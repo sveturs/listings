@@ -29,16 +29,16 @@ type Status struct {
 // Config конфигурация для rate limiter'а
 type Config struct {
 	// Requests per minute для разных провайдеров
-	OpenAI    int `json:"openai"`
-	Google    int `json:"google"`
-	DeepL     int `json:"deepl"`
-	Claude    int `json:"claude"`
-	
+	OpenAI int `json:"openai"`
+	Google int `json:"google"`
+	DeepL  int `json:"deepl"`
+	Claude int `json:"claude"`
+
 	// Глобальные лимиты
 	GlobalRPM int `json:"global_rpm"` // Requests per minute
 	GlobalRPH int `json:"global_rph"` // Requests per hour
 	GlobalRPD int `json:"global_rpd"` // Requests per day
-	
+
 	// Burst размер для token bucket
 	BurstSize int `json:"burst_size"`
 }
@@ -46,14 +46,14 @@ type Config struct {
 // DefaultConfig возвращает конфигурацию по умолчанию
 func DefaultConfig() *Config {
 	return &Config{
-		OpenAI:    20,   // 20 запросов в минуту для OpenAI
-		Google:    100,  // 100 запросов в минуту для Google
-		DeepL:     50,   // 50 запросов в минуту для DeepL
-		Claude:    30,   // 30 запросов в минуту для Claude
-		GlobalRPM: 100,  // 100 запросов в минуту глобально
-		GlobalRPH: 3000, // 3000 запросов в час
+		OpenAI:    20,    // 20 запросов в минуту для OpenAI
+		Google:    100,   // 100 запросов в минуту для Google
+		DeepL:     50,    // 50 запросов в минуту для DeepL
+		Claude:    30,    // 30 запросов в минуту для Claude
+		GlobalRPM: 100,   // 100 запросов в минуту глобально
+		GlobalRPH: 3000,  // 3000 запросов в час
 		GlobalRPD: 50000, // 50000 запросов в день
-		BurstSize: 10,   // Burst до 10 запросов
+		BurstSize: 10,    // Burst до 10 запросов
 	}
 }
 
@@ -69,7 +69,7 @@ func NewInMemoryRateLimiter(cfg *Config) *InMemoryRateLimiter {
 	if cfg == nil {
 		cfg = DefaultConfig()
 	}
-	
+
 	return &InMemoryRateLimiter{
 		limiters: make(map[string]*rate.Limiter),
 		config:   cfg,
@@ -81,19 +81,19 @@ func (r *InMemoryRateLimiter) getLimiter(key string) *rate.Limiter {
 	r.mutex.RLock()
 	limiter, exists := r.limiters[key]
 	r.mutex.RUnlock()
-	
+
 	if exists {
 		return limiter
 	}
-	
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	// Проверяем еще раз после блокировки
 	if limiter, exists := r.limiters[key]; exists {
 		return limiter
 	}
-	
+
 	// Определяем лимит для провайдера
 	var limit int
 	switch key {
@@ -110,11 +110,11 @@ func (r *InMemoryRateLimiter) getLimiter(key string) *rate.Limiter {
 	default:
 		limit = r.config.GlobalRPM
 	}
-	
+
 	// Создаем новый limiter (limit per minute)
 	limiter = rate.NewLimiter(rate.Limit(float64(limit)/60.0), r.config.BurstSize)
 	r.limiters[key] = limiter
-	
+
 	return limiter
 }
 
@@ -134,7 +134,7 @@ func (r *InMemoryRateLimiter) AllowN(ctx context.Context, key string, n int) (bo
 func (r *InMemoryRateLimiter) Reset(ctx context.Context, key string) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	
+
 	delete(r.limiters, key)
 	return nil
 }
@@ -142,10 +142,10 @@ func (r *InMemoryRateLimiter) Reset(ctx context.Context, key string) error {
 // GetStatus возвращает статус лимита
 func (r *InMemoryRateLimiter) GetStatus(ctx context.Context, key string) (*Status, error) {
 	limiter := r.getLimiter(key)
-	
+
 	// Приблизительный расчет оставшихся запросов
 	tokens := int(limiter.Tokens())
-	
+
 	var limit int
 	switch key {
 	case "openai":
@@ -159,7 +159,7 @@ func (r *InMemoryRateLimiter) GetStatus(ctx context.Context, key string) (*Statu
 	default:
 		limit = r.config.GlobalRPM
 	}
-	
+
 	return &Status{
 		Limit:     limit,
 		Remaining: tokens,
@@ -178,7 +178,7 @@ func NewRedisRateLimiter(client *redis.Client, cfg *Config) *RedisRateLimiter {
 	if cfg == nil {
 		cfg = DefaultConfig()
 	}
-	
+
 	return &RedisRateLimiter{
 		client: client,
 		config: cfg,
@@ -206,32 +206,32 @@ func (r *RedisRateLimiter) AllowN(ctx context.Context, key string, n int) (bool,
 	default:
 		limit = r.config.GlobalRPM
 	}
-	
+
 	// Используем sliding window algorithm
 	now := time.Now()
 	windowStart := now.Add(-time.Minute).Unix()
 	windowKey := fmt.Sprintf("ratelimit:%s:window", key)
-	
+
 	pipe := r.client.Pipeline()
-	
+
 	// Удаляем старые записи
 	pipe.ZRemRangeByScore(ctx, windowKey, "0", fmt.Sprintf("%d", windowStart))
-	
+
 	// Считаем текущие записи в окне
 	countCmd := pipe.ZCard(ctx, windowKey)
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
-	
+
 	currentCount := countCmd.Val()
-	
+
 	// Проверяем лимит
 	if int(currentCount)+n > limit {
 		return false, nil
 	}
-	
+
 	// Добавляем новые записи
 	members := make([]redis.Z, n)
 	for i := 0; i < n; i++ {
@@ -240,16 +240,16 @@ func (r *RedisRateLimiter) AllowN(ctx context.Context, key string, n int) (bool,
 			Member: fmt.Sprintf("%d:%d", now.UnixNano(), i),
 		}
 	}
-	
+
 	pipe = r.client.Pipeline()
 	pipe.ZAdd(ctx, windowKey, members...)
 	pipe.Expire(ctx, windowKey, time.Minute*2)
-	
+
 	_, err = pipe.Exec(ctx)
 	if err != nil {
 		return false, err
 	}
-	
+
 	return true, nil
 }
 
@@ -275,28 +275,28 @@ func (r *RedisRateLimiter) GetStatus(ctx context.Context, key string) (*Status, 
 	default:
 		limit = r.config.GlobalRPM
 	}
-	
+
 	// Считаем текущие записи в окне
 	now := time.Now()
 	windowStart := now.Add(-time.Minute).Unix()
 	windowKey := fmt.Sprintf("ratelimit:%s:window", key)
-	
+
 	// Удаляем старые и считаем оставшиеся
 	pipe := r.client.Pipeline()
 	pipe.ZRemRangeByScore(ctx, windowKey, "0", fmt.Sprintf("%d", windowStart))
 	countCmd := pipe.ZCard(ctx, windowKey)
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	currentCount := int(countCmd.Val())
 	remaining := limit - currentCount
 	if remaining < 0 {
 		remaining = 0
 	}
-	
+
 	return &Status{
 		Limit:     limit,
 		Remaining: remaining,
@@ -312,7 +312,7 @@ type MultiProviderRateLimiter struct {
 // NewMultiProviderRateLimiter создает новый multi-provider rate limiter
 func NewMultiProviderRateLimiter(redisClient *redis.Client, cfg *Config) *MultiProviderRateLimiter {
 	var limiter RateLimiter
-	
+
 	if redisClient != nil {
 		limiter = NewRedisRateLimiter(redisClient, cfg)
 		log.Info().Msg("Using Redis-based rate limiter for AI translations")
@@ -320,7 +320,7 @@ func NewMultiProviderRateLimiter(redisClient *redis.Client, cfg *Config) *MultiP
 		limiter = NewInMemoryRateLimiter(cfg)
 		log.Info().Msg("Using in-memory rate limiter for AI translations")
 	}
-	
+
 	return &MultiProviderRateLimiter{
 		limiter: limiter,
 	}
@@ -334,12 +334,12 @@ func (m *MultiProviderRateLimiter) CheckProviderLimit(ctx context.Context, provi
 		log.Error().Err(err).Str("provider", provider).Msg("Failed to check provider rate limit")
 		return false, err
 	}
-	
+
 	if !providerAllowed {
 		log.Warn().Str("provider", provider).Msg("Provider rate limit exceeded")
 		return false, nil
 	}
-	
+
 	// Проверяем глобальный лимит
 	globalAllowed, err := m.limiter.Allow(ctx, "global")
 	if err != nil {
@@ -348,35 +348,35 @@ func (m *MultiProviderRateLimiter) CheckProviderLimit(ctx context.Context, provi
 		_ = m.limiter.Reset(ctx, provider)
 		return false, err
 	}
-	
+
 	if !globalAllowed {
 		log.Warn().Msg("Global rate limit exceeded")
 		// Откатываем счетчик провайдера
 		_ = m.limiter.Reset(ctx, provider)
 		return false, nil
 	}
-	
+
 	return true, nil
 }
 
 // GetProviderStatus возвращает статус лимитов для провайдера
 func (m *MultiProviderRateLimiter) GetProviderStatus(ctx context.Context, provider string) (map[string]*Status, error) {
 	result := make(map[string]*Status)
-	
+
 	// Статус провайдера
 	providerStatus, err := m.limiter.GetStatus(ctx, provider)
 	if err != nil {
 		return nil, err
 	}
 	result[provider] = providerStatus
-	
+
 	// Глобальный статус
 	globalStatus, err := m.limiter.GetStatus(ctx, "global")
 	if err != nil {
 		return nil, err
 	}
 	result["global"] = globalStatus
-	
+
 	return result, nil
 }
 
@@ -384,7 +384,7 @@ func (m *MultiProviderRateLimiter) GetProviderStatus(ctx context.Context, provid
 func (m *MultiProviderRateLimiter) GetAllProvidersStatus(ctx context.Context) (map[string]*Status, error) {
 	providers := []string{"openai", "google", "deepl", "claude", "global"}
 	result := make(map[string]*Status)
-	
+
 	for _, provider := range providers {
 		status, err := m.limiter.GetStatus(ctx, provider)
 		if err != nil {
@@ -393,6 +393,6 @@ func (m *MultiProviderRateLimiter) GetAllProvidersStatus(ctx context.Context) (m
 		}
 		result[provider] = status
 	}
-	
+
 	return result, nil
 }

@@ -57,9 +57,7 @@
     },
     "marketplace": {
       "missing": {
-        "ru": [
-          "marketplace.filters.condition"
-        ]
+        "ru": ["marketplace.filters.condition"]
       },
       "added": {}
     },

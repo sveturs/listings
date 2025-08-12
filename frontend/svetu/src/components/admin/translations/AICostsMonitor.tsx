@@ -99,9 +99,9 @@ export default function AICostsMonitor() {
       today_by_provider: {},
       month_by_provider: {},
     });
-    
+
     setAlerts({
-      alerts: [],
+      alerts: [] as string[],
       daily_limit: dailyLimit,
       monthly_limit: monthlyLimit,
       has_alerts: false,
@@ -110,7 +110,7 @@ export default function AICostsMonitor() {
 
   const fetchCostsData = async () => {
     setRefreshing(true);
-    
+
     try {
       // Use local API route that handles authentication
       const response = await fetch('/api/admin/translations/costs', {
@@ -120,9 +120,9 @@ export default function AICostsMonitor() {
         },
         credentials: 'include',
       });
-      
+
       console.log('Costs API response:', response.status);
-      
+
       if (!response.ok) {
         console.error('Failed to fetch costs:', response.status);
         initializeDemoData();
@@ -130,33 +130,37 @@ export default function AICostsMonitor() {
         setRefreshing(false);
         return;
       }
-      
+
       const data = await response.json();
       console.log('Costs data received:', data);
-      
+
       if (data.success && data.data) {
         console.log('Setting real costs data:', data.data);
         setCostsSummary(data.data);
         setIsDemo(false);
-        
+
         // Check alerts
         const alertsData = {
-          alerts: [],
+          alerts: [] as string[],
           daily_limit: dailyLimit,
           monthly_limit: monthlyLimit,
           has_alerts: false,
         };
-        
+
         if (data.data.today_cost > dailyLimit * 0.8) {
-          alertsData.alerts.push(`Дневной расход приближается к лимиту: ${formatCurrency(data.data.today_cost)} из ${formatCurrency(dailyLimit)}`);
+          alertsData.alerts.push(
+            `Дневной расход приближается к лимиту: ${formatCurrency(data.data.today_cost)} из ${formatCurrency(dailyLimit)}`
+          );
           alertsData.has_alerts = true;
         }
-        
+
         if (data.data.month_cost > monthlyLimit * 0.8) {
-          alertsData.alerts.push(`Месячный расход приближается к лимиту: ${formatCurrency(data.data.month_cost)} из ${formatCurrency(monthlyLimit)}`);
+          alertsData.alerts.push(
+            `Месячный расход приближается к лимиту: ${formatCurrency(data.data.month_cost)} из ${formatCurrency(monthlyLimit)}`
+          );
           alertsData.has_alerts = true;
         }
-        
+
         setAlerts(alertsData);
       } else {
         initializeDemoData();
@@ -173,12 +177,12 @@ export default function AICostsMonitor() {
 
   useEffect(() => {
     fetchCostsData();
-    
+
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => {
       fetchCostsData();
     }, 30000);
-    
+
     return () => clearInterval(interval);
   }, [dailyLimit, monthlyLimit]);
 
@@ -186,7 +190,7 @@ export default function AICostsMonitor() {
     if (!confirm(`Вы уверены, что хотите сбросить счетчики для ${provider}?`)) {
       return;
     }
-    
+
     // For now, just refresh the data since reset endpoint might not exist
     // TODO: Implement reset endpoint when needed
     console.log('Reset requested for provider:', provider);
@@ -224,7 +228,8 @@ export default function AICostsMonitor() {
           <div>
             <h3 className="font-bold">Демо режим</h3>
             <p className="text-sm">
-              Система мониторинга расходов готова к работе. Данные будут отображаться после начала использования AI переводов.
+              Система мониторинга расходов готова к работе. Данные будут
+              отображаться после начала использования AI переводов.
             </p>
           </div>
         </div>
@@ -268,9 +273,7 @@ export default function AICostsMonitor() {
           <div className="stat-value text-2xl">
             {formatCurrency(costsSummary?.today_cost || 0)}
           </div>
-          <div className="stat-desc">
-            Лимит: {formatCurrency(dailyLimit)}
-          </div>
+          <div className="stat-desc">Лимит: {formatCurrency(dailyLimit)}</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg border border-base-300">
@@ -281,9 +284,7 @@ export default function AICostsMonitor() {
           <div className="stat-value text-2xl">
             {formatCurrency(costsSummary?.month_cost || 0)}
           </div>
-          <div className="stat-desc">
-            Лимит: {formatCurrency(monthlyLimit)}
-          </div>
+          <div className="stat-desc">Лимит: {formatCurrency(monthlyLimit)}</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg border border-base-300">
@@ -340,56 +341,52 @@ export default function AICostsMonitor() {
                 </tr>
               </thead>
               <tbody>
-                {costsSummary?.by_provider && Object.keys(costsSummary.by_provider).length > 0 ? (
-                  Object.entries(costsSummary.by_provider).map(
-                    ([provider, data]) => (
+                {costsSummary?.by_provider &&
+                Object.keys(costsSummary.by_provider).length > 0
+                  ? Object.entries(costsSummary.by_provider).map(
+                      ([provider, data]) => (
+                        <tr key={provider}>
+                          <td className="font-medium capitalize">{provider}</td>
+                          <td>{formatCurrency(data.total_cost)}</td>
+                          <td>
+                            {formatCurrency(
+                              costsSummary.today_by_provider?.[provider] || 0
+                            )}
+                          </td>
+                          <td>
+                            {formatCurrency(
+                              costsSummary.month_by_provider?.[provider] || 0
+                            )}
+                          </td>
+                          <td>{formatNumber(data.total_tokens)}</td>
+                          <td>{formatNumber(data.total_requests)}</td>
+                          <td>
+                            <button
+                              className="btn btn-xs btn-ghost"
+                              onClick={() => resetProviderCosts(provider)}
+                            >
+                              Сбросить
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    )
+                  : // Show default providers when no data
+                    ['openai', 'google', 'deepl', 'claude'].map((provider) => (
                       <tr key={provider}>
                         <td className="font-medium capitalize">{provider}</td>
-                        <td>{formatCurrency(data.total_cost)}</td>
+                        <td>{formatCurrency(0)}</td>
+                        <td>{formatCurrency(0)}</td>
+                        <td>{formatCurrency(0)}</td>
+                        <td>{formatNumber(0)}</td>
+                        <td>{formatNumber(0)}</td>
                         <td>
-                          {formatCurrency(
-                            costsSummary.today_by_provider?.[provider] || 0
-                          )}
-                        </td>
-                        <td>
-                          {formatCurrency(
-                            costsSummary.month_by_provider?.[provider] || 0
-                          )}
-                        </td>
-                        <td>{formatNumber(data.total_tokens)}</td>
-                        <td>{formatNumber(data.total_requests)}</td>
-                        <td>
-                          <button
-                            className="btn btn-xs btn-ghost"
-                            onClick={() => resetProviderCosts(provider)}
-                          >
+                          <button className="btn btn-xs btn-ghost" disabled>
                             Сбросить
                           </button>
                         </td>
                       </tr>
-                    )
-                  )
-                ) : (
-                  // Show default providers when no data
-                  ['openai', 'google', 'deepl', 'claude'].map((provider) => (
-                    <tr key={provider}>
-                      <td className="font-medium capitalize">{provider}</td>
-                      <td>{formatCurrency(0)}</td>
-                      <td>{formatCurrency(0)}</td>
-                      <td>{formatCurrency(0)}</td>
-                      <td>{formatNumber(0)}</td>
-                      <td>{formatNumber(0)}</td>
-                      <td>
-                        <button
-                          className="btn btn-xs btn-ghost"
-                          disabled
-                        >
-                          Сбросить
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                    ))}
               </tbody>
             </table>
           </div>
@@ -439,9 +436,7 @@ export default function AICostsMonitor() {
             <div className="text-center text-base-content/60">
               <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
               <p>График расходов по дням</p>
-              <p className="text-sm mt-1">
-                Будет добавлен в следующей версии
-              </p>
+              <p className="text-sm mt-1">Будет добавлен в следующей версии</p>
             </div>
           </div>
         </div>

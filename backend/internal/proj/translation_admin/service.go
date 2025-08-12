@@ -77,13 +77,13 @@ func NewService(logger zerolog.Logger, frontendPath string, translationRepo Tran
 	} else {
 		logger.Warn().Msg("Redis client not provided, caching disabled for translations")
 	}
-	
+
 	// Create batch loader with cache
 	batchLoader := NewBatchLoader(translationRepo, translationCache)
-	
+
 	// Create cost tracker with Redis
 	costTracker := NewCostTracker(redisClient)
-	
+
 	return &Service{
 		logger:          logger,
 		frontendPath:    frontendPath,
@@ -1399,7 +1399,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 	textLength := len(req.Text)
 	inputTokens := textLength / 4
 	outputTokens := textLength / 4 * len(req.TargetLanguages) // умножаем на количество языков
-	
+
 	s.logger.Info().
 		Str("provider", provider).
 		Int("input_tokens", inputTokens).
@@ -1407,7 +1407,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 		Int("text_length", textLength).
 		Int("target_languages", len(req.TargetLanguages)).
 		Msg("Tracking AI provider usage")
-	
+
 	err := s.TrackAIProviderUsage(ctx, provider, inputTokens, outputTokens, textLength*len(req.TargetLanguages))
 	if err != nil {
 		s.logger.Warn().Err(err).Str("provider", provider).Msg("Failed to track AI provider usage")

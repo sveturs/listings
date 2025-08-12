@@ -9,7 +9,7 @@ interface ApiResponse<T = any> {
 
 class ApiClient {
   private baseURL: string;
-  private defaultHeaders: HeadersInit;
+  private defaultHeaders: Record<string, string>;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -23,19 +23,20 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}/api/v1${endpoint}`;
-    
+
     // Get JWT token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
-    
-    const headers: HeadersInit = {
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
+
+    const headers: Record<string, string> = {
       ...this.defaultHeaders,
-      ...options.headers,
+      ...(options.headers ? (options.headers as Record<string, string>) : {}),
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -67,8 +68,13 @@ class ApiClient {
     }
   }
 
-  async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+  async get<T = any>(
+    endpoint: string,
+    params?: Record<string, any>
+  ): Promise<ApiResponse<T>> {
+    const queryString = params
+      ? '?' + new URLSearchParams(params).toString()
+      : '';
     return this.request<T>(endpoint + queryString, {
       method: 'GET',
     });

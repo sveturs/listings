@@ -45,7 +45,7 @@ func GetAIProvider(name string) AIProvider {
 	if name == "" {
 		name = "openai"
 	}
-	
+
 	// Проверяем наличие API ключей в env
 	switch name {
 	case "openai":
@@ -55,7 +55,7 @@ func GetAIProvider(name string) AIProvider {
 		}
 	case "google":
 		if os.Getenv("GOOGLE_API_KEY") != "" {
-			// TODO: вернуть настоящий Google провайдер  
+			// TODO: вернуть настоящий Google провайдер
 			return NewMockProvider("google")
 		}
 	case "deepl":
@@ -69,7 +69,7 @@ func GetAIProvider(name string) AIProvider {
 			return NewMockProvider("claude")
 		}
 	}
-	
+
 	// По умолчанию возвращаем мок
 	return NewMockProvider(name)
 }

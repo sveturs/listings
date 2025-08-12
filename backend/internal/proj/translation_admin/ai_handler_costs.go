@@ -17,13 +17,13 @@ import (
 // @Router /api/v1/admin/translations/ai/costs [get]
 func (h *AITranslationHandler) GetCostsSummary(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	costs, err := h.service.GetAIProviderCosts(ctx)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Failed to get costs summary")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.costsRetrievalFailed")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.costsRetrieved", costs)
 }
 
@@ -40,16 +40,16 @@ func (h *AITranslationHandler) GetCostsSummary(c *fiber.Ctx) error {
 // @Router /api/v1/admin/translations/ai/costs/alerts [get]
 func (h *AITranslationHandler) GetCostAlerts(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	dailyLimit := c.QueryFloat("daily_limit", 100.0)
 	monthlyLimit := c.QueryFloat("monthly_limit", 2000.0)
-	
+
 	alerts, err := h.service.GetAIProviderAlerts(ctx, dailyLimit, monthlyLimit)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Failed to get cost alerts")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.alertsRetrievalFailed")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.alertsRetrieved", map[string]interface{}{
 		"alerts":        alerts,
 		"daily_limit":   dailyLimit,
@@ -71,12 +71,12 @@ func (h *AITranslationHandler) GetCostAlerts(c *fiber.Ctx) error {
 // @Router /api/v1/admin/translations/ai/costs/{provider}/reset [post]
 func (h *AITranslationHandler) ResetProviderCosts(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	provider := c.Params("provider")
 	if provider == "" {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerRequired")
 	}
-	
+
 	// Validate provider
 	validProviders := map[string]bool{
 		"openai": true,
@@ -84,17 +84,17 @@ func (h *AITranslationHandler) ResetProviderCosts(c *fiber.Ctx) error {
 		"deepl":  true,
 		"claude": true,
 	}
-	
+
 	if !validProviders[provider] {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidProvider")
 	}
-	
+
 	err := h.service.ResetAIProviderCosts(ctx, provider)
 	if err != nil {
 		h.logger.Error().Err(err).Str("provider", provider).Msg("Failed to reset provider costs")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.costsResetFailed")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.costsReset", map[string]string{
 		"provider": provider,
 		"status":   "reset",
@@ -114,23 +114,23 @@ func (h *AITranslationHandler) ResetProviderCosts(c *fiber.Ctx) error {
 // @Router /api/v1/admin/translations/ai/costs/{provider} [get]
 func (h *AITranslationHandler) GetProviderCostDetails(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	provider := c.Params("provider")
 	if provider == "" {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerRequired")
 	}
-	
+
 	// Get cost tracker from service
 	costTracker := h.service.GetCostTracker()
 	if costTracker == nil {
 		return utils.SendError(c, fiber.StatusServiceUnavailable, "admin.translations.costTrackingUnavailable")
 	}
-	
+
 	costs, err := costTracker.GetProviderCosts(ctx, provider)
 	if err != nil {
 		h.logger.Error().Err(err).Str("provider", provider).Msg("Failed to get provider costs")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.providerCostsRetrievalFailed")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providerCostsRetrieved", costs)
 }

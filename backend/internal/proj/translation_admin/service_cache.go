@@ -113,7 +113,7 @@ func (s *Service) InvalidateTranslationCache(ctx context.Context, entityType str
 // GetBatchTranslationsWithCache получает несколько переводов с использованием кеша
 func (s *Service) GetBatchTranslationsWithCache(ctx context.Context, requests []TranslationRequest) (map[string]string, error) {
 	result := make(map[string]string)
-	
+
 	if s.cache == nil {
 		// Если кеш не настроен, получаем все из БД
 		return s.getBatchTranslationsFromDB(ctx, requests)
@@ -122,7 +122,7 @@ func (s *Service) GetBatchTranslationsWithCache(ctx context.Context, requests []
 	// Формируем ключи для кеша
 	var cacheKeys []string
 	keyToRequest := make(map[string]TranslationRequest)
-	
+
 	for _, req := range requests {
 		key := s.cache.BuildKey(req.EntityType, req.EntityID, req.Language, req.FieldName)
 		cacheKeys = append(cacheKeys, key)
@@ -157,12 +157,12 @@ func (s *Service) GetBatchTranslationsWithCache(ctx context.Context, requests []
 		toCache := make(map[string]string)
 		for key, translation := range dbTranslations {
 			result[key] = translation
-			
+
 			// Парсим ключ для кеширования
 			var entityType, fieldName, language string
 			var entityID int64
 			fmt.Sscanf(key, "%[^:]:%d:%[^:]:%s", &entityType, &entityID, &language, &fieldName)
-			
+
 			cacheKey := s.cache.BuildKey(entityType, entityID, language, fieldName)
 			toCache[cacheKey] = translation
 		}
@@ -189,7 +189,7 @@ type TranslationRequest struct {
 // getBatchTranslationsFromDB получает несколько переводов из БД
 func (s *Service) getBatchTranslationsFromDB(ctx context.Context, requests []TranslationRequest) (map[string]string, error) {
 	result := make(map[string]string)
-	
+
 	// Группируем запросы для оптимизации
 	for _, req := range requests {
 		filters := map[string]interface{}{
@@ -198,19 +198,19 @@ func (s *Service) getBatchTranslationsFromDB(ctx context.Context, requests []Tra
 			"language":    req.Language,
 			"field_name":  req.FieldName,
 		}
-		
+
 		translations, err := s.translationRepo.GetTranslations(ctx, filters)
 		if err != nil {
 			s.logger.Error().Err(err).Interface("filters", filters).Msg("Failed to get translation from DB")
 			continue
 		}
-		
+
 		if len(translations) > 0 {
 			key := fmt.Sprintf("%s:%d:%s:%s", req.EntityType, req.EntityID, req.Language, req.FieldName)
 			result[key] = translations[0].TranslatedText
 		}
 	}
-	
+
 	return result, nil
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/translation_admin/cache"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -202,14 +203,14 @@ func (b *BatchLoader) PreloadTranslationsForListings(ctx context.Context, listin
 			if listings[i].Translations == nil {
 				listings[i].Translations = make(models.TranslationMap)
 			}
-			
+
 			if title, ok := trans["title"]; ok {
 				if listings[i].Translations["title"] == nil {
 					listings[i].Translations["title"] = make(map[string]string)
 				}
 				listings[i].Translations["title"][language] = title
 			}
-			
+
 			if description, ok := trans["description"]; ok {
 				if listings[i].Translations["description"] == nil {
 					listings[i].Translations["description"] = make(map[string]string)
@@ -247,11 +248,11 @@ func (b *BatchLoader) PreloadTranslationsForCategories(ctx context.Context, cate
 				if categories[i].Translations == nil {
 					categories[i].Translations = make(map[string]string)
 				}
-				
+
 				if name, ok := trans["name"]; ok {
 					categories[i].Translations[lang+"_name"] = name
 				}
-				
+
 				if description, ok := trans["description"]; ok {
 					categories[i].Translations[lang+"_description"] = description
 				}

@@ -65,29 +65,29 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 		if providerName == "" {
 			providerName = "openai" // default provider
 		}
-		
+
 		allowed, err := h.rateLimiter.CheckProviderLimit(ctx, providerName)
 		if err != nil {
 			h.logger.Error().Err(err).Str("provider", providerName).Msg("Failed to check rate limit")
 			return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.rateLimitCheckFailed")
 		}
-		
+
 		if !allowed {
 			// Получаем статус лимитов для информирования пользователя
 			status, _ := h.rateLimiter.GetProviderStatus(ctx, providerName)
-			
+
 			h.logger.Warn().
 				Str("provider", providerName).
 				Interface("status", status).
 				Msg("Rate limit exceeded")
-			
+
 			// Добавляем заголовки для информирования о лимитах
 			if providerStatus, ok := status[providerName]; ok {
 				c.Set("X-RateLimit-Limit", string(providerStatus.Limit))
 				c.Set("X-RateLimit-Remaining", string(providerStatus.Remaining))
 				c.Set("X-RateLimit-Reset", providerStatus.Reset.Format(time.RFC3339))
 			}
-			
+
 			return utils.SendError(c, fiber.StatusTooManyRequests, "admin.translations.rateLimitExceeded")
 		}
 	}
@@ -99,7 +99,7 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 		TargetLanguages: []string{req.TargetLang},
 		Provider:        req.Provider,
 	}
-	
+
 	// Получаем userID из контекста
 	userID := 0
 	if userClaim := c.Locals("user"); userClaim != nil {
@@ -109,7 +109,7 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 			}
 		}
 	}
-	
+
 	result, err := h.service.TranslateText(ctx, translateReq, userID)
 	if err != nil {
 		h.logger.Error().Err(err).
@@ -119,7 +119,7 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 			Msg("Failed to translate text")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.translationFailed")
 	}
-	
+
 	// Отслеживаем расходы (приблизительно)
 	textLength := len(req.Text)
 	_ = h.service.TrackAIProviderUsage(ctx, strings.ToLower(req.Provider), textLength/4, textLength/4, textLength)
@@ -246,20 +246,20 @@ func (h *AITranslationHandler) GetAvailableProviders(c *fiber.Ctx) error {
 // @Router /api/v1/admin/translations/ai/rate-limit-status [get]
 func (h *AITranslationHandler) GetRateLimitStatus(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	if h.rateLimiter == nil {
 		return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.rateLimitStatusRetrieved", map[string]interface{}{
 			"enabled": false,
 			"message": "Rate limiting is not configured",
 		})
 	}
-	
+
 	status, err := h.rateLimiter.GetAllProvidersStatus(ctx)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("Failed to get rate limit status")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.rateLimitStatusFailed")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.rateLimitStatusRetrieved", map[string]interface{}{
 		"enabled": true,
 		"status":  status,

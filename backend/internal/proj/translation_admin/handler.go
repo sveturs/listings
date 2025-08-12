@@ -53,7 +53,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	ai.Post("/apply", h.ApplyAITranslations)
 	ai.Get("/providers-old", h.GetProviders) // старый метод
 	ai.Put("/providers/:id", h.UpdateProvider)
-	
+
 	// Translation providers - новый эндпоинт для системы провайдеров
 	router.Get("/providers", h.GetTranslationProviders)
 	router.Put("/providers/:id", h.UpdateTranslationProvider)
@@ -1121,7 +1121,7 @@ func (h *Handler) GetTranslationProviders(c *fiber.Ctx) error {
 	// Возвращаем пустой массив провайдеров пока они не настроены в системе
 	// В будущем здесь можно будет возвращать реальных провайдеров из БД или конфигурации
 	providers := []map[string]interface{}{}
-	
+
 	// Можно добавить статические провайдеры для демонстрации
 	// providers = append(providers, map[string]interface{}{
 	//     "id": 1,
@@ -1130,7 +1130,7 @@ func (h *Handler) GetTranslationProviders(c *fiber.Ctx) error {
 	//     "is_active": true,
 	//     "api_key": "configured",
 	// })
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providersRetrieved", providers)
 }
 
@@ -1153,7 +1153,7 @@ func (h *Handler) UpdateTranslationProvider(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidProviderID")
 	}
-	
+
 	// Пока просто возвращаем успех, так как провайдеры еще не реализованы
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providerUpdated", nil)
 }

@@ -30,5751 +30,4473 @@
       "language": "ru",
       "key": "bulk.status",
       "value": "[RU] Status",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.lowStock",
       "value": "[RU] Low Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.inStock",
       "value": "[RU] In Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.Failed to update stock",
       "value": "[RU] Failed to update stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.csvImportSuccess",
       "value": "[RU] Csv Import Success",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.Failed to import CSV",
       "value": "[RU] Failed to import  C S V",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.a",
       "value": "[RU] A",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.Failed to export CSV",
       "value": "[RU] Failed to export  C S V",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.lowStockCount",
       "value": "[RU] Low Stock Count",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.outOfStockCount",
       "value": "[RU] Out Of Stock Count",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.searchPlaceholder",
       "value": "[RU] Search Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.status",
       "value": "[RU] Status",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.allStatuses",
       "value": "[RU] All Statuses",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.attribute",
       "value": "[RU] Attribute",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.allAttributes",
       "value": "[RU] All Attributes",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.attributeValue",
       "value": "[RU] Attribute Value",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.allValues",
       "value": "[RU] All Values",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.clearSelection",
       "value": "[RU] Clear Selection",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.selected",
       "value": "[RU] Selected",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.add",
       "value": "[RU] Add",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.subtract",
       "value": "[RU] Subtract",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.setTo",
       "value": "[RU] Set To",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.apply",
       "value": "[RU] Apply",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.importing",
       "value": "[RU] Importing",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.importCSV",
       "value": "[RU] Import C S V",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.exporting",
       "value": "[RU] Exporting",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.exportCSV",
       "value": "[RU] Export C S V",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.saving",
       "value": "[RU] Saving",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.saveChanges",
       "value": "[RU] Save Changes",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.name",
       "value": "[RU] Name",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.sku",
       "value": "[RU] Sku",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.stock",
       "value": "[RU] Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.updated_at",
       "value": "[RU] Updated_at",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.lastUpdated",
       "value": "[RU] Last Updated",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.noVariants",
       "value": "[RU] No Variants",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.noVariantsMatch",
       "value": "[RU] No Variants Match",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.noVariantsDescription",
       "value": "[RU] No Variants Description",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.tryDifferentFilters",
       "value": "[RU] Try Different Filters",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.availability",
       "value": "[RU] Availability",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.moreImages",
       "value": "[RU] More Images",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.Failed to generate variants",
       "value": "[RU] Failed to generate variants",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.title",
       "value": "[RU] Title",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.selectAttributesHelp",
       "value": "[RU] Select Attributes Help",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.generationSummary",
       "value": "[RU] Generation Summary",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.totalCombinations",
       "value": "[RU] Total Combinations",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.generating",
       "value": "[RU] Generating",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.Failed to update variant",
       "value": "[RU] Failed to update variant",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.acrossAllVariants",
       "value": "[RU] Across All Variants",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.variantsWithLowStock",
       "value": "[RU] Variants With Low Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.variantsOutOfStock",
       "value": "[RU] Variants Out Of Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.bulkStockOperations",
       "value": "[RU] Bulk Stock Operations",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.operation",
       "value": "[RU] Operation",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.amount",
       "value": "[RU] Amount",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.currentStock",
       "value": "[RU] Current Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.noAnalytics",
       "value": "[RU] No Analytics",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.noAnalyticsDescription",
       "value": "[RU] No Analytics Description",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.totalSold",
       "value": "[RU] Total Sold",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.lowStockVariants",
       "value": "[RU] Low Stock Variants",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.bestSeller",
       "value": "[RU] Best Seller",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.stockByAttribute",
       "value": "[RU] Stock By Attribute",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "variants.salesByAttribute",
       "value": "[RU] Sales By Attribute",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "stockStatus.out_of_stock",
       "value": "[RU] Out_of_stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "stockStatus.in_stock",
       "value": "[RU] In_stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "stockStatus.low_stock",
       "value": "[RU] Low_stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "tabs.attributes",
       "value": "[RU] Attributes",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "tabs.variants",
       "value": "[RU] Variants",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "tabs.stock",
       "value": "[RU] Stock",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "ru",
       "key": "tabs.analytics",
       "value": "[RU] Analytics",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.noVariantAttributesForCategory",
       "value": "[SR] No Variant Attributes For Category",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.categoryDoesNotSupportVariants",
       "value": "[SR] Category Does Not Support Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.selectValuesForVariants",
       "value": "[SR] Select Values For Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.affectsStock",
       "value": "[SR] Affects Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.attributesFromPreviousStep",
       "value": "[SR] Attributes From Previous Step",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.stockSettings",
       "value": "[SR] Stock Settings",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.defaultStockQuantity",
       "value": "[SR] Default Stock Quantity",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.useIndividualQuantities",
       "value": "[SR] Use Individual Quantities",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "products.errorLoadingProducts",
       "value": "[SR] Error Loading Products",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.lowStock",
       "value": "[SR] Low Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.inStock",
       "value": "[SR] In Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.Failed to update stock",
       "value": "[SR] Failed to update stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.csvImportSuccess",
       "value": "[SR] Csv Import Success",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.Failed to import CSV",
       "value": "[SR] Failed to import  C S V",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.a",
       "value": "[SR] A",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.Failed to export CSV",
       "value": "[SR] Failed to export  C S V",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.lowStockCount",
       "value": "[SR] Low Stock Count",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.outOfStockCount",
       "value": "[SR] Out Of Stock Count",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.searchPlaceholder",
       "value": "[SR] Search Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.status",
       "value": "[SR] Status",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.allStatuses",
       "value": "[SR] All Statuses",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.attribute",
       "value": "[SR] Attribute",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.allAttributes",
       "value": "[SR] All Attributes",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.attributeValue",
       "value": "[SR] Attribute Value",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.allValues",
       "value": "[SR] All Values",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.selectAll",
       "value": "[SR] Select All",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.clearSelection",
       "value": "[SR] Clear Selection",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.selected",
       "value": "[SR] Selected",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.add",
       "value": "[SR] Add",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.subtract",
       "value": "[SR] Subtract",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.setTo",
       "value": "[SR] Set To",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.apply",
       "value": "[SR] Apply",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.importing",
       "value": "[SR] Importing",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.importCSV",
       "value": "[SR] Import C S V",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.exporting",
       "value": "[SR] Exporting",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.exportCSV",
       "value": "[SR] Export C S V",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.saving",
       "value": "[SR] Saving",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.saveChanges",
       "value": "[SR] Save Changes",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.name",
       "value": "[SR] Name",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.sku",
       "value": "[SR] Sku",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.stock",
       "value": "[SR] Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.updated_at",
       "value": "[SR] Updated_at",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.lastUpdated",
       "value": "[SR] Last Updated",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.noVariants",
       "value": "[SR] No Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.noVariantsMatch",
       "value": "[SR] No Variants Match",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.noVariantsDescription",
       "value": "[SR] No Variants Description",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.tryDifferentFilters",
       "value": "[SR] Try Different Filters",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.availability",
       "value": "[SR] Availability",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.moreImages",
       "value": "[SR] More Images",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.Failed to generate variants",
       "value": "[SR] Failed to generate variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.title",
       "value": "[SR] Title",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.selectAttributesHelp",
       "value": "[SR] Select Attributes Help",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.generationSummary",
       "value": "[SR] Generation Summary",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.totalCombinations",
       "value": "[SR] Total Combinations",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.generating",
       "value": "[SR] Generating",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.Failed to update variant",
       "value": "[SR] Failed to update variant",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.acrossAllVariants",
       "value": "[SR] Across All Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.variantsWithLowStock",
       "value": "[SR] Variants With Low Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.variantsOutOfStock",
       "value": "[SR] Variants Out Of Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.bulkStockOperations",
       "value": "[SR] Bulk Stock Operations",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.operation",
       "value": "[SR] Operation",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.amount",
       "value": "[SR] Amount",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.currentStock",
       "value": "[SR] Current Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.noAnalytics",
       "value": "[SR] No Analytics",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.noAnalyticsDescription",
       "value": "[SR] No Analytics Description",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.totalSold",
       "value": "[SR] Total Sold",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.lowStockVariants",
       "value": "[SR] Low Stock Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.bestSeller",
       "value": "[SR] Best Seller",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.stockByAttribute",
       "value": "[SR] Stock By Attribute",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "variants.salesByAttribute",
       "value": "[SR] Sales By Attribute",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "stockStatus.out_of_stock",
       "value": "[SR] Out_of_stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "stockStatus.in_stock",
       "value": "[SR] In_stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "stockStatus.low_stock",
       "value": "[SR] Low_stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "bulk.selectMode",
       "value": "[SR] Select Mode",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "bulk.selectAll",
       "value": "[SR] Select All",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "bulk.status",
       "value": "[SR] Status",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "tabs.attributes",
       "value": "[SR] Attributes",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "tabs.variants",
       "value": "[SR] Variants",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "tabs.stock",
       "value": "[SR] Stock",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "storefronts",
       "language": "sr",
       "key": "tabs.analytics",
       "value": "[SR] Analytics",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "city",
       "value": "[RU] City",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "enterCity",
       "value": "[RU] Enter City",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "category",
       "value": "[RU] Category",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "allCategories",
       "value": "[RU] All Categories",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "inCategory",
       "value": "[RU] In Category",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "search.searchHistory",
       "value": "[RU] Search History",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "ru",
       "key": "search.clearHistory",
       "value": "[RU] Clear History",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "city",
       "value": "[SR] City",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "enterCity",
       "value": "[SR] Enter City",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "category",
       "value": "[SR] Category",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "allCategories",
       "value": "[SR] All Categories",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "inCategory",
       "value": "[SR] In Category",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "search.searchHistory",
       "value": "[SR] Search History",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "search.clearHistory",
       "value": "[SR] Clear History",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "search",
       "language": "sr",
       "key": "popularSearches",
       "value": "[SR] Popular Searches",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "comment.placeholder",
       "value": "[RU] Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "comment.tooShort",
       "value": "[RU] Too Short",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "cons.placeholder",
       "value": "[RU] Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.closeGallery",
       "value": "[RU] Close Gallery",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.fullscreenMode",
       "value": "[RU] Fullscreen Mode",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.nextImage",
       "value": "[RU] Next Image",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.of",
       "value": "[RU] Of",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.photo",
       "value": "[RU] Photo",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.previousImage",
       "value": "[RU] Previous Image",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "gallery.swipeToNavigate",
       "value": "[RU] Swipe To Navigate",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.anonymous",
       "value": "[RU] Anonymous",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.byDate",
       "value": "[RU] By Date",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.byHelpfulness",
       "value": "[RU] By Helpfulness",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.byRating",
       "value": "[RU] By Rating",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.cons",
       "value": "[RU] Cons",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.dispute",
       "value": "[RU] Dispute",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.disputePlaceholder",
       "value": "[RU] Dispute Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.disputeReason",
       "value": "[RU] Dispute Reason",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.disputeReview",
       "value": "[RU] Dispute Review",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.helpful",
       "value": "[RU] Helpful",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.pros",
       "value": "[RU] Pros",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.rating",
       "value": "[RU] Rating",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.seller",
       "value": "[RU] Seller",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.sellerConfirmed",
       "value": "[RU] Seller Confirmed",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.verified",
       "value": "[RU] Verified",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "list.withPhotos",
       "value": "[RU] With Photos",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "photos.dragText",
       "value": "[RU] Drag Text",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "photos.fileTypes",
       "value": "[RU] File Types",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "photos.limitReached",
       "value": "[RU] Limit Reached",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "photos.maxFiles",
       "value": "[RU] Max Files",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "progress.creating",
       "value": "[RU] Creating",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "progress.publishing",
       "value": "[RU] Publishing",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "progress.uploading",
       "value": "[RU] Uploading",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "pros.placeholder",
       "value": "[RU] Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "section.alreadyReviewed",
       "value": "[RU] Already Reviewed",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "section.ownerCantReview",
       "value": "[RU] Owner Cant Review",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "ru",
       "key": "stats.verified",
       "value": "[RU] Verified",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "comment.placeholder",
       "value": "[SR] Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "comment.tooShort",
       "value": "[SR] Too Short",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "cons.placeholder",
       "value": "[SR] Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "form.submit",
       "value": "[SR] Submit",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.closeGallery",
       "value": "[SR] Close Gallery",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.fullscreenMode",
       "value": "[SR] Fullscreen Mode",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.nextImage",
       "value": "[SR] Next Image",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.of",
       "value": "[SR] Of",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.photo",
       "value": "[SR] Photo",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.previousImage",
       "value": "[SR] Previous Image",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "gallery.swipeToNavigate",
       "value": "[SR] Swipe To Navigate",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.anonymous",
       "value": "[SR] Anonymous",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.byDate",
       "value": "[SR] By Date",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.byHelpfulness",
       "value": "[SR] By Helpfulness",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.byRating",
       "value": "[SR] By Rating",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.confirm",
       "value": "[SR] Confirm",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.cons",
       "value": "[SR] Cons",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.dispute",
       "value": "[SR] Dispute",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.disputePlaceholder",
       "value": "[SR] Dispute Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.disputeReason",
       "value": "[SR] Dispute Reason",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.disputeReview",
       "value": "[SR] Dispute Review",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.helpful",
       "value": "[SR] Helpful",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.pros",
       "value": "[SR] Pros",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.rating",
       "value": "[SR] Rating",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.seller",
       "value": "[SR] Seller",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.sellerConfirmed",
       "value": "[SR] Seller Confirmed",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.sortBy",
       "value": "[SR] Sort By",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.submit",
       "value": "[SR] Submit",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.verified",
       "value": "[SR] Verified",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.verifiedPurchase",
       "value": "[SR] Verified Purchase",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "list.withPhotos",
       "value": "[SR] With Photos",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "photos.dragText",
       "value": "[SR] Drag Text",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "photos.fileTypes",
       "value": "[SR] File Types",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "photos.limitReached",
       "value": "[SR] Limit Reached",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "photos.maxFiles",
       "value": "[SR] Max Files",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "progress.creating",
       "value": "[SR] Creating",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "progress.publishing",
       "value": "[SR] Publishing",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "progress.uploading",
       "value": "[SR] Uploading",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "pros.placeholder",
       "value": "[SR] Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "section.alreadyReviewed",
       "value": "[SR] Already Reviewed",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "section.ownerCantReview",
       "value": "[SR] Owner Cant Review",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "reviews",
       "language": "sr",
       "key": "stats.verified",
       "value": "[SR] Verified",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.allTime",
       "value": "[MISSING_EN] allTime",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.monthlyComparison",
       "value": "[MISSING_EN] monthlyComparison",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.orders",
       "value": "[MISSING_EN] orders",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.perOrder",
       "value": "[MISSING_EN] perOrder",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.spendingDecrease",
       "value": "[MISSING_EN] spendingDecrease {percent}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.spendingIncrease",
       "value": "[MISSING_EN] spendingIncrease {percent}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "statistics.spent",
       "value": "[MISSING_EN] spent",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "activeFilters",
       "value": "[MISSING_EN] activeFilters",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "advancedFilters",
       "value": "[MISSING_EN] advancedFilters",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "filter",
       "value": "[MISSING_EN] filter",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "en",
       "key": "search",
       "value": "[MISSING_EN] search",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "cancelError",
       "value": "[RU] Cancel Error",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "cancelSuccess",
       "value": "[RU] Cancel Success",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "carrier",
       "value": "[RU] Carrier",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "confirmCancel",
       "value": "[RU] Confirm Cancel",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "hideDetails",
       "value": "[RU] Hide Details",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "ordered",
       "value": "[RU] Ordered",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.contact",
       "value": "[RU] Contact",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.contactDesc",
       "value": "[RU] Contact Desc",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.description",
       "value": "[RU] Description",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.emailConfirmation",
       "value": "[RU] Email Confirmation",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.emailConfirmationDesc",
       "value": "[RU] Email Confirmation Desc",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.shippingDesc",
       "value": "[RU] Shipping Desc",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.title",
       "value": "[RU] Title",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "success.whatNext",
       "value": "[RU] What Next",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "ru",
       "key": "trackingNumber",
       "value": "[RU] Tracking Number",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.inProgress",
       "value": "[MISSING_SR] inProgress",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.allTime",
       "value": "[MISSING_SR] allTime",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.monthlyComparison",
       "value": "[MISSING_SR] monthlyComparison",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.orders",
       "value": "[MISSING_SR] orders",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.perOrder",
       "value": "[MISSING_SR] perOrder",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.spendingDecrease",
       "value": "[MISSING_SR] spendingDecrease {percent}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.spendingIncrease",
       "value": "[MISSING_SR] spendingIncrease {percent}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "statistics.spent",
       "value": "[MISSING_SR] spent",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "activeFilters",
       "value": "[MISSING_SR] activeFilters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "advancedFilters",
       "value": "[MISSING_SR] advancedFilters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "filter",
       "value": "[MISSING_SR] filter",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "orders",
       "language": "sr",
       "key": "search",
       "value": "[MISSING_SR] search",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "create_listing.ai.publish.ai_insights",
       "value": "[MISSING_RU] ai_insights",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "create_listing.ai.publish.sellers_used_ai",
       "value": "[MISSING_RU] sellers_used_ai",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "storefronts.products.selectDifferentCategory",
       "value": "[MISSING_RU] selectDifferentCategory",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "storefronts.products.stockSettings",
       "value": "[MISSING_RU] stockSettings",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "storefronts.products.defaultStockQuantity",
       "value": "[MISSING_RU] defaultStockQuantity",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "storefronts.products.useIndividualQuantities",
       "value": "[MISSING_RU] useIndividualQuantities",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "ru",
       "key": "gis.district_filter.districts_in",
       "value": "[MISSING_RU] districts_in",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "storefronts.products.selectDifferentCategory",
       "value": "[MISSING_SR] selectDifferentCategory",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "storefronts.products.stockSettings",
       "value": "[MISSING_SR] stockSettings",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "storefronts.products.defaultStockQuantity",
       "value": "[MISSING_SR] defaultStockQuantity",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "storefronts.products.useIndividualQuantities",
       "value": "[MISSING_SR] useIndividualQuantities",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "gis.district_filter.districts_in",
       "value": "[MISSING_SR] districts_in",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "create_listing.ai.publish.ai_insights",
       "value": "[MISSING_SR] ai_insights",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "misc",
       "language": "sr",
       "key": "create_listing.ai.publish.sellers_used_ai",
       "value": "[MISSING_SR] sellers_used_ai",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "marketplace",
       "language": "ru",
       "key": "marketplace.filters.condition",
       "value": "[MISSING_RU] condition",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.marketplace",
       "value": "[MISSING_EN] marketplace",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.createListing",
       "value": "[MISSING_EN] createListing",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.myListings",
       "value": "[MISSING_EN] myListings",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.blog",
       "value": "[MISSING_EN] blog",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.news",
       "value": "[MISSING_EN] news",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.contacts",
       "value": "[MISSING_EN] contacts",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.userContacts",
       "value": "[MISSING_EN] userContacts",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.logout",
       "value": "[MISSING_EN] logout",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.adminPanel",
       "value": "[MISSING_EN] adminPanel",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.messages",
       "value": "[MISSING_EN] messages",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.notifications",
       "value": "[MISSING_EN] notifications",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.settings",
       "value": "[MISSING_EN] settings",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.help",
       "value": "[MISSING_EN] help",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.searchPlaceholder",
       "value": "[MISSING_EN] searchPlaceholder",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.viewAll",
       "value": "[MISSING_EN] viewAll",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.moreOptions",
       "value": "[MISSING_EN] moreOptions",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.backToTop",
       "value": "[MISSING_EN] backToTop",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.fromYou",
       "value": "[MISSING_EN] fromYou",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.meters",
       "value": "[MISSING_EN] meters {count}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.kilometers",
       "value": "[MISSING_EN] kilometers {count}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.walking",
       "value": "[MISSING_EN] walking {time}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.minutes",
       "value": "[MISSING_EN] minutes {count}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.hours",
       "value": "[MISSING_EN] hours {count}",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.distance.walkingDistance",
       "value": "[MISSING_EN] walkingDistance",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.location.latitude",
       "value": "[MISSING_EN] latitude",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.location.longitude",
       "value": "[MISSING_EN] longitude",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "navigation.location.specifyLocation",
       "value": "[MISSING_EN] specifyLocation",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.parking",
       "value": "[MISSING_EN] parking",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.balcony",
       "value": "[MISSING_EN] balcony",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.elevator",
       "value": "[MISSING_EN] elevator",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.garden",
       "value": "[MISSING_EN] garden",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.swimmingPool",
       "value": "[MISSING_EN] swimmingPool",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.garage",
       "value": "[MISSING_EN] garage",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.basement",
       "value": "[MISSING_EN] basement",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.terrace",
       "value": "[MISSING_EN] terrace",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.airConditioning",
       "value": "[MISSING_EN] airConditioning",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.centralHeating",
       "value": "[MISSING_EN] centralHeating",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.partlyFurnished",
       "value": "[MISSING_EN] partlyFurnished",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.filters.quickOptions.unfurnished",
       "value": "[MISSING_EN] unfurnished",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.cluster.listings",
       "value": "[MISSING_EN] listings",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.cluster.storefronts",
       "value": "[MISSING_EN] storefronts",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.viewDetails",
       "value": "[MISSING_EN] viewDetails",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.contact",
       "value": "[MISSING_EN] contact",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.phone",
       "value": "[MISSING_EN] phone",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.address",
       "value": "[MISSING_EN] address",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.price",
       "value": "[MISSING_EN] price",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.area",
       "value": "[MISSING_EN] area",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.rooms",
       "value": "[MISSING_EN] rooms",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.year",
       "value": "[MISSING_EN] year",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.mileage",
       "value": "[MISSING_EN] mileage",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "en",
       "key": "map.popup.condition",
       "value": "[MISSING_EN] condition",
-      "placeholders": [
-        "[MISSING_EN]"
-      ]
+      "placeholders": ["[MISSING_EN]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.marketplace",
       "value": "[MISSING_RU] marketplace",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.createListing",
       "value": "[MISSING_RU] createListing",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.myListings",
       "value": "[MISSING_RU] myListings",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.blog",
       "value": "[MISSING_RU] blog",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.news",
       "value": "[MISSING_RU] news",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.contacts",
       "value": "[MISSING_RU] contacts",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.userContacts",
       "value": "[MISSING_RU] userContacts",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.logout",
       "value": "[MISSING_RU] logout",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.adminPanel",
       "value": "[MISSING_RU] adminPanel",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.messages",
       "value": "[MISSING_RU] messages",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.notifications",
       "value": "[MISSING_RU] notifications",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.settings",
       "value": "[MISSING_RU] settings",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.help",
       "value": "[MISSING_RU] help",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.searchPlaceholder",
       "value": "[MISSING_RU] searchPlaceholder",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.viewAll",
       "value": "[MISSING_RU] viewAll",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.moreOptions",
       "value": "[MISSING_RU] moreOptions",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.backToTop",
       "value": "[MISSING_RU] backToTop",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.fromYou",
       "value": "[MISSING_RU] fromYou",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.meters",
       "value": "[MISSING_RU] meters {count}",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.kilometers",
       "value": "[MISSING_RU] kilometers {count}",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.walking",
       "value": "[MISSING_RU] walking {time}",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.minutes",
       "value": "[MISSING_RU] minutes {count}",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.hours",
       "value": "[MISSING_RU] hours {count}",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.distance.walkingDistance",
       "value": "[MISSING_RU] walkingDistance",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.location.latitude",
       "value": "[MISSING_RU] latitude",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.location.longitude",
       "value": "[MISSING_RU] longitude",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "navigation.location.specifyLocation",
       "value": "[MISSING_RU] specifyLocation",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "search.notFound",
       "value": "[RU] Not Found",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "search.addressPlaceholder",
       "value": "[RU] Address Placeholder",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "search.address",
       "value": "[RU] Address",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "search.byAddress",
       "value": "[RU] By Address",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "search.byDistrict",
       "value": "[RU] By District",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.parking",
       "value": "[MISSING_RU] parking",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.balcony",
       "value": "[MISSING_RU] balcony",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.elevator",
       "value": "[MISSING_RU] elevator",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.garden",
       "value": "[MISSING_RU] garden",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.swimmingPool",
       "value": "[MISSING_RU] swimmingPool",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.garage",
       "value": "[MISSING_RU] garage",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.basement",
       "value": "[MISSING_RU] basement",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.terrace",
       "value": "[MISSING_RU] terrace",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.airConditioning",
       "value": "[MISSING_RU] airConditioning",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.centralHeating",
       "value": "[MISSING_RU] centralHeating",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.partlyFurnished",
       "value": "[MISSING_RU] partlyFurnished",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.filters.quickOptions.unfurnished",
       "value": "[MISSING_RU] unfurnished",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.cluster.listings",
       "value": "[MISSING_RU] listings",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.cluster.storefronts",
       "value": "[MISSING_RU] storefronts",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.viewDetails",
       "value": "[MISSING_RU] viewDetails",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.contact",
       "value": "[MISSING_RU] contact",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.phone",
       "value": "[MISSING_RU] phone",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.address",
       "value": "[MISSING_RU] address",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.price",
       "value": "[MISSING_RU] price",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.area",
       "value": "[MISSING_RU] area",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.rooms",
       "value": "[MISSING_RU] rooms",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.year",
       "value": "[MISSING_RU] year",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.mileage",
       "value": "[MISSING_RU] mileage",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "map.popup.condition",
       "value": "[MISSING_RU] condition",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.title",
       "value": "[RU] Title",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.category",
       "value": "[RU] Category",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.allCategories",
       "value": "[RU] All Categories",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.priceFrom",
       "value": "[RU] Price From",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.priceTo",
       "value": "[RU] Price To",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.resetFilters",
       "value": "[RU] Reset Filters",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.radius",
       "value": "[RU] Radius",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.period",
       "value": "[RU] Period",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.periods.day",
       "value": "[RU] Day",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.periods.week",
       "value": "[RU] Week",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.periods.month",
       "value": "[RU] Month",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "filters.limit",
       "value": "[RU] Limit",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "actions.apply",
       "value": "[RU] Apply",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.minutes",
       "value": "[RU] Minutes",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.km",
       "value": "[RU] Km",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.m",
       "value": "[RU] M",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.resetFilters",
       "value": "[RU] Reset Filters",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.translate",
       "value": "[RU] Translate",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.systemName",
       "value": "[RU] System Name",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.sortOrder",
       "value": "[RU] Sort Order",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.isActive",
       "value": "[RU] Is Active",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.translating",
       "value": "[RU] Translating",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.saveSuccess",
       "value": "[RU] Save Success",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.confirmDelete",
       "value": "[RU] Confirm Delete",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "ru",
       "key": "common.deleteSuccess",
       "value": "[RU] Delete Success",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "search.notFound",
       "value": "[SR] Not Found",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "search.addressPlaceholder",
       "value": "[SR] Address Placeholder",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "search.address",
       "value": "[SR] Address",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "search.byAddress",
       "value": "[SR] By Address",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "search.byDistrict",
       "value": "[SR] By District",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "countries.Сербия",
       "value": "[MISSING_SR] Сербия",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "countries.Serbia",
       "value": "[MISSING_SR] Serbia",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "countries.Srbija",
       "value": "[MISSING_SR] Srbija",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "countries.Србија",
       "value": "[MISSING_SR] Србија",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.withBalcony",
       "value": "[MISSING_SR] withBalcony",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.withParking",
       "value": "[MISSING_SR] withParking",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.withGarden",
       "value": "[MISSING_SR] withGarden",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.withGarage",
       "value": "[MISSING_SR] withGarage",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.likeNew",
       "value": "[MISSING_SR] likeNew",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.inBox",
       "value": "[MISSING_SR] inBox",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.fullTime",
       "value": "[MISSING_SR] fullTime",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.remote",
       "value": "[MISSING_SR] remote",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.filters.quickOptions.noExperience",
       "value": "[MISSING_SR] noExperience",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.results.showing",
       "value": "[MISSING_SR] showing",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.results.listings",
       "value": "[MISSING_SR] listings",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.actions.apply",
       "value": "[MISSING_SR] apply",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.actions.reset",
       "value": "[MISSING_SR] reset",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.geolocation.findMe",
       "value": "[MISSING_SR] findMe",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.geolocation.error",
       "value": "[MISSING_SR] error",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.accessibilitySettings",
       "value": "[MISSING_SR] accessibilitySettings",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.kilometers",
       "value": "[MISSING_SR] kilometers",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.meters",
       "value": "[MISSING_SR] meters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.minutes",
       "value": "[MISSING_SR] minutes",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.min",
       "value": "[MISSING_SR] min",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.byRadius",
       "value": "[MISSING_SR] byRadius",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.byWalkingTime",
       "value": "[MISSING_SR] byWalkingTime",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.searchRadius",
       "value": "[MISSING_SR] searchRadius",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.walkingTime",
       "value": "[MISSING_SR] walkingTime",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.walkingSpeedNote",
       "value": "[MISSING_SR] walkingSpeedNote",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.atAverageSpeed",
       "value": "[MISSING_SR] atAverageSpeed",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.gis.searchAreaSettings",
       "value": "[MISSING_SR] searchAreaSettings",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.showAll",
       "value": "[MISSING_SR] showAll",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.popularDistricts",
       "value": "[MISSING_SR] popularDistricts",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.walkingAccessibility",
       "value": "[MISSING_SR] walkingAccessibility",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.searchRadius",
       "value": "[MISSING_SR] searchRadius",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.minutes",
       "value": "[MISSING_SR] minutes",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.km",
       "value": "[MISSING_SR] km",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.m",
       "value": "[MISSING_SR] m",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.changeModeHint",
       "value": "[MISSING_SR] changeModeHint",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.holdForSettings",
       "value": "[MISSING_SR] holdForSettings",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.singleClickHint",
       "value": "[MISSING_SR] singleClickHint",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.mobileHint",
       "value": "[MISSING_SR] mobileHint",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.desktopHint",
       "value": "[MISSING_SR] desktopHint",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.updatingIsochrone",
       "value": "[MISSING_SR] updatingIsochrone",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.radiusControl",
       "value": "[MISSING_SR] radiusControl",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.walkingMode",
       "value": "[MISSING_SR] walkingMode",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.distanceMode",
       "value": "[MISSING_SR] distanceMode",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.minUnit",
       "value": "[MISSING_SR] minUnit",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "map.controls.kmUnit",
       "value": "[MISSING_SR] kmUnit",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "distance.meters",
       "value": "[MISSING_SR] meters {count}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "distance.kilometers",
       "value": "[MISSING_SR] kilometers {count}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "distance.walking",
       "value": "[MISSING_SR] walking {time}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "distance.minutes",
       "value": "[MISSING_SR] minutes {count}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "distance.hours",
       "value": "[MISSING_SR] hours {count}",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "stockStatus.in_stock",
       "value": "[MISSING_SR] in_stock",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "stockStatus.low_stock",
       "value": "[MISSING_SR] low_stock",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "actions.apply",
       "value": "[SR] Apply",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "actions.reset",
       "value": "[SR] Reset",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.minutes",
       "value": "[SR] Minutes",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.km",
       "value": "[SR] Km",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.m",
       "value": "[SR] M",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.resetFilters",
       "value": "[SR] Reset Filters",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.translate",
       "value": "[SR] Translate",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.systemName",
       "value": "[SR] System Name",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.sortOrder",
       "value": "[SR] Sort Order",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.isActive",
       "value": "[SR] Is Active",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.translating",
       "value": "[SR] Translating",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.saveSuccess",
       "value": "[SR] Save Success",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.confirmDelete",
       "value": "[SR] Confirm Delete",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "common.deleteSuccess",
       "value": "[SR] Delete Success",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "location.latitude",
       "value": "[MISSING_SR] latitude",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "location.longitude",
       "value": "[MISSING_SR] longitude",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "common",
       "language": "sr",
       "key": "location.specifyLocation",
       "value": "[MISSING_SR] specifyLocation",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "checkout",
       "language": "ru",
       "key": " ",
       "value": "[RU] ",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "checkout",
       "language": "sr",
       "key": " ",
       "value": "[SR] ",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "remove",
       "value": "[RU] Remove",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "empty",
       "value": "[RU] Empty",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "miniCart.title",
       "value": "[RU] Title",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "miniCart.empty",
       "value": "[RU] Empty",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "miniCart.total",
       "value": "[RU] Total",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "ru",
       "key": "miniCart.viewCart",
       "value": "[RU] View Cart",
-      "placeholders": [
-        "[RU]"
-      ]
+      "placeholders": ["[RU]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "remove",
       "value": "[SR] Remove",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "empty",
       "value": "[SR] Empty",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "clear",
       "value": "[SR] Clear",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "miniCart.title",
       "value": "[SR] Title",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "miniCart.empty",
       "value": "[SR] Empty",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "miniCart.total",
       "value": "[SR] Total",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "miniCart.viewCart",
       "value": "[SR] View Cart",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "cart",
       "language": "sr",
       "key": "miniCart.checkout",
       "value": "[SR] Checkout",
-      "placeholders": [
-        "[SR]"
-      ]
+      "placeholders": ["[SR]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.bulkTranslation",
       "value": "[MISSING_RU] bulkTranslation",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.bulkTranslationDescription",
       "value": "[MISSING_RU] bulkTranslationDescription",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.versionHistory",
       "value": "[MISSING_RU] versionHistory",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.versionHistoryDescription",
       "value": "[MISSING_RU] versionHistoryDescription",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.auditLog",
       "value": "[MISSING_RU] auditLog",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.auditLogDescription",
       "value": "[MISSING_RU] auditLogDescription",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.exportImport",
       "value": "[MISSING_RU] exportImport",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.exportImportDescription",
       "value": "[MISSING_RU] exportImportDescription",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.massTranslation",
       "value": "[MISSING_RU] massTranslation",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.entityType",
       "value": "[MISSING_RU] entityType",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.autoApprove",
       "value": "[MISSING_RU] autoApprove",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.overwriteExisting",
       "value": "[MISSING_RU] overwriteExisting",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.translationProvider",
       "value": "[MISSING_RU] translationProvider",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.automaticSelection",
       "value": "[MISSING_RU] automaticSelection",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.startBulkTranslation",
       "value": "[MISSING_RU] startBulkTranslation",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.selectEntitiesAndLanguages",
       "value": "[MISSING_RU] selectEntitiesAndLanguages",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.bulkTranslationProgress",
       "value": "[MISSING_RU] bulkTranslationProgress",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.processed",
       "value": "[MISSING_RU] processed",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.errors",
       "value": "[MISSING_RU] errors",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.skipped",
       "value": "[MISSING_RU] skipped",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.results",
       "value": "[MISSING_RU] results",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.rollbackToVersion",
       "value": "[MISSING_RU] rollbackToVersion",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.compareVersions",
       "value": "[MISSING_RU] compareVersions",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.versionComparison",
       "value": "[MISSING_RU] versionComparison",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.textChanges",
       "value": "[MISSING_RU] textChanges",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.metadataChanges",
       "value": "[MISSING_RU] metadataChanges",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.noTextChanges",
       "value": "[MISSING_RU] noTextChanges",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.was",
       "value": "[MISSING_RU] was",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.became",
       "value": "[MISSING_RU] became",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.modification",
       "value": "[MISSING_RU] modification",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.addition",
       "value": "[MISSING_RU] addition",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.deletion",
       "value": "[MISSING_RU] deletion",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.auditFilters",
       "value": "[MISSING_RU] auditFilters",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.userId",
       "value": "[MISSING_RU] userId",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.action",
       "value": "[MISSING_RU] action",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.allActions",
       "value": "[MISSING_RU] allActions",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.allEntityTypes",
       "value": "[MISSING_RU] allEntityTypes",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.dateFrom",
       "value": "[MISSING_RU] dateFrom",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.dateTo",
       "value": "[MISSING_RU] dateTo",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.clearFilters",
       "value": "[MISSING_RU] clearFilters",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.operationsLog",
       "value": "[MISSING_RU] operationsLog",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.totalOperations",
       "value": "[MISSING_RU] totalOperations",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.operationsByType",
       "value": "[MISSING_RU] operationsByType",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.userActivity",
       "value": "[MISSING_RU] userActivity",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.recentOperations",
       "value": "[MISSING_RU] recentOperations",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.operationsCount",
       "value": "[MISSING_RU] operationsCount",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.exportFormat",
       "value": "[MISSING_RU] exportFormat",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.structuredData",
       "value": "[MISSING_RU] structuredData",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.tabularFormat",
       "value": "[MISSING_RU] tabularFormat",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.industryStandard",
       "value": "[MISSING_RU] industryStandard",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.exportFilters",
       "value": "[MISSING_RU] exportFilters",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.onlyVerifiedTranslations",
       "value": "[MISSING_RU] onlyVerifiedTranslations",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.includeMetadata",
       "value": "[MISSING_RU] includeMetadata",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.importOptions",
       "value": "[MISSING_RU] importOptions",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.validateOnly",
       "value": "[MISSING_RU] validateOnly",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.selectFileOrData",
       "value": "[MISSING_RU] selectFileOrData",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.importResults",
       "value": "[MISSING_RU] importResults",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "translations.noRecordsFound",
       "value": "[MISSING_RU] noRecordsFound",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "checkError",
       "value": "[MISSING_RU] checkError",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "ru",
       "key": "required",
       "value": "[MISSING_RU] required",
-      "placeholders": [
-        "[MISSING_RU]"
-      ]
+      "placeholders": ["[MISSING_RU]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.bulkTranslation",
       "value": "[MISSING_SR] bulkTranslation",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.bulkTranslationDescription",
       "value": "[MISSING_SR] bulkTranslationDescription",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.versionHistory",
       "value": "[MISSING_SR] versionHistory",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.versionHistoryDescription",
       "value": "[MISSING_SR] versionHistoryDescription",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.auditLog",
       "value": "[MISSING_SR] auditLog",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.auditLogDescription",
       "value": "[MISSING_SR] auditLogDescription",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.exportImport",
       "value": "[MISSING_SR] exportImport",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.exportImportDescription",
       "value": "[MISSING_SR] exportImportDescription",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.massTranslation",
       "value": "[MISSING_SR] massTranslation",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.entityType",
       "value": "[MISSING_SR] entityType",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.autoApprove",
       "value": "[MISSING_SR] autoApprove",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.overwriteExisting",
       "value": "[MISSING_SR] overwriteExisting",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.translationProvider",
       "value": "[MISSING_SR] translationProvider",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.automaticSelection",
       "value": "[MISSING_SR] automaticSelection",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.startBulkTranslation",
       "value": "[MISSING_SR] startBulkTranslation",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.selectEntitiesAndLanguages",
       "value": "[MISSING_SR] selectEntitiesAndLanguages",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.bulkTranslationProgress",
       "value": "[MISSING_SR] bulkTranslationProgress",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.processed",
       "value": "[MISSING_SR] processed",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.errors",
       "value": "[MISSING_SR] errors",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.skipped",
       "value": "[MISSING_SR] skipped",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.results",
       "value": "[MISSING_SR] results",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.rollbackToVersion",
       "value": "[MISSING_SR] rollbackToVersion",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.compareVersions",
       "value": "[MISSING_SR] compareVersions",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.versionComparison",
       "value": "[MISSING_SR] versionComparison",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.textChanges",
       "value": "[MISSING_SR] textChanges",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.metadataChanges",
       "value": "[MISSING_SR] metadataChanges",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.noTextChanges",
       "value": "[MISSING_SR] noTextChanges",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.was",
       "value": "[MISSING_SR] was",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.became",
       "value": "[MISSING_SR] became",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.modification",
       "value": "[MISSING_SR] modification",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.addition",
       "value": "[MISSING_SR] addition",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.deletion",
       "value": "[MISSING_SR] deletion",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.auditFilters",
       "value": "[MISSING_SR] auditFilters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.userId",
       "value": "[MISSING_SR] userId",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.action",
       "value": "[MISSING_SR] action",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.allActions",
       "value": "[MISSING_SR] allActions",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.allEntityTypes",
       "value": "[MISSING_SR] allEntityTypes",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.dateFrom",
       "value": "[MISSING_SR] dateFrom",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.dateTo",
       "value": "[MISSING_SR] dateTo",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.clearFilters",
       "value": "[MISSING_SR] clearFilters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.operationsLog",
       "value": "[MISSING_SR] operationsLog",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.totalOperations",
       "value": "[MISSING_SR] totalOperations",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.operationsByType",
       "value": "[MISSING_SR] operationsByType",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.userActivity",
       "value": "[MISSING_SR] userActivity",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.recentOperations",
       "value": "[MISSING_SR] recentOperations",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.operationsCount",
       "value": "[MISSING_SR] operationsCount",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.exportFormat",
       "value": "[MISSING_SR] exportFormat",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.structuredData",
       "value": "[MISSING_SR] structuredData",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.tabularFormat",
       "value": "[MISSING_SR] tabularFormat",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.industryStandard",
       "value": "[MISSING_SR] industryStandard",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.exportFilters",
       "value": "[MISSING_SR] exportFilters",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.onlyVerifiedTranslations",
       "value": "[MISSING_SR] onlyVerifiedTranslations",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.includeMetadata",
       "value": "[MISSING_SR] includeMetadata",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.importOptions",
       "value": "[MISSING_SR] importOptions",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.validateOnly",
       "value": "[MISSING_SR] validateOnly",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.selectFileOrData",
       "value": "[MISSING_SR] selectFileOrData",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.importResults",
       "value": "[MISSING_SR] importResults",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     },
     {
       "module": "admin",
       "language": "sr",
       "key": "translations.noRecordsFound",
       "value": "[MISSING_SR] noRecordsFound",
-      "placeholders": [
-        "[MISSING_SR]"
-      ]
+      "placeholders": ["[MISSING_SR]"]
     }
   ]
 }

@@ -116,11 +116,11 @@ func (c *RedisTranslationCache) Delete(ctx context.Context, key string) error {
 func (c *RedisTranslationCache) DeletePattern(ctx context.Context, pattern string) error {
 	iter := c.client.Scan(ctx, 0, pattern, 0).Iterator()
 	var keys []string
-	
+
 	for iter.Next(ctx) {
 		keys = append(keys, iter.Val())
 	}
-	
+
 	if err := iter.Err(); err != nil {
 		log.Error().Err(err).Str("pattern", pattern).Msg("Failed to scan keys")
 		return err
@@ -176,35 +176,35 @@ func (c *RedisTranslationCache) BatchGet(ctx context.Context, keys []string) (ma
 // BatchSet сохраняет несколько переводов одним запросом
 func (c *RedisTranslationCache) BatchSet(ctx context.Context, data map[string]string, expiration time.Duration) error {
 	pipe := c.client.Pipeline()
-	
+
 	for key, value := range data {
 		pipe.Set(ctx, key, value, expiration)
 	}
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to batch set cache")
 		return err
 	}
-	
+
 	return nil
 }
 
 // WarmUp предзагружает переводы в кеш
 func (c *RedisTranslationCache) WarmUp(ctx context.Context, translations map[string]map[string]string) error {
 	data := make(map[string]string)
-	
+
 	for key, langs := range translations {
 		for lang, text := range langs {
 			cacheKey := fmt.Sprintf("%s%s:%s", c.prefix, key, lang)
 			data[cacheKey] = text
 		}
 	}
-	
+
 	if len(data) > 0 {
 		return c.BatchSet(ctx, data, 24*time.Hour)
 	}
-	
+
 	return nil
 }
 
@@ -212,21 +212,21 @@ func (c *RedisTranslationCache) WarmUp(ctx context.Context, translations map[str
 func (c *RedisTranslationCache) GetStats(ctx context.Context) (map[string]interface{}, error) {
 	pattern := fmt.Sprintf("%s*", c.prefix)
 	iter := c.client.Scan(ctx, 0, pattern, 0).Iterator()
-	
+
 	count := 0
 	for iter.Next(ctx) {
 		count++
 	}
-	
+
 	if err := iter.Err(); err != nil {
 		return nil, err
 	}
-	
+
 	info, err := c.client.Info(ctx, "memory").Result()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return map[string]interface{}{
 		"translation_keys": count,
 		"memory_info":      info,

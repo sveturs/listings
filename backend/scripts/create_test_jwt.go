@@ -17,11 +17,11 @@ func main() {
 
 	// Создаем claims с админскими правами
 	claims := jwt.MapClaims{
-		"user_id": 1,
-		"email":   "admin@example.com",
-		"is_admin": true,  // Важно для доступа к админке
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+		"user_id":  1,
+		"email":    "admin@example.com",
+		"is_admin": true, // Важно для доступа к админке
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
 	}
 
 	// Создаем токен

@@ -4,9 +4,9 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 
 	"backend/internal/middleware"
@@ -74,7 +74,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	ai.Post("/translate", m.aiHandler.TranslateText)
 	ai.Post("/translate-batch", m.aiHandler.TranslateBatch)
 	ai.Post("/translate-module", m.aiHandler.TranslateModule)
-	
+
 	// Cost tracking endpoints
 	ai.Get("/costs", m.aiHandler.GetCostsSummary)
 	ai.Get("/costs/alerts", m.aiHandler.GetCostAlerts)

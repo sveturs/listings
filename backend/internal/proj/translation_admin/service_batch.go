@@ -22,7 +22,7 @@ func (s *Service) LoadTranslationsForListings(ctx context.Context, listings []mo
 	if s.batchLoader == nil {
 		return fmt.Errorf("batch loader not initialized")
 	}
-	
+
 	return s.batchLoader.PreloadTranslationsForListings(ctx, listings, language)
 }
 
@@ -31,7 +31,7 @@ func (s *Service) LoadTranslationsForCategories(ctx context.Context, categories 
 	if s.batchLoader == nil {
 		return fmt.Errorf("batch loader not initialized")
 	}
-	
+
 	return s.batchLoader.PreloadTranslationsForCategories(ctx, categories, languages)
 }
 
@@ -40,7 +40,7 @@ func (s *Service) GetTranslationsBatch(ctx context.Context, entityType string, e
 	if s.batchLoader == nil {
 		return nil, fmt.Errorf("batch loader not initialized")
 	}
-	
+
 	return s.batchLoader.LoadMultipleEntitiesTranslations(ctx, entityType, entityIDs, language, fields)
 }
 
@@ -56,14 +56,14 @@ func (s *Service) TrackAIProviderUsage(ctx context.Context, provider string, inp
 			Msg("Cost tracking skipped - tracker not initialized")
 		return nil
 	}
-	
+
 	s.logger.Info().
 		Str("provider", provider).
 		Int("input_tokens", inputTokens).
 		Int("output_tokens", outputTokens).
 		Int("characters", characters).
 		Msg("TrackAIProviderUsage called with provider")
-	
+
 	switch provider {
 	case "openai":
 		return s.costTracker.TrackOpenAIUsage(ctx, "gpt-3.5-turbo", inputTokens, outputTokens)
@@ -87,7 +87,7 @@ func (s *Service) GetAIProviderCosts(ctx context.Context) (map[string]interface{
 			"error": "Cost tracking not available",
 		}, nil
 	}
-	
+
 	return s.costTracker.GetCostsSummary(ctx)
 }
 
@@ -96,7 +96,7 @@ func (s *Service) GetAIProviderAlerts(ctx context.Context, dailyLimit, monthlyLi
 	if s.costTracker == nil {
 		return []string{}, nil
 	}
-	
+
 	return s.costTracker.GetCostAlerts(ctx, dailyLimit, monthlyLimit)
 }
 
@@ -105,6 +105,6 @@ func (s *Service) ResetAIProviderCosts(ctx context.Context, provider string) err
 	if s.costTracker == nil {
 		return fmt.Errorf("cost tracker not initialized")
 	}
-	
+
 	return s.costTracker.ResetProviderCosts(ctx, provider)
 }

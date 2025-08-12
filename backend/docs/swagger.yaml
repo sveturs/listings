@@ -3707,6 +3707,30 @@ definitions:
       word_count:
         type: integer
     type: object
+  backend_internal_domain_models.TranslationProvider:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      priority:
+        type: integer
+      provider_type:
+        type: string
+      settings:
+        additionalProperties: true
+        type: object
+      updated_at:
+        type: string
+      usage_current:
+        type: integer
+      usage_limit:
+        type: integer
+    type: object
   backend_internal_domain_models.TranslationStatistics:
     properties:
       complete_translations:
@@ -5387,6 +5411,15 @@ definitions:
       total:
         type: integer
     type: object
+  backend_internal_proj_translation_admin_ratelimit.Status:
+    properties:
+      limit:
+        type: integer
+      remaining:
+        type: integer
+      reset:
+        type: string
+    type: object
   backend_internal_services.UploadImageResponse:
     properties:
       display_order:
@@ -6965,6 +6998,29 @@ definitions:
           $ref: '#/definitions/backend_internal_domain_models.Storefront'
         type: array
       total:
+        type: integer
+    type: object
+  internal_proj_translation_admin.ProviderCosts:
+    properties:
+      daily_costs:
+        additionalProperties:
+          type: number
+        description: map[date]cost
+        type: object
+      hourly_costs:
+        additionalProperties:
+          type: number
+        description: map[hour]cost
+        type: object
+      last_updated:
+        type: string
+      provider:
+        type: string
+      total_cost:
+        type: number
+      total_requests:
+        type: integer
+      total_tokens:
         type: integer
     type: object
   internal_proj_users_handler.AdminAdminsResponse:
@@ -11066,6 +11122,138 @@ paths:
       summary: Apply AI-generated translations
       tags:
       - Translation Admin
+  /api/v1/admin/translations/ai/costs:
+    get:
+      consumes:
+      - application/json
+      description: Returns summary of AI translation costs across all providers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get AI translation costs summary
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/costs/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed cost information for a specific AI provider
+      parameters:
+      - description: Provider name (openai, google, deepl, claude)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_translation_admin.ProviderCosts'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get detailed costs for a specific provider
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/costs/{provider}/reset:
+    post:
+      consumes:
+      - application/json
+      description: Resets cost tracking for a specific provider
+      parameters:
+      - description: Provider name (openai, google, deepl, claude)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Reset AI provider costs
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/costs/alerts:
+    get:
+      consumes:
+      - application/json
+      description: Returns alerts if costs exceed specified limits
+      parameters:
+      - default: 100
+        description: Daily cost limit in USD
+        in: query
+        name: daily_limit
+        type: number
+      - default: 2000
+        description: Monthly cost limit in USD
+        in: query
+        name: monthly_limit
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get AI translation cost alerts
+      tags:
+      - Translation Admin
   /api/v1/admin/translations/ai/providers:
     get:
       description: Returns list of configured AI translation providers
@@ -11089,6 +11277,30 @@ paths:
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Get available AI translation providers
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/ai/rate-limit-status:
+    get:
+      description: Returns current rate limit status for all AI translation providers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    $ref: '#/definitions/backend_internal_proj_translation_admin_ratelimit.Status'
+                  type: object
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get rate limit status for AI providers
       tags:
       - Translation Admin
   /api/v1/admin/translations/ai/translate:
@@ -11772,6 +11984,72 @@ paths:
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Advanced import translations
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/providers:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of available translation providers (Claude, DeepL,
+        etc.)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.TranslationProvider'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get all translation providers
+      tags:
+      - Translation Admin
+  /api/v1/admin/translations/providers/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Updates provider settings and configuration
+      parameters:
+      - description: Provider ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Provider configuration
+        in: body
+        name: provider
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.TranslationProvider'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update translation provider configuration
       tags:
       - Translation Admin
   /api/v1/admin/translations/stats/overview:

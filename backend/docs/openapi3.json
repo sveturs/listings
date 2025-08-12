@@ -6081,6 +6081,247 @@
                 }
             }
         },
+        "/api/v1/admin/translations/ai/costs": {
+            "get": {
+                "description": "Returns summary of AI translation costs across all providers",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Get AI translation costs summary",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/ai/costs/alerts": {
+            "get": {
+                "description": "Returns alerts if costs exceed specified limits",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Get AI translation cost alerts",
+                "parameters": [
+                    {
+                        "description": "Daily cost limit in USD",
+                        "name": "daily_limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "number",
+                            "default": 100
+                        }
+                    },
+                    {
+                        "description": "Monthly cost limit in USD",
+                        "name": "monthly_limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "number",
+                            "default": 2000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/ai/costs/{provider}": {
+            "get": {
+                "description": "Returns detailed cost information for a specific AI provider",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Get detailed costs for a specific provider",
+                "parameters": [
+                    {
+                        "description": "Provider name (openai, google, deepl, claude)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_translation_admin.ProviderCosts"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/ai/costs/{provider}/reset": {
+            "post": {
+                "description": "Resets cost tracking for a specific provider",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Reset AI provider costs",
+                "parameters": [
+                    {
+                        "description": "Provider name (openai, google, deepl, claude)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/translations/ai/providers": {
             "get": {
                 "description": "Returns list of configured AI translation providers",
@@ -6106,6 +6347,52 @@
                                                     "items": {
                                                         "type": "object",
                                                         "additionalProperties": true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/ai/rate-limit-status": {
+            "get": {
+                "description": "Returns current rate limit status for all AI translation providers",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Get rate limit status for AI providers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "$ref": "#/components/schemas/backend_internal_proj_translation_admin_ratelimit.Status"
                                                     }
                                                 }
                                             }
@@ -7372,6 +7659,125 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/providers": {
+            "get": {
+                "description": "Returns list of available translation providers (Claude, DeepL, etc.)",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Get all translation providers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.TranslationProvider"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/providers/{id}": {
+            "put": {
+                "description": "Updates provider settings and configuration",
+                "tags": [
+                    "Translation Admin"
+                ],
+                "summary": "Update translation provider configuration",
+                "parameters": [
+                    {
+                        "description": "Provider ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.TranslationProvider"
+                            }
+                        }
+                    },
+                    "description": "Provider configuration",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -35744,6 +36150,42 @@
                     }
                 }
             },
+            "backend_internal_domain_models.TranslationProvider": {
+                "type": "object",
+                "properties": {
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "integer"
+                    },
+                    "provider_type": {
+                        "type": "string"
+                    },
+                    "settings": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "usage_current": {
+                        "type": "integer"
+                    },
+                    "usage_limit": {
+                        "type": "integer"
+                    }
+                }
+            },
             "backend_internal_domain_models.TranslationStatistics": {
                 "type": "object",
                 "properties": {
@@ -38229,6 +38671,20 @@
                     }
                 }
             },
+            "backend_internal_proj_translation_admin_ratelimit.Status": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "remaining": {
+                        "type": "integer"
+                    },
+                    "reset": {
+                        "type": "string"
+                    }
+                }
+            },
             "backend_internal_services.UploadImageResponse": {
                 "type": "object",
                 "properties": {
@@ -40541,6 +40997,40 @@
                         }
                     },
                     "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "internal_proj_translation_admin.ProviderCosts": {
+                "type": "object",
+                "properties": {
+                    "daily_costs": {
+                        "description": "map[date]cost",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
+                    },
+                    "hourly_costs": {
+                        "description": "map[hour]cost",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
+                    },
+                    "last_updated": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "total_cost": {
+                        "type": "number"
+                    },
+                    "total_requests": {
+                        "type": "integer"
+                    },
+                    "total_tokens": {
                         "type": "integer"
                     }
                 }
