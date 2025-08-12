@@ -55,19 +55,55 @@ export default function AICostsMonitor() {
       
       // Fetch costs summary
       const costsResponse = await api.get('/admin/translations/ai/costs');
-      if (costsResponse.success) {
+      if (costsResponse.success && costsResponse.data) {
         setCostsSummary(costsResponse.data);
+      } else {
+        // Set default empty data if no response
+        setCostsSummary({
+          total_cost: 0,
+          total_tokens: 0,
+          total_requests: 0,
+          today_cost: 0,
+          month_cost: 0,
+          by_provider: {},
+          today_by_provider: {},
+          month_by_provider: {},
+        });
       }
       
       // Fetch alerts
       const alertsResponse = await api.get(
         `/admin/translations/ai/costs/alerts?daily_limit=${dailyLimit}&monthly_limit=${monthlyLimit}`
       );
-      if (alertsResponse.success) {
+      if (alertsResponse.success && alertsResponse.data) {
         setAlerts(alertsResponse.data);
+      } else {
+        setAlerts({
+          alerts: [],
+          daily_limit: dailyLimit,
+          monthly_limit: monthlyLimit,
+          has_alerts: false,
+        });
       }
     } catch (error) {
       console.error('Failed to fetch costs data:', error);
+      // Set default data on error
+      setCostsSummary({
+        total_cost: 0,
+        total_tokens: 0,
+        total_requests: 0,
+        today_cost: 0,
+        month_cost: 0,
+        by_provider: {},
+        today_by_provider: {},
+        month_by_provider: {},
+      });
+      setAlerts({
+        alerts: [],
+        daily_limit: dailyLimit,
+        monthly_limit: monthlyLimit,
+        has_alerts: false,
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -226,7 +262,7 @@ export default function AICostsMonitor() {
                 </tr>
               </thead>
               <tbody>
-                {costsSummary?.by_provider &&
+                {costsSummary?.by_provider && Object.keys(costsSummary.by_provider).length > 0 ? (
                   Object.entries(costsSummary.by_provider).map(
                     ([provider, data]) => (
                       <tr key={provider}>
@@ -254,7 +290,28 @@ export default function AICostsMonitor() {
                         </td>
                       </tr>
                     )
-                  )}
+                  )
+                ) : (
+                  // Show default providers when no data
+                  ['openai', 'google', 'deepl', 'claude'].map((provider) => (
+                    <tr key={provider}>
+                      <td className="font-medium capitalize">{provider}</td>
+                      <td>{formatCurrency(0)}</td>
+                      <td>{formatCurrency(0)}</td>
+                      <td>{formatCurrency(0)}</td>
+                      <td>{formatNumber(0)}</td>
+                      <td>{formatNumber(0)}</td>
+                      <td>
+                        <button
+                          className="btn btn-xs btn-ghost"
+                          disabled
+                        >
+                          Сбросить
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

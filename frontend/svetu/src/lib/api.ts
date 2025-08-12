@@ -24,13 +24,22 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}/api/v1${endpoint}`;
     
+    // Get JWT token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
+    
+    const headers: HeadersInit = {
+      ...this.defaultHeaders,
+      ...options.headers,
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     try {
       const response = await fetch(url, {
         ...options,
-        headers: {
-          ...this.defaultHeaders,
-          ...options.headers,
-        },
+        headers,
         credentials: 'include',
       });
 
