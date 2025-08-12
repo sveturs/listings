@@ -128,7 +128,10 @@ export default function AICostsMonitor() {
 
     try {
       // Use local API route that handles authentication
-      const response = await fetch('/api/admin/translations/costs', {
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/admin/translations/costs`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -214,11 +217,13 @@ export default function AICostsMonitor() {
   };
 
   const formatCurrency = (amount: number) => {
+    // Для очень маленьких сумм показываем больше знаков после запятой
+    const fractionDigits = amount < 0.01 && amount > 0 ? 6 : 2;
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
   };
 
