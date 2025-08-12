@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   CurrencyDollarIcon,
@@ -11,6 +11,21 @@ import {
   ChartBarIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 interface ProviderCosts {
   provider: string;
@@ -210,6 +225,63 @@ export default function AICostsMonitor() {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('ru-RU').format(num);
   };
+
+  // Подготовка данных для графика расходов по дням
+  const chartData = useMemo(() => {
+    if (!costsSummary) return [];
+
+    // Собираем все уникальные даты из всех провайдеров
+    const allDates = new Set<string>();
+    Object.values(costsSummary.by_provider).forEach((provider) => {
+      Object.keys(provider.daily_costs).forEach((date) => allDates.add(date));
+    });
+
+    // Сортируем даты и берем последние 7 дней
+    const sortedDates = Array.from(allDates).sort();
+    const last7Days = sortedDates.slice(-7);
+
+    // Формируем данные для графика
+    return last7Days.map((date) => {
+      const dataPoint: any = {
+        date: new Date(date).toLocaleDateString('ru-RU', {
+          day: 'numeric',
+          month: 'short',
+        }),
+        total: 0,
+      };
+
+      // Добавляем данные по каждому провайдеру
+      Object.entries(costsSummary.by_provider).forEach(([provider, data]) => {
+        const cost = data.daily_costs[date] || 0;
+        dataPoint[provider] = cost;
+        dataPoint.total += cost;
+      });
+
+      return dataPoint;
+    });
+  }, [costsSummary]);
+
+  // Подготовка данных для круговой диаграммы
+  const pieData = useMemo(() => {
+    if (!costsSummary) return [];
+
+    return Object.entries(costsSummary.by_provider)
+      .filter(([_, data]) => data.total_cost > 0)
+      .map(([provider, data]) => ({
+        name: provider.charAt(0).toUpperCase() + provider.slice(1),
+        value: data.total_cost,
+      }));
+  }, [costsSummary]);
+
+  // Цвета для провайдеров
+  const COLORS = {
+    openai: '#10a37f',
+    google: '#4285f4',
+    deepl: '#0f2b46',
+    claude: '#d97757',
+  };
+
+  const PIE_COLORS = ['#10a37f', '#4285f4', '#0f2b46', '#d97757'];
 
   if (loading) {
     return (
@@ -428,17 +500,138 @@ export default function AICostsMonitor() {
         </div>
       </div>
 
-      {/* Cost Breakdown Chart (placeholder) */}
+      {/* Графики расходов */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* График расходов по дням */}
+        <div className="card bg-base-100">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Расходы по дням</h2>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    name="Всего"
+                  />
+                  {Object.keys(COLORS).map((provider) => (
+                    <Line
+                      key={provider}
+                      type="monotone"
+                      dataKey={provider}
+                      stroke={COLORS[provider as keyof typeof COLORS]}
+                      strokeWidth={1}
+                      name={provider.charAt(0).toUpperCase() + provider.slice(1)}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-64 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg">
+                <div className="text-center text-base-content/60">
+                  <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
+                  <p>Нет данных для отображения</p>
+                  <p className="text-sm mt-1">Данные появятся после использования AI переводов</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Круговая диаграмма распределения по провайдерам */}
+        <div className="card bg-base-100">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Распределение по провайдерам</h2>
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-64 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg">
+                <div className="text-center text-base-content/60">
+                  <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
+                  <p>Нет данных для отображения</p>
+                  <p className="text-sm mt-1">Данные появятся после использования AI переводов</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Почасовая статистика за сегодня */}
       <div className="card bg-base-100">
         <div className="card-body">
-          <h2 className="card-title mb-4">График расходов</h2>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg">
-            <div className="text-center text-base-content/60">
-              <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
-              <p>График расходов по дням</p>
-              <p className="text-sm mt-1">Будет добавлен в следующей версии</p>
-            </div>
-          </div>
+          <h2 className="card-title mb-4">Почасовая статистика за сегодня</h2>
+          {(() => {
+            // Подготовка данных для почасового графика
+            const hourlyData: any[] = [];
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (costsSummary) {
+              for (let hour = 0; hour < 24; hour++) {
+                const hourKey = `${today}T${hour.toString().padStart(2, '0')}`;
+                let totalCost = 0;
+                
+                Object.values(costsSummary.by_provider).forEach((provider) => {
+                  if (provider.hourly_costs[hourKey]) {
+                    totalCost += provider.hourly_costs[hourKey];
+                  }
+                });
+                
+                if (totalCost > 0) {
+                  hourlyData.push({
+                    hour: `${hour}:00`,
+                    cost: totalCost,
+                  });
+                }
+              }
+            }
+            
+            return hourlyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Bar dataKey="cost" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-32 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg">
+                <div className="text-center text-base-content/60">
+                  <p>Нет активности за сегодня</p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
