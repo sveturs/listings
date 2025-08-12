@@ -73,7 +73,11 @@
     "BA": "Bosnia and Herzegovina",
     "HR": "Croatia",
     "ME": "Montenegro",
-    "MK": "North Macedonia"
+    "MK": "North Macedonia",
+    "Сербия": "[MISSING_SR] Сербия",
+    "Serbia": "[MISSING_SR] Serbia",
+    "Srbija": "[MISSING_SR] Srbija",
+    "Србија": "[MISSING_SR] Србија"
   },
   "header": {
     "nav": {
@@ -155,7 +159,16 @@
         "airConditioning": "Sa klima uređajem",
         "centralHeating": "Centralno grejanje",
         "partlyFurnished": "Polunamešten",
-        "unfurnished": "Nenamešten"
+        "unfurnished": "Nenamešten",
+        "withBalcony": "[MISSING_SR] withBalcony",
+        "withParking": "[MISSING_SR] withParking",
+        "withGarden": "[MISSING_SR] withGarden",
+        "withGarage": "[MISSING_SR] withGarage",
+        "likeNew": "[MISSING_SR] likeNew",
+        "inBox": "[MISSING_SR] inBox",
+        "fullTime": "[MISSING_SR] fullTime",
+        "remote": "[MISSING_SR] remote",
+        "noExperience": "[MISSING_SR] noExperience"
       }
     },
     "cluster": {
@@ -173,6 +186,52 @@
       "year": "Godina",
       "mileage": "Kilometraža",
       "condition": "Stanje"
+    },
+    "results": {
+      "showing": "[MISSING_SR] showing",
+      "listings": "[MISSING_SR] listings"
+    },
+    "actions": {
+      "apply": "[MISSING_SR] apply",
+      "reset": "[MISSING_SR] reset"
+    },
+    "geolocation": {
+      "findMe": "[MISSING_SR] findMe",
+      "error": "[MISSING_SR] error"
+    },
+    "gis": {
+      "accessibilitySettings": "[MISSING_SR] accessibilitySettings",
+      "kilometers": "[MISSING_SR] kilometers",
+      "meters": "[MISSING_SR] meters",
+      "minutes": "[MISSING_SR] minutes",
+      "min": "[MISSING_SR] min",
+      "byRadius": "[MISSING_SR] byRadius",
+      "byWalkingTime": "[MISSING_SR] byWalkingTime",
+      "searchRadius": "[MISSING_SR] searchRadius",
+      "walkingTime": "[MISSING_SR] walkingTime",
+      "walkingSpeedNote": "[MISSING_SR] walkingSpeedNote",
+      "atAverageSpeed": "[MISSING_SR] atAverageSpeed",
+      "searchAreaSettings": "[MISSING_SR] searchAreaSettings"
+    },
+    "showAll": "[MISSING_SR] showAll",
+    "popularDistricts": "[MISSING_SR] popularDistricts",
+    "controls": {
+      "walkingAccessibility": "[MISSING_SR] walkingAccessibility",
+      "searchRadius": "[MISSING_SR] searchRadius",
+      "minutes": "[MISSING_SR] minutes",
+      "km": "[MISSING_SR] km",
+      "m": "[MISSING_SR] m",
+      "changeModeHint": "[MISSING_SR] changeModeHint",
+      "holdForSettings": "[MISSING_SR] holdForSettings",
+      "singleClickHint": "[MISSING_SR] singleClickHint",
+      "mobileHint": "[MISSING_SR] mobileHint",
+      "desktopHint": "[MISSING_SR] desktopHint",
+      "updatingIsochrone": "[MISSING_SR] updatingIsochrone",
+      "radiusControl": "[MISSING_SR] radiusControl",
+      "walkingMode": "[MISSING_SR] walkingMode",
+      "distanceMode": "[MISSING_SR] distanceMode",
+      "minUnit": "[MISSING_SR] minUnit",
+      "kmUnit": "[MISSING_SR] kmUnit"
     }
   },
   "justNow": "Upravo sada",
@@ -199,7 +258,12 @@
   },
   "distance": {
     "fromYou": "Od vas",
-    "walkingDistance": "Pešačka udaljenost"
+    "walkingDistance": "Pešačka udaljenost",
+    "meters": "[MISSING_SR] meters {count}",
+    "kilometers": "[MISSING_SR] kilometers {count}",
+    "walking": "[MISSING_SR] walking {time}",
+    "minutes": "[MISSING_SR] minutes {count}",
+    "hours": "[MISSING_SR] hours {count}"
   },
   "products": {
     "title": "Naslov",
@@ -246,7 +310,9 @@
   "addToCart": "Dodaj u korpu",
   "quickView": "Brzi pregled",
   "stockStatus": {
-    "out_of_stock": "Nema na stanju"
+    "out_of_stock": "Nema na stanju",
+    "in_stock": "[MISSING_SR] in_stock",
+    "low_stock": "[MISSING_SR] low_stock"
   },
   "storefront": "Prodavnica",
   "units": "Jedinice",
@@ -567,5 +633,10 @@
     "saveSuccess": "[SR] Save Success",
     "confirmDelete": "[SR] Confirm Delete",
     "deleteSuccess": "[SR] Delete Success"
+  },
+  "location": {
+    "latitude": "[MISSING_SR] latitude",
+    "longitude": "[MISSING_SR] longitude",
+    "specifyLocation": "[MISSING_SR] specifyLocation"
   }
 }

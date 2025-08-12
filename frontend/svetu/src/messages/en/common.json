@@ -16,7 +16,38 @@
     "create": "Create",
     "chats": "Chats",
     "profile": "Profile",
-    "close": "Close"
+    "close": "Close",
+    "marketplace": "[MISSING_EN] marketplace",
+    "createListing": "[MISSING_EN] createListing",
+    "myListings": "[MISSING_EN] myListings",
+    "blog": "[MISSING_EN] blog",
+    "news": "[MISSING_EN] news",
+    "contacts": "[MISSING_EN] contacts",
+    "userContacts": "[MISSING_EN] userContacts",
+    "logout": "[MISSING_EN] logout",
+    "adminPanel": "[MISSING_EN] adminPanel",
+    "messages": "[MISSING_EN] messages",
+    "notifications": "[MISSING_EN] notifications",
+    "settings": "[MISSING_EN] settings",
+    "help": "[MISSING_EN] help",
+    "searchPlaceholder": "[MISSING_EN] searchPlaceholder",
+    "viewAll": "[MISSING_EN] viewAll",
+    "moreOptions": "[MISSING_EN] moreOptions",
+    "backToTop": "[MISSING_EN] backToTop",
+    "distance": {
+      "fromYou": "[MISSING_EN] fromYou",
+      "meters": "[MISSING_EN] meters {count}",
+      "kilometers": "[MISSING_EN] kilometers {count}",
+      "walking": "[MISSING_EN] walking {time}",
+      "minutes": "[MISSING_EN] minutes {count}",
+      "hours": "[MISSING_EN] hours {count}",
+      "walkingDistance": "[MISSING_EN] walkingDistance"
+    },
+    "location": {
+      "latitude": "[MISSING_EN] latitude",
+      "longitude": "[MISSING_EN] longitude",
+      "specifyLocation": "[MISSING_EN] specifyLocation"
+    }
   },
   "search": {
     "notFound": "Not Found",
@@ -125,7 +156,19 @@
         "inBox": "In box",
         "fullTime": "Full time",
         "remote": "Remote",
-        "noExperience": "No experience"
+        "noExperience": "No experience",
+        "parking": "[MISSING_EN] parking",
+        "balcony": "[MISSING_EN] balcony",
+        "elevator": "[MISSING_EN] elevator",
+        "garden": "[MISSING_EN] garden",
+        "swimmingPool": "[MISSING_EN] swimmingPool",
+        "garage": "[MISSING_EN] garage",
+        "basement": "[MISSING_EN] basement",
+        "terrace": "[MISSING_EN] terrace",
+        "airConditioning": "[MISSING_EN] airConditioning",
+        "centralHeating": "[MISSING_EN] centralHeating",
+        "partlyFurnished": "[MISSING_EN] partlyFurnished",
+        "unfurnished": "[MISSING_EN] unfurnished"
       }
     },
     "results": {
@@ -173,6 +216,22 @@
       "distanceMode": "Distance mode",
       "minUnit": "min",
       "kmUnit": "km"
+    },
+    "cluster": {
+      "listings": "[MISSING_EN] listings",
+      "storefronts": "[MISSING_EN] storefronts"
+    },
+    "popup": {
+      "viewDetails": "[MISSING_EN] viewDetails",
+      "contact": "[MISSING_EN] contact",
+      "phone": "[MISSING_EN] phone",
+      "address": "[MISSING_EN] address",
+      "price": "[MISSING_EN] price",
+      "area": "[MISSING_EN] area",
+      "rooms": "[MISSING_EN] rooms",
+      "year": "[MISSING_EN] year",
+      "mileage": "[MISSING_EN] mileage",
+      "condition": "[MISSING_EN] condition"
     }
   },
   "justNow": "Just now",

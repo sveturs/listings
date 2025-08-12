@@ -794,7 +794,11 @@
       "default": "Po defaultu",
       "back": "Nazad",
       "generateVariants": "Generiši varijante",
-      "noVariantAttributes": "Za ovu kategoriju varijantni atributi nisu dostupni"
+      "noVariantAttributes": "Za ovu kategoriju varijantni atributi nisu dostupni",
+      "selectDifferentCategory": "[MISSING_SR] selectDifferentCategory",
+      "stockSettings": "[MISSING_SR] stockSettings",
+      "defaultStockQuantity": "[MISSING_SR] defaultStockQuantity",
+      "useIndividualQuantities": "[MISSING_SR] useIndividualQuantities"
     },
     "noProducts": "Roba još nije dodana",
     "storeInfo": "Informacije o prodavnici",
@@ -1381,7 +1385,8 @@
       "select_district": "Izaberite opštinu",
       "select_municipality": "Izaberite municipalitet",
       "loading": "Učitavanje...",
-      "load_error": "Greška učitavanja podataka"
+      "load_error": "Greška učitavanja podataka",
+      "districts_in": "[MISSING_SR] districts_in"
     },
     "directions": {
       "driving": "Automobilom",
@@ -1843,7 +1848,9 @@
         "recommendations": "Preporuke",
         "social_proof": "{count} prodavac je koristio AI danas",
         "location_picker_title": "Izaberite lokaciju",
-        "location_updated": "Lokacija je ažurirana!"
+        "location_updated": "Lokacija je ažurirana!",
+        "ai_insights": "[MISSING_SR] ai_insights",
+        "sellers_used_ai": "[MISSING_SR] sellers_used_ai"
       },
       "errors": {
         "ai_processing": "Došlo je do greške pri analizi. Proverite internet konekciju i pokušajte ponovo.",

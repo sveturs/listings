@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/internal/proj/translation_admin/cache"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )
 
@@ -34,6 +36,7 @@ type Service struct {
 	mutex           sync.RWMutex
 	translationRepo TranslationRepository
 	auditRepo       AuditRepository
+	cache           *cache.RedisTranslationCache
 }
 
 // TranslationRepository interface for database operations
@@ -64,7 +67,15 @@ type AuditRepository interface {
 }
 
 // NewService creates a new translation admin service
-func NewService(logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository) *Service {
+func NewService(logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository, redisClient *redis.Client) *Service {
+	var translationCache *cache.RedisTranslationCache
+	if redisClient != nil {
+		translationCache = cache.NewRedisTranslationCache(redisClient)
+		logger.Info().Msg("Redis cache enabled for translations")
+	} else {
+		logger.Warn().Msg("Redis client not provided, caching disabled for translations")
+	}
+	
 	return &Service{
 		logger:          logger,
 		frontendPath:    frontendPath,
@@ -72,6 +83,7 @@ func NewService(logger zerolog.Logger, frontendPath string, translationRepo Tran
 		modules:         []string{"common", "auth", "profile", "marketplace", "admin", "storefronts", "cars", "chat", "cart", "checkout", "realEstate", "search", "services", "map", "misc", "notifications", "orders", "products", "reviews"},
 		translationRepo: translationRepo,
 		auditRepo:       auditRepo,
+		cache:           translationCache,
 	}
 }
 

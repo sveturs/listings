@@ -646,7 +646,9 @@
         "recommendations": "Рекомендации",
         "social_proof": "{count} продавца использовали AI сегодня",
         "location_picker_title": "Выберите местоположение",
-        "location_updated": "Местоположение обновлено!"
+        "location_updated": "Местоположение обновлено!",
+        "ai_insights": "[MISSING_RU] ai_insights",
+        "sellers_used_ai": "[MISSING_RU] sellers_used_ai"
       },
       "errors": {
         "ai_processing": "Произошла ошибка при анализе. Проверьте подключение к интернету и попробуйте еще раз.",
@@ -1226,7 +1228,11 @@
       "default": "По умолчанию",
       "back": "Назад",
       "generateVariants": "Сгенерировать варианты",
-      "noVariantAttributes": "Для данной категории вариативные атрибуты недоступны"
+      "noVariantAttributes": "Для данной категории вариативные атрибуты недоступны",
+      "selectDifferentCategory": "[MISSING_RU] selectDifferentCategory",
+      "stockSettings": "[MISSING_RU] stockSettings",
+      "defaultStockQuantity": "[MISSING_RU] defaultStockQuantity",
+      "useIndividualQuantities": "[MISSING_RU] useIndividualQuantities"
     },
     "noProducts": "Товары пока не добавлены",
     "storeInfo": "Информация о магазине",
@@ -1813,7 +1819,8 @@
       "select_district": "Выберите район",
       "select_municipality": "Выберите муниципалитет",
       "loading": "Загрузка...",
-      "load_error": "Ошибка загрузки данных"
+      "load_error": "Ошибка загрузки данных",
+      "districts_in": "[MISSING_RU] districts_in"
     },
     "directions": {
       "driving": "На автомобиле",

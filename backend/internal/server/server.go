@@ -8,12 +8,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/gofiber/websocket/v2"
 	pkgErrors "github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	_ "backend/docs"
+	"backend/internal/cache"
 	"backend/internal/config"
 	"backend/internal/logger"
 	"backend/internal/middleware"
@@ -74,6 +77,19 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, pkgErrors.Wrap(err, "Ошибка инициализации файлового хранилища")
 	}
 
+	// Инициализируем Redis для кеширования переводов
+	var redisClient *redis.Client
+	if cfg.Redis.URL != "" {
+		logrusLogger := logrus.New()
+		redisCache, err := cache.NewRedisCache(ctx, cfg.Redis.URL, cfg.Redis.Password, cfg.Redis.DB, cfg.Redis.PoolSize, logrusLogger)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to initialize Redis cache, continuing without cache")
+		} else {
+			redisClient = redisCache.GetClient()
+			logger.Info().Msg("Redis cache initialized successfully")
+		}
+	}
+
 	osClient, err := initializeOpenSearch(cfg)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "OpenSearch initialization failed")
@@ -114,7 +130,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
-	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system")
+	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient)
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
