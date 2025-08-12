@@ -109,17 +109,77 @@ export default function AICostsMonitor() {
   };
 
   const fetchCostsData = async () => {
-    // Skip API call for now and use demo data
     setRefreshing(true);
-    setTimeout(() => {
+    
+    try {
+      // Use local API route that handles authentication
+      const response = await fetch('/api/admin/translations/costs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      console.log('Costs API response:', response.status);
+      
+      if (!response.ok) {
+        console.error('Failed to fetch costs:', response.status);
+        initializeDemoData();
+        setIsDemo(true);
+        setRefreshing(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Costs data received:', data);
+      
+      if (data.success && data.data) {
+        console.log('Setting real costs data:', data.data);
+        setCostsSummary(data.data);
+        setIsDemo(false);
+        
+        // Check alerts
+        const alertsData = {
+          alerts: [],
+          daily_limit: dailyLimit,
+          monthly_limit: monthlyLimit,
+          has_alerts: false,
+        };
+        
+        if (data.data.today_cost > dailyLimit * 0.8) {
+          alertsData.alerts.push(`Дневной расход приближается к лимиту: ${formatCurrency(data.data.today_cost)} из ${formatCurrency(dailyLimit)}`);
+          alertsData.has_alerts = true;
+        }
+        
+        if (data.data.month_cost > monthlyLimit * 0.8) {
+          alertsData.alerts.push(`Месячный расход приближается к лимиту: ${formatCurrency(data.data.month_cost)} из ${formatCurrency(monthlyLimit)}`);
+          alertsData.has_alerts = true;
+        }
+        
+        setAlerts(alertsData);
+      } else {
+        initializeDemoData();
+        setIsDemo(true);
+      }
+    } catch (error) {
+      console.error('Error fetching costs:', error);
       initializeDemoData();
-      setRefreshing(false);
       setIsDemo(true);
-    }, 500);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
     fetchCostsData();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchCostsData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, [dailyLimit, monthlyLimit]);
 
   const resetProviderCosts = async (provider: string) => {
@@ -127,7 +187,10 @@ export default function AICostsMonitor() {
       return;
     }
     
-    // In demo mode, just refresh the data
+    // For now, just refresh the data since reset endpoint might not exist
+    // TODO: Implement reset endpoint when needed
+    console.log('Reset requested for provider:', provider);
+    alert('Функция сброса будет добавлена в следующей версии');
     fetchCostsData();
   };
 

@@ -146,6 +146,14 @@ func (t *CostTracker) trackUsage(ctx context.Context, provider string, cost floa
 	dateKey := now.Format("2006-01-02")
 	hourKey := now.Format("2006-01-02T15")
 	
+	log.Info().
+		Str("provider", provider).
+		Float64("cost", cost).
+		Int64("tokens", tokens).
+		Str("date", dateKey).
+		Str("hour", hourKey).
+		Msg("trackUsage called")
+	
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	
@@ -158,13 +166,28 @@ func (t *CostTracker) trackUsage(ctx context.Context, provider string, cost floa
 		costs.DailyCosts[dateKey] += cost
 		costs.HourlyCosts[hourKey] += cost
 		
+		log.Info().
+			Str("provider", provider).
+			Float64("total_cost", costs.TotalCost).
+			Int64("total_tokens", costs.TotalTokens).
+			Int64("total_requests", costs.TotalRequests).
+			Msg("Updated in-memory costs")
+		
 		// Очищаем старые данные (храним только последние 30 дней и 24 часа)
 		t.cleanupOldData(costs)
 	}
 	
 	// Сохраняем в Redis если доступно
 	if t.useRedis {
-		return t.saveToRedis(ctx, provider)
+		log.Info().Str("provider", provider).Msg("Saving to Redis")
+		err := t.saveToRedis(ctx, provider)
+		if err != nil {
+			log.Error().Err(err).Str("provider", provider).Msg("Failed to save to Redis")
+			return err
+		}
+		log.Info().Str("provider", provider).Msg("Successfully saved to Redis")
+	} else {
+		log.Info().Msg("Redis not available, using in-memory storage only")
 	}
 	
 	return nil

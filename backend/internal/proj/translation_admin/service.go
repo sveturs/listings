@@ -1372,6 +1372,12 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 		Interface("target_langs", req.TargetLanguages).
 		Msg("Translating text with AI")
 
+	// Определяем провайдера
+	provider := req.Provider
+	if provider == "" {
+		provider = "openai" // default provider
+	}
+
 	// Mock implementation
 	translations := make(map[string]string)
 	for _, lang := range req.TargetLanguages {
@@ -1388,11 +1394,37 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 		}
 	}
 
+	// Отслеживаем использование AI провайдера
+	// Приблизительный расчет токенов (4 символа = 1 токен)
+	textLength := len(req.Text)
+	inputTokens := textLength / 4
+	outputTokens := textLength / 4 * len(req.TargetLanguages) // умножаем на количество языков
+	
+	s.logger.Info().
+		Str("provider", provider).
+		Int("input_tokens", inputTokens).
+		Int("output_tokens", outputTokens).
+		Int("text_length", textLength).
+		Int("target_languages", len(req.TargetLanguages)).
+		Msg("Tracking AI provider usage")
+	
+	err := s.TrackAIProviderUsage(ctx, provider, inputTokens, outputTokens, textLength*len(req.TargetLanguages))
+	if err != nil {
+		s.logger.Warn().Err(err).Str("provider", provider).Msg("Failed to track AI provider usage")
+		// Не прерываем выполнение если трекинг не удался
+	} else {
+		s.logger.Info().
+			Str("provider", provider).
+			Int("input_tokens", inputTokens).
+			Int("output_tokens", outputTokens).
+			Msg("Successfully tracked AI provider usage")
+	}
+
 	result := &models.TranslateResult{
 		Key:          req.Key,
 		Module:       req.Module,
 		Translations: translations,
-		Provider:     req.Provider,
+		Provider:     provider,
 		Confidence:   0.95,
 	}
 

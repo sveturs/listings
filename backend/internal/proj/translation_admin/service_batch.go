@@ -48,7 +48,7 @@ func (s *Service) GetTranslationsBatch(ctx context.Context, entityType string, e
 func (s *Service) TrackAIProviderUsage(ctx context.Context, provider string, inputTokens, outputTokens, characters int) error {
 	if s.costTracker == nil {
 		// Если трекер не инициализирован, просто логируем
-		s.logger.Debug().
+		s.logger.Warn().
 			Str("provider", provider).
 			Int("input_tokens", inputTokens).
 			Int("output_tokens", outputTokens).
@@ -57,16 +57,25 @@ func (s *Service) TrackAIProviderUsage(ctx context.Context, provider string, inp
 		return nil
 	}
 	
+	s.logger.Info().
+		Str("provider", provider).
+		Int("input_tokens", inputTokens).
+		Int("output_tokens", outputTokens).
+		Int("characters", characters).
+		Msg("TrackAIProviderUsage called with provider")
+	
 	switch provider {
 	case "openai":
 		return s.costTracker.TrackOpenAIUsage(ctx, "gpt-3.5-turbo", inputTokens, outputTokens)
 	case "google":
+		s.logger.Info().Int("characters", characters).Msg("Calling TrackGoogleUsage")
 		return s.costTracker.TrackGoogleUsage(ctx, characters)
 	case "deepl":
 		return s.costTracker.TrackDeepLUsage(ctx, characters)
 	case "claude":
 		return s.costTracker.TrackClaudeUsage(ctx, inputTokens, outputTokens)
 	default:
+		s.logger.Error().Str("provider", provider).Msg("Unknown provider")
 		return fmt.Errorf("unknown provider: %s", provider)
 	}
 }
