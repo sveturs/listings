@@ -20,11 +20,12 @@ import ExportImportManager from './ExportImportManager';
 
 // Import existing demo component for backward compatibility
 import AITranslationsDemo from './AITranslationsDemo';
+import AICostsMonitor from './AICostsMonitor';
 
 export default function EnhancedTranslationsDashboard() {
   const t = useTranslations('admin');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'bulk' | 'audit' | 'export' | 'ai' | 'sync' | 'stats'
+    'overview' | 'bulk' | 'audit' | 'export' | 'ai' | 'sync' | 'stats' | 'costs'
   >('overview');
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [versionHistoryParams, setVersionHistoryParams] = useState<{
@@ -133,6 +134,12 @@ export default function EnhancedTranslationsDashboard() {
         >
           <ChartBarIcon className="h-4 w-4 mr-2" />
           Статистика
+        </button>
+        <button
+          className={`tab ${activeTab === 'costs' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('costs')}
+        >
+          💰 Расходы AI
         </button>
       </div>
 
@@ -405,6 +412,9 @@ export default function EnhancedTranslationsDashboard() {
             </div>
           </div>
         )}
+
+        {/* Costs Tab */}
+        {activeTab === 'costs' && <AICostsMonitor />}
 
         {/* Statistics Tab (Legacy) */}
         {activeTab === 'stats' && (

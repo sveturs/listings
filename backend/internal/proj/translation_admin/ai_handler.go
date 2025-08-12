@@ -1,12 +1,12 @@
 package translation_admin
 
 import (
+	"os"
 	"strings"
 	"time"
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/translation_admin/ratelimit"
-	"backend/internal/proj/translation_admin/service"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -92,14 +92,25 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 		}
 	}
 
-	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
-	if !provider.IsConfigured() {
-		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
+	// Выполняем перевод через сервис
+	translateReq := &models.TranslateRequest{
+		Text:            req.Text,
+		SourceLanguage:  req.SourceLang,
+		TargetLanguages: []string{req.TargetLang},
+		Provider:        req.Provider,
 	}
-
-	// Выполняем перевод
-	translation, confidence, err := provider.Translate(ctx, req.Text, req.SourceLang, req.TargetLang)
+	
+	// Получаем userID из контекста
+	userID := 0
+	if userClaim := c.Locals("user"); userClaim != nil {
+		if user, ok := userClaim.(map[string]interface{}); ok {
+			if id, ok := user["id"].(float64); ok {
+				userID = int(id)
+			}
+		}
+	}
+	
+	result, err := h.service.TranslateText(ctx, translateReq, userID)
 	if err != nil {
 		h.logger.Error().Err(err).
 			Str("provider", req.Provider).
@@ -108,11 +119,15 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 			Msg("Failed to translate text")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.translationFailed")
 	}
+	
+	// Отслеживаем расходы (приблизительно)
+	textLength := len(req.Text)
+	_ = h.service.TrackAIProviderUsage(ctx, strings.ToLower(req.Provider), textLength/4, textLength/4, textLength)
 
 	response := models.AITranslateResponse{
-		Translation: translation,
-		Confidence:  confidence,
-		Provider:    provider.GetName(),
+		Translation: result.Translations[req.TargetLang],
+		Confidence:  0.95, // Default confidence
+		Provider:    req.Provider,
 	}
 
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.translationSuccess", response)
@@ -151,7 +166,7 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 	}
 
 	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
+	provider := GetAIProvider(req.Provider)
 	if !provider.IsConfigured() {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
 	}
@@ -212,7 +227,12 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/providers [get]
 func (h *AITranslationHandler) GetAvailableProviders(c *fiber.Ctx) error {
-	providers := service.GetAvailableProviders()
+	providers := []map[string]interface{}{
+		{"name": "openai", "configured": os.Getenv("OPENAI_API_KEY") != ""},
+		{"name": "google", "configured": os.Getenv("GOOGLE_API_KEY") != ""},
+		{"name": "deepl", "configured": os.Getenv("DEEPL_API_KEY") != ""},
+		{"name": "claude", "configured": os.Getenv("CLAUDE_API_KEY") != ""},
+	}
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providersRetrieved", providers)
 }
 
@@ -272,7 +292,7 @@ func (h *AITranslationHandler) TranslateModule(c *fiber.Ctx) error {
 	}
 
 	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
+	provider := GetAIProvider(req.Provider)
 	if !provider.IsConfigured() {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
 	}

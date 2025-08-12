@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultCacheExpiration = 24 * time.Hour
+	cacheDefaultExpiration = 24 * time.Hour
 	shortCacheExpiration   = 1 * time.Hour
 )
 
@@ -39,7 +39,7 @@ func (s *Service) GetTranslationWithCache(ctx context.Context, entityType string
 
 	// Сохраняем в кеш для будущих запросов
 	if translation != "" {
-		if err := s.cache.SetTranslation(ctx, entityType, entityID, language, fieldName, translation, defaultCacheExpiration); err != nil {
+		if err := s.cache.SetTranslation(ctx, entityType, entityID, language, fieldName, translation, cacheDefaultExpiration); err != nil {
 			s.logger.Warn().Err(err).Msg("Failed to cache translation")
 		}
 	}
@@ -91,7 +91,7 @@ func (s *Service) SaveTranslationWithCache(ctx context.Context, translation *mod
 			translation.Language,
 			translation.FieldName,
 			translation.TranslatedText,
-			defaultCacheExpiration,
+			cacheDefaultExpiration,
 		)
 		if cacheErr != nil {
 			s.logger.Warn().Err(cacheErr).Msg("Failed to update translation cache")
@@ -169,7 +169,7 @@ func (s *Service) GetBatchTranslationsWithCache(ctx context.Context, requests []
 
 		// Сохраняем в кеш
 		if len(toCache) > 0 {
-			if err := s.cache.BatchSet(ctx, toCache, defaultCacheExpiration); err != nil {
+			if err := s.cache.BatchSet(ctx, toCache, cacheDefaultExpiration); err != nil {
 				s.logger.Warn().Err(err).Msg("Failed to batch set cache")
 			}
 		}
@@ -241,7 +241,7 @@ func (s *Service) WarmUpCache(ctx context.Context) error {
 	}
 
 	if len(toCache) > 0 {
-		if err := s.cache.BatchSet(ctx, toCache, defaultCacheExpiration); err != nil {
+		if err := s.cache.BatchSet(ctx, toCache, cacheDefaultExpiration); err != nil {
 			return fmt.Errorf("failed to warm-up cache: %w", err)
 		}
 	}

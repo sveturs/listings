@@ -37,6 +37,8 @@ type Service struct {
 	translationRepo TranslationRepository
 	auditRepo       AuditRepository
 	cache           *cache.RedisTranslationCache
+	batchLoader     *BatchLoader
+	costTracker     *CostTracker
 }
 
 // TranslationRepository interface for database operations
@@ -76,6 +78,12 @@ func NewService(logger zerolog.Logger, frontendPath string, translationRepo Tran
 		logger.Warn().Msg("Redis client not provided, caching disabled for translations")
 	}
 	
+	// Create batch loader with cache
+	batchLoader := NewBatchLoader(translationRepo, translationCache)
+	
+	// Create cost tracker with Redis
+	costTracker := NewCostTracker(redisClient)
+	
 	return &Service{
 		logger:          logger,
 		frontendPath:    frontendPath,
@@ -84,6 +92,8 @@ func NewService(logger zerolog.Logger, frontendPath string, translationRepo Tran
 		translationRepo: translationRepo,
 		auditRepo:       auditRepo,
 		cache:           translationCache,
+		batchLoader:     batchLoader,
+		costTracker:     costTracker,
 	}
 }
 

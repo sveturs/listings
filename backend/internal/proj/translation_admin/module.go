@@ -74,6 +74,12 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	ai.Post("/translate", m.aiHandler.TranslateText)
 	ai.Post("/translate-batch", m.aiHandler.TranslateBatch)
 	ai.Post("/translate-module", m.aiHandler.TranslateModule)
+	
+	// Cost tracking endpoints
+	ai.Get("/costs", m.aiHandler.GetCostsSummary)
+	ai.Get("/costs/alerts", m.aiHandler.GetCostAlerts)
+	ai.Get("/costs/:provider", m.aiHandler.GetProviderCostDetails)
+	ai.Post("/costs/:provider/reset", m.aiHandler.ResetProviderCosts)
 
 	m.logger.Info().Msg("Translation admin routes registered")
 
