@@ -804,19 +804,19 @@ func (h *Handler) ResolveConflictsBatch(c *fiber.Ctx) error {
 // @Router /api/v1/admin/translations/versions/translation/{id} [get]
 func (h *Handler) GetTranslationVersions(c *fiber.Ctx) error {
 	ctx := c.Context()
-	
+
 	idStr := c.Params("id")
 	translationID, err := strconv.Atoi(idStr)
 	if err != nil {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidTranslationID")
 	}
-	
+
 	versions, err := h.service.translationRepo.GetTranslationVersions(ctx, translationID)
 	if err != nil {
 		h.logger.Error().Err(err).Int("translation_id", translationID).Msg("Failed to get translation versions")
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.getVersionsError")
 	}
-	
+
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.versionsRetrieved", versions)
 }
 

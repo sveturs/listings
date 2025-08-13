@@ -8164,25 +8164,26 @@
                 }
             }
         },
-        "/api/v1/admin/translations/versions/{entity}/{id}": {
+        "/api/v1/admin/translations/versions/translation/{id}": {
             "get": {
-                "description": "Returns version history for all translations of an entity",
+                "description": "Returns version history for all translations of an entity\nReturns all versions for a specific translation ID",
                 "tags": [
+                    "Translation Admin",
                     "Translation Admin"
                 ],
-                "summary": "Get version history for an entity",
+                "summary": "Get versions for a specific translation",
                 "parameters": [
                     {
-                        "description": "Entity type (translation, category, listing)",
-                        "name": "entity",
+                        "description": "Entity ID",
+                        "name": "id",
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
-                        "description": "Entity ID",
+                        "description": "Translation ID",
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -8205,7 +8206,96 @@
                                             "type": "object",
                                             "properties": {
                                                 "data": {
-                                                    "$ref": "#/components/schemas/backend_internal_domain_models.VersionHistoryResponse"
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.TranslationVersion"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/versions/{entity}/{id}": {
+            "get": {
+                "description": "Returns version history for all translations of an entity\nReturns all versions for a specific translation ID",
+                "tags": [
+                    "Translation Admin",
+                    "Translation Admin"
+                ],
+                "summary": "Get versions for a specific translation",
+                "parameters": [
+                    {
+                        "description": "Entity type (translation, category, listing)",
+                        "name": "entity",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Entity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Translation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.TranslationVersion"
+                                                    }
                                                 }
                                             }
                                         }
@@ -36001,6 +36091,9 @@
                     "created_at": {
                         "type": "string"
                     },
+                    "current_version": {
+                        "type": "integer"
+                    },
                     "entity_id": {
                         "type": "integer"
                     },
@@ -36021,6 +36114,12 @@
                     },
                     "language": {
                         "type": "string"
+                    },
+                    "last_modified_at": {
+                        "type": "string"
+                    },
+                    "last_modified_by": {
+                        "type": "integer"
                     },
                     "metadata": {
                         "type": "object",
@@ -36282,7 +36381,10 @@
             "backend_internal_domain_models.TranslationVersion": {
                 "type": "object",
                 "properties": {
-                    "change_comment": {
+                    "change_reason": {
+                        "type": "string"
+                    },
+                    "change_type": {
                         "type": "string"
                     },
                     "changed_at": {
@@ -36310,13 +36412,16 @@
                         "type": "object",
                         "additionalProperties": true
                     },
+                    "previous_text": {
+                        "type": "string"
+                    },
                     "translated_text": {
                         "type": "string"
                     },
                     "translation_id": {
                         "type": "integer"
                     },
-                    "version_number": {
+                    "version": {
                         "type": "integer"
                     }
                 }

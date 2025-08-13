@@ -4723,7 +4723,9 @@ paths:
         - Translation Admin
   "/api/v1/admin/translations/versions/{entity}/{id}":
     get:
-      description: Returns version history for all translations of an entity
+      description: |-
+        Returns version history for all translations of an entity
+        Returns all versions for a specific translation ID
       parameters:
         - description: Entity type (translation, category, listing)
           in: path
@@ -4732,6 +4734,12 @@ paths:
           schema:
             type: string
         - description: Entity ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Translation ID
           in: path
           name: id
           required: true
@@ -4747,8 +4755,9 @@ paths:
                   - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/backend_internal_domain_models.VersionHistoryRespon\
-                          se"
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.TranslationVersion"
+                        type: array
                     type: object
         "400":
           description: Bad Request
@@ -4762,8 +4771,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Get version history for an entity
+      summary: Get versions for a specific translation
       tags:
+        - Translation Admin
         - Translation Admin
   /api/v1/admin/translations/versions/diff:
     get:
@@ -4845,6 +4855,54 @@ paths:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       summary: Rollback translation to previous version
       tags:
+        - Translation Admin
+  "/api/v1/admin/translations/versions/translation/{id}":
+    get:
+      description: |-
+        Returns version history for all translations of an entity
+        Returns all versions for a specific translation ID
+      parameters:
+        - description: Entity ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Translation ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.TranslationVersion"
+                        type: array
+                    type: object
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get versions for a specific translation
+      tags:
+        - Translation Admin
         - Translation Admin
   /api/v1/admin/users:
     get:
@@ -21853,6 +21911,8 @@ components:
       properties:
         created_at:
           type: string
+        current_version:
+          type: integer
         entity_id:
           type: integer
         entity_type:
@@ -21867,6 +21927,10 @@ components:
           type: boolean
         language:
           type: string
+        last_modified_at:
+          type: string
+        last_modified_by:
+          type: integer
         metadata:
           additionalProperties: true
           type: object
@@ -22043,7 +22107,9 @@ components:
       type: object
     backend_internal_domain_models.TranslationVersion:
       properties:
-        change_comment:
+        change_reason:
+          type: string
+        change_type:
           type: string
         changed_at:
           type: string
@@ -22062,11 +22128,13 @@ components:
         metadata:
           additionalProperties: true
           type: object
+        previous_text:
+          type: string
         translated_text:
           type: string
         translation_id:
           type: integer
-        version_number:
+        version:
           type: integer
       type: object
     backend_internal_domain_models.UpdateAttributeGroupRequest:

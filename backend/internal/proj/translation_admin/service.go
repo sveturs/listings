@@ -31,18 +31,18 @@ func strPtr(s string) *string {
 
 // Service handles translation admin operations
 type Service struct {
-	logger              zerolog.Logger
-	frontendPath        string
-	supportedLangs      []string
-	modules             []string
-	mutex               sync.RWMutex
-	translationRepo     TranslationRepository
-	auditRepo           AuditRepository
-	cache               *cache.RedisTranslationCache
-	batchLoader         *BatchLoader
-	costTracker         *CostTracker
-	db                  *sql.DB
-	translationFactory  interface{} // Will be marketplaceService.TranslationFactoryInterface
+	logger             zerolog.Logger
+	frontendPath       string
+	supportedLangs     []string
+	modules            []string
+	mutex              sync.RWMutex
+	translationRepo    TranslationRepository
+	auditRepo          AuditRepository
+	cache              *cache.RedisTranslationCache
+	batchLoader        *BatchLoader
+	costTracker        *CostTracker
+	db                 *sql.DB
+	translationFactory interface{} // Will be marketplaceService.TranslationFactoryInterface
 }
 
 // TranslationRepository interface for database operations
@@ -1386,7 +1386,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 
 	// Use real translation service
 	translations := make(map[string]string)
-	
+
 	// Используем реальный сервис перевода если доступен
 	if s.translationFactory != nil {
 		// Пробуем использовать интерфейс напрямую для простого перевода
@@ -1396,7 +1396,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 				translations[targetLang] = req.Text
 				continue
 			}
-			
+
 			// Попробуем вызвать метод Translate напрямую
 			// Используем type assertion для проверки интерфейса
 			if translator, ok := s.translationFactory.(interface {
@@ -1980,27 +1980,27 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 		args[i] = id
 	}
-	
+
 	query := fmt.Sprintf(`
 		SELECT id, name, description, seo_title, seo_description 
 		FROM marketplace_categories 
 		WHERE id IN (%s)
 	`, strings.Join(placeholders, ","))
-	
+
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to query categories: %w", err)
 	}
 	defer rows.Close()
-	
+
 	type CategoryData struct {
-		ID              int
-		Name            *string
-		Description     *string
-		SEOTitle        *string
-		SEODescription  *string
+		ID             int
+		Name           *string
+		Description    *string
+		SEOTitle       *string
+		SEODescription *string
 	}
-	
+
 	var categories []CategoryData
 	for rows.Next() {
 		var cat CategoryData
@@ -2010,7 +2010,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 		}
 		categories = append(categories, cat)
 	}
-	
+
 	// Для каждой категории создаем недостающие переводы
 	for _, cat := range categories {
 		// Проверяем какие поля есть в основной таблице
@@ -2020,13 +2020,13 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 			"seo_title":       cat.SEOTitle,
 			"seo_description": cat.SEODescription,
 		}
-		
+
 		for fieldName, fieldValue := range fieldsToTranslate {
 			// Пропускаем NULL поля, но создаем перевод для пустых строк
 			if fieldValue == nil {
 				continue
 			}
-			
+
 			// Проверяем, существует ли уже перевод
 			existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
 				"entity_type": "category",
@@ -2034,7 +2034,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 				"language":    sourceLanguage,
 				"field_name":  fieldName,
 			})
-			
+
 			// Если перевода нет, создаем его
 			if len(existing) == 0 {
 				newTranslation := &models.Translation{
@@ -2046,7 +2046,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 					IsMachineTranslated: false,
 					IsVerified:          true, // Исходные данные считаем проверенными
 				}
-				
+
 				if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
 					s.logger.Error().
 						Err(err).
@@ -2064,7 +2064,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -2073,7 +2073,7 @@ func detectTextLanguage(text string) string {
 	// Count character types
 	latinCount := 0
 	cyrillicCount := 0
-	
+
 	for _, r := range text {
 		// Latin characters
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
@@ -2084,12 +2084,12 @@ func detectTextLanguage(text string) string {
 			cyrillicCount++
 		}
 	}
-	
+
 	// Determine language based on character counts
 	if cyrillicCount > latinCount {
 		return "ru" // Russian text
 	}
-	
+
 	// Check for specific Serbian Latin patterns
 	serbianPatterns := []string{"dj", "nj", "lj", "dž", "š", "č", "ć", "ž", "đ"}
 	textLower := strings.ToLower(text)
@@ -2098,12 +2098,12 @@ func detectTextLanguage(text string) string {
 			return "sr" // Serbian text
 		}
 	}
-	
+
 	// Default to Serbian if mostly Latin (since the site is Serbian)
 	if latinCount > 0 {
 		return "sr"
 	}
-	
+
 	return "auto" // Let AI detect
 }
 
@@ -2167,7 +2167,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 				if targetLang == req.SourceLanguage {
 					continue
 				}
-				
+
 				// Check if translation already exists
 				existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
 					"entity_type": sourceTranslation.EntityType,
@@ -2175,7 +2175,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 					"language":    targetLang,
 					"field_name":  sourceTranslation.FieldName,
 				})
-				
+
 				if len(existing) == 0 {
 					// Create empty translation for consistency
 					newTranslation := &models.Translation{
@@ -2187,7 +2187,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 						IsMachineTranslated: false,
 						IsVerified:          true,
 					}
-					
+
 					if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
 						s.logger.Error().Err(err).Msg("Failed to create empty translation")
 					}
@@ -2195,7 +2195,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 			}
 			continue // Skip to next source translation
 		}
-		
+
 		// Translate to each target language
 		for _, targetLang := range req.TargetLanguages {
 			if targetLang == req.SourceLanguage {
@@ -2209,13 +2209,13 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 				"language":    targetLang,
 				"field_name":  sourceTranslation.FieldName,
 			})
-			
+
 			// Skip if exists and not overwriting, OR if the text is already the same as source
 			if len(existing) > 0 {
 				existingTranslation := existing[0]
 				// Check if the existing translation is the same as source (untranslated)
 				isSameAsSource := existingTranslation.TranslatedText == sourceTranslation.TranslatedText
-				
+
 				if isSameAsSource {
 					// Text is the same as source - needs translation
 					s.logger.Debug().
@@ -2246,7 +2246,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 					Str("text", sourceTranslation.TranslatedText).
 					Msg("Auto-detected source language")
 			}
-			
+
 			// Create translation request
 			translateReq := &models.TranslateRequest{
 				Text:            sourceTranslation.TranslatedText,
@@ -2277,7 +2277,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 					existingTranslation.TranslatedText = translationResult.Translations[targetLang]
 					existingTranslation.IsMachineTranslated = true
 					existingTranslation.IsVerified = false // Machine translations should be reviewed
-					
+
 					if err := s.translationRepo.UpdateTranslation(ctx, &existingTranslation); err != nil {
 						s.logger.Error().Err(err).Msg("Failed to update translation")
 						result.FailedCount++

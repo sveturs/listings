@@ -297,7 +297,7 @@ func (s *ClaudeTranslationService) DetectLanguage(ctx context.Context, text stri
 		}
 		return "ru", 0.9, nil
 	}
-	
+
 	return "en", 0.9, nil
 }
 

@@ -175,7 +175,9 @@ export default function VersionHistoryViewer({
               </button>
             </div>
             <div className="text-sm text-base-content/60 mt-2">
-              Версия {diff.version1.version || diff.version1.version_number || 1} vs Версия{' '}
+              Версия{' '}
+              {diff.version1.version || diff.version1.version_number || 1} vs
+              Версия{' '}
               {diff.version2.version || diff.version2.version_number || 1}
             </div>
           </div>
@@ -259,8 +261,9 @@ export default function VersionHistoryViewer({
           ) : (
             <div className="p-6">
               <div className="text-sm text-base-content/60 mb-4">
-                Найдено {versions.length} версий для {entityType} #{entityId}. 
-                {selectedVersions.length < 2 && ' Выберите до 2 версий для сравнения.'}
+                Найдено {versions.length} версий для {entityType} #{entityId}.
+                {selectedVersions.length < 2 &&
+                  ' Выберите до 2 версий для сравнения.'}
               </div>
 
               <div className="space-y-3">
@@ -282,16 +285,24 @@ export default function VersionHistoryViewer({
                             <div className="badge badge-primary">
                               v{version.version || version.version_number || 1}
                             </div>
-                            <div className={`badge badge-sm ${
-                              version.change_type === 'created' ? 'badge-success' :
-                              version.change_type === 'updated' ? 'badge-info' :
-                              version.change_type === 'deleted' ? 'badge-error' :
-                              'badge-warning'
-                            }`}>
-                              {version.change_type === 'created' ? 'Создано' :
-                               version.change_type === 'updated' ? 'Изменено' :
-                               version.change_type === 'deleted' ? 'Удалено' :
-                               'Восстановлено'}
+                            <div
+                              className={`badge badge-sm ${
+                                version.change_type === 'created'
+                                  ? 'badge-success'
+                                  : version.change_type === 'updated'
+                                    ? 'badge-info'
+                                    : version.change_type === 'deleted'
+                                      ? 'badge-error'
+                                      : 'badge-warning'
+                              }`}
+                            >
+                              {version.change_type === 'created'
+                                ? 'Создано'
+                                : version.change_type === 'updated'
+                                  ? 'Изменено'
+                                  : version.change_type === 'deleted'
+                                    ? 'Удалено'
+                                    : 'Восстановлено'}
                             </div>
                             <div className="badge badge-outline badge-sm">
                               {version.language.toUpperCase()}
@@ -302,17 +313,23 @@ export default function VersionHistoryViewer({
                           </div>
 
                           <div className="text-sm mb-2 bg-base-100 p-2 rounded">
-                            <span className="font-medium">{version.field_name} ({version.language}):</span> {version.translated_text || 'Пустой перевод'}
+                            <span className="font-medium">
+                              {version.field_name} ({version.language}):
+                            </span>{' '}
+                            {version.translated_text || 'Пустой перевод'}
                           </div>
-                          
-                          {version.previous_text && version.change_type === 'updated' && (
-                            <div className="text-sm mb-2">
-                              <div className="text-xs text-base-content/60 mb-1">Предыдущее значение:</div>
-                              <div className="bg-base-200 p-2 rounded line-through opacity-60">
-                                {version.previous_text}
+
+                          {version.previous_text &&
+                            version.change_type === 'updated' && (
+                              <div className="text-sm mb-2">
+                                <div className="text-xs text-base-content/60 mb-1">
+                                  Предыдущее значение:
+                                </div>
+                                <div className="bg-base-200 p-2 rounded line-through opacity-60">
+                                  {version.previous_text}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           <div className="flex items-center gap-4 text-xs text-base-content/60">
                             <div className="flex items-center gap-1">
@@ -327,9 +344,12 @@ export default function VersionHistoryViewer({
                             )}
                           </div>
 
-                          {(version.change_reason || version.change_comment) && (
+                          {(version.change_reason ||
+                            version.change_comment) && (
                             <div className="text-xs text-base-content/60 mt-2 italic">
-                              &quot;{version.change_reason || version.change_comment}&quot;
+                              &quot;
+                              {version.change_reason || version.change_comment}
+                              &quot;
                             </div>
                           )}
                         </div>

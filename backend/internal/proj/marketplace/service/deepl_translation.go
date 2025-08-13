@@ -139,7 +139,7 @@ func (s *DeepLTranslationService) TranslateWithContext(ctx context.Context, text
 	if sourceLang != "" && sourceLang != "auto" {
 		params.Set("source_lang", sourceLang)
 	}
-	
+
 	// Добавляем контекст если это поле заголовка или названия
 	if fieldName == "title" || fieldName == "name" || fieldName == "seo_title" {
 		params.Set("formality", "default") // Нейтральный стиль для заголовков
@@ -231,7 +231,7 @@ func (s *DeepLTranslationService) TranslateEntityFields(ctx context.Context, sou
 		}
 
 		translations := make(map[string]string)
-		
+
 		// Собираем все тексты для batch перевода
 		var texts []string
 		var fieldNames []string
@@ -345,7 +345,7 @@ func (s *DeepLTranslationService) DetectLanguage(ctx context.Context, text strin
 		}
 		return "ru", 0.9, nil
 	}
-	
+
 	return "en", 0.9, nil
 }
 
@@ -360,12 +360,12 @@ func (s *DeepLTranslationService) ModerateText(ctx context.Context, text string,
 func convertToDeepLLanguageCode(code string) string {
 	// DeepL использует другие коды для некоторых языков
 	mapping := map[string]string{
-		"en": "EN-US", // или EN-GB для британского английского
-		"ru": "RU",
-		"sr": "SR",    // DeepL может не поддерживать сербский напрямую
-		"auto": "",    // Пустая строка для автоопределения
+		"en":   "EN-US", // или EN-GB для британского английского
+		"ru":   "RU",
+		"sr":   "SR", // DeepL может не поддерживать сербский напрямую
+		"auto": "",   // Пустая строка для автоопределения
 	}
-	
+
 	if deepLCode, ok := mapping[code]; ok {
 		return deepLCode
 	}

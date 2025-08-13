@@ -401,7 +401,7 @@ func (r *Repository) RollbackToVersion(ctx context.Context, translationID int, v
 	                    last_modified_at = CURRENT_TIMESTAMP,
 	                    current_version = current_version + 1
 	                WHERE id = $3`
-	
+
 	_, err = tx.ExecContext(ctx, updateQuery, version.TranslatedText, userID, translationID)
 	if err != nil {
 		return fmt.Errorf("failed to update translation: %w", err)
@@ -860,4 +860,4 @@ func (r *Repository) GetTranslationByID(ctx context.Context, id int) (*models.Tr
 	}
 
 	return &t, nil
-} 
+}

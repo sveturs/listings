@@ -34,7 +34,8 @@ func NewTranslationServiceFactoryV2(config struct {
 	ClaudeAPIKey    string
 	DeepLAPIKey     string
 	DeepLUseFreeAPI bool
-}, storage storage.Storage) (*TranslationServiceFactoryV2, error) {
+}, storage storage.Storage,
+) (*TranslationServiceFactoryV2, error) {
 	factory := &TranslationServiceFactoryV2{
 		mutex: sync.RWMutex{},
 	}
@@ -182,7 +183,7 @@ func (f *TranslationServiceFactoryV2) SetDefaultProvider(provider TranslationPro
 	}
 
 	f.defaultProvider = provider
-	
+
 	// Перестраиваем цепочку fallback с новым провайдером в начале
 	newChain := []TranslationProvider{provider}
 	for _, p := range f.fallbackChain {
@@ -191,7 +192,7 @@ func (f *TranslationServiceFactoryV2) SetDefaultProvider(provider TranslationPro
 		}
 	}
 	f.fallbackChain = newChain
-	
+
 	logger.Info().
 		Str("provider", string(provider)).
 		Interface("fallbackChain", f.fallbackChain).
@@ -278,7 +279,7 @@ func (f *TranslationServiceFactoryV2) Translate(ctx context.Context, text string
 		// Сохраняем ошибку и пробуем следующий провайдер
 		lastError = err
 		attemptedProviders = append(attemptedProviders, string(provider))
-		
+
 		logger.Warn().
 			Err(err).
 			Str("provider", string(provider)).
@@ -293,7 +294,7 @@ func (f *TranslationServiceFactoryV2) Translate(ctx context.Context, text string
 			Err(lastError).
 			Interface("attemptedProviders", attemptedProviders).
 			Msg("Все провайдеры перевода не сработали, возвращаем mock")
-		
+
 		// Возвращаем mock перевод
 		mockTranslation := fmt.Sprintf("[%s] %s", strings.ToUpper(targetLanguage), text)
 		return mockTranslation, nil
@@ -399,7 +400,7 @@ func (f *TranslationServiceFactoryV2) TranslateEntityFields(ctx context.Context,
 
 		lastError = err
 		attemptedProviders = append(attemptedProviders, string(provider))
-		
+
 		logger.Warn().
 			Err(err).
 			Str("provider", string(provider)).
@@ -412,7 +413,7 @@ func (f *TranslationServiceFactoryV2) TranslateEntityFields(ctx context.Context,
 			Err(lastError).
 			Interface("attemptedProviders", attemptedProviders).
 			Msg("Все провайдеры не смогли перевести поля, возвращаем mock")
-		
+
 		// Возвращаем mock переводы
 		result := make(map[string]map[string]string)
 		for _, targetLang := range targetLanguages {
@@ -544,5 +545,5 @@ func (f *TranslationServiceFactoryV2) updateTranslationWithStorage(ctx context.C
 	return err
 }
 
-// Вспомогательные функции containsCyrillic и containsSerbian 
+// Вспомогательные функции containsCyrillic и containsSerbian
 // уже определены в claude_translation.go и deepl_translation.go

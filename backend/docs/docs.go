@@ -7155,30 +7155,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/translations/versions/{entity}/{id}": {
+        "/api/v1/admin/translations/versions/translation/{id}": {
             "get": {
-                "description": "Returns version history for all translations of an entity",
+                "description": "Returns version history for all translations of an entity\nReturns all versions for a specific translation ID",
                 "consumes": [
+                    "application/json",
                     "application/json"
                 ],
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
+                    "Translation Admin",
                     "Translation Admin"
                 ],
-                "summary": "Get version history for an entity",
+                "summary": "Get versions for a specific translation",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Entity type (translation, category, listing)",
-                        "name": "entity",
+                        "type": "integer",
+                        "description": "Entity ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "description": "Entity ID",
+                        "description": "Translation ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -7196,7 +7199,86 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/backend_internal_domain_models.VersionHistoryResponse"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.TranslationVersion"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/translations/versions/{entity}/{id}": {
+            "get": {
+                "description": "Returns version history for all translations of an entity\nReturns all versions for a specific translation ID",
+                "consumes": [
+                    "application/json",
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "Translation Admin",
+                    "Translation Admin"
+                ],
+                "summary": "Get versions for a specific translation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entity type (translation, category, listing)",
+                        "name": "entity",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Entity ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Translation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.TranslationVersion"
+                                            }
                                         }
                                     }
                                 }
@@ -31527,6 +31609,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "current_version": {
+                    "type": "integer"
+                },
                 "entity_id": {
                     "type": "integer"
                 },
@@ -31547,6 +31632,12 @@ const docTemplate = `{
                 },
                 "language": {
                     "type": "string"
+                },
+                "last_modified_at": {
+                    "type": "string"
+                },
+                "last_modified_by": {
+                    "type": "integer"
                 },
                 "metadata": {
                     "type": "object",
@@ -31808,7 +31899,10 @@ const docTemplate = `{
         "backend_internal_domain_models.TranslationVersion": {
             "type": "object",
             "properties": {
-                "change_comment": {
+                "change_reason": {
+                    "type": "string"
+                },
+                "change_type": {
                     "type": "string"
                 },
                 "changed_at": {
@@ -31836,13 +31930,16 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "previous_text": {
+                    "type": "string"
+                },
                 "translated_text": {
                     "type": "string"
                 },
                 "translation_id": {
                     "type": "integer"
                 },
-                "version_number": {
+                "version": {
                     "type": "integer"
                 }
             }
