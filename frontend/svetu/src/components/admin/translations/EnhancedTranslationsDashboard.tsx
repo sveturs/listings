@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   ChartBarIcon,
-  CogIcon,
   ClockIcon,
   DocumentTextIcon,
   ArrowPathIcon,
@@ -23,12 +22,12 @@ import AITranslationsDemo from './AITranslationsDemo';
 import AICostsMonitor from './AICostsMonitor';
 
 export default function EnhancedTranslationsDashboard() {
-  const t = useTranslations('admin');
+  const _t = useTranslations('admin');
   const [activeTab, setActiveTab] = useState<
     'overview' | 'bulk' | 'audit' | 'export' | 'ai' | 'sync' | 'stats' | 'costs'
   >('overview');
-  const [showVersionHistory, setShowVersionHistory] = useState(false);
-  const [versionHistoryParams, setVersionHistoryParams] = useState<{
+  const [_showVersionHistory, _setShowVersionHistory] = useState(false);
+  const [_versionHistoryParams, _setVersionHistoryParams] = useState<{
     entityType: string;
     entityId: number;
   } | null>(null);
@@ -64,14 +63,14 @@ export default function EnhancedTranslationsDashboard() {
     },
   });
 
-  const openVersionHistory = (entityType: string, entityId: number) => {
-    setVersionHistoryParams({ entityType, entityId });
-    setShowVersionHistory(true);
+  const _openVersionHistory = (_entityType: string, _entityId: number) => {
+    // setVersionHistoryParams({ entityType, entityId });
+    // setShowVersionHistory(true);
   };
 
-  const closeVersionHistory = () => {
-    setShowVersionHistory(false);
-    setVersionHistoryParams(null);
+  const _closeVersionHistory = () => {
+    // setShowVersionHistory(false);
+    // setVersionHistoryParams(null);
   };
 
   return (

@@ -3,7 +3,6 @@ package translation_admin
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"backend/internal/domain/models"
@@ -20,11 +19,10 @@ const (
 type BatchLoader struct {
 	repo  TranslationRepository
 	cache *cache.RedisTranslationCache
-	mu    sync.Mutex
 }
 
 // NewBatchLoader создает новый batch loader
-func NewBatchLoader(repo TranslationRepository, cache *cache.RedisTranslationCache) *BatchLoader {
+func NewBatchLoader(ctx context.Context, repo TranslationRepository, cache *cache.RedisTranslationCache) *BatchLoader {
 	return &BatchLoader{
 		repo:  repo,
 		cache: cache,

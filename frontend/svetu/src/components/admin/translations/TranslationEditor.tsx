@@ -79,7 +79,7 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
 
       const data = await response.json();
       setTranslations(data.data || []);
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.fetchError'));
     } finally {
       setLoading(false);
@@ -171,7 +171,7 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
       setEditValues({});
       setHasChanges(true);
       toast.success(t('translations.saved'));
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.saveError'));
     } finally {
       setSaving(false);

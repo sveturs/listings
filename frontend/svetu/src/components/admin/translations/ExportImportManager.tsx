@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function ExportImportManager() {
-  const t = useTranslations('admin.translations');
+  const _t = useTranslations('admin.translations');
 
   // Export state
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'xliff'>(
@@ -38,7 +38,7 @@ export default function ExportImportManager() {
     'json'
   );
   const [importData, setImportData] = useState<string>('');
-  const [importFile, setImportFile] = useState<File | null>(null);
+  const [_importFile, _setImportFile] = useState<File | null>(null);
   const [importOptions, setImportOptions] = useState({
     overwrite_existing: false,
     validate_only: false,
@@ -161,7 +161,7 @@ export default function ExportImportManager() {
           // For XLIFF, we'll send the raw XML and let backend parse it
           data = importData;
         }
-      } catch (e) {
+      } catch {
         alert('Ошибка при парсинге данных. Проверьте формат файла.');
         return;
       }

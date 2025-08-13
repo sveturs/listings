@@ -56,10 +56,10 @@ interface CostAlerts {
 }
 
 export default function AICostsMonitor() {
-  const t = useTranslations('admin');
+  const _t = useTranslations('admin');
   const [costsSummary, setCostsSummary] = useState<CostsSummary | null>(null);
   const [alerts, setAlerts] = useState<CostAlerts | null>(null);
-  const [loading, setLoading] = useState(false); // Changed to false to show demo data immediately
+  const [_loading, _setLoading] = useState(false); // Changed to false to show demo data immediately
   const [refreshing, setRefreshing] = useState(false);
   const [dailyLimit, setDailyLimit] = useState(100);
   const [monthlyLimit, setMonthlyLimit] = useState(2000);
@@ -128,9 +128,10 @@ export default function AICostsMonitor() {
 
     try {
       // Use local API route that handles authentication
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : 'http://localhost:3001';
+      const baseUrl =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/admin/translations/costs`, {
         method: 'GET',
         headers: {
@@ -536,7 +537,9 @@ export default function AICostsMonitor() {
                       dataKey={provider}
                       stroke={COLORS[provider as keyof typeof COLORS]}
                       strokeWidth={1}
-                      name={provider.charAt(0).toUpperCase() + provider.slice(1)}
+                      name={
+                        provider.charAt(0).toUpperCase() + provider.slice(1)
+                      }
                     />
                   ))}
                 </LineChart>
@@ -546,7 +549,9 @@ export default function AICostsMonitor() {
                 <div className="text-center text-base-content/60">
                   <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
                   <p>Нет данных для отображения</p>
-                  <p className="text-sm mt-1">Данные появятся после использования AI переводов</p>
+                  <p className="text-sm mt-1">
+                    Данные появятся после использования AI переводов
+                  </p>
                 </div>
               </div>
             )}
@@ -565,16 +570,23 @@ export default function AICostsMonitor() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -582,7 +594,9 @@ export default function AICostsMonitor() {
                 <div className="text-center text-base-content/60">
                   <ChartBarIcon className="h-12 w-12 mx-auto mb-2" />
                   <p>Нет данных для отображения</p>
-                  <p className="text-sm mt-1">Данные появятся после использования AI переводов</p>
+                  <p className="text-sm mt-1">
+                    Данные появятся после использования AI переводов
+                  </p>
                 </div>
               </div>
             )}
@@ -598,18 +612,18 @@ export default function AICostsMonitor() {
             // Подготовка данных для почасового графика
             const hourlyData: any[] = [];
             const today = new Date().toISOString().split('T')[0];
-            
+
             if (costsSummary) {
               for (let hour = 0; hour < 24; hour++) {
                 const hourKey = `${today}T${hour.toString().padStart(2, '0')}`;
                 let totalCost = 0;
-                
+
                 Object.values(costsSummary.by_provider).forEach((provider) => {
                   if (provider.hourly_costs[hourKey]) {
                     totalCost += provider.hourly_costs[hourKey];
                   }
                 });
-                
+
                 if (totalCost > 0) {
                   hourlyData.push({
                     hour: `${hour}:00`,
@@ -618,14 +632,16 @@ export default function AICostsMonitor() {
                 }
               }
             }
-            
+
             return hourlyData.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={hourlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis />
-                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                  />
                   <Bar dataKey="cost" fill="#8b5cf6" />
                 </BarChart>
               </ResponsiveContainer>

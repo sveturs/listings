@@ -3,12 +3,16 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 )
+
+// ErrCacheMiss indicates that the requested key was not found in cache
+var ErrCacheMiss = errors.New("cache miss")
 
 // TranslationCache интерфейс для кеширования переводов
 type TranslationCache interface {
@@ -46,8 +50,8 @@ func (c *RedisTranslationCache) BuildPatternKey(entityType string, entityID int6
 // Get получает значение из кеша
 func (c *RedisTranslationCache) Get(ctx context.Context, key string) (interface{}, error) {
 	val, err := c.client.Get(ctx, key).Result()
-	if err == redis.Nil {
-		return nil, nil // Ключ не найден
+	if errors.Is(err, redis.Nil) {
+		return nil, ErrCacheMiss
 	}
 	if err != nil {
 		log.Error().Err(err).Str("key", key).Msg("Failed to get from cache")
@@ -67,7 +71,7 @@ func (c *RedisTranslationCache) Get(ctx context.Context, key string) (interface{
 func (c *RedisTranslationCache) GetTranslation(ctx context.Context, entityType string, entityID int64, language, fieldName string) (string, bool) {
 	key := c.BuildKey(entityType, entityID, language, fieldName)
 	val, err := c.client.Get(ctx, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return "", false
 	}
 	if err != nil {

@@ -29,6 +29,14 @@ type SimilarityCalculator struct {
 }
 
 func NewSimilarityCalculator(searchWeights *config.SearchWeights) *SimilarityCalculator {
+	if searchWeights == nil {
+		// Возвращаем калькулятор с дефолтными весами
+		return &SimilarityCalculator{
+			weightManager:  NewWeightManager(nil, nil),
+			scoringWeights: nil, // Используем дефолтные веса в CalculateSimilarity
+		}
+	}
+
 	wm := NewWeightManager(
 		searchWeights.CategoryAttributeWeights,
 		searchWeights.DefaultAttributeWeights,
@@ -45,6 +53,12 @@ func (sc *SimilarityCalculator) CalculateSimilarity(
 	sourceListing *models.MarketplaceListing,
 	targetListing *models.MarketplaceListing,
 ) (*SimilarityScore, error) {
+	// Проверяем инициализацию scoringWeights
+	if sc.scoringWeights == nil {
+		// Используем дефолтные веса если конфигурация не загружена
+		return sc.calculateWithDefaultWeights(sourceListing, targetListing)
+	}
+
 	score := &SimilarityScore{
 		ListingID:      targetListing.ID,
 		MatchReasons:   make([]string, 0),
@@ -329,6 +343,73 @@ func (sc *SimilarityCalculator) calculateDistance(lat1, lon1, lat2, lon2 float64
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
 	return R * c
+}
+
+// calculateWithDefaultWeights вычисляет похожесть с дефолтными весами
+func (sc *SimilarityCalculator) calculateWithDefaultWeights(
+	sourceListing *models.MarketplaceListing,
+	targetListing *models.MarketplaceListing,
+) (*SimilarityScore, error) {
+	score := &SimilarityScore{
+		ListingID:      targetListing.ID,
+		MatchReasons:   make([]string, 0),
+		ScoreBreakdown: make(map[string]interface{}),
+	}
+
+	// Рассчитываем компоненты скора
+	score.CategoryScore = sc.calculateCategoryScore(sourceListing, targetListing)
+	if score.CategoryScore > 0.5 {
+		score.MatchReasons = append(score.MatchReasons, "Та же категория")
+	}
+
+	score.AttributeScore = sc.calculateAttributeScore(sourceListing, targetListing)
+	if score.AttributeScore > 0.6 {
+		score.MatchReasons = append(score.MatchReasons, "Похожие характеристики")
+	}
+
+	score.TextScore = sc.calculateTextScore(sourceListing, targetListing)
+	if score.TextScore > 0.5 {
+		score.MatchReasons = append(score.MatchReasons, "Похожие описания")
+	}
+
+	score.PriceScore = sc.calculatePriceScore(sourceListing, targetListing)
+	if score.PriceScore > 0.7 {
+		score.MatchReasons = append(score.MatchReasons, "Похожая цена")
+	}
+
+	score.LocationScore = sc.calculateLocationScore(sourceListing, targetListing)
+	if score.LocationScore > 0.8 {
+		score.MatchReasons = append(score.MatchReasons, "То же место")
+	}
+
+	// Дефолтные веса
+	categoryWeight := 0.30
+	attrWeight := 0.30
+	textWeight := 0.20
+	priceWeight := 0.15
+	locationWeight := 0.05
+
+	// Итоговый скор
+	score.TotalScore = categoryWeight*score.CategoryScore +
+		attrWeight*score.AttributeScore +
+		textWeight*score.TextScore +
+		priceWeight*score.PriceScore +
+		locationWeight*score.LocationScore
+
+	score.ScoreBreakdown = map[string]interface{}{
+		"category_weight":  categoryWeight,
+		"attribute_weight": attrWeight,
+		"text_weight":      textWeight,
+		"price_weight":     priceWeight,
+		"location_weight":  locationWeight,
+		"category_raw":     score.CategoryScore,
+		"attribute_raw":    score.AttributeScore,
+		"text_raw":         score.TextScore,
+		"price_raw":        score.PriceScore,
+		"location_raw":     score.LocationScore,
+	}
+
+	return score, nil
 }
 
 // ScoredListing представляет объявление с рассчитанным скором

@@ -161,7 +161,10 @@ func (s *Service) GetBatchTranslationsWithCache(ctx context.Context, requests []
 			// Парсим ключ для кеширования
 			var entityType, fieldName, language string
 			var entityID int64
-			fmt.Sscanf(key, "%[^:]:%d:%[^:]:%s", &entityType, &entityID, &language, &fieldName)
+			if _, err := fmt.Sscanf(key, "%[^:]:%d:%[^:]:%s", &entityType, &entityID, &language, &fieldName); err != nil {
+				s.logger.Error().Err(err).Str("key", key).Msg("Failed to parse cache key")
+				continue
+			}
 
 			cacheKey := s.cache.BuildKey(entityType, entityID, language, fieldName)
 			toCache[cacheKey] = translation

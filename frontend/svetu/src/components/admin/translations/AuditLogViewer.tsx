@@ -11,14 +11,13 @@ import {
   ClockIcon,
   UserIcon,
   DocumentTextIcon,
-  EyeIcon,
   ChartBarIcon,
   FunnelIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 
 export default function AuditLogViewer() {
-  const t = useTranslations('admin.translations');
+  const _t = useTranslations('admin.translations');
 
   const [logs, setLogs] = useState<TranslationAuditLog[]>([]);
   const [statistics, setStatistics] = useState<AuditStatistics | null>(null);

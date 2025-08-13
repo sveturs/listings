@@ -10,7 +10,6 @@ import {
 import { adminApi } from '@/services/admin';
 import {
   PlayIcon,
-  StopIcon,
   ChartBarIcon,
   DocumentArrowDownIcon,
   DocumentArrowUpIcon,
@@ -36,7 +35,7 @@ interface EntityOption {
 }
 
 export default function BulkTranslationManager() {
-  const t = useTranslations('admin.translations');
+  const _t = useTranslations('admin.translations');
 
   // State management
   const [isLoading, setIsLoading] = useState(false);

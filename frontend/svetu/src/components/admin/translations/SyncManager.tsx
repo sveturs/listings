@@ -60,7 +60,7 @@ export default function SyncManager() {
       setLastSyncResult(data.data);
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -93,7 +93,7 @@ export default function SyncManager() {
       setLastSyncResult(data.data);
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -124,7 +124,7 @@ export default function SyncManager() {
 
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -163,7 +163,7 @@ export default function SyncManager() {
       URL.revokeObjectURL(url);
 
       toast.success(t('translations.exportSuccess'));
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.exportError'));
     }
   };
@@ -201,7 +201,7 @@ export default function SyncManager() {
         })
       );
       fetchSyncStatus();
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.importError'));
     }
   };
@@ -221,7 +221,7 @@ export default function SyncManager() {
         const data = await response.json();
         setSyncStatus(data.data);
       }
-    } catch (_err) {
+    } catch {
       console.error('Failed to fetch sync status', _err);
     }
   };
@@ -244,7 +244,7 @@ export default function SyncManager() {
         const data = await response.json();
         setConflicts(data.data || []);
       }
-    } catch (_err) {
+    } catch {
       console.error('Failed to fetch conflicts', _err);
     }
   };
@@ -274,7 +274,7 @@ export default function SyncManager() {
 
       toast.success(t('translations.conflictResolved'));
       fetchConflicts();
-    } catch (_err) {
+    } catch {
       toast.error(t('translations.conflictResolveError'));
     }
   };

@@ -87,7 +87,7 @@ const AI_PROVIDERS: AIProvider[] = [
 export default function AITranslations({
   onTranslationComplete,
 }: AITranslationsProps) {
-  const t = useTranslations('admin');
+  const _t = useTranslations('admin');
   const [providers, setProviders] = useState<AIProvider[]>(AI_PROVIDERS);
   const [activeProvider, setActiveProvider] = useState<string>('');
   const [_translationItems, _setTranslationItems] = useState<TranslationItem[]>(

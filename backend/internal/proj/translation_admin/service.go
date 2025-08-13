@@ -13,6 +13,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/translation_admin/cache"
+	"backend/internal/proj/translation_admin/ratelimit"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -69,7 +70,7 @@ type AuditRepository interface {
 }
 
 // NewService creates a new translation admin service
-func NewService(logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository, redisClient *redis.Client) *Service {
+func NewService(ctx context.Context, logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository, redisClient *redis.Client) *Service {
 	var translationCache *cache.RedisTranslationCache
 	if redisClient != nil {
 		translationCache = cache.NewRedisTranslationCache(redisClient)
@@ -79,10 +80,10 @@ func NewService(logger zerolog.Logger, frontendPath string, translationRepo Tran
 	}
 
 	// Create batch loader with cache
-	batchLoader := NewBatchLoader(translationRepo, translationCache)
+	batchLoader := NewBatchLoader(ctx, translationRepo, translationCache)
 
 	// Create cost tracker with Redis
-	costTracker := NewCostTracker(redisClient)
+	costTracker := NewCostTracker(ctx, redisClient)
 
 	return &Service{
 		logger:          logger,
@@ -1321,9 +1322,9 @@ func (s *Service) GetAIProviders(ctx context.Context) ([]models.AIProvider, erro
 			Temperature: 0.3,
 		},
 		{
-			ID:          "openai",
+			ID:          ratelimit.ProviderOpenAI,
 			Name:        "OpenAI GPT-4",
-			Type:        "openai",
+			Type:        ratelimit.ProviderOpenAI,
 			Model:       "gpt-4-turbo-preview",
 			Enabled:     openaiConfigured,
 			MaxTokens:   2000,
@@ -1375,7 +1376,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 	// Определяем провайдера
 	provider := req.Provider
 	if provider == "" {
-		provider = "openai" // default provider
+		provider = ratelimit.ProviderOpenAI // default provider
 	}
 
 	// Mock implementation
@@ -1429,7 +1430,7 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 	}
 
 	// Optionally add alternative translations
-	if req.Provider == "openai" || req.Provider == "anthropic" {
+	if req.Provider == ratelimit.ProviderOpenAI || req.Provider == "anthropic" {
 		alternatives := make(map[string][]string)
 		for lang := range translations {
 			alternatives[lang] = []string{

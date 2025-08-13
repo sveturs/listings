@@ -77,7 +77,7 @@ func DefaultCostConfig() *CostConfig {
 }
 
 // NewCostTracker создает новый трекер расходов
-func NewCostTracker(redisClient *redis.Client) *CostTracker {
+func NewCostTracker(ctx context.Context, redisClient *redis.Client) *CostTracker {
 	tracker := &CostTracker{
 		redis:    redisClient,
 		inMemory: make(map[string]*ProviderCosts),
@@ -96,7 +96,7 @@ func NewCostTracker(redisClient *redis.Client) *CostTracker {
 
 	// Загружаем данные из Redis если доступно
 	if tracker.useRedis {
-		tracker.loadFromRedis(context.Background())
+		tracker.loadFromRedis(ctx)
 	}
 
 	return tracker
