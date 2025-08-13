@@ -848,7 +848,7 @@ export const adminApi = {
     }
 
     const response = await apiClient.get(
-      `/api/v1/admin/translations/status?${params.toString()}`
+      `/api/v1/admin/marketplace-translations/status?${params.toString()}`
     );
     return (response.data as any).data || [];
   },

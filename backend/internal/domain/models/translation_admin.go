@@ -4,21 +4,7 @@ import (
 	"time"
 )
 
-// TranslationVersion represents a version of a translation
-type TranslationVersion struct {
-	ID             int                    `json:"id" db:"id"`
-	TranslationID  int                    `json:"translation_id" db:"translation_id"`
-	VersionNumber  int                    `json:"version_number" db:"version_number"`
-	EntityType     string                 `json:"entity_type" db:"entity_type"`
-	EntityID       int                    `json:"entity_id" db:"entity_id"`
-	Language       string                 `json:"language" db:"language"`
-	FieldName      string                 `json:"field_name" db:"field_name"`
-	TranslatedText string                 `json:"translated_text" db:"translated_text"`
-	ChangedBy      *int                   `json:"changed_by" db:"changed_by"`
-	ChangedAt      time.Time              `json:"changed_at" db:"changed_at"`
-	ChangeComment  *string                `json:"change_comment" db:"change_comment"`
-	Metadata       map[string]interface{} `json:"metadata" db:"metadata"`
-}
+// TranslationVersion moved to translation.go to avoid duplication
 
 // TranslationSyncConflict represents a conflict during synchronization
 type TranslationSyncConflict struct {
@@ -269,8 +255,8 @@ type SyncResult struct {
 
 // VersionDiff represents differences between two translation versions
 type VersionDiff struct {
-	Version1        *TranslationVersion    `json:"version1"`
-	Version2        *TranslationVersion    `json:"version2"`
+	Version1        TranslationVersion     `json:"version1"`
+	Version2        TranslationVersion     `json:"version2"`
 	TextChanges     []TextChange           `json:"text_changes"`
 	MetadataChanges map[string]interface{} `json:"metadata_changes"`
 }

@@ -125,7 +125,7 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 		}
 
 		// Обновляем перевод
-		err := h.marketplaceService.UpdateTranslationWithProvider(c.Context(), translation, translationProvider)
+		err := h.marketplaceService.UpdateTranslationWithProvider(c.Context(), translation, translationProvider, 0)
 		if err != nil {
 			logger.Error().Err(err).Int("listing_id", listingID).Str("field", fieldName).Str("language", updateData.Language).Msg("Failed to update translation")
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateTranslationError")
@@ -497,7 +497,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				}
 
 				if isFactory {
-					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, titleTranslation, translationProvider)
+					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, titleTranslation, translationProvider, 0)
 				} else {
 					err = h.marketplaceService.UpdateTranslation(bgCtx, titleTranslation)
 				}
@@ -540,7 +540,7 @@ func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {
 				}
 
 				if isFactory {
-					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, descTranslation, translationProvider)
+					err = h.marketplaceService.UpdateTranslationWithProvider(bgCtx, descTranslation, translationProvider, 0)
 				} else {
 					err = h.marketplaceService.UpdateTranslation(bgCtx, descTranslation)
 				}

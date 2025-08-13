@@ -1306,7 +1306,8 @@ func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int
 
 func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation *models.Translation) error {
 	// Используем сервис перевода по умолчанию (Google Translate)
-	return s.UpdateTranslationWithProvider(ctx, translation, GoogleTranslate)
+	// Передаём 0 в качестве userID, так как этот метод не имеет доступа к user_id
+	return s.UpdateTranslationWithProvider(ctx, translation, GoogleTranslate, 0)
 }
 
 // SaveTranslation is an alias for UpdateTranslation for compatibility
@@ -1333,11 +1334,11 @@ func (s *MarketplaceService) TranslateText(ctx context.Context, text, sourceLang
 }
 
 // UpdateTranslationWithProvider обновляет перевод с использованием указанного провайдера
-func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider) error {
+func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error {
 	// Проверяем, есть ли фабрика сервисов перевода
 	if factory, ok := s.translationService.(TranslationFactoryInterface); ok {
 		// Используем фабрику для обновления перевода с информацией о провайдере
-		return factory.UpdateTranslation(ctx, translation, provider)
+		return factory.UpdateTranslation(ctx, translation, provider, userID)
 	}
 
 	// Если фабрики нет, используем прямой запрос к базе данных
@@ -1360,16 +1361,25 @@ func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, 
 	query := `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name,
-            translated_text, is_machine_translated, is_verified, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            translated_text, is_machine_translated, is_verified, metadata,
+            last_modified_by
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (entity_type, entity_id, language, field_name)
         DO UPDATE SET
             translated_text = EXCLUDED.translated_text,
             is_machine_translated = EXCLUDED.is_machine_translated,
             is_verified = EXCLUDED.is_verified,
             metadata = EXCLUDED.metadata,
+            last_modified_by = EXCLUDED.last_modified_by,
             updated_at = CURRENT_TIMESTAMP
     `
+
+	var lastModifiedBy interface{}
+	if userID > 0 {
+		lastModifiedBy = userID
+	} else {
+		lastModifiedBy = nil
+	}
 
 	_, err = s.storage.Exec(ctx, query,
 		translation.EntityType,
@@ -1379,7 +1389,8 @@ func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, 
 		translation.TranslatedText,
 		translation.IsMachineTranslated,
 		translation.IsVerified,
-		metadataJSON)
+		metadataJSON,
+		lastModifiedBy)
 
 	return err
 }

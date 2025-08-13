@@ -60,7 +60,8 @@ export default function SyncManager() {
       setLastSyncResult(data.data);
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch {
+    } catch (err) {
+      console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -93,7 +94,8 @@ export default function SyncManager() {
       setLastSyncResult(data.data);
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch {
+    } catch (err) {
+      console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -124,7 +126,8 @@ export default function SyncManager() {
 
       toast.success(t('translations.syncSuccess'));
       fetchSyncStatus();
-    } catch {
+    } catch (err) {
+      console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
     } finally {
       setSyncing(false);
@@ -163,7 +166,8 @@ export default function SyncManager() {
       URL.revokeObjectURL(url);
 
       toast.success(t('translations.exportSuccess'));
-    } catch {
+    } catch (err) {
+      console.error('Failed to export data', err);
       toast.error(t('translations.exportError'));
     }
   };
@@ -201,7 +205,8 @@ export default function SyncManager() {
         })
       );
       fetchSyncStatus();
-    } catch {
+    } catch (err) {
+      console.error('Failed to import data', err);
       toast.error(t('translations.importError'));
     }
   };
@@ -221,8 +226,8 @@ export default function SyncManager() {
         const data = await response.json();
         setSyncStatus(data.data);
       }
-    } catch {
-      console.error('Failed to fetch sync status', _err);
+    } catch (err) {
+      console.error('Failed to fetch sync status', err);
     }
   };
 
@@ -244,8 +249,8 @@ export default function SyncManager() {
         const data = await response.json();
         setConflicts(data.data || []);
       }
-    } catch {
-      console.error('Failed to fetch conflicts', _err);
+    } catch (err) {
+      console.error('Failed to fetch conflicts', err);
     }
   };
 
@@ -274,7 +279,8 @@ export default function SyncManager() {
 
       toast.success(t('translations.conflictResolved'));
       fetchConflicts();
-    } catch {
+    } catch (err) {
+      console.error('Failed to resolve conflict', err);
       toast.error(t('translations.conflictResolveError'));
     }
   };

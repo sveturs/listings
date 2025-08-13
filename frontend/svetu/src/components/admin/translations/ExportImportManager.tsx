@@ -131,7 +131,7 @@ export default function ExportImportManager() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setImportFile(file);
+    _setImportFile(file);
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -189,7 +189,7 @@ export default function ExportImportManager() {
 
   const clearImport = () => {
     setImportData('');
-    setImportFile(null);
+    _setImportFile(null);
     setImportResult(null);
 
     // Clear file input

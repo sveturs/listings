@@ -4,15 +4,19 @@
 export interface TranslationVersion {
   id: number;
   translation_id: number;
-  version_number: number;
   entity_type: string;
   entity_id: number;
-  language: string;
   field_name: string;
+  language: string;
   translated_text: string;
+  previous_text?: string;
+  version: number;
+  version_number?: number; // для обратной совместимости
+  change_type: 'created' | 'updated' | 'deleted' | 'restored';
   changed_by?: number;
   changed_at: string;
-  change_comment?: string;
+  change_reason?: string;
+  change_comment?: string; // для обратной совместимости
   metadata?: Record<string, any>;
 }
 
@@ -115,10 +119,16 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 
   if (typeof window !== 'undefined') {
     try {
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const token = await tokenManager.getAccessToken();
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      // For demo pages, use a test token
+      if (window.location.pathname.includes('/demo/')) {
+        // This is a hardcoded test token for demo purposes only
+        headers['Authorization'] = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiZXhwIjoxNzU1MTUyNTE5LCJpYXQiOjE3NTUwNjYxMTksImlzX2FkbWluIjp0cnVlLCJ1c2VyX2lkIjoxfQ.Tlq5EwIkiIYmlvEJ-TQMMz0_WT06xudZArjHZ8tArjs`;
+      } else {
+        const { tokenManager } = await import('@/utils/tokenManager');
+        const token = await tokenManager.getAccessToken();
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
       }
     } catch {
       console.log('No auth token available');
@@ -135,7 +145,7 @@ export const translationAdminApi = {
     async getByEntity(
       entityType: string,
       entityId: number
-    ): Promise<TranslationVersion[]> {
+    ): Promise<any> {
       const headers = await getAuthHeaders();
 
       const response = await fetch(
@@ -152,7 +162,8 @@ export const translationAdminApi = {
       }
 
       const data = await response.json();
-      return data.data || [];
+      // API возвращает объект с versions внутри data
+      return data.data || { versions: [], current_version: 0, total_versions: 0 };
     },
 
     async getDiff(

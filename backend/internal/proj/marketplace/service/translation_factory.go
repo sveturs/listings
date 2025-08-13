@@ -27,7 +27,7 @@ type TranslationFactoryInterface interface {
 	TranslateWithProvider(ctx context.Context, text string, sourceLanguage string, targetLanguage string, provider TranslationProvider) (string, error)
 
 	// Обновление перевода с информацией о провайдере
-	UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider) error
+	UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error
 }
 
 // TranslationServiceFactory создает и управляет различными сервисами перевода
@@ -202,14 +202,48 @@ func (f *TranslationServiceFactory) GetTranslationCount(provider TranslationProv
 
 // Реализация интерфейса TranslationServiceInterface
 
-// Translate переводит текст с одного языка на другой, используя провайдер по умолчанию
+// Translate переводит текст с одного языка на другой, используя провайдер по умолчанию с автоматическим fallback
 func (f *TranslationServiceFactory) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
+	// Пытаемся использовать провайдер по умолчанию
 	service, err := f.GetTranslationService(f.defaultProvider)
 	if err != nil {
 		return "", fmt.Errorf("ошибка получения сервиса перевода: %w", err)
 	}
 
-	return service.Translate(ctx, text, sourceLanguage, targetLanguage)
+	result, err := service.Translate(ctx, text, sourceLanguage, targetLanguage)
+	if err == nil {
+		return result, nil
+	}
+
+	// Логируем ошибку основного провайдера
+	logger.Warn().
+		Err(err).
+		Str("provider", string(f.defaultProvider)).
+		Msg("Translation failed with default provider, attempting fallback")
+
+	// Пытаемся использовать резервный провайдер
+	var fallbackProvider TranslationProvider
+	if f.defaultProvider == GoogleTranslate && f.openAIService != nil {
+		fallbackProvider = OpenAI
+		service = f.openAIService
+	} else if f.defaultProvider == OpenAI && f.googleService != nil {
+		fallbackProvider = GoogleTranslate
+		service = f.googleService
+	} else {
+		// Нет резервного провайдера
+		return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
+	}
+
+	logger.Info().
+		Str("fallback_provider", string(fallbackProvider)).
+		Msg("Attempting translation with fallback provider")
+
+	result, fallbackErr := service.Translate(ctx, text, sourceLanguage, targetLanguage)
+	if fallbackErr != nil {
+		return "", fmt.Errorf("перевод не удался с обоими провайдерами. Основной: %v, Резервный: %w", err, fallbackErr)
+	}
+
+	return result, nil
 }
 
 // TranslateWithProvider переводит текст с одного языка на другой, используя указанный провайдер
@@ -242,14 +276,50 @@ func (f *TranslationServiceFactory) TranslateToAllLanguages(ctx context.Context,
 	return service.TranslateToAllLanguages(ctx, text)
 }
 
-// TranslateEntityFields переводит поля сущности
+// TranslateEntityFields переводит поля сущности с автоматическим fallback
 func (f *TranslationServiceFactory) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {
+	// Пытаемся использовать провайдер по умолчанию
 	service, err := f.GetTranslationService(f.defaultProvider)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения сервиса перевода: %w", err)
 	}
 
-	return service.TranslateEntityFields(ctx, sourceLanguage, targetLanguages, fields)
+	result, err := service.TranslateEntityFields(ctx, sourceLanguage, targetLanguages, fields)
+	if err == nil {
+		return result, nil
+	}
+
+	// Логируем ошибку основного провайдера
+	logger.Warn().
+		Err(err).
+		Str("provider", string(f.defaultProvider)).
+		Int("fields_count", len(fields)).
+		Int("target_langs", len(targetLanguages)).
+		Msg("TranslateEntityFields failed with default provider, attempting fallback")
+
+	// Пытаемся использовать резервный провайдер
+	var fallbackProvider TranslationProvider
+	if f.defaultProvider == GoogleTranslate && f.openAIService != nil {
+		fallbackProvider = OpenAI
+		service = f.openAIService
+	} else if f.defaultProvider == OpenAI && f.googleService != nil {
+		fallbackProvider = GoogleTranslate
+		service = f.googleService
+	} else {
+		// Нет резервного провайдера
+		return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
+	}
+
+	logger.Info().
+		Str("fallback_provider", string(fallbackProvider)).
+		Msg("Attempting TranslateEntityFields with fallback provider")
+
+	result, fallbackErr := service.TranslateEntityFields(ctx, sourceLanguage, targetLanguages, fields)
+	if fallbackErr != nil {
+		return nil, fmt.Errorf("перевод полей не удался с обоими провайдерами. Основной: %v, Резервный: %w", err, fallbackErr)
+	}
+
+	return result, nil
 }
 
 // DetectLanguage определяет язык текста
@@ -273,7 +343,7 @@ func (f *TranslationServiceFactory) ModerateText(ctx context.Context, text strin
 }
 
 // UpdateTranslation обновляет перевод с информацией о провайдере
-func (f *TranslationServiceFactory) UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider) error {
+func (f *TranslationServiceFactory) UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error {
 	// Создаем отдельное поле или метаданные для хранения информации о провайдере перевода
 	if translation.Metadata == nil {
 		translation.Metadata = make(map[string]interface{})
@@ -285,16 +355,16 @@ func (f *TranslationServiceFactory) UpdateTranslation(ctx context.Context, trans
 	// Отправляем запрос на обновление перевода через хранилище MarketplaceService
 	// Используем хранилище из любого доступного сервиса
 	if f.googleService != nil && f.googleService.storage != nil {
-		return f.updateTranslationWithStorage(ctx, translation, f.googleService.storage)
+		return f.updateTranslationWithStorage(ctx, translation, f.googleService.storage, userID)
 	} else if f.openAIService != nil && f.openAIService.storage != nil {
-		return f.updateTranslationWithStorage(ctx, translation, f.openAIService.storage)
+		return f.updateTranslationWithStorage(ctx, translation, f.openAIService.storage, userID)
 	}
 
 	return fmt.Errorf("не найдено доступное хранилище для обновления перевода")
 }
 
 // updateTranslationWithStorage - вспомогательный метод для обновления перевода через хранилище
-func (f *TranslationServiceFactory) updateTranslationWithStorage(ctx context.Context, translation *models.Translation, storage storage.Storage) error {
+func (f *TranslationServiceFactory) updateTranslationWithStorage(ctx context.Context, translation *models.Translation, storage storage.Storage, userID int) error {
 	// Преобразуем метаданные в JSON
 	metadataJSON, err := json.Marshal(translation.Metadata)
 	if err != nil {
@@ -305,16 +375,25 @@ func (f *TranslationServiceFactory) updateTranslationWithStorage(ctx context.Con
 	query := `
         INSERT INTO translations (
             entity_type, entity_id, language, field_name,
-            translated_text, is_machine_translated, is_verified, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            translated_text, is_machine_translated, is_verified, metadata,
+            last_modified_by
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (entity_type, entity_id, language, field_name)
         DO UPDATE SET
             translated_text = EXCLUDED.translated_text,
             is_machine_translated = EXCLUDED.is_machine_translated,
             is_verified = EXCLUDED.is_verified,
             metadata = EXCLUDED.metadata,
+            last_modified_by = EXCLUDED.last_modified_by,
             updated_at = CURRENT_TIMESTAMP
     `
+
+	var lastModifiedBy interface{}
+	if userID > 0 {
+		lastModifiedBy = userID
+	} else {
+		lastModifiedBy = nil
+	}
 
 	_, err = storage.Exec(ctx, query,
 		translation.EntityType,
@@ -324,7 +403,8 @@ func (f *TranslationServiceFactory) updateTranslationWithStorage(ctx context.Con
 		translation.TranslatedText,
 		translation.IsMachineTranslated,
 		translation.IsVerified,
-		metadataJSON)
+		metadataJSON,
+		lastModifiedBy)
 
 	return err
 }

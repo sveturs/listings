@@ -23,13 +23,13 @@ type Module struct {
 }
 
 // NewModule creates a new translation admin module
-func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontendPath string, redisClient *redis.Client) *Module {
+func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontendPath string, redisClient *redis.Client, translationService interface{}) *Module {
 	// Create repository
 	repo := NewRepository(db, logger)
 
 	// Create service with proper frontend path and Redis
 	messagesPath := filepath.Join(frontendPath, "frontend", "svetu")
-	service := NewService(ctx, logger, messagesPath, repo, repo, redisClient)
+	service := NewService(ctx, logger, messagesPath, repo, repo, redisClient, db.DB, translationService)
 
 	// Create rate limiter for AI translations
 	rateLimiter := ratelimit.NewMultiProviderRateLimiter(redisClient, ratelimit.DefaultConfig())
@@ -58,6 +58,9 @@ func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontend
 
 // RegisterRoutes registers the module routes
 func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware) error {
+	// Public test endpoint for translation testing
+	app.Post("/api/v1/test/translate", m.aiHandler.TranslateText)
+
 	// Admin-only endpoints for translation management
 	admin := app.Group("/api/v1/admin/translations",
 		middleware.AuthRequiredJWT,

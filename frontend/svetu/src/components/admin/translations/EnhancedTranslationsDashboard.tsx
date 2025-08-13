@@ -24,7 +24,7 @@ import AICostsMonitor from './AICostsMonitor';
 export default function EnhancedTranslationsDashboard() {
   const _t = useTranslations('admin');
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'bulk' | 'audit' | 'export' | 'ai' | 'sync' | 'stats' | 'costs'
+    'overview' | 'bulk' | 'audit' | 'export' | 'ai' | 'sync' | 'stats' | 'costs' | 'versions'
   >('overview');
   const [_showVersionHistory, _setShowVersionHistory] = useState(false);
   const [_versionHistoryParams, _setVersionHistoryParams] = useState<{
@@ -99,6 +99,13 @@ export default function EnhancedTranslationsDashboard() {
         >
           <PlayIcon className="h-4 w-4 mr-2" />
           Массовый перевод
+        </button>
+        <button
+          className={`tab ${activeTab === 'versions' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('versions')}
+        >
+          <ClockIcon className="h-4 w-4 mr-2" />
+          История версий
         </button>
         <button
           className={`tab ${activeTab === 'audit' ? 'tab-active' : ''}`}
@@ -415,6 +422,85 @@ export default function EnhancedTranslationsDashboard() {
         {/* Costs Tab */}
         {activeTab === 'costs' && <AICostsMonitor />}
 
+        {/* Versions Tab */}
+        {activeTab === 'versions' && (
+          <div className="grid gap-6">
+            <div className="card bg-base-100 shadow-sm">
+              <div className="card-body">
+                <h4 className="font-semibold mb-3">История версий переводов</h4>
+                <p className="text-base-content/60 mb-4">
+                  Просматривайте историю изменений, сравнивайте версии и откатывайтесь к предыдущим версиям переводов
+                </p>
+                
+                <div className="form-control mb-4">
+                  <label className="label">
+                    <span className="label-text">Введите тип сущности и ID для просмотра истории</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <select 
+                      className="select select-bordered flex-1"
+                      id="entity-type-select"
+                      defaultValue="listing"
+                    >
+                      <option value="listing">Объявление (listing)</option>
+                      <option value="attribute">Атрибут (attribute)</option>
+                      <option value="category">Категория (category)</option>
+                      <option value="storefront">Витрина (storefront)</option>
+                      <option value="product">Товар (product)</option>
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="ID сущности"
+                      className="input input-bordered flex-1"
+                      id="entity-id-input"
+                    />
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        const typeSelect = document.getElementById('entity-type-select') as HTMLSelectElement;
+                        const idInput = document.getElementById('entity-id-input') as HTMLInputElement;
+                        const entityType = typeSelect?.value;
+                        const entityId = parseInt(idInput?.value || '0');
+                        
+                        if (entityType && entityId > 0) {
+                          _openVersionHistory(entityType, entityId);
+                        } else {
+                          alert('Пожалуйста, выберите тип и введите ID');
+                        }
+                      }}
+                    >
+                      <ClockIcon className="h-4 w-4 mr-2" />
+                      Показать историю
+                    </button>
+                  </div>
+                </div>
+
+                <div className="divider">Недавние изменения</div>
+                
+                <div className="space-y-2">
+                  <div className="alert alert-info">
+                    <div>
+                      <h5 className="font-medium">Примеры для тестирования:</h5>
+                      <ul className="text-sm mt-2 space-y-1">
+                        <li>• attribute ID: 3200 (тестировали версионирование)</li>
+                        <li>• listing ID: 1-100 (обычно есть переводы)</li>
+                        <li>• category ID: 1-20 (основные категории)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="alert alert-warning mt-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>Версионирование автоматически создается при каждом изменении перевода</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Statistics Tab (Legacy) */}
         {activeTab === 'stats' && (
           <div className="grid gap-6">
@@ -503,11 +589,11 @@ export default function EnhancedTranslationsDashboard() {
       </div>
 
       {/* Version History Modal */}
-      {showVersionHistory && versionHistoryParams && (
+      {_showVersionHistory && _versionHistoryParams && (
         <VersionHistoryViewer
-          entityType={versionHistoryParams.entityType}
-          entityId={versionHistoryParams.entityId}
-          onClose={closeVersionHistory}
+          entityType={_versionHistoryParams.entityType}
+          entityId={_versionHistoryParams.entityId}
+          onClose={_closeVersionHistory}
         />
       )}
     </div>
