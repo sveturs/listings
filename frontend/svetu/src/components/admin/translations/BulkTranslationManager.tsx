@@ -19,6 +19,7 @@ import {
   TagIcon,
   CurrencyEuroIcon,
   ArrowPathIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 interface EntityOption {
@@ -195,13 +196,18 @@ export default function BulkTranslationManager() {
 
   const loadProviders = async () => {
     try {
-      const data = await translationAdminApi.providers.getAll();
-      setProviders(data);
+      const response = await translationAdminApi.getProviders();
+      if (response.success && response.data) {
+        setProviders(response.data);
 
-      // Select first active provider by default
-      const activeProvider = data.find((p) => p.is_active);
-      if (activeProvider) {
-        setProviderId(activeProvider.id);
+        // Select first active provider by default
+        const activeProvider = response.data.find((p) => p.is_active);
+        if (activeProvider) {
+          setProviderId(activeProvider.id);
+        }
+      } else {
+        setProviders([]);
+        setProviderId(undefined);
       }
     } catch (error) {
       console.error('Failed to load providers:', error);
@@ -284,11 +290,32 @@ export default function BulkTranslationManager() {
       }, 500);
 
       const translationResult =
-        await translationAdminApi.bulk.translate(request);
+        await translationAdminApi.bulkTranslate(request);
 
       clearInterval(progressInterval);
       setProgress(100);
-      setResult(translationResult);
+
+      if (translationResult.success && translationResult.data) {
+        setResult(translationResult.data);
+        
+        // Обновляем список сущностей после успешного перевода
+        // чтобы отразить новые переводы в UI
+        await loadEntities();
+        
+        // Сбрасываем выбранные элементы
+        setSelectedEntities([]);
+      } else {
+        // Показываем ошибку если запрос не успешен
+        setResult({
+          total_processed: selectedEntities.length,
+          successful: 0,
+          failed: selectedEntities.length,
+          skipped: 0,
+          errors: [
+            translationResult.error || 'Неизвестная ошибка при переводе',
+          ],
+        });
+      }
 
       setTimeout(() => setProgress(0), 2000);
     } catch (error) {
@@ -432,7 +459,7 @@ export default function BulkTranslationManager() {
                     .filter((p) => p.is_active)
                     .map((provider) => (
                       <option key={provider.id} value={provider.id}>
-                        {provider.name} ({provider.provider_type})
+                        {provider.name} ({provider.type})
                       </option>
                     ))}
                 </select>
@@ -657,6 +684,21 @@ export default function BulkTranslationManager() {
                                     </span>
                                   )}
                                 </h4>
+                                
+                                {/* Translation status badges */}
+                                {entity.translations && (
+                                  <div className="flex gap-1 mt-1">
+                                    {entity.translations.en && (
+                                      <span className="badge badge-success badge-xs">EN</span>
+                                    )}
+                                    {entity.translations.ru && (
+                                      <span className="badge badge-success badge-xs">RU</span>
+                                    )}
+                                    {entity.translations.sr && (
+                                      <span className="badge badge-success badge-xs">SR</span>
+                                    )}
+                                  </div>
+                                )}
 
                                 {/* Description */}
                                 {entity.description && (
@@ -768,12 +810,24 @@ export default function BulkTranslationManager() {
             <div className="card-body">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="card-title text-lg">Результаты перевода</h3>
-                {result.processing_time && (
-                  <span className="text-sm text-base-content/60">
-                    Время обработки:{' '}
-                    {(result.processing_time / 1000).toFixed(2)} сек
-                  </span>
-                )}
+                <div className="flex items-center gap-4">
+                  {result.processing_time && (
+                    <span className="text-sm text-base-content/60">
+                      Время обработки:{' '}
+                      {(result.processing_time / 1000).toFixed(2)} сек
+                    </span>
+                  )}
+                  <button
+                    className="btn btn-ghost btn-sm btn-circle"
+                    onClick={() => {
+                      setResult(null);
+                      setProgress(0);
+                    }}
+                    title="Закрыть результаты"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -922,22 +976,39 @@ export default function BulkTranslationManager() {
                       {result.details.successful_items.map((item, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-2 bg-base-100 rounded"
+                          className="p-3 bg-base-100 rounded border border-success/10"
                         >
-                          <span className="text-sm">
-                            <strong>#{item.entity_id}</strong>{' '}
-                            {item.entity_name}
-                          </span>
-                          <div className="flex gap-1">
-                            {item.languages.map((lang) => (
-                              <span
-                                key={lang}
-                                className="badge badge-success badge-sm"
-                              >
-                                {lang.toUpperCase()}
-                              </span>
-                            ))}
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">
+                              <strong>#{item.entity_id}</strong>{' '}
+                              {item.entity_name}
+                            </span>
+                            <div className="flex gap-1">
+                              {item.languages.map((lang) => (
+                                <span
+                                  key={lang}
+                                  className="badge badge-success badge-sm"
+                                >
+                                  {lang.toUpperCase()}
+                                </span>
+                              ))}
+                            </div>
                           </div>
+                          {/* Показываем переведенные значения */}
+                          {item.translations && (
+                            <div className="space-y-1 mt-2">
+                              {Object.entries(item.translations).map(([lang, text]) => (
+                                <div key={lang} className="flex gap-2 text-xs">
+                                  <span className="font-semibold text-base-content/70 w-8">
+                                    {lang.toUpperCase()}:
+                                  </span>
+                                  <span className="text-base-content/90 flex-1">
+                                    {text as string}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

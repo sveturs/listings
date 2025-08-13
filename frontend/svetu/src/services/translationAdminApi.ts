@@ -1,5 +1,3 @@
-// import { apiClient } from './api-client';
-
 // Types для новой системы переводов
 export interface TranslationVersion {
   id: number;
@@ -11,12 +9,12 @@ export interface TranslationVersion {
   translated_text: string;
   previous_text?: string;
   version: number;
-  version_number?: number; // для обратной совместимости
+  version_number?: number;
   change_type: 'created' | 'updated' | 'deleted' | 'restored';
   changed_by?: number;
   changed_at: string;
   change_reason?: string;
-  change_comment?: string; // для обратной совместимости
+  change_comment?: string;
   metadata?: Record<string, any>;
 }
 
@@ -54,6 +52,7 @@ export interface BulkTranslateResult {
       entity_id: number;
       entity_name: string;
       languages: string[];
+      translations?: Record<string, string>; // Добавляем поле для переведенных текстов
     }>;
     failed_items?: Array<{
       entity_id: number;
@@ -98,301 +97,521 @@ export interface VersionDiff {
 
 export interface TextChange {
   type: 'addition' | 'deletion' | 'modification';
-  position: number;
-  old_text: string;
-  new_text: string;
-  length: number;
+  line: number;
+  content: string;
+  old_content?: string;
 }
 
 export interface AuditStatistics {
   total_actions: number;
   actions_by_type: Record<string, number>;
-  actions_by_user: Record<number, number>;
+  actions_by_user: Array<{
+    user_id: number;
+    user_name: string;
+    action_count: number;
+  }>;
+  actions_by_date: Array<{
+    date: string;
+    count: number;
+  }>;
   recent_actions: TranslationAuditLog[];
 }
 
-// Helper function to get auth headers
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+export interface TranslationProvider {
+  id: number;
+  name: string;
+  type: 'openai' | 'google' | 'deepl' | 'claude';
+  is_active: boolean;
+  api_key?: string;
+  settings?: Record<string, any>;
+  usage_count?: number;
+  last_used?: string;
+}
 
-  if (typeof window !== 'undefined') {
-    try {
-      // For demo pages, use a test token
-      if (window.location.pathname.includes('/demo/')) {
-        // This is a hardcoded test token for demo purposes only
-        headers['Authorization'] =
-          `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiZXhwIjoxNzU1MTUyNTE5LCJpYXQiOjE3NTUwNjYxMTksImlzX2FkbWluIjp0cnVlLCJ1c2VyX2lkIjoxfQ.Tlq5EwIkiIYmlvEJ-TQMMz0_WT06xudZArjHZ8tArjs`;
-      } else {
-        const { tokenManager } = await import('@/utils/tokenManager');
-        const token = await tokenManager.getAccessToken();
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
+export interface TranslationStatistics {
+  total_translations: number;
+  complete_translations: number;
+  missing_translations: number;
+  placeholder_count: number;
+  language_stats: Record<
+    string,
+    {
+      total: number;
+      complete: number;
+      machine_translated: number;
+      verified: number;
+      coverage: number;
+    }
+  >;
+  module_stats: Array<{
+    name: string;
+    keys: number;
+    complete: number;
+    incomplete: number;
+    placeholders: number;
+    missing: number;
+    languages: Record<
+      string,
+      {
+        total: number;
+        complete: number;
+        incomplete: number;
+        placeholders: number;
+        missing: number;
       }
-    } catch {
-      console.log('No auth token available');
+    >;
+  }>;
+  recent_changes: TranslationAuditLog[];
+}
+
+export interface SyncConflict {
+  id: number;
+  entity_type: string;
+  entity_id: number;
+  field_name: string;
+  language: string;
+  frontend_value: string;
+  database_value: string;
+  detected_at: string;
+  resolved: boolean;
+  resolution?: 'frontend' | 'database' | 'manual';
+  resolved_value?: string;
+  resolved_by?: number;
+  resolved_at?: string;
+}
+
+export interface SyncStatus {
+  in_progress: boolean;
+  last_sync?: {
+    type: 'frontend-to-db' | 'db-to-frontend' | 'db-to-opensearch';
+    started_at: string;
+    completed_at?: string;
+    items_processed: number;
+    items_synced: number;
+    errors: number;
+  };
+  conflicts_count: number;
+}
+
+// API Response wrapper
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+
+// Translation Admin API Client
+class TranslationAdminApi {
+  private baseUrl = '/api/v1/admin/translations';
+
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem('access_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }
+
+  private async request<T>(
+    path: string,
+    options?: RequestInit
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        ...options,
+        headers: {
+          ...this.getAuthHeaders(),
+          ...options?.headers,
+        },
+      });
+
+      // Handle 401 - Unauthorized
+      if (response.status === 401) {
+        // Try to refresh token
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+          // Retry request with new token
+          const retryResponse = await fetch(`${this.baseUrl}${path}`, {
+            ...options,
+            headers: {
+              ...this.getAuthHeaders(),
+              ...options?.headers,
+            },
+          });
+          return retryResponse.json();
+        }
+        throw new Error('Authentication required');
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('API request failed:', error);
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
+      };
     }
   }
 
-  return headers;
-}
+  private async refreshToken(): Promise<boolean> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return false;
 
-// Translation Admin API Service
-export const translationAdminApi = {
-  // Version History
-  versions: {
-    async getByEntity(entityType: string, entityId: number): Promise<any> {
-      const headers = await getAuthHeaders();
-
-      const response = await fetch(
-        `/api/v1/admin/translations/versions/${entityType}/${entityId}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      // API возвращает объект с versions внутри data
-      return (
-        data.data || { versions: [], current_version: 0, total_versions: 0 }
-      );
-    },
-
-    async getDiff(
-      versionId1: number,
-      versionId2: number
-    ): Promise<VersionDiff> {
-      const headers = await getAuthHeaders();
-
-      const response = await fetch(
-        `/api/v1/admin/translations/versions/diff?version_id1=${versionId1}&version_id2=${versionId2}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.data;
-    },
-
-    async rollback(
-      translationId: number,
-      versionId: number,
-      comment?: string
-    ): Promise<void> {
-      const headers = await getAuthHeaders();
-
-      const response = await fetch(
-        `/api/v1/admin/translations/versions/rollback`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            translation_id: translationId,
-            version_id: versionId,
-            comment,
-          }),
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    },
-  },
-
-  // Audit Logs
-  audit: {
-    async getLogs(
-      page: number = 1,
-      pageSize: number = 20,
-      filters?: {
-        user_id?: number;
-        action?: string;
-        entity_type?: string;
-        start_date?: string;
-        end_date?: string;
-      }
-    ): Promise<{
-      data: TranslationAuditLog[];
-      total: number;
-      page: number;
-      total_pages: number;
-    }> {
-      const headers = await getAuthHeaders();
-      const params = new URLSearchParams({
-        page: page.toString(),
-        page_size: pageSize.toString(),
+    try {
+      const response = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined) {
-            params.append(key, value.toString());
+      if (response.ok) {
+        const data = await response.json();
+        if (data.access_token) {
+          localStorage.setItem('access_token', data.access_token);
+          if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
           }
-        });
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/translations/audit/logs?${params.toString()}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
+          return true;
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+    }
 
-      return await response.json();
-    },
+    return false;
+  }
 
-    async getStatistics(): Promise<AuditStatistics> {
-      const headers = await getAuthHeaders();
+  // Statistics
+  async getStatistics(): Promise<ApiResponse<TranslationStatistics>> {
+    return this.request<TranslationStatistics>('/stats/overview');
+  }
 
-      const response = await fetch(
-        `/api/v1/admin/translations/audit/statistics`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
+  async getCoverage(language?: string): Promise<ApiResponse<any>> {
+    const params = language ? `?language=${language}` : '';
+    return this.request(`/stats/coverage${params}`);
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  async getQuality(): Promise<ApiResponse<any>> {
+    return this.request('/stats/quality');
+  }
 
-      const data = await response.json();
-      return data.data;
-    },
-  },
+  async getUsage(): Promise<ApiResponse<any>> {
+    return this.request('/stats/usage');
+  }
 
-  // Bulk Operations
-  bulk: {
-    async translate(
-      request: BulkTranslateRequest
-    ): Promise<BulkTranslateResult> {
-      const headers = await getAuthHeaders();
+  // Providers
+  async getProviders(): Promise<ApiResponse<TranslationProvider[]>> {
+    return this.request<TranslationProvider[]>('/providers');
+  }
 
-      const response = await fetch(
-        `/api/v1/admin/translations/bulk/translate`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(request),
-          credentials: 'include',
-        }
-      );
+  async updateProvider(
+    id: number,
+    data: Partial<TranslationProvider>
+  ): Promise<ApiResponse<TranslationProvider>> {
+    return this.request<TranslationProvider>(`/providers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  // Bulk operations
+  async bulkTranslate(
+    request: BulkTranslateRequest
+  ): Promise<ApiResponse<BulkTranslateResult>> {
+    return this.request<BulkTranslateResult>('/bulk/translate', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
 
-      const data = await response.json();
-      return data.data;
-    },
-  },
+  // Version history
+  async getVersionHistory(
+    entityType: string,
+    entityId: number
+  ): Promise<ApiResponse<TranslationVersion[]>> {
+    return this.request<TranslationVersion[]>(
+      `/versions/${entityType}/${entityId}`
+    );
+  }
+
+  async getVersionDiff(
+    version1Id: number,
+    version2Id: number
+  ): Promise<ApiResponse<VersionDiff>> {
+    return this.request<VersionDiff>(
+      `/versions/diff?v1=${version1Id}&v2=${version2Id}`
+    );
+  }
+
+  async rollbackVersion(
+    versionId: number,
+    reason?: string
+  ): Promise<ApiResponse<TranslationVersion>> {
+    return this.request<TranslationVersion>('/versions/rollback', {
+      method: 'POST',
+      body: JSON.stringify({ version_id: versionId, reason }),
+    });
+  }
+
+  // Sync operations
+  async syncFrontendToDB(): Promise<ApiResponse<any>> {
+    return this.request('/sync/frontend-to-db', {
+      method: 'POST',
+    });
+  }
+
+  async syncDBToFrontend(): Promise<ApiResponse<any>> {
+    return this.request('/sync/db-to-frontend', {
+      method: 'POST',
+    });
+  }
+
+  async syncDBToOpenSearch(): Promise<ApiResponse<any>> {
+    return this.request('/sync/db-to-opensearch', {
+      method: 'POST',
+    });
+  }
+
+  async getSyncStatus(): Promise<ApiResponse<SyncStatus>> {
+    return this.request<SyncStatus>('/sync/status');
+  }
+
+  async getConflicts(): Promise<ApiResponse<SyncConflict[]>> {
+    return this.request<SyncConflict[]>('/sync/conflicts');
+  }
+
+  async resolveConflict(
+    conflictId: number,
+    resolution: 'frontend' | 'database' | 'manual',
+    value?: string
+  ): Promise<ApiResponse<SyncConflict>> {
+    return this.request<SyncConflict>(`/sync/conflicts/${conflictId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ resolution, value }),
+    });
+  }
+
+  async resolveConflictsBatch(
+    conflictIds: number[],
+    resolution: 'frontend' | 'database'
+  ): Promise<ApiResponse<any>> {
+    return this.request('/sync/conflicts/resolve', {
+      method: 'POST',
+      body: JSON.stringify({ conflict_ids: conflictIds, resolution }),
+    });
+  }
 
   // Export/Import
-  async export(request: ExportRequest): Promise<any> {
-    const headers = await getAuthHeaders();
-
-    const response = await fetch(`/api/v1/admin/translations/export/advanced`, {
+  async export(request: ExportRequest): Promise<ApiResponse<any>> {
+    return this.request('/export/advanced', {
       method: 'POST',
-      headers,
       body: JSON.stringify(request),
-      credentials: 'include',
+    });
+  }
+
+  async import(request: ImportRequest): Promise<ApiResponse<any>> {
+    return this.request('/import/advanced', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async validateImport(data: any, format: string): Promise<ApiResponse<any>> {
+    return this.request('/import/validate', {
+      method: 'POST',
+      body: JSON.stringify({ data, format }),
+    });
+  }
+
+  // Audit
+  async getAuditLogs(
+    page = 1,
+    limit = 50,
+    filters?: {
+      user_id?: number;
+      action?: string;
+      entity_type?: string;
+      start_date?: string;
+      end_date?: string;
+    }
+  ): Promise<
+    ApiResponse<{
+      logs: TranslationAuditLog[];
+      total: number;
+      page: number;
+      pages: number;
+    }>
+  > {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(filters?.user_id && { user_id: filters.user_id.toString() }),
+      ...(filters?.action && { action: filters.action }),
+      ...(filters?.entity_type && { entity_type: filters.entity_type }),
+      ...(filters?.start_date && { start_date: filters.start_date }),
+      ...(filters?.end_date && { end_date: filters.end_date }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    return this.request(`/audit/logs?${params}`);
+  }
+
+  async getAuditStatistics(): Promise<ApiResponse<AuditStatistics>> {
+    return this.request<AuditStatistics>('/audit/statistics');
+  }
+
+  // Search
+  async searchTranslations(
+    query: string,
+    filters?: {
+      language?: string;
+      module?: string;
+      verified_only?: boolean;
+      entity_type?: string;
     }
-
-    // Для CSV и XLIFF возвращаем blob для скачивания
-    if (request.format === 'csv' || request.format === 'xliff') {
-      return await response.blob();
-    }
-
-    // Для JSON возвращаем данные
-    return await response.json();
-  },
-
-  async import(request: ImportRequest): Promise<{
-    success: number;
-    failed: number;
-    skipped: number;
-    errors?: string[];
-  }> {
-    const headers = await getAuthHeaders();
-
-    const response = await fetch(`/api/v1/admin/translations/import/advanced`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(request),
-      credentials: 'include',
+  ): Promise<ApiResponse<any>> {
+    const params = new URLSearchParams({
+      q: query,
+      ...(filters?.language && { language: filters.language }),
+      ...(filters?.module && { module: filters.module }),
+      ...(filters?.verified_only && { verified_only: 'true' }),
+      ...(filters?.entity_type && { entity_type: filters.entity_type }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    return this.request(`/search?${params}`);
+  }
+
+  // AI Translation
+  async translateWithAI(
+    text: string,
+    targetLanguage: string,
+    providerId?: number
+  ): Promise<
+    ApiResponse<{
+      translated_text: string;
+      provider_used: string;
+      confidence?: number;
+    }>
+  > {
+    return this.request('/ai/translate', {
+      method: 'POST',
+      body: JSON.stringify({
+        text,
+        target_language: targetLanguage,
+        provider_id: providerId,
+      }),
+    });
+  }
+
+  async translateBatch(
+    texts: string[],
+    targetLanguages: string[],
+    providerId?: number
+  ): Promise<ApiResponse<any>> {
+    return this.request('/ai/batch', {
+      method: 'POST',
+      body: JSON.stringify({
+        texts,
+        target_languages: targetLanguages,
+        provider_id: providerId,
+      }),
+    });
+  }
+
+  // Frontend module translations
+  async getFrontendModules(): Promise<ApiResponse<string[]>> {
+    return this.request<string[]>('/frontend/modules');
+  }
+
+  async getModuleTranslations(
+    moduleName: string
+  ): Promise<ApiResponse<Record<string, any>>> {
+    return this.request(`/frontend/module/${moduleName}`);
+  }
+
+  async updateModuleTranslations(
+    moduleName: string,
+    translations: Record<string, any>
+  ): Promise<ApiResponse<any>> {
+    return this.request(`/frontend/module/${moduleName}`, {
+      method: 'PUT',
+      body: JSON.stringify(translations),
+    });
+  }
+
+  // Database translations
+  async getDatabaseTranslations(
+    entityType?: string,
+    entityId?: number
+  ): Promise<ApiResponse<any>> {
+    const params = new URLSearchParams();
+    if (entityType) params.append('entity_type', entityType);
+    if (entityId) params.append('entity_id', entityId.toString());
+
+    return this.request(`/database?${params}`);
+  }
+
+  async updateTranslation(
+    id: number,
+    data: {
+      translated_text: string;
+      is_verified?: boolean;
     }
+  ): Promise<ApiResponse<any>> {
+    return this.request(`/database/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
 
-    const data = await response.json();
-    return data.data;
-  },
+  async deleteTranslation(id: number): Promise<ApiResponse<any>> {
+    return this.request(`/database/${id}`, {
+      method: 'DELETE',
+    });
+  }
 
-  // Translation Providers
-  providers: {
-    async getAll(): Promise<any[]> {
-      const headers = await getAuthHeaders();
+  // Search translations
+  async searchTranslations(params: {
+    query: string;
+    entity_type?: string;
+    language?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<Translation[]>> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('q', params.query);
+    if (params.entity_type)
+      searchParams.append('entity_type', params.entity_type);
+    if (params.language) searchParams.append('language', params.language);
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.offset) searchParams.append('offset', params.offset.toString());
 
-      const response = await fetch(`/api/v1/admin/translations/providers`, {
-        method: 'GET',
-        headers,
-        credentials: 'include',
-      });
+    return this.request<Translation[]>(`/search?${searchParams}`);
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  // AI Translation
+  async translateWithAI(params: {
+    text: string;
+    source_language: string;
+    target_language: string;
+    context?: string;
+  }): Promise<ApiResponse<{ translated_text: string; confidence: number }>> {
+    return this.request(`/ai/translate`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+}
 
-      const data = await response.json();
-      return data.data || [];
-    },
-
-    async update(id: number, provider: any): Promise<void> {
-      const headers = await getAuthHeaders();
-
-      const response = await fetch(
-        `/api/v1/admin/translations/providers/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(provider),
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    },
-  },
-};
+// Export singleton instance
+export const translationAdminApi = new TranslationAdminApi();

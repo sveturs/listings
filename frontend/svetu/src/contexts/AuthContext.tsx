@@ -372,12 +372,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshSession, storageUtils]);
 
-  const login = useCallback((returnTo?: string) => {
+  const login = useCallback(
+    async (email: string, password: string) => {
+      try {
+        setError(null);
+        const response = await AuthService.login({ email, password });
+
+        if (response && response.user) {
+          // Save tokens if they exist
+          if (response.access_token) {
+            tokenManager.setAccessToken(response.access_token);
+            localStorage.setItem('access_token', response.access_token);
+          }
+          if (response.refresh_token) {
+            tokenManager.setRefreshToken(response.refresh_token);
+            localStorage.setItem('refresh_token', response.refresh_token);
+          }
+
+          // Update user in context
+          updateUser(response.user);
+
+          return { success: true, user: response.user };
+        } else {
+          return { success: false, error: 'Login failed' };
+        }
+      } catch (error: any) {
+        console.error('Login error:', error);
+        const errorMessage =
+          error.message || 'Failed to login. Please try again.';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    },
+    [updateUser]
+  );
+
+  const loginWithGoogle = useCallback((returnTo?: string) => {
     try {
       AuthService.loginWithGoogle(returnTo);
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Failed to initiate login. Please try again.');
+      console.error('Google login error:', error);
+      setError('Failed to initiate Google login. Please try again.');
     }
   }, []);
 
@@ -472,6 +507,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isRefreshingSession,
       error,
       login,
+      loginWithGoogle,
       logout,
       refreshSession,
       updateProfile,
@@ -486,6 +522,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isRefreshingSession,
       error,
       login,
+      loginWithGoogle,
       logout,
       refreshSession,
       updateProfile,

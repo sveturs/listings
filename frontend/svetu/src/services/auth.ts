@@ -415,11 +415,21 @@ export class AuthService {
       // Извлекаем данные из обертки - сервер возвращает {data: {...}, success: true}
       const loginData = result.data as LoginResponse;
 
-      // Сохраняем JWT токен
-      if (loginData && loginData.access_token) {
-        tokenManager.setAccessToken(loginData.access_token);
-      } else {
-        console.error('[AuthService] No access_token in login response');
+      // Сохраняем JWT токены
+      if (loginData) {
+        if (loginData.access_token) {
+          tokenManager.setAccessToken(loginData.access_token);
+          // Также сохраняем в localStorage для translationAdminApi
+          localStorage.setItem('access_token', loginData.access_token);
+        } else {
+          console.error('[AuthService] No access_token in login response');
+        }
+
+        if (loginData.refresh_token) {
+          tokenManager.setRefreshToken(loginData.refresh_token);
+          // Также сохраняем в localStorage для translationAdminApi
+          localStorage.setItem('refresh_token', loginData.refresh_token);
+        }
       }
 
       this.abortControllers.delete('login');
