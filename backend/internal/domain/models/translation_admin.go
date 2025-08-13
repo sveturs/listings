@@ -266,3 +266,82 @@ type SyncResult struct {
 	Conflicts  int `json:"conflicts"`
 	TotalItems int `json:"total_items"`
 }
+
+// VersionDiff represents differences between two translation versions
+type VersionDiff struct {
+	Version1        *TranslationVersion    `json:"version1"`
+	Version2        *TranslationVersion    `json:"version2"`
+	TextChanges     []TextChange           `json:"text_changes"`
+	MetadataChanges map[string]interface{} `json:"metadata_changes"`
+}
+
+// TextChange represents a change in translation text
+type TextChange struct {
+	Type     string `json:"type"` // "addition", "deletion", "modification"
+	Position int    `json:"position"`
+	OldText  string `json:"old_text"`
+	NewText  string `json:"new_text"`
+	Length   int    `json:"length"`
+}
+
+// RollbackRequest represents a request to rollback to a previous version
+type RollbackRequest struct {
+	TranslationID int    `json:"translation_id"`
+	VersionID     int    `json:"version_id"`
+	Comment       string `json:"comment,omitempty"`
+}
+
+// VersionHistoryResponse represents the response for version history
+type VersionHistoryResponse struct {
+	TranslationID  int                  `json:"translation_id"`
+	CurrentVersion int                  `json:"current_version"`
+	Versions       []TranslationVersion `json:"versions"`
+	TotalVersions  int                  `json:"total_versions"`
+}
+
+// ExportFormat represents the format for export
+type ExportFormat string
+
+const (
+	ExportFormatJSON  ExportFormat = "json"
+	ExportFormatCSV   ExportFormat = "csv"
+	ExportFormatXLIFF ExportFormat = "xliff"
+)
+
+// ExportRequest represents a request to export translations
+type ExportRequest struct {
+	Format          ExportFormat `json:"format"`
+	EntityType      *string      `json:"entity_type,omitempty"`
+	Language        *string      `json:"language,omitempty"`
+	Module          *string      `json:"module,omitempty"`
+	OnlyVerified    bool         `json:"only_verified"`
+	IncludeMetadata bool         `json:"include_metadata"`
+}
+
+// TranslationImportRequest represents a request to import translations
+type TranslationImportRequest struct {
+	Format            ExportFormat           `json:"format"`
+	Data              interface{}            `json:"data"`
+	OverwriteExisting bool                   `json:"overwrite_existing"`
+	ValidateOnly      bool                   `json:"validate_only"`
+	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// BulkTranslateRequest represents a request for bulk translation
+type BulkTranslateRequest struct {
+	EntityType        string   `json:"entity_type"`
+	EntityIDs         []int    `json:"entity_ids,omitempty"`
+	SourceLanguage    string   `json:"source_language"`
+	TargetLanguages   []string `json:"target_languages"`
+	ProviderID        *int     `json:"provider_id,omitempty"`
+	AutoApprove       bool     `json:"auto_approve"`
+	OverwriteExisting bool     `json:"overwrite_existing"`
+}
+
+// AuditStatistics represents statistics for audit logs
+type AuditStatistics struct {
+	TotalActions  int                   `json:"total_actions"`
+	ActionsByType map[string]int        `json:"actions_by_type"`
+	ActionsByUser map[int]int           `json:"actions_by_user"`
+	RecentActions []TranslationAuditLog `json:"recent_actions"`
+}

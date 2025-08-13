@@ -16,7 +16,38 @@
     "create": "Создать",
     "chats": "Чаты",
     "profile": "Профиль",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "marketplace": "[MISSING_RU] marketplace",
+    "createListing": "[MISSING_RU] createListing",
+    "myListings": "[MISSING_RU] myListings",
+    "blog": "[MISSING_RU] blog",
+    "news": "[MISSING_RU] news",
+    "contacts": "[MISSING_RU] contacts",
+    "userContacts": "[MISSING_RU] userContacts",
+    "logout": "[MISSING_RU] logout",
+    "adminPanel": "[MISSING_RU] adminPanel",
+    "messages": "[MISSING_RU] messages",
+    "notifications": "[MISSING_RU] notifications",
+    "settings": "[MISSING_RU] settings",
+    "help": "[MISSING_RU] help",
+    "searchPlaceholder": "[MISSING_RU] searchPlaceholder",
+    "viewAll": "[MISSING_RU] viewAll",
+    "moreOptions": "[MISSING_RU] moreOptions",
+    "backToTop": "[MISSING_RU] backToTop",
+    "distance": {
+      "fromYou": "[MISSING_RU] fromYou",
+      "meters": "[MISSING_RU] meters {count}",
+      "kilometers": "[MISSING_RU] kilometers {count}",
+      "walking": "[MISSING_RU] walking {time}",
+      "minutes": "[MISSING_RU] minutes {count}",
+      "hours": "[MISSING_RU] hours {count}",
+      "walkingDistance": "[MISSING_RU] walkingDistance"
+    },
+    "location": {
+      "latitude": "[MISSING_RU] latitude",
+      "longitude": "[MISSING_RU] longitude",
+      "specifyLocation": "[MISSING_RU] specifyLocation"
+    }
   },
   "search": {
     "notFound": "[RU] Not Found",
@@ -125,7 +156,19 @@
         "inBox": "В упаковке",
         "fullTime": "Полная занятость",
         "remote": "Удаленно",
-        "noExperience": "Без опыта"
+        "noExperience": "Без опыта",
+        "parking": "[MISSING_RU] parking",
+        "balcony": "[MISSING_RU] balcony",
+        "elevator": "[MISSING_RU] elevator",
+        "garden": "[MISSING_RU] garden",
+        "swimmingPool": "[MISSING_RU] swimmingPool",
+        "garage": "[MISSING_RU] garage",
+        "basement": "[MISSING_RU] basement",
+        "terrace": "[MISSING_RU] terrace",
+        "airConditioning": "[MISSING_RU] airConditioning",
+        "centralHeating": "[MISSING_RU] centralHeating",
+        "partlyFurnished": "[MISSING_RU] partlyFurnished",
+        "unfurnished": "[MISSING_RU] unfurnished"
       }
     },
     "results": {
@@ -173,6 +216,22 @@
       "distanceMode": "Режим расстояния",
       "minUnit": "мин",
       "kmUnit": "км"
+    },
+    "cluster": {
+      "listings": "[MISSING_RU] listings",
+      "storefronts": "[MISSING_RU] storefronts"
+    },
+    "popup": {
+      "viewDetails": "[MISSING_RU] viewDetails",
+      "contact": "[MISSING_RU] contact",
+      "phone": "[MISSING_RU] phone",
+      "address": "[MISSING_RU] address",
+      "price": "[MISSING_RU] price",
+      "area": "[MISSING_RU] area",
+      "rooms": "[MISSING_RU] rooms",
+      "year": "[MISSING_RU] year",
+      "mileage": "[MISSING_RU] mileage",
+      "condition": "[MISSING_RU] condition"
     }
   },
   "justNow": "Только что",

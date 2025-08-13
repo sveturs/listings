@@ -39,7 +39,8 @@
       "selectCategory": "Выберите категорию",
       "loadError": "Ошибка загрузки фильтров",
       "noFilters": "Нет доступных фильтров",
-      "reset": "Сбросить фильтры"
+      "reset": "Сбросить фильтры",
+      "condition": "[MISSING_RU] condition"
     },
     "imageGallery": {
       "clickToZoom": "Нажмите для увеличения"

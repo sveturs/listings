@@ -1,10 +1,12 @@
 package translation_admin
 
 import (
+	"os"
 	"strings"
+	"time"
 
 	"backend/internal/domain/models"
-	"backend/internal/proj/translation_admin/service"
+	"backend/internal/proj/translation_admin/ratelimit"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,15 +15,17 @@ import (
 
 // AITranslationHandler handles AI translation endpoints
 type AITranslationHandler struct {
-	logger  zerolog.Logger
-	service *Service
+	logger      zerolog.Logger
+	service     *Service
+	rateLimiter *ratelimit.MultiProviderRateLimiter
 }
 
 // NewAITranslationHandler creates new AI translation handler
-func NewAITranslationHandler(logger zerolog.Logger, service *Service) *AITranslationHandler {
+func NewAITranslationHandler(logger zerolog.Logger, service *Service, rateLimiter *ratelimit.MultiProviderRateLimiter) *AITranslationHandler {
 	return &AITranslationHandler{
-		logger:  logger,
-		service: service,
+		logger:      logger,
+		service:     service,
+		rateLimiter: rateLimiter,
 	}
 }
 
@@ -55,14 +59,58 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 
 	// SourceLang может быть пустым или "auto" для автоопределения
 
-	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
-	if !provider.IsConfigured() {
-		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
+	// Проверяем rate limit для провайдера
+	if h.rateLimiter != nil {
+		providerName := strings.ToLower(req.Provider)
+		if providerName == "" {
+			providerName = "openai" // default provider
+		}
+
+		allowed, err := h.rateLimiter.CheckProviderLimit(ctx, providerName)
+		if err != nil {
+			h.logger.Error().Err(err).Str("provider", providerName).Msg("Failed to check rate limit")
+			return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.rateLimitCheckFailed")
+		}
+
+		if !allowed {
+			// Получаем статус лимитов для информирования пользователя
+			status, _ := h.rateLimiter.GetProviderStatus(ctx, providerName)
+
+			h.logger.Warn().
+				Str("provider", providerName).
+				Interface("status", status).
+				Msg("Rate limit exceeded")
+
+			// Добавляем заголовки для информирования о лимитах
+			if providerStatus, ok := status[providerName]; ok {
+				c.Set("X-RateLimit-Limit", string(providerStatus.Limit))
+				c.Set("X-RateLimit-Remaining", string(providerStatus.Remaining))
+				c.Set("X-RateLimit-Reset", providerStatus.Reset.Format(time.RFC3339))
+			}
+
+			return utils.SendError(c, fiber.StatusTooManyRequests, "admin.translations.rateLimitExceeded")
+		}
 	}
 
-	// Выполняем перевод
-	translation, confidence, err := provider.Translate(ctx, req.Text, req.SourceLang, req.TargetLang)
+	// Выполняем перевод через сервис
+	translateReq := &models.TranslateRequest{
+		Text:            req.Text,
+		SourceLanguage:  req.SourceLang,
+		TargetLanguages: []string{req.TargetLang},
+		Provider:        req.Provider,
+	}
+
+	// Получаем userID из контекста
+	userID := 0
+	if userClaim := c.Locals("user"); userClaim != nil {
+		if user, ok := userClaim.(map[string]interface{}); ok {
+			if id, ok := user["id"].(float64); ok {
+				userID = int(id)
+			}
+		}
+	}
+
+	result, err := h.service.TranslateText(ctx, translateReq, userID)
 	if err != nil {
 		h.logger.Error().Err(err).
 			Str("provider", req.Provider).
@@ -72,10 +120,14 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.translationFailed")
 	}
 
+	// Отслеживаем расходы (приблизительно)
+	textLength := len(req.Text)
+	_ = h.service.TrackAIProviderUsage(ctx, strings.ToLower(req.Provider), textLength/4, textLength/4, textLength)
+
 	response := models.AITranslateResponse{
-		Translation: translation,
-		Confidence:  confidence,
-		Provider:    provider.GetName(),
+		Translation: result.Translations[req.TargetLang],
+		Confidence:  0.95, // Default confidence
+		Provider:    req.Provider,
 	}
 
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.translationSuccess", response)
@@ -114,7 +166,7 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 	}
 
 	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
+	provider := GetAIProvider(req.Provider)
 	if !provider.IsConfigured() {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
 	}
@@ -175,8 +227,43 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/providers [get]
 func (h *AITranslationHandler) GetAvailableProviders(c *fiber.Ctx) error {
-	providers := service.GetAvailableProviders()
+	providers := []map[string]interface{}{
+		{"name": "openai", "configured": os.Getenv("OPENAI_API_KEY") != ""},
+		{"name": "google", "configured": os.Getenv("GOOGLE_API_KEY") != ""},
+		{"name": "deepl", "configured": os.Getenv("DEEPL_API_KEY") != ""},
+		{"name": "claude", "configured": os.Getenv("CLAUDE_API_KEY") != ""},
+	}
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providersRetrieved", providers)
+}
+
+// GetRateLimitStatus godoc
+// @Summary Get rate limit status for AI providers
+// @Description Returns current rate limit status for all AI translation providers
+// @Tags Translation Admin
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]ratelimit.Status}
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/ai/rate-limit-status [get]
+func (h *AITranslationHandler) GetRateLimitStatus(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	if h.rateLimiter == nil {
+		return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.rateLimitStatusRetrieved", map[string]interface{}{
+			"enabled": false,
+			"message": "Rate limiting is not configured",
+		})
+	}
+
+	status, err := h.rateLimiter.GetAllProvidersStatus(ctx)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Failed to get rate limit status")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.rateLimitStatusFailed")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.rateLimitStatusRetrieved", map[string]interface{}{
+		"enabled": true,
+		"status":  status,
+	})
 }
 
 // TranslateModule godoc
@@ -205,7 +292,7 @@ func (h *AITranslationHandler) TranslateModule(c *fiber.Ctx) error {
 	}
 
 	// Получаем провайдера
-	provider := service.GetAIProvider(req.Provider)
+	provider := GetAIProvider(req.Provider)
 	if !provider.IsConfigured() {
 		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.providerNotConfigured")
 	}

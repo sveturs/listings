@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import TranslationsDashboardDemo from '@/components/admin/translations/TranslationsDashboardDemo';
+import EnhancedTranslationsDashboard from '@/components/admin/translations/EnhancedTranslationsDashboard';
 
 export async function generateMetadata({
   params,
@@ -17,6 +17,6 @@ export async function generateMetadata({
 }
 
 export default function TranslationsAdminPage() {
-  // Используем демо-версию для тестирования
-  return <TranslationsDashboardDemo />;
+  // Используем расширенную версию с полной функциональностью
+  return <EnhancedTranslationsDashboard />;
 }

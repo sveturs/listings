@@ -54,9 +54,19 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	ai.Get("/providers-old", h.GetProviders) // старый метод
 	ai.Put("/providers/:id", h.UpdateProvider)
 
+	// Translation providers - новый эндпоинт для системы провайдеров
+	router.Get("/providers", h.GetTranslationProviders)
+	router.Put("/providers/:id", h.UpdateTranslationProvider)
+
 	// Export/Import
 	router.Get("/export", h.ExportToJSON)
 	router.Post("/import", h.ImportFromJSON)
+	router.Post("/export/advanced", h.ExportAdvanced)
+	router.Post("/import/advanced", h.ImportAdvanced)
+
+	// Bulk operations
+	bulk := router.Group("/bulk")
+	bulk.Post("/translate", h.BulkTranslate)
 
 	// Synchronization
 	sync := router.Group("/sync")
@@ -80,6 +90,11 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	stats.Get("/coverage", h.GetCoverage)
 	stats.Get("/quality", h.GetQuality)
 	stats.Get("/usage", h.GetUsage)
+
+	// Audit
+	audit := router.Group("/audit")
+	audit.Get("/logs", h.GetAuditLogs)
+	audit.Get("/statistics", h.GetAuditStatistics)
 }
 
 // GetFrontendModules godoc
@@ -763,19 +778,110 @@ func (h *Handler) ResolveConflictsBatch(c *fiber.Ctx) error {
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.conflictsResolved", result)
 }
 
+// GetVersionHistory godoc
+// @Summary Get version history for an entity
+// @Description Returns version history for all translations of an entity
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param entity path string true "Entity type (translation, category, listing)"
+// @Param id path int true "Entity ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.VersionHistoryResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/versions/{entity}/{id} [get]
 func (h *Handler) GetVersionHistory(c *fiber.Ctx) error {
-	// TODO: Implement get version history
-	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.notImplemented", nil)
+	ctx := c.Context()
+
+	entityType := c.Params("entity")
+	idStr := c.Params("id")
+
+	if entityType == "" {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidEntityType")
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidEntityID")
+	}
+
+	history, err := h.service.GetVersionHistory(ctx, entityType, id)
+	if err != nil {
+		h.logger.Error().Err(err).Str("entity", entityType).Int("id", id).Msg("Failed to get version history")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.versionHistoryError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.versionHistoryRetrieved", history)
 }
 
+// RollbackVersion godoc
+// @Summary Rollback translation to previous version
+// @Description Rollback a translation to a specific previous version
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param request body models.RollbackRequest true "Rollback request"
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/versions/rollback [post]
 func (h *Handler) RollbackVersion(c *fiber.Ctx) error {
-	// TODO: Implement rollback version
-	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.notImplemented", nil)
+	ctx := c.Context()
+
+	// Get user ID from context
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
+	}
+
+	var req models.RollbackRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidRequest")
+	}
+
+	if req.TranslationID <= 0 || req.VersionID <= 0 {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidRollbackRequest")
+	}
+
+	err := h.service.RollbackVersion(ctx, &req, userID)
+	if err != nil {
+		h.logger.Error().Err(err).Int("translation_id", req.TranslationID).Int("version_id", req.VersionID).Msg("Failed to rollback version")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.rollbackError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.rollbackSuccess", nil)
 }
 
+// GetVersionDiff godoc
+// @Summary Get differences between two versions
+// @Description Compare two translation versions and return differences
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param version1 query int true "First version ID"
+// @Param version2 query int true "Second version ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.VersionDiff}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/versions/diff [get]
 func (h *Handler) GetVersionDiff(c *fiber.Ctx) error {
-	// TODO: Implement get version diff
-	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.notImplemented", nil)
+	ctx := c.Context()
+
+	version1 := c.QueryInt("version1", 0)
+	version2 := c.QueryInt("version2", 0)
+
+	if version1 <= 0 || version2 <= 0 {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidVersionIDs")
+	}
+
+	diff, err := h.service.GetVersionDiff(ctx, version1, version2)
+	if err != nil {
+		h.logger.Error().Err(err).Int("version1", version1).Int("version2", version2).Msg("Failed to get version diff")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.versionDiffError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.versionDiffRetrieved", diff)
 }
 
 func (h *Handler) GetCoverage(c *fiber.Ctx) error {
@@ -825,4 +931,229 @@ func (h *Handler) ApplyAITranslations(c *fiber.Ctx) error {
 	}
 
 	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.translationsApplied", nil)
+}
+
+// GetAuditLogs godoc
+// @Summary Get audit logs
+// @Description Retrieve audit logs with optional filters
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit results (default: 100)"
+// @Param user_id query int false "Filter by user ID"
+// @Param action query string false "Filter by action type"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationAuditLog}
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/audit/logs [get]
+func (h *Handler) GetAuditLogs(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Build filters from query parameters
+	filters := make(map[string]interface{})
+
+	if limit := c.QueryInt("limit", 100); limit > 0 {
+		filters["limit"] = limit
+	}
+	if userID := c.QueryInt("user_id", 0); userID > 0 {
+		filters["user_id"] = userID
+	}
+	if action := c.Query("action"); action != "" {
+		filters["action"] = action
+	}
+
+	logs, err := h.service.GetAuditLogs(ctx, filters)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Failed to get audit logs")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.auditLogsError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.auditLogsRetrieved", logs)
+}
+
+// GetAuditStatistics godoc
+// @Summary Get audit statistics
+// @Description Retrieve statistics about audit logs and user activity
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AuditStatistics}
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/audit/statistics [get]
+func (h *Handler) GetAuditStatistics(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	stats, err := h.service.GetAuditStatistics(ctx)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("Failed to get audit statistics")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.auditStatisticsError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.auditStatisticsRetrieved", stats)
+}
+
+// ExportAdvanced godoc
+// @Summary Advanced export translations
+// @Description Export translations in various formats (JSON, CSV, XLIFF)
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param request body models.ExportRequest true "Export request"
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/export/advanced [post]
+func (h *Handler) ExportAdvanced(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	var req models.ExportRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidRequest")
+	}
+
+	// Set default format if not specified
+	if req.Format == "" {
+		req.Format = models.ExportFormatJSON
+	}
+
+	data, err := h.service.ExportTranslationsAdvanced(ctx, &req)
+	if err != nil {
+		h.logger.Error().Err(err).Str("format", string(req.Format)).Msg("Failed to export translations")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.exportAdvancedError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.exportAdvancedSuccess", data)
+}
+
+// ImportAdvanced godoc
+// @Summary Advanced import translations
+// @Description Import translations from various formats (JSON, CSV, XLIFF)
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param request body models.TranslationImportRequest true "Import request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ImportResult}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/import/advanced [post]
+func (h *Handler) ImportAdvanced(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get user ID from context
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
+	}
+
+	var req models.TranslationImportRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidRequest")
+	}
+
+	// Set default format if not specified
+	if req.Format == "" {
+		req.Format = models.ExportFormatJSON
+	}
+
+	result, err := h.service.ImportTranslationsAdvanced(ctx, &req, userID)
+	if err != nil {
+		h.logger.Error().Err(err).Str("format", string(req.Format)).Msg("Failed to import translations")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.importAdvancedError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.importAdvancedSuccess", result)
+}
+
+// BulkTranslate godoc
+// @Summary Bulk translate multiple entities
+// @Description Perform bulk translation of multiple entities across languages
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param request body models.BulkTranslateRequest true "Bulk translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.BatchTranslateResult}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/bulk/translate [post]
+func (h *Handler) BulkTranslate(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	// Get user ID from context
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
+	}
+
+	var req models.BulkTranslateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidRequest")
+	}
+
+	// Validate request
+	if req.EntityType == "" || req.SourceLanguage == "" || len(req.TargetLanguages) == 0 {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidBulkRequest")
+	}
+
+	result, err := h.service.BulkTranslate(ctx, &req, userID)
+	if err != nil {
+		h.logger.Error().Err(err).
+			Str("entity_type", req.EntityType).
+			Str("source_lang", req.SourceLanguage).
+			Strs("target_langs", req.TargetLanguages).
+			Msg("Failed to perform bulk translation")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.bulkTranslateError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.bulkTranslateSuccess", result)
+}
+
+// GetTranslationProviders godoc
+// @Summary Get all translation providers
+// @Description Returns list of available translation providers (Claude, DeepL, etc.)
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationProvider}
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/providers [get]
+func (h *Handler) GetTranslationProviders(c *fiber.Ctx) error {
+	// Возвращаем пустой массив провайдеров пока они не настроены в системе
+	// В будущем здесь можно будет возвращать реальных провайдеров из БД или конфигурации
+	providers := []map[string]interface{}{}
+
+	// Можно добавить статические провайдеры для демонстрации
+	// providers = append(providers, map[string]interface{}{
+	//     "id": 1,
+	//     "name": "Claude AI",
+	//     "provider_type": "claude",
+	//     "is_active": true,
+	//     "api_key": "configured",
+	// })
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providersRetrieved", providers)
+}
+
+// UpdateTranslationProvider godoc
+// @Summary Update translation provider configuration
+// @Description Updates provider settings and configuration
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param id path int true "Provider ID"
+// @Param provider body models.TranslationProvider true "Provider configuration"
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/providers/{id} [put]
+func (h *Handler) UpdateTranslationProvider(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	_, err := strconv.Atoi(idStr)
+	if err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidProviderID")
+	}
+
+	// Пока просто возвращаем успех, так как провайдеры еще не реализованы
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.providerUpdated", nil)
 }

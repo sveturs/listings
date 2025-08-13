@@ -92,7 +92,14 @@
     "thisMonth": "This Month",
     "thisYear": "This Year",
     "title": "Order Statistics",
-    "totalSpent": "Total Spent"
+    "totalSpent": "Total Spent",
+    "allTime": "[MISSING_EN] allTime",
+    "monthlyComparison": "[MISSING_EN] monthlyComparison",
+    "orders": "[MISSING_EN] orders",
+    "perOrder": "[MISSING_EN] perOrder",
+    "spendingDecrease": "[MISSING_EN] spendingDecrease {percent}",
+    "spendingIncrease": "[MISSING_EN] spendingIncrease {percent}",
+    "spent": "[MISSING_EN] spent"
   },
   "status": {
     "cancelled": "Cancelled",
@@ -142,5 +149,9 @@
   "tryAgain": "Try again",
   "unknown": "Unknown",
   "viewDetails": "View Details",
-  "you": "You"
+  "you": "You",
+  "activeFilters": "[MISSING_EN] activeFilters",
+  "advancedFilters": "[MISSING_EN] advancedFilters",
+  "filter": "[MISSING_EN] filter",
+  "search": "[MISSING_EN] search"
 }
