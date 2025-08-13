@@ -314,8 +314,24 @@ func (s *AllSecureService) validatePaymentRequest(ctx context.Context, req Creat
 		return fmt.Errorf("amount must be positive")
 	}
 
+	if req.Currency == "" {
+		return fmt.Errorf("currency is required")
+	}
+
 	if req.Currency != "RSD" && req.Currency != "EUR" && req.Currency != "USD" {
 		return fmt.Errorf("unsupported currency: %s", req.Currency)
+	}
+
+	if req.UserID <= 0 {
+		return fmt.Errorf("invalid user ID")
+	}
+
+	if req.ListingID <= 0 {
+		return fmt.Errorf("invalid listing ID")
+	}
+
+	if req.ReturnURL == "" {
+		return fmt.Errorf("return URL is required")
 	}
 
 	return nil
@@ -323,7 +339,9 @@ func (s *AllSecureService) validatePaymentRequest(ctx context.Context, req Creat
 
 // calculateCommission рассчитывает комиссию маркетплейса
 func (s *AllSecureService) calculateCommission(amount decimal.Decimal) decimal.Decimal {
-	return amount.Mul(s.commissionRate).Round(2)
+	commission := amount.Mul(s.commissionRate)
+	// Округляем до 4 знаков после запятой для точности малых комиссий
+	return commission.Round(4)
 }
 
 // mapAllSecureStatus маппит статус AllSecure в наш статус

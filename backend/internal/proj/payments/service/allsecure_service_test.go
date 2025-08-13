@@ -173,10 +173,16 @@ func createTestService(
 
 	logger := logger.New()
 
-	// Создаем настоящий клиент, но заменим его поле на мок
-	realClient := &allsecure.Client{}
+	// Создаем настоящий клиент для тестов
+	realClient := allsecure.NewClient(allsecure.Config{
+		BaseURL:  config.BaseURL,
+		Username: config.Username,
+		Password: config.Password,
+		Timeout:  30, // 30 seconds
+	})
 
 	service := &AllSecureService{
+		client:         realClient,
 		repository:     paymentRepo,
 		userRepo:       userRepo,
 		listingRepo:    listingRepo,
@@ -184,9 +190,6 @@ func createTestService(
 		logger:         *logger,
 		commissionRate: config.MarketplaceCommissionRate,
 	}
-
-	// Добавляем мок клиент как приватное поле для тестов
-	service.client = realClient
 
 	return service
 }

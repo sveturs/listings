@@ -139,6 +139,9 @@ func TestRedisCacheRealIntegration(t *testing.T) {
 		assert.Equal(t, 1, loadCount)
 		assert.Equal(t, 100, int(result1["id"].(float64)))
 
+		// Небольшая задержка чтобы асинхронное кеширование завершилось
+		time.Sleep(100 * time.Millisecond)
+
 		// Второй вызов - должен получить из кеша
 		var result2 map[string]interface{}
 		err = cache.GetOrSet(ctx, key, &result2, 30*time.Second, loader)

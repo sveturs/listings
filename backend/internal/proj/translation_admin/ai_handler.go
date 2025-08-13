@@ -2,6 +2,7 @@ package translation_admin
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -63,7 +64,7 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 	if h.rateLimiter != nil {
 		providerName := strings.ToLower(req.Provider)
 		if providerName == "" {
-			providerName = "openai" // default provider
+			providerName = ratelimit.ProviderOpenAI // default provider
 		}
 
 		allowed, err := h.rateLimiter.CheckProviderLimit(ctx, providerName)
@@ -83,8 +84,8 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 
 			// Добавляем заголовки для информирования о лимитах
 			if providerStatus, ok := status[providerName]; ok {
-				c.Set("X-RateLimit-Limit", string(providerStatus.Limit))
-				c.Set("X-RateLimit-Remaining", string(providerStatus.Remaining))
+				c.Set("X-RateLimit-Limit", strconv.Itoa(providerStatus.Limit))
+				c.Set("X-RateLimit-Remaining", strconv.Itoa(providerStatus.Remaining))
 				c.Set("X-RateLimit-Reset", providerStatus.Reset.Format(time.RFC3339))
 			}
 

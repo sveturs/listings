@@ -27,7 +27,7 @@ export default function VersionHistoryViewer({
   entityId,
   onClose,
 }: VersionHistoryViewerProps) {
-  const t = useTranslations('admin.translations');
+  const _t = useTranslations('admin.translations');
 
   const [versions, setVersions] = useState<TranslationVersion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -301,7 +301,7 @@ export default function VersionHistoryViewer({
 
                           {version.change_comment && (
                             <div className="text-xs text-base-content/60 mt-2 italic">
-                              "{version.change_comment}"
+                              &quot;{version.change_comment}&quot;
                             </div>
                           )}
                         </div>

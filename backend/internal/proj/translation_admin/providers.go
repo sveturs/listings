@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+
+	"backend/internal/proj/translation_admin/ratelimit"
 )
 
 // AIProvider интерфейс для AI провайдеров переводов
@@ -43,15 +45,15 @@ func GetAIProvider(name string) AIProvider {
 	// TODO: Реализовать реальных провайдеров
 	// Пока возвращаем мок
 	if name == "" {
-		name = "openai"
+		name = ratelimit.ProviderOpenAI
 	}
 
 	// Проверяем наличие API ключей в env
 	switch name {
-	case "openai":
+	case ratelimit.ProviderOpenAI:
 		if os.Getenv("OPENAI_API_KEY") != "" {
 			// TODO: вернуть настоящий OpenAI провайдер
-			return NewMockProvider("openai")
+			return NewMockProvider(ratelimit.ProviderOpenAI)
 		}
 	case "google":
 		if os.Getenv("GOOGLE_API_KEY") != "" {

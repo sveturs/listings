@@ -29,7 +29,7 @@ func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontend
 
 	// Create service with proper frontend path and Redis
 	messagesPath := filepath.Join(frontendPath, "frontend", "svetu")
-	service := NewService(logger, messagesPath, repo, repo, redisClient)
+	service := NewService(ctx, logger, messagesPath, repo, repo, redisClient)
 
 	// Create rate limiter for AI translations
 	rateLimiter := ratelimit.NewMultiProviderRateLimiter(redisClient, ratelimit.DefaultConfig())
@@ -40,11 +40,11 @@ func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontend
 
 	// Warm up cache if Redis is available
 	if redisClient != nil {
-		go func() {
-			if err := service.WarmUpCache(context.Background()); err != nil {
+		go func(ctx context.Context) {
+			if err := service.WarmUpCache(ctx); err != nil {
 				logger.Error().Err(err).Msg("Failed to warm up translation cache")
 			}
-		}()
+		}(ctx)
 	}
 
 	return &Module{

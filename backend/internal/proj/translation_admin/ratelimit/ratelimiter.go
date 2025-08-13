@@ -11,6 +11,14 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// Provider constants
+const (
+	ProviderOpenAI = "openai"
+	ProviderGoogle = "google"
+	ProviderDeepL  = "deepl"
+	ProviderClaude = "claude"
+)
+
 // RateLimiter интерфейс для ограничения частоты запросов
 type RateLimiter interface {
 	Allow(ctx context.Context, key string) (bool, error)
@@ -97,13 +105,13 @@ func (r *InMemoryRateLimiter) getLimiter(key string) *rate.Limiter {
 	// Определяем лимит для провайдера
 	var limit int
 	switch key {
-	case "openai":
+	case ProviderOpenAI:
 		limit = r.config.OpenAI
-	case "google":
+	case ProviderGoogle:
 		limit = r.config.Google
-	case "deepl":
+	case ProviderDeepL:
 		limit = r.config.DeepL
-	case "claude":
+	case ProviderClaude:
 		limit = r.config.Claude
 	case "global":
 		limit = r.config.GlobalRPM
@@ -148,13 +156,13 @@ func (r *InMemoryRateLimiter) GetStatus(ctx context.Context, key string) (*Statu
 
 	var limit int
 	switch key {
-	case "openai":
+	case ProviderOpenAI:
 		limit = r.config.OpenAI
-	case "google":
+	case ProviderGoogle:
 		limit = r.config.Google
-	case "deepl":
+	case ProviderDeepL:
 		limit = r.config.DeepL
-	case "claude":
+	case ProviderClaude:
 		limit = r.config.Claude
 	default:
 		limit = r.config.GlobalRPM
@@ -195,13 +203,13 @@ func (r *RedisRateLimiter) AllowN(ctx context.Context, key string, n int) (bool,
 	// Определяем лимит для провайдера
 	var limit int
 	switch key {
-	case "openai":
+	case ProviderOpenAI:
 		limit = r.config.OpenAI
-	case "google":
+	case ProviderGoogle:
 		limit = r.config.Google
-	case "deepl":
+	case ProviderDeepL:
 		limit = r.config.DeepL
-	case "claude":
+	case ProviderClaude:
 		limit = r.config.Claude
 	default:
 		limit = r.config.GlobalRPM
@@ -264,13 +272,13 @@ func (r *RedisRateLimiter) GetStatus(ctx context.Context, key string) (*Status, 
 	// Определяем лимит для провайдера
 	var limit int
 	switch key {
-	case "openai":
+	case ProviderOpenAI:
 		limit = r.config.OpenAI
-	case "google":
+	case ProviderGoogle:
 		limit = r.config.Google
-	case "deepl":
+	case ProviderDeepL:
 		limit = r.config.DeepL
-	case "claude":
+	case ProviderClaude:
 		limit = r.config.Claude
 	default:
 		limit = r.config.GlobalRPM
