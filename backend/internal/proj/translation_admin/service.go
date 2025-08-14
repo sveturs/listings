@@ -2,6 +2,7 @@ package translation_admin
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,16 +31,18 @@ func strPtr(s string) *string {
 
 // Service handles translation admin operations
 type Service struct {
-	logger          zerolog.Logger
-	frontendPath    string
-	supportedLangs  []string
-	modules         []string
-	mutex           sync.RWMutex
-	translationRepo TranslationRepository
-	auditRepo       AuditRepository
-	cache           *cache.RedisTranslationCache
-	batchLoader     *BatchLoader
-	costTracker     *CostTracker
+	logger             zerolog.Logger
+	frontendPath       string
+	supportedLangs     []string
+	modules            []string
+	mutex              sync.RWMutex
+	translationRepo    TranslationRepository
+	auditRepo          AuditRepository
+	cache              *cache.RedisTranslationCache
+	batchLoader        *BatchLoader
+	costTracker        *CostTracker
+	db                 *sql.DB
+	translationFactory interface{} // Will be marketplaceService.TranslationFactoryInterface
 }
 
 // TranslationRepository interface for database operations
@@ -70,7 +73,7 @@ type AuditRepository interface {
 }
 
 // NewService creates a new translation admin service
-func NewService(ctx context.Context, logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository, redisClient *redis.Client) *Service {
+func NewService(ctx context.Context, logger zerolog.Logger, frontendPath string, translationRepo TranslationRepository, auditRepo AuditRepository, redisClient *redis.Client, db *sql.DB, translationFactory interface{}) *Service {
 	var translationCache *cache.RedisTranslationCache
 	if redisClient != nil {
 		translationCache = cache.NewRedisTranslationCache(redisClient)
@@ -86,15 +89,17 @@ func NewService(ctx context.Context, logger zerolog.Logger, frontendPath string,
 	costTracker := NewCostTracker(ctx, redisClient)
 
 	return &Service{
-		logger:          logger,
-		frontendPath:    frontendPath,
-		supportedLangs:  []string{"sr", "en", "ru"},
-		modules:         []string{"common", "auth", "profile", "marketplace", "admin", "storefronts", "cars", "chat", "cart", "checkout", "realEstate", "search", "services", "map", "misc", "notifications", "orders", "products", "reviews"},
-		translationRepo: translationRepo,
-		auditRepo:       auditRepo,
-		cache:           translationCache,
-		batchLoader:     batchLoader,
-		costTracker:     costTracker,
+		logger:             logger,
+		frontendPath:       frontendPath,
+		supportedLangs:     []string{"sr", "en", "ru"},
+		modules:            []string{"common", "auth", "profile", "marketplace", "admin", "storefronts", "cars", "chat", "cart", "checkout", "realEstate", "search", "services", "map", "misc", "notifications", "orders", "products", "reviews"},
+		translationRepo:    translationRepo,
+		auditRepo:          auditRepo,
+		cache:              translationCache,
+		batchLoader:        batchLoader,
+		costTracker:        costTracker,
+		db:                 db,
+		translationFactory: translationFactory,
 	}
 }
 
@@ -1379,18 +1384,44 @@ func (s *Service) TranslateText(ctx context.Context, req *models.TranslateReques
 		provider = ratelimit.ProviderOpenAI // default provider
 	}
 
-	// Mock implementation
+	// Use real translation service
 	translations := make(map[string]string)
-	for _, lang := range req.TargetLanguages {
-		// В реальной версии - вызвать API провайдера
-		switch lang {
-		case "ru":
-			translations[lang] = "[RU] " + req.Text
-		case "sr":
-			translations[lang] = "[SR] " + req.Text
-		case "en":
-			translations[lang] = "[EN] " + req.Text
-		default:
+
+	// Используем реальный сервис перевода если доступен
+	if s.translationFactory != nil {
+		// Пробуем использовать интерфейс напрямую для простого перевода
+		for _, targetLang := range req.TargetLanguages {
+			if req.SourceLanguage == targetLang {
+				// Same language, no translation needed
+				translations[targetLang] = req.Text
+				continue
+			}
+
+			// Попробуем вызвать метод Translate напрямую
+			// Используем type assertion для проверки интерфейса
+			if translator, ok := s.translationFactory.(interface {
+				Translate(ctx context.Context, text, sourceLang, targetLang string) (string, error)
+			}); ok {
+				translated, err := translator.Translate(ctx, req.Text, req.SourceLanguage, targetLang)
+				if err != nil {
+					s.logger.Error().
+						Err(err).
+						Str("source", req.SourceLanguage).
+						Str("target", targetLang).
+						Msg("Translation failed")
+					// Fallback to mock on error
+					translations[targetLang] = "[" + strings.ToUpper(targetLang) + "] " + req.Text
+				} else {
+					translations[targetLang] = translated
+				}
+			} else {
+				// Интерфейс не поддерживает метод Translate, используем mock
+				translations[targetLang] = "[" + strings.ToUpper(targetLang) + "] " + req.Text
+			}
+		}
+	} else {
+		// Фабрика не доступна, используем mock
+		for _, lang := range req.TargetLanguages {
 			translations[lang] = "[" + strings.ToUpper(lang) + "] " + req.Text
 		}
 	}
@@ -1560,30 +1591,20 @@ func (s *Service) GetVersionHistory(ctx context.Context, entityType string, enti
 		}, nil
 	}
 
-	// Group by translation ID and get the latest version
-	translationVersions := make(map[int][]models.TranslationVersion)
-	currentVersions := make(map[int]int)
-
+	// Get the maximum version number across all translations
+	var maxVersion int
 	for _, version := range versions {
-		translationVersions[version.TranslationID] = append(translationVersions[version.TranslationID], version)
-		if version.VersionNumber > currentVersions[version.TranslationID] {
-			currentVersions[version.TranslationID] = version.VersionNumber
+		if version.Version > maxVersion {
+			maxVersion = version.Version
 		}
 	}
 
-	// For simplicity, return the first translation's history
-	// In a full implementation, you might want to handle multiple translations
-	var firstTranslationID int
-	for id := range translationVersions {
-		firstTranslationID = id
-		break
-	}
-
+	// Return all versions for the entity
 	response := &models.VersionHistoryResponse{
-		TranslationID:  firstTranslationID,
-		CurrentVersion: currentVersions[firstTranslationID],
-		Versions:       translationVersions[firstTranslationID],
-		TotalVersions:  len(translationVersions[firstTranslationID]),
+		TranslationID:  0, // 0 indicates multiple translations
+		CurrentVersion: maxVersion,
+		Versions:       versions, // Return all versions for all fields/languages
+		TotalVersions:  len(versions),
 	}
 
 	return response, nil
@@ -1949,6 +1970,143 @@ func (s *Service) importFromXLIFF(ctx context.Context, req *models.TranslationIm
 	return result, nil
 }
 
+// ensureCategoryTranslations creates missing translations from marketplace_categories table
+func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []int, sourceLanguage string) error {
+	// Получаем категории из основной таблицы
+	// Используем IN вместо ANY так как это обычный sql.DB
+	placeholders := make([]string, len(categoryIDs))
+	args := make([]interface{}, len(categoryIDs))
+	for i, id := range categoryIDs {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, name, description, seo_title, seo_description 
+		FROM marketplace_categories 
+		WHERE id IN (%s)
+	`, strings.Join(placeholders, ","))
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to query categories: %w", err)
+	}
+	defer rows.Close()
+
+	type CategoryData struct {
+		ID             int
+		Name           *string
+		Description    *string
+		SEOTitle       *string
+		SEODescription *string
+	}
+
+	var categories []CategoryData
+	for rows.Next() {
+		var cat CategoryData
+		if err := rows.Scan(&cat.ID, &cat.Name, &cat.Description, &cat.SEOTitle, &cat.SEODescription); err != nil {
+			s.logger.Error().Err(err).Msg("Failed to scan category")
+			continue
+		}
+		categories = append(categories, cat)
+	}
+
+	// Для каждой категории создаем недостающие переводы
+	for _, cat := range categories {
+		// Проверяем какие поля есть в основной таблице
+		fieldsToTranslate := map[string]*string{
+			"name":            cat.Name,
+			"description":     cat.Description,
+			"seo_title":       cat.SEOTitle,
+			"seo_description": cat.SEODescription,
+		}
+
+		for fieldName, fieldValue := range fieldsToTranslate {
+			// Пропускаем NULL поля, но создаем перевод для пустых строк
+			if fieldValue == nil {
+				continue
+			}
+
+			// Проверяем, существует ли уже перевод
+			existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
+				"entity_type": "category",
+				"entity_id":   cat.ID,
+				"language":    sourceLanguage,
+				"field_name":  fieldName,
+			})
+
+			// Если перевода нет, создаем его
+			if len(existing) == 0 {
+				newTranslation := &models.Translation{
+					EntityType:          "category",
+					EntityID:            cat.ID,
+					Language:            sourceLanguage,
+					FieldName:           fieldName,
+					TranslatedText:      *fieldValue,
+					IsMachineTranslated: false,
+					IsVerified:          true, // Исходные данные считаем проверенными
+				}
+
+				if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
+					s.logger.Error().
+						Err(err).
+						Int("category_id", cat.ID).
+						Str("field", fieldName).
+						Msg("Failed to create source translation")
+					// Продолжаем с другими полями
+				} else {
+					s.logger.Info().
+						Int("category_id", cat.ID).
+						Str("field", fieldName).
+						Str("language", sourceLanguage).
+						Msg("Created source translation from marketplace_categories")
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// detectTextLanguage attempts to detect the language of text based on character patterns
+func detectTextLanguage(text string) string {
+	// Count character types
+	latinCount := 0
+	cyrillicCount := 0
+
+	for _, r := range text {
+		// Latin characters
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+			latinCount++
+		}
+		// Cyrillic characters
+		if (r >= 'А' && r <= 'я') || (r >= 'Ё' && r <= 'ё') {
+			cyrillicCount++
+		}
+	}
+
+	// Determine language based on character counts
+	if cyrillicCount > latinCount {
+		return "ru" // Russian text
+	}
+
+	// Check for specific Serbian Latin patterns
+	serbianPatterns := []string{"dj", "nj", "lj", "dž", "š", "č", "ć", "ž", "đ"}
+	textLower := strings.ToLower(text)
+	for _, pattern := range serbianPatterns {
+		if strings.Contains(textLower, pattern) {
+			return "sr" // Serbian text
+		}
+	}
+
+	// Default to Serbian if mostly Latin (since the site is Serbian)
+	if latinCount > 0 {
+		return "sr"
+	}
+
+	return "auto" // Let AI detect
+}
+
 // BulkTranslate performs bulk translation of multiple entities
 func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRequest, userID int) (*models.BatchTranslateResult, error) {
 	s.logger.Info().
@@ -1964,6 +2122,15 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 		TranslatedCount: 0,
 		FailedCount:     0,
 		Errors:          []string{},
+	}
+
+	// Если это категории и нет переводов в таблице translations,
+	// создаем их из основной таблицы marketplace_categories
+	if req.EntityType == "category" && len(req.EntityIDs) > 0 {
+		if err := s.ensureCategoryTranslations(ctx, req.EntityIDs, req.SourceLanguage); err != nil {
+			s.logger.Error().Err(err).Msg("Failed to ensure category translations")
+			// Продолжаем, даже если не удалось создать некоторые переводы
+		}
 	}
 
 	// Get source translations for the entities
@@ -1993,6 +2160,42 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 
 	// Process each source translation
 	for _, sourceTranslation := range sourceTranslations {
+		// Skip empty source texts unless they're intentionally empty (like empty descriptions)
+		if strings.TrimSpace(sourceTranslation.TranslatedText) == "" {
+			// For empty texts, create empty translations in target languages
+			for _, targetLang := range req.TargetLanguages {
+				if targetLang == req.SourceLanguage {
+					continue
+				}
+
+				// Check if translation already exists
+				existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
+					"entity_type": sourceTranslation.EntityType,
+					"entity_id":   sourceTranslation.EntityID,
+					"language":    targetLang,
+					"field_name":  sourceTranslation.FieldName,
+				})
+
+				if len(existing) == 0 {
+					// Create empty translation for consistency
+					newTranslation := &models.Translation{
+						EntityType:          sourceTranslation.EntityType,
+						EntityID:            sourceTranslation.EntityID,
+						Language:            targetLang,
+						FieldName:           sourceTranslation.FieldName,
+						TranslatedText:      "",
+						IsMachineTranslated: false,
+						IsVerified:          true,
+					}
+
+					if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
+						s.logger.Error().Err(err).Msg("Failed to create empty translation")
+					}
+				}
+			}
+			continue // Skip to next source translation
+		}
+
 		// Translate to each target language
 		for _, targetLang := range req.TargetLanguages {
 			if targetLang == req.SourceLanguage {
@@ -2000,22 +2203,54 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 			}
 
 			// Check if translation already exists
-			if !req.OverwriteExisting {
-				existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
-					"entity_type": sourceTranslation.EntityType,
-					"entity_id":   sourceTranslation.EntityID,
-					"language":    targetLang,
-					"field_name":  sourceTranslation.FieldName,
-				})
-				if len(existing) > 0 {
-					continue // Skip existing
+			existing, _ := s.translationRepo.GetTranslations(ctx, map[string]interface{}{
+				"entity_type": sourceTranslation.EntityType,
+				"entity_id":   sourceTranslation.EntityID,
+				"language":    targetLang,
+				"field_name":  sourceTranslation.FieldName,
+			})
+
+			// Skip if exists and not overwriting, OR if the text is already the same as source
+			if len(existing) > 0 {
+				existingTranslation := existing[0]
+				// Check if the existing translation is the same as source (untranslated)
+				isSameAsSource := existingTranslation.TranslatedText == sourceTranslation.TranslatedText
+
+				if isSameAsSource {
+					// Text is the same as source - needs translation
+					s.logger.Debug().
+						Str("entity_type", sourceTranslation.EntityType).
+						Int("entity_id", sourceTranslation.EntityID).
+						Str("field", sourceTranslation.FieldName).
+						Str("lang", targetLang).
+						Msg("Existing translation same as source, will translate")
+					// Continue with translation - don't skip
+				} else if !req.OverwriteExisting {
+					// Has different translation and not overwriting - skip
+					s.logger.Debug().
+						Str("entity_type", sourceTranslation.EntityType).
+						Int("entity_id", sourceTranslation.EntityID).
+						Str("field", sourceTranslation.FieldName).
+						Str("lang", targetLang).
+						Msg("Skipping - has existing translation and overwrite_existing=false")
+					continue
 				}
+			}
+
+			// Detect source language if needed
+			actualSourceLang := req.SourceLanguage
+			if actualSourceLang == "auto" || actualSourceLang == "" {
+				actualSourceLang = detectTextLanguage(sourceTranslation.TranslatedText)
+				s.logger.Debug().
+					Str("detected_lang", actualSourceLang).
+					Str("text", sourceTranslation.TranslatedText).
+					Msg("Auto-detected source language")
 			}
 
 			// Create translation request
 			translateReq := &models.TranslateRequest{
 				Text:            sourceTranslation.TranslatedText,
-				SourceLanguage:  req.SourceLanguage,
+				SourceLanguage:  actualSourceLang,
 				TargetLanguages: []string{targetLang},
 			}
 
@@ -2035,19 +2270,42 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 
 			// Auto-approve if requested
 			if req.AutoApprove {
-				// Create new translation record
-				newTranslation := &models.Translation{
-					EntityType:          sourceTranslation.EntityType,
-					EntityID:            sourceTranslation.EntityID,
-					Language:            targetLang,
-					FieldName:           sourceTranslation.FieldName,
-					TranslatedText:      translationResult.Translations[targetLang],
-					IsMachineTranslated: true,
-					IsVerified:          true,
-				}
+				// Check if we need to update existing or create new
+				if len(existing) > 0 {
+					// Update existing translation
+					existingTranslation := existing[0]
+					existingTranslation.TranslatedText = translationResult.Translations[targetLang]
+					existingTranslation.IsMachineTranslated = true
+					existingTranslation.IsVerified = false // Machine translations should be reviewed
 
-				if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
-					s.logger.Error().Err(err).Msg("Failed to save auto-approved translation")
+					if err := s.translationRepo.UpdateTranslation(ctx, &existingTranslation); err != nil {
+						s.logger.Error().Err(err).Msg("Failed to update translation")
+						result.FailedCount++
+						result.Errors = append(result.Errors,
+							fmt.Sprintf("Failed to update translation for %s:%d:%s:%s: %v",
+								sourceTranslation.EntityType, sourceTranslation.EntityID,
+								sourceTranslation.FieldName, targetLang, err))
+					}
+				} else {
+					// Create new translation record
+					newTranslation := &models.Translation{
+						EntityType:          sourceTranslation.EntityType,
+						EntityID:            sourceTranslation.EntityID,
+						Language:            targetLang,
+						FieldName:           sourceTranslation.FieldName,
+						TranslatedText:      translationResult.Translations[targetLang],
+						IsMachineTranslated: true,
+						IsVerified:          false, // Machine translations should be reviewed
+					}
+
+					if err := s.translationRepo.CreateTranslation(ctx, newTranslation); err != nil {
+						s.logger.Error().Err(err).Msg("Failed to save auto-approved translation")
+						result.FailedCount++
+						result.Errors = append(result.Errors,
+							fmt.Sprintf("Failed to create translation for %s:%d:%s:%s: %v",
+								sourceTranslation.EntityType, sourceTranslation.EntityID,
+								sourceTranslation.FieldName, targetLang, err))
+					}
 				}
 			}
 		}

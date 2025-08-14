@@ -289,7 +289,7 @@ export default function AICostsMonitor() {
 
   const PIE_COLORS = ['#10a37f', '#4285f4', '#0f2b46', '#d97757'];
 
-  if (loading) {
+  if (_loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <span className="loading loading-spinner loading-lg"></span>

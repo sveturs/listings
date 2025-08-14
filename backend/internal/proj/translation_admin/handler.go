@@ -81,6 +81,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 	// Versioning
 	versions := router.Group("/versions")
 	versions.Get("/:entity/:id", h.GetVersionHistory)
+	versions.Get("/translation/:id", h.GetTranslationVersions)
 	versions.Post("/rollback", h.RollbackVersion)
 	versions.Get("/diff", h.GetVersionDiff)
 
@@ -790,6 +791,35 @@ func (h *Handler) ResolveConflictsBatch(c *fiber.Ctx) error {
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/versions/{entity}/{id} [get]
+// GetTranslationVersions godoc
+// @Summary Get versions for a specific translation
+// @Description Returns all versions for a specific translation ID
+// @Tags Translation Admin
+// @Accept json
+// @Produce json
+// @Param id path int true "Translation ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationVersion}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
+// @Router /api/v1/admin/translations/versions/translation/{id} [get]
+func (h *Handler) GetTranslationVersions(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	idStr := c.Params("id")
+	translationID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return utils.SendError(c, fiber.StatusBadRequest, "admin.translations.invalidTranslationID")
+	}
+
+	versions, err := h.service.translationRepo.GetTranslationVersions(ctx, translationID)
+	if err != nil {
+		h.logger.Error().Err(err).Int("translation_id", translationID).Msg("Failed to get translation versions")
+		return utils.SendError(c, fiber.StatusInternalServerError, "admin.translations.getVersionsError")
+	}
+
+	return utils.SendSuccess(c, fiber.StatusOK, "admin.translations.versionsRetrieved", versions)
+}
+
 func (h *Handler) GetVersionHistory(c *fiber.Ctx) error {
 	ctx := c.Context()
 

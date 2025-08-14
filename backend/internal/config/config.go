@@ -20,6 +20,9 @@ type Config struct {
 	LogLevel              string `yaml:"log_level"`
 	OpenAIAPIKey          string
 	GoogleTranslateAPIKey string
+	ClaudeAPIKey          string
+	DeepLAPIKey           string
+	DeepLUseFreeAPI       bool `yaml:"deepl_use_free_api"`
 	StripeAPIKey          string
 	StripeWebhookSecret   string
 	JWTSecret             string
@@ -159,6 +162,13 @@ func NewConfig() (*Config, error) {
 
 	// Получаем ключ Google Translate API (необязательный)
 	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
+
+	// Получаем ключ Claude API (необязательный)
+	config.ClaudeAPIKey = os.Getenv("CLAUDE_API_KEY")
+
+	// Получаем ключ DeepL API (необязательный)
+	config.DeepLAPIKey = os.Getenv("DEEPL_API_KEY")
+	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == "true"
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -362,6 +372,9 @@ func NewConfig() (*Config, error) {
 		LogLevel:              logLevel,
 		OpenAIAPIKey:          openAIAPIKey,
 		GoogleTranslateAPIKey: config.GoogleTranslateAPIKey,
+		ClaudeAPIKey:          config.ClaudeAPIKey,
+		DeepLAPIKey:           config.DeepLAPIKey,
+		DeepLUseFreeAPI:       config.DeepLUseFreeAPI,
 		StripeAPIKey:          config.StripeAPIKey,
 		StripeWebhookSecret:   config.StripeWebhookSecret,
 		JWTSecret:             config.JWTSecret,

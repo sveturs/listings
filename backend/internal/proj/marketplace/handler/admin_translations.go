@@ -146,7 +146,7 @@ func (h *AdminTranslationsHandler) BatchTranslateCategories(c *fiber.Ctx) error 
 					Metadata:            map[string]interface{}{"provider": provider},
 				}
 
-				if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, translation, translationProvider); err != nil {
+				if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, translation, translationProvider, 0); err != nil {
 					logger.Error().Err(err).
 						Int("category_id", categoryID).
 						Str("target_lang", targetLang).
@@ -275,7 +275,7 @@ func (h *AdminTranslationsHandler) BatchTranslateAttributes(c *fiber.Ctx) error 
 					Metadata:            map[string]interface{}{"provider": provider},
 				}
 
-				if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, translation, translationProvider); err != nil {
+				if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, translation, translationProvider, 0); err != nil {
 					logger.Error().Err(err).
 						Int("attribute_id", attributeID).
 						Str("target_lang", targetLang).
@@ -324,7 +324,7 @@ func (h *AdminTranslationsHandler) BatchTranslateAttributes(c *fiber.Ctx) error 
 									Metadata:            map[string]interface{}{"provider": provider},
 								}
 
-								if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, optionTranslation, translationProvider); err != nil {
+								if err := h.marketplaceService.UpdateTranslationWithProvider(bgCtx, optionTranslation, translationProvider, 0); err != nil {
 									logger.Error().Err(err).
 										Int("attribute_id", attributeID).
 										Str("option", value).
@@ -532,6 +532,15 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 		translationProvider = service.OpenAI
 	}
 
+	// Получаем user_id из контекста
+	userID := c.Locals("userID")
+	var userIDInt int
+	if userID != nil {
+		if uid, ok := userID.(int); ok {
+			userIDInt = uid
+		}
+	}
+
 	// Обновляем переводы для каждого языка
 	for lang, translatedText := range request.Translations {
 		translation := &models.Translation{
@@ -545,7 +554,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 			Metadata:            map[string]interface{}{"provider": provider},
 		}
 
-		if err := h.marketplaceService.UpdateTranslationWithProvider(c.Context(), translation, translationProvider); err != nil {
+		if err := h.marketplaceService.UpdateTranslationWithProvider(c.Context(), translation, translationProvider, userIDInt); err != nil {
 			logger.Error().Err(err).
 				Str("entity_type", entityType).
 				Int("entity_id", entityID).

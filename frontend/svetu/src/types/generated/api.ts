@@ -6887,8 +6887,9 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get version history for an entity
+     * Get versions for a specific translation
      * @description Returns version history for all translations of an entity
+     *     Returns all versions for a specific translation ID
      */
     get: {
       parameters: {
@@ -6897,7 +6898,7 @@ export interface paths {
         path: {
           /** @description Entity type (translation, category, listing) */
           entity: string;
-          /** @description Entity ID */
+          /** @description Translation ID */
           id: number;
         };
         cookie?: never;
@@ -6911,7 +6912,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_models.VersionHistoryResponse'];
+              data?: components['schemas']['backend_internal_domain_models.TranslationVersion'][];
             };
           };
         };
@@ -7072,6 +7073,69 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/translations/versions/translation/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get versions for a specific translation
+     * @description Returns version history for all translations of an entity
+     *     Returns all versions for a specific translation ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Translation ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.TranslationVersion'][];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -28392,6 +28456,7 @@ export interface components {
     };
     'backend_internal_domain_models.Translation': {
       created_at?: string;
+      current_version?: number;
       entity_id?: number;
       entity_type?: string;
       field_name?: string;
@@ -28399,6 +28464,8 @@ export interface components {
       is_machine_translated?: boolean;
       is_verified?: boolean;
       language?: string;
+      last_modified_at?: string;
+      last_modified_by?: number;
       metadata?: {
         [key: string]: unknown;
       };
@@ -28497,7 +28564,8 @@ export interface components {
       translated_text?: string;
     };
     'backend_internal_domain_models.TranslationVersion': {
-      change_comment?: string;
+      change_reason?: string;
+      change_type?: string;
       changed_at?: string;
       changed_by?: number;
       entity_id?: number;
@@ -28508,9 +28576,10 @@ export interface components {
       metadata?: {
         [key: string]: unknown;
       };
+      previous_text?: string;
       translated_text?: string;
       translation_id?: number;
-      version_number?: number;
+      version?: number;
     };
     'backend_internal_domain_models.UpdateAttributeGroupRequest': {
       description?: string;

@@ -130,7 +130,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
-	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient)
+	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService)
 	searchAdminModule := search_admin.NewModule(db)
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
@@ -197,22 +197,47 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 }
 
 func initializeTranslationService(cfg *config.Config, db *postgres.Database) (marketplaceService.TranslationServiceInterface, error) {
+	// Используем новую фабрику V2 с поддержкой 4 провайдеров
+	factoryConfig := struct {
+		GoogleAPIKey    string
+		OpenAIAPIKey    string
+		ClaudeAPIKey    string
+		DeepLAPIKey     string
+		DeepLUseFreeAPI bool
+	}{
+		GoogleAPIKey:    cfg.GoogleTranslateAPIKey,
+		OpenAIAPIKey:    cfg.OpenAIAPIKey,
+		ClaudeAPIKey:    cfg.ClaudeAPIKey,
+		DeepLAPIKey:     cfg.DeepLAPIKey,
+		DeepLUseFreeAPI: cfg.DeepLUseFreeAPI,
+	}
+
+	translationFactory, err := marketplaceService.NewTranslationServiceFactoryV2(factoryConfig, db)
+	if err == nil {
+		availableProviders := translationFactory.GetAvailableProviders()
+		logger.Info().
+			Interface("providers", availableProviders).
+			Int("count", len(availableProviders)).
+			Msg("Создана фабрика сервисов перевода V2")
+		return translationFactory, nil
+	}
+
+	// Fallback на старую версию если V2 не работает
 	if cfg.GoogleTranslateAPIKey != "" && cfg.OpenAIAPIKey != "" {
 		translationFactory, err := marketplaceService.NewTranslationServiceFactory(cfg.GoogleTranslateAPIKey, cfg.OpenAIAPIKey, db)
 		if err == nil {
-			logger.Info().Msg("Создана фабрика сервисов перевода с поддержкой Google Translate и OpenAI")
+			logger.Info().Msg("Создана фабрика сервисов перевода (старая версия)")
 			return translationFactory, nil
-		} else {
-			logger.Error().Err(err).Msg("Ошибка создания фабрики перевода, будет использован только OpenAI")
 		}
 	}
 
+	// Крайний fallback на простой OpenAI сервис
 	if cfg.OpenAIAPIKey != "" {
 		translationService, err := marketplaceService.NewTranslationService(cfg.OpenAIAPIKey)
 		if err != nil {
 			return nil, err
 		}
-		logger.Info().Msg("Создан сервис перевода на базе OpenAI")
+		logger.Info().Msg("Создан сервис перевода на базе OpenAI (fallback)")
 		return translationService, nil
 	}
 

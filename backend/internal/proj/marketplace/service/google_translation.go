@@ -34,6 +34,10 @@ const (
 	GoogleTranslate TranslationProvider = "google"
 	// OpenAI провайдер перевода OpenAI
 	OpenAI TranslationProvider = "openai"
+	// ClaudeAI провайдер перевода Claude AI (Anthropic)
+	ClaudeAI TranslationProvider = "claude"
+	// DeepL провайдер перевода DeepL
+	DeepL TranslationProvider = "deepl"
 	// Manual ручной перевод
 	Manual TranslationProvider = "manual"
 
