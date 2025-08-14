@@ -156,7 +156,7 @@
         <has_elevator>1</has_elevator>
         <has_parking>1</has_parking>
         <year_built>2018</year_built>
-        <renovation_year>2024</renovation_year>
+        <renovation_year>2025</renovation_year>
         <slike>
             <slika><![CDATA[https://example.com/images/novisad_apartment3_main.jpg]]></slika>
             <slika><![CDATA[https://example.com/images/novisad_apartment3_view.jpg]]></slika>
@@ -426,7 +426,7 @@
         <has_balcony>1</has_balcony>
         <has_elevator>1</has_elevator>
         <has_parking>1</has_parking>
-        <year_built>2024</year_built>
+        <year_built>2025</year_built>
         <renovation_year>2025</renovation_year>
         <slike>
             <slika><![CDATA[https://example.com/images/novisad_apartment8_main.jpg]]></slika>

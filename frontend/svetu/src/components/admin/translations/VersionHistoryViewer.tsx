@@ -43,16 +43,15 @@ export default function VersionHistoryViewer({
   const loadVersionHistory = async () => {
     try {
       setIsLoading(true);
-      const response = await translationAdminApi.versions.getByEntity(
+      const response = await translationAdminApi.getVersionHistory(
         entityType,
         entityId
       );
-      // API возвращает объект с полем versions
-      if (response && response.versions) {
-        setVersions(response.versions);
-      } else if (Array.isArray(response)) {
-        setVersions(response);
+
+      if (response.success && response.data) {
+        setVersions(response.data);
       } else {
+        console.error('Failed to load versions:', response.error);
         setVersions([]);
       }
     } catch (error) {
@@ -81,14 +80,21 @@ export default function VersionHistoryViewer({
 
     try {
       setIsLoading(true);
-      const diffData = await translationAdminApi.versions.getDiff(
+      const response = await translationAdminApi.getVersionDiff(
         selectedVersions[0],
         selectedVersions[1]
       );
-      setDiff(diffData);
-      setIsViewingDiff(true);
+
+      if (response.success && response.data) {
+        setDiff(response.data);
+        setIsViewingDiff(true);
+      } else {
+        console.error('Failed to load diff:', response.error);
+        alert('Ошибка при загрузке сравнения версий');
+      }
     } catch (error) {
       console.error('Failed to load diff:', error);
+      alert('Ошибка при загрузке сравнения версий');
     } finally {
       setIsLoading(false);
     }
@@ -103,15 +109,21 @@ export default function VersionHistoryViewer({
 
     try {
       setIsRollingBack(true);
-      await translationAdminApi.versions.rollback(
-        version.translation_id,
+      const response = await translationAdminApi.rollbackVersion(
         versionId,
         comment || undefined
       );
 
-      // Reload versions after rollback
-      await loadVersionHistory();
-      alert('Откат выполнен успешно');
+      if (response.success) {
+        // Reload versions after rollback
+        await loadVersionHistory();
+        alert('Откат выполнен успешно');
+      } else {
+        console.error('Rollback failed:', response.error);
+        alert(
+          `Ошибка при выполнении отката: ${response.error || 'Неизвестная ошибка'}`
+        );
+      }
     } catch (error) {
       console.error('Failed to rollback:', error);
       alert('Ошибка при выполнении отката');

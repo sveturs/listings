@@ -274,6 +274,34 @@
     "skipped": "Skipped",
     "results": "Results",
     "rollbackToVersion": "Rollback to this version",
+    "search": {
+      "placeholder": "Search translations...",
+      "searching": "Searching...",
+      "noResults": "No results found",
+      "types": {
+        "category": "Category",
+        "attribute": "Attribute",
+        "page": "Page",
+        "notification": "Notification",
+        "email": "Email",
+        "other": "Other"
+      }
+    },
+    "editor": {
+      "noTranslation": "No translation",
+      "aiTranslate": "AI Translate",
+      "enterTranslation": "Enter translation...",
+      "shortcuts": "Ctrl+Enter to save, Esc to cancel",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "editorDemo": {
+      "title": "Translation Editor",
+      "description": "Search and inline edit translations",
+      "searchTitle": "Search Translations",
+      "selectedTranslation": "Selected Translation",
+      "demoTitle": "Demo Translation"
+    },
     "compareVersions": "Compare Versions",
     "versionComparison": "Version Comparison",
     "textChanges": "Text Changes",

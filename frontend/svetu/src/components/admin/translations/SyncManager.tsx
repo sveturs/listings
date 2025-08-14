@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
-import { tokenManager } from '@/utils/tokenManager';
+import {
+  translationAdminApi,
+  SyncStatus,
+  SyncConflict,
+} from '@/services/translationAdminApi';
 import {
   ArrowPathIcon,
   CloudArrowUpIcon,
@@ -20,13 +24,15 @@ interface SyncResult {
   updated: number;
   conflicts: number;
   total_items: number;
+  skipped?: number;
+  errors?: string[];
 }
 
 export default function SyncManager() {
   const t = useTranslations('admin');
   const [syncing, setSyncing] = useState(false);
-  const [conflicts, setConflicts] = useState<any[]>([]);
-  const [syncStatus, setSyncStatus] = useState<any>(null);
+  const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [_exportedData, _setExportedData] = useState<any>(null);
 
@@ -37,29 +43,21 @@ export default function SyncManager() {
   const syncFrontendToDB = async () => {
     setSyncing(true);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
+      const response = await translationAdminApi.syncFrontendToDB();
+
+      if (response.success && response.data) {
+        setLastSyncResult({
+          added: response.data.added || 0,
+          updated: response.data.updated || 0,
+          conflicts: response.data.conflicts || 0,
+          total_items: response.data.total_items || response.data.total || 0,
+          skipped: response.data.skipped || 0,
+        });
+        toast.success(t('translations.syncSuccess'));
+        fetchSyncStatus();
+      } else {
+        throw new Error(response.error || 'Sync failed');
       }
-
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/frontend-to-db',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Sync failed');
-      }
-
-      const data = await response.json();
-      setLastSyncResult(data.data);
-      toast.success(t('translations.syncSuccess'));
-      fetchSyncStatus();
     } catch (err) {
       console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
@@ -71,29 +69,21 @@ export default function SyncManager() {
   const syncDBToFrontend = async () => {
     setSyncing(true);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
+      const response = await translationAdminApi.syncDBToFrontend();
+
+      if (response.success && response.data) {
+        setLastSyncResult({
+          added: response.data.added || 0,
+          updated: response.data.updated || 0,
+          conflicts: response.data.conflicts || 0,
+          total_items: response.data.total_items || response.data.total || 0,
+          skipped: response.data.skipped || 0,
+        });
+        toast.success(t('translations.syncSuccess'));
+        fetchSyncStatus();
+      } else {
+        throw new Error(response.error || 'Sync failed');
       }
-
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/db-to-frontend',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Sync failed');
-      }
-
-      const data = await response.json();
-      setLastSyncResult(data.data);
-      toast.success(t('translations.syncSuccess'));
-      fetchSyncStatus();
     } catch (err) {
       console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
@@ -105,27 +95,14 @@ export default function SyncManager() {
   const syncDBToOpenSearch = async () => {
     setSyncing(true);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
+      const response = await translationAdminApi.syncDBToOpenSearch();
+
+      if (response.success) {
+        toast.success(t('translations.syncSuccess'));
+        fetchSyncStatus();
+      } else {
+        throw new Error(response.error || 'Sync failed');
       }
-
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/db-to-opensearch',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Sync failed');
-      }
-
-      toast.success(t('translations.syncSuccess'));
-      fetchSyncStatus();
     } catch (err) {
       console.error('Failed to sync from server', err);
       toast.error(t('translations.syncError'));
@@ -136,36 +113,28 @@ export default function SyncManager() {
 
   const exportTranslations = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch('/api/v1/admin/translations/export', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await translationAdminApi.export({
+        format: 'json',
+        only_verified: false,
+        include_metadata: true,
       });
 
-      if (!response.ok) {
-        throw new Error('Export failed');
+      if (response.success && response.data) {
+        // Create downloadable file
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], {
+          type: 'application/json',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `translations-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        toast.success(t('translations.exportSuccess'));
+      } else {
+        throw new Error(response.error || 'Export failed');
       }
-
-      const data = await response.json();
-      // setExportedData(data.data); // TODO: Implement export data handling
-
-      // Create downloadable file
-      const blob = new Blob([JSON.stringify(data.data, null, 2)], {
-        type: 'application/json',
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `translations-export-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      toast.success(t('translations.exportSuccess'));
     } catch (err) {
       console.error('Failed to export data', err);
       toast.error(t('translations.exportError'));
@@ -174,34 +143,23 @@ export default function SyncManager() {
 
   const importTranslations = async (file: File) => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
       const fileContent = await file.text();
-      const translations = JSON.parse(fileContent);
+      const data = JSON.parse(fileContent);
 
-      const response = await fetch('/api/v1/admin/translations/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          translations,
-          overwrite_existing: true,
-        }),
+      const response = await translationAdminApi.import({
+        format: 'json',
+        data,
+        overwrite_existing: true,
+        validate_only: false,
       });
 
-      if (!response.ok) {
-        throw new Error('Import failed');
+      if (!response.success) {
+        throw new Error(response.error || 'Import failed');
       }
 
-      const data = await response.json();
       toast.success(
         t('translations.importSuccess', {
-          count: data.data?.success || 0,
+          count: response.data?.imported || response.data?.success || 0,
         })
       );
       fetchSyncStatus();
@@ -213,18 +171,10 @@ export default function SyncManager() {
 
   const fetchSyncStatus = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) return;
+      const response = await translationAdminApi.getSyncStatus();
 
-      const response = await fetch('/api/v1/admin/translations/sync/status', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSyncStatus(data.data);
+      if (response.success && response.data) {
+        setSyncStatus(response.data);
       }
     } catch (err) {
       console.error('Failed to fetch sync status', err);
@@ -233,52 +183,34 @@ export default function SyncManager() {
 
   const fetchConflicts = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) return;
+      const response = await translationAdminApi.getConflicts();
 
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/conflicts',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setConflicts(data.data || []);
+      if (response.success && response.data) {
+        setConflicts(response.data);
+      } else {
+        setConflicts([]);
       }
     } catch (err) {
       console.error('Failed to fetch conflicts', err);
     }
   };
 
-  const resolveConflict = async (conflictId: number, resolution: string) => {
+  const resolveConflict = async (
+    conflictId: number,
+    resolution: 'frontend' | 'database' | 'manual'
+  ) => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/translations/sync/conflicts/${conflictId}/resolve`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ resolution }),
-        }
+      const response = await translationAdminApi.resolveConflict(
+        conflictId,
+        resolution
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to resolve conflict');
+      if (response.success) {
+        toast.success(t('translations.conflictResolved'));
+        fetchConflicts();
+      } else {
+        throw new Error(response.error || 'Failed to resolve conflict');
       }
-
-      toast.success(t('translations.conflictResolved'));
-      fetchConflicts();
     } catch (err) {
       console.error('Failed to resolve conflict', err);
       toast.error(t('translations.conflictResolveError'));
@@ -481,8 +413,10 @@ export default function SyncManager() {
                   {t('translations.lastSync')}:
                 </span>
                 <span className="ml-2">
-                  {syncStatus.last_sync
-                    ? new Date(syncStatus.last_sync).toLocaleString()
+                  {syncStatus.last_sync?.completed_at
+                    ? new Date(
+                        syncStatus.last_sync.completed_at
+                      ).toLocaleString()
                     : t('translations.never')}
                 </span>
               </div>
@@ -491,7 +425,7 @@ export default function SyncManager() {
                   {t('translations.conflicts')}:
                 </span>
                 <span className="ml-2 font-semibold">
-                  {syncStatus.conflicts || 0}
+                  {syncStatus.conflicts_count || 0}
                 </span>
               </div>
             </div>
@@ -519,14 +453,14 @@ export default function SyncManager() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="font-medium">
-                        {conflict.entity_identifier}
+                        {conflict.entity_type} #{conflict.entity_id}
                       </span>
                       <span className="ml-2 text-sm text-base-content/60">
-                        {conflict.source_type} → {conflict.target_type}
+                        {conflict.field_name} ({conflict.language})
                       </span>
                     </div>
                     <span className="badge badge-warning">
-                      {conflict.conflict_type}
+                      {conflict.resolved ? 'Resolved' : 'Pending'}
                     </span>
                   </div>
 
@@ -536,7 +470,7 @@ export default function SyncManager() {
                         {t('translations.sourceValue')}:
                       </p>
                       <p className="text-sm bg-base-200 p-2 rounded">
-                        {conflict.source_value || t('translations.empty')}
+                        {conflict.frontend_value || t('translations.empty')}
                       </p>
                     </div>
                     <div>
@@ -544,7 +478,7 @@ export default function SyncManager() {
                         {t('translations.targetValue')}:
                       </p>
                       <p className="text-sm bg-base-200 p-2 rounded">
-                        {conflict.target_value || t('translations.empty')}
+                        {conflict.database_value || t('translations.empty')}
                       </p>
                     </div>
                   </div>
@@ -552,24 +486,30 @@ export default function SyncManager() {
                   <div className="flex gap-2">
                     <button
                       className="btn btn-sm btn-success"
-                      onClick={() => resolveConflict(conflict.id, 'use_source')}
+                      onClick={() => resolveConflict(conflict.id, 'frontend')}
+                      disabled={conflict.resolved}
                     >
                       <CheckCircleIcon className="h-4 w-4 mr-1" />
-                      {t('translations.useSource')}
+                      {t('translations.useFrontend')}
                     </button>
                     <button
                       className="btn btn-sm btn-info"
-                      onClick={() => resolveConflict(conflict.id, 'use_target')}
+                      onClick={() => resolveConflict(conflict.id, 'database')}
+                      disabled={conflict.resolved}
                     >
                       <CheckCircleIcon className="h-4 w-4 mr-1" />
-                      {t('translations.useTarget')}
+                      {t('translations.useDatabase')}
                     </button>
                     <button
-                      className="btn btn-sm btn-error"
-                      onClick={() => resolveConflict(conflict.id, 'skip')}
+                      className="btn btn-sm btn-warning"
+                      onClick={() => {
+                        const value = prompt('Enter manual value:');
+                        if (value) resolveConflict(conflict.id, 'manual');
+                      }}
+                      disabled={conflict.resolved}
                     >
                       <XCircleIcon className="h-4 w-4 mr-1" />
-                      {t('translations.skip')}
+                      {t('translations.manual')}
                     </button>
                   </div>
                 </div>

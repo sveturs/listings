@@ -1,5 +1,10 @@
 {
   "title": "Администрирование",
+  "authRequired": "Требуется авторизация",
+  "authRequiredDescription": "Для доступа к панели администратора необходимо войти в систему",
+  "login": "Войти",
+  "accessDenied": "Доступ запрещен",
+  "adminOnly": "Только администраторы могут получить доступ к этой странице",
   "manage": "Управление",
   "availableBalance": "Доступный баланс",
   "deposit": "Пополнить",
@@ -272,6 +277,34 @@
     "skipped": "[MISSING_RU] skipped",
     "results": "[MISSING_RU] results",
     "rollbackToVersion": "[MISSING_RU] rollbackToVersion",
+    "search": {
+      "placeholder": "Поиск переводов...",
+      "searching": "Поиск...",
+      "noResults": "Ничего не найдено",
+      "types": {
+        "category": "Категория",
+        "attribute": "Атрибут",
+        "page": "Страница",
+        "notification": "Уведомление",
+        "email": "Email",
+        "other": "Другое"
+      }
+    },
+    "editor": {
+      "noTranslation": "Нет перевода",
+      "aiTranslate": "AI перевод",
+      "enterTranslation": "Введите перевод...",
+      "shortcuts": "Ctrl+Enter - сохранить, Esc - отменить",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
+    "editorDemo": {
+      "title": "Редактор переводов",
+      "description": "Поиск и inline редактирование переводов",
+      "searchTitle": "Поиск переводов",
+      "selectedTranslation": "Выбранный перевод",
+      "demoTitle": "Демо перевод"
+    },
     "compareVersions": "[MISSING_RU] compareVersions",
     "versionComparison": "[MISSING_RU] versionComparison",
     "textChanges": "[MISSING_RU] textChanges",

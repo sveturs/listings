@@ -168,6 +168,50 @@ export default function ExamplesPage() {
       color: 'bg-gradient-to-r from-teal-500 to-cyan-500',
       icon: '📱',
     },
+    {
+      title: 'Доставка BEX Express',
+      description: 'Интеграция курьерской службы для C2C и B2C сценариев',
+      href: '/examples/delivery',
+      color: 'bg-gradient-to-r from-blue-600 to-indigo-600',
+      icon: '🚚',
+      badge: 'NEW',
+    },
+    {
+      title: 'Идеальный маркетплейс',
+      description:
+        'Главная страница с лучшими практиками Avito, Amazon и Wildberries',
+      href: '/examples/ideal-marketplace',
+      color: 'bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600',
+      icon: '🛒',
+      badge: 'HOT',
+    },
+    {
+      title: 'Детальная карточка товара',
+      description:
+        'Страница товара с галереей, отзывами, характеристиками и Black Friday',
+      href: '/examples/product-detail',
+      color: 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500',
+      icon: '📦',
+      badge: 'NEW',
+    },
+    {
+      title: 'Здоровое питание',
+      description:
+        'Настоящие полезные продукты без маркетинговых уловок корпораций',
+      href: '/examples/healthy-food',
+      color: 'bg-gradient-to-r from-green-500 to-emerald-500',
+      icon: '🌱',
+      badge: 'NEW',
+    },
+    {
+      title: 'Српске курирске службе',
+      description:
+        'Интеграција AKS, Post Express, City Express и Yettel Post за српско тржиште',
+      href: '/examples/serbian-delivery',
+      color: 'bg-gradient-to-r from-blue-600 to-red-600',
+      icon: '🇷🇸',
+      badge: 'NEW',
+    },
   ];
 
   return (
@@ -190,7 +234,7 @@ export default function ExamplesPage() {
           </div>
           <div className="stat">
             <div className="stat-title">New</div>
-            <div className="stat-value text-accent">2</div>
+            <div className="stat-value text-accent">4</div>
             <div className="stat-desc">Latest additions</div>
           </div>
         </div>
@@ -244,7 +288,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 23 UI/UX improvements have been successfully implemented!
+              All 26 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

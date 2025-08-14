@@ -372,12 +372,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshSession, storageUtils]);
 
-  const login = useCallback((returnTo?: string) => {
+  // Redirect to login page (matches the interface)
+  const login = useCallback(
+    (returnTo?: string) => {
+      const returnPath = returnTo || window.location.pathname;
+      router.push(`/auth/login?returnTo=${encodeURIComponent(returnPath)}`);
+    },
+    [router]
+  );
+
+  const _loginWithGoogle = useCallback((returnTo?: string) => {
     try {
       AuthService.loginWithGoogle(returnTo);
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Failed to initiate login. Please try again.');
+      console.error('Google login error:', error);
+      setError('Failed to initiate Google login. Please try again.');
     }
   }, []);
 

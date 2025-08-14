@@ -94,23 +94,49 @@ export default function ExportImportManager() {
         include_metadata: exportFilters.include_metadata,
       };
 
-      const result = await translationAdminApi.export(request);
+      const response = await translationAdminApi.export(request);
 
-      // Handle different export formats
-      if (exportFormat === 'json') {
-        // For JSON, create a downloadable file
-        const blob = new Blob([JSON.stringify(result, null, 2)], {
-          type: 'application/json',
-        });
-        downloadFile(blob, `translations_export.json`);
+      if (response.success && response.data) {
+        // Handle different export formats
+        let blob: Blob;
+        let filename: string;
+
+        if (exportFormat === 'json') {
+          blob = new Blob([JSON.stringify(response.data, null, 2)], {
+            type: 'application/json',
+          });
+          filename = `translations_export_${new Date().toISOString().split('T')[0]}.json`;
+        } else if (exportFormat === 'csv') {
+          // Assuming backend returns CSV as string in data
+          const csvContent =
+            typeof response.data === 'string'
+              ? response.data
+              : JSON.stringify(response.data);
+          blob = new Blob([csvContent], {
+            type: 'text/csv',
+          });
+          filename = `translations_export_${new Date().toISOString().split('T')[0]}.csv`;
+        } else {
+          // XLIFF format
+          const xliffContent =
+            typeof response.data === 'string'
+              ? response.data
+              : JSON.stringify(response.data);
+          blob = new Blob([xliffContent], {
+            type: 'application/xml',
+          });
+          filename = `translations_export_${new Date().toISOString().split('T')[0]}.xliff`;
+        }
+
+        downloadFile(blob, filename);
       } else {
-        // For CSV and XLIFF, result is already a Blob
-        const extension = exportFormat === 'csv' ? 'csv' : 'xlf';
-        downloadFile(result, `translations_export.${extension}`);
+        throw new Error(response.error || 'Экспорт не удался');
       }
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Ошибка при экспорте данных');
+      alert(
+        `Ошибка при экспорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`
+      );
     } finally {
       setIsExporting(false);
     }
@@ -177,11 +203,39 @@ export default function ExportImportManager() {
         },
       };
 
-      const result = await translationAdminApi.import(request);
-      setImportResult(result);
+      const response = await translationAdminApi.import(request);
+
+      if (response.success && response.data) {
+        setImportResult({
+          success: response.data.imported || response.data.successful || 0,
+          failed: response.data.failed || 0,
+          skipped: response.data.skipped || 0,
+          errors: response.data.errors || [],
+        });
+
+        if (!importOptions.validate_only) {
+          alert(
+            `Импорт успешно завершен! Импортировано: ${response.data.imported || response.data.successful || 0} записей`
+          );
+        }
+      } else {
+        throw new Error(response.error || 'Импорт не удался');
+      }
     } catch (error) {
       console.error('Import failed:', error);
-      alert('Ошибка при импорте данных');
+      alert(
+        `Ошибка при импорте: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`
+      );
+      setImportResult({
+        success: 0,
+        failed: 1,
+        skipped: 0,
+        errors: [
+          error instanceof Error
+            ? error.message
+            : 'Неизвестная ошибка при импорте',
+        ],
+      });
     } finally {
       setIsImporting(false);
     }

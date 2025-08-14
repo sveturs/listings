@@ -9,6 +9,7 @@ import {
   ArrowPathIcon,
   PlayIcon,
   DocumentArrowDownIcon,
+  PencilIcon,
 } from '@heroicons/react/24/outline';
 
 // Import our new components
@@ -16,6 +17,8 @@ import BulkTranslationManager from './BulkTranslationManager';
 import VersionHistoryViewer from './VersionHistoryViewer';
 import AuditLogViewer from './AuditLogViewer';
 import ExportImportManager from './ExportImportManager';
+import TranslationSearch from '@/app/[locale]/admin/translations/components/TranslationSearch';
+import TranslationEditorDemo from '@/app/[locale]/admin/translations/components/TranslationEditorDemo';
 
 // Import existing demo component for backward compatibility
 import AITranslationsDemo from './AITranslationsDemo';
@@ -33,6 +36,7 @@ export default function EnhancedTranslationsDashboard() {
     | 'stats'
     | 'costs'
     | 'versions'
+    | 'editor'
   >('overview');
   const [_showVersionHistory, _setShowVersionHistory] = useState(false);
   const [_versionHistoryParams, _setVersionHistoryParams] = useState<{
@@ -81,15 +85,30 @@ export default function EnhancedTranslationsDashboard() {
     // setVersionHistoryParams(null);
   };
 
+  const handleSearchResultSelect = (translation: any) => {
+    // Handle the selected translation
+    console.log('Selected translation:', translation);
+    // You can add logic here to open the translation in an editor
+    // or navigate to a specific view
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Система переводов</h1>
-        <p className="text-base-content/60">
-          Расширенное управление переводами с версионированием, аудитом и
-          массовыми операциями
-        </p>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Система переводов</h1>
+            <p className="text-base-content/60">
+              Расширенное управление переводами с версионированием, аудитом и
+              массовыми операциями
+            </p>
+          </div>
+          {/* Search Component */}
+          <div className="lg:w-96">
+            <TranslationSearch onResultSelect={handleSearchResultSelect} />
+          </div>
+        </div>
       </div>
 
       {/* Navigation Tabs */}
@@ -154,6 +173,13 @@ export default function EnhancedTranslationsDashboard() {
           onClick={() => setActiveTab('costs')}
         >
           💰 Расходы AI
+        </button>
+        <button
+          className={`tab ${activeTab === 'editor' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('editor')}
+        >
+          <PencilIcon className="h-4 w-4 mr-2" />
+          Редактор
         </button>
       </div>
 
@@ -429,6 +455,9 @@ export default function EnhancedTranslationsDashboard() {
 
         {/* Costs Tab */}
         {activeTab === 'costs' && <AICostsMonitor />}
+
+        {/* Editor Tab */}
+        {activeTab === 'editor' && <TranslationEditorDemo />}
 
         {/* Versions Tab */}
         {activeTab === 'versions' && (
