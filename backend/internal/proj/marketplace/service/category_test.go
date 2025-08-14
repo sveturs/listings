@@ -1139,18 +1139,23 @@ func (ts *testStorage) SearchCarMakes(ctx context.Context, query string, limit i
 func (ts *testStorage) GetAllRoles(ctx context.Context) ([]*models.Role, error) {
 	return nil, ErrNotImplemented
 }
+
 func (ts *testStorage) UpdateUserRole(ctx context.Context, id int, roleID int) error {
 	return ErrNotImplemented
 }
+
 func (ts *testStorage) GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error) {
 	return nil, 0, ErrNotImplemented
 }
+
 func (ts *testStorage) GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error) {
 	return 0, ErrNotImplemented
 }
+
 func (ts *testStorage) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
 	return nil, ErrNotImplemented
 }
+
 func (ts *testStorage) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
 	return ErrNotImplemented
 }
