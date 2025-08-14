@@ -18,6 +18,7 @@ import { toast } from '@/utils/toast';
 interface ChatWindowProps {
   chat?: MarketplaceChat;
   initialListingId?: number;
+  initialStorefrontProductId?: number;
   initialSellerId?: number;
   initialContactId?: number;
   onBack?: () => void;
@@ -37,6 +38,7 @@ interface ListingInfo {
 export default function ChatWindow({
   chat,
   initialListingId,
+  initialStorefrontProductId,
   initialSellerId,
   initialContactId,
   onBack,
@@ -50,7 +52,9 @@ export default function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isNewChat] = useState(
-    !chat && ((initialListingId && initialSellerId) || initialContactId)
+    !chat &&
+      (((initialListingId || initialStorefrontProductId) && initialSellerId) ||
+        initialContactId)
   );
   const [isContactChat] = useState(
     (!chat && initialContactId && !initialListingId) ||
@@ -594,6 +598,7 @@ export default function ChatWindow({
         <MessageInput
           chat={chat}
           initialListingId={initialListingId}
+          initialStorefrontProductId={initialStorefrontProductId}
           initialSellerId={initialSellerId || initialContactId}
         />
       </div>

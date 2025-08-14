@@ -326,10 +326,18 @@ export default function ListingPage({ params }: Props) {
     }
 
     if (listing && user.id !== listing.user_id) {
-      // Navigate to chat with listing_id and seller_id as params
-      router.push(
-        `/${locale}/chat?listing_id=${listing.id}&seller_id=${listing.user_id}`
-      );
+      // Check if this is a storefront product or regular listing
+      if (listing.storefront_id) {
+        // For storefront products, use storefront_product_id
+        router.push(
+          `/${locale}/chat?storefront_product_id=${listing.id}&seller_id=${listing.user_id}`
+        );
+      } else {
+        // For regular listings, use listing_id
+        router.push(
+          `/${locale}/chat?listing_id=${listing.id}&seller_id=${listing.user_id}`
+        );
+      }
     }
   };
 

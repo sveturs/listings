@@ -60,8 +60,27 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	var listing *models.MarketplaceListing
 	listingExists := false
 
-	// Если есть ListingID, пытаемся найти объявление
-	if msg.ListingID > 0 {
+	// Если есть StorefrontProductID, нужно найти владельца витрины
+	if msg.StorefrontProductID > 0 {
+		// Получаем информацию о товаре и владельце витрины
+		storefrontOwnerID, err := s.storage.GetStorefrontOwnerByProductID(ctx, msg.StorefrontProductID)
+		if err != nil {
+			log.Printf("Error getting storefront owner for product %d: %v", msg.StorefrontProductID, err)
+			return fmt.Errorf("storefront product not found: %d", msg.StorefrontProductID)
+		}
+
+		// Устанавливаем получателя как владельца витрины
+		msg.ReceiverID = storefrontOwnerID
+		log.Printf("Message for storefront product %d will be sent to owner %d", msg.StorefrontProductID, storefrontOwnerID)
+
+		// Создаем виртуальный листинг для отображения
+		listing = &models.MarketplaceListing{
+			ID:    0,
+			Title: fmt.Sprintf("Товар витрины #%d", msg.StorefrontProductID),
+		}
+		listingExists = false
+	} else if msg.ListingID > 0 {
+		// Если есть ListingID, пытаемся найти объявление
 		var err error
 		listing, err = s.storage.GetListingByID(ctx, msg.ListingID)
 		if err != nil {

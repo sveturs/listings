@@ -98,3 +98,21 @@ type LoginResponse struct {
 	Message string       `json:"message" example:"users.login.success.authenticated"`
 	User    *models.User `json:"user"`
 }
+
+// UsersListResponse структура ответа со списком пользователей для админки
+type UsersListResponse struct {
+	Users      []*models.UserProfile `json:"users"`
+	TotalCount int                   `json:"total_count" example:"100"`
+	Page       int                   `json:"page" example:"1"`
+	PageSize   int                   `json:"page_size" example:"20"`
+}
+
+// UpdateUserStatusRequest структура запроса изменения статуса пользователя
+type UpdateUserStatusRequest struct {
+	Status string `json:"status" validate:"required,oneof=active inactive suspended" example:"active"`
+}
+
+// UpdateUserRoleRequest структура запроса изменения роли пользователя
+type UpdateUserRoleRequest struct {
+	RoleID int `json:"role_id" validate:"required,min=1" example:"2"`
+}

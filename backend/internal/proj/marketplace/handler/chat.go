@@ -15,7 +15,6 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/internal/pkg/contextkeys"
 	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 )
@@ -79,6 +78,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 
 	chatID := c.Query("chat_id")
 	listingID := c.Query("listing_id")
+	// storefrontProductID := c.Query("storefront_product_id") // Может понадобиться позже
 
 	// Если есть chat_id, используем его
 	if chatID != "" {
@@ -89,12 +89,19 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 		c.Context().SetUserValue("chat_id", chatIDInt)
 
 		// Если указан chat_id, listing_id не обязателен
-		// Получим listing_id из чата
+		// Получим listing_id или storefront_product_id из чата
 		chat, err := h.services.Chat().GetChat(c.Context(), chatIDInt, userID)
 		if err != nil {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getChatError")
 		}
-		listingID = strconv.Itoa(chat.ListingID)
+		// Чат может быть связан либо с listing_id, либо с storefront_product_id
+		if chat.ListingID > 0 {
+			listingID = strconv.Itoa(chat.ListingID)
+		} else if chat.StorefrontProductID > 0 {
+			// storefrontProductID = strconv.Itoa(chat.StorefrontProductID)
+			// Для товаров витрин будем передавать listing_id = 0
+			listingID = "0"
+		}
 	}
 
 	// Получаем receiver_id для прямых сообщений
@@ -136,16 +143,15 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 		Int("userId", userID).
 		Msg("GetMessages")
 
-	// Создаем новый context.Context с chat_id
-	ctx := context.Background()
+	// Сохраняем chat_id в контексте Fiber если он есть
 	if chatID != "" {
 		// Преобразуем строку в int для контекста
 		if chatIDInt, err := strconv.Atoi(chatID); err == nil {
-			ctx = context.WithValue(ctx, contextkeys.ChatIDKey, chatIDInt)
+			c.Context().SetUserValue("chat_id", chatIDInt)
 		}
 	}
 
-	messages, err := h.services.Chat().GetMessages(ctx, listingIDInt, userID, offset, limit)
+	messages, err := h.services.Chat().GetMessages(c.Context(), listingIDInt, userID, offset, limit)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error fetching messages")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMessagesError")
@@ -228,8 +234,18 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidRequest")
 	}
 
+	// Если указан StorefrontProductID, нужно найти владельца витрины
+	if req.StorefrontProductID > 0 {
+		// Для товаров витрин ReceiverID не обязателен, мы его найдем сами
+		// Будет установлен в сервисе Chat при обработке сообщения
+		logger.Info().
+			Int("productId", req.StorefrontProductID).
+			Msg("Message for storefront product will be processed in service layer")
+	}
+
 	// Валидация входных данных
-	if req.ReceiverID == 0 {
+	// ReceiverID обязателен только если не указан StorefrontProductID
+	if req.ReceiverID == 0 && req.StorefrontProductID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.receiverRequired")
 	}
 
@@ -237,17 +253,18 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 	req.Content = utils.SanitizeText(req.Content)
 
 	// Для прямых сообщений между контактами достаточно ReceiverID
-	// ListingID или ChatID нужны только для чатов с привязкой к объявлению
-	// Если нет ни ListingID, ни ChatID - это прямое сообщение контакту
+	// ListingID, StorefrontProductID или ChatID нужны для чатов с привязкой к объявлению/товару
+	// Если нет ни одного из них - это прямое сообщение контакту
 
 	msg := &models.MarketplaceMessage{
-		ChatID:     req.ChatID,
-		ListingID:  req.ListingID,
-		SenderID:   userID,
-		ReceiverID: req.ReceiverID,
-		Content:    req.Content,
-		Sender:     &models.User{}, // Инициализируем структуры
-		Receiver:   &models.User{},
+		ChatID:              req.ChatID,
+		ListingID:           req.ListingID,
+		StorefrontProductID: req.StorefrontProductID,
+		SenderID:            userID,
+		ReceiverID:          req.ReceiverID,
+		Content:             req.Content,
+		Sender:              &models.User{}, // Инициализируем структуры
+		Receiver:            &models.User{},
 	}
 
 	if err := h.services.Chat().SendMessage(c.Context(), msg); err != nil {

@@ -34,5 +34,76 @@
     "cityMaxLength": "City name cannot exceed 100 characters",
     "countryMaxLength": "Country name cannot exceed 100 characters"
   },
-  "notProvided": "Not provided"
+  "notProvided": "Not provided",
+  "settings": {
+    "title": "Settings",
+    "comingSoon": "Coming soon",
+    "tabs": {
+      "privacy": "Privacy",
+      "notifications": "Notifications",
+      "security": "Security"
+    },
+    "privacy": {
+      "title": "Privacy Settings",
+      "description": "Control who can contact you and see your information",
+      "allowContactRequests": "Allow contact requests",
+      "allowContactRequestsDesc": "Let other users send you contact requests",
+      "messagesFromContactsOnly": "Messages from contacts only",
+      "messagesFromContactsOnlyDesc": "Only allow messages from users in your contacts",
+      "locationPrivacy": "Location Privacy",
+      "locationPrivacyDesc": "Control how your location is displayed in listings",
+      "locationExact": "Show exact location",
+      "locationArea": "Show general area (default)",
+      "locationCity": "Show city only",
+      "locationHidden": "Hide location",
+      "locationNote": "Location privacy settings will be available soon",
+      "error": {
+        "fetchFailed": "Failed to load privacy settings",
+        "saveFailed": "Failed to save privacy settings"
+      }
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "description": "Irreversible actions for your account",
+      "deactivateAccount": "Deactivate Account",
+      "deleteAccount": "Delete Account",
+      "warning": "These actions are not yet available. Contact support if needed."
+    },
+    "actions": {
+      "save": "Save Settings",
+      "saving": "Saving..."
+    },
+    "messages": {
+      "saveSuccess": "Settings saved successfully"
+    }
+  },
+  "contacts": {
+    "title": "Contacts",
+    "addContact": "Add Contact",
+    "searchPlaceholder": "Search contacts...",
+    "enterEmail": "Enter email address",
+    "emailPlaceholder": "user@example.com",
+    "adding": "Adding...",
+    "accept": "Accept",
+    "decline": "Decline",
+    "unblock": "Unblock",
+    "message": "Message",
+    "remove": "Remove",
+    "confirmRemove": "Are you sure you want to remove this contact?",
+    "tabs": {
+      "contacts": "Contacts",
+      "pending": "Pending",
+      "blocked": "Blocked"
+    },
+    "noContacts": "No contacts yet",
+    "noPending": "No pending requests",
+    "noBlocked": "No blocked users",
+    "error": {
+      "fetchFailed": "Failed to load contacts",
+      "addFailed": "Failed to add contact",
+      "updateFailed": "Failed to update contact status",
+      "removeFailed": "Failed to remove contact",
+      "userNotFound": "User not found with this email"
+    }
+  }
 }

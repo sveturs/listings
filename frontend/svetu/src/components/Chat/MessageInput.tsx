@@ -14,12 +14,14 @@ import Image from 'next/image';
 interface MessageInputProps {
   chat?: MarketplaceChat;
   initialListingId?: number;
+  initialStorefrontProductId?: number;
   initialSellerId?: number;
 }
 
 export default function MessageInput({
   chat,
   initialListingId,
+  initialStorefrontProductId,
   initialSellerId,
 }: MessageInputProps) {
   const t = useTranslations('Chat');
@@ -61,6 +63,13 @@ export default function MessageInput({
         chat_id: chat.id > 0 ? chat.id : undefined, // Если chat.id = 0, это виртуальный чат для контакта
         listing_id: chat.listing_id,
         receiver_id: chat.buyer_id === user.id ? chat.seller_id : chat.buyer_id,
+        content: messageContent,
+      };
+    } else if (initialStorefrontProductId && initialSellerId) {
+      // Создание нового чата с товаром витрины
+      payload = {
+        storefront_product_id: initialStorefrontProductId,
+        receiver_id: initialSellerId,
         content: messageContent,
       };
     } else if (initialListingId && initialSellerId) {

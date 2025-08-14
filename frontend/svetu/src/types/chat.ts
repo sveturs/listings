@@ -43,6 +43,7 @@ export interface MarketplaceMessage {
   id: number;
   chat_id: number;
   listing_id: number;
+  storefront_product_id?: number;
   sender_id: number;
   receiver_id: number;
   content: string;
@@ -54,6 +55,7 @@ export interface MarketplaceMessage {
   sender?: User;
   receiver?: User;
   listing?: MarketplaceItem;
+  storefront_product?: any; // TODO: добавить тип StorefrontProduct
 
   // Мультиязычность
   original_language: string;
@@ -67,6 +69,7 @@ export interface MarketplaceMessage {
 
 export interface SendMessagePayload {
   listing_id?: number;
+  storefront_product_id?: number;
   chat_id?: number;
   receiver_id?: number;
   content: string;

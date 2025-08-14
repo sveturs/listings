@@ -137,11 +137,16 @@ func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error)
 }
 
 func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	// Если provider не указан и нет google_id, устанавливаем provider = 'email'
+	if user.Provider == "" && user.GoogleID == "" {
+		user.Provider = "email"
+	}
+
 	err := s.pool.QueryRow(ctx, `
-        INSERT INTO users (name, email, google_id, picture_url, phone)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO users (name, email, google_id, picture_url, phone, provider)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, created_at
-    `, user.Name, user.Email, user.GoogleID, user.PictureURL, user.Phone).Scan(&user.ID, &user.CreatedAt)
+    `, user.Name, user.Email, user.GoogleID, user.PictureURL, user.Phone, user.Provider).Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return nil, errors.New("email already exists")

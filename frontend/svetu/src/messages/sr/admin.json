@@ -446,9 +446,106 @@
   },
   "searchLabel": "Pretraga",
   "users": {
-    "title": "Naslov",
+    "title": "Upravljanje korisnicima",
+    "pageTitle": "Upravljanje korisnicima - Admin",
+    "pageDescription": "Upravljanje korisnicima sistema, dozvolama i pristupom",
     "comingSoon": "Uskoro",
-    "description": "Opis"
+    "description": "Funkcionalnost upravljanja korisnicima",
+    "totalUsers": "Ukupno {count} korisnika",
+    "searchPlaceholder": "Pretraži po imenu ili email-u...",
+    "allStatuses": "Svi statusi",
+    "itemsPerPage": "Stavki po stranici",
+    "view": "Pregled",
+    "userDetails": "Podaci korisnika",
+    "selectRole": "Izaberite ulogu",
+    "pageInfo": "Stranica {current} od {total}",
+    "table": {
+      "id": "ID",
+      "name": "Ime",
+      "email": "Email",
+      "status": "Status",
+      "role": "Uloga",
+      "provider": "Provajder",
+      "createdAt": "Kreiran",
+      "lastSeen": "Poslednji put viđen",
+      "actions": "Akcije"
+    },
+    "status": {
+      "active": "Aktivan",
+      "inactive": "Neaktivan",
+      "suspended": "Suspendovan"
+    },
+    "details": {
+      "id": "ID korisnika",
+      "status": "Status naloga",
+      "role": "Uloga korisnika",
+      "provider": "Način prijave",
+      "phone": "Telefon",
+      "location": "Lokacija",
+      "timezone": "Vremenska zona",
+      "created": "Datum kreiranja",
+      "lastSeen": "Poslednja poseta",
+      "bio": "O sebi",
+      "notifications": "Postavke obaveštenja",
+      "emailNotifications": "Email obaveštenja",
+      "isAdmin": "Ovaj korisnik ima administratorske privilegije"
+    },
+    "deleteConfirm": {
+      "title": "Obriši korisnika",
+      "message": "Da li ste sigurni da želite da obrišete korisnika {name}?",
+      "warning": "Ova radnja se ne može poništiti. Svi podaci korisnika će biti trajno obrisani."
+    },
+    "error": {
+      "fetchFailed": "Neuspešno učitavanje korisnika",
+      "updateFailed": "Neuspešno ažuriranje statusa korisnika",
+      "deleteFailed": "Neuspešno brisanje korisnika",
+      "cannotModifySelf": "Ne možete promeniti svoj nalog",
+      "cannotDeleteSelf": "Ne možete obrisati svoj nalog"
+    },
+    "roleTooltip": {
+      "noRole": "Uloga nije dodeljena",
+      "noDescription": "Nema opisa funkcija uloge",
+      "priority": "Prioritet"
+    },
+    "providers": {
+      "google": "Google",
+      "email": "Elektronska pošta"
+    },
+    "timezone": {
+      "default": "Podrazumevano"
+    },
+    "roleDescriptions": {
+      "super_admin": "Potpun pristup sistemu sa svim dozvolama",
+      "admin": "Administrativni pristup za upravljanje korisnicima i sadržajem",
+      "financial_manager": "Upravlja finansijskim transakcijama i izveštajima",
+      "vendor_manager": "Upravlja nalozima dobavljača i izlozima",
+      "dispute_manager": "Rešava sporove između kupaca i prodavaca",
+      "content_moderator": "Moderira oglase, proizvode i sadržaj",
+      "warehouse_manager": "Upravlja skladišnim operacijama i inventarom",
+      "professional_vendor": "Profesionalni prodavac sa izlogom i naprednim funkcijama",
+      "vendor": "Može kreirati i upravljati izlozima i proizvodima",
+      "business_analyst": "Analiza i optimizacija poslovnih procesa",
+      "category_manager": "Upravlja kategorijama proizvoda i atributima",
+      "chat_moderator": "Kontroliše i moderira čet razgovore",
+      "compliance_officer": "Obezbeđuje regulatornu usklađenost",
+      "courier": "Dostavlja porudžbine klijentima",
+      "data_analyst": "Pristup analitici i alatima za izveštavanje",
+      "individual_seller": "Individualni prodavac sa osnovnim funkcijama",
+      "legal_advisor": "Bavi se pravnim pitanjima i usklađenošću",
+      "marketing_manager": "Upravlja promocijama, popustima i marketinškim kampanjama",
+      "moderator": "Može moderirati sadržaj i upravljati oglasima",
+      "pickup_manager": "Upravlja radom mesta preuzimanja",
+      "pickup_worker": "Obrađuje preuzimanje porudžbina i povraćaj",
+      "review_moderator": "Moderira recenzije i ocene",
+      "storefront_staff": "Zaposleni u izlogu sa ograničenim dozvolama",
+      "support_l1": "Osnovna podrška klijentima i upiti",
+      "support_l2": "Napredna podrška i rešavanje problema",
+      "support_l3": "Ekspertska podrška i eskalacije",
+      "verified_buyer": "Verifikovani kupac sa punim privilegijama kupovine",
+      "vip_customer": "VIP klijent sa ekskluzivnim pogodnostima",
+      "warehouse_worker": "Obrađuje ispunjavanje porudžbina i pakovanje",
+      "user": "Standardni korisnik sa osnovnim dozvolama"
+    }
   },
   "balance": {
     "title": "Moj balans",

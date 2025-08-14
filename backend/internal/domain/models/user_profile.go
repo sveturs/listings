@@ -20,6 +20,8 @@ type UserProfile struct {
 	City              string          `json:"city"` // Теперь используем обычные строки, а не указатели
 	Country           string          `json:"country"`
 	IsAdmin           bool            `json:"is_admin"` // Флаг администратора
+	RoleID            *int            `json:"role_id,omitempty" db:"role_id"`
+	Role              *Role           `json:"role,omitempty"`
 }
 
 // UserProfileUpdate используется для частичного обновления профиля

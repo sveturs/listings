@@ -39,7 +39,10 @@ type Storage interface {
 
 	// Административные методы для управления пользователями
 	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error)
+	GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error)
 	UpdateUserStatus(ctx context.Context, id int, status string) error
+	UpdateUserRole(ctx context.Context, id int, roleID int) error
+	GetAllRoles(ctx context.Context) ([]*models.Role, error)
 	DeleteUser(ctx context.Context, id int) error
 
 	// Методы для работы с администраторами
@@ -173,6 +176,7 @@ type Storage interface {
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 	UpdateStorefront(ctx context.Context, storefront *models.Storefront) error
 	DeleteStorefront(ctx context.Context, id int) error
+	GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error)
 
 	// Storefront repository access
 	Storefront() interface{}
@@ -225,6 +229,10 @@ type Storage interface {
 	GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error
 	CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error)
+
+	// Privacy Settings methods
+	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
+	UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error
 
 	// Car Makes and Models methods
 	GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error)

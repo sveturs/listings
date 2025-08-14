@@ -1187,6 +1187,9 @@ definitions:
         type: integer
       receiver_id:
         type: integer
+      storefront_product_id:
+        description: Новое поле для товаров витрин
+        type: integer
     required:
     - content
     - receiver_id
@@ -1931,6 +1934,9 @@ definitions:
         $ref: '#/definitions/backend_internal_domain_models.User'
       seller_id:
         type: integer
+      storefront_product_id:
+        description: Новое поле для товаров витрин
+        type: integer
       unread_count:
         type: integer
       updated_at:
@@ -2118,6 +2124,13 @@ definitions:
         - $ref: '#/definitions/backend_internal_domain_models.User'
         description: Дополнительные поля для отображения
       sender_id:
+        type: integer
+      storefront_product:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.StorefrontProduct'
+        description: Новое поле для товара витрины
+      storefront_product_id:
+        description: Новое поле для товаров витрин
         type: integer
       translations:
         additionalProperties:
@@ -2554,6 +2567,21 @@ definitions:
       user_id:
         type: integer
     type: object
+  backend_internal_domain_models.Permission:
+    properties:
+      action:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
   backend_internal_domain_models.PriceHistoryEntry:
     properties:
       change_percentage:
@@ -2731,6 +2759,32 @@ definitions:
         type: integer
       verified_reviews:
         type: integer
+    type: object
+  backend_internal_domain_models.Role:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      is_assignable:
+        type: boolean
+      is_system:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        description: Relations
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.Permission'
+        type: array
+      priority:
+        type: integer
+      updated_at:
+        type: string
     type: object
   backend_internal_domain_models.RollbackRequest:
     properties:
@@ -4076,6 +4130,10 @@ definitions:
         type: string
       provider:
         type: string
+      role:
+        $ref: '#/definitions/backend_internal_domain_models.Role'
+      role_id:
+        type: integer
       settings:
         items:
           type: integer
@@ -7222,6 +7280,15 @@ definitions:
       token_type:
         example: Bearer
         type: string
+    type: object
+  internal_proj_users_handler.UpdateUserRoleRequest:
+    properties:
+      role_id:
+        example: 2
+        minimum: 1
+        type: integer
+    required:
+    - role_id
     type: object
   internal_proj_users_handler.UserResponse:
     properties:
@@ -10451,6 +10518,34 @@ paths:
       summary: Reindex listing ratings
       tags:
       - marketplace-admin-indexing
+  /api/v1/admin/roles:
+    get:
+      consumes:
+      - application/json
+      description: Returns list of all available roles in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of roles
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.Role'
+                  type: array
+              type: object
+        "500":
+          description: admin.users.error.fetch_roles_failed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get all roles (Admin)
+      tags:
+      - admin-users
   /api/v1/admin/search/analytics:
     get:
       consumes:
@@ -12373,13 +12468,27 @@ paths:
         in: query
         name: page
         type: integer
-      - default: 10
+      - default: 20
         description: Items per page
         in: query
-        maximum: 100
+        maximum: 1000
         minimum: 1
         name: limit
         type: integer
+      - description: Filter by status (active, inactive, suspended)
+        in: query
+        name: status
+        type: string
+      - default: id
+        description: Sort field (id, name, email, created_at, last_seen, account_status)
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order (asc, desc)
+        in: query
+        name: sort_order
+        type: string
       produces:
       - application/json
       responses:
@@ -12548,6 +12657,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Get user balance (Admin)
+      tags:
+      - admin-users
+  /api/v1/admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Updates user role by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_users_handler.UpdateUserRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.AdminMessageResponse'
+              type: object
+        "400":
+          description: admin.users.error.invalid_user_id or admin.users.error.invalid_format
+            or admin.users.error.invalid_role
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: admin.users.error.role_update_failed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update user role (Admin)
       tags:
       - admin-users
   /api/v1/admin/users/{id}/status:
@@ -23852,6 +24004,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user profile
+      tags:
+      - users
+  /api/v1/users/privacy-settings:
+    put:
+      consumes:
+      - application/json
+      description: Updates privacy settings for the authenticated user
+      parameters:
+      - description: Privacy settings
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpdatePrivacySettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Settings updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
+              type: object
+        "400":
+          description: users.privacy.error.invalid_data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: users.privacy.error.update
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update privacy settings
       tags:
       - users
   /api/v1/users/register:

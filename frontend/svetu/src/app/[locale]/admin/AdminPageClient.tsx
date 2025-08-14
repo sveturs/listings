@@ -16,9 +16,9 @@ export default function AdminPage() {
             <h2 className="card-title">{t('sections.users')}</h2>
             <p>{t('sections.usersDescription')}</p>
             <div className="card-actions justify-end">
-              <button className="btn btn-primary" disabled title="Coming soon">
+              <Link href="/admin/users" className="btn btn-primary">
                 {t('manage')}
-              </button>
+              </Link>
             </div>
           </div>
         </div>
