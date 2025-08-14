@@ -49,9 +49,16 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
   const [selectedListing, setSelectedListing] = React.useState<string | number | null>(null);
   const [walkingMode, setWalkingMode] = React.useState<'radius' | 'walking'>('radius');
   const [walkingTime, setWalkingTime] = React.useState(15);
-  const [userMarkerLocation, setUserMarkerLocation] = React.useState(
-    userLocation || { latitude: 44.7866, longitude: 20.4489 }
-  );
+  const [userMarkerLocation, setUserMarkerLocation] = React.useState(() => {
+    if (userLocation && 
+        typeof userLocation.longitude === 'number' && 
+        typeof userLocation.latitude === 'number' &&
+        !isNaN(userLocation.longitude) && 
+        !isNaN(userLocation.latitude)) {
+      return userLocation;
+    }
+    return { latitude: 44.7866, longitude: 20.4489 }; // Белград по умолчанию
+  });
   const [isCompactControlExpanded, setIsCompactControlExpanded] = React.useState(false);
   const [isochroneData, setIsochroneData] = React.useState<Feature<Polygon> | null>(null);
   const [isLoadingIsochrone, setIsLoadingIsochrone] = React.useState(false);
@@ -100,6 +107,17 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
       return;
     }
 
+    // Валидация координат для изохрона
+    if (typeof userMarkerLocation.longitude !== 'number' || 
+        typeof userMarkerLocation.latitude !== 'number' ||
+        isNaN(userMarkerLocation.longitude) || 
+        isNaN(userMarkerLocation.latitude) ||
+        userMarkerLocation.latitude < -90 || userMarkerLocation.latitude > 90 ||
+        userMarkerLocation.longitude < -180 || userMarkerLocation.longitude > 180) {
+      setIsochroneData(null);
+      return;
+    }
+
     const loadIsochrone = async () => {
       setIsLoadingIsochrone(true);
       try {
@@ -111,6 +129,7 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
         setIsochroneData(isochrone);
       } catch (error) {
         console.error('Failed to load isochrone:', error);
+        setIsochroneData(null);
       } finally {
         setIsLoadingIsochrone(false);
       }
@@ -140,7 +159,15 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
 
   // Фильтрация по категориям и радиусу
   const filteredListings = useMemo(() => {
-    let filtered = listings;
+    // Сначала фильтруем только listings с валидными координатами
+    let filtered = listings.filter(listing => 
+      typeof listing.latitude === 'number' && 
+      typeof listing.longitude === 'number' &&
+      !isNaN(listing.latitude) && 
+      !isNaN(listing.longitude) &&
+      listing.latitude >= -90 && listing.latitude <= 90 &&
+      listing.longitude >= -180 && listing.longitude <= 180
+    );
 
     // Фильтр по категориям
     if (selectedCategories.length > 0) {
@@ -154,20 +181,30 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
 
     if (walkingMode === 'walking' && isochroneData) {
       return filtered.filter((listing) => {
-        return isPointInIsochrone([listing.longitude, listing.latitude], isochroneData);
+        try {
+          return isPointInIsochrone([listing.longitude, listing.latitude], isochroneData);
+        } catch (error) {
+          console.warn('Error checking isochrone for listing:', listing.id, error);
+          return false;
+        }
       });
     }
 
     const effectiveRadius = walkingMode === 'walking' ? walkingTime * 80 : searchRadius;
 
     return filtered.filter((listing) => {
-      const distance = calculateDistance(
-        userMarkerLocation.latitude,
-        userMarkerLocation.longitude,
-        listing.latitude,
-        listing.longitude
-      );
-      return distance <= effectiveRadius;
+      try {
+        const distance = calculateDistance(
+          userMarkerLocation.latitude,
+          userMarkerLocation.longitude,
+          listing.latitude,
+          listing.longitude
+        );
+        return !isNaN(distance) && distance <= effectiveRadius;
+      } catch (error) {
+        console.warn('Error calculating distance for listing:', listing.id, error);
+        return false;
+      }
     });
   }, [listings, userMarkerLocation, showRadius, searchRadius, walkingMode, walkingTime, calculateDistance, isochroneData, selectedCategories]);
 
@@ -175,28 +212,41 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
   const geoJsonData = useMemo(() => {
     return {
       type: 'FeatureCollection' as const,
-      features: filteredListings.map((listing) => ({
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [listing.longitude, listing.latitude],
-        },
-        properties: {
-          id: listing.id,
-          price: listing.price,
-          title: listing.title,
-          category: listing.category,
-          isStorefront: listing.isStorefront || false,
-          storeName: listing.storeName,
-          imageUrl: listing.imageUrl,
-        },
-      })),
+      features: filteredListings
+        .filter(listing => 
+          typeof listing.latitude === 'number' && 
+          typeof listing.longitude === 'number' &&
+          !isNaN(listing.latitude) && 
+          !isNaN(listing.longitude) &&
+          listing.latitude >= -90 && listing.latitude <= 90 &&
+          listing.longitude >= -180 && listing.longitude <= 180
+        )
+        .map((listing) => ({
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [listing.longitude, listing.latitude],
+          },
+          properties: {
+            id: listing.id,
+            price: listing.price,
+            title: listing.title,
+            category: listing.category,
+            isStorefront: listing.isStorefront || false,
+            storeName: listing.storeName,
+            imageUrl: listing.imageUrl,
+          },
+        })),
     };
   }, [filteredListings]);
 
   // Центр и масштаб карты
   const { center, zoom } = useMemo(() => {
-    if (userLocation) {
+    if (userLocation && 
+        typeof userLocation.longitude === 'number' && 
+        typeof userLocation.latitude === 'number' &&
+        !isNaN(userLocation.longitude) && 
+        !isNaN(userLocation.latitude)) {
       return {
         center: { longitude: userLocation.longitude, latitude: userLocation.latitude },
         zoom: 13,
@@ -204,14 +254,24 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
     }
 
     if (listings.length > 0) {
-      const avgLat = listings.reduce((sum, l) => sum + l.latitude, 0) / listings.length;
-      const avgLng = listings.reduce((sum, l) => sum + l.longitude, 0) / listings.length;
-      return {
-        center: { longitude: avgLng, latitude: avgLat },
-        zoom: 12,
-      };
+      const validListings = listings.filter(l => 
+        typeof l.latitude === 'number' && 
+        typeof l.longitude === 'number' &&
+        !isNaN(l.latitude) && 
+        !isNaN(l.longitude)
+      );
+      
+      if (validListings.length > 0) {
+        const avgLat = validListings.reduce((sum, l) => sum + l.latitude, 0) / validListings.length;
+        const avgLng = validListings.reduce((sum, l) => sum + l.longitude, 0) / validListings.length;
+        return {
+          center: { longitude: avgLng, latitude: avgLat },
+          zoom: 12,
+        };
+      }
     }
 
+    // Белград по умолчанию
     return {
       center: { longitude: 20.4489, latitude: 44.7866 },
       zoom: 11,
@@ -266,6 +326,17 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
   const radiusGeoJson = useMemo(() => {
     if (!userMarkerLocation || !showRadius) return null;
 
+    // Валидация координат пользователя
+    if (!userMarkerLocation || 
+        typeof userMarkerLocation.longitude !== 'number' || 
+        typeof userMarkerLocation.latitude !== 'number' ||
+        isNaN(userMarkerLocation.longitude) || 
+        isNaN(userMarkerLocation.latitude) ||
+        userMarkerLocation.latitude < -90 || userMarkerLocation.latitude > 90 ||
+        userMarkerLocation.longitude < -180 || userMarkerLocation.longitude > 180) {
+      return null;
+    }
+
     if (walkingMode === 'walking' && isochroneData) {
       return isochroneData;
     }
@@ -278,11 +349,30 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
     const metersPerDegreeLat = 111320;
     const metersPerDegreeLng = 111320 * Math.cos(latRad);
 
+    // Проверяем что metersPerDegreeLng не NaN или Infinity
+    if (isNaN(metersPerDegreeLng) || !isFinite(metersPerDegreeLng)) {
+      return null;
+    }
+
     for (let i = 0; i <= numSides; i++) {
       const angle = i * angleStep;
       const dx = (searchRadius * Math.cos(angle)) / metersPerDegreeLng;
       const dy = (searchRadius * Math.sin(angle)) / metersPerDegreeLat;
-      coordinates.push([userMarkerLocation.longitude + dx, userMarkerLocation.latitude + dy]);
+      
+      // Проверяем валидность вычисленных координат
+      const newLng = userMarkerLocation.longitude + dx;
+      const newLat = userMarkerLocation.latitude + dy;
+      
+      if (isNaN(newLng) || isNaN(newLat) || !isFinite(newLng) || !isFinite(newLat)) {
+        continue; // Пропускаем невалидные координаты
+      }
+      
+      coordinates.push([newLng, newLat]);
+    }
+
+    // Проверяем что у нас есть минимум координат для полигона
+    if (coordinates.length < 3) {
+      return null;
     }
 
     return {
@@ -338,10 +428,19 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
   }, []);
 
   const handleUserMarkerDrag = useCallback((event: MarkerDragEvent) => {
-    setUserMarkerLocation({
-      longitude: event.lngLat.lng,
-      latitude: event.lngLat.lat,
-    });
+    const lng = event.lngLat.lng;
+    const lat = event.lngLat.lat;
+    
+    // Проверяем валидность координат
+    if (typeof lng === 'number' && typeof lat === 'number' &&
+        !isNaN(lng) && !isNaN(lat) &&
+        lat >= -90 && lat <= 90 &&
+        lng >= -180 && lng <= 180) {
+      setUserMarkerLocation({
+        longitude: lng,
+        latitude: lat,
+      });
+    }
   }, []);
 
   if (!mounted) {
@@ -380,7 +479,11 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
         )}
 
         {/* Маркер пользователя */}
-        {userMarkerLocation && (
+        {userMarkerLocation && 
+         typeof userMarkerLocation.longitude === 'number' && 
+         typeof userMarkerLocation.latitude === 'number' &&
+         !isNaN(userMarkerLocation.longitude) && 
+         !isNaN(userMarkerLocation.latitude) && (
           <Marker
             longitude={userMarkerLocation.longitude}
             latitude={userMarkerLocation.latitude}
@@ -418,7 +521,16 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
             <Layer {...unclusteredPointLayer} />
           </Source>
         ) : (
-          filteredListings.map((listing) => (
+          filteredListings
+            .filter(listing => 
+              typeof listing.latitude === 'number' && 
+              typeof listing.longitude === 'number' &&
+              !isNaN(listing.latitude) && 
+              !isNaN(listing.longitude) &&
+              listing.latitude >= -90 && listing.latitude <= 90 &&
+              listing.longitude >= -180 && listing.longitude <= 180
+            )
+            .map((listing) => (
             <Marker
               key={listing.id}
               longitude={listing.longitude}

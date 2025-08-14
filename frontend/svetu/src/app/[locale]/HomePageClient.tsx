@@ -66,16 +66,23 @@ export default function HomePageClient({
   createListingText,
 }: HomePageClientProps) {
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [userLocation] = useState('Белград');
+  const [userLocation] = useState([44.7866, 20.4489]); // Координаты Белграда
+  const [userLocationName] = useState('Белград');
   const [cartCount, setCartCount] = useState(0);
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Баннеры для hero секции
   const banners = [
@@ -400,7 +407,7 @@ export default function HomePageClient({
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">
                   <FiMapPin className="w-3 h-3" />
-                  {userLocation}
+                  {userLocationName}
                 </span>
                 <Link href="/map" className="hover:underline">
                   Выбрать другой город
@@ -486,24 +493,32 @@ export default function HomePageClient({
                 >
                   {createListingText}
                 </Link>
-                {user ? (
-                  <Link
-                    href="/profile"
-                    className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
-                  >
-                    <FiUser className="w-5 h-5" />
-                    <span className="hidden lg:inline ml-2">
-                      {user.name || 'Профиль'}
-                    </span>
-                  </Link>
+                {mounted ? (
+                  user ? (
+                    <Link
+                      href="/profile"
+                      className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
+                    >
+                      <FiUser className="w-5 h-5" />
+                      <span className="hidden lg:inline ml-2">
+                        {user.name || 'Профиль'}
+                      </span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/auth/login"
+                      className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
+                    >
+                      <FiUser className="w-5 h-5" />
+                      <span className="hidden lg:inline ml-2">Войти</span>
+                    </Link>
+                  )
                 ) : (
-                  <Link
-                    href="/auth/login"
-                    className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
-                  >
+                  // Placeholder при SSR - показываем нейтральную кнопку
+                  <div className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide">
                     <FiUser className="w-5 h-5" />
-                    <span className="hidden lg:inline ml-2">Войти</span>
-                  </Link>
+                    <span className="hidden lg:inline ml-2">⚪</span>
+                  </div>
                 )}
               </div>
 
