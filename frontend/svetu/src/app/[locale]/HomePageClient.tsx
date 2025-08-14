@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 
 // Динамический импорт карты для избежания SSR проблем
-const MapSection = dynamic(() => import('./components/MapSection'), {
+const EnhancedMapSection = dynamic(() => import('./components/EnhancedMapSection').then(mod => ({ default: mod.EnhancedMapSection })), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full flex items-center justify-center bg-base-200 rounded-lg">
@@ -799,21 +799,23 @@ export default function HomePageClient({
             <div className="lg:col-span-2">
               <div className="card bg-base-100 overflow-hidden">
                 <div className="card-body p-0">
-                  <div className="h-96 relative">
-                    <MapSection />
-                    {/* Фильтры на карте */}
-                    <div className="absolute top-4 left-4 right-4 flex gap-2 z-[1000]">
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        До €100
-                      </button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        Сегодня
-                      </button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        С фото
-                      </button>
-                    </div>
-                  </div>
+                  <EnhancedMapSection 
+                    className="h-96 w-full"
+                    listings={listings.map(item => ({
+                      id: item.id,
+                      latitude: item.location?.lat || 44.8125 + (Math.random() - 0.5) * 0.02,
+                      longitude: item.location?.lng || 20.4612 + (Math.random() - 0.5) * 0.02,
+                      price: item.price,
+                      title: item.title,
+                      category: item.category,
+                      imageUrl: item.image,
+                      isStorefront: item.isStorefront
+                    }))}
+                    userLocation={userLocation ? { latitude: userLocation[0], longitude: userLocation[1] } : undefined}
+                    searchRadius={5000}
+                    showRadius={true}
+                    enableClustering={true}
+                  />
                 </div>
               </div>
             </div>
