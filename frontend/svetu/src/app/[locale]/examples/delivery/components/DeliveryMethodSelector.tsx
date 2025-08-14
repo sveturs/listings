@@ -5,7 +5,6 @@ import {
   TruckIcon,
   MapPinIcon,
   ClockIcon,
-  CurrencyDollarIcon,
   CheckIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';

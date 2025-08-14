@@ -6,7 +6,6 @@ import {
   DocumentDuplicateIcon,
   CheckCircleIcon,
   InformationCircleIcon,
-  CurrencyDollarIcon,
   ShieldCheckIcon,
   DocumentCheckIcon,
 } from '@heroicons/react/24/outline';

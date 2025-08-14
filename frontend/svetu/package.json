@@ -38,6 +38,7 @@
     "@types/mapbox-gl": "^3.4.1",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.11.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
     "exifr": "^7.1.3",

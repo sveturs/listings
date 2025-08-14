@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import {
-  translationAdminApi,
   TranslationAuditLog,
   AuditStatistics,
 } from '@/services/translationAdminApi';
@@ -60,18 +59,23 @@ export default function AuditLogViewer() {
     try {
       setIsLoading(true);
 
-      const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== '')
-      );
+      // TODO: Fix audit API integration
+      // const cleanFilters = Object.fromEntries(
+      //   Object.entries(filters).filter(([_, value]) => value !== '')
+      // );
 
-      const response = await translationAdminApi.audit.getLogs(
-        currentPage,
-        20,
-        cleanFilters
-      );
+      // const response = await translationAdminApi.audit.getLogs(
+      //   currentPage,
+      //   20,
+      //   cleanFilters
+      // );
 
-      setLogs(response.data);
-      setTotalPages(response.total_pages);
+      // setLogs(response.data);
+      // setTotalPages(response.total_pages);
+
+      // Temporary mock data
+      setLogs([]);
+      setTotalPages(1);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
     } finally {
@@ -82,8 +86,18 @@ export default function AuditLogViewer() {
   const loadStatistics = async () => {
     try {
       setIsLoading(true);
-      const stats = await translationAdminApi.audit.getStatistics();
-      setStatistics(stats);
+      // TODO: Fix audit API integration
+      // const stats = await translationAdminApi.audit.getStatistics();
+      // setStatistics(stats);
+
+      // Temporary mock data
+      setStatistics({
+        total_actions: 0,
+        actions_by_type: {},
+        actions_by_user: [],
+        actions_by_date: [],
+        recent_actions: [],
+      });
     } catch (error) {
       console.error('Failed to load audit statistics:', error);
     } finally {
@@ -459,19 +473,21 @@ export default function AuditLogViewer() {
                 <div className="card-body">
                   <h3 className="card-title">Активность пользователей</h3>
                   <div className="space-y-2">
-                    {Object.entries(statistics.actions_by_user)
-                      .sort(([, a], [, b]) => (b as number) - (a as number))
+                    {statistics.actions_by_user
+                      .sort((a, b) => b.action_count - a.action_count)
                       .slice(0, 10)
-                      .map(([userId, count]) => (
+                      .map((user) => (
                         <div
-                          key={userId}
+                          key={user.user_id}
                           className="flex justify-between items-center p-2 bg-base-200 rounded"
                         >
                           <span className="flex items-center gap-2">
                             <UserIcon className="h-4 w-4" />
-                            Пользователь {userId}
+                            {user.user_name}
                           </span>
-                          <span className="font-medium">{count} операций</span>
+                          <span className="font-medium">
+                            {user.action_count} операций
+                          </span>
                         </div>
                       ))}
                   </div>

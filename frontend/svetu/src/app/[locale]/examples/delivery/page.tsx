@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import {
   TruckIcon,
   MapPinIcon,
@@ -12,7 +11,6 @@ import {
   ChartBarIcon,
   UserGroupIcon,
   BuildingStorefrontIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
   BanknotesIcon,
   DocumentCheckIcon,
@@ -29,7 +27,6 @@ import DeliveryCalculator from './components/DeliveryCalculator';
 import BulkShipmentManager from './components/BulkShipmentManager';
 
 export default function DeliveryExamplesPage() {
-  const t = useTranslations('examples');
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDeliveryMethod, setSelectedDeliveryMethod] =
     useState('courier');
@@ -276,7 +273,7 @@ export default function DeliveryExamplesPage() {
                         ))}
                       </div>
                       <p className="text-base-content/80 italic">
-                        "{testimonial.text}"
+                        &ldquo;{testimonial.text}&rdquo;
                       </p>
                     </div>
                   </div>

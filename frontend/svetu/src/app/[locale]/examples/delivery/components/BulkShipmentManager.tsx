@@ -5,8 +5,6 @@ import {
   DocumentDuplicateIcon,
   PrinterIcon,
   TruckIcon,
-  CheckIcon,
-  XMarkIcon,
   ArrowDownTrayIcon,
   CalendarIcon,
   ExclamationTriangleIcon,

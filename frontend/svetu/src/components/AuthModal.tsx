@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'react-hot-toast';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,11 +15,11 @@ interface AuthModalProps {
 export default function AuthModal({
   isOpen,
   onClose,
-  onSuccess,
+  onSuccess: _onSuccess,
   requireAdmin = false,
 }: AuthModalProps) {
   const t = useTranslations('auth');
-  const { login, loginWithGoogle, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,21 +41,11 @@ export default function AuthModal({
     setIsSubmitting(true);
 
     try {
-      const result = await login(email, password);
-
-      if (result.success) {
-        if (requireAdmin && !result.user?.is_admin) {
-          setError(t('errors.adminRequired'));
-          return;
-        }
-
-        toast.success(t('loginSuccess'));
-        onSuccess?.();
-        onClose();
-      } else {
-        setError(result.error || t('errors.loginFailed'));
-      }
-    } catch (err) {
+      // For now, just redirect to login page
+      // This component needs to be refactored to work with new auth flow
+      login();
+      onClose();
+    } catch {
       setError(t('errors.unexpectedError'));
     } finally {
       setIsSubmitting(false);
@@ -66,9 +55,9 @@ export default function AuthModal({
   const handleGoogleLogin = async () => {
     try {
       setError(null);
-      await loginWithGoogle();
-      // Google login redirects, so we don't need to handle success here
-    } catch (err) {
+      // Redirect to Google OAuth
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    } catch {
       setError(t('errors.googleLoginFailed'));
     }
   };

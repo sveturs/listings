@@ -4,46 +4,60 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
 // Динамический импорт карты для избежания SSR проблем
-const MapSection = dynamic(
-  () => import('./components/MapSection'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-full w-full flex items-center justify-center bg-base-200 rounded-lg">
-        <div className="text-center">
-          <div className="loading loading-spinner loading-lg text-primary"></div>
-          <p className="mt-2">Загрузка карты...</p>
-        </div>
+const MapSection = dynamic(() => import('./components/MapSection'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center bg-base-200 rounded-lg">
+      <div className="text-center">
+        <div className="loading loading-spinner loading-lg text-primary"></div>
+        <p className="mt-2">Загрузка карты...</p>
       </div>
-    )
-  }
-);
+    </div>
+  ),
+});
 import {
-  FiSearch, FiMapPin, FiUser, FiShoppingCart, FiMenu, FiX, FiChevronRight,
-  FiTruck, FiShield, FiCreditCard, FiMessageCircle, FiStar, FiHeart,
-  FiTrendingUp, FiPercent, FiClock, FiFilter, FiGrid, FiList
+  FiSearch,
+  FiMapPin,
+  FiUser,
+  FiShoppingCart,
+  FiMenu,
+  FiX,
+  FiChevronRight,
+  FiTruck,
+  FiShield,
+  FiCreditCard,
+  FiMessageCircle,
+  FiStar,
+  FiHeart,
+  FiTrendingUp,
+  FiGrid,
+  FiList,
 } from 'react-icons/fi';
 import {
-  BsHouseDoor, BsLaptop, BsBriefcase, BsPalette,
-  BsTools, BsPhone, BsGem, BsBook, BsHeart, BsHandbag
+  BsHouseDoor,
+  BsLaptop,
+  BsBriefcase,
+  BsPalette,
+  BsTools,
+  BsPhone,
+  BsGem,
+  BsHandbag,
 } from 'react-icons/bs';
 import { FaCar, FaTshirt } from 'react-icons/fa';
 import { AiOutlineThunderbolt, AiOutlineEye } from 'react-icons/ai';
 import { HiOutlineSparkles } from 'react-icons/hi';
 
 export default function IdealMarketplacePage() {
-  const t = useTranslations('marketplace');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [userLocation, setUserLocation] = useState('Белград');
-  const [cartCount, setCartCount] = useState(3);
+  const [_userLocation, _setUserLocation] = useState('Белград');
+  const [_cartCount, _setCartCount] = useState(3);
 
   // Баннеры для hero секции
   const banners = [
@@ -55,7 +69,7 @@ export default function IdealMarketplacePage() {
       cta: 'Смотреть акции',
       image: '🛍️',
       badge: 'AI проверка',
-      details: '> 5% товаров со скидкой 25%+'
+      details: '> 5% товаров со скидкой 25%+',
     },
     {
       id: 2,
@@ -63,7 +77,7 @@ export default function IdealMarketplacePage() {
       subtitle: 'При покупке от €50',
       bgColor: 'bg-gradient-to-r from-blue-600 to-cyan-600',
       cta: 'Узнать больше',
-      image: '📦'
+      image: '📦',
     },
     {
       id: 3,
@@ -71,8 +85,8 @@ export default function IdealMarketplacePage() {
       subtitle: 'Безопасные сделки с эскроу',
       bgColor: 'bg-gradient-to-r from-green-600 to-teal-600',
       cta: 'Как работает',
-      image: '🔒'
-    }
+      image: '🔒',
+    },
   ];
 
   // Автоматическая смена баннеров
@@ -85,14 +99,62 @@ export default function IdealMarketplacePage() {
 
   // Категории с иконками и количеством
   const categories = [
-    { id: 'realestate', name: 'Недвижимость', icon: BsHouseDoor, count: '45K+', color: 'text-blue-600' },
-    { id: 'auto', name: 'Транспорт', icon: FaCar, count: '28K+', color: 'text-red-600' },
-    { id: 'electronics', name: 'Электроника', icon: BsLaptop, count: '67K+', color: 'text-purple-600' },
-    { id: 'fashion', name: 'Одежда', icon: FaTshirt, count: '89K+', color: 'text-pink-600' },
-    { id: 'job', name: 'Работа', icon: BsBriefcase, count: '12K+', color: 'text-green-600' },
-    { id: 'services', name: 'Услуги', icon: BsTools, count: '35K+', color: 'text-orange-600' },
-    { id: 'hobby', name: 'Хобби', icon: BsPalette, count: '23K+', color: 'text-indigo-600' },
-    { id: 'home', name: 'Для дома', icon: BsHandbag, count: '54K+', color: 'text-yellow-600' },
+    {
+      id: 'realestate',
+      name: 'Недвижимость',
+      icon: BsHouseDoor,
+      count: '45K+',
+      color: 'text-blue-600',
+    },
+    {
+      id: 'auto',
+      name: 'Транспорт',
+      icon: FaCar,
+      count: '28K+',
+      color: 'text-red-600',
+    },
+    {
+      id: 'electronics',
+      name: 'Электроника',
+      icon: BsLaptop,
+      count: '67K+',
+      color: 'text-purple-600',
+    },
+    {
+      id: 'fashion',
+      name: 'Одежда',
+      icon: FaTshirt,
+      count: '89K+',
+      color: 'text-pink-600',
+    },
+    {
+      id: 'job',
+      name: 'Работа',
+      icon: BsBriefcase,
+      count: '12K+',
+      color: 'text-green-600',
+    },
+    {
+      id: 'services',
+      name: 'Услуги',
+      icon: BsTools,
+      count: '35K+',
+      color: 'text-orange-600',
+    },
+    {
+      id: 'hobby',
+      name: 'Хобби',
+      icon: BsPalette,
+      count: '23K+',
+      color: 'text-indigo-600',
+    },
+    {
+      id: 'home',
+      name: 'Для дома',
+      icon: BsHandbag,
+      count: '54K+',
+      color: 'text-yellow-600',
+    },
   ];
 
   // Горячие предложения с реальными изображениями
@@ -104,24 +166,26 @@ export default function IdealMarketplacePage() {
       oldPrice: '€1399',
       discount: '-21%',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop',
       rating: 4.8,
       reviews: 234,
       isNew: true,
       isPremium: false,
-      isFavorite: false
+      isFavorite: false,
     },
     {
       id: 2,
       title: '2-комн квартира, центр, 65м²',
       price: '€85000',
       location: 'Нови Сад',
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop',
       rating: 4.9,
       reviews: 12,
       isNew: false,
       isPremium: true,
-      isFavorite: true
+      isFavorite: true,
     },
     {
       id: 3,
@@ -130,24 +194,26 @@ export default function IdealMarketplacePage() {
       oldPrice: '€1599',
       discount: '-19%',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&h=300&fit=crop',
       rating: 4.9,
       reviews: 567,
       isNew: true,
       isPremium: false,
-      isFavorite: false
+      isFavorite: false,
     },
     {
       id: 4,
       title: 'BMW X5 2021 xDrive30d',
       price: '€52900',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1555215858-9db736e8a7b8?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1555215858-9db736e8a7b8?w=400&h=300&fit=crop',
       rating: 5.0,
       reviews: 8,
       isNew: false,
       isPremium: true,
-      isFavorite: true
+      isFavorite: true,
     },
     {
       id: 5,
@@ -156,24 +222,26 @@ export default function IdealMarketplacePage() {
       oldPrice: '€699',
       discount: '-21%',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&h=300&fit=crop',
       rating: 4.9,
       reviews: 445,
       isNew: false,
       isPremium: false,
-      isFavorite: false
+      isFavorite: false,
     },
     {
       id: 6,
       title: 'Диван угловой, кожа',
       price: '€899',
       location: 'Нови Сад',
-      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
       rating: 4.7,
       reviews: 89,
       isNew: true,
       isPremium: false,
-      isFavorite: true
+      isFavorite: true,
     },
     {
       id: 7,
@@ -182,25 +250,27 @@ export default function IdealMarketplacePage() {
       oldPrice: '€199',
       discount: '-25%',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop',
       rating: 4.8,
       reviews: 1234,
       isNew: true,
       isPremium: false,
-      isFavorite: false
+      isFavorite: false,
     },
     {
       id: 8,
       title: 'Электросамокат Xiaomi Pro 2',
       price: '€449',
       location: 'Белград',
-      image: 'https://images.unsplash.com/photo-1593941966874-e9ec34e67d0e?w=400&h=300&fit=crop',
+      image:
+        'https://images.unsplash.com/photo-1593941966874-e9ec34e67d0e?w=400&h=300&fit=crop',
       rating: 4.6,
       reviews: 567,
       isNew: false,
       isPremium: false,
-      isFavorite: false
-    }
+      isFavorite: false,
+    },
   ];
 
   // Официальные магазины с реальными логотипами
@@ -215,9 +285,10 @@ export default function IdealMarketplacePage() {
       rating: 4.9,
       verified: true,
       discount: 'до -70%',
-      bgImage: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400&h=200&fit=crop',
+      bgImage:
+        'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400&h=200&fit=crop',
       blackFriday: true,
-      realDiscount: '31% реальная скидка'
+      realDiscount: '31% реальная скидка',
     },
     {
       id: 2,
@@ -229,7 +300,8 @@ export default function IdealMarketplacePage() {
       rating: 4.8,
       verified: true,
       discount: 'до -50%',
-      bgImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=200&fit=crop'
+      bgImage:
+        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=200&fit=crop',
     },
     {
       id: 3,
@@ -241,7 +313,8 @@ export default function IdealMarketplacePage() {
       rating: 4.7,
       verified: true,
       discount: 'до -40%',
-      bgImage: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop'
+      bgImage:
+        'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
     },
     {
       id: 4,
@@ -253,14 +326,23 @@ export default function IdealMarketplacePage() {
       rating: 4.8,
       verified: true,
       discount: 'до -30%',
-      bgImage: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=200&fit=crop'
-    }
+      bgImage:
+        'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=200&fit=crop',
+    },
   ];
 
   // Популярные поисковые запросы
   const trendingSearches = [
-    'iPhone 15', 'PS5', 'Квартира центр', 'MacBook', 'Электросамокат',
-    'Диван', 'AirPods', 'Nike кроссовки', 'Холодильник', 'Велосипед'
+    'iPhone 15',
+    'PS5',
+    'Квартира центр',
+    'MacBook',
+    'Электросамокат',
+    'Диван',
+    'AirPods',
+    'Nike кроссовки',
+    'Холодильник',
+    'Велосипед',
   ];
 
   return (
@@ -273,14 +355,22 @@ export default function IdealMarketplacePage() {
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <FiMapPin className="w-3 h-3" />
-                {userLocation}
+                {_userLocation}
               </span>
-              <Link href="/map" className="hover:underline">Выбрать другой город</Link>
+              <Link href="/map" className="hover:underline">
+                Выбрать другой город
+              </Link>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/business" className="hover:underline">Для бизнеса</Link>
-              <Link href="/help" className="hover:underline">Помощь</Link>
-              <Link href="/app" className="hover:underline">📱 Приложение</Link>
+              <Link href="/business" className="hover:underline">
+                Для бизнеса
+              </Link>
+              <Link href="/help" className="hover:underline">
+                Помощь
+              </Link>
+              <Link href="/app" className="hover:underline">
+                📱 Приложение
+              </Link>
             </div>
           </div>
         </div>
@@ -316,7 +406,9 @@ export default function IdealMarketplacePage() {
                 >
                   <option value="all">Все категории</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
                   ))}
                 </select>
                 <div className="relative flex-1">
@@ -341,15 +433,22 @@ export default function IdealMarketplacePage() {
             <div className="flex items-center gap-2">
               <button className="btn btn-ghost btn-circle relative">
                 <FiHeart className="w-5 h-5" />
-                <span className="badge badge-sm badge-error absolute -top-1 -right-1">2</span>
+                <span className="badge badge-sm badge-error absolute -top-1 -right-1">
+                  2
+                </span>
               </button>
               <button className="btn btn-ghost btn-circle relative">
                 <FiShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="badge badge-sm badge-error absolute -top-1 -right-1">{cartCount}</span>
+                {_cartCount > 0 && (
+                  <span className="badge badge-sm badge-error absolute -top-1 -right-1">
+                    {_cartCount}
+                  </span>
                 )}
               </button>
-              <Link href="/create" className="btn btn-secondary hidden lg:inline-flex">
+              <Link
+                href="/create"
+                className="btn btn-secondary hidden lg:inline-flex"
+              >
                 Подать объявление
               </Link>
               <button className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide">
@@ -363,7 +462,11 @@ export default function IdealMarketplacePage() {
               className="btn btn-ghost btn-circle lg:hidden"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
-              {showMobileMenu ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
+              {showMobileMenu ? (
+                <FiX className="w-5 h-5" />
+              ) : (
+                <FiMenu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -410,7 +513,7 @@ export default function IdealMarketplacePage() {
                   style={{
                     backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop')`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
                   }}
                 >
                   {banners[currentBanner].badge && (
@@ -494,11 +597,15 @@ export default function IdealMarketplacePage() {
                 >
                   <div className="card bg-base-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                     <div className="card-body p-4 text-center">
-                      <div className={`mx-auto mb-2 p-3 rounded-full bg-base-200 group-hover:bg-primary/10 transition-colors`}>
+                      <div
+                        className={`mx-auto mb-2 p-3 rounded-full bg-base-200 group-hover:bg-primary/10 transition-colors`}
+                      >
                         <Icon className={`w-8 h-8 ${cat.color}`} />
                       </div>
                       <h3 className="font-medium text-sm">{cat.name}</h3>
-                      <p className="text-xs text-base-content/60">{cat.count}</p>
+                      <p className="text-xs text-base-content/60">
+                        {cat.count}
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -535,7 +642,9 @@ export default function IdealMarketplacePage() {
             </div>
           </div>
 
-          <div className={`grid ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'} gap-4`}>
+          <div
+            className={`grid ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'} gap-4`}
+          >
             {hotDeals.map((deal) => (
               <motion.div
                 key={deal.id}
@@ -564,20 +673,28 @@ export default function IdealMarketplacePage() {
                     </div>
                   )}
                   <button className="btn btn-circle btn-sm absolute top-2 right-2 bg-base-100/80 hover:bg-base-100">
-                    <FiHeart className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`} />
+                    <FiHeart
+                      className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                    />
                   </button>
                 </figure>
                 <div className="card-body p-4">
-                  <h3 className="card-title text-base line-clamp-2">{deal.title}</h3>
+                  <h3 className="card-title text-base line-clamp-2">
+                    {deal.title}
+                  </h3>
                   <div className="flex items-center gap-2 text-sm">
                     <FiMapPin className="w-3 h-3" />
-                    <span className="text-base-content/60">{deal.location}</span>
+                    <span className="text-base-content/60">
+                      {deal.location}
+                    </span>
                   </div>
                   {deal.rating && (
                     <div className="flex items-center gap-1 text-sm">
                       <FiStar className="w-3 h-3 fill-warning text-warning" />
                       <span>{deal.rating}</span>
-                      <span className="text-base-content/60">({deal.reviews})</span>
+                      <span className="text-base-content/60">
+                        ({deal.reviews})
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 mt-2">
@@ -622,9 +739,15 @@ export default function IdealMarketplacePage() {
                     <MapSection />
                     {/* Фильтры на карте */}
                     <div className="absolute top-4 left-4 right-4 flex gap-2 z-[1000]">
-                      <button className="btn btn-sm bg-base-100 shadow-lg">До €100</button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">Сегодня</button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">С фото</button>
+                      <button className="btn btn-sm bg-base-100 shadow-lg">
+                        До €100
+                      </button>
+                      <button className="btn btn-sm bg-base-100 shadow-lg">
+                        Сегодня
+                      </button>
+                      <button className="btn btn-sm bg-base-100 shadow-lg">
+                        С фото
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -662,7 +785,9 @@ export default function IdealMarketplacePage() {
             <div className="card-body">
               <div className="flex items-center gap-4 mb-4">
                 <div className="badge badge-warning badge-lg">AI ПРОВЕРКА</div>
-                <h3 className="text-2xl font-bold">Как работает проверка Черной пятницы</h3>
+                <h3 className="text-2xl font-bold">
+                  Как работает проверка Черной пятницы
+                </h3>
               </div>
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="text-center">
@@ -683,7 +808,7 @@ export default function IdealMarketplacePage() {
                   <div className="text-3xl mb-2">✅</div>
                   <h4 className="font-bold mb-1">Минимум 25%</h4>
                   <p className="text-sm text-base-content/60">
-                    Только скидки от 25% на >5% товаров
+                    Только скидки от 25% на более чем 5% товаров
                   </p>
                 </div>
                 <div className="text-center">
@@ -697,7 +822,8 @@ export default function IdealMarketplacePage() {
               <div className="alert alert-info mt-4">
                 <FiShield className="w-5 h-5" />
                 <span>
-                  <strong>Защита покупателей:</strong> Магазины с поддельными скидками автоматически исключаются из программы Черная пятница
+                  <strong>Защита покупателей:</strong> Магазины с поддельными
+                  скидками автоматически исключаются из программы Черная пятница
                 </span>
               </div>
             </div>
@@ -720,14 +846,17 @@ export default function IdealMarketplacePage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {stores.map((store) => (
-              <div key={store.id} className="card bg-base-100 hover:shadow-xl transition-all overflow-hidden">
+              <div
+                key={store.id}
+                className="card bg-base-100 hover:shadow-xl transition-all overflow-hidden"
+              >
                 {/* Фоновое изображение магазина */}
                 <div
                   className="h-24 relative"
                   style={{
                     backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${store.bgImage}')`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
                   }}
                 >
                   {store.blackFriday && (
@@ -736,7 +865,9 @@ export default function IdealMarketplacePage() {
                     </div>
                   )}
                   {store.discount && (
-                    <div className="badge badge-error absolute top-2 right-2">{store.discount}</div>
+                    <div className="badge badge-error absolute top-2 right-2">
+                      {store.discount}
+                    </div>
                   )}
                 </div>
 
@@ -755,7 +886,9 @@ export default function IdealMarketplacePage() {
                             <FiShield className="w-4 h-4 text-success" />
                           )}
                         </h3>
-                        <p className="text-sm text-base-content/60">{store.category}</p>
+                        <p className="text-sm text-base-content/60">
+                          {store.category}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -814,17 +947,23 @@ export default function IdealMarketplacePage() {
                     />
                   </figure>
                   <div className="card-body p-4">
-                    <h3 className="font-medium text-sm line-clamp-2">{deal.title}</h3>
+                    <h3 className="font-medium text-sm line-clamp-2">
+                      {deal.title}
+                    </h3>
                     <div className="flex items-center gap-2">
                       {deal.oldPrice && (
                         <span className="text-sm text-base-content/40 line-through">
                           {deal.oldPrice}
                         </span>
                       )}
-                      <p className="text-lg font-bold text-primary">{deal.price}</p>
+                      <p className="text-lg font-bold text-primary">
+                        {deal.price}
+                      </p>
                     </div>
                     {deal.discount && (
-                      <div className="badge badge-error badge-sm">{deal.discount}</div>
+                      <div className="badge badge-error badge-sm">
+                        {deal.discount}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -911,9 +1050,7 @@ export default function IdealMarketplacePage() {
             Присоединяйтесь к 2 миллионам пользователей
           </p>
           <div className="flex gap-4 justify-center">
-            <button className="btn btn-white btn-lg">
-              Создать аккаунт
-            </button>
+            <button className="btn btn-white btn-lg">Создать аккаунт</button>
             <button className="btn btn-outline btn-white btn-lg">
               Подать объявление
             </button>
@@ -948,11 +1085,31 @@ export default function IdealMarketplacePage() {
             <div>
               <h4 className="font-bold mb-4">Покупателям</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/how-to-buy" className="hover:text-primary">Как купить</Link></li>
-                <li><Link href="/delivery" className="hover:text-primary">Доставка</Link></li>
-                <li><Link href="/payment" className="hover:text-primary">Оплата</Link></li>
-                <li><Link href="/return" className="hover:text-primary">Возврат</Link></li>
-                <li><Link href="/warranty" className="hover:text-primary">Гарантия</Link></li>
+                <li>
+                  <Link href="/how-to-buy" className="hover:text-primary">
+                    Как купить
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/delivery" className="hover:text-primary">
+                    Доставка
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/payment" className="hover:text-primary">
+                    Оплата
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/return" className="hover:text-primary">
+                    Возврат
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/warranty" className="hover:text-primary">
+                    Гарантия
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -960,11 +1117,31 @@ export default function IdealMarketplacePage() {
             <div>
               <h4 className="font-bold mb-4">Продавцам</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/how-to-sell" className="hover:text-primary">Как продать</Link></li>
-                <li><Link href="/tariffs" className="hover:text-primary">Тарифы</Link></li>
-                <li><Link href="/promotion" className="hover:text-primary">Продвижение</Link></li>
-                <li><Link href="/stores" className="hover:text-primary">Магазины</Link></li>
-                <li><Link href="/api" className="hover:text-primary">API</Link></li>
+                <li>
+                  <Link href="/how-to-sell" className="hover:text-primary">
+                    Как продать
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tariffs" className="hover:text-primary">
+                    Тарифы
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/promotion" className="hover:text-primary">
+                    Продвижение
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/stores" className="hover:text-primary">
+                    Магазины
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/api" className="hover:text-primary">
+                    API
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -972,11 +1149,31 @@ export default function IdealMarketplacePage() {
             <div>
               <h4 className="font-bold mb-4">Помощь</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-primary">Частые вопросы</Link></li>
-                <li><Link href="/support" className="hover:text-primary">Поддержка</Link></li>
-                <li><Link href="/rules" className="hover:text-primary">Правила</Link></li>
-                <li><Link href="/blog" className="hover:text-primary">Блог</Link></li>
-                <li><Link href="/contacts" className="hover:text-primary">Контакты</Link></li>
+                <li>
+                  <Link href="/faq" className="hover:text-primary">
+                    Частые вопросы
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/support" className="hover:text-primary">
+                    Поддержка
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/rules" className="hover:text-primary">
+                    Правила
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog" className="hover:text-primary">
+                    Блог
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contacts" className="hover:text-primary">
+                    Контакты
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -986,9 +1183,15 @@ export default function IdealMarketplacePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-base-content/60">
             <p>© 2025 SveTu. Все права защищены.</p>
             <div className="flex gap-4">
-              <Link href="/terms" className="hover:text-primary">Условия использования</Link>
-              <Link href="/privacy" className="hover:text-primary">Конфиденциальность</Link>
-              <Link href="/cookies" className="hover:text-primary">Cookie</Link>
+              <Link href="/terms" className="hover:text-primary">
+                Условия использования
+              </Link>
+              <Link href="/privacy" className="hover:text-primary">
+                Конфиденциальность
+              </Link>
+              <Link href="/cookies" className="hover:text-primary">
+                Cookie
+              </Link>
             </div>
           </div>
         </div>
@@ -1007,8 +1210,10 @@ export default function IdealMarketplacePage() {
         <button className="text-secondary">
           <div className="indicator">
             <FiShoppingCart className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="badge badge-xs badge-error indicator-item">{cartCount}</span>
+            {_cartCount > 0 && (
+              <span className="badge badge-xs badge-error indicator-item">
+                {_cartCount}
+              </span>
             )}
           </div>
           <span className="btm-nav-label">Корзина</span>

@@ -372,42 +372,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshSession, storageUtils]);
 
+  // Redirect to login page (matches the interface)
   const login = useCallback(
-    async (email: string, password: string) => {
-      try {
-        setError(null);
-        const response = await AuthService.login({ email, password });
-
-        if (response && response.user) {
-          // Save tokens if they exist
-          if (response.access_token) {
-            tokenManager.setAccessToken(response.access_token);
-            localStorage.setItem('access_token', response.access_token);
-          }
-          if (response.refresh_token) {
-            tokenManager.setRefreshToken(response.refresh_token);
-            localStorage.setItem('refresh_token', response.refresh_token);
-          }
-
-          // Update user in context
-          updateUser(response.user);
-
-          return { success: true, user: response.user };
-        } else {
-          return { success: false, error: 'Login failed' };
-        }
-      } catch (error: any) {
-        console.error('Login error:', error);
-        const errorMessage =
-          error.message || 'Failed to login. Please try again.';
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
+    (returnTo?: string) => {
+      const returnPath = returnTo || window.location.pathname;
+      router.push(`/auth/login?returnTo=${encodeURIComponent(returnPath)}`);
     },
-    [updateUser]
+    [router]
   );
 
-  const loginWithGoogle = useCallback((returnTo?: string) => {
+  const _loginWithGoogle = useCallback((returnTo?: string) => {
     try {
       AuthService.loginWithGoogle(returnTo);
     } catch (error) {
@@ -507,7 +481,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isRefreshingSession,
       error,
       login,
-      loginWithGoogle,
       logout,
       refreshSession,
       updateProfile,
@@ -522,7 +495,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isRefreshingSession,
       error,
       login,
-      loginWithGoogle,
       logout,
       refreshSession,
       updateProfile,

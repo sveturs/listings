@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   MagnifyingGlassIcon,
   TruckIcon,
-  CheckCircleIcon,
   ClockIcon,
   MapPinIcon,
   PhoneIcon,

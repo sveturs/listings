@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import InlineTranslationEditor from './InlineTranslationEditor';
 import TranslationSearch from './TranslationSearch';
 import type { Translation } from '@/types/translation';
+import type { Translation as TranslationApiType } from '@/services/translationAdminApi';
 
 export default function TranslationEditorDemo() {
   const t = useTranslations('admin.translations');
@@ -28,8 +29,21 @@ export default function TranslationEditorDemo() {
     updated_at: new Date().toISOString(),
   };
 
-  const handleSearchSelect = (translation: Translation) => {
-    setSelectedTranslation(translation);
+  const handleSearchSelect = (translation: TranslationApiType) => {
+    // Convert API translation type to local type
+    const convertedTranslation: Translation = {
+      ...translation,
+      key: `${translation.entity_type}.${translation.entity_id}.${translation.field_name}`,
+      value_en:
+        translation.language === 'en' ? translation.translated_text : undefined,
+      value_ru:
+        translation.language === 'ru' ? translation.translated_text : undefined,
+      value_sr:
+        translation.language === 'sr' ? translation.translated_text : undefined,
+      created_at: translation.created_at || new Date().toISOString(),
+      updated_at: translation.updated_at || new Date().toISOString(),
+    };
+    setSelectedTranslation(convertedTranslation);
   };
 
   const handleSave = (translation: Translation) => {

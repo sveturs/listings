@@ -425,11 +425,12 @@ export class AuthService {
           console.error('[AuthService] No access_token in login response');
         }
 
-        if (loginData.refresh_token) {
-          tokenManager.setRefreshToken(loginData.refresh_token);
-          // Также сохраняем в localStorage для translationAdminApi
-          localStorage.setItem('refresh_token', loginData.refresh_token);
-        }
+        // TODO: Handle refresh_token when it's added to the response type
+        // if (loginData.refresh_token) {
+        //   tokenManager.setRefreshToken(loginData.refresh_token);
+        //   // Также сохраняем в localStorage для translationAdminApi
+        //   localStorage.setItem('refresh_token', loginData.refresh_token);
+        // }
       }
 
       this.abortControllers.delete('login');

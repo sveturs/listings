@@ -4,8 +4,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useDebounce } from '@/hooks/useDebounce';
-import { translationAdminApi } from '@/services/translationAdminApi';
-import type { Translation } from '@/types/translation';
+import {
+  translationAdminApi,
+  type Translation,
+} from '@/services/translationAdminApi';
 
 interface TranslationSearchProps {
   onResultSelect?: (translation: Translation) => void;
@@ -178,60 +180,37 @@ export default function TranslationSearch({
                     {/* Ключ и тип */}
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-mono text-sm text-primary">
-                        {highlightMatch(translation.key, debouncedQuery)}
+                        {highlightMatch(
+                          `${translation.entity_type}.${translation.entity_id}.${translation.field_name}`,
+                          debouncedQuery
+                        )}
                       </span>
                       <span className="badge badge-ghost badge-sm">
-                        {getItemType(translation.key)}
+                        {getItemType(translation.entity_type)}
                       </span>
                     </div>
 
                     {/* Переводы */}
                     <div className="space-y-1">
-                      {translation.value_en && (
-                        <div className="text-sm">
-                          <span className="font-semibold text-base-content/70">
-                            EN:
-                          </span>{' '}
-                          <span className="text-base-content/90">
-                            {highlightMatch(
-                              translation.value_en,
-                              debouncedQuery
-                            )}
-                          </span>
-                        </div>
-                      )}
-                      {translation.value_ru && (
-                        <div className="text-sm">
-                          <span className="font-semibold text-base-content/70">
-                            RU:
-                          </span>{' '}
-                          <span className="text-base-content/90">
-                            {highlightMatch(
-                              translation.value_ru,
-                              debouncedQuery
-                            )}
-                          </span>
-                        </div>
-                      )}
-                      {translation.value_sr && (
-                        <div className="text-sm">
-                          <span className="font-semibold text-base-content/70">
-                            SR:
-                          </span>{' '}
-                          <span className="text-base-content/90">
-                            {highlightMatch(
-                              translation.value_sr,
-                              debouncedQuery
-                            )}
-                          </span>
-                        </div>
-                      )}
+                      <div className="text-sm">
+                        <span className="font-semibold text-base-content/70">
+                          {translation.language.toUpperCase()}:
+                        </span>{' '}
+                        <span className="text-base-content/90">
+                          {highlightMatch(
+                            translation.translated_text,
+                            debouncedQuery
+                          )}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Дополнительная информация */}
-                    {translation.context && (
-                      <div className="mt-1 text-xs text-base-content/60">
-                        {translation.context}
+                    {translation.is_verified && (
+                      <div className="mt-1">
+                        <span className="badge badge-success badge-xs">
+                          Verified
+                        </span>
                       </div>
                     )}
                   </button>

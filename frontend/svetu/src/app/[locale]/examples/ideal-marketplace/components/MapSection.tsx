@@ -17,9 +17,9 @@ if (typeof window !== 'undefined') {
 
 export default function MapSection() {
   return (
-    <MapContainer 
-      center={[44.8125, 20.4612]} 
-      zoom={12} 
+    <MapContainer
+      center={[44.8125, 20.4612]}
+      zoom={12}
       style={{ height: '100%', width: '100%' }}
       className="rounded-lg"
     >
@@ -28,13 +28,13 @@ export default function MapSection() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {/* Круг, показывающий радиус поиска */}
-      <Circle 
-        center={[44.8125, 20.4612]} 
+      <Circle
+        center={[44.8125, 20.4612]}
         radius={5000}
-        pathOptions={{ 
-          color: 'blue', 
+        pathOptions={{
+          color: 'blue',
           fillColor: '#3b82f6',
-          fillOpacity: 0.1 
+          fillOpacity: 0.1,
         }}
       />
       {/* Маркеры товаров */}
@@ -44,8 +44,10 @@ export default function MapSection() {
       <Marker position={[44.8225, 20.4512]}>
         <Popup>
           <div className="text-sm">
-            <strong>iPhone 15 Pro</strong><br/>
-            €1099<br/>
+            <strong>iPhone 15 Pro</strong>
+            <br />
+            €1099
+            <br />
             <span className="text-xs">2 км от вас</span>
           </div>
         </Popup>
@@ -53,8 +55,10 @@ export default function MapSection() {
       <Marker position={[44.8025, 20.4712]}>
         <Popup>
           <div className="text-sm">
-            <strong>MacBook Air M3</strong><br/>
-            €1299<br/>
+            <strong>MacBook Air M3</strong>
+            <br />
+            €1299
+            <br />
             <span className="text-xs">3 км от вас</span>
           </div>
         </Popup>
@@ -62,8 +66,10 @@ export default function MapSection() {
       <Marker position={[44.8325, 20.4412]}>
         <Popup>
           <div className="text-sm">
-            <strong>Квартира 2-комн</strong><br/>
-            €85000<br/>
+            <strong>Квартира 2-комн</strong>
+            <br />
+            €85000
+            <br />
             <span className="text-xs">4 км от вас</span>
           </div>
         </Popup>
@@ -71,8 +77,10 @@ export default function MapSection() {
       <Marker position={[44.7925, 20.4812]}>
         <Popup>
           <div className="text-sm">
-            <strong>PlayStation 5</strong><br/>
-            €549<br/>
+            <strong>PlayStation 5</strong>
+            <br />
+            €549
+            <br />
             <span className="text-xs">2.5 км от вас</span>
           </div>
         </Popup>
@@ -80,8 +88,10 @@ export default function MapSection() {
       <Marker position={[44.8425, 20.4312]}>
         <Popup>
           <div className="text-sm">
-            <strong>Диван угловой</strong><br/>
-            €899<br/>
+            <strong>Диван угловой</strong>
+            <br />
+            €899
+            <br />
             <span className="text-xs">5 км от вас</span>
           </div>
         </Popup>

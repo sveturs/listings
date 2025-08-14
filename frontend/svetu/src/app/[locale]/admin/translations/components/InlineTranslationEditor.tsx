@@ -133,29 +133,27 @@ export default function InlineTranslationEditor({
     try {
       // Get source text for AI translation
       let sourceText = '';
-      let sourceLanguage = '';
+      let _sourceLanguage = '';
 
       if (language !== 'en' && translation.value_en) {
         sourceText = translation.value_en;
-        sourceLanguage = 'en';
+        _sourceLanguage = 'en';
       } else if (language !== 'ru' && translation.value_ru) {
         sourceText = translation.value_ru;
-        sourceLanguage = 'ru';
+        _sourceLanguage = 'ru';
       } else if (language !== 'sr' && translation.value_sr) {
         sourceText = translation.value_sr;
-        sourceLanguage = 'sr';
+        _sourceLanguage = 'sr';
       }
 
       if (!sourceText) {
         return;
       }
 
-      const response = await translationAdminApi.translateWithAI({
-        text: sourceText,
-        source_language: sourceLanguage,
-        target_language: language,
-        context: translation.context,
-      });
+      const response = await translationAdminApi.translateWithAI(
+        sourceText,
+        language
+      );
 
       if (response.success && response.data) {
         setValue(response.data.translated_text);
@@ -186,7 +184,7 @@ export default function InlineTranslationEditor({
       case 'sr':
         return 'Српски';
       default:
-        return language.toUpperCase();
+        return language as string;
     }
   };
 

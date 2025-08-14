@@ -297,11 +297,11 @@ export default function BulkTranslationManager() {
 
       if (translationResult.success && translationResult.data) {
         setResult(translationResult.data);
-        
+
         // Обновляем список сущностей после успешного перевода
         // чтобы отразить новые переводы в UI
         await loadEntities();
-        
+
         // Сбрасываем выбранные элементы
         setSelectedEntities([]);
       } else {
@@ -684,21 +684,27 @@ export default function BulkTranslationManager() {
                                     </span>
                                   )}
                                 </h4>
-                                
-                                {/* Translation status badges */}
-                                {entity.translations && (
+
+                                {/* Translation status badges - TODO: Add when translations field is available */}
+                                {/* {entity.translations && (
                                   <div className="flex gap-1 mt-1">
                                     {entity.translations.en && (
-                                      <span className="badge badge-success badge-xs">EN</span>
+                                      <span className="badge badge-success badge-xs">
+                                        EN
+                                      </span>
                                     )}
                                     {entity.translations.ru && (
-                                      <span className="badge badge-success badge-xs">RU</span>
+                                      <span className="badge badge-success badge-xs">
+                                        RU
+                                      </span>
                                     )}
                                     {entity.translations.sr && (
-                                      <span className="badge badge-success badge-xs">SR</span>
+                                      <span className="badge badge-success badge-xs">
+                                        SR
+                                      </span>
                                     )}
                                   </div>
-                                )}
+                                )} */}
 
                                 {/* Description */}
                                 {entity.description && (
@@ -997,16 +1003,21 @@ export default function BulkTranslationManager() {
                           {/* Показываем переведенные значения */}
                           {item.translations && (
                             <div className="space-y-1 mt-2">
-                              {Object.entries(item.translations).map(([lang, text]) => (
-                                <div key={lang} className="flex gap-2 text-xs">
-                                  <span className="font-semibold text-base-content/70 w-8">
-                                    {lang.toUpperCase()}:
-                                  </span>
-                                  <span className="text-base-content/90 flex-1">
-                                    {text as string}
-                                  </span>
-                                </div>
-                              ))}
+                              {Object.entries(item.translations).map(
+                                ([lang, text]) => (
+                                  <div
+                                    key={lang}
+                                    className="flex gap-2 text-xs"
+                                  >
+                                    <span className="font-semibold text-base-content/70 w-8">
+                                      {lang.toUpperCase()}:
+                                    </span>
+                                    <span className="text-base-content/90 flex-1">
+                                      {text as string}
+                                    </span>
+                                  </div>
+                                )
+                              )}
                             </div>
                           )}
                         </div>

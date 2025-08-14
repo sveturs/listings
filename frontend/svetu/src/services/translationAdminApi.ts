@@ -1,4 +1,16 @@
 // Types для новой системы переводов
+export interface Translation {
+  id: number;
+  entity_type: string;
+  entity_id: number;
+  field_name: string;
+  language: string;
+  translated_text: string;
+  is_verified?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface TranslationVersion {
   id: number;
   translation_id: number;
@@ -470,27 +482,6 @@ class TranslationAdminApi {
     return this.request<AuditStatistics>('/audit/statistics');
   }
 
-  // Search
-  async searchTranslations(
-    query: string,
-    filters?: {
-      language?: string;
-      module?: string;
-      verified_only?: boolean;
-      entity_type?: string;
-    }
-  ): Promise<ApiResponse<any>> {
-    const params = new URLSearchParams({
-      q: query,
-      ...(filters?.language && { language: filters.language }),
-      ...(filters?.module && { module: filters.module }),
-      ...(filters?.verified_only && { verified_only: 'true' }),
-      ...(filters?.entity_type && { entity_type: filters.entity_type }),
-    });
-
-    return this.request(`/search?${params}`);
-  }
-
   // AI Translation
   async translateWithAI(
     text: string,
@@ -599,18 +590,7 @@ class TranslationAdminApi {
     return this.request<Translation[]>(`/search?${searchParams}`);
   }
 
-  // AI Translation
-  async translateWithAI(params: {
-    text: string;
-    source_language: string;
-    target_language: string;
-    context?: string;
-  }): Promise<ApiResponse<{ translated_text: string; confidence: number }>> {
-    return this.request(`/ai/translate`, {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-  }
+  // Duplicate translateWithAI removed - using the one at line 475
 }
 
 // Export singleton instance
