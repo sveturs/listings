@@ -107,7 +107,7 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 				return fmt.Errorf("permission denied")
 			}
 		}
-	} else {
+	default:
 		// Это прямое сообщение контакту без привязки к объявлению
 		listingExists = false
 		listing = &models.MarketplaceListing{
