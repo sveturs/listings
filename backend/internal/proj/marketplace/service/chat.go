@@ -60,8 +60,9 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	var listing *models.MarketplaceListing
 	listingExists := false
 
-	// Если есть StorefrontProductID, нужно найти владельца витрины
-	if msg.StorefrontProductID > 0 {
+	// Определяем тип сообщения и обрабатываем соответствующим образом
+	switch {
+	case msg.StorefrontProductID > 0:
 		// Получаем информацию о товаре и владельце витрины
 		storefrontOwnerID, err := s.storage.GetStorefrontOwnerByProductID(ctx, msg.StorefrontProductID)
 		if err != nil {
@@ -79,7 +80,7 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 			Title: fmt.Sprintf("Товар витрины #%d", msg.StorefrontProductID),
 		}
 		listingExists = false
-	} else if msg.ListingID > 0 {
+	case msg.ListingID > 0:
 		// Если есть ListingID, пытаемся найти объявление
 		var err error
 		listing, err = s.storage.GetListingByID(ctx, msg.ListingID)

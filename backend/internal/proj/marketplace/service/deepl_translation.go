@@ -49,12 +49,6 @@ type deepLTranslateResponse struct {
 	} `json:"translations"`
 }
 
-// deepLLanguageResponse представляет ответ для определения языка
-type deepLLanguageResponse struct {
-	Language   string  `json:"language"`
-	Confidence float64 `json:"confidence"`
-}
-
 // Translate переводит текст с одного языка на другой
 func (s *DeepLTranslationService) Translate(ctx context.Context, text string, sourceLanguage string, targetLanguage string) (string, error) {
 	if text == "" {
@@ -69,7 +63,7 @@ func (s *DeepLTranslationService) Translate(ctx context.Context, text string, so
 	params := url.Values{}
 	params.Set("text", text)
 	params.Set("target_lang", targetLang)
-	if sourceLang != "" && sourceLang != "auto" {
+	if sourceLang != "" && sourceLang != languageAuto {
 		params.Set("source_lang", sourceLang)
 	}
 
@@ -136,14 +130,15 @@ func (s *DeepLTranslationService) TranslateWithContext(ctx context.Context, text
 	params := url.Values{}
 	params.Set("text", text)
 	params.Set("target_lang", targetLang)
-	if sourceLang != "" && sourceLang != "auto" {
+	if sourceLang != "" && sourceLang != languageAuto {
 		params.Set("source_lang", sourceLang)
 	}
 
 	// Добавляем контекст если это поле заголовка или названия
-	if fieldName == "title" || fieldName == "name" || fieldName == "seo_title" {
+	switch fieldName {
+	case "title", fieldNameName, "seo_title":
 		params.Set("formality", "default") // Нейтральный стиль для заголовков
-	} else if fieldName == "description" || fieldName == "seo_description" {
+	case "description", "seo_description":
 		params.Set("formality", "less") // Менее формальный стиль для описаний
 	}
 
@@ -290,7 +285,7 @@ func (s *DeepLTranslationService) translateBatch(ctx context.Context, texts []st
 		params.Add("text", text)
 	}
 	params.Set("target_lang", targetLang)
-	if sourceLang != "" && sourceLang != "auto" {
+	if sourceLang != "" && sourceLang != languageAuto {
 		params.Set("source_lang", sourceLang)
 	}
 

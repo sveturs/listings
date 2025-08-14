@@ -209,7 +209,7 @@ func (s *TranslationService) TranslateEntityFields(ctx context.Context, sourceLa
 	var title string
 	for fieldName, text := range fields {
 		fieldNameLower := strings.ToLower(fieldName)
-		if fieldNameLower == "title" || fieldNameLower == "name" || fieldNameLower == "header" {
+		if fieldNameLower == fieldNameTitle || fieldNameLower == fieldNameName || fieldNameLower == "header" {
 			title = text
 			break
 		}
