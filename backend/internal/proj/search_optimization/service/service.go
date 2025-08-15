@@ -110,10 +110,10 @@ func (s *searchOptimizationService) StartOptimization(ctx context.Context, param
 func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, sessionID int64, weights []*storage.SearchWeight, params *OptimizationParams) {
 	defer func() {
 		if r := recover(); r != nil {
-			s.logger.Error(fmt.Sprintf("Optimization process panicked: %v", r))
+			s.logger.Error("Optimization process panicked: %v", r)
 			errorMsg := fmt.Sprintf("Internal error during optimization: %v", r)
 			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "failed", nil, &errorMsg); updateErr != nil {
-				s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+				s.logger.Error("Failed to update optimization session status: %v", updateErr)
 			}
 		}
 	}()
@@ -131,7 +131,7 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 			// Контекст отменен, прекращаем оптимизацию
 			errorMsg := "optimization canceled"
 			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "canceled", results, &errorMsg); updateErr != nil {
-				s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+				s.logger.Error("Failed to update optimization session status: %v", updateErr)
 			}
 			return
 		default:
@@ -140,7 +140,7 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		// Анализ производительности поля
 		result, err := s.optimizeFieldWeight(ctx, weight, fromDate, toDate, params)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("Failed to optimize field %s: %v", weight.FieldName, err))
+			s.logger.Error("Failed to optimize field %s: %v", weight.FieldName, err)
 			continue
 		}
 
@@ -153,7 +153,7 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		// Обновление прогресса (каждые 10 полей)
 		if processedFields%10 == 0 {
 			if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, "running", results, nil); updateErr != nil {
-				s.logger.Error(fmt.Sprintf("Failed to update optimization session progress: %v", updateErr))
+				s.logger.Error("Failed to update optimization session progress: %v", updateErr)
 			}
 		}
 	}
@@ -164,15 +164,15 @@ func (s *searchOptimizationService) runOptimizationProcess(ctx context.Context, 
 		status = statusCompleted
 		errorMsg := "no optimization results generated"
 		if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, &errorMsg); updateErr != nil {
-			s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+			s.logger.Error("Failed to update optimization session status: %v", updateErr)
 		}
 	} else {
 		if updateErr := s.repo.UpdateOptimizationSession(ctx, sessionID, status, results, nil); updateErr != nil {
-			s.logger.Error(fmt.Sprintf("Failed to update optimization session status: %v", updateErr))
+			s.logger.Error("Failed to update optimization session status: %v", updateErr)
 		}
 	}
 
-	s.logger.Info(fmt.Sprintf("Optimization session %d completed with %d results", sessionID, len(results)))
+	s.logger.Info("Optimization session %d completed with %d results", sessionID, len(results))
 }
 
 func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, weight *storage.SearchWeight, fromDate, toDate time.Time, params *OptimizationParams) (*storage.WeightOptimizationResult, error) {
@@ -191,8 +191,8 @@ func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, wei
 	}
 
 	if totalSearches < params.MinSampleSize {
-		s.logger.Debug(fmt.Sprintf("Insufficient data for field %s: %d searches (min: %d)",
-			weight.FieldName, totalSearches, params.MinSampleSize))
+		s.logger.Debug("Insufficient data for field %s: %d searches (min: %d)",
+			weight.FieldName, totalSearches, params.MinSampleSize)
 		return nil, ErrInsufficientDataForOptimization
 	}
 
@@ -200,8 +200,8 @@ func (s *searchOptimizationService) optimizeFieldWeight(ctx context.Context, wei
 	optimizedWeight, confidence := s.gradientDescentOptimization(fieldData, weight.Weight, params)
 
 	if confidence < params.ConfidenceLevel {
-		s.logger.Debug(fmt.Sprintf("Low confidence for field %s: %.3f (min: %.3f)",
-			weight.FieldName, confidence, params.ConfidenceLevel))
+		s.logger.Debug("Low confidence for field %s: %.3f (min: %.3f)",
+			weight.FieldName, confidence, params.ConfidenceLevel)
 		return nil, ErrLowConfidenceOptimization
 	}
 
@@ -493,7 +493,7 @@ func (s *searchOptimizationService) AnalyzeCurrentWeights(ctx context.Context, i
 	for _, weight := range weights {
 		result, err := s.optimizeFieldWeight(ctx, weight, fromDate, toDate, params)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("Failed to analyze weight for field %s: %v", weight.FieldName, err))
+			s.logger.Error("Failed to analyze weight for field %s: %v", weight.FieldName, err)
 			continue
 		}
 		if result != nil {
@@ -629,13 +629,13 @@ func (s *searchOptimizationService) ApplyOptimizedWeights(ctx context.Context, s
 	// Создание checkpoint для отката
 	err = s.securityCheck.CreateSecurityCheckpoint(ctx, resultsToApply, adminID)
 	if err != nil {
-		s.logger.Error(fmt.Sprintf("Failed to create security checkpoint: %v", err))
+		s.logger.Error("Failed to create security checkpoint: %v", err)
 	}
 
 	// Создание бэкапа перед применением (дополнительная безопасность)
 	err = s.CreateWeightBackup(ctx, "global", nil, adminID)
 	if err != nil {
-		s.logger.Error(fmt.Sprintf("Failed to create automatic backup: %v", err))
+		s.logger.Error("Failed to create automatic backup: %v", err)
 		// Не прерываем выполнение, но логируем
 	}
 
@@ -671,17 +671,17 @@ func (s *searchOptimizationService) ApplyOptimizedWeights(ctx context.Context, s
 
 		err = s.repo.UpdateSearchWeight(ctx, weight.ID, result.OptimizedWeight, adminID)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("Failed to update weight for field %s: %v", result.FieldName, err))
+			s.logger.Error("Failed to update weight for field %s: %v", result.FieldName, err)
 		} else {
 			appliedCount++
-			s.logger.Info(fmt.Sprintf("Successfully updated weight for field %s: %.3f -> %.3f",
-				result.FieldName, weight.Weight, result.OptimizedWeight))
+			s.logger.Info("Successfully updated weight for field %s: %.3f -> %.3f",
+				result.FieldName, weight.Weight, result.OptimizedWeight)
 		}
 	}
 
 	// Финальная запись в лог
-	s.logger.Info(fmt.Sprintf("Weight optimization completed: %d/%d weights applied by admin %d for session %d",
-		appliedCount, len(selectedResults), adminID, sessionID))
+	s.logger.Info("Weight optimization completed: %d/%d weights applied by admin %d for session %d",
+		appliedCount, len(selectedResults), adminID, sessionID)
 
 	return nil
 }
@@ -698,7 +698,7 @@ func (s *searchOptimizationService) RollbackWeights(ctx context.Context, weightI
 		previousWeight := history[1].OldWeight
 		err = s.repo.UpdateSearchWeight(ctx, weightID, previousWeight, adminID)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("Failed to rollback weight %d: %v", weightID, err))
+			s.logger.Error("Failed to rollback weight %d: %v", weightID, err)
 		}
 	}
 
@@ -731,7 +731,7 @@ func (s *searchOptimizationService) CreateWeightBackup(ctx context.Context, item
 
 		err = s.repo.CreateWeightHistoryEntry(ctx, entry)
 		if err != nil {
-			s.logger.Error(fmt.Sprintf("Failed to create backup for weight %d: %v", weight.ID, err))
+			s.logger.Error("Failed to create backup for weight %d: %v", weight.ID, err)
 		}
 	}
 
@@ -864,7 +864,7 @@ func (s *searchOptimizationService) CreateSynonym(ctx context.Context, term, syn
 		return 0, pkgErrors.Wrap(err, "failed to create synonym")
 	}
 
-	s.logger.Info(fmt.Sprintf("Synonym created: %s -> %s (%s) by admin %d", term, synonym, language, adminID))
+	s.logger.Info("Synonym created: %s -> %s (%s) by admin %d", term, synonym, language, adminID)
 
 	return synonymID, nil
 }
@@ -904,7 +904,7 @@ func (s *searchOptimizationService) UpdateSynonym(ctx context.Context, synonymID
 		return pkgErrors.Wrap(err, "failed to update synonym")
 	}
 
-	s.logger.Info(fmt.Sprintf("Synonym updated (ID: %d): %s -> %s (%s) by admin %d", synonymID, term, synonym, language, adminID))
+	s.logger.Info("Synonym updated (ID: %d): %s -> %s (%s) by admin %d", synonymID, term, synonym, language, adminID)
 
 	return nil
 }
@@ -926,7 +926,7 @@ func (s *searchOptimizationService) DeleteSynonym(ctx context.Context, synonymID
 		return pkgErrors.Wrap(err, "failed to delete synonym")
 	}
 
-	s.logger.Info(fmt.Sprintf("Synonym deleted (ID: %d) by admin %d", synonymID, adminID))
+	s.logger.Info("Synonym deleted (ID: %d) by admin %d", synonymID, adminID)
 
 	return nil
 }
