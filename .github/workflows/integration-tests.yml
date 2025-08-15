@@ -1,10 +1,16 @@
 name: Svetu Integration Tests
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  schedule:
+    # Запуск каждую ночь в 2:00 UTC (5:00 по Москве, 3:00 по Сербии)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Позволяет запускать вручную из GitHub UI
+    inputs:
+      debug_enabled:
+        description: 'Run with debug logging'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   integration-tests:
@@ -192,11 +198,11 @@ jobs:
 
           # Ждем запуска backend и проверяем логи
           echo "=== Waiting for backend to start ==="
-          for i in {1..20}; do
+          for i in {1..60}; do
             echo "Attempt $i/60: Checking backend..."
 
-            # Показываем логи каждые 10 попыток
-            if [ $((i % 10)) -eq 0 ]; then
+            # Показываем логи каждые 10 попыток (или каждый раз в debug режиме)
+            if [ $((i % 10)) -eq 0 ] || [ "${{ inputs.debug_enabled }}" == "true" ]; then
               echo "=== Current backend logs (attempt $i) ==="
               cat backend.log 2>/dev/null || echo "No logs yet..."
             fi
@@ -291,6 +297,31 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ github.run_id }}
           path: playwright/test-results/
           retention-days: 7
+
+      # Создание отчета о результатах
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "# 🧪 Nightly Integration Tests Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** All tests passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 The application is working correctly!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Tests failed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🔍 Check the logs and artifacts for details:" >> $GITHUB_STEP_SUMMARY
+            echo "- [Backend logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
+            echo "- [Frontend logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
+            echo "- [Playwright report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" >> $GITHUB_STEP_SUMMARY
+          fi
