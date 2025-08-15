@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgis/postgis:15-3.3
+    build:
+      context: ./docker/postgres-postgis
+      dockerfile: Dockerfile
     container_name: hostel_db
     environment:
       POSTGRES_USER: postgres
@@ -164,22 +166,22 @@ services:
 #      - NEXT_PUBLIC_ENABLE_PAYMENTS=false
 #    networks:
 #      - hostel_network
-  migrate:
-    image: migrate/migrate
-    volumes:
-      - ./backend/migrations:/migrations
-    command: [
-      "-path", "/migrations",
-      "-database", "postgres://postgres:password@db:5432/hostel_db?sslmode=disable",
-      "up"
-    ]
-    depends_on:
-      db:
-        condition: service_healthy
-    stop_grace_period: 1s
-    restart: "no"
-    networks:
-      - hostel_network
+#  migrate:
+#    image: migrate/migrate
+#    volumes:
+#      - ./backend/migrations:/migrations
+#    command: [
+#      "-path", "/migrations",
+#      "-database", "postgres://postgres:password@db:5432/hostel_db?sslmode=disable",
+#      "up"
+#    ]
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    stop_grace_period: 1s
+#    restart: "no"
+#    networks:
+#      - hostel_network
 volumes:
   postgres_data:
   opensearch-data:
