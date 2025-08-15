@@ -1,51 +1,296 @@
-name: Playwright Tests
+name: Svetu Integration Tests
 
 on:
   push:
-    branches: [main, develop, tests]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main, develop]
+    branches: [ main, develop ]
 
 jobs:
-  playwright-tests:
+  integration-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: hostel_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      opensearch:
+        image: opensearchproject/opensearch:2.11.0
+        env:
+          discovery.type: single-node
+          bootstrap.memory_lock: true
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+          DISABLE_SECURITY_PLUGIN: true
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-#      - name: Setup Node.js
-#        uses: actions/setup-node@v4
-#        with:
-#          node-version: '18'
-#          cache: 'yarn'
-#          cache-dependency-path: playwright/yarn.lock
-#
-#      - name: Install Playwright dependencies
-#        run: |
-#          cd playwright
-#          yarn install
-#          yarn install:browsers
-#
-#      - name: Run Playwright tests
-#        run: |
-#          cd playwright
-#          yarn test
-#        env:
-#          CI: true
-#
-#      - name: Upload Playwright report
-#        uses: actions/upload-artifact@v4
-#        if: always()
-#        with:
-#          name: playwright-report
-#          path: playwright/playwright-report/
-#          retention-days: 7
-#
-#      - name: Upload test results
-#        uses: actions/upload-artifact@v4
-#        if: always()
-#        with:
-#          name: test-results
-#          path: playwright/test-results/
-#          retention-days: 7
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: |
+            frontend/svetu/yarn.lock
+            playwright/yarn.lock
+
+      - name: Install Go dependencies
+        run: |
+          cd backend
+          go mod download
+
+      - name: Start MinIO
+        run: |
+          # Запускаем MinIO контейнер
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=1321321321321 \
+            minio/minio:RELEASE.2023-09-30T07-02-29Z \
+            server /data
+
+          # Ждем пока MinIO запустится
+          sleep 15
+
+          # Проверяем что MinIO доступен
+          curl -f http://localhost:9000/minio/health/live || echo "MinIO health check failed but continuing..."
+
+      - name: Setup MinIO buckets
+        run: |
+          # Ждем пока MinIO станет доступным
+          sleep 10
+          # Устанавливаем MinIO client
+          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
+          # Настраиваем buckets
+          mc alias set myminio http://localhost:9000 minioadmin 1321321321321
+          mc mb myminio/listings --ignore-existing
+          mc policy set public myminio/listings
+          mc mb myminio/chat-files --ignore-existing
+          mc policy set public myminio/chat-files
+
+      - name: Run database migrations
+        run: |
+          cd backend
+          # Проверяем что есть в папке миграций
+          # echo "=== Debug: Contents of migrations directory ==="
+          # ls -la migrations/ || echo "migrations directory not found"
+          # echo "=== Debug: Contents of fixtures directory ==="
+          # ls -la fixtures/ || echo "fixtures directory not found"
+          echo "=== Debug: Current working directory ==="
+          pwd
+          echo "=== Debug: Environment variables ==="
+          echo "MIGRATIONS_PATH: $MIGRATIONS_PATH"
+          echo "MIGRATIONS_FIXTURES_PATH: $MIGRATIONS_FIXTURES_PATH"
+
+          # Собираем мигратор
+          go build -o migrator cmd/migrator/migrator.go
+          # Запускаем миграции с фикстурами (up - направление миграции)
+          ./migrator up --with-fixtures
+        env:
+          DATABASE_URL: "postgres://postgres:password@localhost:5432/hostel_db?sslmode=disable"
+          MIGRATIONS_PATH: "${{ github.workspace }}/backend/migrations"
+          MIGRATIONS_FIXTURES_PATH: "${{ github.workspace }}/backend/fixtures"
+          MIGRATIONS_FIXTURES_TABLE: "schema_fixtures"
+
+      - name: Build backend
+        run: |
+          cd backend
+          # Создаем .env файл для тестов
+          cat > .env << EOF
+          DATABASE_URL=postgres://postgres:password@localhost:5432/hostel_db?sslmode=disable
+          REDIS_URL=redis://localhost:6379
+          OPENSEARCH_URL=http://localhost:9200
+          OPENSEARCH_MARKETPLACE_INDEX=marketplace
+          MINIO_ENDPOINT=localhost:9000
+          MINIO_ACCESS_KEY=minioadmin
+          MINIO_SECRET_KEY=1321321321321
+          MINIO_USE_SSL=false
+          MINIO_BUCKET_NAME=listings
+          MINIO_LOCATION=eu-central-1
+          PORT=3000
+          JWT_SECRET=test-secret-key-for-github-actions
+          JWT_EXPIRATION_HOURS=1
+          GOOGLE_CLIENT_ID=test
+          GOOGLE_CLIENT_SECRET=test
+          GOOGLE_REDIRECT_URL=http://localhost:3000/auth/google/callback
+          GOOGLE_OAUTH_REDIRECT_URL=http://localhost:3000/auth/google/callback
+          GOOGLE_APPLICATION_CREDENTIALS=test-credentials
+          GOOGLE_TRANSLATE_API_KEY=test-translate-key
+          FILE_STORAGE_PUBLIC_URL=http://localhost:3000
+          FILE_STORAGE_PROVIDER=minio
+          APP_URL=http://localhost:3001
+          FRONTEND_URL=http://localhost:3001
+          APP_MODE=development
+          SVETU_APP_ENV=dev
+          CORS_ORIGINS=http://localhost:3001
+          OPENAI_API_KEY=test-key-for-ci
+          DOCS_ROOT_PATH=.
+          TELEGRAM_BOT_TOKEN=test-telegram-token
+          STRIPE_API_KEY=test-stripe-key
+          STRIPE_PUBLISHABLE_KEY=test-stripe-pub-key
+          STRIPE_WEBHOOK_SECRET=test-stripe-webhook
+          MAPBOX_ACCESS_TOKEN=test-mapbox-token
+          MAPBOX_SECRET_TOKEN=test-mapbox-secret
+          GEOCODING_CACHE_TTL_HOURS=720
+          GEOCODING_MAX_SUGGESTIONS=10
+          EMAIL_PASSWORD=test-email-password
+          EOF
+
+          # Собираем backend бинарь
+          echo "=== Building backend ==="
+          go build -o svetu-backend ./cmd/api/main.go
+          echo "✅ Backend built successfully"
+
+      - name: Start backend
+        run: |
+          cd backend
+          # Запускаем собранный бинарь в фоне
+          echo "=== Starting backend binary ==="
+          nohup ./svetu-backend > backend.log 2>&1 &
+          BACKEND_PID=$!
+          echo "Backend started with PID: $BACKEND_PID"
+
+          # Ждем запуска backend и проверяем логи
+          echo "=== Waiting for backend to start ==="
+          for i in {1..20}; do
+            echo "Attempt $i/60: Checking backend..."
+
+            # Показываем логи каждые 10 попыток
+            if [ $((i % 10)) -eq 0 ]; then
+              echo "=== Current backend logs (attempt $i) ==="
+              cat backend.log 2>/dev/null || echo "No logs yet..."
+            fi
+
+            # Проверяем health endpoint
+            if curl -f http://localhost:3000/api/health 2>/dev/null; then
+              echo "✅ Backend is ready!"
+              break
+            fi
+
+            # Также пробуем базовый эндпоинт на случай если health endpoint другой
+            if curl -f http://localhost:3000/ 2>/dev/null; then
+              echo "✅ Backend responds on root endpoint!"
+              break
+            fi
+
+            if [ $i -eq 60 ]; then
+              echo "❌ Backend failed to start after 60 attempts"
+              echo "=== Final backend logs ==="
+              cat backend.log || echo "No backend.log found"
+              echo "=== Process status ==="
+              ps aux | grep "svetu-backend" || echo "No backend processes found"
+              echo "=== Port check ==="
+              netstat -tlnp | grep ":3000" || echo "Port 3000 not listening"
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend/svetu
+          yarn install
+
+      - name: Build and start frontend
+        run: |
+          cd frontend/svetu
+          # Создаем .env.local файл для тестов
+          cat > .env.local << EOF
+          NEXT_PUBLIC_API_URL=http://localhost:3000
+          NEXT_PUBLIC_MINIO_URL=http://localhost:9000
+          NEXT_PUBLIC_IMAGE_HOSTS=http://localhost:9000
+          NEXT_PUBLIC_IMAGE_PATH_PATTERN=/listings/**
+          NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:3000
+          NEXT_PUBLIC_ENABLE_PAYMENTS=false
+          NEXT_PUBLIC_FRONTEND_URL=http://localhost:3001
+          NEXT_PUBLIC_MAPBOX_TOKEN=pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA
+          PORT=3001
+          EOF
+          # Собираем frontend
+          yarn build
+          # Запускаем frontend в фоне на порту 3001
+          nohup yarn start -p 3001 > frontend.log 2>&1 &
+          # Ждем запуска frontend
+          sleep 30
+          # Проверяем что frontend запустился
+          curl -f http://localhost:3001 || (cat frontend.log && exit 1)
+
+      - name: Install Playwright dependencies
+        run: |
+          cd playwright
+          yarn install
+          yarn install:browsers
+
+      - name: Run Playwright tests
+        run: |
+          cd playwright
+          yarn test
+        env:
+          CI: true
+
+      - name: Upload test logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-logs
+          path: |
+            backend/backend.log
+            frontend/svetu/frontend.log
+          retention-days: 7
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright/playwright-report/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: playwright/test-results/
+          retention-days: 7

@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+
+# Test results
+test-results/
+playwright-report/
+
+# Test artifacts
+*.webm
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Environment files
+.env.test.local
+
+# Test caches
+.cache/
+
+# Temporary files
+*.tmp
+*.temp
