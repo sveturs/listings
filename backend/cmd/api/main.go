@@ -29,6 +29,7 @@ import (
 
 	"github.com/joho/godotenv"
 
+	"backend/internal/app/migrator"
 	"backend/internal/config"
 	"backend/internal/logger"
 	"backend/internal/server"
@@ -65,6 +66,30 @@ func main() {
 		Str("buildTime", buildTime).
 		Any("config", cfg).
 		Msg("Config loaded successfully")
+
+	// Выполнение миграций при старте API (если включено)
+	if cfg.MigrationsOnAPI != "off" {
+		logger.Info().
+			Str("migrationsMode", cfg.MigrationsOnAPI).
+			Msg("Running migrations on API startup")
+
+		switch cfg.MigrationsOnAPI {
+		case "schema":
+			if err := migrator.RunMigrationsSchema(cfg.DatabaseURL); err != nil {
+				logger.Fatal().Err(err).Msg("Failed to run schema migrations")
+			}
+		case "full":
+			if err := migrator.RunMigrationsFull(cfg.DatabaseURL); err != nil {
+				logger.Fatal().Err(err).Msg("Failed to run full migrations")
+			}
+		default:
+			logger.Warn().
+				Str("migrationsMode", cfg.MigrationsOnAPI).
+				Msg("Unknown migrations mode, skipping")
+		}
+
+		logger.Info().Msg("Migrations completed successfully")
+	}
 
 	// Создание и запуск сервера
 	// Удаляем второй аргумент fileStorage, так как NewServer инициализирует его внутри себя

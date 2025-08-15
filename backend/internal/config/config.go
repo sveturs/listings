@@ -35,6 +35,7 @@ type Config struct {
 	AllSecure             AllSecureConfig `yaml:"allsecure"`
 	SearchWeights         *SearchWeights  `yaml:"search_weights"`
 	Redis                 RedisConfig     `yaml:"redis"`
+	MigrationsOnAPI       string          `yaml:"migrations_on_api"` // off, schema, full
 }
 
 type FileStorageConfig struct {
@@ -361,6 +362,12 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
+	// Получаем настройку миграций при старте API
+	migrationsOnAPI := os.Getenv("MIGRATIONS_ON_API")
+	if migrationsOnAPI == "" {
+		migrationsOnAPI = "off" // По умолчанию выключено
+	}
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -387,6 +394,7 @@ func NewConfig() (*Config, error) {
 		AllSecure:             allSecureConfig,
 		SearchWeights:         searchWeights,
 		Redis:                 redisConfig,
+		MigrationsOnAPI:       migrationsOnAPI,
 	}, nil
 }
 
