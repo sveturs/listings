@@ -1,0 +1,7 @@
+INSERT INTO public.reviews (id, user_id, entity_type, entity_id, rating, comment, pros, cons, photos, likes_count, helpful_votes, not_helpful_votes, is_verified_purchase, status, original_language, created_at, updated_at, entity_origin_type, entity_origin_id, seller_confirmed, has_active_dispute) VALUES (5, 5, 'listing', 34, 5, '654654654654 654654654654564 654564654654654654', '564654654', '465465456465', '{/listings/reviews/review_5_1753290443755060382_11.jpeg,/listings/reviews/review_5_1753290443759766098_Siemens_ME45.jpg}', 0, 0, 0, false, 'published', 'en', '2025-07-23 17:07:20.731547', '2025-07-23 17:07:23.801805', 'storefront', 1, false, false);
+INSERT INTO public.reviews (id, user_id, entity_type, entity_id, rating, comment, pros, cons, photos, likes_count, helpful_votes, not_helpful_votes, is_verified_purchase, status, original_language, created_at, updated_at, entity_origin_type, entity_origin_id, seller_confirmed, has_active_dispute) VALUES (6, 5, 'listing', 24, 4, 'лопрорлпор  орпропорпорп олрпорпорпорпорп', 'порпорпропор', 'длтолдодлоолдолд', '{/listings/reviews/review_6_1753554125023422212_1753007242863504454.jpg,/listings/reviews/review_6_1753554125026265633_svetu-gradient-48x48.png,"/listings/reviews/review_6_1753554125028158419_svetu-gradient-48x48 (1).png"}', 0, 0, 0, false, 'published', 'sr', '2025-07-26 18:22:00.688535', '2025-07-26 18:22:05.058409', 'user', 2, false, false);
+
+
+--
+-- Data for Name: role_audit_log; Type: TABLE DATA; Schema: public; Owner: -
+--
