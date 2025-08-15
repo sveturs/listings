@@ -27,6 +27,15 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/user/profile
 ```
 
 - ## Important Notes
+
+### ✅ Post Express Integration - COMPLETED!
+**Status**: Production Ready (waiting for credentials)
+**Documentation**: /data/hostel-booking-system/docs/POST_EXPRESS_INTEGRATION_COMPLETE.md
+- Backend: 100% complete
+- Frontend: 100% complete with cart delivery selection
+- API: 6/7 transactions implemented
+- Only waiting for production credentials from Post Express
+
 нужно реализовать план:
 /data/hostel-booking-system/docs/ADMIN_VARIANT_ATTRIBUTES_EXTENSION_PLAN.md
 

@@ -34,6 +34,9 @@ import (
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
+	postexpressHandler "backend/internal/proj/postexpress/handler"
+	postexpressService "backend/internal/proj/postexpress/service"
+	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
@@ -56,6 +59,7 @@ type Server struct {
 	notifications      *notificationHandler.Handler
 	balance            *balanceHandler.Handler
 	payments           *paymentHandler.Handler
+	postexpress        *postexpressHandler.Handler
 	orders             *orders.Module
 	storefront         *storefronts.Module
 	geocode            *geocodeHandler.Handler
@@ -124,6 +128,37 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 	contactsHandler := contactsHandler.NewHandler(services)
 	paymentsHandler := paymentHandler.NewHandler(services)
+
+	// Post Express инициализация
+	postexpressRepo := postexpressRepository.NewRepository(db.GetSQLXDB())
+	postexpressWSPClient := postexpressService.NewWSPClient(&postexpressService.WSPConfig{
+		Endpoint:        cfg.PostExpress.BaseURL,
+		Username:        cfg.PostExpress.Username,
+		Password:        cfg.PostExpress.Password,
+		TestMode:        cfg.PostExpress.TestMode,
+		Timeout:         30 * time.Second,
+		Language:        "sr",
+		DeviceType:      2, // 2 для API интеграции согласно документации Post Express
+		MaxRetries:      3,
+		RetryDelay:      1 * time.Second,
+		DeviceName:      "SveTu-Server",
+		ApplicationName: "SveTu-Platform",
+		Version:         "1.0.0",
+	}, *pkglogger.New())
+	postexpressServiceInstance := postexpressService.NewService(
+		postexpressRepo,
+		postexpressWSPClient,
+		*pkglogger.New(),
+		&postexpressService.ServiceConfig{
+			DefaultWarehouseCode: "MAIN",
+			PickupExpiryDays:     7,
+			EnableAutoTracking:   true,
+			TrackingInterval:     15 * time.Minute,
+			MaxRetries:           3,
+		},
+	)
+	postexpressHandlerInstance := postexpressHandler.NewHandler(postexpressServiceInstance, *pkglogger.New())
+
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
@@ -174,6 +209,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		notifications:      notificationsHandler,
 		balance:            balanceHandler,
 		payments:           paymentsHandler,
+		postexpress:        postexpressHandlerInstance,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
@@ -336,7 +372,7 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.gis, s.contacts, s.payments, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
+		s.geocode, s.gis, s.contacts, s.payments, s.postexpress, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
