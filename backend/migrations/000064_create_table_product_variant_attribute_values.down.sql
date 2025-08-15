@@ -1,6 +1,0 @@
--- Drop table: product_variant_attribute_values
-DROP SEQUENCE IF EXISTS public.product_variant_attribute_values_id_seq;
-DROP TABLE IF EXISTS public.product_variant_attribute_values;
-DROP INDEX IF EXISTS public.idx_product_variant_attribute_values_attribute_id;
-DROP INDEX IF EXISTS public.idx_product_variant_attribute_values_value;
-DROP TRIGGER IF EXISTS trigger_update_product_variant_attribute_values_updated_at ON public.product_variant_attribute_values;
