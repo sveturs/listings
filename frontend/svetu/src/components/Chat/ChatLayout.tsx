@@ -9,12 +9,14 @@ import { MarketplaceChat } from '@/types/chat';
 
 interface ChatLayoutProps {
   initialListingId?: number;
+  initialStorefrontProductId?: number;
   initialSellerId?: number;
   initialContactId?: number;
 }
 
 export default function ChatLayout({
   initialListingId,
+  initialStorefrontProductId,
   initialSellerId,
   initialContactId,
 }: ChatLayoutProps) {
@@ -76,9 +78,11 @@ export default function ChatLayout({
             onBack={handleBackToList}
             showBackButton={isMobile}
           />
-        ) : initialListingId && initialSellerId ? (
+        ) : (initialListingId || initialStorefrontProductId) &&
+          initialSellerId ? (
           <ChatWindow
             initialListingId={initialListingId}
+            initialStorefrontProductId={initialStorefrontProductId}
             initialSellerId={initialSellerId}
             onBack={handleBackToList}
             showBackButton={isMobile}

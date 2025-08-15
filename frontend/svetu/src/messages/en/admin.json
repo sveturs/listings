@@ -469,9 +469,106 @@
     "description": "Description"
   },
   "users": {
-    "title": "Title",
+    "title": "User Management",
+    "pageTitle": "User Management - Admin",
+    "pageDescription": "Manage system users, permissions and access control",
     "comingSoon": "Coming Soon",
-    "description": "Description"
+    "description": "User management functionality",
+    "totalUsers": "{count} users total",
+    "searchPlaceholder": "Search by name or email...",
+    "allStatuses": "All Statuses",
+    "itemsPerPage": "Items per page",
+    "view": "View",
+    "userDetails": "User Details",
+    "selectRole": "Select role",
+    "pageInfo": "Page {current} of {total}",
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "role": "Role",
+      "provider": "Provider",
+      "createdAt": "Created",
+      "lastSeen": "Last Seen",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    },
+    "details": {
+      "id": "User ID",
+      "status": "Account Status",
+      "role": "User Role",
+      "provider": "Auth Provider",
+      "phone": "Phone Number",
+      "location": "Location",
+      "timezone": "Timezone",
+      "created": "Created Date",
+      "lastSeen": "Last Seen",
+      "bio": "Bio",
+      "notifications": "Notification Settings",
+      "emailNotifications": "Email Notifications",
+      "isAdmin": "This user has administrator privileges"
+    },
+    "deleteConfirm": {
+      "title": "Delete User",
+      "message": "Are you sure you want to delete user {name}?",
+      "warning": "This action cannot be undone. All user data will be permanently deleted."
+    },
+    "error": {
+      "fetchFailed": "Failed to fetch users",
+      "updateFailed": "Failed to update user status",
+      "deleteFailed": "Failed to delete user",
+      "cannotModifySelf": "You cannot modify your own account",
+      "cannotDeleteSelf": "You cannot delete your own account"
+    },
+    "roleTooltip": {
+      "noRole": "No role assigned",
+      "noDescription": "No description available for this role",
+      "priority": "Priority"
+    },
+    "providers": {
+      "google": "Google",
+      "email": "Email"
+    },
+    "timezone": {
+      "default": "Default"
+    },
+    "roleDescriptions": {
+      "super_admin": "Full system access with all permissions",
+      "admin": "Administrative access to manage users and content",
+      "financial_manager": "Handles financial transactions and reports",
+      "vendor_manager": "Manages vendor accounts and storefronts",
+      "dispute_manager": "Handles disputes between buyers and sellers",
+      "content_moderator": "Moderates listings, products and content",
+      "warehouse_manager": "Manages warehouse operations and inventory",
+      "professional_vendor": "Professional seller with storefront and advanced features",
+      "vendor": "Can create and manage storefronts and products",
+      "business_analyst": "Business process analysis and optimization",
+      "category_manager": "Manages product categories and attributes",
+      "chat_moderator": "Monitors and moderates chat conversations",
+      "compliance_officer": "Ensures regulatory compliance",
+      "courier": "Delivers orders to customers",
+      "data_analyst": "Access to analytics and reporting tools",
+      "individual_seller": "Individual seller with basic features",
+      "legal_advisor": "Handles legal matters and compliance",
+      "marketing_manager": "Manages promotions, discounts and marketing campaigns",
+      "moderator": "Can moderate content and manage listings",
+      "pickup_manager": "Manages pickup point operations",
+      "pickup_worker": "Handles order pickup and returns",
+      "review_moderator": "Moderates reviews and ratings",
+      "storefront_staff": "Staff member of a storefront with limited permissions",
+      "support_l1": "Basic customer support and inquiries",
+      "support_l2": "Advanced support and issue resolution",
+      "support_l3": "Expert support and escalations",
+      "verified_buyer": "Verified customer with full buying privileges",
+      "vip_customer": "VIP customer with exclusive benefits",
+      "warehouse_worker": "Handles order fulfillment and packaging",
+      "user": "Standard user with basic permissions"
+    }
   },
   "balance": {
     "title": "My Balance",

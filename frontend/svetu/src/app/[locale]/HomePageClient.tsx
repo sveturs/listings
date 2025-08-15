@@ -6,27 +6,33 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { PageTransition } from '@/components/ui/PageTransition';
-import { useAuth } from '@/contexts/AuthContext';
+// import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
+import CartIcon from '@/components/cart/CartIcon';
+import { AuthButton } from '@/components/AuthButton';
 
 // Динамический импорт карты для избежания SSR проблем
-const MapSection = dynamic(() => import('./components/MapSection'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full w-full flex items-center justify-center bg-base-200 rounded-lg">
-      <div className="text-center">
-        <div className="loading loading-spinner loading-lg text-primary"></div>
-        <p className="mt-2">Загрузка карты...</p>
+const EnhancedMapSection = dynamic(
+  () =>
+    import('./components/EnhancedMapSection').then((mod) => ({
+      default: mod.EnhancedMapSection,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-full w-full flex items-center justify-center bg-base-200 rounded-lg">
+        <div className="text-center">
+          <div className="loading loading-spinner loading-lg text-primary"></div>
+          <p className="mt-2">Загрузка карты...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+);
 
 import {
   FiSearch,
   FiMapPin,
-  FiUser,
-  FiShoppingCart,
   FiMenu,
   FiX,
   FiChevronRight,
@@ -65,17 +71,22 @@ interface HomePageClientProps {
 export default function HomePageClient({
   createListingText,
 }: HomePageClientProps) {
-  const { user } = useAuth();
+  const [_mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [userLocation] = useState('Белград');
-  const [cartCount, setCartCount] = useState(0);
+  const [userLocation] = useState([44.7866, 20.4489]); // Координаты Белграда
+  const [userLocationName] = useState('Белград');
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Баннеры для hero секции
   const banners = [
@@ -400,7 +411,7 @@ export default function HomePageClient({
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">
                   <FiMapPin className="w-3 h-3" />
-                  {userLocation}
+                  {userLocationName}
                 </span>
                 <Link href="/map" className="hover:underline">
                   Выбрать другой город
@@ -426,7 +437,12 @@ export default function HomePageClient({
               {/* Логотип */}
               <Link href="/" className="flex items-center gap-2">
                 <div className="text-2xl">
-                  <Image src="/logo.svg" alt="SveTu" width={32} height={32} />
+                  <Image
+                    src="/logos/svetu-gradient-48x48.png"
+                    alt="SveTu"
+                    width={32}
+                    height={32}
+                  />
                 </div>
                 <span className="text-xl font-bold hidden md:inline">
                   SveTu
@@ -472,39 +488,14 @@ export default function HomePageClient({
                     2
                   </span>
                 </button>
-                <button className="btn btn-ghost btn-circle relative">
-                  <FiShoppingCart className="w-5 h-5" />
-                  {cartCount > 0 && (
-                    <span className="badge badge-sm badge-error absolute -top-1 -right-1">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
+                <CartIcon />
                 <Link
                   href="/create-listing-choice"
                   className="btn btn-secondary hidden lg:inline-flex"
                 >
                   {createListingText}
                 </Link>
-                {user ? (
-                  <Link
-                    href="/profile"
-                    className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
-                  >
-                    <FiUser className="w-5 h-5" />
-                    <span className="hidden lg:inline ml-2">
-                      {user.name || 'Профиль'}
-                    </span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/auth/login"
-                    className="btn btn-ghost btn-circle lg:btn lg:btn-ghost lg:btn-wide"
-                  >
-                    <FiUser className="w-5 h-5" />
-                    <span className="hidden lg:inline ml-2">Войти</span>
-                  </Link>
-                )}
+                <AuthButton />
               </div>
 
               {/* Мобильное меню */}
@@ -777,7 +768,7 @@ export default function HomePageClient({
                     </div>
                     <button
                       className="btn btn-primary btn-sm btn-block mt-2"
-                      onClick={() => setCartCount((prev) => prev + 1)}
+                      onClick={() => console.log('Add to cart:', deal.id)}
                     >
                       В корзину
                     </button>
@@ -799,21 +790,34 @@ export default function HomePageClient({
             <div className="lg:col-span-2">
               <div className="card bg-base-100 overflow-hidden">
                 <div className="card-body p-0">
-                  <div className="h-96 relative">
-                    <MapSection />
-                    {/* Фильтры на карте */}
-                    <div className="absolute top-4 left-4 right-4 flex gap-2 z-[1000]">
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        До €100
-                      </button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        Сегодня
-                      </button>
-                      <button className="btn btn-sm bg-base-100 shadow-lg">
-                        С фото
-                      </button>
-                    </div>
-                  </div>
+                  <EnhancedMapSection
+                    className="h-96 w-full"
+                    listings={listings.map((item) => ({
+                      id: item.id,
+                      latitude:
+                        item.location?.lat ||
+                        44.8125 + (Math.random() - 0.5) * 0.02,
+                      longitude:
+                        item.location?.lng ||
+                        20.4612 + (Math.random() - 0.5) * 0.02,
+                      price: item.price,
+                      title: item.title,
+                      category: item.category,
+                      imageUrl: item.image,
+                      isStorefront: item.isStorefront,
+                    }))}
+                    userLocation={
+                      userLocation
+                        ? {
+                            latitude: userLocation[0],
+                            longitude: userLocation[1],
+                          }
+                        : undefined
+                    }
+                    searchRadius={5000}
+                    showRadius={true}
+                    enableClustering={true}
+                  />
                 </div>
               </div>
             </div>
@@ -1295,21 +1299,14 @@ export default function HomePageClient({
             <FiHeart className="w-5 h-5" />
             <span className="btm-nav-label">Избранное</span>
           </button>
-          <button className="text-secondary">
-            <div className="indicator">
-              <FiShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="badge badge-xs badge-error indicator-item">
-                  {cartCount}
-                </span>
-              )}
-            </div>
+          <div className="text-secondary">
+            <CartIcon />
             <span className="btm-nav-label">Корзина</span>
-          </button>
-          <button>
-            <FiUser className="w-5 h-5" />
-            <span className="btm-nav-label">Профиль</span>
-          </button>
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <AuthButton />
+            <span className="btm-nav-label text-xs">Профиль</span>
+          </div>
         </div>
       </div>
     </PageTransition>

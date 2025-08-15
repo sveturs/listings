@@ -33,6 +33,32 @@ import (
 const (
 	// Attribute names
 	attributeNameModel = "model"
+
+	// Attribute types
+	attributeTypeText = "text"
+
+	// Languages
+	languageAuto = "auto"
+
+	// Field names
+	fieldNameName = "name"
+
+	// SQL queries
+	insertTranslationQuery = `
+        INSERT INTO translations (
+            entity_type, entity_id, language, field_name,
+            translated_text, is_machine_translated, is_verified, metadata,
+            last_modified_by
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT (entity_type, entity_id, language, field_name)
+        DO UPDATE SET
+            translated_text = EXCLUDED.translated_text,
+            is_machine_translated = EXCLUDED.is_machine_translated,
+            is_verified = EXCLUDED.is_verified,
+            metadata = EXCLUDED.metadata,
+            last_modified_by = EXCLUDED.last_modified_by,
+            updated_at = CURRENT_TIMESTAMP
+    `
 )
 
 type MarketplaceService struct {
@@ -1358,21 +1384,7 @@ func (s *MarketplaceService) UpdateTranslationWithProvider(ctx context.Context, 
 		metadataJSON = []byte("{}")
 	}
 
-	query := `
-        INSERT INTO translations (
-            entity_type, entity_id, language, field_name,
-            translated_text, is_machine_translated, is_verified, metadata,
-            last_modified_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        ON CONFLICT (entity_type, entity_id, language, field_name)
-        DO UPDATE SET
-            translated_text = EXCLUDED.translated_text,
-            is_machine_translated = EXCLUDED.is_machine_translated,
-            is_verified = EXCLUDED.is_verified,
-            metadata = EXCLUDED.metadata,
-            last_modified_by = EXCLUDED.last_modified_by,
-            updated_at = CURRENT_TIMESTAMP
-    `
+	query := insertTranslationQuery
 
 	var lastModifiedBy interface{}
 	if userID > 0 {

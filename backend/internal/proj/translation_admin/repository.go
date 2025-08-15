@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"backend/internal/domain/models"
 
@@ -366,6 +367,10 @@ func (r *Repository) GetVersionDiff(ctx context.Context, versionID1, versionID2 
 		versions = append(versions, v)
 	}
 
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate rows: %w", err)
+	}
+
 	if len(versions) != 2 {
 		return nil, fmt.Errorf("expected 2 versions, got %d", len(versions))
 	}
@@ -384,7 +389,11 @@ func (r *Repository) RollbackToVersion(ctx context.Context, translationID int, v
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			log.Printf("failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Get the version to rollback to
 	var version models.TranslationVersion

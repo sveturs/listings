@@ -20,12 +20,14 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 	chat := &models.MarketplaceChat{}
 	chat.Listing = &models.MarketplaceListing{}
 
-	// Сначала пытаемся получить чат с листингом
+	// Сначала пытаемся получить чат с листингом или товаром витрины
 	err := s.pool.QueryRow(ctx, `
         SELECT
-            c.id, COALESCE(c.listing_id, 0), c.buyer_id, c.seller_id,
+            c.id, COALESCE(c.listing_id, 0), COALESCE(c.storefront_product_id, 0), 
+            c.buyer_id, c.seller_id,
             c.last_message_at, c.created_at, c.updated_at, c.is_archived,
             CASE 
+                WHEN c.storefront_product_id IS NOT NULL AND sp.id IS NOT NULL THEN sp.name
                 WHEN c.listing_id IS NULL THEN 'Личное сообщение'
                 WHEN l.id IS NULL THEN 'Удаленное объявление'
                 ELSE l.title
@@ -37,9 +39,10 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
             ) as unread_count
         FROM marketplace_chats c
         LEFT JOIN marketplace_listings l ON c.listing_id = l.id
+        LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
         WHERE c.id = $1 AND (c.buyer_id = $2 OR c.seller_id = $2)
     `, chatID, userID).Scan(
-		&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+		&chat.ID, &chat.ListingID, &chat.StorefrontProductID, &chat.BuyerID, &chat.SellerID,
 		&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
 		&chat.Listing.Title,
 		&chat.UnreadCount,
@@ -251,7 +254,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		query = `
 		WITH ordered_messages AS (
 			SELECT
-				m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
+				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
 				sender.name as sender_name,
 				sender.picture_url as sender_picture,
@@ -311,7 +314,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		),
 		ordered_messages AS (
 			SELECT
-				m.id, m.chat_id, m.listing_id, m.sender_id, m.receiver_id,
+				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
 				sender.name as sender_name,
 				sender.picture_url as sender_picture,
@@ -369,15 +372,17 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 	for rows.Next() {
 		var msg models.MarketplaceMessage
 		var listingID sql.NullInt64
+		var storefrontProductID sql.NullInt64
 		var attachmentsJSON json.RawMessage
+		var senderName, senderPicture, receiverName, receiverPicture sql.NullString
 		msg.Sender = &models.User{}
 		msg.Receiver = &models.User{}
 
 		err := rows.Scan(
-			&msg.ID, &msg.ChatID, &listingID, &msg.SenderID, &msg.ReceiverID,
+			&msg.ID, &msg.ChatID, &listingID, &storefrontProductID, &msg.SenderID, &msg.ReceiverID,
 			&msg.Content, &msg.IsRead, &msg.CreatedAt,
-			&msg.Sender.Name, &msg.Sender.PictureURL,
-			&msg.Receiver.Name, &msg.Receiver.PictureURL,
+			&senderName, &senderPicture,
+			&receiverName, &receiverPicture,
 			&msg.HasAttachments, &msg.AttachmentsCount,
 			&attachmentsJSON,
 		)
@@ -391,6 +396,19 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		} else {
 			msg.ListingID = 0
 		}
+
+		// Устанавливаем StorefrontProductID только если он не NULL
+		if storefrontProductID.Valid {
+			msg.StorefrontProductID = int(storefrontProductID.Int64)
+		} else {
+			msg.StorefrontProductID = 0
+		}
+
+		// Устанавливаем имена и картинки пользователей
+		msg.Sender.Name = senderName.String
+		msg.Sender.PictureURL = senderPicture.String
+		msg.Receiver.Name = receiverName.String
+		msg.Receiver.PictureURL = receiverPicture.String
 
 		// Парсим вложения из JSON
 		if msg.HasAttachments && msg.AttachmentsCount > 0 {
@@ -513,8 +531,8 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 
 	var sellerID, buyerID int
 
-	// Для прямых сообщений без ChatID и ListingID сначала пытаемся найти существующий чат
-	if msg.ChatID == 0 && msg.ListingID == 0 {
+	// Для прямых сообщений без ChatID, ListingID и StorefrontProductID сначала пытаемся найти существующий чат
+	if msg.ChatID == 0 && msg.ListingID == 0 && msg.StorefrontProductID == 0 {
 		// Определяем buyerID и sellerID для прямого чата
 		if msg.SenderID < msg.ReceiverID {
 			buyerID = msg.SenderID
@@ -528,7 +546,7 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		err = tx.QueryRow(ctx, `
 			SELECT id
 			FROM marketplace_chats
-			WHERE listing_id IS NULL
+			WHERE listing_id IS NULL AND storefront_product_id IS NULL
 			AND ((buyer_id = $1 AND seller_id = $2) OR (buyer_id = $2 AND seller_id = $1))
 			LIMIT 1
 		`, buyerID, sellerID).Scan(&msg.ChatID)
@@ -537,6 +555,26 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			return fmt.Errorf("error checking existing direct chat: %w", err)
 		}
 		// Если нашли чат, msg.ChatID теперь заполнен
+	}
+
+	// Для товаров витрин тоже пытаемся найти существующий чат
+	if msg.ChatID == 0 && msg.StorefrontProductID > 0 {
+		// Для товаров витрин: отправитель - покупатель, получатель (владелец витрины) - продавец
+		buyerID = msg.SenderID
+		sellerID = msg.ReceiverID
+
+		// Ищем существующий чат для товара витрины
+		err = tx.QueryRow(ctx, `
+			SELECT id
+			FROM marketplace_chats
+			WHERE storefront_product_id = $1
+			AND buyer_id = $2 AND seller_id = $3
+			LIMIT 1
+		`, msg.StorefrontProductID, buyerID, sellerID).Scan(&msg.ChatID)
+
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("error checking existing storefront product chat: %w", err)
+		}
 	}
 
 	// Определяем sellerID и buyerID
@@ -637,42 +675,84 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		}
 	} else {
 		// Создаем новый чат или получаем существующий
-		err = tx.QueryRow(ctx, `
-            WITH user_info AS (
-                SELECT id, name, picture_url
-                FROM users
-                WHERE id IN ($1, $2)
-            ),
-            chat_insert AS (
-                INSERT INTO marketplace_chats (
-                    listing_id,
-                    buyer_id,
-                    seller_id,
-                    last_message_at
-                ) VALUES (NULLIF($3, 0), $4, $5, CURRENT_TIMESTAMP)
-                ON CONFLICT (listing_id, buyer_id, seller_id)
-                DO UPDATE SET
-                    last_message_at = CURRENT_TIMESTAMP,
-                    is_archived = false
-                RETURNING id
-            )
-            SELECT
-                ci.id,
-                (SELECT name FROM user_info WHERE id = $1),
-                (SELECT picture_url FROM user_info WHERE id = $1),
-                (SELECT name FROM user_info WHERE id = $2),
-                (SELECT picture_url FROM user_info WHERE id = $2)
-            FROM chat_insert ci
-        `,
-			msg.SenderID, msg.ReceiverID,
-			msg.ListingID, buyerID, sellerID,
-		).Scan(
-			&msg.ChatID,
-			&senderInfo.name,
-			&senderInfo.pictureURL,
-			&receiverInfo.name,
-			&receiverInfo.pictureURL,
-		)
+		// Для товаров витрин нужна особая логика создания чата
+		if msg.StorefrontProductID > 0 {
+			// Для товаров витрин создаем чат с storefront_product_id
+			err = tx.QueryRow(ctx, `
+				WITH user_info AS (
+					SELECT id, name, picture_url
+					FROM users
+					WHERE id IN ($1, $2)
+				),
+				chat_insert AS (
+					INSERT INTO marketplace_chats (
+						storefront_product_id,
+						buyer_id,
+						seller_id,
+						last_message_at
+					) VALUES ($3, $4, $5, CURRENT_TIMESTAMP)
+					ON CONFLICT (storefront_product_id, buyer_id, seller_id) WHERE storefront_product_id IS NOT NULL
+					DO UPDATE SET
+						last_message_at = CURRENT_TIMESTAMP,
+						is_archived = false
+					RETURNING id
+				)
+				SELECT
+					ci.id,
+					(SELECT name FROM user_info WHERE id = $1),
+					(SELECT picture_url FROM user_info WHERE id = $1),
+					(SELECT name FROM user_info WHERE id = $2),
+					(SELECT picture_url FROM user_info WHERE id = $2)
+				FROM chat_insert ci
+			`,
+				msg.SenderID, msg.ReceiverID,
+				msg.StorefrontProductID, buyerID, sellerID,
+			).Scan(
+				&msg.ChatID,
+				&senderInfo.name,
+				&senderInfo.pictureURL,
+				&receiverInfo.name,
+				&receiverInfo.pictureURL,
+			)
+		} else {
+			// Для обычных листингов или прямых сообщений
+			err = tx.QueryRow(ctx, `
+				WITH user_info AS (
+					SELECT id, name, picture_url
+					FROM users
+					WHERE id IN ($1, $2)
+				),
+				chat_insert AS (
+					INSERT INTO marketplace_chats (
+						listing_id,
+						buyer_id,
+						seller_id,
+						last_message_at
+					) VALUES (NULLIF($3, 0), $4, $5, CURRENT_TIMESTAMP)
+					ON CONFLICT (listing_id, buyer_id, seller_id)
+					DO UPDATE SET
+						last_message_at = CURRENT_TIMESTAMP,
+						is_archived = false
+					RETURNING id
+				)
+				SELECT
+					ci.id,
+					(SELECT name FROM user_info WHERE id = $1),
+					(SELECT picture_url FROM user_info WHERE id = $1),
+					(SELECT name FROM user_info WHERE id = $2),
+					(SELECT picture_url FROM user_info WHERE id = $2)
+				FROM chat_insert ci
+			`,
+				msg.SenderID, msg.ReceiverID,
+				msg.ListingID, buyerID, sellerID,
+			).Scan(
+				&msg.ChatID,
+				&senderInfo.name,
+				&senderInfo.pictureURL,
+				&receiverInfo.name,
+				&receiverInfo.pictureURL,
+			)
+		}
 		if err != nil {
 			return fmt.Errorf("error creating/getting chat: %w", err)
 		}
@@ -689,16 +769,18 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
         INSERT INTO marketplace_messages (
             chat_id,
             listing_id,
+            storefront_product_id,
             sender_id,
             receiver_id,
             content,
             is_read,
             original_language
-        ) VALUES ($1, NULLIF($2, 0), $3, $4, $5, false, $6)
+        ) VALUES ($1, NULLIF($2, 0), NULLIF($3, 0), $4, $5, $6, false, $7)
         RETURNING id, created_at
     `,
 		msg.ChatID,
 		msg.ListingID,
+		msg.StorefrontProductID,
 		msg.SenderID,
 		msg.ReceiverID,
 		msg.Content,

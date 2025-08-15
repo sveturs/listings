@@ -23,7 +23,7 @@ linters:
     - staticcheck  # Comprehensive static analysis (includes gosimple, stylecheck)
     - bodyclose    # Checks whether HTTP response body is closed successfully
     - contextcheck # Check whether context is correctly passed
-    - nilerr       # Finds code which returns nil even if error is not nil
+    # - nilerr       # Finds code which returns nil even if error is not nil (disabled due to stack overflow bug)
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed
     - rowserrcheck  # Checks whether Err of rows is checked successfully
     - asasalint    # Check for pass []any as any in variadic func(...any)

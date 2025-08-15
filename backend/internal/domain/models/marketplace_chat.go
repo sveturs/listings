@@ -4,20 +4,22 @@ package models
 import "time"
 
 type MarketplaceMessage struct {
-	ID         int       `json:"id"`
-	ChatID     int       `json:"chat_id"`
-	ListingID  int       `json:"listing_id"`
-	SenderID   int       `json:"sender_id"`
-	ReceiverID int       `json:"receiver_id"`
-	Content    string    `json:"content"`
-	IsRead     bool      `json:"is_read"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID                  int       `json:"id"`
+	ChatID              int       `json:"chat_id"`
+	ListingID           int       `json:"listing_id"`
+	StorefrontProductID int       `json:"storefront_product_id"` // Новое поле для товаров витрин
+	SenderID            int       `json:"sender_id"`
+	ReceiverID          int       `json:"receiver_id"`
+	Content             string    `json:"content"`
+	IsRead              bool      `json:"is_read"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 
 	// Дополнительные поля для отображения
-	Sender   *User               `json:"sender,omitempty"`
-	Receiver *User               `json:"receiver,omitempty"`
-	Listing  *MarketplaceListing `json:"listing,omitempty"`
+	Sender            *User               `json:"sender,omitempty"`
+	Receiver          *User               `json:"receiver,omitempty"`
+	Listing           *MarketplaceListing `json:"listing,omitempty"`
+	StorefrontProduct *StorefrontProduct  `json:"storefront_product,omitempty"` // Новое поле для товара витрины
 	// Добавляем поля для мультиязычности
 	OriginalLanguage string                       `json:"original_language"`
 	Translations     map[string]map[string]string `json:"translations,omitempty"`
@@ -29,14 +31,15 @@ type MarketplaceMessage struct {
 }
 
 type MarketplaceChat struct {
-	ID            int       `json:"id"`
-	ListingID     int       `json:"listing_id"`
-	BuyerID       int       `json:"buyer_id"`
-	SellerID      int       `json:"seller_id"`
-	LastMessageAt time.Time `json:"last_message_at"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	IsArchived    bool      `json:"is_archived"`
+	ID                  int       `json:"id"`
+	ListingID           int       `json:"listing_id"`
+	StorefrontProductID int       `json:"storefront_product_id"` // Новое поле для товаров витрин
+	BuyerID             int       `json:"buyer_id"`
+	SellerID            int       `json:"seller_id"`
+	LastMessageAt       time.Time `json:"last_message_at"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	IsArchived          bool      `json:"is_archived"`
 
 	// Дополнительные поля для отображения
 	Buyer       *User               `json:"buyer,omitempty"`
@@ -49,10 +52,11 @@ type MarketplaceChat struct {
 
 // Структуры для запросов
 type CreateMessageRequest struct {
-	ListingID  int    `json:"listing_id"`
-	ChatID     int    `json:"chat_id"`
-	ReceiverID int    `json:"receiver_id" validate:"required"`
-	Content    string `json:"content" validate:"required"`
+	ListingID           int    `json:"listing_id"`
+	StorefrontProductID int    `json:"storefront_product_id"` // Новое поле для товаров витрин
+	ChatID              int    `json:"chat_id"`
+	ReceiverID          int    `json:"receiver_id" validate:"required"`
+	Content             string `json:"content" validate:"required"`
 }
 
 type GetMessagesRequest struct {

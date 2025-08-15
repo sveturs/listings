@@ -16,7 +16,6 @@ import (
 const (
 	attributeTypeSelect      = "select"
 	attributeTypeMultiselect = "multiselect"
-	attributeTypeText        = "text"
 	attributeTypeTextarea    = "textarea"
 )
 
@@ -1057,7 +1056,7 @@ func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingI
 		// Определяем тип значения и устанавливаем соответствующее поле
 		switch attr.AttributeType {
 		case attributeTypeText, attributeTypeTextarea, attributeTypeSelect, attributeTypeMultiselect:
-			valueType = "text"
+			valueType = attributeTypeText
 			textValue = attr.TextValue
 		case "number", "range":
 			valueType = "numeric"
@@ -1069,7 +1068,7 @@ func (s *MarketplaceService) SaveListingAttributes(ctx context.Context, listingI
 			valueType = "json"
 			jsonValue = attr.JSONValue
 		default:
-			valueType = "text"
+			valueType = attributeTypeText
 			textValue = attr.TextValue
 		}
 

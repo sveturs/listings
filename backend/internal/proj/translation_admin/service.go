@@ -1974,6 +1974,10 @@ func (s *Service) importFromXLIFF(ctx context.Context, req *models.TranslationIm
 func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []int, sourceLanguage string) error {
 	// Получаем категории из основной таблицы
 	// Используем IN вместо ANY так как это обычный sql.DB
+	if len(categoryIDs) == 0 {
+		return nil
+	}
+
 	placeholders := make([]string, len(categoryIDs))
 	args := make([]interface{}, len(categoryIDs))
 	for i, id := range categoryIDs {
@@ -1981,11 +1985,14 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 		args[i] = id
 	}
 
-	query := fmt.Sprintf(`
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString(`
 		SELECT id, name, description, seo_title, seo_description 
 		FROM marketplace_categories 
-		WHERE id IN (%s)
-	`, strings.Join(placeholders, ","))
+		WHERE id IN (`)
+	queryBuilder.WriteString(strings.Join(placeholders, ","))
+	queryBuilder.WriteString(")")
+	query := queryBuilder.String()
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -2009,6 +2016,10 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 			continue
 		}
 		categories = append(categories, cat)
+	}
+
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("failed to iterate rows: %w", err)
 	}
 
 	// Для каждой категории создаем недостающие переводы

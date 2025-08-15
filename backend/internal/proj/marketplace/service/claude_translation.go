@@ -23,7 +23,7 @@ type ClaudeTranslationService struct {
 // NewClaudeTranslationService создает новый экземпляр сервиса перевода Claude AI
 func NewClaudeTranslationService(apiKey string) (*ClaudeTranslationService, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("Claude API key is required")
+		return nil, fmt.Errorf("claude API key is required")
 	}
 
 	return &ClaudeTranslationService{
@@ -115,7 +115,7 @@ Text to translate:
 
 	// Проверяем статус ответа
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Claude API error: status %d, body: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("claude API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	// Парсим ответ
@@ -126,11 +126,11 @@ Text to translate:
 
 	// Проверяем на ошибки в ответе
 	if claudeResp.Error.Message != "" {
-		return "", fmt.Errorf("Claude API error: %s", claudeResp.Error.Message)
+		return "", fmt.Errorf("claude API error: %s", claudeResp.Error.Message)
 	}
 
 	// Извлекаем переведенный текст
-	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == "text" {
+	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == attributeTypeText {
 		translatedText := strings.TrimSpace(claudeResp.Content[0].Text)
 		logger.Info().
 			Str("source", sourceLanguage).
@@ -200,7 +200,7 @@ Text to translate:
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Claude API error: status %d, body: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("claude API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	var claudeResp claudeResponse
@@ -209,10 +209,10 @@ Text to translate:
 	}
 
 	if claudeResp.Error.Message != "" {
-		return "", fmt.Errorf("Claude API error: %s", claudeResp.Error.Message)
+		return "", fmt.Errorf("claude API error: %s", claudeResp.Error.Message)
 	}
 
-	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == "text" {
+	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == attributeTypeText {
 		return strings.TrimSpace(claudeResp.Content[0].Text), nil
 	}
 
@@ -227,7 +227,7 @@ func (s *ClaudeTranslationService) TranslateToAllLanguages(ctx context.Context, 
 	// Определяем исходный язык
 	sourceLanguage, _, err := s.DetectLanguage(ctx, text)
 	if err != nil {
-		sourceLanguage = "auto"
+		sourceLanguage = languageAuto
 	}
 
 	// Переводим на все языки кроме исходного
@@ -356,7 +356,7 @@ Text in %s:
 		return text, nil
 	}
 
-	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == "text" {
+	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == attributeTypeText {
 		return strings.TrimSpace(claudeResp.Content[0].Text), nil
 	}
 

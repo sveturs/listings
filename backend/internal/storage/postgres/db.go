@@ -644,8 +644,20 @@ func (db *Database) GetAllUsers(ctx context.Context, limit, offset int) ([]*mode
 	return db.usersDB.GetAllUsers(ctx, limit, offset)
 }
 
+func (db *Database) GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error) {
+	return db.usersDB.GetAllUsersWithSort(ctx, limit, offset, sortBy, sortOrder, statusFilter)
+}
+
 func (db *Database) UpdateUserStatus(ctx context.Context, id int, status string) error {
 	return db.usersDB.UpdateUserStatus(ctx, id, status)
+}
+
+func (db *Database) UpdateUserRole(ctx context.Context, id int, roleID int) error {
+	return db.usersDB.UpdateUserRole(ctx, id, roleID)
+}
+
+func (db *Database) GetAllRoles(ctx context.Context) ([]*models.Role, error) {
+	return db.usersDB.GetAllRoles(ctx)
 }
 
 func (db *Database) DeleteUser(ctx context.Context, id int) error {
@@ -1058,6 +1070,14 @@ func (db *Database) GetUserPrivacySettings(ctx context.Context, userID int) (*mo
 }
 
 func (db *Database) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
+	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+}
+
+func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
+	return db.marketplaceDB.GetUserPrivacySettings(ctx, userID)
+}
+
+func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
 	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
@@ -1563,6 +1583,25 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 	}
 
 	return &s, nil
+}
+
+// GetStorefrontOwnerByProductID возвращает ID владельца витрины по ID товара
+func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error) {
+	var userID int
+	err := db.pool.QueryRow(ctx, `
+		SELECT s.user_id 
+		FROM storefronts s
+		INNER JOIN storefront_products sp ON sp.storefront_id = s.id
+		WHERE sp.id = $1
+	`, productID).Scan(&userID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, fmt.Errorf("storefront product not found: %d", productID)
+		}
+		return 0, err
+	}
+
+	return userID, nil
 }
 
 func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {

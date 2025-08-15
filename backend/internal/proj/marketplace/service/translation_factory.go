@@ -34,6 +34,8 @@ type TranslationFactoryInterface interface {
 type TranslationServiceFactory struct {
 	googleService   *GoogleTranslationService
 	openAIService   *TranslationService
+	claudeService   *ClaudeTranslationService
+	deeplService    *DeepLTranslationService
 	defaultProvider TranslationProvider
 	mutex           sync.RWMutex
 }
@@ -114,6 +116,16 @@ func (f *TranslationServiceFactory) GetTranslationService(provider TranslationPr
 			return nil, fmt.Errorf("сервис OpenAI недоступен")
 		}
 		return f.openAIService, nil
+	case ClaudeAI:
+		if f.claudeService == nil {
+			return nil, fmt.Errorf("сервис Claude AI недоступен")
+		}
+		return f.claudeService, nil
+	case DeepL:
+		if f.deeplService == nil {
+			return nil, fmt.Errorf("сервис DeepL недоступен")
+		}
+		return f.deeplService, nil
 	case Manual:
 		return nil, fmt.Errorf("ручной перевод не поддерживается в автоматическом режиме")
 	default:
@@ -149,6 +161,14 @@ func (f *TranslationServiceFactory) SetDefaultProvider(provider TranslationProvi
 		if f.openAIService == nil {
 			return fmt.Errorf("сервис OpenAI недоступен")
 		}
+	case ClaudeAI:
+		if f.claudeService == nil {
+			return fmt.Errorf("сервис Claude AI недоступен")
+		}
+	case DeepL:
+		if f.deeplService == nil {
+			return fmt.Errorf("сервис DeepL недоступен")
+		}
 	case Manual:
 		return fmt.Errorf("ручной перевод не может быть установлен как провайдер по умолчанию")
 	default:
@@ -165,7 +185,7 @@ func (f *TranslationServiceFactory) GetAvailableProviders() []TranslationProvide
 	f.mutex.RLock()
 	defer f.mutex.RUnlock()
 
-	providers := make([]TranslationProvider, 0, 2)
+	providers := make([]TranslationProvider, 0, 4)
 
 	if f.googleService != nil {
 		providers = append(providers, GoogleTranslate)
@@ -173,6 +193,14 @@ func (f *TranslationServiceFactory) GetAvailableProviders() []TranslationProvide
 
 	if f.openAIService != nil {
 		providers = append(providers, OpenAI)
+	}
+
+	if f.claudeService != nil {
+		providers = append(providers, ClaudeAI)
+	}
+
+	if f.deeplService != nil {
+		providers = append(providers, DeepL)
 	}
 
 	return providers
@@ -191,6 +219,12 @@ func (f *TranslationServiceFactory) GetTranslationCount(provider TranslationProv
 		return f.googleService.TranslationCount(), f.googleService.TranslationLimit(), nil
 	case OpenAI:
 		// OpenAI не имеет встроенного ограничения по количеству, но может иметь внешние ограничения
+		return 0, 0, nil
+	case ClaudeAI:
+		// Claude AI не имеет встроенного ограничения по количеству, но может иметь внешние ограничения
+		return 0, 0, nil
+	case DeepL:
+		// DeepL может иметь ограничения в зависимости от плана
 		return 0, 0, nil
 	case Manual:
 		// Ручной перевод не имеет счетчика
@@ -223,13 +257,38 @@ func (f *TranslationServiceFactory) Translate(ctx context.Context, text string, 
 
 	// Пытаемся использовать резервный провайдер
 	var fallbackProvider TranslationProvider
-	if f.defaultProvider == GoogleTranslate && f.openAIService != nil {
-		fallbackProvider = OpenAI
-		service = f.openAIService
-	} else if f.defaultProvider == OpenAI && f.googleService != nil {
-		fallbackProvider = GoogleTranslate
-		service = f.googleService
-	} else {
+	switch f.defaultProvider {
+	case GoogleTranslate:
+		if f.openAIService != nil {
+			fallbackProvider = OpenAI
+			service = f.openAIService
+		} else {
+			return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
+		}
+	case OpenAI:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
+		}
+	case ClaudeAI:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
+		}
+	case DeepL:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
+		}
+	case Manual:
+		return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен для ручного перевода: %w", err)
+	default:
 		// Нет резервного провайдера
 		return "", fmt.Errorf("перевод не удался и резервный провайдер недоступен: %w", err)
 	}
@@ -240,7 +299,7 @@ func (f *TranslationServiceFactory) Translate(ctx context.Context, text string, 
 
 	result, fallbackErr := service.Translate(ctx, text, sourceLanguage, targetLanguage)
 	if fallbackErr != nil {
-		return "", fmt.Errorf("перевод не удался с обоими провайдерами. Основной: %v, Резервный: %w", err, fallbackErr)
+		return "", fmt.Errorf("перевод не удался с обоими провайдерами. Основной: %s, Резервный: %w", err.Error(), fallbackErr)
 	}
 
 	return result, nil
@@ -299,13 +358,38 @@ func (f *TranslationServiceFactory) TranslateEntityFields(ctx context.Context, s
 
 	// Пытаемся использовать резервный провайдер
 	var fallbackProvider TranslationProvider
-	if f.defaultProvider == GoogleTranslate && f.openAIService != nil {
-		fallbackProvider = OpenAI
-		service = f.openAIService
-	} else if f.defaultProvider == OpenAI && f.googleService != nil {
-		fallbackProvider = GoogleTranslate
-		service = f.googleService
-	} else {
+	switch f.defaultProvider {
+	case GoogleTranslate:
+		if f.openAIService != nil {
+			fallbackProvider = OpenAI
+			service = f.openAIService
+		} else {
+			return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
+		}
+	case OpenAI:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
+		}
+	case ClaudeAI:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
+		}
+	case DeepL:
+		if f.googleService != nil {
+			fallbackProvider = GoogleTranslate
+			service = f.googleService
+		} else {
+			return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
+		}
+	case Manual:
+		return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен для ручного перевода: %w", err)
+	default:
 		// Нет резервного провайдера
 		return nil, fmt.Errorf("перевод полей не удался и резервный провайдер недоступен: %w", err)
 	}
@@ -316,7 +400,7 @@ func (f *TranslationServiceFactory) TranslateEntityFields(ctx context.Context, s
 
 	result, fallbackErr := service.TranslateEntityFields(ctx, sourceLanguage, targetLanguages, fields)
 	if fallbackErr != nil {
-		return nil, fmt.Errorf("перевод полей не удался с обоими провайдерами. Основной: %v, Резервный: %w", err, fallbackErr)
+		return nil, fmt.Errorf("перевод полей не удался с обоими провайдерами. Основной: %s, Резервный: %w", err.Error(), fallbackErr)
 	}
 
 	return result, nil

@@ -65,11 +65,11 @@ func (d *dummyTranslationService) Translate(ctx context.Context, text string, so
 }
 
 func (d *dummyTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
-	return "auto", 1.0, nil
+	return languageAuto, 1.0, nil
 }
 
 func (d *dummyTranslationService) TranslateToAllLanguages(ctx context.Context, text string) (map[string]string, error) {
-	return map[string]string{"auto": text}, nil
+	return map[string]string{languageAuto: text}, nil
 }
 
 func (d *dummyTranslationService) TranslateEntityFields(ctx context.Context, sourceLanguage string, targetLanguages []string, fields map[string]string) (map[string]map[string]string, error) {

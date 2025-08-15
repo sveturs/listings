@@ -4212,6 +4212,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/admin/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns list of all available roles in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Get all roles (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "List of roles",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.Role"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "admin.users.error.fetch_roles_failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/search/analytics": {
             "get": {
                 "description": "Get comprehensive search analytics including usage metrics, popular queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
@@ -7327,12 +7376,32 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 1000,
                         "minimum": 1,
                         "type": "integer",
-                        "default": 10,
+                        "default": 20,
                         "description": "Items per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (active, inactive, suspended)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "Sort field (id, name, email, created_at, last_seen, account_status)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort order (asc, desc)",
+                        "name": "sort_order",
                         "in": "query"
                     }
                 ],
@@ -7606,6 +7675,76 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "admin.balance.error.fetch_balance_failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users/{id}/role": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates user role by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-users"
+                ],
+                "summary": "Update user role (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Role update request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_users_handler.UpdateUserRoleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.AdminMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_role",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "admin.users.error.role_update_failed",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -25572,6 +25711,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/privacy-settings": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates privacy settings for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update privacy settings",
+                "parameters": [
+                    {
+                        "description": "Privacy settings",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UpdatePrivacySettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Settings updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "users.privacy.error.invalid_data",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "users.privacy.error.update",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/register": {
             "post": {
                 "description": "Creates new user in the system. DEPRECATED: Use /api/v1/auth/register instead",
@@ -28017,6 +28225,10 @@ const docTemplate = `{
                 },
                 "receiver_id": {
                     "type": "integer"
+                },
+                "storefront_product_id": {
+                    "description": "Новое поле для товаров витрин",
+                    "type": "integer"
                 }
             }
         },
@@ -29100,6 +29312,10 @@ const docTemplate = `{
                 "seller_id": {
                     "type": "integer"
                 },
+                "storefront_product_id": {
+                    "description": "Новое поле для товаров витрин",
+                    "type": "integer"
+                },
                 "unread_count": {
                     "type": "integer"
                 },
@@ -29377,6 +29593,18 @@ const docTemplate = `{
                     ]
                 },
                 "sender_id": {
+                    "type": "integer"
+                },
+                "storefront_product": {
+                    "description": "Новое поле для товара витрины",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.StorefrontProduct"
+                        }
+                    ]
+                },
+                "storefront_product_id": {
+                    "description": "Новое поле для товаров витрин",
                     "type": "integer"
                 },
                 "translations": {
@@ -30008,6 +30236,29 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.Permission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.PriceHistoryEntry": {
             "type": "object",
             "properties": {
@@ -30281,6 +30532,45 @@ const docTemplate = `{
                 },
                 "verified_reviews": {
                     "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.Role": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_assignable": {
+                    "type": "boolean"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "description": "Relations",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.Permission"
+                    }
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -32304,6 +32594,12 @@ const docTemplate = `{
                 },
                 "provider": {
                     "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/backend_internal_domain_models.Role"
+                },
+                "role_id": {
+                    "type": "integer"
                 },
                 "settings": {
                     "type": "array",
@@ -36924,6 +37220,19 @@ const docTemplate = `{
                 "token_type": {
                     "type": "string",
                     "example": "Bearer"
+                }
+            }
+        },
+        "internal_proj_users_handler.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 2
                 }
             }
         },

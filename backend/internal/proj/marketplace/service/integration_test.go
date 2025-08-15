@@ -143,9 +143,17 @@ func (m *MockStorage) CountActiveUserTokens(ctx context.Context, userID int) (in
 func (m *MockStorage) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error) {
 	return nil, 0, nil
 }
+
+func (m *MockStorage) GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error) {
+	return nil, 0, nil
+}
 func (m *MockStorage) UpdateUserStatus(ctx context.Context, id int, status string) error { return nil }
-func (m *MockStorage) DeleteUser(ctx context.Context, id int) error                      { return nil }
-func (m *MockStorage) IsUserAdmin(ctx context.Context, email string) (bool, error)       { return false, nil }
+func (m *MockStorage) GetAllRoles(ctx context.Context) ([]*models.Role, error) {
+	return nil, ErrNotImplemented
+}
+func (m *MockStorage) UpdateUserRole(ctx context.Context, id int, roleID int) error { return nil }
+func (m *MockStorage) DeleteUser(ctx context.Context, id int) error                 { return nil }
+func (m *MockStorage) IsUserAdmin(ctx context.Context, email string) (bool, error)  { return false, nil }
 func (m *MockStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
 	return nil, ErrNotImplemented
 }
@@ -446,12 +454,15 @@ func (m *MockStorage) UpdateStorefront(ctx context.Context, storefront *models.S
 	return nil
 }
 func (m *MockStorage) DeleteStorefront(ctx context.Context, id int) error { return nil }
-func (m *MockStorage) Storefront() interface{}                            { return nil }
-func (m *MockStorage) Cart() interface{}                                  { return nil }
-func (m *MockStorage) Order() interface{}                                 { return nil }
-func (m *MockStorage) Inventory() interface{}                             { return nil }
-func (m *MockStorage) MarketplaceOrder() interface{}                      { return nil }
-func (m *MockStorage) StorefrontProductSearch() interface{}               { return nil }
+func (m *MockStorage) GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error) {
+	return 0, ErrNotImplemented
+}
+func (m *MockStorage) Storefront() interface{}              { return nil }
+func (m *MockStorage) Cart() interface{}                    { return nil }
+func (m *MockStorage) Order() interface{}                   { return nil }
+func (m *MockStorage) Inventory() interface{}               { return nil }
+func (m *MockStorage) MarketplaceOrder() interface{}        { return nil }
+func (m *MockStorage) StorefrontProductSearch() interface{} { return nil }
 func (m *MockStorage) SearchListings(ctx context.Context, params *search.SearchParams) (*search.SearchResult, error) {
 	args := m.Called(ctx, params)
 	return args.Get(0).(*search.SearchResult), args.Error(1)
@@ -503,7 +514,15 @@ func (m *MockStorage) GetUserPrivacySettings(ctx context.Context, userID int) (*
 	return nil, ErrNotImplemented
 }
 
+func (m *MockStorage) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
+	return nil, ErrNotImplemented
+}
+
 func (m *MockStorage) UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
+	return nil
+}
+
+func (m *MockStorage) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
 	return nil
 }
 

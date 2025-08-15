@@ -352,6 +352,194 @@ func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {
 	})
 }
 
+// GetAllUsers возвращает список всех пользователей с пагинацией (для админов)
+// @Summary Get all users
+// @Description Returns paginated list of all users (admin only)
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(20)
+// @Param status query string false "Filter by status (active, inactive, suspended)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=UsersListResponse} "Users list"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "admin.users.error.access_denied"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_failed"
+// @Security BearerAuth
+// @Router /api/v1/admin/users [get]
+func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
+	// Проверяем, что пользователь авторизован
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
+	}
+
+	// Проверяем, является ли пользователь администратором
+	userEmail := c.Locals("user_email").(string)
+	isAdmin, err := h.userService.IsUserAdmin(c.Context(), userEmail)
+	if err != nil || !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.users.error.access_denied")
+	}
+
+	// Параметры пагинации
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 20)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
+
+	// Получаем список пользователей
+	users, totalCount, err := h.userService.GetAllUsers(c.Context(), limit, offset)
+	if err != nil {
+		logger.Error().Err(err).Msg("Error fetching users list")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.fetch_failed")
+	}
+
+	return utils.SuccessResponse(c, &UsersListResponse{
+		Users:      users,
+		TotalCount: totalCount,
+		Page:       page,
+		PageSize:   limit,
+	})
+}
+
+// UpdateUserStatus обновляет статус пользователя (для админов)
+// @Summary Update user status
+// @Description Updates user account status (admin only)
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param status body UpdateUserStatusRequest true "New status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Status updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_id or admin.users.error.invalid_status"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "admin.users.error.access_denied or admin.users.error.cannot_modify_self"
+// @Failure 404 {object} utils.ErrorResponseSwag "admin.users.error.not_found"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.update_failed"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id}/status [put]
+func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
+	// Проверяем авторизацию
+	currentUserID, ok := c.Locals("user_id").(int)
+	if !ok || currentUserID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
+	}
+
+	// Проверяем права администратора
+	userEmail := c.Locals("user_email").(string)
+	isAdmin, err := h.userService.IsUserAdmin(c.Context(), userEmail)
+	if err != nil || !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.users.error.access_denied")
+	}
+
+	// Получаем ID пользователя
+	userID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_id")
+	}
+
+	// Нельзя изменять свой собственный статус
+	if userID == currentUserID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.users.error.cannot_modify_self")
+	}
+
+	// Парсим новый статус
+	var req UpdateUserStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_status")
+	}
+
+	// Обновляем статус
+	err = h.userService.UpdateUserStatus(c.Context(), userID, req.Status)
+	if err != nil {
+		if err.Error() == "user not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "admin.users.error.not_found")
+		}
+		logger.Error().Err(err).Int("user_id", userID).Msg("Error updating user status")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.update_failed")
+	}
+
+	return utils.SuccessResponse(c, &MessageResponse{
+		Message: "admin.users.success.status_updated",
+	})
+}
+
+// DeleteUser удаляет пользователя (для админов)
+// @Summary Delete user
+// @Description Permanently deletes user account (admin only)
+// @Tags admin-users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "User deleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_id"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "admin.users.error.access_denied or admin.users.error.cannot_delete_self"
+// @Failure 404 {object} utils.ErrorResponseSwag "admin.users.error.not_found"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.delete_failed"
+// @Security BearerAuth
+// @Router /api/v1/admin/users/{id} [delete]
+func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
+	// Проверяем авторизацию
+	currentUserID, ok := c.Locals("user_id").(int)
+	if !ok || currentUserID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
+	}
+
+	// Проверяем права администратора
+	userEmail := c.Locals("user_email").(string)
+	isAdmin, err := h.userService.IsUserAdmin(c.Context(), userEmail)
+	if err != nil || !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.users.error.access_denied")
+	}
+
+	// Получаем ID пользователя для удаления
+	userID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "admin.users.error.invalid_id")
+	}
+
+	// Нельзя удалить самого себя
+	if userID == currentUserID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.users.error.cannot_delete_self")
+	}
+
+	// Удаляем пользователя
+	err = h.userService.DeleteUser(c.Context(), userID)
+	if err != nil {
+		if err.Error() == "user not found" {
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "admin.users.error.not_found")
+		}
+		logger.Error().Err(err).Int("user_id", userID).Msg("Error deleting user")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "admin.users.error.delete_failed")
+	}
+
+	logger.Info().
+		Int("deleted_user_id", userID).
+		Int("admin_id", currentUserID).
+		Msg("User deleted by admin")
+
+	return utils.SuccessResponse(c, &MessageResponse{
+		Message: "admin.users.success.deleted",
+	})
+}
+
+// GetPrivacySettings возвращает настройки приватности пользователя
+// @Summary Get privacy settings
+// @Description Returns privacy settings for the authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserPrivacySettings} "Privacy settings"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.privacy.error.fetch"
+// @Security BearerAuth
+// @Router /api/v1/users/privacy-settings [get]
 func (h *UserHandler) GetPrivacySettings(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 

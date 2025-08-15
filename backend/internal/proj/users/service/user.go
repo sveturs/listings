@@ -54,9 +54,24 @@ func (s *UserService) GetAllUsers(ctx context.Context, limit, offset int) ([]*mo
 	return s.storage.GetAllUsers(ctx, limit, offset)
 }
 
+// GetAllUsersWithSort возвращает список всех пользователей с пагинацией, сортировкой и фильтрацией
+func (s *UserService) GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error) {
+	return s.storage.GetAllUsersWithSort(ctx, limit, offset, sortBy, sortOrder, statusFilter)
+}
+
 // UpdateUserStatus обновляет статус пользователя
 func (s *UserService) UpdateUserStatus(ctx context.Context, id int, status string) error {
 	return s.storage.UpdateUserStatus(ctx, id, status)
+}
+
+// UpdateUserRole обновляет роль пользователя
+func (s *UserService) UpdateUserRole(ctx context.Context, id int, roleID int) error {
+	return s.storage.UpdateUserRole(ctx, id, roleID)
+}
+
+// GetAllRoles возвращает список всех ролей
+func (s *UserService) GetAllRoles(ctx context.Context) ([]*models.Role, error) {
+	return s.storage.GetAllRoles(ctx)
 }
 
 // DeleteUser удаляет пользователя
@@ -84,4 +99,16 @@ func (s *UserService) AddAdmin(ctx context.Context, admin *models.AdminUser) err
 // RemoveAdmin удаляет администратора по email
 func (s *UserService) RemoveAdmin(ctx context.Context, email string) error {
 	return s.storage.RemoveAdmin(ctx, email)
+}
+
+// Методы для настроек приватности
+
+// GetPrivacySettings возвращает настройки приватности пользователя
+func (s *UserService) GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
+	return s.storage.GetPrivacySettings(ctx, userID)
+}
+
+// UpdatePrivacySettings обновляет настройки приватности пользователя
+func (s *UserService) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
+	return s.storage.UpdatePrivacySettings(ctx, userID, settings)
 }

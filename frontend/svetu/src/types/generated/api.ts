@@ -3802,6 +3802,56 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/roles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all roles (Admin)
+     * @description Returns list of all available roles in the system
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of roles */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.Role'][];
+            };
+          };
+        };
+        /** @description admin.users.error.fetch_roles_failed */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/search/analytics': {
     parameters: {
       query?: never;
@@ -7160,6 +7210,12 @@ export interface paths {
           page?: number;
           /** @description Items per page */
           limit?: number;
+          /** @description Filter by status (active, inactive, suspended) */
+          status?: string;
+          /** @description Sort field (id, name, email, created_at, last_seen, account_status) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
         };
         header?: never;
         path?: never;
@@ -7411,6 +7467,73 @@ export interface paths {
       };
     };
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/users/{id}/role': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update user role (Admin)
+     * @description Updates user role by ID
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description User ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Role update request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_users_handler.UpdateUserRoleRequest'];
+        };
+      };
+      responses: {
+        /** @description Role updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_users_handler.AdminMessageResponse'];
+            };
+          };
+        };
+        /** @description admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_role */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description admin.users.error.role_update_failed */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     post?: never;
     delete?: never;
     options?: never;
@@ -26010,6 +26133,79 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/users/privacy-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update privacy settings
+     * @description Updates privacy settings for the authenticated user
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Privacy settings */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UpdatePrivacySettingsRequest'];
+        };
+      };
+      responses: {
+        /** @description Settings updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_users_handler.MessageResponse'];
+            };
+          };
+        };
+        /** @description users.privacy.error.invalid_data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description users.privacy.error.update */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/register': {
     parameters: {
       query?: never;
@@ -27211,6 +27407,8 @@ export interface components {
       content: string;
       listing_id?: number;
       receiver_id: number;
+      /** @description Новое поле для товаров витрин */
+      storefront_product_id?: number;
     };
     'backend_internal_domain_models.CreateOrderRequest': {
       billing_address: components['schemas']['backend_internal_domain_models.ShippingAddress'];
@@ -27582,6 +27780,8 @@ export interface components {
       other_user?: components['schemas']['backend_internal_domain_models.User'];
       seller?: components['schemas']['backend_internal_domain_models.User'];
       seller_id?: number;
+      /** @description Новое поле для товаров витрин */
+      storefront_product_id?: number;
       unread_count?: number;
       updated_at?: string;
     };
@@ -27680,6 +27880,10 @@ export interface components {
       /** @description Дополнительные поля для отображения */
       sender?: components['schemas']['backend_internal_domain_models.User'];
       sender_id?: number;
+      /** @description Новое поле для товара витрины */
+      storefront_product?: components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+      /** @description Новое поле для товаров витрин */
+      storefront_product_id?: number;
       translations?: {
         [key: string]: {
           [key: string]: string;
@@ -27900,6 +28104,14 @@ export interface components {
       user?: components['schemas']['backend_internal_domain_models.User'];
       user_id?: number;
     };
+    'backend_internal_domain_models.Permission': {
+      action?: string;
+      created_at?: string;
+      description?: string;
+      id?: number;
+      name?: string;
+      resource?: string;
+    };
     'backend_internal_domain_models.PriceHistoryEntry': {
       change_percentage?: number;
       /** @description manual, import, system, etc. */
@@ -27996,6 +28208,19 @@ export interface components {
       };
       total_reviews?: number;
       verified_reviews?: number;
+    };
+    'backend_internal_domain_models.Role': {
+      created_at?: string;
+      description?: string;
+      display_name?: string;
+      id?: number;
+      is_assignable?: boolean;
+      is_system?: boolean;
+      name?: string;
+      /** @description Relations */
+      permissions?: components['schemas']['backend_internal_domain_models.Permission'][];
+      priority?: number;
+      updated_at?: string;
     };
     'backend_internal_domain_models.RollbackRequest': {
       comment?: string;
@@ -28699,6 +28924,8 @@ export interface components {
       phone?: string;
       picture_url?: string;
       provider?: string;
+      role?: components['schemas']['backend_internal_domain_models.Role'];
+      role_id?: number;
       settings?: number[];
       timezone?: string;
     };
@@ -30455,6 +30682,10 @@ export interface components {
       expires_in?: number;
       /** @example Bearer */
       token_type?: string;
+    };
+    'internal_proj_users_handler.UpdateUserRoleRequest': {
+      /** @example 2 */
+      role_id: number;
     };
     'internal_proj_users_handler.UserResponse': {
       /** @example user@example.com */

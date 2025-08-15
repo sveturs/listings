@@ -20,6 +20,7 @@ export default function ChatClient() {
 
   // Параметры для создания нового чата
   const listingId = searchParams?.get('listing_id');
+  const storefrontProductId = searchParams?.get('storefront_product_id');
   const sellerId = searchParams?.get('seller_id');
 
   useEffect(() => {
@@ -131,6 +132,9 @@ export default function ChatClient() {
         <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2">
           <ChatLayout
             initialListingId={listingId ? parseInt(listingId) : undefined}
+            initialStorefrontProductId={
+              storefrontProductId ? parseInt(storefrontProductId) : undefined
+            }
             initialSellerId={sellerId ? parseInt(sellerId) : undefined}
           />
         </div>
