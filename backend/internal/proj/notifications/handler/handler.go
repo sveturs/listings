@@ -414,7 +414,7 @@ func (h *Handler) SendPublicEmail(c *fiber.Ctx) error {
 	headers += "MIME-Version: 1.0\r\n"
 	headers += "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
 
-	_, err = fmt.Fprintf(wc, headers+message)
+	_, err = fmt.Fprintf(wc, "%s", headers+message)
 	if err != nil {
 		logger.Error().Err(err).Msg("Ошибка записи данных")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "email.writeError")

@@ -406,8 +406,8 @@ func (sc *SecurityCheck) CreateSecurityCheckpoint(ctx context.Context, changes [
 	// TODO: Реализовать сохранение checkpoint в БД
 	_ = checkpointData // Используем переменную для избежания warning
 
-	sc.service.logger.Info(fmt.Sprintf("Security checkpoint created for %d changes by admin %d",
-		len(changes), adminID))
+	sc.service.logger.Info("Security checkpoint created for %d changes by admin %d",
+		len(changes), adminID)
 
 	return nil
 }
