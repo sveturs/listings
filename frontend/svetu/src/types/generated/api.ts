@@ -17546,6 +17546,1781 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/postexpress/calculate-rate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate delivery rate
+     * @description Рассчитать стоимость доставки Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Параметры для расчета стоимости */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_postexpress_models.CalculateRateRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.CalculateRateResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Health check для Post Express
+     * @description Проверяет доступность и состояние сервиса Post Express
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/locations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get location
+     * @description Получить информацию о населенном пункте по ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID населенного пункта */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressLocation'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/locations/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search locations
+     * @description Поиск населенных пунктов Post Express
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Поисковый запрос */
+          q: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressLocation'][];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/locations/sync': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync locations
+     * @description Синхронизировать населенные пункты с API Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/offices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get offices
+     * @description Получить список почтовых отделений для населенного пункта
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description ID населенного пункта */
+          location_id: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressOffice'][];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/offices/{code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get office
+     * @description Получить информацию о почтовом отделении по коду
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Код отделения */
+          code: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressOffice'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/offices/sync': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync offices
+     * @description Синхронизировать почтовые отделения с API Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery rates
+     * @description Получить список тарифов доставки Post Express
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressRate'][];
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Post Express settings
+     * @description Получить текущие настройки интеграции с Post Express
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressSettings'];
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update Post Express settings
+     * @description Обновить настройки интеграции с Post Express
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Настройки Post Express */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_postexpress_models.PostExpressSettings'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressSettings'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List shipments
+     * @description Получить список отправлений с фильтрацией и пагинацией
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Статус отправления */
+          status?: string;
+          /** @description Дата от (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата до (YYYY-MM-DD) */
+          date_to?: string;
+          /** @description Город получателя */
+          city?: string;
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Размер страницы */
+          page_size?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: Record<string, never>;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create shipment
+     * @description Создать новое отправление Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для создания отправления */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_postexpress_models.CreateShipmentRequest'];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressShipment'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment
+     * @description Получить информацию об отправлении по ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.PostExpressShipment'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel shipment
+     * @description Отменить отправление
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['Request'];
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments/{id}/invoice': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment invoice
+     * @description Получить накладную отправления в формате PDF
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description PDF накладная */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': string;
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments/{id}/label': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment label
+     * @description Получить этикетку отправления в формате PDF
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description PDF этикетка */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': string;
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/shipments/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update shipment status
+     * @description Обновить статус отправления
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Новый статус */
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/statistics/shipments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment statistics
+     * @description Получить статистику отправлений с фильтрами
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Дата от (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата до (YYYY-MM-DD) */
+          date_to?: string;
+          /** @description Группировка (day, week, month) */
+          group_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_storage.ShipmentStatistics'];
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/statistics/warehouse/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get warehouse statistics
+     * @description Получить статистику склада
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID склада */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_storage.WarehouseStatistics'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/track/{tracking}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Track shipment
+     * @description Получить события отслеживания отправления по трекинг-номеру
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Трекинг-номер */
+          tracking: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.TrackingEvent'][];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/track/sync': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync all active shipments
+     * @description Синхронизировать статусы всех активных отправлений с Post Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get warehouses
+     * @description Получить список всех активных складов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.Warehouse'][];
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/{code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get warehouse
+     * @description Получить информацию о складе по коду
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Код склада */
+          code: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.Warehouse'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/pickup-orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create pickup order
+     * @description Создать заказ на самовывоз со склада
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для создания заказа на самовывоз */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_postexpress_models.CreatePickupOrderRequest'];
+        };
+      };
+      responses: {
+        /** @description Created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.WarehousePickupOrder'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/pickup-orders/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get pickup order
+     * @description Получить информацию о заказе на самовывоз по ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID заказа на самовывоз */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.WarehousePickupOrder'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/pickup-orders/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel pickup order
+     * @description Отменить заказ на самовывоз
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID заказа на самовывоз */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['Request'];
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/pickup-orders/{id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm pickup
+     * @description Подтвердить выдачу заказа со склада
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID заказа на самовывоз */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Данные подтверждения */
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/warehouse/pickup-orders/code/{code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get pickup order by code
+     * @description Получить информацию о заказе на самовывоз по коду
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Код самовывоза */
+          code: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_postexpress_models.WarehousePickupOrder'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/product-variant-attributes': {
     parameters: {
       query?: never;
@@ -29422,6 +31197,318 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
+    'backend_internal_proj_postexpress_models.CalculateRateRequest': {
+      cod_amount?: number;
+      declared_value?: number;
+      height_cm?: number;
+      length_cm?: number;
+      recipient_postal_code: string;
+      sender_postal_code: string;
+      service_type?: string;
+      weight_kg: number;
+      width_cm?: number;
+    };
+    'backend_internal_proj_postexpress_models.CalculateRateResponse': {
+      base_price?: number;
+      cod_fee?: number;
+      delivery_days_max?: number;
+      delivery_days_min?: number;
+      insurance_fee?: number;
+      service_available?: boolean;
+      total_price?: number;
+    };
+    'backend_internal_proj_postexpress_models.CreatePickupOrderRequest': {
+      customer_email?: string;
+      customer_name: string;
+      customer_phone: string;
+      notes?: string;
+      order_id?: number;
+      storefront_order_id?: number;
+    };
+    'backend_internal_proj_postexpress_models.CreateShipmentRequest': {
+      cod_amount?: number;
+      declared_value?: number;
+      delivery_instructions?: string;
+      height_cm?: number;
+      insurance_amount?: number;
+      length_cm?: number;
+      notes?: string;
+      order_id?: number;
+      recipient_address: string;
+      recipient_city: string;
+      recipient_email?: string;
+      recipient_name: string;
+      recipient_phone: string;
+      recipient_postal_code: string;
+      service_type?: string;
+      storefront_order_id?: number;
+      weight_kg: number;
+      width_cm?: number;
+    };
+    /** @enum {string} */
+    'backend_internal_proj_postexpress_models.PickupOrderStatus':
+      | 'pending'
+      | 'ready'
+      | 'picked_up'
+      | 'expired'
+      | 'canceled';
+    'backend_internal_proj_postexpress_models.PostExpressLocation': {
+      created_at?: string;
+      delivery_zone?: string;
+      district?: string;
+      id?: number;
+      is_active?: boolean;
+      latitude?: number;
+      longitude?: number;
+      municipality?: string;
+      name?: string;
+      name_cyrillic?: string;
+      post_express_id?: number;
+      postal_code?: string;
+      region?: string;
+      supports_cod?: boolean;
+      supports_express?: boolean;
+      updated_at?: string;
+    };
+    'backend_internal_proj_postexpress_models.PostExpressOffice': {
+      accepts_packages?: boolean;
+      address?: string;
+      closed_until?: string;
+      created_at?: string;
+      email?: string;
+      has_atm?: boolean;
+      has_parking?: boolean;
+      id?: number;
+      is_active?: boolean;
+      issues_packages?: boolean;
+      latitude?: number;
+      location_id?: number;
+      longitude?: number;
+      name?: string;
+      office_code?: string;
+      phone?: string;
+      temporary_closed?: boolean;
+      updated_at?: string;
+      wheelchair_accessible?: boolean;
+      working_hours?: number[];
+    };
+    'backend_internal_proj_postexpress_models.PostExpressRate': {
+      base_price?: number;
+      cod_fee?: number;
+      created_at?: string;
+      delivery_days_max?: number;
+      delivery_days_min?: number;
+      id?: number;
+      insurance_included_up_to?: number;
+      insurance_rate_percent?: number;
+      is_active?: boolean;
+      is_special_offer?: boolean;
+      max_dimensions_sum_cm?: number;
+      max_height_cm?: number;
+      max_length_cm?: number;
+      max_width_cm?: number;
+      updated_at?: string;
+      weight_from?: number;
+      weight_to?: number;
+    };
+    'backend_internal_proj_postexpress_models.PostExpressSettings': {
+      api_endpoint?: string;
+      api_username?: string;
+      auto_print_labels?: boolean;
+      auto_track_shipments?: boolean;
+      created_at?: string;
+      enabled?: boolean;
+      failed_deliveries?: number;
+      id?: number;
+      notify_on_delivery?: boolean;
+      notify_on_failed_delivery?: boolean;
+      notify_on_pickup?: boolean;
+      sender_address?: string;
+      sender_city?: string;
+      sender_email?: string;
+      sender_name?: string;
+      sender_phone?: string;
+      sender_postal_code?: string;
+      successful_deliveries?: number;
+      test_mode?: boolean;
+      total_shipments?: number;
+      updated_at?: string;
+    };
+    'backend_internal_proj_postexpress_models.PostExpressShipment': {
+      barcode?: string;
+      /** @description Расчет стоимости */
+      base_price?: number;
+      cod_amount?: number;
+      cod_fee?: number;
+      cod_reference?: string;
+      created_at?: string;
+      declared_value?: number;
+      delivered_at?: string;
+      delivery_instructions?: string;
+      delivery_status?: string;
+      failed_at?: string;
+      failed_reason?: string;
+      height_cm?: number;
+      id?: number;
+      insurance_amount?: number;
+      insurance_fee?: number;
+      internal_notes?: string;
+      invoice_url?: string;
+      /** @description Документы */
+      label_url?: string;
+      length_cm?: number;
+      marketplace_order_id?: number;
+      /** @description Дополнительная информация */
+      notes?: string;
+      picked_up_at?: string;
+      pod_url?: string;
+      post_express_id?: string;
+      recipient_address?: string;
+      recipient_city?: string;
+      recipient_email?: string;
+      recipient_location_id?: number;
+      /** @description Получатель */
+      recipient_name?: string;
+      recipient_phone?: string;
+      recipient_postal_code?: string;
+      /** @description Временные метки */
+      registered_at?: string;
+      returned_at?: string;
+      sender_address?: string;
+      sender_city?: string;
+      sender_email?: string;
+      sender_location_id?: number;
+      /** @description Отправитель */
+      sender_name?: string;
+      sender_phone?: string;
+      sender_postal_code?: string;
+      /** @description Услуги */
+      service_type?: string;
+      /** @description Статусы */
+      status?: components['schemas']['backend_internal_proj_postexpress_models.ShipmentStatus'];
+      /** @description История статусов */
+      status_history?: number[];
+      storefront_order_id?: number;
+      total_price?: number;
+      tracking_number?: string;
+      updated_at?: string;
+      /** @description Параметры посылки */
+      weight_kg?: number;
+      width_cm?: number;
+    };
+    /** @enum {string} */
+    'backend_internal_proj_postexpress_models.ShipmentStatus':
+      | 'created'
+      | 'registered'
+      | 'picked_up'
+      | 'in_transit'
+      | 'delivered'
+      | 'failed'
+      | 'returned';
+    'backend_internal_proj_postexpress_models.TrackingEvent': {
+      additional_info?: number[];
+      created_at?: string;
+      event_code?: string;
+      event_description?: string;
+      event_location?: string;
+      event_timestamp?: string;
+      id?: number;
+      shipment_id?: number;
+    };
+    'backend_internal_proj_postexpress_models.Warehouse': {
+      address?: string;
+      city?: string;
+      code?: string;
+      country?: string;
+      created_at?: string;
+      current_occupancy_m3?: number;
+      email?: string;
+      has_loading_dock?: boolean;
+      has_refrigeration?: boolean;
+      id?: number;
+      is_active?: boolean;
+      latitude?: number;
+      longitude?: number;
+      manager_name?: string;
+      manager_phone?: string;
+      max_capacity_m3?: number;
+      name?: string;
+      phone?: string;
+      postal_code?: string;
+      storage_area_m2?: number;
+      supports_fbs?: boolean;
+      supports_pickup?: boolean;
+      total_area_m2?: number;
+      type?: string;
+      updated_at?: string;
+      working_hours?: number[];
+    };
+    'backend_internal_proj_postexpress_models.WarehousePickupOrder': {
+      created_at?: string;
+      customer_email?: string;
+      customer_name?: string;
+      customer_phone?: string;
+      expires_at?: string;
+      id?: number;
+      id_document_number?: string;
+      id_document_type?: string;
+      marketplace_order_id?: number;
+      notes?: string;
+      notification_sent_at?: string;
+      picked_up_at?: string;
+      pickup_code?: string;
+      pickup_confirmed_by?: string;
+      pickup_photo_url?: string;
+      qr_code_url?: string;
+      ready_at?: string;
+      reminder_sent_at?: string;
+      signature_url?: string;
+      status?: components['schemas']['backend_internal_proj_postexpress_models.PickupOrderStatus'];
+      storefront_order_id?: number;
+      updated_at?: string;
+      warehouse_id?: number;
+    };
+    'backend_internal_proj_postexpress_storage.ShipmentStatistics': {
+      average_delivery_time?: number;
+      by_city?: {
+        [key: string]: number;
+      };
+      by_status?: {
+        [key: string]: number;
+      };
+      canceled?: number;
+      delivered?: number;
+      delivered_shipments?: number;
+      delivery_success_rate?: number;
+      failed_shipments?: number;
+      in_transit?: number;
+      in_transit_shipments?: number;
+      pending?: number;
+      total?: number;
+      total_cod?: number;
+      total_revenue?: number;
+      /** @description Дополнительные поля для совместимости с repository */
+      total_shipments?: number;
+      total_value?: number;
+    };
+    'backend_internal_proj_postexpress_storage.WarehouseStatistics': {
+      average_pickup_time?: number;
+      canceled_orders?: number;
+      completed_orders?: number;
+      completed_pickup_orders?: number;
+      occupancy_percent?: number;
+      pending_orders?: number;
+      pending_pickup_orders?: number;
+      ready_orders?: number;
+      total_inventory_items?: number;
+      total_orders?: number;
+      /** @description Дополнительные поля для совместимости с repository */
+      total_pickup_orders?: number;
+      total_value?: number;
+      total_volume_m3?: number;
+      warehouse_id?: number;
+      warehouse_name?: string;
+    };
     'backend_internal_proj_search_optimization_service.OptimizationConfig': {
       default_analysis_period_days?: number;
       default_confidence_level?: number;
@@ -31105,6 +33192,12 @@ export interface components {
     'backend_internal_domain_search.ServiceParams': {
       content: {
         'application/json': components['schemas']['backend_internal_domain_search.ServiceParams'];
+      };
+    };
+    /** @description Причина отмены */
+    Request: {
+      content: {
+        'application/json': Record<string, never>;
       };
     };
     postApiV1Reviews_id_photos: {

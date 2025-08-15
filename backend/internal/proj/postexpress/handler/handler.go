@@ -125,7 +125,7 @@ func (h *Handler) Health(c *fiber.Ctx) error {
 func (h *Handler) GetSettings(c *fiber.Ctx) error {
 	settings, err := h.service.GetSettings(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to get Post Express settings", "error", err.Error())
+		h.logger.Error("Failed to get Post Express settings: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getSettingsError")
 	}
 
@@ -151,7 +151,7 @@ func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
 
 	err := h.service.UpdateSettings(c.Context(), &settings)
 	if err != nil {
-		h.logger.Error("Failed to update Post Express settings", "error", err.Error())
+		h.logger.Error("Failed to update Post Express settings: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.updateSettingsError")
 	}
 
@@ -181,7 +181,7 @@ func (h *Handler) SearchLocations(c *fiber.Ctx) error {
 
 	locations, err := h.service.SearchLocations(c.Context(), query)
 	if err != nil {
-		h.logger.Error("Failed to search locations", "query", query, "error", err.Error())
+		h.logger.Error("Failed to search locations - query: %s, error: %v", query, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.searchLocationsError")
 	}
 
@@ -208,7 +208,7 @@ func (h *Handler) GetLocation(c *fiber.Ctx) error {
 
 	location, err := h.service.GetLocationByID(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get location", "id", id, "error", err.Error())
+		h.logger.Error("Failed to get location - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getLocationError")
 	}
 
@@ -231,7 +231,7 @@ func (h *Handler) GetLocation(c *fiber.Ctx) error {
 func (h *Handler) SyncLocations(c *fiber.Ctx) error {
 	err := h.service.SyncLocations(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to sync locations", "error", err.Error())
+		h.logger.Error("Failed to sync locations: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.syncLocationsError")
 	}
 
@@ -257,7 +257,7 @@ func (h *Handler) GetOffices(c *fiber.Ctx) error {
 
 	offices, err := h.service.GetOfficesByLocation(c.Context(), locationID)
 	if err != nil {
-		h.logger.Error("Failed to get offices", "location_id", locationID, "error", err.Error())
+		h.logger.Error("Failed to get offices - location_id: %d, error: %v", locationID, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getOfficesError")
 	}
 
@@ -283,7 +283,7 @@ func (h *Handler) GetOffice(c *fiber.Ctx) error {
 
 	office, err := h.service.GetOfficeByCode(c.Context(), code)
 	if err != nil {
-		h.logger.Error("Failed to get office", "code", code, "error", err.Error())
+		h.logger.Error("Failed to get office - code: %s, error: %v", code, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getOfficeError")
 	}
 
@@ -306,7 +306,7 @@ func (h *Handler) GetOffice(c *fiber.Ctx) error {
 func (h *Handler) SyncOffices(c *fiber.Ctx) error {
 	err := h.service.SyncOffices(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to sync offices", "error", err.Error())
+		h.logger.Error("Failed to sync offices: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.syncOfficesError")
 	}
 
@@ -341,7 +341,7 @@ func (h *Handler) CalculateRate(c *fiber.Ctx) error {
 
 	response, err := h.service.CalculateRate(c.Context(), &req)
 	if err != nil {
-		h.logger.Error("Failed to calculate rate", "weight", req.WeightKg, "error", err.Error())
+		h.logger.Error("Failed to calculate rate - weight: %f, error: %v", req.WeightKg, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.calculateRateError")
 	}
 
@@ -360,7 +360,7 @@ func (h *Handler) CalculateRate(c *fiber.Ctx) error {
 func (h *Handler) GetRates(c *fiber.Ctx) error {
 	rates, err := h.service.GetRates(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to get rates", "error", err.Error())
+		h.logger.Error("Failed to get rates: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getRatesError")
 	}
 
@@ -399,7 +399,7 @@ func (h *Handler) CreateShipment(c *fiber.Ctx) error {
 
 	shipment, err := h.service.CreateShipment(c.Context(), &req)
 	if err != nil {
-		h.logger.Error("Failed to create shipment", "error", err.Error())
+		h.logger.Error("Failed to create shipment: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.createShipmentError")
 	}
 
@@ -452,7 +452,7 @@ func (h *Handler) ListShipments(c *fiber.Ctx) error {
 
 	shipments, total, err := h.service.ListShipments(c.Context(), filters)
 	if err != nil {
-		h.logger.Error("Failed to list shipments", "error", err.Error())
+		h.logger.Error("Failed to list shipments: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.listShipmentsError")
 	}
 
@@ -487,7 +487,7 @@ func (h *Handler) GetShipment(c *fiber.Ctx) error {
 
 	shipment, err := h.service.GetShipment(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get shipment", "id", id, "error", err.Error())
+		h.logger.Error("Failed to get shipment - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getShipmentError")
 	}
 
@@ -527,7 +527,7 @@ func (h *Handler) UpdateShipmentStatus(c *fiber.Ctx) error {
 
 	err = h.service.UpdateShipmentStatus(c.Context(), id, req.Status)
 	if err != nil {
-		h.logger.Error("Failed to update shipment status", "id", id, "status", req.Status, "error", err.Error())
+		h.logger.Error("Failed to update shipment status - id: %d, status: %s, error: %v", id, req.Status, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.updateStatusError")
 	}
 
@@ -563,11 +563,11 @@ func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 
 	err = h.service.CancelShipment(c.Context(), id, req.Reason)
 	if err != nil {
-		h.logger.Error("Failed to cancel shipment", "id", id, "reason", req.Reason, "error", err.Error())
+		h.logger.Error("Failed to cancel shipment - id: %d, reason: %s, error: %v", id, req.Reason, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.cancelShipmentError")
 	}
 
-	return utils.SuccessResponse(c, "Shipment cancelled successfully")
+	return utils.SuccessResponse(c, "Shipment canceled successfully")
 }
 
 // =============================================================================
@@ -594,7 +594,7 @@ func (h *Handler) GetShipmentLabel(c *fiber.Ctx) error {
 
 	labelData, err := h.service.GetShipmentLabel(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get shipment label", "id", id, "error", err.Error())
+		h.logger.Error("Failed to get shipment label - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getLabelError")
 	}
 
@@ -623,7 +623,7 @@ func (h *Handler) GetShipmentInvoice(c *fiber.Ctx) error {
 
 	invoiceData, err := h.service.GetShipmentInvoice(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get shipment invoice", "id", id, "error", err.Error())
+		h.logger.Error("Failed to get shipment invoice - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getInvoiceError")
 	}
 
@@ -655,7 +655,7 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 
 	events, err := h.service.TrackShipment(c.Context(), trackingNumber)
 	if err != nil {
-		h.logger.Error("Failed to track shipment", "tracking", trackingNumber, "error", err.Error())
+		h.logger.Error("Failed to track shipment - tracking: %s, error: %v", trackingNumber, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.trackShipmentError")
 	}
 
@@ -674,7 +674,7 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 func (h *Handler) SyncAllShipments(c *fiber.Ctx) error {
 	err := h.service.SyncAllActiveShipments(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to sync all shipments", "error", err.Error())
+		h.logger.Error("Failed to sync all shipments: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.syncShipmentsError")
 	}
 
@@ -697,7 +697,7 @@ func (h *Handler) SyncAllShipments(c *fiber.Ctx) error {
 func (h *Handler) GetWarehouses(c *fiber.Ctx) error {
 	warehouses, err := h.service.GetWarehouses(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to get warehouses", "error", err.Error())
+		h.logger.Error("Failed to get warehouses: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getWarehousesError")
 	}
 
@@ -723,7 +723,7 @@ func (h *Handler) GetWarehouse(c *fiber.Ctx) error {
 
 	warehouse, err := h.service.GetWarehouseByCode(c.Context(), code)
 	if err != nil {
-		h.logger.Error("Failed to get warehouse", "code", code, "error", err.Error())
+		h.logger.Error("Failed to get warehouse - code: %s, error: %v", code, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getWarehouseError")
 	}
 
@@ -758,7 +758,7 @@ func (h *Handler) CreatePickupOrder(c *fiber.Ctx) error {
 
 	order, err := h.service.CreatePickupOrder(c.Context(), &req)
 	if err != nil {
-		h.logger.Error("Failed to create pickup order", "error", err.Error())
+		h.logger.Error("Failed to create pickup order: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.createPickupOrderError")
 	}
 
@@ -785,7 +785,7 @@ func (h *Handler) GetPickupOrder(c *fiber.Ctx) error {
 
 	order, err := h.service.GetPickupOrder(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get pickup order", "id", id, "error", err.Error())
+		h.logger.Error("Failed to get pickup order - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getPickupOrderError")
 	}
 
@@ -815,7 +815,7 @@ func (h *Handler) GetPickupOrderByCode(c *fiber.Ctx) error {
 
 	order, err := h.service.GetPickupOrderByCode(c.Context(), code)
 	if err != nil {
-		h.logger.Error("Failed to get pickup order by code", "code", code, "error", err.Error())
+		h.logger.Error("Failed to get pickup order by code - code: %s, error: %v", code, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getPickupOrderError")
 	}
 
@@ -857,7 +857,7 @@ func (h *Handler) ConfirmPickup(c *fiber.Ctx) error {
 
 	err = h.service.ConfirmPickup(c.Context(), id, req.ConfirmedBy, req.DocumentType, req.DocumentNumber)
 	if err != nil {
-		h.logger.Error("Failed to confirm pickup", "id", id, "error", err.Error())
+		h.logger.Error("Failed to confirm pickup - id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.confirmPickupError")
 	}
 
@@ -893,11 +893,11 @@ func (h *Handler) CancelPickupOrder(c *fiber.Ctx) error {
 
 	err = h.service.CancelPickupOrder(c.Context(), id, req.Reason)
 	if err != nil {
-		h.logger.Error("Failed to cancel pickup order", "id", id, "reason", req.Reason, "error", err.Error())
+		h.logger.Error("Failed to cancel pickup order - id: %d, reason: %s, error: %v", id, req.Reason, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.cancelPickupOrderError")
 	}
 
-	return utils.SuccessResponse(c, "Pickup order cancelled successfully")
+	return utils.SuccessResponse(c, "Pickup order canceled successfully")
 }
 
 // =============================================================================
@@ -913,7 +913,7 @@ func (h *Handler) CancelPickupOrder(c *fiber.Ctx) error {
 // @Param date_from query string false "Дата от (YYYY-MM-DD)"
 // @Param date_to query string false "Дата до (YYYY-MM-DD)"
 // @Param group_by query string false "Группировка (day, week, month)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.ShipmentStatistics}
+// @Success 200 {object} utils.SuccessResponseSwag{data=storage.ShipmentStatistics}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/statistics/shipments [get]
 func (h *Handler) GetShipmentStatistics(c *fiber.Ctx) error {
@@ -933,7 +933,7 @@ func (h *Handler) GetShipmentStatistics(c *fiber.Ctx) error {
 
 	stats, err := h.service.GetShipmentStatistics(c.Context(), filters)
 	if err != nil {
-		h.logger.Error("Failed to get shipment statistics", "error", err.Error())
+		h.logger.Error("Failed to get shipment statistics: %v", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getStatisticsError")
 	}
 
@@ -947,7 +947,7 @@ func (h *Handler) GetShipmentStatistics(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID склада"
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.WarehouseStatistics}
+// @Success 200 {object} utils.SuccessResponseSwag{data=storage.WarehouseStatistics}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/statistics/warehouse/{id} [get]
@@ -959,7 +959,7 @@ func (h *Handler) GetWarehouseStatistics(c *fiber.Ctx) error {
 
 	stats, err := h.service.GetWarehouseStatistics(c.Context(), id)
 	if err != nil {
-		h.logger.Error("Failed to get warehouse statistics", "warehouse_id", id, "error", err.Error())
+		h.logger.Error("Failed to get warehouse statistics - warehouse_id: %d, error: %v", id, err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "postexpress.getWarehouseStatisticsError")
 	}
 

@@ -124,7 +124,7 @@ type ShipmentStatistics struct {
 	Pending    int     `json:"pending"`
 	InTransit  int     `json:"in_transit"`
 	Delivered  int     `json:"delivered"`
-	Cancelled  int     `json:"cancelled"`
+	Canceled   int     `json:"canceled"`
 	TotalValue float64 `json:"total_value"`
 	TotalCOD   float64 `json:"total_cod"`
 	// Дополнительные поля для совместимости с repository
@@ -147,7 +147,7 @@ type WarehouseStatistics struct {
 	PendingOrders   int     `json:"pending_orders"`
 	ReadyOrders     int     `json:"ready_orders"`
 	CompletedOrders int     `json:"completed_orders"`
-	CancelledOrders int     `json:"cancelled_orders"`
+	CanceledOrders  int     `json:"canceled_orders"`
 	TotalValue      float64 `json:"total_value"`
 	// Дополнительные поля для совместимости с repository
 	TotalPickupOrders     int     `json:"total_pickup_orders"`

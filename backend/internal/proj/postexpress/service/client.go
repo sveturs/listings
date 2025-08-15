@@ -16,6 +16,11 @@ import (
 	"backend/pkg/logger"
 )
 
+// Constants
+const (
+	errMsgUnknown = "unknown error"
+)
+
 // WSPClientImpl представляет реализацию клиента WSP API
 type WSPClientImpl struct {
 	httpClient *http.Client
@@ -46,7 +51,7 @@ func NewWSPClient(config *WSPConfig, logger logger.Logger) WSPClient {
 		Timeout: config.Timeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: config.TestMode, // В тестовом режиме пропускаем проверку SSL
+				InsecureSkipVerify: config.TestMode, // #nosec G402 - только для тестового режима
 			},
 			DialContext: (&net.Dialer{
 				Timeout:   10 * time.Second,
@@ -97,10 +102,8 @@ func (c *WSPClientImpl) Transaction(ctx context.Context, req *models.Transaction
 	}
 
 	// Логирование запроса (без пароля)
-	c.logger.Debug("WSP API Request",
-		"transaction_id", transReq.IdTransakcija,
-		"type", req.TransactionType,
-		"endpoint", c.config.Endpoint)
+	c.logger.Debug("WSP API Request - transaction_id: %s, type: %d, endpoint: %s",
+		transReq.IdTransakcija, req.TransactionType, c.config.Endpoint)
 
 	// Выполнение HTTP запроса с ретраями
 	var lastErr error
@@ -157,9 +160,8 @@ func (c *WSPClientImpl) executeRequest(ctx context.Context, transReq *models.Tra
 	executionTime := time.Since(startTime)
 
 	// Логирование времени выполнения
-	c.logger.Debug("WSP API Response",
-		"status_code", httpResp.StatusCode,
-		"execution_time_ms", executionTime.Milliseconds())
+	c.logger.Debug("WSP API Response - status_code: %d, execution_time_ms: %d",
+		httpResp.StatusCode, executionTime.Milliseconds())
 
 	// Проверка статуса ответа
 	if httpResp.StatusCode != http.StatusOK {
@@ -237,7 +239,7 @@ func (c *WSPClientImpl) GetLocations(ctx context.Context, search string) ([]WSPL
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}
@@ -280,7 +282,7 @@ func (c *WSPClientImpl) GetOffices(ctx context.Context, locationID int) ([]WSPOf
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}
@@ -318,7 +320,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}
@@ -360,7 +362,7 @@ func (c *WSPClientImpl) GetShipmentStatus(ctx context.Context, trackingNumber st
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}
@@ -400,7 +402,7 @@ func (c *WSPClientImpl) PrintLabel(ctx context.Context, shipmentID string) ([]by
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}
@@ -445,7 +447,7 @@ func (c *WSPClientImpl) CancelShipment(ctx context.Context, shipmentID string) e
 	}
 
 	if !resp.Success {
-		errMsg := "unknown error"
+		errMsg := errMsgUnknown
 		if resp.ErrorMessage != nil {
 			errMsg = *resp.ErrorMessage
 		}

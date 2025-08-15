@@ -95,7 +95,7 @@ func (s *ServiceImpl) SearchLocations(ctx context.Context, query string) ([]*mod
 	}
 
 	// Иначе запрашиваем у Post Express API
-	s.logger.Debug("Searching locations via WSP API", "query", query)
+	s.logger.Debug("Searching locations via WSP API - query: %s", query)
 
 	wspLocations, err := s.wspClient.GetLocations(ctx, query)
 	if err != nil {
@@ -110,7 +110,7 @@ func (s *ServiceImpl) SearchLocations(ctx context.Context, query string) ([]*mod
 		// Проверяем, есть ли уже такая локация
 		existing, err := s.repo.GetLocationByPostExpressID(ctx, wspLoc.ID)
 		if err != nil {
-			s.logger.Error("Failed to check existing location", "id", wspLoc.ID, "error", err.Error())
+			s.logger.Error("Failed to check existing location - id: %d, error: %v", wspLoc.ID, err)
 			continue
 		}
 
@@ -132,7 +132,7 @@ func (s *ServiceImpl) SearchLocations(ctx context.Context, query string) ([]*mod
 
 		err = s.repo.CreateLocation(ctx, location)
 		if err != nil {
-			s.logger.Error("Failed to create location", "location", wspLoc.Name, "error", err.Error())
+			s.logger.Error("Failed to create location - location: %s, error: %v", wspLoc.Name, err)
 			continue
 		}
 
@@ -140,7 +140,8 @@ func (s *ServiceImpl) SearchLocations(ctx context.Context, query string) ([]*mod
 	}
 
 	// Объединяем локальные и новые результаты
-	allLocations := append(locations, newLocations...)
+	locations = append(locations, newLocations...)
+	allLocations := locations
 
 	// Удаляем дубликаты и ограничиваем количество
 	seen := make(map[int]bool)
@@ -169,11 +170,11 @@ func (s *ServiceImpl) SyncLocations(ctx context.Context) error {
 	allLocations := make([]*models.PostExpressLocation, 0)
 
 	for _, city := range cities {
-		s.logger.Debug("Syncing city", "city", city)
+		s.logger.Debug("Syncing city: %s", city)
 
 		wspLocations, err := s.wspClient.GetLocations(ctx, city)
 		if err != nil {
-			s.logger.Error("Failed to get locations for city", "city", city, "error", err.Error())
+			s.logger.Error("Failed to get locations for city - city: %s, error: %v", city, err)
 			continue
 		}
 
@@ -201,7 +202,7 @@ func (s *ServiceImpl) SyncLocations(ctx context.Context) error {
 		}
 	}
 
-	s.logger.Info("Locations sync completed", "count", len(allLocations))
+	s.logger.Info("Locations sync completed - count: %d", len(allLocations))
 	return nil
 }
 
@@ -229,11 +230,11 @@ func (s *ServiceImpl) SyncOffices(ctx context.Context) error {
 	allOffices := make([]*models.PostExpressOffice, 0)
 
 	for _, location := range locations {
-		s.logger.Debug("Syncing offices for location", "location", location.Name, "id", location.PostExpressID)
+		s.logger.Debug("Syncing offices for location: %s (id: %d)", location.Name, location.PostExpressID)
 
 		wspOffices, err := s.wspClient.GetOffices(ctx, location.PostExpressID)
 		if err != nil {
-			s.logger.Error("Failed to get offices for location", "location", location.Name, "error", err.Error())
+			s.logger.Error("Failed to get offices for location %s: %v", location.Name, err)
 			continue
 		}
 
@@ -249,10 +250,8 @@ func (s *ServiceImpl) SyncOffices(ctx context.Context) error {
 				IsActive:        true,
 			}
 
-			// Парсим рабочие часы если есть
-			if wspOffice.WorkingHours != "" {
-				// TODO: Парсинг рабочих часов в JSON формат
-			}
+			// TODO: Парсинг рабочих часов в JSON формат если есть
+			_ = wspOffice.WorkingHours
 
 			allOffices = append(allOffices, office)
 		}
@@ -268,7 +267,7 @@ func (s *ServiceImpl) SyncOffices(ctx context.Context) error {
 		}
 	}
 
-	s.logger.Info("Offices sync completed", "count", len(allOffices))
+	s.logger.Info("Offices sync completed - count: %d", len(allOffices))
 	return nil
 }
 
@@ -306,10 +305,7 @@ func (s *ServiceImpl) CalculateRate(ctx context.Context, req *models.CalculateRa
 	}
 
 	// Проверка размеров
-	serviceAvailable := true
-	if req.LengthCm != nil && *req.LengthCm > rate.MaxLengthCm {
-		serviceAvailable = false
-	}
+	serviceAvailable := req.LengthCm == nil || *req.LengthCm <= rate.MaxLengthCm
 	if req.WidthCm != nil && *req.WidthCm > rate.MaxWidthCm {
 		serviceAvailable = false
 	}
@@ -352,7 +348,7 @@ func (s *ServiceImpl) CreateShipment(ctx context.Context, req *models.CreateShip
 	}
 
 	if !settings.Enabled {
-		return nil, fmt.Errorf("Post Express integration is disabled")
+		return nil, fmt.Errorf("post Express integration is disabled")
 	}
 
 	// Рассчитываем стоимость
@@ -430,8 +426,8 @@ func (s *ServiceImpl) CreateShipment(ctx context.Context, req *models.CreateShip
 	// Регистрируем отправление в Post Express
 	err = s.registerShipmentWithPostExpress(ctx, createdShipment)
 	if err != nil {
-		s.logger.Error("Failed to register shipment with Post Express",
-			"shipment_id", createdShipment.ID, "error", err.Error())
+		s.logger.Error("Failed to register shipment with Post Express - shipment_id: %d, error: %v",
+			createdShipment.ID, err)
 		// Не возвращаем ошибку, так как отправление уже создано в БД
 		// Можно попробовать зарегистрировать позже
 	}
@@ -474,7 +470,7 @@ func (s *ServiceImpl) registerShipmentWithPostExpress(ctx context.Context, shipm
 	}
 
 	if !resp.Success {
-		return fmt.Errorf("Post Express API error: %s", resp.ErrorMessage)
+		return fmt.Errorf("post Express API error: %s", resp.ErrorMessage)
 	}
 
 	// Обновляем отправление данными от Post Express
@@ -488,13 +484,13 @@ func (s *ServiceImpl) registerShipmentWithPostExpress(ctx context.Context, shipm
 
 	err = s.repo.UpdateShipment(ctx, shipment)
 	if err != nil {
-		s.logger.Error("Failed to update shipment after registration",
-			"shipment_id", shipment.ID, "error", err.Error())
+		s.logger.Error("Failed to update shipment after registration - shipment_id: %d, error: %v",
+			shipment.ID, err)
 		// Не критичная ошибка
 	}
 
-	s.logger.Info("Shipment registered with Post Express",
-		"shipment_id", shipment.ID, "tracking_number", resp.TrackingNumber)
+	s.logger.Info("Shipment registered with Post Express - shipment_id: %d, tracking_number: %s",
+		shipment.ID, resp.TrackingNumber)
 
 	return nil
 }
@@ -529,8 +525,8 @@ func (s *ServiceImpl) CancelShipment(ctx context.Context, id int, reason string)
 	if shipment.PostExpressID != nil {
 		err = s.wspClient.CancelShipment(ctx, *shipment.PostExpressID)
 		if err != nil {
-			s.logger.Error("Failed to cancel shipment in Post Express",
-				"shipment_id", id, "error", err.Error())
+			s.logger.Error("Failed to cancel shipment in Post Express - shipment_id: %d, error: %v",
+				id, err)
 			// Продолжаем отмену в локальной БД
 		}
 	}
@@ -638,8 +634,8 @@ func (s *ServiceImpl) UpdateTrackingStatus(ctx context.Context, trackingNumber s
 
 		err = s.repo.CreateTrackingEvent(ctx, event)
 		if err != nil {
-			s.logger.Error("Failed to create tracking event",
-				"shipment_id", shipment.ID, "event_code", wspEvent.Code, "error", err.Error())
+			s.logger.Error("Failed to create tracking event - shipment_id: %d, event_code: %s, error: %v",
+				shipment.ID, wspEvent.Code, err)
 		}
 	}
 
@@ -673,8 +669,8 @@ func (s *ServiceImpl) SyncAllActiveShipments(ctx context.Context) error {
 
 		err = s.UpdateTrackingStatus(ctx, *shipment.TrackingNumber)
 		if err != nil {
-			s.logger.Error("Failed to update tracking for shipment",
-				"shipment_id", shipment.ID, "tracking", *shipment.TrackingNumber, "error", err.Error())
+			s.logger.Error("Failed to update tracking for shipment - shipment_id: %d, tracking: %s, error: %v",
+				shipment.ID, *shipment.TrackingNumber, err)
 			errorCount++
 		} else {
 			successCount++
@@ -684,8 +680,8 @@ func (s *ServiceImpl) SyncAllActiveShipments(ctx context.Context) error {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	s.logger.Info("Tracking sync completed",
-		"success_count", successCount, "error_count", errorCount)
+	s.logger.Info("Tracking sync completed - success_count: %d, error_count: %d",
+		successCount, errorCount)
 
 	return nil
 }
@@ -770,7 +766,7 @@ func (s *ServiceImpl) CancelPickupOrder(ctx context.Context, id int, reason stri
 		return fmt.Errorf("pickup order not found")
 	}
 
-	order.Status = models.PickupOrderStatusCancelled
+	order.Status = models.PickupOrderStatusCanceled
 	order.Notes = &reason
 
 	return s.repo.UpdatePickupOrder(ctx, order)

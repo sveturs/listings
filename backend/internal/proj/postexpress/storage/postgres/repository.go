@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,6 +14,9 @@ import (
 	"backend/internal/proj/postexpress/models"
 	"backend/internal/proj/postexpress/storage"
 )
+
+// ErrNotFound is returned when an entity is not found
+var ErrNotFound = errors.New("not found")
 
 // Repository представляет PostgreSQL реализацию репозитория Post Express
 type Repository struct {
@@ -43,8 +47,8 @@ func (r *Repository) GetSettings(ctx context.Context) (*models.PostExpressSettin
 
 	err := r.db.GetContext(ctx, &settings, query)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Настройки не найдены
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound // Настройки не найдены
 		}
 		return nil, fmt.Errorf("failed to get settings: %w", err)
 	}
@@ -120,8 +124,8 @@ func (r *Repository) GetLocationByID(ctx context.Context, id int) (*models.PostE
 
 	err := r.db.GetContext(ctx, &location, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get location by ID: %w", err)
 	}
@@ -140,8 +144,8 @@ func (r *Repository) GetLocationByPostExpressID(ctx context.Context, postExpress
 
 	err := r.db.GetContext(ctx, &location, query, postExpressID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get location by PostExpress ID: %w", err)
 	}
@@ -228,7 +232,9 @@ func (r *Repository) BulkUpsertLocations(ctx context.Context, locations []*model
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT INTO post_express_locations (
@@ -285,8 +291,8 @@ func (r *Repository) GetOfficeByID(ctx context.Context, id int) (*models.PostExp
 
 	err := r.db.GetContext(ctx, &office, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get office by ID: %w", err)
 	}
@@ -306,8 +312,8 @@ func (r *Repository) GetOfficeByCode(ctx context.Context, code string) (*models.
 
 	err := r.db.GetContext(ctx, &office, query, code)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get office by code: %w", err)
 	}
@@ -389,7 +395,9 @@ func (r *Repository) BulkUpsertOffices(ctx context.Context, offices []*models.Po
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT INTO post_express_offices (
@@ -476,8 +484,8 @@ func (r *Repository) GetRateForWeight(ctx context.Context, weight float64) (*mod
 
 	err := r.db.GetContext(ctx, &rate, query, weight)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get rate for weight: %w", err)
 	}
@@ -587,8 +595,8 @@ func (r *Repository) GetShipmentByID(ctx context.Context, id int) (*models.PostE
 
 	err := r.db.GetContext(ctx, &shipment, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get shipment by ID: %w", err)
 	}
@@ -614,8 +622,8 @@ func (r *Repository) GetShipmentByTrackingNumber(ctx context.Context, trackingNu
 
 	err := r.db.GetContext(ctx, &shipment, query, trackingNumber)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get shipment by tracking number: %w", err)
 	}
@@ -845,7 +853,9 @@ func (r *Repository) BulkCreateTrackingEvents(ctx context.Context, events []*mod
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT INTO post_express_tracking_events (
@@ -957,8 +967,8 @@ func (r *Repository) GetWarehouseByID(ctx context.Context, id int) (*models.Ware
 
 	err := r.db.GetContext(ctx, &warehouse, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get warehouse by ID: %w", err)
 	}
@@ -979,8 +989,8 @@ func (r *Repository) GetWarehouseByCode(ctx context.Context, code string) (*mode
 
 	err := r.db.GetContext(ctx, &warehouse, query, code)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get warehouse by code: %w", err)
 	}
@@ -1052,8 +1062,8 @@ func (r *Repository) GetPickupOrderByID(ctx context.Context, id int) (*models.Wa
 
 	err := r.db.GetContext(ctx, &order, query, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get pickup order by ID: %w", err)
 	}
@@ -1074,8 +1084,8 @@ func (r *Repository) GetPickupOrderByCode(ctx context.Context, code string) (*mo
 
 	err := r.db.GetContext(ctx, &order, query, code)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get pickup order by code: %w", err)
 	}
@@ -1203,7 +1213,6 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 	if filters.DateTo != nil {
 		whereClause += fmt.Sprintf(" AND created_at <= $%d", argIndex)
 		args = append(args, *filters.DateTo)
-		argIndex++
 	}
 
 	// Основная статистика
@@ -1253,6 +1262,9 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 		}
 		stats.ByStatus[status] = count
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate status statistics: %w", err)
+	}
 
 	// Статистика по городам
 	cityQuery := fmt.Sprintf(`
@@ -1277,6 +1289,9 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 			return nil, fmt.Errorf("failed to scan city row: %w", err)
 		}
 		stats.ByCity[city] = count
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate city statistics: %w", err)
 	}
 
 	return &stats, nil
@@ -1312,8 +1327,8 @@ func (r *Repository) GetWarehouseStatistics(ctx context.Context, warehouseID int
 		&currentOccupancy, &maxCapacity, &stats.TotalPickupOrders,
 		&stats.PendingPickupOrders, &stats.CompletedPickupOrders, &stats.AveragePickupTime)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get warehouse statistics: %w", err)
 	}

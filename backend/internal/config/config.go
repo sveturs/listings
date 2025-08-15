@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+const (
+	envValueTrue = "true"
+)
+
 type Config struct {
 	Port                  string
 	DatabaseURL           string
@@ -179,7 +183,7 @@ func NewConfig() (*Config, error) {
 
 	// Получаем ключ DeepL API (необязательный)
 	config.DeepLAPIKey = os.Getenv("DEEPL_API_KEY")
-	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == "true"
+	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == envValueTrue
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -213,7 +217,7 @@ func NewConfig() (*Config, error) {
 		MinioEndpoint:   os.Getenv("MINIO_ENDPOINT"),
 		MinioAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
 		MinioSecretKey:  os.Getenv("MINIO_SECRET_KEY"),
-		MinioUseSSL:     os.Getenv("MINIO_USE_SSL") == "true",
+		MinioUseSSL:     os.Getenv("MINIO_USE_SSL") == envValueTrue,
 		MinioBucketName: os.Getenv("MINIO_BUCKET_NAME"),
 		MinioLocation:   os.Getenv("MINIO_LOCATION"),
 	}
@@ -325,7 +329,7 @@ func NewConfig() (*Config, error) {
 		BaseURL:       os.Getenv("POSTEXPRESS_BASE_URL"),
 		Username:      os.Getenv("POSTEXPRESS_USERNAME"),
 		Password:      os.Getenv("POSTEXPRESS_PASSWORD"),
-		TestMode:      os.Getenv("POSTEXPRESS_TEST_MODE") == "true",
+		TestMode:      os.Getenv("POSTEXPRESS_TEST_MODE") == envValueTrue,
 		SenderName:    os.Getenv("POSTEXPRESS_SENDER_NAME"),
 		SenderAddress: os.Getenv("POSTEXPRESS_SENDER_ADDRESS"),
 	}

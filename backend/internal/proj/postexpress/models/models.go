@@ -348,11 +348,11 @@ type Warehouse struct {
 type PickupOrderStatus string
 
 const (
-	PickupOrderStatusPending   PickupOrderStatus = "pending"
-	PickupOrderStatusReady     PickupOrderStatus = "ready"
-	PickupOrderStatusPickedUp  PickupOrderStatus = "picked_up"
-	PickupOrderStatusExpired   PickupOrderStatus = "expired"
-	PickupOrderStatusCancelled PickupOrderStatus = "cancelled"
+	PickupOrderStatusPending  PickupOrderStatus = "pending"
+	PickupOrderStatusReady    PickupOrderStatus = "ready"
+	PickupOrderStatusPickedUp PickupOrderStatus = "picked_up"
+	PickupOrderStatusExpired  PickupOrderStatus = "expired"
+	PickupOrderStatusCanceled PickupOrderStatus = "canceled"
 )
 
 // WarehousePickupOrder представляет заказ на самовывоз
