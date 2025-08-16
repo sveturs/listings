@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 import {
   TruckIcon,
   MapPinIcon,
   BuildingOfficeIcon,
   CalculatorIcon,
   DocumentTextIcon,
-  QrCodeIcon,
+  // QrCodeIcon,
   ChartBarIcon,
   CurrencyDollarIcon,
   ClockIcon,
@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function PostExpressDemoPage() {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedMethod, setSelectedMethod] = useState('courier');
   const [weight, setWeight] = useState(2);

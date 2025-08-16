@@ -45,10 +45,10 @@ interface Props {
 
 export default function PostExpressPickupCode({
   pickupOrder,
-  onStatusUpdate,
+  onStatusUpdate: _onStatusUpdate,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [copied, setCopied] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const printRef = useRef<HTMLDivElement>(null);

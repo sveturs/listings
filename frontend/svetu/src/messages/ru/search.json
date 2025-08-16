@@ -60,5 +60,7 @@
     "searchHistory": "[RU] Search History",
     "clearHistory": "[RU] Clear History"
   },
-  "popularSearches": "Популярные запросы"
+  "popularSearches": "Популярные запросы",
+  "categoryResults": "Товары в категории",
+  "reset": "Сбросить"
 }

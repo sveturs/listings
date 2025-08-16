@@ -60,5 +60,7 @@
     "searchHistory": "[SR] Search History",
     "clearHistory": "[SR] Clear History"
   },
-  "popularSearches": "[SR] Popular Searches"
+  "popularSearches": "[SR] Popular Searches",
+  "categoryResults": "Proizvodi u kategoriji",
+  "reset": "Resetuj"
 }

@@ -9,7 +9,7 @@ import {
   MapPinIcon,
   BuildingStorefrontIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 // Import our components
 import PostExpressDeliverySelector from './PostExpressDeliverySelector';
@@ -47,7 +47,7 @@ export default function PostExpressDeliveryFlow({
   initialData,
   orderWeight = 1,
   orderValue = 1000,
-  allowCOD = true,
+  allowCOD: _allowCOD = true,
   className = '',
 }: Props) {
   // const t = useTranslations('delivery');

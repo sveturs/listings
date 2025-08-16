@@ -44,7 +44,7 @@ export default function PostExpressDeliverySelector({
   recipientCity,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [calculatedRates, setCalculatedRates] = useState<Record<string, any>>(
     {}
   );

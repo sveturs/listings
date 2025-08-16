@@ -7,10 +7,10 @@ import {
   CurrencyDollarIcon,
   MapPinIcon,
   TruckIcon,
-  BuildingStorefrontIcon,
+  // BuildingStorefrontIcon,
   InformationCircleIcon,
   CheckIcon,
-  BanknotesIcon,
+  // BanknotesIcon,
   ShieldCheckIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
@@ -47,7 +47,7 @@ export default function PostExpressRateCalculator({
   initialParams,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [loading, setLoading] = useState(false);
   const [rate, setRate] = useState<RateCalculation | null>(null);
   const [error, setError] = useState<string | null>(null);

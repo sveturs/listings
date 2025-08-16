@@ -57,7 +57,7 @@ export default function PostExpressTracker({
   onTrackingUpdate,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [shipment, setShipment] = useState<ShipmentInfo | null>(null);
   const [loading, setLoading] = useState(false);

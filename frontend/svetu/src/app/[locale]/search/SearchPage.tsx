@@ -46,6 +46,7 @@ export default function SearchPage() {
     ? parseFloat(searchParams.get('lon')!)
     : undefined;
   const initialDistance = searchParams?.get('distance') || undefined;
+  const initialCategory = searchParams?.get('category') || undefined;
 
   const [query, setQuery] = useState(initialQuery);
   const [fuzzy, setFuzzy] = useState(initialFuzzy);
@@ -56,6 +57,7 @@ export default function SearchPage() {
     product_types: ['marketplace', 'storefront'],
     sort_by: 'relevance',
     sort_order: 'desc',
+    category_id: initialCategory,
   });
   const [page, setPage] = useState(1);
   const [allItems, setAllItems] = useState<any[]>([]);
@@ -101,26 +103,40 @@ export default function SearchPage() {
       ? parseFloat(searchParams.get('lon')!)
       : undefined;
     const distance = searchParams?.get('distance') || undefined;
+    const categoryId = searchParams?.get('category') || undefined;
 
-    if (searchQuery) {
+    // Если есть категория, но нет поискового запроса, используем пустой запрос для поиска всех товаров в категории
+    const effectiveQuery = searchQuery || (categoryId ? '' : null);
+
+    if (effectiveQuery !== null) {
       // Perform search if:
       // 1. This is the initial load (!hasInitialSearchRun)
       // 2. Or the query/fuzzy params have changed
       // 3. Or geo params have changed
+      // 4. Or category has changed
       if (
         !hasInitialSearchRun ||
-        searchQuery !== query ||
+        effectiveQuery !== query ||
         searchFuzzy !== fuzzy ||
         lat !== geoParams.latitude ||
         lon !== geoParams.longitude ||
-        distance !== geoParams.distance
+        distance !== geoParams.distance ||
+        categoryId !== filters.category_id
       ) {
-        setQuery(searchQuery);
+        setQuery(effectiveQuery);
         setFuzzy(searchFuzzy);
         setGeoParams({ latitude: lat, longitude: lon, distance });
+        if (categoryId !== filters.category_id) {
+          setFilters((prev) => ({ ...prev, category_id: categoryId }));
+        }
         setPage(1);
         setAllItems([]);
-        performSearch(searchQuery, 1, filters, searchFuzzy);
+        performSearch(
+          effectiveQuery,
+          1,
+          { ...filters, category_id: categoryId },
+          searchFuzzy
+        );
         setHasInitialSearchRun(true);
       }
     }
@@ -153,7 +169,8 @@ export default function SearchPage() {
     currentFilters: SearchFilters,
     useFuzzy: boolean = true
   ) => {
-    if (!searchQuery.trim()) return;
+    // Разрешаем пустой запрос, если есть категория
+    if (!searchQuery.trim() && !currentFilters.category_id) return;
 
     // Запоминаем время начала поиска для трекинга
     if (currentPage === 1) {
@@ -164,8 +181,11 @@ export default function SearchPage() {
     setError(null);
 
     try {
+      // Если есть категория, но нет запроса, используем пустую строку
+      const effectiveQuery = searchQuery || '';
+
       const params: UnifiedSearchParams = {
-        query: searchQuery,
+        query: effectiveQuery,
         page: currentPage,
         limit: 20,
         product_types: currentFilters.product_types as (
@@ -491,7 +511,7 @@ export default function SearchPage() {
         {/* Результаты поиска */}
         <div className="container mx-auto px-4 py-6">
           {/* Статистика поиска в стиле аналитики */}
-          {query && results && (
+          {(query || filters.category_id) && results && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               {/* Найдено результатов */}
               <div className="stat bg-base-100 rounded-xl shadow-md">
@@ -589,11 +609,13 @@ export default function SearchPage() {
             </div>
           )}
 
-          {query && (
+          {(query || filters.category_id) && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
               <div>
                 <h2 className="text-2xl font-bold">
-                  {t('resultsFor')} &quot;{query}&quot;
+                  {query
+                    ? `${t('resultsFor')} "${query}"`
+                    : t('categoryResults')}
                 </h2>
               </div>
 
@@ -926,63 +948,14 @@ export default function SearchPage() {
                 </div>
               )}
 
-              {!loading && allItems.length === 0 && query && (
-                <div className="card bg-base-100 shadow-xl mx-auto max-w-2xl">
-                  <div className="card-body text-center py-16">
-                    <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 mb-8 mx-auto">
-                      <svg
-                        className="w-16 h-16 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-3xl font-bold mb-4">
-                      {t('noResults')}
-                    </h3>
-                    <p className="text-base-content/60 mb-8 max-w-md mx-auto">
-                      {t('noResultsDescription')}
-                    </p>
-
-                    <div className="divider">
-                      {locale === 'ru' ? 'Попробуйте' : 'Try'}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 justify-center mb-8">
-                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                        {locale === 'ru' ? 'Электроника' : 'Electronics'}
-                      </button>
-                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                        {locale === 'ru' ? 'Одежда' : 'Clothing'}
-                      </button>
-                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                        {locale === 'ru' ? 'Дом и сад' : 'Home & Garden'}
-                      </button>
-                      <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
-                        {locale === 'ru' ? 'Авто' : 'Auto'}
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        className="btn btn-outline btn-primary"
-                        onClick={() => {
-                          setFilters({
-                            product_types: ['marketplace', 'storefront'],
-                            sort_by: 'relevance',
-                            sort_order: 'desc',
-                          });
-                        }}
-                      >
+              {!loading &&
+                allItems.length === 0 &&
+                (query || filters.category_id) && (
+                  <div className="card bg-base-100 shadow-xl mx-auto max-w-2xl">
+                    <div className="card-body text-center py-16">
+                      <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 mb-8 mx-auto">
                         <svg
-                          className="w-4 h-4 mr-2"
+                          className="w-16 h-16 text-primary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -991,39 +964,90 @@ export default function SearchPage() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        {t('clearFilters')}
-                      </button>
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => {
-                          setQuery('');
-                          setAllItems([]);
-                          setResults(null);
-                          router.push(`/${locale}`);
-                        }}
-                      >
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      </div>
+                      <h3 className="text-3xl font-bold mb-4">
+                        {t('noResults')}
+                      </h3>
+                      <p className="text-base-content/60 mb-8 max-w-md mx-auto">
+                        {t('noResultsDescription')}
+                      </p>
+
+                      <div className="divider">
+                        {locale === 'ru' ? 'Попробуйте' : 'Try'}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 justify-center mb-8">
+                        <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                          {locale === 'ru' ? 'Электроника' : 'Electronics'}
+                        </button>
+                        <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                          {locale === 'ru' ? 'Одежда' : 'Clothing'}
+                        </button>
+                        <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                          {locale === 'ru' ? 'Дом и сад' : 'Home & Garden'}
+                        </button>
+                        <button className="badge badge-lg badge-outline hover:badge-primary cursor-pointer">
+                          {locale === 'ru' ? 'Авто' : 'Auto'}
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button
+                          className="btn btn-outline btn-primary"
+                          onClick={() => {
+                            setFilters({
+                              product_types: ['marketplace', 'storefront'],
+                              sort_by: 'relevance',
+                              sort_order: 'desc',
+                            });
+                          }}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                          />
-                        </svg>
-                        {locale === 'ru' ? 'На главную' : 'Home'}
-                      </button>
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          {t('clearFilters')}
+                        </button>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            setQuery('');
+                            setAllItems([]);
+                            setResults(null);
+                            router.push(`/${locale}`);
+                          }}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            />
+                          </svg>
+                          {locale === 'ru' ? 'На главную' : 'Home'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {allItems.length > 0 && (
                 <>

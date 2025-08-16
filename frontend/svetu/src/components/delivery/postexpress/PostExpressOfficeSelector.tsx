@@ -49,7 +49,7 @@ export default function PostExpressOfficeSelector({
   selectedOffice,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  // const t = useTranslations('delivery');
   const [offices, setOffices] = useState<PostOffice[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

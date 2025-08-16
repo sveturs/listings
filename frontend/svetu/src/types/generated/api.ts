@@ -15917,6 +15917,61 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/popular-categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get popular categories
+     * @description Returns most popular categories by active listings count
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Language code (e.g., 'sr', 'en', 'ru') */
+          lang?: string;
+          /** @description Limit of categories to return (default: 7) */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'][];
+            };
+          };
+        };
+        /** @description marketplace.categoriesError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/search': {
     parameters: {
       query?: never;
@@ -30876,6 +30931,8 @@ export interface components {
       /** @description Направление сортировки (asc, desc) */
       sortDirection?: string;
       status?: string;
+      /** @description Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая строка = exclude_b2c по умолчанию */
+      storefrontFilter?: string;
       /** @description ID витрины */
       storefrontID?: string;
       /** @description Использовать расширение запроса синонимами */

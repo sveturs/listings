@@ -11,7 +11,7 @@ import {
   UserIcon,
   EnvelopeIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 interface Location {
   id: number;

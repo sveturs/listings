@@ -60,5 +60,7 @@
     "searchHistory": "Search History",
     "clearHistory": "Clear History"
   },
-  "popularSearches": "Popular Searches"
+  "popularSearches": "Popular Searches",
+  "categoryResults": "Products in category",
+  "reset": "Reset"
 }
