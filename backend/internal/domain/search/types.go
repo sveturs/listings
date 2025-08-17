@@ -30,6 +30,7 @@ type SearchParams struct {
 	CustomQuery        map[string]interface{} // Кастомный запрос для OpenSearch
 	Status             string                 // Статус объявления (active, inactive и т.д.)
 	UseSynonyms        bool                   // Использовать расширение запроса синонимами
+	StorefrontFilter   string                 // Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая строка = exclude_b2c по умолчанию
 }
 
 // SearchParams параметры поиска для OpenSearch
@@ -55,7 +56,8 @@ type ServiceParams struct {
 	Fuzziness          string            // Уровень нечеткости (AUTO, 1, 2, ...)
 	AttributeFilters   map[string]string //  поле для фильтров атрибутов
 	Status             string
-	UseSynonyms        bool // Использовать расширение запроса синонимами
+	UseSynonyms        bool   // Использовать расширение запроса синонимами
+	StorefrontFilter   string // Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая строка = exclude_b2c по умолчанию
 
 	// Расширенные геофильтры
 	AdvancedGeoFilters *AdvancedGeoFilters `json:"advanced_geo_filters,omitempty"`

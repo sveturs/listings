@@ -2234,6 +2234,29 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
+	// Обработка фильтра B2C объявлений
+	switch params.StorefrontFilter {
+	case "exclude_b2c", "":
+		// По умолчанию исключаем B2C объявления (объявления с storefront_id)
+		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+		filter = append(filter, map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must_not": []map[string]interface{}{
+					{
+						"exists": map[string]interface{}{
+							"field": "storefront_id",
+						},
+					},
+				},
+			},
+		})
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+		logger.Info().Msgf("Применен фильтр исключения B2C объявлений (storefront_filter=%s)", params.StorefrontFilter)
+	case "include_b2c":
+		// Включаем B2C объявления - не добавляем никаких фильтров
+		logger.Info().Msgf("B2C объявления включены в поиск (storefront_filter=%s)", params.StorefrontFilter)
+	}
+
 	if params.Status != "" {
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, map[string]interface{}{

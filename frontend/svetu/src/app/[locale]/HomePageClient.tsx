@@ -10,6 +10,8 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import api from '@/services/api';
 import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
+import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -74,8 +76,9 @@ export default function HomePageClient({
   locale,
 }: HomePageClientProps) {
   const [_mounted, setMounted] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | number>(
+    'all'
+  );
   const [currentBanner, setCurrentBanner] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -624,32 +627,24 @@ export default function HomePageClient({
 
               {/* Поисковая строка */}
               <div className="flex-1 max-w-3xl">
-                <div className="flex">
-                  <select
-                    className="select select-bordered rounded-r-none w-40 hidden md:block"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="all">Все категории</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      placeholder="Поиск среди 2 млн товаров..."
-                      className="input input-bordered w-full rounded-none"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60" />
-                  </div>
-                  <button className="btn btn-primary rounded-l-none">
-                    Найти
-                  </button>
+                <div className="flex gap-2">
+                  {/* Селектор категорий с вложенностью */}
+                  <NestedCategorySelector
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                    onChange={setSelectedCategory}
+                    placeholder="Все категории"
+                    showCounts={true}
+                    className="w-48 hidden md:block"
+                  />
+
+                  {/* Поисковая строка с автодополнением */}
+                  <SearchAutocomplete
+                    placeholder="Поиск среди 2 млн товаров..."
+                    selectedCategory={selectedCategory}
+                    locale={locale}
+                    className="flex-1"
+                  />
                 </div>
               </div>
 

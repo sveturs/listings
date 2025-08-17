@@ -22160,6 +22160,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/search/suggestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search suggestions
+     * @description Returns autocomplete suggestions based on query
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query (alias for prefix) */
+          q?: string;
+          /** @description Search prefix */
+          prefix?: string;
+          /** @description Number of suggestions (alias for size) */
+          limit?: number;
+          /** @description Number of suggestions */
+          size?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Suggestions list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string[];
+            };
+          };
+        };
+        /** @description marketplace.prefixRequired */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.suggestionsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefront/categories/{category_id}/attributes': {
     parameters: {
       query?: never;

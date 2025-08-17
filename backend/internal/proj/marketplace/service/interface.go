@@ -23,6 +23,7 @@ type MarketplaceServiceInterface interface {
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
 	GetAllCategories(ctx context.Context) ([]models.MarketplaceCategory, error)
+	GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error)
 	AddToFavorites(ctx context.Context, userID int, listingID int) error
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)

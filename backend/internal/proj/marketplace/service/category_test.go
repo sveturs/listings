@@ -1160,6 +1160,10 @@ func (ts *testStorage) UpdatePrivacySettings(ctx context.Context, userID int, se
 	return ErrNotImplemented
 }
 
+func (ts *testStorage) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
+	return nil, ErrNotImplemented
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

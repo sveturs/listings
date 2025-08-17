@@ -166,6 +166,42 @@ func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, ranges)
 }
 
+// GetPopularCategories получает список популярных категорий
+// @Summary Get popular categories
+// @Description Returns most popular categories by active listings count
+// @Tags marketplace-categories
+// @Accept json
+// @Produce json
+// @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
+// @Param limit query int false "Limit of categories to return (default: 7)"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
+// @Router /api/v1/marketplace/popular-categories [get]
+func (h *CategoriesHandler) GetPopularCategories(c *fiber.Ctx) error {
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+
+	// Получаем лимит из query параметра (по умолчанию 7)
+	limit := c.QueryInt("limit", 7)
+	if limit < 1 {
+		limit = 7
+	}
+	if limit > 20 {
+		limit = 20
+	}
+
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.UserContext(), ContextKeyLocale, lang)
+
+	categories, err := h.marketplaceService.GetPopularCategories(ctx, limit)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get popular categories")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.categoriesError")
+	}
+
+	return utils.SuccessResponse(c, categories)
+}
+
 // InvalidateCategoryCache инвалидирует кеш категорий
 func (h *CategoriesHandler) InvalidateCategoryCache() {
 	categoryTreeMutex.Lock()

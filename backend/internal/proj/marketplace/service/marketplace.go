@@ -1322,6 +1322,36 @@ func (s *MarketplaceService) GetAllCategories(ctx context.Context) ([]models.Mar
 	return result, nil
 }
 
+// GetPopularCategories возвращает самые популярные категории по количеству активных объявлений
+func (s *MarketplaceService) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
+	// Получаем язык из контекста
+	locale := "en"
+	if lang, ok := ctx.Value(common.ContextKeyLocale).(string); ok && lang != "" {
+		locale = lang
+	}
+
+	// Получаем популярные категории из хранилища
+	categories, err := s.storage.GetPopularCategories(ctx, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Переводим названия категорий на нужный язык
+	for i := range categories {
+		// Проверяем переводы для названия категории
+		translations, err := s.storage.GetTranslationsForEntity(ctx, "category", categories[i].ID)
+		if err == nil && len(translations) > 0 {
+			for _, t := range translations {
+				if t.Language == locale && t.FieldName == "name" && t.TranslatedText != "" {
+					categories[i].Name = t.TranslatedText
+				}
+			}
+		}
+	}
+
+	return categories, nil
+}
+
 func (s *MarketplaceService) AddToFavorites(ctx context.Context, userID int, listingID int) error {
 	return s.storage.AddToFavorites(ctx, userID, listingID)
 }
@@ -1431,6 +1461,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		CustomQuery:      nil,
 		UseSynonyms:      params.UseSynonyms,
 		Fuzziness:        params.Fuzziness,
+		StorefrontFilter: params.StorefrontFilter,
 	}
 	// Преобразуем числовые значения в указатели для SearchParams
 	if params.CategoryID != "" {

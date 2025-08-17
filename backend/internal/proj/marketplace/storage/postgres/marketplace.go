@@ -2322,6 +2322,102 @@ func (s *Storage) GetAllCategories(ctx context.Context) ([]models.MarketplaceCat
 	return categories, rows.Err()
 }
 
+// GetPopularCategories возвращает самые популярные категории по количеству активных объявлений
+func (s *Storage) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
+	log.Printf("GetPopularCategories: fetching top %d categories", limit)
+
+	query := `
+		WITH category_counts AS (
+			SELECT 
+				c.id,
+				c.name,
+				c.slug,
+				c.parent_id,
+				c.icon,
+				c.description,
+				c.is_active,
+				c.created_at,
+				c.seo_title,
+				c.seo_description,
+				c.seo_keywords,
+				COUNT(DISTINCT l.id) as listing_count
+			FROM marketplace_categories c
+			LEFT JOIN marketplace_listings l ON l.category_id = c.id AND l.status = 'active'
+			WHERE c.is_active = true AND c.parent_id IS NULL
+			GROUP BY c.id, c.name, c.slug, c.parent_id, c.icon, c.description, 
+					 c.is_active, c.created_at, c.seo_title, c.seo_description, c.seo_keywords
+		)
+		SELECT 
+			id, name, slug, parent_id, icon, description, is_active, created_at,
+			seo_title, seo_description, seo_keywords, listing_count
+		FROM category_counts
+		ORDER BY listing_count DESC, name ASC
+		LIMIT $1
+	`
+
+	rows, err := s.pool.Query(ctx, query, limit)
+	if err != nil {
+		log.Printf("GetPopularCategories: Error querying categories: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []models.MarketplaceCategory
+	for rows.Next() {
+		var cat models.MarketplaceCategory
+		var parentID sql.NullInt32
+		var icon, description, seoTitle, seoDescription, seoKeywords sql.NullString
+		var listingCount int
+
+		err := rows.Scan(
+			&cat.ID,
+			&cat.Name,
+			&cat.Slug,
+			&parentID,
+			&icon,
+			&description,
+			&cat.IsActive,
+			&cat.CreatedAt,
+			&seoTitle,
+			&seoDescription,
+			&seoKeywords,
+			&listingCount,
+		)
+		if err != nil {
+			log.Printf("GetPopularCategories: Error scanning row: %v", err)
+			return nil, err
+		}
+
+		if parentID.Valid {
+			pid := int(parentID.Int32)
+			cat.ParentID = &pid
+		}
+		if icon.Valid {
+			cat.Icon = &icon.String
+		}
+		if description.Valid {
+			cat.Description = description.String
+		}
+		if seoTitle.Valid {
+			cat.SEOTitle = seoTitle.String
+		}
+		if seoDescription.Valid {
+			cat.SEODescription = seoDescription.String
+		}
+		if seoKeywords.Valid {
+			cat.SEOKeywords = seoKeywords.String
+		}
+
+		// Добавляем количество объявлений в поле Count
+		cat.Count = listingCount
+
+		categories = append(categories, cat)
+	}
+
+	log.Printf("GetPopularCategories: returning %d popular categories", len(categories))
+	return categories, rows.Err()
+}
+
 func (s *Storage) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	cat := &models.MarketplaceCategory{}
 	var icon, description sql.NullString

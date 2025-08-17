@@ -513,7 +513,8 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 	}
 
 	// Сортировка
-	orderBy := "created_at DESC"
+	const createdAtField = "created_at"
+	orderBy := createdAtField + " DESC"
 	if filter.SortBy != "" {
 		switch filter.SortBy {
 		case "rating":
@@ -525,6 +526,10 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 				orderBy = fmt.Sprintf("earth_distance(ll_to_earth(latitude, longitude), ll_to_earth(%f, %f))",
 					*filter.Latitude, *filter.Longitude)
 			}
+		case createdAtField:
+			orderBy = createdAtField
+		default:
+			orderBy = filter.SortBy
 		}
 
 		if filter.SortOrder == "desc" {
@@ -534,20 +539,37 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		}
 	}
 
-	// Основной запрос
+	// Основной запрос с подсчетом товаров и средним рейтингом
 	query := fmt.Sprintf(`
 		SELECT 
-			id, user_id, slug, name, description,
-			logo_url, banner_url, theme,
-			phone, email, website,
-			address, city, postal_code, country, latitude, longitude,
-			settings, seo_meta,
-			is_active, is_verified, verification_date,
-			rating, reviews_count, products_count, sales_count, views_count,
-			subscription_plan, subscription_expires_at, commission_rate,
-			ai_agent_enabled, ai_agent_config, live_shopping_enabled, group_buying_enabled,
-			created_at, updated_at
-		FROM storefronts
+			s.id, s.user_id, s.slug, s.name, s.description,
+			s.logo_url, s.banner_url, s.theme,
+			s.phone, s.email, s.website,
+			s.address, s.city, s.postal_code, s.country, s.latitude, s.longitude,
+			s.settings, s.seo_meta,
+			s.is_active, s.is_verified, s.verification_date,
+			COALESCE(
+				(SELECT AVG(r.rating) 
+				 FROM reviews r 
+				 WHERE r.entity_type = 'storefront_product' 
+				   AND r.entity_id IN (SELECT id FROM storefront_products WHERE storefront_id = s.id)
+				   AND r.status = 'published'
+				), 0
+			) as rating,
+			COALESCE(
+				(SELECT COUNT(*) 
+				 FROM reviews r 
+				 WHERE r.entity_type = 'storefront_product' 
+				   AND r.entity_id IN (SELECT id FROM storefront_products WHERE storefront_id = s.id)
+				   AND r.status = 'published'
+				), 0
+			) as reviews_count,
+			COALESCE((SELECT COUNT(*) FROM storefront_products WHERE storefront_id = s.id AND is_active = true), 0) as products_count, 
+			s.sales_count, s.views_count,
+			s.subscription_plan, s.subscription_expires_at, s.commission_rate,
+			s.ai_agent_enabled, s.ai_agent_config, s.live_shopping_enabled, s.group_buying_enabled,
+			s.created_at, s.updated_at
+		FROM storefronts s
 		WHERE %s
 		ORDER BY %s
 		LIMIT $%d OFFSET $%d

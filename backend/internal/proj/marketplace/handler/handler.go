@@ -184,6 +184,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace := app.Group("/api/v1/marketplace")
 	marketplace.Get("/listings", h.Listings.GetListings)
 	marketplace.Get("/categories", h.Categories.GetCategories)
+	marketplace.Get("/popular-categories", h.Categories.GetPopularCategories)
 	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
 	marketplace.Get("/listings/slug/:slug", h.Listings.GetListingBySlug)
 	marketplace.Get("/listings/:id", h.Listings.GetListing)
