@@ -1715,13 +1715,18 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 			})
 		}
 
-		// Поиск по сербским переводам для всех вариантов транслитерации
+		// Поиск по переводам для всех языков и вариантов транслитерации
+		translationTitleBoost := r.getBoostWeight("TranslationTitle", 4.0)
+		translationDescBoost := r.getBoostWeight("TranslationDesc", 1.5)
+		logger.Info().Msgf("Translation boost weights - Title: %.2f, Description: %.2f", translationTitleBoost, translationDescBoost)
+		
 		for _, queryVariant := range queryVariants {
+			// Поиск по сербским переводам
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
 					"translations.sr.title": map[string]interface{}{
 						"query":     queryVariant,
-						"boost":     r.getBoostWeight("TranslationTitle", 4.0),
+						"boost":     translationTitleBoost,
 						"fuzziness": fuzziness,
 					},
 				},
@@ -1731,82 +1736,55 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 				"match": map[string]interface{}{
 					"translations.sr.description": map[string]interface{}{
 						"query":     queryVariant,
-						"boost":     r.getBoostWeight("TranslationDesc", 1.5),
+						"boost":     translationDescBoost,
+						"fuzziness": fuzziness,
+					},
+				},
+			})
+			
+			// Поиск по русским переводам
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.ru.title": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     translationTitleBoost,
+						"fuzziness": fuzziness,
+					},
+				},
+			})
+
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.ru.description": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     translationDescBoost,
+						"fuzziness": fuzziness,
+					},
+				},
+			})
+			
+			// Поиск по английским переводам
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.en.title": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     translationTitleBoost,
+						"fuzziness": fuzziness,
+					},
+				},
+			})
+
+			should = append(should, map[string]interface{}{
+				"match": map[string]interface{}{
+					"translations.en.description": map[string]interface{}{
+						"query":     queryVariant,
+						"boost":     translationDescBoost,
 						"fuzziness": fuzziness,
 					},
 				},
 			})
 		}
 
-		// Поиск по переводам из БД (nested запросы для db_translations)
-		// TODO: Временно отключено - нужно исправить маппинг в OpenSearch
-		/*
-		for _, queryVariant := range queryVariants {
-			for _, lang := range []string{"ru", "sr", "en"} {
-				should = append(should, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "db_translations",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"db_translations.language": lang,
-										},
-									},
-									{
-										"term": map[string]interface{}{
-											"db_translations.field_name": "title",
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"db_translations.translated_text": map[string]interface{}{
-												"query":     queryVariant,
-												"boost":     r.getBoostWeight("TranslationTitle", 5.0),
-												"fuzziness": fuzziness,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				})
-
-				should = append(should, map[string]interface{}{
-					"nested": map[string]interface{}{
-						"path": "db_translations",
-						"query": map[string]interface{}{
-							"bool": map[string]interface{}{
-								"must": []map[string]interface{}{
-									{
-										"term": map[string]interface{}{
-											"db_translations.language": lang,
-										},
-									},
-									{
-										"term": map[string]interface{}{
-											"db_translations.field_name": "description",
-										},
-									},
-									{
-										"match": map[string]interface{}{
-											"db_translations.translated_text": map[string]interface{}{
-												"query":     queryVariant,
-												"boost":     r.getBoostWeight("TranslationDesc", 2.0),
-												"fuzziness": fuzziness,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				})
-			}
-		}
-		*/
 
 		// Добавляем специальную обработку для атрибутов в nested формате для всех вариантов транслитерации
 		for _, queryVariant := range queryVariants {
