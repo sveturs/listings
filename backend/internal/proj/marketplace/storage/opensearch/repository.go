@@ -1670,12 +1670,14 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		}
 
 		// Основной поиск по заголовку с высоким приоритетом для всех вариантов транслитерации
+		titleBoost := r.getBoostWeight("Title", 5.0)
+		logger.Info().Msgf("Title boost weight: %.2f for query: %s", titleBoost, params.Query)
 		for _, queryVariant := range queryVariants {
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
 					"title": map[string]interface{}{
 						"query":     queryVariant,
-						"boost":     r.getBoostWeight("Title", 5.0),
+						"boost":     titleBoost,
 						"fuzziness": fuzziness,
 					},
 				},
@@ -1684,12 +1686,14 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 
 		// Добавляем поиск по n-граммам для лучшего нечеткого соответствия
 		if params.UseSynonyms {
+			titleNgramBoost := r.getBoostWeight("TitleNgram", 2.0)
+			logger.Info().Msgf("TitleNgram boost weight: %.2f", titleNgramBoost)
 			for _, queryVariant := range queryVariants {
 				should = append(should, map[string]interface{}{
 					"match": map[string]interface{}{
 						"title.ngram": map[string]interface{}{
 							"query": queryVariant,
-							"boost": r.getBoostWeight("TitleNgram", 2.0),
+							"boost": titleNgramBoost,
 						},
 					},
 				})
@@ -1697,12 +1701,14 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		}
 
 		// Поиск по описанию для всех вариантов транслитерации
+		descriptionBoost := r.getBoostWeight("Description", 2.0)
+		logger.Info().Msgf("Description boost weight: %.2f", descriptionBoost)
 		for _, queryVariant := range queryVariants {
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
 					"description": map[string]interface{}{
 						"query":     queryVariant,
-						"boost":     r.getBoostWeight("Description", 2.0),
+						"boost":     descriptionBoost,
 						"fuzziness": fuzziness,
 					},
 				},
@@ -1733,6 +1739,8 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		}
 
 		// Поиск по переводам из БД (nested запросы для db_translations)
+		// TODO: Временно отключено - нужно исправить маппинг в OpenSearch
+		/*
 		for _, queryVariant := range queryVariants {
 			for _, lang := range []string{"ru", "sr", "en"} {
 				should = append(should, map[string]interface{}{
@@ -1798,6 +1806,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 				})
 			}
 		}
+		*/
 
 		// Добавляем специальную обработку для атрибутов в nested формате для всех вариантов транслитерации
 		for _, queryVariant := range queryVariants {
@@ -1979,10 +1988,12 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		boolMap["minimum_should_match"] = 1
 
 		// Добавляем multi_match для всех вариантов транслитерации
+		logger.Info().Msgf("Adding multi_match query with %d fields for query: %s", len(searchFields), params.Query)
 		must := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["must"].([]interface{})
 
 		multiMatchShould := []map[string]interface{}{}
 		for _, queryVariant := range queryVariants {
+			logger.Info().Msgf("Multi-match variant: %s", queryVariant)
 			multiMatchShould = append(multiMatchShould, map[string]interface{}{
 				"multi_match": map[string]interface{}{
 					"query":                queryVariant,
@@ -2422,6 +2433,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 	}
 
 	if params.Sort != "" {
+		logger.Info().Msgf("Применяем сортировку: %s, направление: %s", params.Sort, params.SortDirection)
 		var sortField string
 		var sortOrder string
 
@@ -2433,6 +2445,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 
 		switch params.Sort {
 		case "relevance":
+			logger.Info().Msg("Используем сортировку по релевантности (_score DESC)")
 			// Для сортировки по релевантности используем _score
 			query["sort"] = []interface{}{
 				map[string]interface{}{
@@ -2540,12 +2553,33 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 			},
 		}
 	} else {
-		query["sort"] = []interface{}{
-			map[string]interface{}{
-				"created_at": map[string]interface{}{
-					"order": "desc",
+		logger.Info().Msg("Сортировка не указана, используется сортировка по умолчанию")
+		// Если сортировка не указана, используем сортировку по умолчанию
+		if params.Query != "" {
+			logger.Info().Msg("Есть поисковый запрос - сортируем по релевантности (_score DESC, created_at DESC)")
+			// Если есть поисковый запрос, сортируем по релевантности
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"_score": map[string]interface{}{
+						"order": "desc",
+					},
 				},
-			},
+				map[string]interface{}{
+					"created_at": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+			}
+		} else {
+			logger.Info().Msg("Нет поискового запроса - сортируем только по дате (created_at DESC)")
+			// Если нет поискового запроса, сортируем по дате
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"created_at": map[string]interface{}{
+						"order": "desc",
+					},
+				},
+			}
 		}
 	}
 
