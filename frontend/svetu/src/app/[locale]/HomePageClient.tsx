@@ -135,65 +135,6 @@ export default function HomePageClient({
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // Категории с иконками и количеством
-  const categoryIcons = [
-    {
-      id: 'realestate',
-      name: 'Недвижимость',
-      icon: BsHouseDoor,
-      count: '45K+',
-      color: 'text-blue-600',
-    },
-    {
-      id: 'auto',
-      name: 'Транспорт',
-      icon: FaCar,
-      count: '28K+',
-      color: 'text-red-600',
-    },
-    {
-      id: 'electronics',
-      name: 'Электроника',
-      icon: BsLaptop,
-      count: '67K+',
-      color: 'text-purple-600',
-    },
-    {
-      id: 'fashion',
-      name: 'Одежда',
-      icon: FaTshirt,
-      count: '89K+',
-      color: 'text-pink-600',
-    },
-    {
-      id: 'job',
-      name: 'Работа',
-      icon: BsBriefcase,
-      count: '12K+',
-      color: 'text-green-600',
-    },
-    {
-      id: 'services',
-      name: 'Услуги',
-      icon: BsTools,
-      count: '35K+',
-      color: 'text-orange-600',
-    },
-    {
-      id: 'hobby',
-      name: 'Хобби',
-      icon: BsPalette,
-      count: '23K+',
-      color: 'text-indigo-600',
-    },
-    {
-      id: 'home',
-      name: 'Для дома',
-      icon: BsHandbag,
-      count: '54K+',
-      color: 'text-yellow-600',
-    },
-  ];
 
   // Популярные поисковые запросы
   const trendingSearches = [
@@ -684,22 +625,40 @@ export default function HomePageClient({
           <div className="border-t border-base-300 py-2 hidden lg:block">
             <div className="container mx-auto px-4">
               <div className="flex items-center gap-6 text-sm">
-                {categoryIcons.slice(0, 8).map((cat) => {
-                  const Icon = cat.icon;
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={`/${locale}/search?category=${cat.id}`}
-                      className="flex items-center gap-2 hover:text-primary transition-colors"
+                {isLoadingCategories ? (
+                  // Скелетон при загрузке
+                  [...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 animate-pulse"
                     >
-                      <Icon className={`w-4 h-4 ${cat.color}`} />
-                      <span>{cat.name}</span>
-                      <span className="text-base-content/50">
-                        ({cat.count})
-                      </span>
-                    </Link>
-                  );
-                })}
+                      <div className="w-4 h-4 bg-base-300 rounded"></div>
+                      <div className="w-20 h-4 bg-base-300 rounded"></div>
+                      <div className="w-10 h-3 bg-base-300 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  popularCategories.slice(0, 8).map((cat) => {
+                    const Icon = cat.icon || BsHandbag;
+                    const count = cat.listing_count || cat.count || 0;
+                    const formattedCount = count > 1000 
+                      ? `${Math.floor(count / 1000)}K+` 
+                      : count;
+                    return (
+                      <Link
+                        key={cat.id}
+                        href={`/${locale}/search?category=${cat.id}`}
+                        className="flex items-center gap-2 hover:text-primary transition-colors"
+                      >
+                        <Icon className={`w-4 h-4 ${cat.color}`} />
+                        <span>{cat.name}</span>
+                        <span className="text-base-content/50">
+                          ({formattedCount})
+                        </span>
+                      </Link>
+                    );
+                  })
+                )}
                 <Link href="/categories" className="text-primary font-medium">
                   Все категории →
                 </Link>
