@@ -1,3 +1,30 @@
+ALTER SEQUENCE public.item_performance_metrics_id_seq OWNED BY public.item_performance_metrics.id;
+ALTER SEQUENCE public.listing_attribute_values_id_seq OWNED BY public.listing_attribute_values.id;
+ALTER SEQUENCE public.listing_views_id_seq OWNED BY public.listing_views.id;
+ALTER SEQUENCE public.listings_geo_id_seq OWNED BY public.listings_geo.id;
+ALTER SEQUENCE public.map_items_cache_id_seq OWNED BY public.map_items_cache.id;
+ALTER SEQUENCE public.marketplace_categories_id_seq OWNED BY public.marketplace_categories.id;
+ALTER SEQUENCE public.marketplace_chats_id_seq OWNED BY public.marketplace_chats.id;
+ALTER SEQUENCE public.marketplace_images_id_seq OWNED BY public.marketplace_images.id;
+ALTER SEQUENCE public.marketplace_messages_id_seq OWNED BY public.marketplace_messages.id;
+ALTER SEQUENCE public.marketplace_orders_id_seq OWNED BY public.marketplace_orders.id;
+ALTER SEQUENCE public.merchant_payouts_id_seq OWNED BY public.merchant_payouts.id;
+ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
+ALTER SEQUENCE public.payment_gateways_id_seq OWNED BY public.payment_gateways.id;
+ALTER SEQUENCE public.payment_methods_id_seq OWNED BY public.payment_methods.id;
+ALTER SEQUENCE public.payment_transactions_id_seq OWNED BY public.payment_transactions.id;
+ALTER SEQUENCE public.permissions_id_seq OWNED BY public.permissions.id;
+ALTER SEQUENCE public.post_express_api_logs_id_seq OWNED BY public.post_express_api_logs.id;
+ALTER SEQUENCE public.post_express_locations_id_seq OWNED BY public.post_express_locations.id;
+ALTER SEQUENCE public.post_express_offices_id_seq OWNED BY public.post_express_offices.id;
+ALTER SEQUENCE public.post_express_rates_id_seq OWNED BY public.post_express_rates.id;
+ALTER SEQUENCE public.post_express_settings_id_seq OWNED BY public.post_express_settings.id;
+ALTER SEQUENCE public.post_express_shipments_id_seq OWNED BY public.post_express_shipments.id;
+ALTER SEQUENCE public.post_express_tracking_events_id_seq OWNED BY public.post_express_tracking_events.id;
+ALTER SEQUENCE public.price_history_id_seq OWNED BY public.price_history.id;
+ALTER SEQUENCE public.product_variant_attribute_values_id_seq OWNED BY public.product_variant_attribute_values.id;
+ALTER SEQUENCE public.product_variant_attributes_id_seq OWNED BY public.product_variant_attributes.id;
+ALTER SEQUENCE public.refresh_tokens_id_seq OWNED BY public.refresh_tokens.id;
 ALTER SEQUENCE public.review_confirmations_id_seq OWNED BY public.review_confirmations.id;
 ALTER SEQUENCE public.review_disputes_id_seq OWNED BY public.review_disputes.id;
 ALTER SEQUENCE public.review_responses_id_seq OWNED BY public.review_responses.id;
@@ -16,6 +43,7 @@ ALTER SEQUENCE public.search_weights_id_seq OWNED BY public.search_weights.id;
 ALTER SEQUENCE public.shopping_cart_items_id_seq OWNED BY public.shopping_cart_items.id;
 ALTER SEQUENCE public.shopping_carts_id_seq OWNED BY public.shopping_carts.id;
 ALTER SEQUENCE public.storefront_delivery_options_id_seq OWNED BY public.storefront_delivery_options.id;
+ALTER SEQUENCE public.storefront_fbs_settings_id_seq OWNED BY public.storefront_fbs_settings.id;
 ALTER SEQUENCE public.storefront_hours_id_seq OWNED BY public.storefront_hours.id;
 ALTER SEQUENCE public.storefront_inventory_movements_id_seq OWNED BY public.storefront_inventory_movements.id;
 ALTER SEQUENCE public.storefront_order_items_id_seq OWNED BY public.storefront_order_items.id;
@@ -40,6 +68,11 @@ ALTER SEQUENCE public.user_contacts_id_seq OWNED BY public.user_contacts.id;
 ALTER SEQUENCE public.user_storefronts_id_seq OWNED BY public.user_storefronts.id;
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 ALTER SEQUENCE public.variant_attribute_mappings_id_seq OWNED BY public.variant_attribute_mappings.id;
+ALTER SEQUENCE public.warehouse_inventory_id_seq OWNED BY public.warehouse_inventory.id;
+ALTER SEQUENCE public.warehouse_invoices_id_seq OWNED BY public.warehouse_invoices.id;
+ALTER SEQUENCE public.warehouse_movements_id_seq OWNED BY public.warehouse_movements.id;
+ALTER SEQUENCE public.warehouse_pickup_orders_id_seq OWNED BY public.warehouse_pickup_orders.id;
+ALTER SEQUENCE public.warehouses_id_seq OWNED BY public.warehouses.id;
 ALTER TABLE ONLY public.attribute_group_items
     ADD CONSTRAINT attribute_group_items_attribute_id_fkey FOREIGN KEY (attribute_id) REFERENCES public.category_attributes(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.attribute_group_items
@@ -90,69 +123,3 @@ ALTER TABLE ONLY public.import_sources
     ADD CONSTRAINT import_sources_storefront_id_fkey FOREIGN KEY (storefront_id) REFERENCES public.user_storefronts(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.imported_categories
     ADD CONSTRAINT imported_categories_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.import_sources(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.listing_attribute_values
-    ADD CONSTRAINT listing_attribute_values_attribute_id_fkey FOREIGN KEY (attribute_id) REFERENCES public.category_attributes(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.listings_geo
-    ADD CONSTRAINT listings_geo_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.districts(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.listings_geo
-    ADD CONSTRAINT listings_geo_municipality_id_fkey FOREIGN KEY (municipality_id) REFERENCES public.municipalities(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.marketplace_categories
-    ADD CONSTRAINT marketplace_categories_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.marketplace_categories(id);
-ALTER TABLE ONLY public.marketplace_chats
-    ADD CONSTRAINT marketplace_chats_buyer_id_fkey FOREIGN KEY (buyer_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_chats
-    ADD CONSTRAINT marketplace_chats_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.marketplace_chats
-    ADD CONSTRAINT marketplace_chats_seller_id_fkey FOREIGN KEY (seller_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_favorites
-    ADD CONSTRAINT marketplace_favorites_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.marketplace_favorites
-    ADD CONSTRAINT marketplace_favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_images
-    ADD CONSTRAINT marketplace_images_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.marketplace_listings
-    ADD CONSTRAINT marketplace_listings_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id);
-ALTER TABLE ONLY public.marketplace_listings
-    ADD CONSTRAINT marketplace_listings_storefront_id_fkey FOREIGN KEY (storefront_id) REFERENCES public.user_storefronts(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.marketplace_listings
-    ADD CONSTRAINT marketplace_listings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_messages
-    ADD CONSTRAINT marketplace_messages_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.marketplace_chats(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.marketplace_messages
-    ADD CONSTRAINT marketplace_messages_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.marketplace_messages
-    ADD CONSTRAINT marketplace_messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_messages
-    ADD CONSTRAINT marketplace_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.marketplace_orders
-    ADD CONSTRAINT marketplace_orders_payment_transaction_id_fkey FOREIGN KEY (payment_transaction_id) REFERENCES public.payment_transactions(id);
-ALTER TABLE ONLY public.merchant_payouts
-    ADD CONSTRAINT merchant_payouts_gateway_id_fkey FOREIGN KEY (gateway_id) REFERENCES public.payment_gateways(id);
-ALTER TABLE ONLY public.municipalities
-    ADD CONSTRAINT municipalities_district_id_fkey FOREIGN KEY (district_id) REFERENCES public.districts(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.notification_settings
-    ADD CONSTRAINT notification_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.notifications
-    ADD CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.payment_transactions
-    ADD CONSTRAINT payment_transactions_gateway_id_fkey FOREIGN KEY (gateway_id) REFERENCES public.payment_gateways(id);
-ALTER TABLE ONLY public.payment_transactions
-    ADD CONSTRAINT payment_transactions_storefront_id_fkey FOREIGN KEY (storefront_id) REFERENCES public.storefronts(id);
-ALTER TABLE ONLY public.product_variant_attribute_values
-    ADD CONSTRAINT product_variant_attribute_values_attribute_id_fkey FOREIGN KEY (attribute_id) REFERENCES public.product_variant_attributes(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.review_confirmations
-    ADD CONSTRAINT review_confirmations_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES public.users(id);
-ALTER TABLE ONLY public.review_confirmations
-    ADD CONSTRAINT review_confirmations_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.review_disputes
-    ADD CONSTRAINT review_disputes_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES public.users(id);
-ALTER TABLE ONLY public.review_disputes
-    ADD CONSTRAINT review_disputes_disputed_by_fkey FOREIGN KEY (disputed_by) REFERENCES public.users(id);
-ALTER TABLE ONLY public.review_disputes
-    ADD CONSTRAINT review_disputes_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.review_responses
-    ADD CONSTRAINT review_responses_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.review_responses
-    ADD CONSTRAINT review_responses_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.review_votes
-    ADD CONSTRAINT review_votes_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id) ON DELETE CASCADE;

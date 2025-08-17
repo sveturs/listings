@@ -1,22 +1,5 @@
-SELECT pg_catalog.setval('public.search_behavior_metrics_id_seq', 1, false);
-SELECT pg_catalog.setval('public.search_config_id_seq', 2, false);
-SELECT pg_catalog.setval('public.search_optimization_sessions_id_seq', 1, false);
-SELECT pg_catalog.setval('public.search_queries_id_seq', 97, true);
-SELECT pg_catalog.setval('public.search_statistics_id_seq', 1, false);
-SELECT pg_catalog.setval('public.search_synonyms_config_id_seq', 8, false);
-SELECT pg_catalog.setval('public.search_synonyms_id_seq', 41, false);
-SELECT pg_catalog.setval('public.search_weights_history_id_seq', 1, false);
-SELECT pg_catalog.setval('public.search_weights_id_seq', 17, false);
-SELECT pg_catalog.setval('public.shopping_cart_items_id_seq', 53, true);
-SELECT pg_catalog.setval('public.shopping_carts_id_seq', 8, true);
-SELECT pg_catalog.setval('public.storefront_delivery_options_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_hours_id_seq', 25, true);
-SELECT pg_catalog.setval('public.storefront_inventory_movements_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_order_items_id_seq', 16, true);
-SELECT pg_catalog.setval('public.storefront_orders_id_seq', 56, true);
-SELECT pg_catalog.setval('public.storefront_payment_methods_id_seq', 15, true);
 SELECT pg_catalog.setval('public.storefront_product_attributes_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_product_images_id_seq', 35, true);
+SELECT pg_catalog.setval('public.storefront_product_images_id_seq', 36, true);
 SELECT pg_catalog.setval('public.storefront_product_variant_images_id_seq', 1, false);
 SELECT pg_catalog.setval('public.storefront_product_variants_id_seq', 97, true);
 SELECT pg_catalog.setval('public.storefront_staff_id_seq', 13, true);
@@ -28,12 +11,17 @@ SELECT pg_catalog.setval('public.translation_sync_conflicts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.translation_tasks_id_seq', 1, false);
 SELECT pg_catalog.setval('public.translations_id_seq', 3499, true);
 SELECT pg_catalog.setval('public.transliteration_rules_id_seq', 52, false);
-SELECT pg_catalog.setval('public.unified_geo_id_seq', 232, true);
-SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 848, true);
+SELECT pg_catalog.setval('public.unified_geo_id_seq', 233, true);
+SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 854, true);
 SELECT pg_catalog.setval('public.user_contacts_id_seq', 25, true);
 SELECT pg_catalog.setval('public.user_storefronts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.users_id_seq', 9, true);
 SELECT pg_catalog.setval('public.variant_attribute_mappings_id_seq', 4, true);
+SELECT pg_catalog.setval('public.warehouse_inventory_id_seq', 1, false);
+SELECT pg_catalog.setval('public.warehouse_invoices_id_seq', 1, false);
+SELECT pg_catalog.setval('public.warehouse_movements_id_seq', 1, false);
+SELECT pg_catalog.setval('public.warehouse_pickup_orders_id_seq', 1, false);
+SELECT pg_catalog.setval('public.warehouses_id_seq', 1, true);
 ALTER TABLE ONLY public.address_change_log
     ADD CONSTRAINT address_change_log_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.admin_users
@@ -162,3 +150,27 @@ ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.payment_gateways
     ADD CONSTRAINT payment_gateways_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.payment_methods
+    ADD CONSTRAINT payment_methods_code_key UNIQUE (code);
+ALTER TABLE ONLY public.payment_methods
+    ADD CONSTRAINT payment_methods_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.payment_transactions
+    ADD CONSTRAINT payment_transactions_order_reference_key UNIQUE (order_reference);
+ALTER TABLE ONLY public.payment_transactions
+    ADD CONSTRAINT payment_transactions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_name_key UNIQUE (name);
+ALTER TABLE ONLY public.permissions
+    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_api_logs
+    ADD CONSTRAINT post_express_api_logs_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_locations
+    ADD CONSTRAINT post_express_locations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_locations
+    ADD CONSTRAINT post_express_locations_post_express_id_key UNIQUE (post_express_id);
+ALTER TABLE ONLY public.post_express_offices
+    ADD CONSTRAINT post_express_offices_office_code_key UNIQUE (office_code);
+ALTER TABLE ONLY public.post_express_offices
+    ADD CONSTRAINT post_express_offices_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_rates
+    ADD CONSTRAINT post_express_rates_pkey PRIMARY KEY (id);

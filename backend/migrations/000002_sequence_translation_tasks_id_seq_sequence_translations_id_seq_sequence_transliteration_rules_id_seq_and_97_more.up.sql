@@ -1,4 +1,92 @@
+CREATE SEQUENCE public.translation_tasks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.transliteration_rules_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.unified_geo_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.user_behavior_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.user_contacts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.user_storefronts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.variant_attribute_mappings_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.warehouse_inventory_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.warehouse_invoices_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.warehouse_movements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.warehouse_pickup_orders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.warehouses_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -12,6 +100,34 @@ BEGIN
     -- Рассчитываем дату освобождения на основе escrow_days
     IF NEW.escrow_release_date IS NULL AND NEW.escrow_days IS NOT NULL THEN
         NEW.escrow_release_date := CURRENT_DATE + INTERVAL '1 day' * NEW.escrow_days;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.generate_pickup_code() RETURNS character varying
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    chars VARCHAR := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    result VARCHAR := '';
+    i INTEGER;
+BEGIN
+    FOR i IN 1..6 LOOP
+        result := result || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+    END LOOP;
+    RETURN result;
+END;
+$$;
+CREATE FUNCTION public.log_shipment_status_change() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF OLD.status IS DISTINCT FROM NEW.status THEN
+        NEW.status_history = NEW.status_history || jsonb_build_object(
+            'status', NEW.status,
+            'timestamp', NOW(),
+            'old_status', OLD.status
+        );
     END IF;
     RETURN NEW;
 END;
@@ -232,6 +348,14 @@ BEGIN
     RETURN NEW;
 END;
 $$;
+CREATE FUNCTION public.update_post_express_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.update_product_stock_status() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -363,6 +487,14 @@ CREATE FUNCTION public.update_user_updated_at() RETURNS trigger
     AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+CREATE FUNCTION public.update_warehouse_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$;
@@ -971,6 +1103,40 @@ BEGIN
     END LOOP;
 END;
 $$;
+CREATE FUNCTION public.reserve_inventory_on_order() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    inv_record RECORD;
+BEGIN
+    -- Находим товар на складе
+    SELECT * INTO inv_record
+    FROM warehouse_inventory
+    WHERE (storefront_product_id = NEW.product_id OR marketplace_listing_id = NEW.listing_id)
+    AND quantity_available >= NEW.quantity
+    LIMIT 1;
+    IF FOUND THEN
+        -- Резервируем товар
+        UPDATE warehouse_inventory
+        SET
+            quantity_available = quantity_available - NEW.quantity,
+            quantity_reserved = quantity_reserved + NEW.quantity,
+            updated_at = NOW()
+        WHERE id = inv_record.id;
+        -- Создаем запись о движении
+        INSERT INTO warehouse_movements (
+            warehouse_id, inventory_id, movement_type, movement_reason,
+            quantity, quantity_before, quantity_after,
+            order_id, storefront_order_id
+        ) VALUES (
+            inv_record.warehouse_id, inv_record.id, 'outbound', 'order_fulfillment',
+            -NEW.quantity, inv_record.quantity_available, inv_record.quantity_available - NEW.quantity,
+            NEW.marketplace_order_id, NEW.storefront_order_id
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$;
 CREATE FUNCTION public.sync_attribute_option_translations() RETURNS void
     LANGUAGE plpgsql
     AS $$
@@ -1012,6 +1178,25 @@ BEGIN
             END IF;
         END IF;
     END LOOP;
+END;
+$$;
+CREATE FUNCTION public.track_inventory_changes() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF OLD.quantity_total != NEW.quantity_total OR
+       OLD.quantity_available != NEW.quantity_available OR
+       OLD.quantity_reserved != NEW.quantity_reserved THEN
+        INSERT INTO warehouse_movements (
+            warehouse_id, inventory_id, movement_type, movement_reason,
+            quantity, quantity_before, quantity_after
+        ) VALUES (
+            NEW.warehouse_id, NEW.id, 'adjustment', 'manual_adjustment',
+            NEW.quantity_total - OLD.quantity_total,
+            OLD.quantity_total, NEW.quantity_total
+        );
+    END IF;
+    RETURN NEW;
 END;
 $$;
 CREATE FUNCTION public.trigger_update_listings_on_attribute_translation_change() RETURNS trigger
@@ -1407,330 +1592,4 @@ CREATE TABLE public.attribute_group_items (
     custom_display_name character varying(255),
     visibility_condition jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.attribute_groups (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    display_name character varying(255) NOT NULL,
-    description text,
-    icon character varying(100),
-    sort_order integer DEFAULT 0,
-    is_active boolean DEFAULT true,
-    is_system boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.attribute_option_translations (
-    id integer NOT NULL,
-    attribute_name character varying(100) NOT NULL,
-    option_value text NOT NULL,
-    ru_translation text NOT NULL,
-    sr_translation text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.balance_transactions (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    type character varying(20) NOT NULL,
-    amount numeric(12,2) NOT NULL,
-    currency character varying(3) DEFAULT 'RSD'::character varying NOT NULL,
-    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
-    payment_method character varying(50),
-    payment_details jsonb,
-    description text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    completed_at timestamp without time zone
-);
-CREATE TABLE public.car_generations (
-    id integer NOT NULL,
-    model_id integer,
-    name character varying(100),
-    year_start integer,
-    year_end integer,
-    facelift_year integer,
-    specs jsonb,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    body_types jsonb DEFAULT '[]'::jsonb,
-    engine_types jsonb DEFAULT '[]'::jsonb,
-    image_url character varying(500),
-    is_active boolean DEFAULT true,
-    slug character varying(100) NOT NULL,
-    sort_order integer DEFAULT 0,
-    external_id character varying(100),
-    platform character varying(100),
-    production_country character varying(100),
-    metadata jsonb DEFAULT '{}'::jsonb,
-    last_sync_at timestamp without time zone
-);
-CREATE TABLE public.car_makes (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    slug character varying(100) NOT NULL,
-    logo_url character varying(500),
-    country character varying(50),
-    is_active boolean DEFAULT true,
-    sort_order integer DEFAULT 0,
-    is_domestic boolean DEFAULT false,
-    popularity_rs integer DEFAULT 0,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    external_id character varying(100),
-    manufacturer_id character varying(100),
-    last_sync_at timestamp without time zone,
-    metadata jsonb DEFAULT '{}'::jsonb
-);
-CREATE TABLE public.car_market_analysis (
-    id integer NOT NULL,
-    brand character varying(100),
-    model character varying(100),
-    total_listings integer,
-    avg_price numeric(10,2),
-    min_year integer,
-    max_year integer,
-    popularity_score numeric(5,2),
-    analyzed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.car_models (
-    id integer NOT NULL,
-    make_id integer,
-    name character varying(100) NOT NULL,
-    slug character varying(100) NOT NULL,
-    generation character varying(50),
-    production_start integer,
-    production_end integer,
-    body_types jsonb,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    sort_order integer DEFAULT 0,
-    external_id character varying(100),
-    body_type character varying(50),
-    segment character varying(50),
-    years_range int4range,
-    metadata jsonb DEFAULT '{}'::jsonb,
-    last_sync_at timestamp without time zone,
-    engine_type character varying(50),
-    engine_power_kw integer,
-    engine_power_hp integer,
-    engine_torque_nm integer,
-    fuel_type character varying(50),
-    fuel_consumption_city numeric(4,2),
-    fuel_consumption_highway numeric(4,2),
-    fuel_consumption_combined numeric(4,2),
-    co2_emissions integer,
-    euro_standard character varying(10),
-    transmission_type character varying(50),
-    transmission_gears integer,
-    drive_type character varying(50),
-    length_mm integer,
-    width_mm integer,
-    height_mm integer,
-    wheelbase_mm integer,
-    trunk_volume_l integer,
-    fuel_tank_l integer,
-    weight_kg integer,
-    max_speed_kmh integer,
-    acceleration_0_100 numeric(3,1),
-    seats integer,
-    doors integer,
-    serbia_popularity_score integer DEFAULT 0,
-    serbia_average_price_eur numeric(10,2),
-    serbia_listings_count integer DEFAULT 0,
-    is_electric boolean DEFAULT false,
-    battery_capacity_kwh numeric(10,2),
-    battery_capacity_net_kwh numeric(10,2),
-    electric_range_km integer,
-    electric_range_wltp_km integer,
-    electric_range_standard character varying(50),
-    charging_time_0_100 numeric(10,2),
-    charging_time_10_80 numeric(10,2),
-    fast_charging_power_kw numeric(10,2),
-    onboard_charger_kw numeric(10,2),
-    popularity_score numeric(5,2) DEFAULT 0
-);
-CREATE TABLE public.category_attribute_groups (
-    id integer NOT NULL,
-    category_id integer NOT NULL,
-    group_id integer NOT NULL,
-    component_id integer,
-    sort_order integer DEFAULT 0,
-    is_active boolean DEFAULT true,
-    display_mode character varying(50) DEFAULT 'list'::character varying,
-    collapsed_by_default boolean DEFAULT false,
-    configuration jsonb DEFAULT '{}'::jsonb,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.category_attribute_mapping (
-    category_id integer NOT NULL,
-    attribute_id integer NOT NULL,
-    is_enabled boolean DEFAULT true,
-    is_required boolean DEFAULT false,
-    sort_order integer DEFAULT 0,
-    custom_component character varying(255),
-    show_in_card boolean,
-    show_in_list boolean
-);
-CREATE TABLE public.category_attributes (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    display_name character varying(255) NOT NULL,
-    attribute_type character varying(50) NOT NULL,
-    options jsonb DEFAULT '{}'::jsonb,
-    validation_rules jsonb,
-    is_searchable boolean DEFAULT true,
-    is_filterable boolean DEFAULT true,
-    is_required boolean DEFAULT false,
-    sort_order integer DEFAULT 0,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    custom_component character varying(255),
-    show_in_card boolean DEFAULT true,
-    show_in_list boolean DEFAULT false,
-    icon character varying(10) DEFAULT ''::character varying,
-    affects_stock boolean DEFAULT false,
-    data_source character varying(50) DEFAULT 'manual'::character varying,
-    is_variant_compatible boolean DEFAULT false,
-    data_source_config jsonb,
-    CONSTRAINT check_data_source_values CHECK (((data_source)::text = ANY ((ARRAY['manual'::character varying, 'api_external'::character varying, 'ai_generated'::character varying, 'imported'::character varying, 'computed'::character varying, 'database'::character varying, 'internal'::character varying])::text[])))
-);
-CREATE TABLE public.category_keywords (
-    id integer NOT NULL,
-    category_id integer NOT NULL,
-    keyword character varying(100) NOT NULL,
-    language character varying(2) DEFAULT 'en'::character varying,
-    weight double precision DEFAULT 1.0,
-    keyword_type character varying(20) DEFAULT 'general'::character varying,
-    is_negative boolean DEFAULT false,
-    source character varying(50) DEFAULT 'manual'::character varying,
-    usage_count integer DEFAULT 0,
-    success_rate double precision DEFAULT 0.0,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT category_keywords_keyword_type_check CHECK (((keyword_type)::text = ANY ((ARRAY['main'::character varying, 'synonym'::character varying, 'brand'::character varying, 'attribute'::character varying, 'context'::character varying, 'pattern'::character varying])::text[]))),
-    CONSTRAINT category_keywords_source_check CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'ai_extracted'::character varying, 'user_confirmed'::character varying, 'auto_learned'::character varying])::text[]))),
-    CONSTRAINT category_keywords_success_rate_check CHECK (((success_rate >= (0.0)::double precision) AND (success_rate <= (1.0)::double precision))),
-    CONSTRAINT category_keywords_weight_check CHECK (((weight >= (0.0)::double precision) AND (weight <= (10.0)::double precision)))
-);
-CREATE TABLE public.marketplace_categories (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    slug character varying(100) NOT NULL,
-    parent_id integer,
-    icon character varying(50),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    has_custom_ui boolean DEFAULT false,
-    custom_ui_component character varying(255),
-    sort_order integer DEFAULT 0,
-    level integer DEFAULT 0,
-    count integer DEFAULT 0,
-    external_id character varying(255),
-    description text,
-    is_active boolean DEFAULT true,
-    seo_title character varying(255),
-    seo_description text,
-    seo_keywords text
-);
-CREATE TABLE public.marketplace_listings (
-    id integer DEFAULT nextval('public.global_product_id_seq'::regclass) NOT NULL,
-    user_id integer,
-    category_id integer,
-    title character varying(255) NOT NULL,
-    description text,
-    price numeric(12,2),
-    condition character varying(50),
-    status character varying(20) DEFAULT 'active'::character varying,
-    location character varying(255),
-    latitude numeric(10,8),
-    longitude numeric(11,8),
-    address_city character varying(100),
-    address_country character varying(100),
-    views_count integer DEFAULT 0,
-    show_on_map boolean DEFAULT true NOT NULL,
-    original_language character varying(10) DEFAULT 'sr'::character varying,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    storefront_id integer,
-    external_id character varying(255),
-    metadata jsonb,
-    needs_reindex boolean DEFAULT false
-);
-CREATE TABLE public.category_variant_attributes (
-    id integer NOT NULL,
-    category_id integer NOT NULL,
-    variant_attribute_name character varying(100) NOT NULL,
-    sort_order integer DEFAULT 0,
-    is_required boolean DEFAULT false,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-CREATE TABLE public.chat_attachments (
-    id integer NOT NULL,
-    message_id integer NOT NULL,
-    file_type character varying(20) NOT NULL,
-    file_path character varying(500) NOT NULL,
-    file_name character varying(255) NOT NULL,
-    file_size bigint NOT NULL,
-    content_type character varying(100) NOT NULL,
-    storage_type character varying(20) DEFAULT 'minio'::character varying,
-    storage_bucket character varying(100) DEFAULT 'chat-files'::character varying,
-    public_url text,
-    thumbnail_url text,
-    metadata jsonb,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chat_attachments_file_type_check CHECK (((file_type)::text = ANY (ARRAY[('image'::character varying)::text, ('video'::character varying)::text, ('document'::character varying)::text])))
-);
-CREATE TABLE public.component_templates (
-    id integer NOT NULL,
-    component_id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    description text,
-    template_config jsonb DEFAULT '{}'::jsonb,
-    preview_image text,
-    category_id integer,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by integer
-);
-CREATE TABLE public.custom_ui_component_usage (
-    id integer NOT NULL,
-    component_id integer NOT NULL,
-    category_id integer,
-    usage_context character varying(50) DEFAULT 'listing'::character varying NOT NULL,
-    placement character varying(50) DEFAULT 'default'::character varying,
-    priority integer DEFAULT 0,
-    configuration jsonb DEFAULT '{}'::jsonb,
-    conditions_logic jsonb,
-    is_active boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by integer,
-    updated_by integer
-);
-CREATE TABLE public.custom_ui_components (
-    id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    description text,
-    component_type character varying(50) NOT NULL,
-    is_active boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by integer,
-    updated_by integer,
-    template_code text DEFAULT ''::text NOT NULL,
-    styles text DEFAULT ''::text,
-    props_schema jsonb DEFAULT '{}'::jsonb,
-    CONSTRAINT custom_ui_components_component_type_check CHECK (((component_type)::text = ANY (ARRAY[('category'::character varying)::text, ('attribute'::character varying)::text, ('filter'::character varying)::text])))
-);
-CREATE TABLE public.custom_ui_templates (
-    id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    display_name character varying(255) NOT NULL,
-    description text,
-    template_code text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    variables jsonb DEFAULT '{}'::jsonb,
-    is_shared boolean DEFAULT false,
-    created_by integer,
-    updated_by integer
 );

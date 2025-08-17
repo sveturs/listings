@@ -21,5 +21,11 @@ INSERT INTO public.shopping_carts (id, user_id, storefront_id, session_id, creat
 
 
 --
+-- Data for Name: storefront_fbs_settings; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
 -- Data for Name: storefront_hours; Type: TABLE DATA; Schema: public; Owner: -
 --

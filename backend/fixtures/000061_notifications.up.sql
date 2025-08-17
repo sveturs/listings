@@ -75,3 +75,11 @@ INSERT INTO public.notifications (id, user_id, type, title, message, data, is_re
 Товар: Личное сообщение1
 
 😘', NULL, false, NULL, '2025-08-14 16:55:00.2086');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (24, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от Margarita Voroshilova
+Товар: Ретро телефон Siemens ME45 T-Mobile
+
+fdsgsfdgdsfgsdfg', NULL, false, NULL, '2025-08-15 14:48:57.556737');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (25, 5, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Ретро телефон Siemens ME45 T-Mobile
+
+456354673657', NULL, false, NULL, '2025-08-15 14:49:10.333874');
