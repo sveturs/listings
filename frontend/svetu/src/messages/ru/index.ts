@@ -14,6 +14,7 @@ export type TranslationModule =
   | 'chat'
   | 'checkout'
   | 'common'
+  | 'delivery'
   | 'map'
   | 'marketplace'
   | 'misc'
@@ -35,6 +36,7 @@ export const moduleLoaders = {
   cart: () => import('./cart.json'),
   chat: () => import('./chat.json'),
   checkout: () => import('./checkout.json'),
+  delivery: () => import('./delivery.json'),
   map: () => import('./map.json'),
   marketplace: () => import('./marketplace.json'),
   misc: () => import('./misc.json'),

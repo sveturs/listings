@@ -13,6 +13,7 @@ export interface CartItem {
   storefrontId: number;
   storefrontName?: string;
   storefrontSlug?: string;
+  weight?: number; // Вес товара в кг для расчета доставки
 }
 
 interface LocalCartState {

@@ -27,6 +27,13 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import type { AppDispatch } from '@/store';
 import { PageTransition } from '@/components/ui/PageTransition';
+import DeliverySelector from '@/components/cart/DeliverySelector';
+
+interface DeliverySelection {
+  providerId: string;
+  methodId: string;
+  price: number;
+}
 
 export default function CartPage() {
   const t = useTranslations('cart');
@@ -62,6 +69,9 @@ export default function CartPage() {
   // Используем эффект для определения начального состояния
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [deliverySelections, setDeliverySelections] = useState<
+    Record<number, DeliverySelection>
+  >({});
 
   // Определяем, когда компонент смонтирован
   useEffect(() => {
@@ -105,6 +115,7 @@ export default function CartPage() {
       // Для неавторизованных пользователей сразу снимаем флаг загрузки
       setIsInitialLoad(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, user?.id, dispatch]);
 
   // Группируем товары по витринам для локальной корзины (неавторизованные)
@@ -244,12 +255,30 @@ export default function CartPage() {
     router.push(`/${locale}/checkout`);
   };
 
-  const calculateShipping = () => {
-    // Бесплатная доставка от 5000 RSD
-    return total >= 5000 ? 0 : 300;
+  // Рассчитываем общую стоимость доставки
+  const calculateTotalShipping = () => {
+    return Object.values(deliverySelections).reduce(
+      (sum, selection) => sum + selection.price,
+      0
+    );
   };
 
-  const shipping = calculateShipping();
+  const handleDeliveryChange = (
+    storefrontId: number,
+    selection: DeliverySelection | null
+  ) => {
+    if (selection) {
+      setDeliverySelections((prev) => ({ ...prev, [storefrontId]: selection }));
+    } else {
+      setDeliverySelections((prev) => {
+        const updated = { ...prev };
+        delete updated[storefrontId];
+        return updated;
+      });
+    }
+  };
+
+  const shipping = calculateTotalShipping();
   const finalTotal = total + shipping;
 
   // Показываем загрузку пока компонент не смонтирован или идет начальная загрузка
@@ -510,6 +539,34 @@ export default function CartPage() {
                   )
                 )}
 
+              {/* Delivery selection for non-authenticated users */}
+              {!isAuthenticated &&
+                Object.entries(itemsByStorefront).map(
+                  ([storefrontId, group]) => {
+                    // Рассчитываем общий вес товаров витрины
+                    const totalWeight = group.items.reduce(
+                      (sum, item) => sum + (item.weight || 0.5) * item.quantity,
+                      0
+                    );
+
+                    return (
+                      <DeliverySelector
+                        key={`delivery-${storefrontId}`}
+                        storefrontId={parseInt(storefrontId)}
+                        storefrontName={group.name}
+                        subtotal={group.subtotal}
+                        weight={totalWeight}
+                        onDeliveryChange={(selection) =>
+                          handleDeliveryChange(
+                            parseInt(storefrontId),
+                            selection
+                          )
+                        }
+                      />
+                    );
+                  }
+                )}
+
               {/* API корзины (авторизованные) */}
               {isAuthenticated &&
                 Object.entries(cartsByStorefront).map(
@@ -689,6 +746,39 @@ export default function CartPage() {
                   )
                 )}
 
+              {/* Delivery selection for authenticated users */}
+              {isAuthenticated &&
+                Object.entries(cartsByStorefront).map(
+                  ([storefrontId, group]) => {
+                    // Рассчитываем общий вес товаров витрины
+                    // TODO: добавить поле weight в Product на backend
+                    const totalWeight =
+                      group.cart.items?.reduce(
+                        (sum, item) =>
+                          sum +
+                          ((item.product as any)?.weight || 0.5) *
+                            (item.quantity || 1),
+                        0
+                      ) || 0;
+
+                    return (
+                      <DeliverySelector
+                        key={`delivery-${storefrontId}`}
+                        storefrontId={parseInt(storefrontId)}
+                        storefrontName={group.name}
+                        subtotal={group.subtotal}
+                        weight={totalWeight}
+                        onDeliveryChange={(selection) =>
+                          handleDeliveryChange(
+                            parseInt(storefrontId),
+                            selection
+                          )
+                        }
+                      />
+                    );
+                  }
+                )}
+
               {/* Promo code */}
               <div className="card bg-base-200">
                 <div className="card-body">
@@ -720,11 +810,17 @@ export default function CartPage() {
                       <span>{t('shipping')}</span>
                       <span>
                         {shipping === 0 ? (
-                          <span className="text-success">
-                            {t('freeShipping')}
-                          </span>
+                          Object.keys(deliverySelections).length === 0 ? (
+                            <span className="text-base-content/60 text-sm">
+                              Не выбрана
+                            </span>
+                          ) : (
+                            <span className="text-success">
+                              {t('freeShipping')}
+                            </span>
+                          )
                         ) : (
-                          `${shipping} RSD`
+                          `${shipping.toFixed(0)} RSD`
                         )}
                       </span>
                     </div>
@@ -737,26 +833,35 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  {/* Free shipping progress */}
-                  {shipping > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm text-base-content/60 mb-2">
-                        {t('freeShippingAt', {
-                          amount: (5000 - total).toFixed(2),
-                        })}
-                      </p>
-                      <progress
-                        className="progress progress-primary w-full"
-                        value={total}
-                        max={5000}
-                      />
-                    </div>
-                  )}
+                  {/* Info about delivery selection */}
+                  {Object.keys(deliverySelections).length === 0 &&
+                    itemsCount > 0 && (
+                      <div className="alert alert-warning py-2 mt-4">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="stroke-current shrink-0 h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        <span className="text-sm">
+                          Выберите способ доставки
+                        </span>
+                      </div>
+                    )}
 
                   <button
                     onClick={handleCheckout}
                     className="btn btn-primary btn-block mt-6"
-                    disabled={isLoading}
+                    disabled={
+                      isLoading || Object.keys(deliverySelections).length === 0
+                    }
                   >
                     {isLoading && <span className="loading loading-spinner" />}
                     {t('proceedToCheckout')}

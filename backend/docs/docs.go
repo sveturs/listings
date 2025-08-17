@@ -17712,6 +17712,1641 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/postexpress/calculate-rate": {
+            "post": {
+                "description": "Рассчитать стоимость доставки Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Calculate delivery rate",
+                "parameters": [
+                    {
+                        "description": "Параметры для расчета стоимости",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.CalculateRateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.CalculateRateResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/health": {
+            "get": {
+                "description": "Проверяет доступность и состояние сервиса Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Health check для Post Express",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/locations/search": {
+            "get": {
+                "description": "Поиск населенных пунктов Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Search locations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поисковый запрос",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressLocation"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/locations/sync": {
+            "post": {
+                "description": "Синхронизировать населенные пункты с API Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Sync locations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/locations/{id}": {
+            "get": {
+                "description": "Получить информацию о населенном пункте по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get location",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID населенного пункта",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressLocation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/offices": {
+            "get": {
+                "description": "Получить список почтовых отделений для населенного пункта",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get offices",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID населенного пункта",
+                        "name": "location_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressOffice"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/offices/sync": {
+            "post": {
+                "description": "Синхронизировать почтовые отделения с API Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Sync offices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/offices/{code}": {
+            "get": {
+                "description": "Получить информацию о почтовом отделении по коду",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get office",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Код отделения",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressOffice"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/rates": {
+            "get": {
+                "description": "Получить список тарифов доставки Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get delivery rates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressRate"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/settings": {
+            "get": {
+                "description": "Получить текущие настройки интеграции с Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get Post Express settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Обновить настройки интеграции с Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Update Post Express settings",
+                "parameters": [
+                    {
+                        "description": "Настройки Post Express",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments": {
+            "get": {
+                "description": "Получить список отправлений с фильтрацией и пагинацией",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "List shipments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Статус отправления",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата от (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата до (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Город получателя",
+                        "name": "city",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Номер страницы",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Размер страницы",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создать новое отправление Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Create shipment",
+                "parameters": [
+                    {
+                        "description": "Данные для создания отправления",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.CreateShipmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressShipment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments/{id}": {
+            "get": {
+                "description": "Получить информацию об отправлении по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get shipment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отправления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.PostExpressShipment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments/{id}/cancel": {
+            "post": {
+                "description": "Отменить отправление",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Cancel shipment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отправления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Причина отмены",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments/{id}/invoice": {
+            "get": {
+                "description": "Получить накладную отправления в формате PDF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get shipment invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отправления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF накладная",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments/{id}/label": {
+            "get": {
+                "description": "Получить этикетку отправления в формате PDF",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get shipment label",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отправления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF этикетка",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/shipments/{id}/status": {
+            "put": {
+                "description": "Обновить статус отправления",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Update shipment status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID отправления",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Новый статус",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/statistics/shipments": {
+            "get": {
+                "description": "Получить статистику отправлений с фильтрами",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get shipment statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Дата от (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата до (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Группировка (day, week, month)",
+                        "name": "group_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_storage.ShipmentStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/statistics/warehouse/{id}": {
+            "get": {
+                "description": "Получить статистику склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get warehouse statistics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID склада",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_storage.WarehouseStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/track/sync": {
+            "post": {
+                "description": "Синхронизировать статусы всех активных отправлений с Post Express",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Sync all active shipments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/track/{tracking}": {
+            "get": {
+                "description": "Получить события отслеживания отправления по трекинг-номеру",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Track shipment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Трекинг-номер",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_postexpress_models.TrackingEvent"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse": {
+            "get": {
+                "description": "Получить список всех активных складов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get warehouses",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_postexpress_models.Warehouse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/pickup-orders": {
+            "post": {
+                "description": "Создать заказ на самовывоз со склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Create pickup order",
+                "parameters": [
+                    {
+                        "description": "Данные для создания заказа на самовывоз",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.CreatePickupOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.WarehousePickupOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/pickup-orders/code/{code}": {
+            "get": {
+                "description": "Получить информацию о заказе на самовывоз по коду",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get pickup order by code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Код самовывоза",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.WarehousePickupOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/pickup-orders/{id}": {
+            "get": {
+                "description": "Получить информацию о заказе на самовывоз по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get pickup order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заказа на самовывоз",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.WarehousePickupOrder"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/pickup-orders/{id}/cancel": {
+            "post": {
+                "description": "Отменить заказ на самовывоз",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Cancel pickup order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заказа на самовывоз",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Причина отмены",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/pickup-orders/{id}/confirm": {
+            "post": {
+                "description": "Подтвердить выдачу заказа со склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Confirm pickup",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заказа на самовывоз",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные подтверждения",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/warehouse/{code}": {
+            "get": {
+                "description": "Получить информацию о складе по коду",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PostExpress"
+                ],
+                "summary": "Get warehouse",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Код склада",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.Warehouse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/product-variant-attributes": {
             "get": {
                 "description": "Returns list of all product variant attributes",
@@ -34102,6 +35737,925 @@ const docTemplate = `{
                 },
                 "similarity_score": {
                     "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.CalculateRateRequest": {
+            "type": "object",
+            "required": [
+                "recipient_postal_code",
+                "sender_postal_code",
+                "weight_kg"
+            ],
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "declared_value": {
+                    "type": "number"
+                },
+                "height_cm": {
+                    "type": "integer"
+                },
+                "length_cm": {
+                    "type": "integer"
+                },
+                "recipient_postal_code": {
+                    "type": "string"
+                },
+                "sender_postal_code": {
+                    "type": "string"
+                },
+                "service_type": {
+                    "type": "string"
+                },
+                "weight_kg": {
+                    "type": "number",
+                    "maximum": 20,
+                    "minimum": 0.1
+                },
+                "width_cm": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.CalculateRateResponse": {
+            "type": "object",
+            "properties": {
+                "base_price": {
+                    "type": "number"
+                },
+                "cod_fee": {
+                    "type": "number"
+                },
+                "delivery_days_max": {
+                    "type": "integer"
+                },
+                "delivery_days_min": {
+                    "type": "integer"
+                },
+                "insurance_fee": {
+                    "type": "number"
+                },
+                "service_available": {
+                    "type": "boolean"
+                },
+                "total_price": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.CreatePickupOrderRequest": {
+            "type": "object",
+            "required": [
+                "customer_name",
+                "customer_phone"
+            ],
+            "properties": {
+                "customer_email": {
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_phone": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "storefront_order_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.CreateShipmentRequest": {
+            "type": "object",
+            "required": [
+                "recipient_address",
+                "recipient_city",
+                "recipient_name",
+                "recipient_phone",
+                "recipient_postal_code",
+                "weight_kg"
+            ],
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "declared_value": {
+                    "type": "number"
+                },
+                "delivery_instructions": {
+                    "type": "string"
+                },
+                "height_cm": {
+                    "type": "integer"
+                },
+                "insurance_amount": {
+                    "type": "number"
+                },
+                "length_cm": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "recipient_address": {
+                    "type": "string"
+                },
+                "recipient_city": {
+                    "type": "string"
+                },
+                "recipient_email": {
+                    "type": "string"
+                },
+                "recipient_name": {
+                    "type": "string"
+                },
+                "recipient_phone": {
+                    "type": "string"
+                },
+                "recipient_postal_code": {
+                    "type": "string"
+                },
+                "service_type": {
+                    "type": "string"
+                },
+                "storefront_order_id": {
+                    "type": "integer"
+                },
+                "weight_kg": {
+                    "type": "number",
+                    "maximum": 20,
+                    "minimum": 0.1
+                },
+                "width_cm": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.PickupOrderStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "ready",
+                "picked_up",
+                "expired",
+                "canceled"
+            ],
+            "x-enum-varnames": [
+                "PickupOrderStatusPending",
+                "PickupOrderStatusReady",
+                "PickupOrderStatusPickedUp",
+                "PickupOrderStatusExpired",
+                "PickupOrderStatusCanceled"
+            ]
+        },
+        "backend_internal_proj_postexpress_models.PostExpressLocation": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "delivery_zone": {
+                    "type": "string"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "municipality": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "name_cyrillic": {
+                    "type": "string"
+                },
+                "post_express_id": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "supports_cod": {
+                    "type": "boolean"
+                },
+                "supports_express": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.PostExpressOffice": {
+            "type": "object",
+            "properties": {
+                "accepts_packages": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "closed_until": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "has_atm": {
+                    "type": "boolean"
+                },
+                "has_parking": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "issues_packages": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "location_id": {
+                    "type": "integer"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "office_code": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "temporary_closed": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "wheelchair_accessible": {
+                    "type": "boolean"
+                },
+                "working_hours": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.PostExpressRate": {
+            "type": "object",
+            "properties": {
+                "base_price": {
+                    "type": "number"
+                },
+                "cod_fee": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "delivery_days_max": {
+                    "type": "integer"
+                },
+                "delivery_days_min": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "insurance_included_up_to": {
+                    "type": "number"
+                },
+                "insurance_rate_percent": {
+                    "type": "number"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_special_offer": {
+                    "type": "boolean"
+                },
+                "max_dimensions_sum_cm": {
+                    "type": "integer"
+                },
+                "max_height_cm": {
+                    "type": "integer"
+                },
+                "max_length_cm": {
+                    "type": "integer"
+                },
+                "max_width_cm": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "weight_from": {
+                    "type": "number"
+                },
+                "weight_to": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.PostExpressSettings": {
+            "type": "object",
+            "properties": {
+                "api_endpoint": {
+                    "type": "string"
+                },
+                "api_username": {
+                    "type": "string"
+                },
+                "auto_print_labels": {
+                    "type": "boolean"
+                },
+                "auto_track_shipments": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "failed_deliveries": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "notify_on_delivery": {
+                    "type": "boolean"
+                },
+                "notify_on_failed_delivery": {
+                    "type": "boolean"
+                },
+                "notify_on_pickup": {
+                    "type": "boolean"
+                },
+                "sender_address": {
+                    "type": "string"
+                },
+                "sender_city": {
+                    "type": "string"
+                },
+                "sender_email": {
+                    "type": "string"
+                },
+                "sender_name": {
+                    "type": "string"
+                },
+                "sender_phone": {
+                    "type": "string"
+                },
+                "sender_postal_code": {
+                    "type": "string"
+                },
+                "successful_deliveries": {
+                    "type": "integer"
+                },
+                "test_mode": {
+                    "type": "boolean"
+                },
+                "total_shipments": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.PostExpressShipment": {
+            "type": "object",
+            "properties": {
+                "barcode": {
+                    "type": "string"
+                },
+                "base_price": {
+                    "description": "Расчет стоимости",
+                    "type": "number"
+                },
+                "cod_amount": {
+                    "type": "number"
+                },
+                "cod_fee": {
+                    "type": "number"
+                },
+                "cod_reference": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "declared_value": {
+                    "type": "number"
+                },
+                "delivered_at": {
+                    "type": "string"
+                },
+                "delivery_instructions": {
+                    "type": "string"
+                },
+                "delivery_status": {
+                    "type": "string"
+                },
+                "failed_at": {
+                    "type": "string"
+                },
+                "failed_reason": {
+                    "type": "string"
+                },
+                "height_cm": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "insurance_amount": {
+                    "type": "number"
+                },
+                "insurance_fee": {
+                    "type": "number"
+                },
+                "internal_notes": {
+                    "type": "string"
+                },
+                "invoice_url": {
+                    "type": "string"
+                },
+                "label_url": {
+                    "description": "Документы",
+                    "type": "string"
+                },
+                "length_cm": {
+                    "type": "integer"
+                },
+                "marketplace_order_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "description": "Дополнительная информация",
+                    "type": "string"
+                },
+                "picked_up_at": {
+                    "type": "string"
+                },
+                "pod_url": {
+                    "type": "string"
+                },
+                "post_express_id": {
+                    "type": "string"
+                },
+                "recipient_address": {
+                    "type": "string"
+                },
+                "recipient_city": {
+                    "type": "string"
+                },
+                "recipient_email": {
+                    "type": "string"
+                },
+                "recipient_location_id": {
+                    "type": "integer"
+                },
+                "recipient_name": {
+                    "description": "Получатель",
+                    "type": "string"
+                },
+                "recipient_phone": {
+                    "type": "string"
+                },
+                "recipient_postal_code": {
+                    "type": "string"
+                },
+                "registered_at": {
+                    "description": "Временные метки",
+                    "type": "string"
+                },
+                "returned_at": {
+                    "type": "string"
+                },
+                "sender_address": {
+                    "type": "string"
+                },
+                "sender_city": {
+                    "type": "string"
+                },
+                "sender_email": {
+                    "type": "string"
+                },
+                "sender_location_id": {
+                    "type": "integer"
+                },
+                "sender_name": {
+                    "description": "Отправитель",
+                    "type": "string"
+                },
+                "sender_phone": {
+                    "type": "string"
+                },
+                "sender_postal_code": {
+                    "type": "string"
+                },
+                "service_type": {
+                    "description": "Услуги",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Статусы",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_postexpress_models.ShipmentStatus"
+                        }
+                    ]
+                },
+                "status_history": {
+                    "description": "История статусов",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "storefront_order_id": {
+                    "type": "integer"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "weight_kg": {
+                    "description": "Параметры посылки",
+                    "type": "number"
+                },
+                "width_cm": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.ShipmentStatus": {
+            "type": "string",
+            "enum": [
+                "created",
+                "registered",
+                "picked_up",
+                "in_transit",
+                "delivered",
+                "failed",
+                "returned"
+            ],
+            "x-enum-varnames": [
+                "ShipmentStatusCreated",
+                "ShipmentStatusRegistered",
+                "ShipmentStatusPickedUp",
+                "ShipmentStatusInTransit",
+                "ShipmentStatusDelivered",
+                "ShipmentStatusFailed",
+                "ShipmentStatusReturned"
+            ]
+        },
+        "backend_internal_proj_postexpress_models.TrackingEvent": {
+            "type": "object",
+            "properties": {
+                "additional_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "event_code": {
+                    "type": "string"
+                },
+                "event_description": {
+                    "type": "string"
+                },
+                "event_location": {
+                    "type": "string"
+                },
+                "event_timestamp": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "shipment_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.Warehouse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_occupancy_m3": {
+                    "type": "number"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "has_loading_dock": {
+                    "type": "boolean"
+                },
+                "has_refrigeration": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "manager_name": {
+                    "type": "string"
+                },
+                "manager_phone": {
+                    "type": "string"
+                },
+                "max_capacity_m3": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "storage_area_m2": {
+                    "type": "number"
+                },
+                "supports_fbs": {
+                    "type": "boolean"
+                },
+                "supports_pickup": {
+                    "type": "boolean"
+                },
+                "total_area_m2": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "working_hours": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_models.WarehousePickupOrder": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_email": {
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_phone": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "id_document_number": {
+                    "type": "string"
+                },
+                "id_document_type": {
+                    "type": "string"
+                },
+                "marketplace_order_id": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "notification_sent_at": {
+                    "type": "string"
+                },
+                "picked_up_at": {
+                    "type": "string"
+                },
+                "pickup_code": {
+                    "type": "string"
+                },
+                "pickup_confirmed_by": {
+                    "type": "string"
+                },
+                "pickup_photo_url": {
+                    "type": "string"
+                },
+                "qr_code_url": {
+                    "type": "string"
+                },
+                "ready_at": {
+                    "type": "string"
+                },
+                "reminder_sent_at": {
+                    "type": "string"
+                },
+                "signature_url": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/backend_internal_proj_postexpress_models.PickupOrderStatus"
+                },
+                "storefront_order_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "warehouse_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_storage.ShipmentStatistics": {
+            "type": "object",
+            "properties": {
+                "average_delivery_time": {
+                    "type": "number"
+                },
+                "by_city": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "by_status": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "canceled": {
+                    "type": "integer"
+                },
+                "delivered": {
+                    "type": "integer"
+                },
+                "delivered_shipments": {
+                    "type": "integer"
+                },
+                "delivery_success_rate": {
+                    "type": "number"
+                },
+                "failed_shipments": {
+                    "type": "integer"
+                },
+                "in_transit": {
+                    "type": "integer"
+                },
+                "in_transit_shipments": {
+                    "type": "integer"
+                },
+                "pending": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_cod": {
+                    "type": "number"
+                },
+                "total_revenue": {
+                    "type": "number"
+                },
+                "total_shipments": {
+                    "description": "Дополнительные поля для совместимости с repository",
+                    "type": "integer"
+                },
+                "total_value": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_postexpress_storage.WarehouseStatistics": {
+            "type": "object",
+            "properties": {
+                "average_pickup_time": {
+                    "type": "number"
+                },
+                "canceled_orders": {
+                    "type": "integer"
+                },
+                "completed_orders": {
+                    "type": "integer"
+                },
+                "completed_pickup_orders": {
+                    "type": "integer"
+                },
+                "occupancy_percent": {
+                    "type": "number"
+                },
+                "pending_orders": {
+                    "type": "integer"
+                },
+                "pending_pickup_orders": {
+                    "type": "integer"
+                },
+                "ready_orders": {
+                    "type": "integer"
+                },
+                "total_inventory_items": {
+                    "type": "integer"
+                },
+                "total_orders": {
+                    "type": "integer"
+                },
+                "total_pickup_orders": {
+                    "description": "Дополнительные поля для совместимости с repository",
+                    "type": "integer"
+                },
+                "total_value": {
+                    "type": "number"
+                },
+                "total_volume_m3": {
+                    "type": "number"
+                },
+                "warehouse_id": {
+                    "type": "integer"
+                },
+                "warehouse_name": {
+                    "type": "string"
                 }
             }
         },

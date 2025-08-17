@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+const (
+	envValueTrue = "true"
+)
+
 type Config struct {
 	Port                  string
 	DatabaseURL           string
@@ -31,11 +35,12 @@ type Config struct {
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
 	MinIOPublicURL        string
-	Docs                  DocsConfig      `yaml:"docs"`
-	AllSecure             AllSecureConfig `yaml:"allsecure"`
-	SearchWeights         *SearchWeights  `yaml:"search_weights"`
-	Redis                 RedisConfig     `yaml:"redis"`
-	MigrationsOnAPI       string          `yaml:"migrations_on_api"` // off, schema, full
+	Docs                  DocsConfig        `yaml:"docs"`
+	AllSecure             AllSecureConfig   `yaml:"allsecure"`
+	PostExpress           PostExpressConfig `yaml:"postexpress"`
+	SearchWeights         *SearchWeights    `yaml:"search_weights"`
+	Redis                 RedisConfig       `yaml:"redis"`
+	MigrationsOnAPI       string            `yaml:"migrations_on_api"` // off, schema, full
 }
 
 type FileStorageConfig struct {
@@ -60,6 +65,15 @@ type AllSecureConfig struct {
 	MarketplaceCommissionRate float64 `yaml:"marketplace_commission_rate"`
 	EscrowReleaseDays         int     `yaml:"escrow_release_days"`
 	SandboxMode               bool    `yaml:"sandbox_mode"`
+}
+
+type PostExpressConfig struct {
+	BaseURL       string `yaml:"base_url"`
+	Username      string `yaml:"username"`
+	Password      string `yaml:"password"`
+	TestMode      bool   `yaml:"test_mode"`
+	SenderName    string `yaml:"sender_name"`
+	SenderAddress string `yaml:"sender_address"`
 }
 
 type RedisConfig struct {
@@ -169,7 +183,7 @@ func NewConfig() (*Config, error) {
 
 	// Получаем ключ DeepL API (необязательный)
 	config.DeepLAPIKey = os.Getenv("DEEPL_API_KEY")
-	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == "true"
+	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == envValueTrue
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")
@@ -203,7 +217,7 @@ func NewConfig() (*Config, error) {
 		MinioEndpoint:   os.Getenv("MINIO_ENDPOINT"),
 		MinioAccessKey:  os.Getenv("MINIO_ACCESS_KEY"),
 		MinioSecretKey:  os.Getenv("MINIO_SECRET_KEY"),
-		MinioUseSSL:     os.Getenv("MINIO_USE_SSL") == "true",
+		MinioUseSSL:     os.Getenv("MINIO_USE_SSL") == envValueTrue,
 		MinioBucketName: os.Getenv("MINIO_BUCKET_NAME"),
 		MinioLocation:   os.Getenv("MINIO_LOCATION"),
 	}
@@ -310,6 +324,29 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
+	// Настройки Post Express
+	postExpressConfig := PostExpressConfig{
+		BaseURL:       os.Getenv("POSTEXPRESS_BASE_URL"),
+		Username:      os.Getenv("POSTEXPRESS_USERNAME"),
+		Password:      os.Getenv("POSTEXPRESS_PASSWORD"),
+		TestMode:      os.Getenv("POSTEXPRESS_TEST_MODE") == envValueTrue,
+		SenderName:    os.Getenv("POSTEXPRESS_SENDER_NAME"),
+		SenderAddress: os.Getenv("POSTEXPRESS_SENDER_ADDRESS"),
+	}
+
+	// Если базовый URL не указан, используем production endpoint
+	if postExpressConfig.BaseURL == "" {
+		postExpressConfig.BaseURL = "https://wsp.postexpress.rs/api/Transakcija"
+	}
+
+	// Значения по умолчанию для отправителя
+	if postExpressConfig.SenderName == "" {
+		postExpressConfig.SenderName = "Sve Tu d.o.o."
+	}
+	if postExpressConfig.SenderAddress == "" {
+		postExpressConfig.SenderAddress = "Микија Манојловића 53, 21000 Нови Сад"
+	}
+
 	// Загружаем веса поиска (используем дефолтные значения)
 	searchWeights := GetDefaultSearchWeights()
 
@@ -392,6 +429,7 @@ func NewConfig() (*Config, error) {
 		FileUpload:            fileUploadConfig,
 		Docs:                  docsConfig,
 		AllSecure:             allSecureConfig,
+		PostExpress:           postExpressConfig,
 		SearchWeights:         searchWeights,
 		Redis:                 redisConfig,
 		MigrationsOnAPI:       migrationsOnAPI,

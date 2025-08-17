@@ -45,6 +45,7 @@ import {
   FiTrendingUp,
   FiGrid,
   FiList,
+  FiShoppingBag,
 } from 'react-icons/fi';
 import {
   BsHouseDoor,
@@ -70,6 +71,7 @@ interface HomePageClientProps {
 
 export default function HomePageClient({
   createListingText,
+  locale,
 }: HomePageClientProps) {
   const [_mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +84,10 @@ export default function HomePageClient({
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
+  const [popularCategories, setPopularCategories] = useState<any[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [officialStores, setOfficialStores] = useState<any[]>([]);
+  const [_isLoadingStores, setIsLoadingStores] = useState(false);
 
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
@@ -186,64 +192,6 @@ export default function HomePageClient({
     },
   ];
 
-  // Официальные магазины с реальными логотипами
-  const stores = [
-    {
-      id: 1,
-      name: 'TechnoWorld',
-      category: 'Электроника',
-      logo: 'https://ui-avatars.com/api/?name=TW&background=6366f1&color=fff&size=128',
-      followers: '125K',
-      products: 892,
-      rating: 4.9,
-      verified: true,
-      discount: 'до -70%',
-      bgImage:
-        'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400&h=200&fit=crop',
-      blackFriday: true,
-      realDiscount: '31% реальная скидка',
-    },
-    {
-      id: 2,
-      name: 'FashionHub',
-      category: 'Одежда и обувь',
-      logo: 'https://ui-avatars.com/api/?name=FH&background=ec4899&color=fff&size=128',
-      followers: '89K',
-      products: 1234,
-      rating: 4.8,
-      verified: true,
-      discount: 'до -50%',
-      bgImage:
-        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=200&fit=crop',
-    },
-    {
-      id: 3,
-      name: 'HomeDecor',
-      category: 'Дом и сад',
-      logo: 'https://ui-avatars.com/api/?name=HD&background=10b981&color=fff&size=128',
-      followers: '67K',
-      products: 456,
-      rating: 4.7,
-      verified: true,
-      discount: 'до -40%',
-      bgImage:
-        'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
-    },
-    {
-      id: 4,
-      name: 'AutoParts',
-      category: 'Автозапчасти',
-      logo: 'https://ui-avatars.com/api/?name=AP&background=ef4444&color=fff&size=128',
-      followers: '45K',
-      products: 789,
-      rating: 4.8,
-      verified: true,
-      discount: 'до -30%',
-      bgImage:
-        'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=200&fit=crop',
-    },
-  ];
-
   // Популярные поисковые запросы
   const trendingSearches = [
     'iPhone 15',
@@ -258,147 +206,372 @@ export default function HomePageClient({
     'Велосипед',
   ];
 
-  // Загрузка категорий
+  // Загрузка категорий и популярных категорий
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await api.get('/api/v1/marketplace/categories');
-        if (response.data.success) {
-          setCategories(response.data.data);
+        // Загружаем обычные категории для выпадающего списка
+        const [categoriesResponse, popularResponse] = await Promise.all([
+          api.get('/api/v1/marketplace/categories'),
+          api.get(
+            `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
+          ),
+        ]);
+
+        if (categoriesResponse.data.success) {
+          setCategories(categoriesResponse.data.data);
+        }
+
+        if (popularResponse.data.success && popularResponse.data.data) {
+          // Добавляем иконки для популярных категорий на основе их slug
+          const iconMap: { [key: string]: any } = {
+            'real-estate': BsHouseDoor,
+            automotive: FaCar,
+            electronics: BsLaptop,
+            fashion: FaTshirt,
+            jobs: BsBriefcase,
+            services: BsTools,
+            'hobbies-entertainment': BsPalette,
+            'home-garden': BsHandbag,
+            industrial: BsTools,
+            'food-beverages': BsPhone,
+            'books-stationery': BsGem,
+            'antiques-art': BsPalette,
+          };
+
+          const colorMap: { [key: string]: string } = {
+            'real-estate': 'text-blue-600',
+            automotive: 'text-red-600',
+            electronics: 'text-purple-600',
+            fashion: 'text-pink-600',
+            jobs: 'text-green-600',
+            services: 'text-orange-600',
+            'hobbies-entertainment': 'text-indigo-600',
+            'home-garden': 'text-yellow-600',
+            industrial: 'text-gray-600',
+            'food-beverages': 'text-teal-600',
+            'books-stationery': 'text-cyan-600',
+            'antiques-art': 'text-rose-600',
+          };
+
+          const categoriesWithIcons = popularResponse.data.data.map(
+            (cat: any) => ({
+              ...cat,
+              icon: iconMap[cat.slug] || BsHandbag,
+              color: colorMap[cat.slug] || 'text-gray-600',
+              count: cat.count ? `${cat.count}+` : '0',
+            })
+          );
+
+          setPopularCategories(categoriesWithIcons);
+          console.log('Popular categories loaded:', categoriesWithIcons);
         }
       } catch (error) {
         console.error('Failed to load categories:', error);
+      } finally {
+        setIsLoadingCategories(false);
       }
     };
     loadCategories();
+  }, [locale]);
+
+  // Загрузка витрин (официальных магазинов)
+  useEffect(() => {
+    const loadStorefronts = async () => {
+      setIsLoadingStores(true);
+      try {
+        // Загружаем активные витрины
+        const response = await api.get('/api/v1/storefronts', {
+          params: {
+            is_active: true,
+            limit: 4,
+            sort_by: 'products_count',
+            sort_order: 'desc',
+          },
+        });
+
+        if (response.data && response.data.storefronts) {
+          // Форматируем данные витрин для отображения
+          const formattedStores = response.data.storefronts.map(
+            (store: any) => {
+              // Генерируем цвет для аватара на основе имени
+              const colors = [
+                '6366f1',
+                'ec4899',
+                '10b981',
+                'ef4444',
+                'f59e0b',
+                '8b5cf6',
+              ];
+              const colorIndex = store.id % colors.length;
+              const bgColor = colors[colorIndex];
+
+              // Берем первые 2 буквы названия для аватара
+              const initials = store.name.substring(0, 2).toUpperCase();
+
+              // Получаем случайное изображение для фона (можно заменить на реальные изображения категорий)
+              const bgImages = [
+                'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=400&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
+                'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400&h=200&fit=crop',
+              ];
+              const bgImage = bgImages[store.id % bgImages.length];
+
+              return {
+                id: store.id,
+                name: store.name,
+                category: store.category_name || 'Магазин',
+                logo:
+                  store.logo_url ||
+                  `https://ui-avatars.com/api/?name=${initials}&background=${bgColor}&color=fff&size=128`,
+                followers: store.followers_count
+                  ? `${Math.floor(store.followers_count / 1000)}K`
+                  : '0',
+                products: store.products_count || 0,
+                rating: store.rating || 0,
+                verified: store.is_verified || false,
+                discount: store.discount_text || '',
+                bgImage: store.banner_url || bgImage,
+                slug: store.slug,
+                description: store.description,
+              };
+            }
+          );
+
+          setOfficialStores(formattedStores);
+          console.log('Loaded storefronts:', formattedStores);
+        } else {
+          // Если нет реальных витрин, используем заглушки
+          setOfficialStores([
+            {
+              id: 1,
+              name: 'Агентство недвижимости',
+              category: 'Недвижимость',
+              logo: '/listings/storefronts/1/logo/10_2.jpeg',
+              followers: '2K',
+              products: 38,
+              rating: 4.5,
+              verified: true,
+              discount: '',
+              bgImage:
+                'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
+              slug: 'agenstvo',
+              description:
+                'Тут мы раскидаем по карте квартиры и будем их продавать',
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load storefronts:', error);
+        // В случае ошибки тоже используем одну витрину из БД как заглушку
+        setOfficialStores([
+          {
+            id: 1,
+            name: 'Агентство недвижимости',
+            category: 'Недвижимость',
+            logo: '/listings/storefronts/1/logo/10_2.jpeg',
+            followers: '2K',
+            products: 38,
+            rating: 4.5,
+            verified: true,
+            discount: '',
+            bgImage:
+              'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
+            slug: 'agenstvo',
+            description:
+              'Тут мы раскидаем по карте квартиры и будем их продавать',
+          },
+        ]);
+      } finally {
+        setIsLoadingStores(false);
+      }
+    };
+
+    loadStorefronts();
   }, []);
 
-  // Загрузка товаров
+  // Загрузка товаров через API поиска
   useEffect(() => {
     const loadListings = async () => {
       setIsLoadingListings(true);
 
-      // Всегда используем демо данные для отображения
-      setListings([
-        {
-          id: 1,
-          title: 'iPhone 15 Pro Max 256GB',
-          price: '€1099',
-          oldPrice: '€1399',
-          discount: '-21%',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop',
-          rating: 4.8,
-          reviews: 234,
-          isNew: true,
-          isPremium: false,
-          isFavorite: false,
-        },
-        {
-          id: 2,
-          title: '2-комн квартира, центр, 65м²',
-          price: '€85000',
-          location: 'Нови Сад',
-          image:
-            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop',
-          rating: 4.9,
-          reviews: 12,
-          isNew: false,
-          isPremium: true,
-          isFavorite: true,
-        },
-        {
-          id: 3,
-          title: 'MacBook Air M3 13" 512GB',
-          price: '€1299',
-          oldPrice: '€1599',
-          discount: '-19%',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&h=300&fit=crop',
-          rating: 4.9,
-          reviews: 567,
-          isNew: true,
-          isPremium: false,
-          isFavorite: false,
-        },
-        {
-          id: 4,
-          title: 'BMW X5 2021 xDrive30d',
-          price: '€52900',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1555215858-9db736e8a7b8?w=400&h=300&fit=crop',
-          rating: 5.0,
-          reviews: 8,
-          isNew: false,
-          isPremium: true,
-          isFavorite: true,
-        },
-        {
-          id: 5,
-          title: 'PlayStation 5 с играми',
-          price: '€549',
-          oldPrice: '€699',
-          discount: '-21%',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&h=300&fit=crop',
-          rating: 4.9,
-          reviews: 445,
-          isNew: false,
-          isPremium: false,
-          isFavorite: false,
-        },
-        {
-          id: 6,
-          title: 'Диван угловой, кожа',
-          price: '€899',
-          location: 'Нови Сад',
-          image:
-            'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
-          rating: 4.7,
-          reviews: 89,
-          isNew: true,
-          isPremium: false,
-          isFavorite: true,
-        },
-        {
-          id: 7,
-          title: 'Nike Air Max 2024',
-          price: '€149',
-          oldPrice: '€199',
-          discount: '-25%',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop',
-          rating: 4.8,
-          reviews: 1234,
-          isNew: true,
-          isPremium: false,
-          isFavorite: false,
-        },
-        {
-          id: 8,
-          title: 'Электросамокат Xiaomi Pro 2',
-          price: '€449',
-          location: 'Белград',
-          image:
-            'https://images.unsplash.com/photo-1593941966874-e9ec34e67d0e?w=400&h=300&fit=crop',
-          rating: 4.6,
-          reviews: 567,
-          isNew: false,
-          isPremium: false,
-          isFavorite: false,
-        },
-      ]);
+      try {
+        // Загружаем больше объявлений для смешанного показа C2C и B2C
+        const searchParams = new URLSearchParams();
+        searchParams.append('query', '');
+        searchParams.append('size', '25');
+        searchParams.append('page', '1');
+        searchParams.append('sort', 'created_at');
+        searchParams.append('sortDirection', 'desc');
+        searchParams.append('language', locale);
+        searchParams.append('status', 'active');
+        searchParams.append('product_types[]', 'marketplace');
+        searchParams.append('product_types[]', 'storefront');
 
-      setIsLoadingListings(false);
+        console.log(
+          'Request URL:',
+          `/api/v1/search?${searchParams.toString()}`
+        );
+        const response = await api.get(
+          `/api/v1/search?${searchParams.toString()}`
+        );
+        console.log('API Response:', response.data);
+
+        if (
+          response.data &&
+          response.data.items &&
+          response.data.items.length > 0
+        ) {
+          // Разделяем объявления на C2C и B2C для смешанного показа
+          const allListings = response.data.items;
+          console.log(
+            'All listings product types:',
+            JSON.stringify(
+              allListings.map((l: any) => ({
+                id: l.id,
+                product_id: l.product_id,
+                product_type: l.product_type,
+                name: l.name || l.title,
+              })),
+              null,
+              2
+            )
+          );
+          const c2cListings = allListings.filter(
+            (listing: any) => listing.product_type !== 'storefront'
+          );
+          const b2cListings = allListings.filter(
+            (listing: any) => listing.product_type === 'storefront'
+          );
+
+          // Создаем смешанную выборку: преимущественно C2C, но включаем B2C если есть
+          let selectedListings = [];
+
+          // Берем первые 6 C2C объявлений
+          selectedListings.push(...c2cListings.slice(0, 6));
+
+          // Добавляем 2 B2C объявления если есть
+          if (b2cListings.length > 0) {
+            selectedListings.push(...b2cListings.slice(0, 2));
+          } else {
+            // Если B2C нет, добавляем еще 2 C2C
+            selectedListings.push(...c2cListings.slice(6, 8));
+          }
+
+          // Ограничиваем до 8 объявлений
+          selectedListings = selectedListings.slice(0, 8);
+
+          console.log(
+            `Mixed selection: ${selectedListings.filter((l) => !l.storefrontId).length} C2C + ${selectedListings.filter((l) => l.storefrontId).length} B2C`
+          );
+
+          const apiListings = selectedListings.map((listing: any) => {
+            // Вычисляем скидку если есть старая цена
+            let discount = null;
+            let oldPrice = null;
+
+            if (
+              listing.originalPrice &&
+              listing.price &&
+              listing.originalPrice > listing.price
+            ) {
+              const discountPercent = Math.round(
+                ((listing.originalPrice - listing.price) /
+                  listing.originalPrice) *
+                  100
+              );
+              discount = `-${discountPercent}%`;
+              oldPrice = `${listing.originalPrice} РСД`;
+            }
+
+            return {
+              id:
+                listing.product_type === 'storefront'
+                  ? listing.product_id
+                  : listing.id,
+              title: listing.name || listing.title,
+              price: `${listing.price} ${listing.currency || 'РСД'}`,
+              oldPrice,
+              discount,
+              location:
+                listing.address_city ||
+                listing.city ||
+                listing.location?.city ||
+                'Сербия',
+              image:
+                listing.images && listing.images.length > 0
+                  ? `http://localhost:3000${listing.images[0].url || listing.images[0].public_url}`
+                  : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop', // fallback изображение
+              rating: listing.rating || 4.0 + Math.random() * 1.0, // Используем настоящий рейтинг или генерируем
+              reviews:
+                listing.reviewCount || Math.floor(Math.random() * 500) + 10,
+              isNew:
+                new Date(listing.created_at || listing.createdAt) >
+                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Новое если создано за последнюю неделю
+              isPremium: listing.isPremium || false,
+              isFavorite: false, // Это нужно будет получать из профиля пользователя
+              category: listing.category?.name || listing.categoryName,
+              isStorefront: listing.product_type === 'storefront',
+            };
+          });
+
+          setListings(apiListings);
+          console.log(
+            'Loaded hot deals from API:',
+            apiListings.length,
+            'items'
+          );
+        } else {
+          console.warn(
+            'No listings data in API response, showing demo content for development'
+          );
+          // Fallback: показываем несколько демо объявлений когда API пуст
+          setListings([
+            {
+              id: 'demo-1',
+              title: 'iPhone 15 Pro Max 256GB',
+              price: '130000 РСД',
+              oldPrice: '167000 РСД',
+              discount: '-21%',
+              location: 'Белград',
+              image:
+                'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop',
+              rating: 4.8,
+              reviews: 234,
+              isNew: true,
+              isPremium: false,
+              isFavorite: false,
+            },
+            {
+              id: 'demo-2',
+              title: 'MacBook Air M3 13" 512GB',
+              price: '155000 РСД',
+              oldPrice: '190000 РСД',
+              discount: '-19%',
+              location: 'Белград',
+              image:
+                'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&h=300&fit=crop',
+              rating: 4.9,
+              reviews: 567,
+              isNew: true,
+              isPremium: false,
+              isFavorite: false,
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to load hot deals from API:', error);
+
+        // В случае ошибки показываем пустой массив вместо mock данных
+        setListings([]);
+      } finally {
+        setIsLoadingListings(false);
+      }
     };
 
     loadListings();
-  }, []);
+  }, [locale]);
 
   return (
     <PageTransition mode="fade">
@@ -521,7 +694,7 @@ export default function HomePageClient({
                   return (
                     <Link
                       key={cat.id}
-                      href={`/category/${cat.id}`}
+                      href={`/${locale}/search?category=${cat.id}`}
                       className="flex items-center gap-2 hover:text-primary transition-colors"
                     >
                       <Icon className={`w-4 h-4 ${cat.color}`} />
@@ -631,32 +804,46 @@ export default function HomePageClient({
               <HiOutlineSparkles className="w-6 h-6 text-warning" />
               Популярные категории
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-              {categoryIcons.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/category/${cat.id}`}
-                    className="group"
-                  >
-                    <div className="card bg-base-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="card-body p-4 text-center">
-                        <div
-                          className={`mx-auto mb-2 p-3 rounded-full bg-base-200 group-hover:bg-primary/10 transition-colors`}
-                        >
-                          <Icon className={`w-8 h-8 ${cat.color}`} />
-                        </div>
-                        <h3 className="font-medium text-sm">{cat.name}</h3>
-                        <p className="text-xs text-base-content/60">
-                          {cat.count}
-                        </p>
-                      </div>
+            {isLoadingCategories ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="card bg-base-100">
+                    <div className="card-body p-4">
+                      <div className="skeleton h-14 w-14 rounded-full mx-auto mb-2"></div>
+                      <div className="skeleton h-4 w-full"></div>
+                      <div className="skeleton h-3 w-1/2 mx-auto"></div>
                     </div>
-                  </Link>
-                );
-              })}
-            </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                {popularCategories.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/${locale}/search?category=${cat.id}`}
+                      className="group"
+                    >
+                      <div className="card bg-base-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="card-body p-4 text-center">
+                          <div
+                            className={`mx-auto mb-2 p-3 rounded-full bg-base-200 group-hover:bg-primary/10 transition-colors`}
+                          >
+                            <Icon className={`w-8 h-8 ${cat.color}`} />
+                          </div>
+                          <h3 className="font-medium text-sm">{cat.name}</h3>
+                          <p className="text-xs text-base-content/60">
+                            {cat.count}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
@@ -716,22 +903,47 @@ export default function HomePageClient({
                       alt={deal.title}
                       className="w-full h-full object-cover"
                     />
-                    {deal.isNew && (
+
+                    {/* Значок витрины для B2C объявлений */}
+                    {deal.isStorefront && (
+                      <div className="badge badge-info absolute top-2 left-2 flex items-center gap-1">
+                        <FiShoppingBag className="w-3 h-3" />
+                        Витрина
+                      </div>
+                    )}
+
+                    {/* Остальные бейджи с учетом значка витрины */}
+                    {deal.isNew && !deal.isStorefront && (
                       <div className="badge badge-secondary absolute top-2 left-2">
                         NEW
                       </div>
                     )}
-                    {deal.discount && (
+                    {deal.isNew && deal.isStorefront && (
+                      <div className="badge badge-secondary absolute top-12 left-2">
+                        NEW
+                      </div>
+                    )}
+
+                    {deal.discount && !deal.isStorefront && (
                       <div className="badge badge-error absolute top-2 left-2">
                         {deal.discount}
                       </div>
                     )}
+                    {deal.discount && deal.isStorefront && (
+                      <div className="badge badge-error absolute top-12 left-2">
+                        {deal.discount}
+                      </div>
+                    )}
+
                     {deal.isPremium && (
                       <div className="badge badge-warning absolute top-2 right-2">
                         PREMIUM
                       </div>
                     )}
-                    <button className="btn btn-circle btn-sm absolute top-2 right-2 bg-base-100/80 hover:bg-base-100">
+
+                    <button
+                      className={`btn btn-circle btn-sm absolute ${deal.isPremium ? 'top-12 right-2' : 'top-2 right-2'} bg-base-100/80 hover:bg-base-100`}
+                    >
                       <FiHeart
                         className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
                       />
@@ -766,12 +978,48 @@ export default function HomePageClient({
                         {deal.price}
                       </p>
                     </div>
-                    <button
-                      className="btn btn-primary btn-sm btn-block mt-2"
-                      onClick={() => console.log('Add to cart:', deal.id)}
-                    >
-                      В корзину
-                    </button>
+
+                    {/* Кнопки действий в зависимости от типа объявления */}
+                    {deal.isStorefront ? (
+                      // B2C (витрина) - кнопка "В корзину" + "Написать в чат"
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="btn btn-primary btn-sm flex-1"
+                          onClick={() => console.log('Add to cart:', deal.id)}
+                        >
+                          В корзину
+                        </button>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() =>
+                            console.log('Chat with seller:', deal.id)
+                          }
+                        >
+                          <FiMessageCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      // C2C (обычное объявление) - "Написать в чат" + "В избранное"
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          className="btn btn-primary btn-sm flex-1"
+                          onClick={() =>
+                            console.log('Chat with seller:', deal.id)
+                          }
+                        >
+                          <FiMessageCircle className="w-4 h-4 mr-1" />
+                          Написать в чат
+                        </button>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() =>
+                            console.log('Add to favorites:', deal.id)
+                          }
+                        >
+                          <FiHeart className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -916,7 +1164,7 @@ export default function HomePageClient({
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stores.map((store) => (
+            {officialStores.map((store) => (
               <div
                 key={store.id}
                 className="card bg-base-100 hover:shadow-xl transition-all overflow-hidden"
