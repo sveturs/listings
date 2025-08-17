@@ -87,5 +87,23 @@ INSERT INTO public.permissions (id, name, resource, action, description, created
 
 
 --
--- Data for Name: price_history; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: post_express_api_logs; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: post_express_locations; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: post_express_offices; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: post_express_rates; Type: TABLE DATA; Schema: public; Owner: -
 --

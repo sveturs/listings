@@ -1,15 +1,11 @@
-ALTER TABLE ONLY public.payment_methods
-    ADD CONSTRAINT payment_methods_code_key UNIQUE (code);
-ALTER TABLE ONLY public.payment_methods
-    ADD CONSTRAINT payment_methods_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.payment_transactions
-    ADD CONSTRAINT payment_transactions_order_reference_key UNIQUE (order_reference);
-ALTER TABLE ONLY public.payment_transactions
-    ADD CONSTRAINT payment_transactions_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.permissions
-    ADD CONSTRAINT permissions_name_key UNIQUE (name);
-ALTER TABLE ONLY public.permissions
-    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_settings
+    ADD CONSTRAINT post_express_settings_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_shipments
+    ADD CONSTRAINT post_express_shipments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.post_express_shipments
+    ADD CONSTRAINT post_express_shipments_tracking_number_key UNIQUE (tracking_number);
+ALTER TABLE ONLY public.post_express_tracking_events
+    ADD CONSTRAINT post_express_tracking_events_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.price_history
     ADD CONSTRAINT price_history_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.product_variant_attribute_values
@@ -70,6 +66,10 @@ ALTER TABLE ONLY public.shopping_carts
     ADD CONSTRAINT shopping_carts_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.storefront_delivery_options
     ADD CONSTRAINT storefront_delivery_options_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_fbs_settings
+    ADD CONSTRAINT storefront_fbs_settings_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_fbs_settings
+    ADD CONSTRAINT storefront_fbs_settings_storefront_id_key UNIQUE (storefront_id);
 ALTER TABLE ONLY public.storefront_hours
     ADD CONSTRAINT storefront_hours_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.storefront_hours
@@ -174,15 +174,23 @@ ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.variant_attribute_mappings
     ADD CONSTRAINT variant_attribute_mappings_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warehouse_inventory
+    ADD CONSTRAINT warehouse_inventory_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warehouse_invoices
+    ADD CONSTRAINT warehouse_invoices_invoice_number_key UNIQUE (invoice_number);
+ALTER TABLE ONLY public.warehouse_invoices
+    ADD CONSTRAINT warehouse_invoices_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warehouse_movements
+    ADD CONSTRAINT warehouse_movements_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warehouse_pickup_orders
+    ADD CONSTRAINT warehouse_pickup_orders_pickup_code_key UNIQUE (pickup_code);
+ALTER TABLE ONLY public.warehouse_pickup_orders
+    ADD CONSTRAINT warehouse_pickup_orders_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.warehouses
+    ADD CONSTRAINT warehouses_code_key UNIQUE (code);
+ALTER TABLE ONLY public.warehouses
+    ADD CONSTRAINT warehouses_pkey PRIMARY KEY (id);
 CREATE TRIGGER calculate_escrow_release_date_trigger BEFORE INSERT OR UPDATE ON public.storefront_orders FOR EACH ROW EXECUTE FUNCTION public.calculate_escrow_release_date();
+CREATE TRIGGER log_post_express_shipment_status BEFORE UPDATE ON public.post_express_shipments FOR EACH ROW EXECUTE FUNCTION public.log_shipment_status_change();
 CREATE TRIGGER marketplace_orders_updated_at_trigger BEFORE UPDATE ON public.marketplace_orders FOR EACH ROW EXECUTE FUNCTION public.update_marketplace_orders_updated_at();
 CREATE TRIGGER preserve_review_origin_trigger BEFORE DELETE ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.preserve_review_origin();
-CREATE TRIGGER refresh_category_counts_delete AFTER DELETE ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.refresh_category_listing_counts();
-CREATE TRIGGER refresh_category_counts_insert AFTER INSERT ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.refresh_category_listing_counts();
-CREATE TRIGGER refresh_category_counts_update AFTER UPDATE ON public.marketplace_listings FOR EACH ROW WHEN (((old.status)::text IS DISTINCT FROM (new.status)::text)) EXECUTE FUNCTION public.refresh_category_listing_counts();
-CREATE TRIGGER refresh_rating_summaries_trigger AFTER INSERT OR DELETE OR UPDATE ON public.reviews FOR EACH STATEMENT EXECUTE FUNCTION public.refresh_rating_summaries();
-CREATE TRIGGER set_order_number_trigger BEFORE INSERT ON public.storefront_orders FOR EACH ROW EXECUTE FUNCTION public.set_order_number();
-CREATE TRIGGER tr_update_category_attribute_sort_order BEFORE INSERT ON public.category_attribute_mapping FOR EACH ROW EXECUTE FUNCTION public.update_category_attribute_sort_order();
-CREATE TRIGGER trg_new_listing_price_history AFTER INSERT ON public.marketplace_listings FOR EACH ROW EXECUTE FUNCTION public.update_price_history('create');
-CREATE TRIGGER trg_update_listing_price_history AFTER UPDATE OF price ON public.marketplace_listings FOR EACH ROW WHEN ((old.price IS DISTINCT FROM new.price)) EXECUTE FUNCTION public.update_price_history('update');
-CREATE TRIGGER trig_update_metadata_after_price_change AFTER INSERT ON public.price_history FOR EACH ROW EXECUTE FUNCTION public.update_listing_metadata_after_price_change();

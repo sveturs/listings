@@ -5,7 +5,29 @@ INSERT INTO public.variant_attribute_mappings (id, variant_attribute_id, categor
 
 
 --
--- Name: address_change_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Data for Name: warehouse_inventory; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.address_change_log_id_seq', 1, false);
+
+
+--
+-- Data for Name: warehouse_invoices; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: warehouse_movements; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: warehouse_pickup_orders; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: warehouses; Type: TABLE DATA; Schema: public; Owner: -
+--

@@ -51,6 +51,7 @@ INSERT INTO public.marketplace_images (id, listing_id, file_path, file_name, fil
 INSERT INTO public.marketplace_images (id, listing_id, file_path, file_name, file_size, content_type, is_main, created_at, storage_type, storage_bucket, public_url) VALUES (52, 109, '109/1754253315951286163.jpg', 'IMG_20250722_141737.jpg', 2321945, 'image/jpeg', false, '2025-08-03 20:35:15.961227', 'minio', 'listings', '/listings/109/1754253315951286163.jpg');
 INSERT INTO public.marketplace_images (id, listing_id, file_path, file_name, file_size, content_type, is_main, created_at, storage_type, storage_bucket, public_url) VALUES (53, 109, '109/1754253315961880389.jpg', 'IMG_20250722_141720.jpg', 2701388, 'image/jpeg', false, '2025-08-03 20:35:15.974671', 'minio', 'listings', '/listings/109/1754253315961880389.jpg');
 INSERT INTO public.marketplace_images (id, listing_id, file_path, file_name, file_size, content_type, is_main, created_at, storage_type, storage_bucket, public_url) VALUES (54, 110, '110/1754410715141164922.jpg', 'IMG_20250717_124426.jpg', 2427188, 'image/jpeg', true, '2025-08-05 16:18:35.160571', 'minio', 'listings', '/listings/110/1754410715141164922.jpg');
+INSERT INTO public.marketplace_images (id, listing_id, file_path, file_name, file_size, content_type, is_main, created_at, storage_type, storage_bucket, public_url) VALUES (55, 113, '/listings/iphone15-pro.jpg', 'iphone15-pro.jpg', 256000, 'image/jpeg', true, '2025-08-16 13:17:55.505063', 'local', NULL, '/listings/iphone15-pro.jpg');
 
 
 --

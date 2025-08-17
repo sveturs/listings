@@ -1,3 +1,329 @@
+CREATE TABLE public.attribute_groups (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    display_name character varying(255) NOT NULL,
+    description text,
+    icon character varying(100),
+    sort_order integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    is_system boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.attribute_option_translations (
+    id integer NOT NULL,
+    attribute_name character varying(100) NOT NULL,
+    option_value text NOT NULL,
+    ru_translation text NOT NULL,
+    sr_translation text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.balance_transactions (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    type character varying(20) NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    currency character varying(3) DEFAULT 'RSD'::character varying NOT NULL,
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    payment_method character varying(50),
+    payment_details jsonb,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    completed_at timestamp without time zone
+);
+CREATE TABLE public.car_generations (
+    id integer NOT NULL,
+    model_id integer,
+    name character varying(100),
+    year_start integer,
+    year_end integer,
+    facelift_year integer,
+    specs jsonb,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    body_types jsonb DEFAULT '[]'::jsonb,
+    engine_types jsonb DEFAULT '[]'::jsonb,
+    image_url character varying(500),
+    is_active boolean DEFAULT true,
+    slug character varying(100) NOT NULL,
+    sort_order integer DEFAULT 0,
+    external_id character varying(100),
+    platform character varying(100),
+    production_country character varying(100),
+    metadata jsonb DEFAULT '{}'::jsonb,
+    last_sync_at timestamp without time zone
+);
+CREATE TABLE public.car_makes (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    slug character varying(100) NOT NULL,
+    logo_url character varying(500),
+    country character varying(50),
+    is_active boolean DEFAULT true,
+    sort_order integer DEFAULT 0,
+    is_domestic boolean DEFAULT false,
+    popularity_rs integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    external_id character varying(100),
+    manufacturer_id character varying(100),
+    last_sync_at timestamp without time zone,
+    metadata jsonb DEFAULT '{}'::jsonb
+);
+CREATE TABLE public.car_market_analysis (
+    id integer NOT NULL,
+    brand character varying(100),
+    model character varying(100),
+    total_listings integer,
+    avg_price numeric(10,2),
+    min_year integer,
+    max_year integer,
+    popularity_score numeric(5,2),
+    analyzed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.car_models (
+    id integer NOT NULL,
+    make_id integer,
+    name character varying(100) NOT NULL,
+    slug character varying(100) NOT NULL,
+    generation character varying(50),
+    production_start integer,
+    production_end integer,
+    body_types jsonb,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    sort_order integer DEFAULT 0,
+    external_id character varying(100),
+    body_type character varying(50),
+    segment character varying(50),
+    years_range int4range,
+    metadata jsonb DEFAULT '{}'::jsonb,
+    last_sync_at timestamp without time zone,
+    engine_type character varying(50),
+    engine_power_kw integer,
+    engine_power_hp integer,
+    engine_torque_nm integer,
+    fuel_type character varying(50),
+    fuel_consumption_city numeric(4,2),
+    fuel_consumption_highway numeric(4,2),
+    fuel_consumption_combined numeric(4,2),
+    co2_emissions integer,
+    euro_standard character varying(10),
+    transmission_type character varying(50),
+    transmission_gears integer,
+    drive_type character varying(50),
+    length_mm integer,
+    width_mm integer,
+    height_mm integer,
+    wheelbase_mm integer,
+    trunk_volume_l integer,
+    fuel_tank_l integer,
+    weight_kg integer,
+    max_speed_kmh integer,
+    acceleration_0_100 numeric(3,1),
+    seats integer,
+    doors integer,
+    serbia_popularity_score integer DEFAULT 0,
+    serbia_average_price_eur numeric(10,2),
+    serbia_listings_count integer DEFAULT 0,
+    is_electric boolean DEFAULT false,
+    battery_capacity_kwh numeric(10,2),
+    battery_capacity_net_kwh numeric(10,2),
+    electric_range_km integer,
+    electric_range_wltp_km integer,
+    electric_range_standard character varying(50),
+    charging_time_0_100 numeric(10,2),
+    charging_time_10_80 numeric(10,2),
+    fast_charging_power_kw numeric(10,2),
+    onboard_charger_kw numeric(10,2),
+    popularity_score numeric(5,2) DEFAULT 0
+);
+CREATE TABLE public.category_attribute_groups (
+    id integer NOT NULL,
+    category_id integer NOT NULL,
+    group_id integer NOT NULL,
+    component_id integer,
+    sort_order integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    display_mode character varying(50) DEFAULT 'list'::character varying,
+    collapsed_by_default boolean DEFAULT false,
+    configuration jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.category_attribute_mapping (
+    category_id integer NOT NULL,
+    attribute_id integer NOT NULL,
+    is_enabled boolean DEFAULT true,
+    is_required boolean DEFAULT false,
+    sort_order integer DEFAULT 0,
+    custom_component character varying(255),
+    show_in_card boolean,
+    show_in_list boolean
+);
+CREATE TABLE public.category_attributes (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    display_name character varying(255) NOT NULL,
+    attribute_type character varying(50) NOT NULL,
+    options jsonb DEFAULT '{}'::jsonb,
+    validation_rules jsonb,
+    is_searchable boolean DEFAULT true,
+    is_filterable boolean DEFAULT true,
+    is_required boolean DEFAULT false,
+    sort_order integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    custom_component character varying(255),
+    show_in_card boolean DEFAULT true,
+    show_in_list boolean DEFAULT false,
+    icon character varying(10) DEFAULT ''::character varying,
+    affects_stock boolean DEFAULT false,
+    data_source character varying(50) DEFAULT 'manual'::character varying,
+    is_variant_compatible boolean DEFAULT false,
+    data_source_config jsonb,
+    CONSTRAINT check_data_source_values CHECK (((data_source)::text = ANY ((ARRAY['manual'::character varying, 'api_external'::character varying, 'ai_generated'::character varying, 'imported'::character varying, 'computed'::character varying, 'database'::character varying, 'internal'::character varying])::text[])))
+);
+CREATE TABLE public.category_keywords (
+    id integer NOT NULL,
+    category_id integer NOT NULL,
+    keyword character varying(100) NOT NULL,
+    language character varying(2) DEFAULT 'en'::character varying,
+    weight double precision DEFAULT 1.0,
+    keyword_type character varying(20) DEFAULT 'general'::character varying,
+    is_negative boolean DEFAULT false,
+    source character varying(50) DEFAULT 'manual'::character varying,
+    usage_count integer DEFAULT 0,
+    success_rate double precision DEFAULT 0.0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT category_keywords_keyword_type_check CHECK (((keyword_type)::text = ANY ((ARRAY['main'::character varying, 'synonym'::character varying, 'brand'::character varying, 'attribute'::character varying, 'context'::character varying, 'pattern'::character varying])::text[]))),
+    CONSTRAINT category_keywords_source_check CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'ai_extracted'::character varying, 'user_confirmed'::character varying, 'auto_learned'::character varying])::text[]))),
+    CONSTRAINT category_keywords_success_rate_check CHECK (((success_rate >= (0.0)::double precision) AND (success_rate <= (1.0)::double precision))),
+    CONSTRAINT category_keywords_weight_check CHECK (((weight >= (0.0)::double precision) AND (weight <= (10.0)::double precision)))
+);
+CREATE TABLE public.marketplace_categories (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    slug character varying(100) NOT NULL,
+    parent_id integer,
+    icon character varying(50),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    has_custom_ui boolean DEFAULT false,
+    custom_ui_component character varying(255),
+    sort_order integer DEFAULT 0,
+    level integer DEFAULT 0,
+    count integer DEFAULT 0,
+    external_id character varying(255),
+    description text,
+    is_active boolean DEFAULT true,
+    seo_title character varying(255),
+    seo_description text,
+    seo_keywords text
+);
+CREATE TABLE public.marketplace_listings (
+    id integer DEFAULT nextval('public.global_product_id_seq'::regclass) NOT NULL,
+    user_id integer,
+    category_id integer,
+    title character varying(255) NOT NULL,
+    description text,
+    price numeric(12,2),
+    condition character varying(50),
+    status character varying(20) DEFAULT 'active'::character varying,
+    location character varying(255),
+    latitude numeric(10,8),
+    longitude numeric(11,8),
+    address_city character varying(100),
+    address_country character varying(100),
+    views_count integer DEFAULT 0,
+    show_on_map boolean DEFAULT true NOT NULL,
+    original_language character varying(10) DEFAULT 'sr'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    storefront_id integer,
+    external_id character varying(255),
+    metadata jsonb,
+    needs_reindex boolean DEFAULT false
+);
+CREATE TABLE public.category_variant_attributes (
+    id integer NOT NULL,
+    category_id integer NOT NULL,
+    variant_attribute_name character varying(100) NOT NULL,
+    sort_order integer DEFAULT 0,
+    is_required boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.chat_attachments (
+    id integer NOT NULL,
+    message_id integer NOT NULL,
+    file_type character varying(20) NOT NULL,
+    file_path character varying(500) NOT NULL,
+    file_name character varying(255) NOT NULL,
+    file_size bigint NOT NULL,
+    content_type character varying(100) NOT NULL,
+    storage_type character varying(20) DEFAULT 'minio'::character varying,
+    storage_bucket character varying(100) DEFAULT 'chat-files'::character varying,
+    public_url text,
+    thumbnail_url text,
+    metadata jsonb,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chat_attachments_file_type_check CHECK (((file_type)::text = ANY (ARRAY[('image'::character varying)::text, ('video'::character varying)::text, ('document'::character varying)::text])))
+);
+CREATE TABLE public.component_templates (
+    id integer NOT NULL,
+    component_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    template_config jsonb DEFAULT '{}'::jsonb,
+    preview_image text,
+    category_id integer,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer
+);
+CREATE TABLE public.custom_ui_component_usage (
+    id integer NOT NULL,
+    component_id integer NOT NULL,
+    category_id integer,
+    usage_context character varying(50) DEFAULT 'listing'::character varying NOT NULL,
+    placement character varying(50) DEFAULT 'default'::character varying,
+    priority integer DEFAULT 0,
+    configuration jsonb DEFAULT '{}'::jsonb,
+    conditions_logic jsonb,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    updated_by integer
+);
+CREATE TABLE public.custom_ui_components (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    component_type character varying(50) NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    updated_by integer,
+    template_code text DEFAULT ''::text NOT NULL,
+    styles text DEFAULT ''::text,
+    props_schema jsonb DEFAULT '{}'::jsonb,
+    CONSTRAINT custom_ui_components_component_type_check CHECK (((component_type)::text = ANY (ARRAY[('category'::character varying)::text, ('attribute'::character varying)::text, ('filter'::character varying)::text])))
+);
+CREATE TABLE public.custom_ui_templates (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    display_name character varying(255) NOT NULL,
+    description text,
+    template_code text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    variables jsonb DEFAULT '{}'::jsonb,
+    is_shared boolean DEFAULT false,
+    created_by integer,
+    updated_by integer
+);
 CREATE TABLE public.escrow_payments (
     id bigint NOT NULL,
     payment_transaction_id bigint,
@@ -225,6 +551,10 @@ CREATE TABLE public.marketplace_orders (
     delivered_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
+    delivery_method character varying(50) DEFAULT 'pickup'::character varying,
+    delivery_cost numeric(12,2) DEFAULT 0,
+    delivery_address jsonb,
+    delivery_notes text,
     CONSTRAINT marketplace_orders_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('paid'::character varying)::text, ('shipped'::character varying)::text, ('delivered'::character varying)::text, ('completed'::character varying)::text, ('disputed'::character varying)::text, ('cancelled'::character varying)::text, ('refunded'::character varying)::text])))
 );
 CREATE TABLE public.merchant_payouts (
@@ -328,6 +658,163 @@ CREATE TABLE public.permissions (
     action character varying(50) NOT NULL,
     description text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.post_express_api_logs (
+    id integer NOT NULL,
+    transaction_id character varying(100) NOT NULL,
+    transaction_type integer NOT NULL,
+    request_data jsonb,
+    response_data jsonb,
+    status character varying(50),
+    error_message text,
+    shipment_id integer,
+    execution_time_ms integer,
+    created_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_locations (
+    id integer NOT NULL,
+    post_express_id integer NOT NULL,
+    name character varying(200) NOT NULL,
+    name_cyrillic character varying(200),
+    postal_code character varying(20),
+    municipality character varying(200),
+    latitude numeric(10,8),
+    longitude numeric(11,8),
+    region character varying(100),
+    district character varying(100),
+    delivery_zone character varying(50),
+    is_active boolean DEFAULT true,
+    supports_cod boolean DEFAULT true,
+    supports_express boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_offices (
+    id integer NOT NULL,
+    office_code character varying(50) NOT NULL,
+    location_id integer,
+    name character varying(200) NOT NULL,
+    address character varying(500) NOT NULL,
+    phone character varying(50),
+    email character varying(200),
+    working_hours jsonb,
+    latitude numeric(10,8),
+    longitude numeric(11,8),
+    accepts_packages boolean DEFAULT true,
+    issues_packages boolean DEFAULT true,
+    has_atm boolean DEFAULT false,
+    has_parking boolean DEFAULT false,
+    wheelchair_accessible boolean DEFAULT false,
+    is_active boolean DEFAULT true,
+    temporary_closed boolean DEFAULT false,
+    closed_until date,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_rates (
+    id integer NOT NULL,
+    weight_from numeric(10,3) NOT NULL,
+    weight_to numeric(10,3) NOT NULL,
+    base_price numeric(12,2) NOT NULL,
+    insurance_included_up_to numeric(12,2) DEFAULT 15000,
+    insurance_rate_percent numeric(5,2) DEFAULT 1.0,
+    cod_fee numeric(12,2) DEFAULT 45,
+    max_length_cm integer DEFAULT 150,
+    max_width_cm integer DEFAULT 60,
+    max_height_cm integer DEFAULT 50,
+    max_dimensions_sum_cm integer DEFAULT 300,
+    delivery_days_min integer DEFAULT 1,
+    delivery_days_max integer DEFAULT 2,
+    is_active boolean DEFAULT true,
+    is_special_offer boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_settings (
+    id integer NOT NULL,
+    api_username character varying(100) NOT NULL,
+    api_password character varying(255) NOT NULL,
+    api_endpoint character varying(255) DEFAULT 'https://wsp.postexpress.rs/api/Transakcija'::character varying NOT NULL,
+    sender_name character varying(200) DEFAULT 'Sve Tu Platform'::character varying NOT NULL,
+    sender_address character varying(500) DEFAULT 'Улица Микија Манојловића 53'::character varying NOT NULL,
+    sender_city character varying(100) DEFAULT 'Нови Сад'::character varying NOT NULL,
+    sender_postal_code character varying(20) DEFAULT '21000'::character varying NOT NULL,
+    sender_phone character varying(50) DEFAULT '+381 21 XXX-XXXX'::character varying NOT NULL,
+    sender_email character varying(200) DEFAULT 'shipping@svetu.rs'::character varying NOT NULL,
+    enabled boolean DEFAULT false,
+    test_mode boolean DEFAULT true,
+    auto_print_labels boolean DEFAULT false,
+    auto_track_shipments boolean DEFAULT true,
+    notify_on_pickup boolean DEFAULT true,
+    notify_on_delivery boolean DEFAULT true,
+    notify_on_failed_delivery boolean DEFAULT true,
+    total_shipments integer DEFAULT 0,
+    successful_deliveries integer DEFAULT 0,
+    failed_deliveries integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_shipments (
+    id integer NOT NULL,
+    marketplace_order_id integer,
+    storefront_order_id bigint,
+    tracking_number character varying(100),
+    barcode character varying(100),
+    post_express_id character varying(100),
+    sender_name character varying(200) NOT NULL,
+    sender_address character varying(500) NOT NULL,
+    sender_city character varying(100) NOT NULL,
+    sender_postal_code character varying(20) NOT NULL,
+    sender_phone character varying(50) NOT NULL,
+    sender_email character varying(200),
+    sender_location_id integer,
+    recipient_name character varying(200) NOT NULL,
+    recipient_address character varying(500) NOT NULL,
+    recipient_city character varying(100) NOT NULL,
+    recipient_postal_code character varying(20) NOT NULL,
+    recipient_phone character varying(50) NOT NULL,
+    recipient_email character varying(200),
+    recipient_location_id integer,
+    weight_kg numeric(10,3) NOT NULL,
+    length_cm integer,
+    width_cm integer,
+    height_cm integer,
+    declared_value numeric(12,2),
+    service_type character varying(50) DEFAULT 'danas_za_sutra'::character varying,
+    cod_amount numeric(12,2),
+    cod_reference character varying(100),
+    insurance_amount numeric(12,2),
+    base_price numeric(12,2) NOT NULL,
+    insurance_fee numeric(12,2) DEFAULT 0,
+    cod_fee numeric(12,2) DEFAULT 0,
+    total_price numeric(12,2) NOT NULL,
+    status character varying(50) DEFAULT 'created'::character varying,
+    delivery_status character varying(100),
+    label_url character varying(500),
+    invoice_url character varying(500),
+    pod_url character varying(500),
+    registered_at timestamp with time zone,
+    picked_up_at timestamp with time zone,
+    delivered_at timestamp with time zone,
+    failed_at timestamp with time zone,
+    returned_at timestamp with time zone,
+    status_history jsonb DEFAULT '[]'::jsonb,
+    notes text,
+    internal_notes text,
+    delivery_instructions text,
+    failed_reason character varying(500),
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.post_express_tracking_events (
+    id integer NOT NULL,
+    shipment_id integer NOT NULL,
+    event_code character varying(50) NOT NULL,
+    event_description character varying(500) NOT NULL,
+    event_location character varying(200),
+    event_timestamp timestamp with time zone NOT NULL,
+    additional_info jsonb,
+    created_at timestamp with time zone DEFAULT now()
 );
 CREATE TABLE public.price_history (
     id integer NOT NULL,
@@ -616,6 +1103,33 @@ CREATE TABLE public.storefront_delivery_options (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE public.storefront_fbs_settings (
+    id integer NOT NULL,
+    storefront_id integer NOT NULL,
+    fbs_enabled boolean DEFAULT false,
+    auto_fulfillment boolean DEFAULT true,
+    storage_tier character varying(50) DEFAULT 'standard'::character varying,
+    max_storage_volume_m3 numeric(10,2),
+    free_storage_days integer DEFAULT 30,
+    default_packaging character varying(50) DEFAULT 'standard'::character varying,
+    use_branded_packaging boolean DEFAULT false,
+    include_invoice boolean DEFAULT true,
+    include_marketing_materials boolean DEFAULT false,
+    min_processing_hours integer DEFAULT 24,
+    cutoff_time time without time zone DEFAULT '15:00:00'::time without time zone,
+    process_on_weekends boolean DEFAULT false,
+    billing_cycle character varying(50) DEFAULT 'monthly'::character varying,
+    storage_fee_per_m3_daily numeric(10,2) DEFAULT 50,
+    picking_fee_per_item numeric(10,2) DEFAULT 30,
+    packing_fee_per_order numeric(10,2) DEFAULT 50,
+    total_orders_fulfilled integer DEFAULT 0,
+    total_items_stored integer DEFAULT 0,
+    current_storage_used_m3 numeric(10,2) DEFAULT 0,
+    last_billed_at timestamp with time zone,
+    current_charges numeric(12,2) DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
 CREATE TABLE public.storefront_hours (
     id integer NOT NULL,
     storefront_id integer NOT NULL,
@@ -691,7 +1205,11 @@ CREATE TABLE public.storefront_orders (
     notes text,
     metadata jsonb DEFAULT '{}'::jsonb,
     discount numeric(12,2) DEFAULT 0,
-    pickup_address jsonb
+    pickup_address jsonb,
+    delivery_method character varying(50) DEFAULT 'pickup'::character varying,
+    delivery_cost numeric(12,2) DEFAULT 0,
+    delivery_address jsonb,
+    delivery_notes text
 );
 CREATE TABLE public.storefront_payment_methods (
     id integer NOT NULL,
@@ -1014,46 +1532,3 @@ CREATE TABLE public.users (
     CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
     CONSTRAINT users_preferred_language_check CHECK (((preferred_language)::text = ANY ((ARRAY['ru'::character varying, 'sr'::character varying, 'en'::character varying])::text[])))
 );
-CREATE TABLE public.user_roles (
-    user_id integer NOT NULL,
-    role_id integer NOT NULL,
-    assigned_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    assigned_by integer
-);
-CREATE TABLE public.user_telegram_connections (
-    user_id integer NOT NULL,
-    telegram_chat_id character varying(100) NOT NULL,
-    telegram_username character varying(100),
-    connected_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.variant_attribute_mappings (
-    id integer NOT NULL,
-    variant_attribute_id integer NOT NULL,
-    category_attribute_id integer NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
-ALTER TABLE ONLY public.address_change_log ALTER COLUMN id SET DEFAULT nextval('public.address_change_log_id_seq'::regclass);
-ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.admin_users_id_seq'::regclass);
-ALTER TABLE ONLY public.attribute_group_items ALTER COLUMN id SET DEFAULT nextval('public.attribute_group_items_id_seq'::regclass);
-ALTER TABLE ONLY public.attribute_groups ALTER COLUMN id SET DEFAULT nextval('public.attribute_groups_id_seq'::regclass);
-ALTER TABLE ONLY public.attribute_option_translations ALTER COLUMN id SET DEFAULT nextval('public.attribute_option_translations_id_seq'::regclass);
-ALTER TABLE ONLY public.balance_transactions ALTER COLUMN id SET DEFAULT nextval('public.balance_transactions_id_seq'::regclass);
-ALTER TABLE ONLY public.car_generations ALTER COLUMN id SET DEFAULT nextval('public.car_generations_id_seq'::regclass);
-ALTER TABLE ONLY public.car_makes ALTER COLUMN id SET DEFAULT nextval('public.car_makes_id_seq'::regclass);
-ALTER TABLE ONLY public.car_market_analysis ALTER COLUMN id SET DEFAULT nextval('public.car_market_analysis_id_seq'::regclass);
-ALTER TABLE ONLY public.car_models ALTER COLUMN id SET DEFAULT nextval('public.car_models_id_seq'::regclass);
-ALTER TABLE ONLY public.category_attribute_groups ALTER COLUMN id SET DEFAULT nextval('public.category_attribute_groups_id_seq'::regclass);
-ALTER TABLE ONLY public.category_attributes ALTER COLUMN id SET DEFAULT nextval('public.category_attributes_id_seq'::regclass);
-ALTER TABLE ONLY public.category_keywords ALTER COLUMN id SET DEFAULT nextval('public.category_keywords_id_seq'::regclass);
-ALTER TABLE ONLY public.category_variant_attributes ALTER COLUMN id SET DEFAULT nextval('public.category_variant_attributes_id_seq'::regclass);
-ALTER TABLE ONLY public.chat_attachments ALTER COLUMN id SET DEFAULT nextval('public.chat_attachments_id_seq'::regclass);
-ALTER TABLE ONLY public.component_templates ALTER COLUMN id SET DEFAULT nextval('public.component_templates_id_seq'::regclass);
-ALTER TABLE ONLY public.custom_ui_component_usage ALTER COLUMN id SET DEFAULT nextval('public.custom_ui_component_usage_id_seq'::regclass);
-ALTER TABLE ONLY public.custom_ui_components ALTER COLUMN id SET DEFAULT nextval('public.custom_ui_components_id_seq'::regclass);
-ALTER TABLE ONLY public.custom_ui_templates ALTER COLUMN id SET DEFAULT nextval('public.custom_ui_templates_id_seq'::regclass);
-ALTER TABLE ONLY public.escrow_payments ALTER COLUMN id SET DEFAULT nextval('public.escrow_payments_id_seq'::regclass);
-ALTER TABLE ONLY public.geocoding_cache ALTER COLUMN id SET DEFAULT nextval('public.geocoding_cache_id_seq'::regclass);
-ALTER TABLE ONLY public.gis_filter_analytics ALTER COLUMN id SET DEFAULT nextval('public.gis_filter_analytics_id_seq'::regclass);
-ALTER TABLE ONLY public.gis_isochrone_cache ALTER COLUMN id SET DEFAULT nextval('public.gis_isochrone_cache_id_seq'::regclass);
-ALTER TABLE ONLY public.gis_poi_cache ALTER COLUMN id SET DEFAULT nextval('public.gis_poi_cache_id_seq'::regclass);
