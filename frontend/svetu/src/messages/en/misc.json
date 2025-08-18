@@ -32,6 +32,13 @@
     },
     "readMore": "Read more"
   },
+  "home": {
+    "nearbyTitle": "In Your Area",
+    "totalListings": "Total Listings",
+    "newToday": "New Today",
+    "withinRadius": "Within {radius} km",
+    "statsLoadError": "Unable to load statistics"
+  },
   "users": {
     "register": {
       "error": {

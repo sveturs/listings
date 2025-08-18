@@ -38,6 +38,7 @@ export default function VersionHistoryViewer({
 
   useEffect(() => {
     loadVersionHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, entityId]);
 
   const loadVersionHistory = async () => {

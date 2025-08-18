@@ -14,7 +14,7 @@ import {
   ShieldCheckIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 interface RateCalculation {
   base_price: number;
@@ -99,6 +99,7 @@ export default function PostExpressRateCalculator({
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params, selectedMethod]);
 
   const calculateRate = async () => {

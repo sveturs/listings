@@ -15,7 +15,7 @@ import {
   BuildingStorefrontIcon,
   BanknotesIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 interface TrackingEvent {
   id: number;

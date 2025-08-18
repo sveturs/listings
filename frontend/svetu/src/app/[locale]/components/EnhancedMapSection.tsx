@@ -908,15 +908,18 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span className="text-xs">Объявления</span>
+            <span className="text-xs">{_t('listings')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-            <span className="text-xs">Витрины</span>
+            <span className="text-xs">{_t('storefronts')}</span>
           </div>
           <div className="pt-1 mt-1 border-t">
             <p className="text-xs font-medium">
-              Показано: {filteredListings.length} из {listings.length}
+              {_t('showing', {
+                shown: filteredListings.length,
+                total: listings.length,
+              })}
             </p>
           </div>
         </div>
@@ -946,7 +949,7 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
                   )}
                   <div className="flex-1">
                     <h3 className="font-semibold">
-                      {listing.title || 'Объявление'}
+                      {listing.title || _t('listing')}
                     </h3>
                     {listing.category && (
                       <p className="text-xs text-gray-500">

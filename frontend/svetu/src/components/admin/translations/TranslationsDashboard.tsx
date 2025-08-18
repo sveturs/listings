@@ -41,6 +41,7 @@ export default function TranslationsDashboard() {
 
   useEffect(() => {
     fetchStatistics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchStatistics = async () => {

@@ -529,6 +529,10 @@ func (db *Database) GetAllCategories(ctx context.Context) ([]models.MarketplaceC
 	return db.marketplaceDB.GetAllCategories(ctx)
 }
 
+func (db *Database) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
+	return db.marketplaceDB.GetPopularCategories(ctx, limit)
+}
+
 func (db *Database) GetCategoryByID(ctx context.Context, id int) (*models.MarketplaceCategory, error) {
 	return db.marketplaceDB.GetCategoryByID(ctx, id)
 }

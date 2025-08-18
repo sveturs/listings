@@ -152,6 +152,14 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		params.Language = lang
 	}
 
+	// Парсим параметр фильтрации витрин B2C
+	storefrontFilter := c.Query("storefront_filter")
+	if storefrontFilter == "" {
+		// По умолчанию исключаем B2C объявления
+		storefrontFilter = "exclude_b2c"
+	}
+	params.StorefrontFilter = storefrontFilter
+
 	// Проверяем, нужно ли использовать нечеткий поиск
 	useFuzzy := c.Query("fuzzy", "true") // По умолчанию включен
 	if useFuzzy == "true" || useFuzzy == "1" {

@@ -6,6 +6,15 @@ import { AnimatedSection } from '@/components/ui/AnimatedSection';
 export default function ExamplesPage() {
   const examples = [
     {
+      title: '🔍 Все варианты просмотра',
+      description:
+        'Демонстрация всех способов отображения деталей объявлений и товаров',
+      href: '/examples/view-demo',
+      color: 'bg-gradient-to-r from-blue-600 to-cyan-600',
+      icon: '👁️',
+      badge: 'DEMO',
+    },
+    {
       title: 'Главная v2.0 - Лучшие практики',
       description:
         'Новый дизайн с лучшими практиками Avito, Amazon и Wildberries',

@@ -32,6 +32,13 @@
     },
     "readMore": "Подробнее"
   },
+  "home": {
+    "nearbyTitle": "В вашем районе",
+    "totalListings": "Всего объявлений",
+    "newToday": "Новых сегодня",
+    "withinRadius": "В радиусе {radius} км",
+    "statsLoadError": "Не удалось загрузить статистику"
+  },
   "users": {
     "register": {
       "error": {

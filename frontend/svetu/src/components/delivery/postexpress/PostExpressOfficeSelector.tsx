@@ -11,7 +11,7 @@ import {
   ArrowsPointingOutIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 interface PostOffice {
   id: number;
@@ -63,6 +63,7 @@ export default function PostExpressOfficeSelector({
     if (selectedCity) {
       loadOffices();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity]);
 
   const loadOffices = async () => {

@@ -11011,6 +11011,43 @@ paths:
       summary: Get my sales
       tags:
         - orders
+  /api/v1/marketplace/popular-categories:
+    get:
+      description: Returns most popular categories by active listings count
+      parameters:
+        - description: Language code (e.g., 'sr', 'en', 'ru')
+          in: query
+          name: lang
+          schema:
+            type: string
+        - description: "Limit of categories to return (default: 7)"
+          in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_domain_models.MarketplaceCategory"
+                        type: array
+                    type: object
+        "500":
+          description: marketplace.categoriesError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get popular categories
+      tags:
+        - marketplace-categories
   /api/v1/marketplace/search:
     get:
       description: Performs advanced search with filters, facets, and suggestions
@@ -15066,6 +15103,61 @@ paths:
       summary: Get popular searches
       tags:
         - search-config
+  /api/v1/search/suggestions:
+    get:
+      description: Returns autocomplete suggestions based on query
+      parameters:
+        - description: Search query (alias for prefix)
+          in: query
+          name: q
+          schema:
+            type: string
+        - description: Search prefix
+          in: query
+          name: prefix
+          schema:
+            type: string
+        - description: Number of suggestions (alias for size)
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - description: Number of suggestions
+          in: query
+          name: size
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Suggestions list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+        "400":
+          description: marketplace.prefixRequired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: marketplace.suggestionsError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get search suggestions
+      tags:
+        - search
   "/api/v1/storefront/categories/{category_id}/attributes":
     get:
       description: Returns all attributes that can be used for products in a specific
@@ -23991,6 +24083,10 @@ components:
           description: Направление сортировки (asc, desc)
           type: string
         status:
+          type: string
+        storefrontFilter:
+          description: 'Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая
+            строка = exclude_b2c по умолчанию'
           type: string
         storefrontID:
           description: ID витрины

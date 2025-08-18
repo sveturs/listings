@@ -497,6 +497,10 @@ func (m *MockStorage) ReindexAllStorefronts(ctx context.Context) error          
 func (m *MockStorage) GetTranslationsForEntity(ctx context.Context, entityType string, entityID int) ([]models.Translation, error) {
 	return nil, ErrNotImplemented
 }
+
+func (m *MockStorage) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
+	return nil, ErrNotImplemented
+}
 func (m *MockStorage) AddContact(ctx context.Context, contact *models.UserContact) error { return nil }
 func (m *MockStorage) UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error {
 	return nil
