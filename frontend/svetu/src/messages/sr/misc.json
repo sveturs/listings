@@ -32,6 +32,13 @@
     },
     "readMore": "Detaljnije"
   },
+  "home": {
+    "nearbyTitle": "U vašem kraju",
+    "totalListings": "Ukupno oglasa",
+    "newToday": "Novih danas",
+    "withinRadius": "U radijusu od {radius} km",
+    "statsLoadError": "Nije moguće učitati statistiku"
+  },
   "users": {
     "register": {
       "error": {

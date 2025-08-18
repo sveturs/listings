@@ -9,6 +9,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -44,7 +45,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 
 	var suggestions []SuggestionItem
 	typesList := strings.Split(types, ",")
-	
+
 	log.Info().
 		Str("query", query).
 		Strs("types", typesList).
@@ -91,11 +92,11 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 		log.Info().
 			Strs("product_categories_to_add", productCategories).
 			Msg("Processing product categories")
-		
+
 		// Получаем информацию о категориях из БД
 		allCategories, _ := s.storage.GetCategories(ctx)
 		log.Info().Int("all_categories_count", len(allCategories)).Msg("Loaded all categories from DB")
-		
+
 		for _, catName := range productCategories {
 			log.Debug().
 				Str("looking_for", catName).
@@ -104,7 +105,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 			for _, dbCat := range allCategories {
 				// Проверяем по имени и по переводам
 				nameMatch := strings.EqualFold(dbCat.Name, catName)
-				
+
 				// Проверяем также по переводам
 				if !nameMatch && dbCat.Translations != nil {
 					for _, translation := range dbCat.Translations {
@@ -114,7 +115,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 						}
 					}
 				}
-				
+
 				if nameMatch {
 					iconStr := ""
 					if dbCat.Icon != nil {
@@ -129,7 +130,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 						Icon:       iconStr,
 						Count:      dbCat.ListingCount,
 						Metadata: map[string]interface{}{
-							"parent_id": dbCat.ParentID,
+							"parent_id":     dbCat.ParentID,
 							"from_products": true, // Помечаем, что категория из товаров
 						},
 					})
@@ -147,7 +148,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 			}
 		}
 	}
-	
+
 	// Также ищем категории по запросу
 	if containsString(typesList, "categories") {
 		categorySuggestions, err := s.getCategorySuggestionsEnhanced(ctx, query, productCategories)
@@ -155,7 +156,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 			suggestions = append(suggestions, categorySuggestions...)
 		}
 	}
-	
+
 	// Добавляем категории из товаров в начало
 	if len(productCategorySuggestions) > 0 {
 		// Вставляем категории из товаров в начало списка suggestions
@@ -167,8 +168,8 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 	}
 
 	// Сортируем и убеждаемся, что категории из товаров попадают в результат
-	suggestions = s.rankSuggestionsWithProductCategories(suggestions, query, productCategories)
-	
+	suggestions = s.rankSuggestionsWithProductCategories(ctx, suggestions, query, productCategories)
+
 	// Логируем финальный результат
 	log.Info().
 		Str("query", query).
@@ -182,7 +183,7 @@ func (s *MarketplaceService) GetEnhancedSuggestions(
 			return result
 		}()).
 		Msg("Final suggestions")
-	
+
 	if len(suggestions) > limit {
 		suggestions = suggestions[:limit]
 	}
@@ -219,12 +220,7 @@ func (s *MarketplaceService) getQuerySuggestions(
 	return suggestions, nil
 }
 
-func (s *MarketplaceService) getCategorySuggestions(
-	ctx context.Context,
-	query string,
-) ([]SuggestionItem, error) {
-	return s.getCategorySuggestionsEnhanced(ctx, query, nil)
-}
+// getCategorySuggestions - удалена, используется getCategorySuggestionsEnhanced напрямую
 
 func (s *MarketplaceService) getCategorySuggestionsEnhanced(
 	ctx context.Context,
@@ -242,12 +238,12 @@ func (s *MarketplaceService) getCategorySuggestionsEnhanced(
 		// Пробуем найти категории, которые содержат части запроса
 		allCategories, _ := s.storage.GetCategories(ctx)
 		queryLower := strings.ToLower(query)
-		
+
 		for _, cat := range allCategories {
 			nameLower := strings.ToLower(cat.Name)
 			// Проверяем частичное совпадение или fuzzy matching
-			if strings.Contains(nameLower, queryLower) || 
-			   levenshteinDistance(queryLower, nameLower) <= 2 {
+			if strings.Contains(nameLower, queryLower) ||
+				levenshteinDistance(queryLower, nameLower) <= 2 {
 				categories = append(categories, cat)
 				if len(categories) >= 5 {
 					break
@@ -260,12 +256,12 @@ func (s *MarketplaceService) getCategorySuggestionsEnhanced(
 	if len(productCategories) > 0 {
 		allCategories, _ := s.storage.GetCategories(ctx)
 		categoryMap := make(map[string]bool)
-		
+
 		// Помечаем уже найденные категории
 		for _, cat := range categories {
 			categoryMap[strings.ToLower(cat.Name)] = true
 		}
-		
+
 		// Добавляем категории товаров, если их еще нет
 		for _, catName := range productCategories {
 			catNameLower := strings.ToLower(catName)
@@ -309,12 +305,7 @@ func (s *MarketplaceService) getCategorySuggestionsEnhanced(
 	return suggestions, nil
 }
 
-func (s *MarketplaceService) getProductSuggestions(
-	ctx context.Context,
-	query string,
-) ([]SuggestionItem, error) {
-	return s.getProductSuggestionsWithFuzzy(ctx, query)
-}
+// getProductSuggestions - удалена, используется getProductSuggestionsWithFuzzy напрямую
 
 func (s *MarketplaceService) getProductSuggestionsWithFuzzy(
 	ctx context.Context,
@@ -324,21 +315,21 @@ func (s *MarketplaceService) getProductSuggestionsWithFuzzy(
 
 	// 1. Сначала пробуем точный поиск
 	searchParams := &search.ServiceParams{
-		Query:     query,
-		Size:      5,
-		Page:      1,
+		Query: query,
+		Size:  5,
+		Page:  1,
 	}
 
 	marketplaceResults, err := s.SearchListingsAdvanced(ctx, searchParams)
-	
+
 	// 2. Если точный поиск не дал результатов, используем fuzzy
 	if (err != nil || marketplaceResults == nil || len(marketplaceResults.Items) == 0) && len(query) > 3 {
 		// Пробуем с fuzzy search для опечаток
 		searchParams.Fuzziness = "AUTO"
 		marketplaceResults, err = s.SearchListingsAdvanced(ctx, searchParams)
-		
+
 		// 3. Если и fuzzy не помог, пробуем исправить опечатки вручную
-		if (err != nil || marketplaceResults == nil || len(marketplaceResults.Items) == 0) {
+		if err != nil || marketplaceResults == nil || len(marketplaceResults.Items) == 0 {
 			// Пробуем найти похожие слова среди популярных брендов
 			correctedQuery := s.correctSpelling(query)
 			if correctedQuery != query {
@@ -348,14 +339,14 @@ func (s *MarketplaceService) getProductSuggestionsWithFuzzy(
 			}
 		}
 	}
-	
+
 	if err == nil && marketplaceResults != nil {
 		// Ограничиваем до 3 товаров
 		maxItems := 3
 		if len(marketplaceResults.Items) < maxItems {
 			maxItems = len(marketplaceResults.Items)
 		}
-		
+
 		for i := 0; i < maxItems; i++ {
 			item := marketplaceResults.Items[i]
 			suggestions = append(suggestions, SuggestionItem{
@@ -426,6 +417,7 @@ func (s *MarketplaceService) getProductSuggestionsWithFuzzy(
 }
 
 func (s *MarketplaceService) rankSuggestionsWithProductCategories(
+	ctx context.Context,
 	suggestions []SuggestionItem,
 	query string,
 	productCategories []string,
@@ -435,7 +427,7 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 		Int("suggestions_count", len(suggestions)).
 		Strs("product_categories", productCategories).
 		Msg("rankSuggestionsWithProductCategories called")
-	
+
 	// ХАКФИКС: Если есть категории из товаров, но они не в suggestions, добавляем их
 	if len(productCategories) > 0 {
 		hasCategories := false
@@ -445,12 +437,11 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 				break
 			}
 		}
-		
+
 		if !hasCategories {
 			// Пытаемся добавить хотя бы первую категорию из товаров
-			ctx := context.Background()
 			allCategories, _ := s.storage.GetCategories(ctx)
-			
+
 			for _, catName := range productCategories {
 				for _, dbCat := range allCategories {
 					// Проверяем по имени и переводам
@@ -463,7 +454,7 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 							}
 						}
 					}
-					
+
 					if nameMatch {
 						iconStr := ""
 						if dbCat.Icon != nil {
@@ -478,7 +469,7 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 							Icon:       iconStr,
 							Count:      dbCat.ListingCount,
 							Metadata: map[string]interface{}{
-								"parent_id": dbCat.ParentID,
+								"parent_id":     dbCat.ParentID,
 								"from_products": true,
 							},
 						}}, suggestions...)
@@ -489,21 +480,21 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 						break
 					}
 				}
-				break // Добавляем только одну категорию
+				// Добавляем только одну категорию
 			}
 		}
 	}
-	
+
 	// Группируем по типам
 	var queries, categoriesFromProducts, otherCategories, products []SuggestionItem
 	productCategorySet := make(map[string]bool)
 	for _, cat := range productCategories {
 		productCategorySet[strings.ToLower(cat)] = true
 	}
-	
+
 	// Подсчитываем типы для логирования
 	typeCounts := map[string]int{}
-	
+
 	for _, s := range suggestions {
 		typeCounts[string(s.Type)]++
 		switch s.Type {
@@ -531,7 +522,7 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 			products = append(products, s)
 		}
 	}
-	
+
 	log.Debug().
 		Interface("type_counts", typeCounts).
 		Int("categories_from_products", len(categoriesFromProducts)).
@@ -539,7 +530,7 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 		Int("products", len(products)).
 		Int("queries", len(queries)).
 		Msg("Grouped suggestions")
-	
+
 	// Сортируем каждую группу отдельно
 	sortGroup := func(group []SuggestionItem) {
 		sort.Slice(group, func(i, j int) bool {
@@ -553,15 +544,15 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 			return group[i].Count > group[j].Count
 		})
 	}
-	
+
 	sortGroup(queries)
 	sortGroup(categoriesFromProducts)
 	sortGroup(otherCategories)
 	sortGroup(products)
-	
+
 	// Собираем результат с правильным приоритетом
 	var result []SuggestionItem
-	
+
 	// 1. СНАЧАЛА добавляем категории из найденных товаров (самый высокий приоритет)
 	categoriesAdded := 0
 	for i := 0; i < len(categoriesFromProducts) && i < 2; i++ {
@@ -572,37 +563,39 @@ func (s *MarketplaceService) rankSuggestionsWithProductCategories(
 			Int("position", len(result)-1).
 			Msg("Added product category to result")
 	}
-	
+
 	// 2. Добавляем до 2 запросов
 	for i := 0; i < len(queries) && i < 2 && len(result) < 7; i++ {
 		result = append(result, queries[i])
 	}
-	
+
 	// 3. Добавляем до 3 товаров
 	for i := 0; i < len(products) && i < 3 && len(result) < 8; i++ {
 		result = append(result, products[i])
 	}
-	
+
 	// 4. Добавляем другие категории, если есть место
 	for i := 0; i < len(otherCategories) && len(result) < 10; i++ {
 		result = append(result, otherCategories[i])
 	}
-	
+
 	log.Debug().
 		Int("final_result_count", len(result)).
 		Int("categories_added", categoriesAdded).
 		Msg("Ranking complete")
-	
+
 	return result
 }
 
+// rankSuggestions - удалена, используется rankSuggestionsWithProductCategories
+/*
 func (s *MarketplaceService) rankSuggestions(
 	suggestions []SuggestionItem,
 	query string,
 ) []SuggestionItem {
 	// Группируем по типам
 	var queries, categories, products []SuggestionItem
-	
+
 	for _, s := range suggestions {
 		switch s.Type {
 		case SuggestionTypeQuery:
@@ -613,7 +606,7 @@ func (s *MarketplaceService) rankSuggestions(
 			products = append(products, s)
 		}
 	}
-	
+
 	// Сортируем каждую группу отдельно
 	sortGroup := func(group []SuggestionItem) {
 		sort.Slice(group, func(i, j int) bool {
@@ -627,14 +620,14 @@ func (s *MarketplaceService) rankSuggestions(
 			return group[i].Count > group[j].Count
 		})
 	}
-	
+
 	sortGroup(queries)
 	sortGroup(categories)
 	sortGroup(products)
-	
+
 	// Собираем результат: запросы, товары, категории
 	var result []SuggestionItem
-	
+
 	// Добавляем запросы (максимум 3)
 	maxQueries := 3
 	if len(queries) < maxQueries {
@@ -643,7 +636,7 @@ func (s *MarketplaceService) rankSuggestions(
 	for i := 0; i < maxQueries; i++ {
 		result = append(result, queries[i])
 	}
-	
+
 	// Добавляем товары (максимум 3-4)
 	maxProducts := 4
 	if len(products) < maxProducts {
@@ -652,7 +645,7 @@ func (s *MarketplaceService) rankSuggestions(
 	for i := 0; i < maxProducts; i++ {
 		result = append(result, products[i])
 	}
-	
+
 	// Добавляем категории (минимум 1, если есть)
 	maxCategories := 2
 	if len(categories) > 0 && len(categories) < maxCategories {
@@ -661,9 +654,10 @@ func (s *MarketplaceService) rankSuggestions(
 	for i := 0; i < maxCategories && i < len(categories); i++ {
 		result = append(result, categories[i])
 	}
-	
+
 	return result
 }
+*/
 
 // Вспомогательные функции
 func containsString(slice []string, item string) bool {
@@ -714,14 +708,14 @@ func (s *MarketplaceService) correctSpelling(query string) string {
 		"iphone", "samsung", "xiaomi", "huawei", "laptop", "playstation",
 		"automobil", "auto", "telefon", "stan", "kuca", "garaza",
 	}
-	
+
 	words := strings.Fields(strings.ToLower(query))
 	corrected := make([]string, 0, len(words))
-	
+
 	for _, word := range words {
 		bestMatch := word
 		minDistance := 999
-		
+
 		// Ищем наиболее похожее слово
 		for _, term := range commonTerms {
 			distance := levenshteinDistance(word, term)
@@ -731,10 +725,10 @@ func (s *MarketplaceService) correctSpelling(query string) string {
 				bestMatch = term
 			}
 		}
-		
+
 		corrected = append(corrected, bestMatch)
 	}
-	
+
 	return strings.Join(corrected, " ")
 }
 
@@ -767,7 +761,7 @@ func levenshteinDistance(s1, s2 string) int {
 			if s1[i-1] == s2[j-1] {
 				matrix[i][j] = matrix[i-1][j-1]
 			} else {
-				min := matrix[i-1][j]   // удаление
+				min := matrix[i-1][j] // удаление
 				if matrix[i][j-1] < min {
 					min = matrix[i][j-1] // вставка
 				}

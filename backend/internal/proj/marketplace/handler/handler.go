@@ -243,6 +243,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/map/bounds", h.GetListingsInBounds)
 	marketplace.Get("/map/clusters", h.GetMapClusters)
 
+	// Neighborhood statistics
+	marketplace.Get("/neighborhood-stats", h.MarketplaceHandler.GetNeighborhoodStats)
+
 	// Автомобильные марки и модели
 	if h.Cars != nil {
 		h.Cars.RegisterRoutes(marketplace)

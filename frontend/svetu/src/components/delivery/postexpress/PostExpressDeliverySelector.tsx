@@ -11,7 +11,7 @@ import {
   ShieldCheckIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
+// import { useTranslations } from 'next-intl';
 
 interface DeliveryMethod {
   id: string;
@@ -107,6 +107,7 @@ export default function PostExpressDeliverySelector({
     if (weight > 0 && recipientCity) {
       calculateDeliveryRates();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weight, insuranceAmount, hasCOD, recipientCity]);
 
   const calculateDeliveryRates = async () => {

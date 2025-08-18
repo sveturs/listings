@@ -19,3 +19,8 @@ func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServic
 		AttributeGroups:    NewAttributeGroupStorage(pool),
 	}
 }
+
+// GetPool returns the database pool
+func (s *Storage) GetPool() *pgxpool.Pool {
+	return s.pool
+}

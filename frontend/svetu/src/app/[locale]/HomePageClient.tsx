@@ -12,6 +12,7 @@ import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
 import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
+import { useTranslations } from 'next-intl';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -62,6 +63,7 @@ import {
 import { FaCar, FaTshirt } from 'react-icons/fa';
 import { AiOutlineEye } from 'react-icons/ai';
 import { HiOutlineSparkles } from 'react-icons/hi';
+import NearbyStats from '@/components/home/NearbyStats';
 
 interface HomePageClientProps {
   title: string;
@@ -75,6 +77,9 @@ export default function HomePageClient({
   createListingText,
   locale,
 }: HomePageClientProps) {
+  const t = useTranslations('marketplace.home');
+  const tCommon = useTranslations('common');
+  const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | number>(
     'all'
@@ -101,28 +106,28 @@ export default function HomePageClient({
   const banners = [
     {
       id: 1,
-      title: '✅ Проверенная Черная пятница',
-      subtitle: 'Только реальные скидки от 25%! Проверено историей цен',
+      title: t('blackFridayTitle'),
+      subtitle: t('blackFridaySubtitle'),
       bgColor: 'bg-gradient-to-r from-purple-600 to-pink-600',
-      cta: 'Смотреть акции',
+      cta: t('blackFridayCta'),
       image: '🛍️',
-      badge: 'AI проверка',
-      details: '> 5% товаров со скидкой 25%+',
+      badge: t('blackFridayBadge'),
+      details: t('blackFridayDetails'),
     },
     {
       id: 2,
-      title: '🚚 Бесплатная доставка',
-      subtitle: 'При покупке от €50',
+      title: t('freeDeliveryTitle'),
+      subtitle: t('freeDeliverySubtitle'),
       bgColor: 'bg-gradient-to-r from-blue-600 to-cyan-600',
-      cta: 'Узнать больше',
+      cta: t('freeDeliveryCta'),
       image: '📦',
     },
     {
       id: 3,
-      title: '🛡️ Защита покупателя',
-      subtitle: 'Безопасные сделки с эскроу',
+      title: t('buyerProtectionTitle'),
+      subtitle: t('buyerProtectionSubtitle'),
       bgColor: 'bg-gradient-to-r from-green-600 to-teal-600',
-      cta: 'Как работает',
+      cta: t('buyerProtectionCta'),
       image: '🔒',
     },
   ];
@@ -134,7 +139,6 @@ export default function HomePageClient({
     }, 5000);
     return () => clearInterval(interval);
   }, [banners.length]);
-
 
   // Популярные поисковые запросы
   const trendingSearches = [
@@ -531,18 +535,18 @@ export default function HomePageClient({
                   {userLocationName}
                 </span>
                 <Link href="/map" className="hover:underline">
-                  Выбрать другой город
+                  {t('selectOtherCity')}
                 </Link>
               </div>
               <div className="flex items-center gap-4">
                 <Link href="/business" className="hover:underline">
-                  Для бизнеса
+                  {t('forBusiness')}
                 </Link>
                 <Link href="/help" className="hover:underline">
-                  Помощь
+                  {t('help')}
                 </Link>
                 <Link href="/app" className="hover:underline">
-                  📱 Приложение
+                  {t('app')}
                 </Link>
               </div>
             </div>
@@ -574,14 +578,14 @@ export default function HomePageClient({
                     categories={categories}
                     selectedCategory={selectedCategory}
                     onChange={setSelectedCategory}
-                    placeholder="Все категории"
+                    placeholder={t('allCategories')}
                     showCounts={true}
                     className="w-48 hidden md:block"
                   />
 
                   {/* Поисковая строка с автодополнением */}
                   <SearchAutocomplete
-                    placeholder="Поиск среди 2 млн товаров..."
+                    placeholder={t('searchPlaceholder')}
                     selectedCategory={selectedCategory}
                     locale={locale}
                     className="flex-1"
@@ -625,42 +629,39 @@ export default function HomePageClient({
           <div className="border-t border-base-300 py-2 hidden lg:block">
             <div className="container mx-auto px-4">
               <div className="flex items-center gap-6 text-sm">
-                {isLoadingCategories ? (
-                  // Скелетон при загрузке
-                  [...Array(8)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 animate-pulse"
-                    >
-                      <div className="w-4 h-4 bg-base-300 rounded"></div>
-                      <div className="w-20 h-4 bg-base-300 rounded"></div>
-                      <div className="w-10 h-3 bg-base-300 rounded"></div>
-                    </div>
-                  ))
-                ) : (
-                  popularCategories.slice(0, 8).map((cat) => {
-                    const Icon = cat.icon || BsHandbag;
-                    const count = cat.listing_count || cat.count || 0;
-                    const formattedCount = count > 1000 
-                      ? `${Math.floor(count / 1000)}K+` 
-                      : count;
-                    return (
-                      <Link
-                        key={cat.id}
-                        href={`/${locale}/search?category=${cat.id}`}
-                        className="flex items-center gap-2 hover:text-primary transition-colors"
+                {isLoadingCategories
+                  ? // Скелетон при загрузке
+                    [...Array(8)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 animate-pulse"
                       >
-                        <Icon className={`w-4 h-4 ${cat.color}`} />
-                        <span>{cat.name}</span>
-                        <span className="text-base-content/50">
-                          ({formattedCount})
-                        </span>
-                      </Link>
-                    );
-                  })
-                )}
+                        <div className="w-4 h-4 bg-base-300 rounded"></div>
+                        <div className="w-20 h-4 bg-base-300 rounded"></div>
+                        <div className="w-10 h-3 bg-base-300 rounded"></div>
+                      </div>
+                    ))
+                  : popularCategories.slice(0, 8).map((cat) => {
+                      const Icon = cat.icon || BsHandbag;
+                      const count = cat.listing_count || cat.count || 0;
+                      const formattedCount =
+                        count > 1000 ? `${Math.floor(count / 1000)}K+` : count;
+                      return (
+                        <Link
+                          key={cat.id}
+                          href={`/${locale}/search?category=${cat.id}`}
+                          className="flex items-center gap-2 hover:text-primary transition-colors"
+                        >
+                          <Icon className={`w-4 h-4 ${cat.color}`} />
+                          <span>{cat.name}</span>
+                          <span className="text-base-content/50">
+                            ({formattedCount})
+                          </span>
+                        </Link>
+                      );
+                    })}
                 <Link href="/categories" className="text-primary font-medium">
-                  Все категории →
+                  {t('allCategories')} →
                 </Link>
               </div>
             </div>
@@ -733,17 +734,23 @@ export default function HomePageClient({
               <div className="space-y-4">
                 <div className="card bg-gradient-to-br from-orange-500 to-red-500 text-white h-[190px]">
                   <div className="card-body">
-                    <h3 className="card-title text-white">⚡ Молния-скидки</h3>
-                    <p>Успей купить со скидкой до 90%</p>
+                    <h3 className="card-title text-white">
+                      {t('lightningDeals')}
+                    </h3>
+                    <p>{t('lightningDealsSubtitle')}</p>
                     <div className="text-2xl font-bold">02:45:18</div>
-                    <button className="btn btn-white btn-sm">Смотреть</button>
+                    <button className="btn btn-white btn-sm">
+                      {t('watch')}
+                    </button>
                   </div>
                 </div>
                 <div className="card bg-gradient-to-br from-green-500 to-teal-500 text-white h-[190px]">
                   <div className="card-body">
-                    <h3 className="card-title text-white">🎁 Подарок новым</h3>
-                    <p>Скидка €10 на первый заказ</p>
-                    <button className="btn btn-white btn-sm">Получить</button>
+                    <h3 className="card-title text-white">
+                      {t('newUsersGift')}
+                    </h3>
+                    <p>{t('newUsersGiftSubtitle')}</p>
+                    <button className="btn btn-white btn-sm">{t('get')}</button>
                   </div>
                 </div>
               </div>
@@ -756,7 +763,7 @@ export default function HomePageClient({
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <HiOutlineSparkles className="w-6 h-6 text-warning" />
-              Популярные категории
+              {t('popularCategories')}
             </h2>
             {isLoadingCategories ? (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
@@ -806,7 +813,7 @@ export default function HomePageClient({
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <HiOutlineSparkles className="text-warning" />
-              Горячие предложения
+              {t('hotDeals')}
             </h2>
             <div className="flex gap-2">
               <button
@@ -822,7 +829,7 @@ export default function HomePageClient({
                 <FiList className="w-4 h-4" />
               </button>
               <Link href="/hot" className="btn btn-sm btn-ghost">
-                Все предложения →
+                {t('allDeals')}
               </Link>
             </div>
           </div>
@@ -862,7 +869,7 @@ export default function HomePageClient({
                     {deal.isStorefront && (
                       <div className="badge badge-info absolute top-2 left-2 flex items-center gap-1">
                         <FiShoppingBag className="w-3 h-3" />
-                        Витрина
+                        {t('storefront')}
                       </div>
                     )}
 
@@ -941,7 +948,7 @@ export default function HomePageClient({
                           className="btn btn-primary btn-sm flex-1"
                           onClick={() => console.log('Add to cart:', deal.id)}
                         >
-                          В корзину
+                          {t('addToCart')}
                         </button>
                         <button
                           className="btn btn-outline btn-sm"
@@ -962,7 +969,7 @@ export default function HomePageClient({
                           }
                         >
                           <FiMessageCircle className="w-4 h-4 mr-1" />
-                          Написать в чат
+                          {t('writeToSeller')}
                         </button>
                         <button
                           className="btn btn-outline btn-sm"
@@ -985,7 +992,7 @@ export default function HomePageClient({
         <section className="container mx-auto px-4 py-8">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <FiMapPin className="text-primary" />
-            Товары рядом с вами
+            {t('nearbyProducts')}
           </h2>
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Карта */}
@@ -1026,25 +1033,7 @@ export default function HomePageClient({
 
             {/* Статистика */}
             <div className="space-y-4">
-              <div className="card bg-base-100">
-                <div className="card-body">
-                  <h3 className="card-title text-lg">В вашем районе</h3>
-                  <div className="stats stats-vertical">
-                    <div className="stat px-0">
-                      <div className="stat-title">Всего объявлений</div>
-                      <div className="stat-value text-primary">1,234</div>
-                    </div>
-                    <div className="stat px-0">
-                      <div className="stat-title">Новых сегодня</div>
-                      <div className="stat-value text-success">+87</div>
-                    </div>
-                    <div className="stat px-0">
-                      <div className="stat-title">В радиусе 5 км</div>
-                      <div className="stat-value">567</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <NearbyStats />
             </div>
           </div>
         </section>
@@ -1059,45 +1048,44 @@ export default function HomePageClient({
                     AI ПРОВЕРКА
                   </div>
                   <h3 className="text-2xl font-bold">
-                    Как работает проверка Черной пятницы
+                    {t('howBlackFridayWorks')}
                   </h3>
                 </div>
                 <div className="grid md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-3xl mb-2">📊</div>
-                    <h4 className="font-bold mb-1">История цен</h4>
+                    <h4 className="font-bold mb-1">{t('priceHistory')}</h4>
                     <p className="text-sm text-base-content/60">
-                      Отслеживаем цены 60 дней до акции
+                      {t('priceHistoryDesc')}
                     </p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl mb-2">🤖</div>
-                    <h4 className="font-bold mb-1">AI анализ</h4>
+                    <h4 className="font-bold mb-1">{t('aiAnalysis')}</h4>
                     <p className="text-sm text-base-content/60">
-                      Алгоритм проверяет реальность скидок
+                      {t('aiAnalysisDesc')}
                     </p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl mb-2">✅</div>
-                    <h4 className="font-bold mb-1">Минимум 25%</h4>
+                    <h4 className="font-bold mb-1">{t('minimum25')}</h4>
                     <p className="text-sm text-base-content/60">
-                      Только скидки от 25% на более чем 5% товаров
+                      {t('minimum25Desc')}
                     </p>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl mb-2">🏆</div>
-                    <h4 className="font-bold mb-1">Значок качества</h4>
+                    <h4 className="font-bold mb-1">{t('qualityBadge')}</h4>
                     <p className="text-sm text-base-content/60">
-                      Получают только честные продавцы
+                      {t('qualityBadgeDesc')}
                     </p>
                   </div>
                 </div>
                 <div className="alert alert-info mt-4">
                   <FiShield className="w-5 h-5" />
                   <span>
-                    <strong>Защита покупателей:</strong> Магазины с поддельными
-                    скидками автоматически исключаются из программы Черная
-                    пятница
+                    <strong>{t('buyerProtectionNote')}</strong>{' '}
+                    {t('buyerProtectionNoteDesc')}
                   </span>
                 </div>
               </div>
@@ -1110,10 +1098,10 @@ export default function HomePageClient({
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <BsGem className="w-6 h-6 text-secondary" />
-              Официальные магазины
+              {t('officialStores')}
             </h2>
             <Link href="/stores" className="btn btn-sm btn-ghost">
-              Все магазины →
+              {t('allStores')}
             </Link>
           </div>
 
@@ -1174,15 +1162,15 @@ export default function HomePageClient({
 
                   <div className="flex justify-between text-sm mt-4">
                     <div className="text-center">
-                      <p className="text-base-content/60">Подписчики</p>
+                      <p className="text-base-content/60">{t('followers')}</p>
                       <p className="font-bold">{store.followers}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-base-content/60">Товаров</p>
+                      <p className="text-base-content/60">{t('products')}</p>
                       <p className="font-bold">{store.products}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-base-content/60">Рейтинг</p>
+                      <p className="text-base-content/60">{t('rating')}</p>
                       <p className="font-bold flex items-center gap-1">
                         <FiStar className="w-3 h-3 fill-warning text-warning" />
                         {store.rating}
@@ -1191,7 +1179,7 @@ export default function HomePageClient({
                   </div>
 
                   <button className="btn btn-primary btn-sm mt-4 w-full">
-                    Перейти в магазин
+                    {t('goToStore')}
                   </button>
                 </div>
               </div>
@@ -1204,7 +1192,7 @@ export default function HomePageClient({
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <AiOutlineEye className="w-6 h-6 text-info" />
-              Рекомендуем на основе ваших просмотров
+              {t('recommendedTitle')}
             </h2>
 
             <div className="carousel carousel-center w-full space-x-4 pb-4 overflow-x-auto">
@@ -1250,7 +1238,7 @@ export default function HomePageClient({
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <FiTrendingUp className="w-6 h-6 text-success" />
-              Что сейчас ищут
+              {t('trendingSearches')}
             </h2>
             <div className="flex flex-wrap gap-2">
               {trendingSearches.map((search) => (
@@ -1269,43 +1257,43 @@ export default function HomePageClient({
         <section className="py-12">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-8 text-center">
-              Почему выбирают SveTu?
+              {t('whyChooseUs')}
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
                   <FiTruck className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-bold mb-2">Быстрая доставка</h3>
+                <h3 className="font-bold mb-2">{t('fastDelivery')}</h3>
                 <p className="text-sm text-base-content/60">
-                  Доставка по всей Сербии от 1 дня
+                  {t('fastDeliveryDesc')}
                 </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-success/10 rounded-full flex items-center justify-center">
                   <FiShield className="w-8 h-8 text-success" />
                 </div>
-                <h3 className="font-bold mb-2">Защита сделок</h3>
+                <h3 className="font-bold mb-2">{t('dealProtection')}</h3>
                 <p className="text-sm text-base-content/60">
-                  Безопасные платежи через эскроу
+                  {t('dealProtectionDesc')}
                 </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-warning/10 rounded-full flex items-center justify-center">
                   <FiCreditCard className="w-8 h-8 text-warning" />
                 </div>
-                <h3 className="font-bold mb-2">Удобная оплата</h3>
+                <h3 className="font-bold mb-2">{t('convenientPayment')}</h3>
                 <p className="text-sm text-base-content/60">
-                  Все способы оплаты включая рассрочку
+                  {t('convenientPaymentDesc')}
                 </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-info/10 rounded-full flex items-center justify-center">
                   <FiMessageCircle className="w-8 h-8 text-info" />
                 </div>
-                <h3 className="font-bold mb-2">Поддержка 24/7</h3>
+                <h3 className="font-bold mb-2">{t('support247')}</h3>
                 <p className="text-sm text-base-content/60">
-                  Помощь на каждом этапе сделки
+                  {t('support247Desc')}
                 </p>
               </div>
             </div>
@@ -1315,16 +1303,14 @@ export default function HomePageClient({
         {/* CTA секция */}
         <section className="py-12 bg-gradient-to-r from-primary to-secondary">
           <div className="container mx-auto px-4 text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">
-              Начните покупать и продавать прямо сейчас!
-            </h2>
-            <p className="text-xl mb-8 opacity-90">
-              Присоединяйтесь к 2 миллионам пользователей
-            </p>
+            <h2 className="text-3xl font-bold mb-4">{t('startNowTitle')}</h2>
+            <p className="text-xl mb-8 opacity-90">{t('startNowSubtitle')}</p>
             <div className="flex gap-4 justify-center">
-              <button className="btn btn-white btn-lg">Создать аккаунт</button>
+              <button className="btn btn-white btn-lg">
+                {t('createAccount')}
+              </button>
               <button className="btn btn-outline btn-white btn-lg">
-                Подать объявление
+                {t('postListing')}
               </button>
             </div>
           </div>
@@ -1336,50 +1322,51 @@ export default function HomePageClient({
             <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
               {/* О компании */}
               <div className="lg:col-span-2">
-                <h3 className="text-2xl font-bold mb-4">SveTu</h3>
+                <h3 className="text-2xl font-bold mb-4">
+                  {tFooter('company')}
+                </h3>
                 <p className="text-base-content/60 mb-4">
-                  Крупнейшая площадка для покупки и продажи товаров в Сербии.
-                  Безопасные сделки, быстрая доставка, лучшие цены.
+                  {tFooter('companyDescription')}
                 </p>
                 <div className="flex gap-4">
                   <button className="btn btn-primary">
                     <BsPhone className="w-4 h-4 mr-2" />
-                    App Store
+                    {tFooter('appStore')}
                   </button>
                   <button className="btn btn-primary">
                     <BsPhone className="w-4 h-4 mr-2" />
-                    Google Play
+                    {tFooter('googlePlay')}
                   </button>
                 </div>
               </div>
 
               {/* Покупателям */}
               <div>
-                <h4 className="font-bold mb-4">Покупателям</h4>
+                <h4 className="font-bold mb-4">{tFooter('buyers')}</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="/how-to-buy" className="hover:text-primary">
-                      Как купить
+                      {tFooter('howToBuy')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/delivery" className="hover:text-primary">
-                      Доставка
+                      {tFooter('delivery')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/payment" className="hover:text-primary">
-                      Оплата
+                      {tFooter('payment')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/return" className="hover:text-primary">
-                      Возврат
+                      {tFooter('return')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/warranty" className="hover:text-primary">
-                      Гарантия
+                      {tFooter('warranty')}
                     </Link>
                   </li>
                 </ul>
@@ -1387,31 +1374,31 @@ export default function HomePageClient({
 
               {/* Продавцам */}
               <div>
-                <h4 className="font-bold mb-4">Продавцам</h4>
+                <h4 className="font-bold mb-4">{tFooter('sellers')}</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="/how-to-sell" className="hover:text-primary">
-                      Как продать
+                      {tFooter('howToSell')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/tariffs" className="hover:text-primary">
-                      Тарифы
+                      {tFooter('tariffs')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/promotion" className="hover:text-primary">
-                      Продвижение
+                      {tFooter('promotion')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/stores" className="hover:text-primary">
-                      Магазины
+                      {tFooter('stores')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/api" className="hover:text-primary">
-                      API
+                      {tFooter('api')}
                     </Link>
                   </li>
                 </ul>
@@ -1419,31 +1406,31 @@ export default function HomePageClient({
 
               {/* Помощь */}
               <div>
-                <h4 className="font-bold mb-4">Помощь</h4>
+                <h4 className="font-bold mb-4">{tFooter('help')}</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
                     <Link href="/faq" className="hover:text-primary">
-                      Частые вопросы
+                      {tFooter('frequentQuestions')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/support" className="hover:text-primary">
-                      Поддержка
+                      {tFooter('support')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/rules" className="hover:text-primary">
-                      Правила
+                      {tFooter('rules')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/blog" className="hover:text-primary">
-                      Блог
+                      {tFooter('blog')}
                     </Link>
                   </li>
                   <li>
                     <Link href="/contacts" className="hover:text-primary">
-                      Контакты
+                      {tFooter('contacts')}
                     </Link>
                   </li>
                 </ul>
@@ -1453,16 +1440,16 @@ export default function HomePageClient({
             <div className="divider my-8"></div>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-base-content/60">
-              <p>© 2025 SveTu. Все права защищены.</p>
+              <p>{tFooter('copyright')}</p>
               <div className="flex gap-4">
                 <Link href="/terms" className="hover:text-primary">
-                  Условия использования
+                  {tFooter('termsOfUse')}
                 </Link>
                 <Link href="/privacy" className="hover:text-primary">
-                  Конфиденциальность
+                  {tFooter('confidentiality')}
                 </Link>
                 <Link href="/cookies" className="hover:text-primary">
-                  Cookie
+                  {tFooter('cookie')}
                 </Link>
               </div>
             </div>
@@ -1495,19 +1482,19 @@ export default function HomePageClient({
         <div className="btm-nav lg:hidden">
           <button className="text-primary">
             <FiSearch className="w-5 h-5" />
-            <span className="btm-nav-label">Поиск</span>
+            <span className="btm-nav-label">{t('search')}</span>
           </button>
           <button>
             <FiHeart className="w-5 h-5" />
-            <span className="btm-nav-label">Избранное</span>
+            <span className="btm-nav-label">{t('favorites')}</span>
           </button>
           <div className="text-secondary">
             <CartIcon />
-            <span className="btm-nav-label">Корзина</span>
+            <span className="btm-nav-label">{t('cart')}</span>
           </div>
           <div className="flex flex-col items-center justify-center">
             <AuthButton />
-            <span className="btm-nav-label text-xs">Профиль</span>
+            <span className="btm-nav-label text-xs">{tCommon('profile')}</span>
           </div>
         </div>
       </div>

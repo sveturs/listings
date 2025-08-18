@@ -1719,7 +1719,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		translationTitleBoost := r.getBoostWeight("TranslationTitle", 4.0)
 		translationDescBoost := r.getBoostWeight("TranslationDesc", 1.5)
 		logger.Info().Msgf("Translation boost weights - Title: %.2f, Description: %.2f", translationTitleBoost, translationDescBoost)
-		
+
 		for _, queryVariant := range queryVariants {
 			// Поиск по сербским переводам
 			should = append(should, map[string]interface{}{
@@ -1741,7 +1741,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 					},
 				},
 			})
-			
+
 			// Поиск по русским переводам
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
@@ -1762,7 +1762,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 					},
 				},
 			})
-			
+
 			// Поиск по английским переводам
 			should = append(should, map[string]interface{}{
 				"match": map[string]interface{}{
@@ -1784,7 +1784,6 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 				},
 			})
 		}
-
 
 		// Добавляем специальную обработку для атрибутов в nested формате для всех вариантов транслитерации
 		for _, queryVariant := range queryVariants {
