@@ -50,10 +50,12 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
     if (module) {
       fetchTranslations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [module]);
 
   useEffect(() => {
     filterAndSortTranslations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [translations, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const fetchTranslations = async () => {
@@ -228,7 +230,11 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
   };
 
   const debouncedSearch = useCallback(
-    debounce((value: string) => setSearchTerm(value), 300),
+    (value: string) => {
+      const debounced = debounce((val: string) => setSearchTerm(val), 300);
+      debounced(value);
+    },
+
     []
   );
 

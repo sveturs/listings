@@ -79,6 +79,7 @@ export default function BulkTranslationManager() {
   useEffect(() => {
     loadEntities();
     loadProviders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityType, listingFilters]);
 
   const loadEntities = async () => {

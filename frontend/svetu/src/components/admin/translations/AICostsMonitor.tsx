@@ -203,6 +203,7 @@ export default function AICostsMonitor() {
     }, 30000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailyLimit, monthlyLimit]);
 
   const resetProviderCosts = async (provider: string) => {
