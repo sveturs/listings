@@ -9,7 +9,7 @@ on:
                 default: 'latest'
 
 jobs:
-    deploy:
+    build:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code

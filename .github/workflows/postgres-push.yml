@@ -9,7 +9,7 @@ on:
                 default: 'latest'
 
 jobs:
-    build:
+    harborputh:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code
@@ -35,14 +35,14 @@ jobs:
             -   name: Build and push Frontend Docker image
                 uses: docker/build-push-action@v6
                 with:
-                    context: ./frontend/svetu
+                    context: ./docker/postgres-postgis
                     push: true
                     build-args: |
                         GIT_COMMIT=${{ github.sha }}
                         BUILD_TIME=${{ env.TIMESTAMP }}
                     tags: |
-                        ${{ secrets.DOCKER_REGISTRY }}/svetu/frontend/app:${{ env.TIMESTAMP }}
-                        ${{ secrets.DOCKER_REGISTRY }}/svetu/frontend/app:latest
+                        ${{ secrets.DOCKER_REGISTRY }}/postgres/postgis:${{ env.TIMESTAMP }}
+                        ${{ secrets.DOCKER_REGISTRY }}/postgres/postgis:latest
 
             # Оповещение о завершении деплоя
             -   name: Deployment notification
