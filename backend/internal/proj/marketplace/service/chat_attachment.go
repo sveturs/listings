@@ -27,6 +27,7 @@ type ChatAttachmentServiceInterface interface {
 	UploadAttachments(ctx context.Context, messageID int, files []*multipart.FileHeader) ([]*models.ChatAttachment, error)
 	GetAttachment(ctx context.Context, attachmentID int) (*models.ChatAttachment, error)
 	GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error)
+	GetAttachmentFile(ctx context.Context, filePath string) (io.ReadCloser, error)
 	DeleteAttachment(ctx context.Context, attachmentID int, userID int) error
 	ValidateFile(file *multipart.FileHeader, fileUploadConfig config.FileUploadConfig) error
 }
@@ -217,6 +218,11 @@ func (s *ChatAttachmentService) GetAttachment(ctx context.Context, attachmentID 
 // GetMessageAttachments получает все вложения сообщения
 func (s *ChatAttachmentService) GetMessageAttachments(ctx context.Context, messageID int) ([]*models.ChatAttachment, error) {
 	return s.storage.GetMessageAttachments(ctx, messageID)
+}
+
+// GetAttachmentFile получает файл вложения из хранилища
+func (s *ChatAttachmentService) GetAttachmentFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	return s.fileStorage.GetFile(ctx, filePath)
 }
 
 // DeleteAttachment удаляет вложение

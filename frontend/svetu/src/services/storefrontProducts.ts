@@ -83,6 +83,23 @@ export const storefrontProductsService = {
     return response.data;
   },
 
+  // Получить товар напрямую по ID (без slug витрины)
+  async getProductById(productId: number): Promise<StorefrontProduct> {
+    const response = await apiClient.get(
+      `/api/v1/storefronts/products/${productId}`
+    );
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to fetch product');
+    }
+
+    if (!response.data) {
+      throw new Error('Product not found');
+    }
+
+    return response.data;
+  },
+
   // Создать товар (с поддержкой вариантов)
   async createProduct(
     storefrontSlug: string,

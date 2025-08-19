@@ -9,6 +9,8 @@ type Locale = 'ru' | 'en' | 'sr';
 export type TranslationModule =
   | 'common' // Базовые переводы (всегда загружаются)
   | 'auth' // Авторизация
+  | 'auth-shared' // Общие переводы для авторизации
+  | 'balance' // Баланс и платежи
   | 'profile' // Профиль пользователя
   | 'marketplace' // Маркетплейс и объявления
   | 'admin' // Админ панель
@@ -67,6 +69,12 @@ export async function loadMessages(
           break;
         case 'auth':
           moduleData = await import(`@/messages/${locale}/auth.json`);
+          break;
+        case 'auth-shared':
+          moduleData = await import(`@/messages/${locale}/auth-shared.json`);
+          break;
+        case 'balance':
+          moduleData = await import(`@/messages/${locale}/balance.json`);
           break;
         case 'profile':
           moduleData = await import(`@/messages/${locale}/profile.json`);
@@ -179,7 +187,10 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
 
   // Определяем модули по пути
   if (pathname.includes('/admin')) {
-    modules.push('admin');
+    modules.push('admin', 'auth-shared');
+  }
+  if (pathname.includes('/balance')) {
+    modules.push('balance', 'auth-shared');
   }
   if (pathname.includes('/marketplace') || pathname.includes('/listing')) {
     modules.push('marketplace');
@@ -202,7 +213,7 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     modules.push('auth');
   }
   if (pathname.includes('/profile')) {
-    modules.push('profile');
+    modules.push('profile', 'auth-shared');
     // Для страницы storefronts в профиле также нужен модуль storefronts
     if (pathname.includes('/profile/storefronts')) {
       modules.push('storefronts');
@@ -210,6 +221,10 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     // Для страницы заказов в профиле также нужен модуль orders
     if (pathname.includes('/profile/orders')) {
       modules.push('orders');
+    }
+    // Для страницы баланса в профиле
+    if (pathname.includes('/profile/balance')) {
+      modules.push('balance');
     }
   }
   if (pathname.includes('/real-estate') || pathname.includes('/property')) {

@@ -15,7 +15,7 @@ import { ThemeToggle } from './ThemeToggle';
 import Image from 'next/image';
 
 export default function Header() {
-  const t = useTranslations('header');
+  const t = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -71,7 +71,7 @@ export default function Header() {
     }
   };
 
-  const navItems = [{ href: '/map', label: t('nav.map') }];
+  const navItems = [{ href: '/map', label: t('header.nav.map') }];
 
   return (
     <>
@@ -179,7 +179,7 @@ export default function Header() {
               <Link
                 href="/create-listing-choice"
                 className="btn btn-primary btn-sm hidden md:flex tooltip tooltip-bottom"
-                data-tip={t('nav.createListing')}
+                data-tip={t('header.nav.createListing')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -196,7 +196,7 @@ export default function Header() {
                   />
                 </svg>
                 <span className="hidden md:inline">
-                  {t('nav.createListing')}
+                  {t('header.nav.createListing')}
                 </span>
               </Link>
             )}
@@ -225,7 +225,7 @@ export default function Header() {
       {/* Мобильная поисковая строка - скрываем на странице поиска и главной */}
       {!isSearchPage && !isHomePage && (
         <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
-          <SearchBar className="w-full" placeholder={t('search.placeholder')} />
+          <SearchBar className="w-full" placeholder={t('header.search.placeholder')} />
         </div>
       )}
     </>

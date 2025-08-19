@@ -57,15 +57,38 @@ export default function StorefrontProductPage({ params }: Props) {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        let productData: StorefrontProduct | null = null;
 
-        // Загружаем данные витрины и товара параллельно
-        const [productData, storefrontData] = await Promise.all([
-          storefrontProductsService.getProduct(slug, parseInt(id)),
-          storefrontApi.getStorefrontBySlug(slug),
-        ]);
+        // Сначала пытаемся загрузить по slug
+        try {
+          const [productResult, storefrontData] = await Promise.all([
+            storefrontProductsService.getProduct(slug, parseInt(id)),
+            storefrontApi.getStorefrontBySlug(slug),
+          ]);
 
-        setProduct(productData);
-        setStorefront(storefrontData);
+          productData = productResult;
+          setProduct(productData);
+          setStorefront(storefrontData);
+        } catch {
+          // Если не удалось по slug, пробуем напрямую по ID
+          console.log('Failed to load by slug, trying direct ID...');
+          productData = await storefrontProductsService.getProductById(
+            parseInt(id)
+          );
+          setProduct(productData);
+
+          // Пытаемся загрузить витрину по ID из товара
+          if (productData && productData.storefront_id) {
+            try {
+              const storefrontData = await storefrontApi.getStorefront(
+                productData.storefront_id
+              );
+              setStorefront(storefrontData);
+            } catch {
+              console.log('Could not load storefront data');
+            }
+          }
+        }
 
         // Check if product has variants
         if (

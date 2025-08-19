@@ -12807,6 +12807,82 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/attachments/{id}/download': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download attachment file
+     * @description Downloads an attachment file with authorization check
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Attachment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description File content */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description marketplace.invalidAttachmentId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.accessDenied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.attachmentNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/categories': {
     parameters: {
       query?: never;
@@ -15478,6 +15554,63 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/neighborhood-stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get neighborhood statistics
+     * @description Get statistics about listings in user's neighborhood
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Center latitude */
+          lat?: number;
+          /** @description Center longitude */
+          lon?: number;
+          /** @description Radius in kilometers (default 5) */
+          radius?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.NeighborhoodStatsResponse'];
+            };
+          };
+        };
+        /** @description marketplace.statsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -22169,7 +22302,7 @@ export interface paths {
     };
     /**
      * Get search suggestions
-     * @description Returns autocomplete suggestions based on query
+     * @description Returns autocomplete suggestions with types (search, product, category)
      */
     get: {
       parameters: {
@@ -22182,6 +22315,8 @@ export interface paths {
           limit?: number;
           /** @description Number of suggestions */
           size?: number;
+          /** @description Comma-separated types: queries,categories,products */
+          types?: string;
         };
         header?: never;
         path?: never;
@@ -22189,14 +22324,14 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Suggestions list */
+        /** @description Enhanced suggestions list */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: string[];
+              data?: components['schemas']['backend_internal_proj_marketplace_service.SuggestionItem'][];
             };
           };
         };
@@ -26950,6 +27085,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/products/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a storefront product by ID
+     * @description Returns details of a specific product using only product ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/search': {
     parameters: {
       query?: never;
@@ -31322,6 +31517,23 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
+    'backend_internal_proj_marketplace_service.SuggestionItem': {
+      category_id?: number;
+      count?: number;
+      icon?: string;
+      label?: string;
+      metadata?: {
+        [key: string]: unknown;
+      };
+      product_id?: number;
+      type?: components['schemas']['backend_internal_proj_marketplace_service.SuggestionType'];
+      value?: string;
+    };
+    /** @enum {string} */
+    'backend_internal_proj_marketplace_service.SuggestionType':
+      | 'query'
+      | 'category'
+      | 'product';
     'backend_internal_proj_postexpress_models.CalculateRateRequest': {
       cod_amount?: number;
       declared_value?: number;
@@ -32353,6 +32565,14 @@ export interface components {
        *     ] */
       labels?: string[];
       prohibited_labels?: string[];
+    };
+    'internal_proj_marketplace_handler.NeighborhoodStatsResponse': {
+      center_lat?: number;
+      center_lon?: number;
+      new_today?: number;
+      radius_km?: number;
+      total_listings?: number;
+      within_radius?: number;
     };
     'internal_proj_marketplace_handler.OpenDisputeRequest': {
       reason: string;

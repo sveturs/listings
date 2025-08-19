@@ -1231,7 +1231,7 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 		logger.Info().Msgf("Fetching storefront %d data for listing %d", *listing.StorefrontID, listing.ID)
 		var storefront models.Storefront
 		err := storage.QueryRow(context.Background(), `
-			SELECT id, name, slug, city, address, country, latitude, longitude, rating, is_verified
+			SELECT id, name, slug, city, address, country, latitude, longitude, is_verified
 			FROM user_storefronts
 			WHERE id = $1
 		`, *listing.StorefrontID).Scan(
@@ -1243,7 +1243,6 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 			&storefront.Country,
 			&storefront.Latitude,
 			&storefront.Longitude,
-			&storefront.Rating,
 			&storefront.IsVerified,
 		)
 
@@ -1253,7 +1252,6 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 				"id":          storefront.ID,
 				"name":        storefront.Name,
 				"slug":        storefront.Slug,
-				"rating":      storefront.Rating,
 				"is_verified": storefront.IsVerified,
 			}
 
@@ -1350,12 +1348,39 @@ func processCategory(doc map[string]interface{}, listing *models.MarketplaceList
 }
 
 func processUser(doc map[string]interface{}, listing *models.MarketplaceListing) {
-	if listing.User != nil {
-		doc["user"] = map[string]interface{}{
-			"id":    listing.User.ID,
-			"name":  listing.User.Name,
-			"email": listing.User.Email,
+	// Всегда добавляем user_id из listing.UserID
+	if listing.UserID > 0 {
+		logger.Info().Msgf("processUser: listing.ID=%d, listing.UserID=%d", listing.ID, listing.UserID)
+
+		// Создаем базовую структуру пользователя с user_id
+		userDoc := map[string]interface{}{
+			"id": listing.UserID,
 		}
+
+		// Добавляем дополнительную информацию, если User объект заполнен
+		if listing.User != nil {
+			logger.Info().Msgf("processUser: listing.User.ID=%d, listing.User.Name=%s", listing.User.ID, listing.User.Name)
+
+			// Если User.ID равен 0, но есть UserID, используем UserID
+			if listing.User.ID == 0 && listing.UserID > 0 {
+				userDoc["id"] = listing.UserID
+				logger.Info().Msgf("processUser: User.ID was 0, using listing.UserID=%d", listing.UserID)
+			} else if listing.User.ID > 0 {
+				userDoc["id"] = listing.User.ID
+			}
+
+			if listing.User.Name != "" {
+				userDoc["name"] = listing.User.Name
+			}
+			if listing.User.Email != "" {
+				userDoc["email"] = listing.User.Email
+			}
+		}
+
+		doc["user"] = userDoc
+		logger.Info().Msgf("processUser: final user doc for listing %d: %v", listing.ID, userDoc)
+	} else {
+		logger.Warn().Msgf("processUser: listing.ID=%d has no UserID", listing.ID)
 	}
 }
 

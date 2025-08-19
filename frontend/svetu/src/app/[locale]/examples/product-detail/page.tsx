@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -526,7 +526,7 @@ export default function ProductDetailPage() {
                           <div>
                             <div className="font-medium">Самовывоз</div>
                             <div className="text-sm opacity-70">
-                              Белград, ТЦ "Delta City" - бесплатно
+                              Белград, ТЦ &quot;Delta City&quot; - бесплатно
                             </div>
                           </div>
                         </div>

@@ -15056,6 +15056,76 @@
                 }
             }
         },
+        "/api/v1/marketplace/attachments/{id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Downloads an attachment file with authorization check",
+                "tags": [
+                    "marketplace-chat"
+                ],
+                "summary": "Download attachment file",
+                "parameters": [
+                    {
+                        "description": "Attachment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File content"
+                    },
+                    "400": {
+                        "description": "marketplace.invalidAttachmentId",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "marketplace.accessDenied",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "marketplace.attachmentNotFound",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/categories": {
             "get": {
                 "description": "Returns all marketplace categories",
@@ -18250,6 +18320,75 @@
                     },
                     "500": {
                         "description": "marketplace.moderationError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/neighborhood-stats": {
+            "get": {
+                "description": "Get statistics about listings in user's neighborhood",
+                "tags": [
+                    "marketplace"
+                ],
+                "summary": "Get neighborhood statistics",
+                "parameters": [
+                    {
+                        "description": "Center latitude",
+                        "name": "lat",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Center longitude",
+                        "name": "lon",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Radius in kilometers (default 5)",
+                        "name": "radius",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/internal_proj_marketplace_handler.NeighborhoodStatsResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.statsError",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -25558,7 +25697,7 @@
         },
         "/api/v1/search/suggestions": {
             "get": {
-                "description": "Returns autocomplete suggestions based on query",
+                "description": "Returns autocomplete suggestions with types (search, product, category)",
                 "tags": [
                     "search"
                 ],
@@ -25597,11 +25736,20 @@
                             "type": "integer",
                             "default": 10
                         }
+                    },
+                    {
+                        "description": "Comma-separated types: queries,categories,products",
+                        "name": "types",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "\"queries,categories,products\""
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Suggestions list",
+                        "description": "Enhanced suggestions list",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -25615,7 +25763,7 @@
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string"
+                                                        "$ref": "#/components/schemas/backend_internal_proj_marketplace_service.SuggestionItem"
                                                     }
                                                 }
                                             }
@@ -27201,6 +27349,58 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/products/{id}": {
+            "get": {
+                "description": "Returns details of a specific product using only product ID",
+                "tags": [
+                    "storefront-products"
+                ],
+                "summary": "Get a storefront product by ID",
+                "parameters": [
+                    {
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_internal_domain_models.StorefrontProduct"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
                         }
@@ -40639,6 +40839,49 @@
                     }
                 }
             },
+            "backend_internal_proj_marketplace_service.SuggestionItem": {
+                "type": "object",
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/backend_internal_proj_marketplace_service.SuggestionType"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_proj_marketplace_service.SuggestionType": {
+                "type": "string",
+                "enum": [
+                    "query",
+                    "category",
+                    "product"
+                ],
+                "x-enum-varnames": [
+                    "SuggestionTypeQuery",
+                    "SuggestionTypeCategory",
+                    "SuggestionTypeProduct"
+                ]
+            },
             "backend_internal_proj_postexpress_models.CalculateRateRequest": {
                 "type": "object",
                 "required": [
@@ -43371,6 +43614,29 @@
                         "items": {
                             "type": "string"
                         }
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.NeighborhoodStatsResponse": {
+                "type": "object",
+                "properties": {
+                    "center_lat": {
+                        "type": "number"
+                    },
+                    "center_lon": {
+                        "type": "number"
+                    },
+                    "new_today": {
+                        "type": "integer"
+                    },
+                    "radius_km": {
+                        "type": "number"
+                    },
+                    "total_listings": {
+                        "type": "integer"
+                    },
+                    "within_radius": {
+                        "type": "integer"
                     }
                 }
             },

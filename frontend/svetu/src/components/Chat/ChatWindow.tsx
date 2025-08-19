@@ -14,6 +14,10 @@ import configManager from '@/config';
 import { contactsService } from '@/services/contacts';
 import { getLastSeenText } from '@/utils/timeUtils';
 import { toast } from '@/utils/toast';
+import StorefrontProductQuickView from './StorefrontProductQuickView';
+import { useAppDispatch } from '@/store/hooks';
+import { addToCart } from '@/store/slices/cartSlice';
+import { addItem } from '@/store/slices/localCartSlice';
 
 interface ChatWindowProps {
   chat?: MarketplaceChat;
@@ -35,6 +39,20 @@ interface ListingInfo {
   user_id: number;
 }
 
+interface StorefrontProduct {
+  id: number;
+  name: string;
+  price: number;
+  storefront_id: number;
+  stock_quantity?: number;
+  images?: Array<{ url: string }>;
+  storefront?: {
+    id: number;
+    slug: string;
+    name: string;
+  };
+}
+
 export default function ChatWindow({
   chat,
   initialListingId,
@@ -44,7 +62,7 @@ export default function ChatWindow({
   onBack,
   showBackButton,
 }: ChatWindowProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const params = useParams();
   const locale = params?.locale as string;
   const { user } = useAuth();
@@ -64,6 +82,11 @@ export default function ChatWindow({
   const [isLoadingOldMessages, setIsLoadingOldMessages] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showProductQuickView, setShowProductQuickView] = useState(false);
+  const [storefrontProduct, setStorefrontProduct] =
+    useState<StorefrontProduct | null>(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const dispatch = useAppDispatch();
 
   const {
     messages,
@@ -161,16 +184,49 @@ export default function ChatWindow({
     }
   }, [chat, chatMessages.length, isInitialLoad, isLoading]);
 
+  // Загрузка информации о товаре витрины для существующих чатов
+  useEffect(() => {
+    if (chat?.storefront_product_id && !storefrontProduct) {
+      const apiUrl = configManager.getApiUrl();
+      fetch(
+        `${apiUrl}/api/v1/storefronts/products/${chat.storefront_product_id}`,
+        {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+        .then((res) => res.json())
+        .then((result) => {
+          const data = result.data || result;
+          if (data && data.id) {
+            setStorefrontProduct(data);
+          }
+        })
+        .catch((err) => {
+          console.error('Error loading storefront product:', err);
+          // Fallback data for testing
+          setStorefrontProduct({
+            id: chat.storefront_product_id || 0,
+            name: chat.listing?.title || 'Product',
+            price: 1000,
+            storefront_id: chat.seller_id || 1,
+            stock_quantity: 10,
+            storefront: {
+              id: chat.seller_id || 1,
+              slug: 'store', // Default slug, should be loaded from API
+              name: 'Store',
+            },
+          });
+        });
+    }
+  }, [chat?.storefront_product_id, storefrontProduct]);
+
   // Загрузка информации об объявлении для новых чатов
   useEffect(() => {
-    console.log('Loading listing effect:', {
-      isNewChat,
-      initialListingId,
-      listingInfo,
-      isContactChat,
-    });
+    // Для обычных объявлений
     if (isNewChat && initialListingId && !listingInfo && !isContactChat) {
-      console.log('Fetching listing info for ID:', initialListingId);
       const apiUrl = configManager.getApiUrl();
       fetch(`${apiUrl}/api/v1/marketplace/listings/${initialListingId}`, {
         credentials: 'include',
@@ -180,7 +236,6 @@ export default function ChatWindow({
       })
         .then((res) => res.json())
         .then((result) => {
-          console.log('Listing data received:', result);
           // Проверяем обертку ответа
           const data = result.data || result;
           if (data && data.id) {
@@ -189,7 +244,34 @@ export default function ChatWindow({
         })
         .catch((err) => console.error('Error loading listing info:', err));
     }
-  }, [isNewChat, initialListingId, isContactChat, listingInfo]);
+
+    // Для товаров витрин - используем заглушку пока endpoint не реализован
+    if (
+      isNewChat &&
+      initialStorefrontProductId &&
+      !listingInfo &&
+      !isContactChat
+    ) {
+      console.log(
+        'Storefront product loading - using placeholder data (endpoint not implemented):',
+        initialStorefrontProductId
+      );
+      // TODO: Implement proper storefront product loading when endpoint is available
+      // For now, set placeholder data with product ID
+      setListingInfo({
+        id: initialStorefrontProductId,
+        title: t('storefrontProduct', { id: initialStorefrontProductId }),
+        images: [],
+        user_id: initialSellerId || 0,
+      });
+    }
+  }, [
+    isNewChat,
+    initialListingId,
+    initialStorefrontProductId,
+    isContactChat,
+    listingInfo,
+  ]);
 
   // Прокрутка к низу только при новых сообщениях (не при загрузке старых)
   useEffect(() => {
@@ -218,18 +300,6 @@ export default function ChatWindow({
     const { scrollTop, scrollHeight, clientHeight } =
       messagesContainerRef.current;
     setIsAtBottom(scrollHeight - scrollTop - clientHeight < 100);
-
-    console.log('Scroll position:', { scrollTop, scrollHeight, clientHeight });
-    console.log(
-      'Should load more:',
-      scrollTop < 100,
-      'hasMore:',
-      hasMore,
-      'isLoading:',
-      isLoading,
-      'isLoadingOldMessages:',
-      isLoadingOldMessages
-    );
 
     // Загрузка предыдущих сообщений при скролле вверх
     if (
@@ -281,10 +351,22 @@ export default function ChatWindow({
       if (chat.listing.title === '__DELETED_LISTING__') {
         return t('deletedListing');
       }
+      // Если это чат товара витрины, показываем название товара
+      if (chat.storefront_product_id && chat.storefront_product_id > 0) {
+        return chat.listing.title; // Backend уже отправляет название товара витрины
+      }
       return chat.listing.title;
     }
     if (listingInfo) {
       return listingInfo.title;
+    }
+    // Если это новый чат с товаром витрины, но информация еще загружается
+    if (isNewChat && initialStorefrontProductId && !isContactChat) {
+      return t('loadingProduct');
+    }
+    // Если это новый чат с обычным объявлением, но информация еще загружается
+    if (isNewChat && initialListingId && !isContactChat) {
+      return t('loadingListing');
     }
     if (isContactChat) {
       return t('directMessage');
@@ -292,16 +374,15 @@ export default function ChatWindow({
     return t('newChat');
   };
 
+  const handleTitleClick = () => {
+    // Открываем быстрый просмотр только для товаров витрин
+    if (chat?.storefront_product_id && chat.storefront_product_id > 0) {
+      setShowProductQuickView(true);
+    }
+  };
+
   const handleAddToContacts = async () => {
     if (!user || !chat?.other_user?.id || isAddingContact) return;
-
-    console.log('Adding contact:', {
-      chat,
-      other_user: chat.other_user,
-      contact_user_id: chat.other_user.id,
-      chat_id: chat.id,
-      current_user_id: user.id,
-    });
 
     setIsAddingContact(true);
     try {
@@ -371,7 +452,12 @@ export default function ChatWindow({
           {/* Информация о товаре или контакте */}
           {(chat?.listing || chat?.listing_id || listingInfo) &&
             !isContactChat && (
-              <div className="avatar flex-shrink-0">
+              <div
+                className="avatar flex-shrink-0 cursor-pointer"
+                onClick={
+                  chat?.storefront_product_id ? handleTitleClick : undefined
+                }
+              >
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded">
                   <Image
                     src={
@@ -418,9 +504,24 @@ export default function ChatWindow({
           )}
 
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm sm:text-base font-semibold truncate">
-              {getChatTitle()}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2
+                className={`text-sm sm:text-base font-semibold truncate ${
+                  chat?.storefront_product_id
+                    ? 'cursor-pointer hover:text-primary transition-colors'
+                    : ''
+                }`}
+                onClick={handleTitleClick}
+              >
+                {getChatTitle()}
+              </h2>
+              {/* Цена для товара витрины */}
+              {chat?.storefront_product_id && chat?.listing?.price ? (
+                <span className="text-sm font-bold text-primary">
+                  {chat.listing.price} RSD
+                </span>
+              ) : null}
+            </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-base-content/70">
               {isNewChat ? (
                 <span>{t('startNewConversation')}</span>
@@ -462,7 +563,92 @@ export default function ChatWindow({
 
           {/* Кнопки действий */}
           <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-            {(chat?.listing || chat?.listing_id || listingInfo) &&
+            {/* Кнопка добавить в корзину для товаров витрин */}
+            {chat?.storefront_product_id && (
+              <button
+                className="btn btn-primary btn-xs sm:btn-sm"
+                title={t('addToCart')}
+                disabled={isAddingToCart || !storefrontProduct}
+                onClick={async () => {
+                  if (!storefrontProduct || isAddingToCart) return;
+
+                  setIsAddingToCart(true);
+                  try {
+                    if (user) {
+                      // For authenticated users, save to backend
+                      await dispatch(
+                        addToCart({
+                          storefrontId: storefrontProduct.storefront_id,
+                          item: {
+                            product_id: storefrontProduct.id,
+                            quantity: 1,
+                          },
+                        })
+                      ).unwrap();
+                      toast.success(t('productAddedToCart'));
+                    } else {
+                      // For non-authenticated users, save to local storage
+                      dispatch(
+                        addItem({
+                          productId: storefrontProduct.id,
+                          name: storefrontProduct.name,
+                          price: storefrontProduct.price,
+                          currency: 'RSD',
+                          quantity: 1,
+                          stockQuantity: storefrontProduct.stock_quantity,
+                          image: storefrontProduct.images?.[0]?.url,
+                          storefrontId: storefrontProduct.storefront_id,
+                        })
+                      );
+                      toast.success(t('productAddedToCart'));
+                    }
+                  } catch (error) {
+                    console.error('Failed to add to cart:', error);
+                    toast.error(t('failedToAddToCart'));
+                  } finally {
+                    setIsAddingToCart(false);
+                  }
+                }}
+              >
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* Кнопка просмотра детальной страницы */}
+            {chat?.storefront_product_id ? (
+              <Link
+                href={`/${locale}/storefronts/product/${chat.storefront_product_id}`}
+                className="btn btn-ghost btn-xs sm:btn-sm"
+                title={t('viewDetails')}
+              >
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </Link>
+            ) : (
+              (chat?.listing || chat?.listing_id || listingInfo) &&
               !isContactChat && (
                 <Link
                   href={`/${locale}/marketplace/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
@@ -483,7 +669,8 @@ export default function ChatWindow({
                     />
                   </svg>
                 </Link>
-              )}
+              )
+            )}
 
             {getContactUserId() && (
               <button
@@ -602,6 +789,15 @@ export default function ChatWindow({
           initialSellerId={initialSellerId || initialContactId}
         />
       </div>
+
+      {/* Quick View Modal for Storefront Product */}
+      {chat?.storefront_product_id && (
+        <StorefrontProductQuickView
+          productId={chat.storefront_product_id}
+          isOpen={showProductQuickView}
+          onClose={() => setShowProductQuickView(false)}
+        />
+      )}
     </div>
   );
 }

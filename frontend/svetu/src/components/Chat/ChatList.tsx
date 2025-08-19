@@ -16,7 +16,7 @@ interface ChatListProps {
 }
 
 export default function ChatList({ onChatSelect }: ChatListProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const locale = useLocale();
   const { user, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,6 +139,10 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
       if (chat.listing.title === '__DELETED_LISTING__') {
         return t('deletedListing');
       }
+      // Если это чат товара витрины, показываем название товара
+      if (chat.storefront_product_id && chat.storefront_product_id > 0) {
+        return chat.listing.title; // Backend уже отправляет название товара витрины в listing.title
+      }
       return chat.listing.title;
     }
     return t('deletedListing');
@@ -149,15 +153,8 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
   };
 
   const getChatAvatar = (chat: MarketplaceChat) => {
-    console.log('Chat avatar for:', chat.id, {
-      listing: chat.listing,
-      images: chat.listing?.images,
-      first_image: chat.listing?.images?.[0],
-    });
-
     if (chat.listing?.images?.[0]?.public_url) {
       const imageUrl = config.buildImageUrl(chat.listing.images[0].public_url);
-      console.log('Built image URL:', imageUrl);
       return imageUrl;
     }
     return '/placeholder-listing.jpg';

@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { PageTransition } from '@/components/ui/PageTransition';
-// import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
@@ -77,6 +78,8 @@ export default function HomePageClient({
   createListingText,
   locale,
 }: HomePageClientProps) {
+  const router = useRouter();
+  const { user } = useAuth();
   const t = useTranslations('marketplace.home');
   const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
@@ -96,6 +99,86 @@ export default function HomePageClient({
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [officialStores, setOfficialStores] = useState<any[]>([]);
   const [_isLoadingStores, setIsLoadingStores] = useState(false);
+
+  // Функция для получения URL объявления
+  const getListingUrl = (deal: any) => {
+    console.log('getListingUrl called with deal:', {
+      id: deal.id,
+      product_id: deal.product_id,
+      listing_id: deal.listing_id,
+      isStorefront: deal.isStorefront,
+    });
+
+    if (deal.isStorefront && deal.product_id) {
+      // Для товаров витрин - используем product_id без префикса
+      const url = `/${locale}/marketplace/${deal.product_id}`;
+      console.log('Storefront URL:', url);
+      return url;
+    } else if (deal.listing_id) {
+      // Для обычных объявлений - используем listing_id
+      const url = `/${locale}/marketplace/${deal.listing_id}`;
+      console.log('Listing URL:', url);
+      return url;
+    } else {
+      // Fallback - извлекаем чистый ID из deal.id убрав префиксы
+      const cleanId =
+        typeof deal.id === 'string'
+          ? deal.id.replace(/^(ml_|sp_)/, '')
+          : deal.id;
+      const url = `/${locale}/marketplace/${cleanId}`;
+      console.log('Fallback URL:', url);
+      return url;
+    }
+  };
+
+  // Функция для открытия чата
+  const handleStartChat = (deal: any) => {
+    console.log('handleStartChat called with deal:', deal);
+
+    if (!user) {
+      // Если пользователь не авторизован, перенаправляем на страницу входа
+      router.push(`/${locale}/login`);
+      return;
+    }
+
+    // Определяем URL для чата в зависимости от типа объявления
+    if (deal.isStorefront && deal.storefront_id) {
+      // B2C - чат с витриной, передаем storefront_product_id и seller_id (владелец витрины)
+      console.log(
+        'Opening B2C chat with storefront_id:',
+        deal.storefront_id,
+        'product_id:',
+        deal.product_id || deal.id,
+        'seller_id:',
+        deal.user_id
+      );
+      const productId = deal.product_id || deal.id;
+      if (!deal.user_id) {
+        console.error(
+          'Missing seller_id for storefront product chat. Deal data:',
+          deal
+        );
+        return;
+      }
+      router.push(
+        `/${locale}/chat?storefront_product_id=${productId}&seller_id=${deal.user_id}`
+      );
+    } else if (deal.user_id) {
+      // C2C - чат с продавцом обычного объявления
+      const listingId = deal.listing_id || deal.id;
+      console.log(
+        'Opening C2C chat with user_id:',
+        deal.user_id,
+        'listing_id:',
+        listingId
+      );
+      router.push(
+        `/${locale}/chat?listing_id=${listingId}&seller_id=${deal.user_id}`
+      );
+    } else {
+      console.error('Missing seller information for chat. Deal data:', deal);
+    }
+  };
 
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
@@ -433,11 +516,15 @@ export default function HomePageClient({
               oldPrice = `${listing.originalPrice} РСД`;
             }
 
-            return {
+            const mappedListing = {
               id:
                 listing.product_type === 'storefront'
+                  ? `sp_${listing.product_id}` // Добавляем префикс для уникальности
+                  : `ml_${listing.id}`,
+              product_id:
+                listing.product_type === 'storefront'
                   ? listing.product_id
-                  : listing.id,
+                  : null,
               title: listing.name || listing.title,
               price: `${listing.price} ${listing.currency || 'РСД'}`,
               oldPrice,
@@ -461,7 +548,29 @@ export default function HomePageClient({
               isFavorite: false, // Это нужно будет получать из профиля пользователя
               category: listing.category?.name || listing.categoryName,
               isStorefront: listing.product_type === 'storefront',
+              // Извлекаем user_id из объекта user (search API) или напрямую (marketplace API)
+              user_id: listing.user?.id || listing.user_id,
+              // Извлекаем storefront_id из объекта storefront (search API) или напрямую
+              storefront_id: listing.storefront?.id || listing.storefront_id,
+              // Сохраняем оригинальный listing_id для C2C товаров (удаляем префикс ml_ если есть)
+              listing_id:
+                listing.product_type !== 'storefront'
+                  ? typeof listing.id === 'string' &&
+                    listing.id.startsWith('ml_')
+                    ? listing.id.replace('ml_', '')
+                    : listing.id
+                  : null,
             };
+
+            // Логирование для отладки
+            if (!mappedListing.user_id && !mappedListing.storefront_id) {
+              console.warn('Listing missing user_id and storefront_id:', {
+                original_listing: listing,
+                mapped_listing: mappedListing,
+              });
+            }
+
+            return mappedListing;
           });
 
           setListings(apiListings);
@@ -853,136 +962,159 @@ export default function HomePageClient({
               className={`grid ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'} gap-4`}
             >
               {listings.map((deal) => (
-                <motion.div
+                <Link
                   key={deal.id}
-                  whileHover={{ scale: 1.02 }}
-                  className="card bg-base-100 hover:shadow-xl transition-all"
+                  href={getListingUrl(deal)}
+                  className="block"
                 >
-                  <figure className="relative h-48 overflow-hidden">
-                    <img
-                      src={deal.image}
-                      alt={deal.title}
-                      className="w-full h-full object-cover"
-                    />
-
-                    {/* Значок витрины для B2C объявлений */}
-                    {deal.isStorefront && (
-                      <div className="badge badge-info absolute top-2 left-2 flex items-center gap-1">
-                        <FiShoppingBag className="w-3 h-3" />
-                        {t('storefront')}
-                      </div>
-                    )}
-
-                    {/* Остальные бейджи с учетом значка витрины */}
-                    {deal.isNew && !deal.isStorefront && (
-                      <div className="badge badge-secondary absolute top-2 left-2">
-                        NEW
-                      </div>
-                    )}
-                    {deal.isNew && deal.isStorefront && (
-                      <div className="badge badge-secondary absolute top-12 left-2">
-                        NEW
-                      </div>
-                    )}
-
-                    {deal.discount && !deal.isStorefront && (
-                      <div className="badge badge-error absolute top-2 left-2">
-                        {deal.discount}
-                      </div>
-                    )}
-                    {deal.discount && deal.isStorefront && (
-                      <div className="badge badge-error absolute top-12 left-2">
-                        {deal.discount}
-                      </div>
-                    )}
-
-                    {deal.isPremium && (
-                      <div className="badge badge-warning absolute top-2 right-2">
-                        PREMIUM
-                      </div>
-                    )}
-
-                    <button
-                      className={`btn btn-circle btn-sm absolute ${deal.isPremium ? 'top-12 right-2' : 'top-2 right-2'} bg-base-100/80 hover:bg-base-100`}
-                    >
-                      <FiHeart
-                        className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="card bg-base-100 hover:shadow-xl transition-all"
+                  >
+                    <figure className="relative h-48 overflow-hidden">
+                      <img
+                        src={deal.image}
+                        alt={deal.title}
+                        className="w-full h-full object-cover"
                       />
-                    </button>
-                  </figure>
-                  <div className="card-body p-4">
-                    <h3 className="card-title text-base line-clamp-2">
-                      {deal.title}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm">
-                      <FiMapPin className="w-3 h-3" />
-                      <span className="text-base-content/60">
-                        {deal.location}
-                      </span>
-                    </div>
-                    {deal.rating && (
-                      <div className="flex items-center gap-1 text-sm">
-                        <FiStar className="w-3 h-3 fill-warning text-warning" />
-                        <span>{deal.rating}</span>
-                        <span className="text-base-content/60">
-                          ({deal.reviews})
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      {deal.oldPrice && (
-                        <span className="text-base-content/40 line-through text-sm">
-                          {deal.oldPrice}
-                        </span>
-                      )}
-                      <p className="text-xl font-bold text-primary">
-                        {deal.price}
-                      </p>
-                    </div>
 
-                    {/* Кнопки действий в зависимости от типа объявления */}
-                    {deal.isStorefront ? (
-                      // B2C (витрина) - кнопка "В корзину" + "Написать в чат"
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          className="btn btn-primary btn-sm flex-1"
-                          onClick={() => console.log('Add to cart:', deal.id)}
-                        >
-                          {t('addToCart')}
-                        </button>
-                        <button
-                          className="btn btn-outline btn-sm"
-                          onClick={() =>
-                            console.log('Chat with seller:', deal.id)
-                          }
-                        >
-                          <FiMessageCircle className="w-4 h-4" />
-                        </button>
+                      {/* Значок витрины для B2C объявлений */}
+                      {deal.isStorefront && (
+                        <div className="badge badge-info absolute top-2 left-2 flex items-center gap-1">
+                          <FiShoppingBag className="w-3 h-3" />
+                          {t('storefront')}
+                        </div>
+                      )}
+
+                      {/* Остальные бейджи с учетом значка витрины */}
+                      {deal.isNew && !deal.isStorefront && (
+                        <div className="badge badge-secondary absolute top-2 left-2">
+                          NEW
+                        </div>
+                      )}
+                      {deal.isNew && deal.isStorefront && (
+                        <div className="badge badge-secondary absolute top-12 left-2">
+                          NEW
+                        </div>
+                      )}
+
+                      {deal.discount && !deal.isStorefront && (
+                        <div className="badge badge-error absolute top-2 left-2">
+                          {deal.discount}
+                        </div>
+                      )}
+                      {deal.discount && deal.isStorefront && (
+                        <div className="badge badge-error absolute top-12 left-2">
+                          {deal.discount}
+                        </div>
+                      )}
+
+                      {deal.isPremium && (
+                        <div className="badge badge-warning absolute top-2 right-2">
+                          PREMIUM
+                        </div>
+                      )}
+
+                      <button
+                        className={`btn btn-circle btn-sm absolute ${deal.isPremium ? 'top-12 right-2' : 'top-2 right-2'} bg-base-100/80 hover:bg-base-100`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Add to favorites:', deal.id);
+                        }}
+                      >
+                        <FiHeart
+                          className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                        />
+                      </button>
+                    </figure>
+                    <div className="card-body p-4">
+                      <h3 className="card-title text-base line-clamp-2">
+                        {deal.title}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm">
+                        <FiMapPin className="w-3 h-3" />
+                        <span className="text-base-content/60">
+                          {deal.location}
+                        </span>
                       </div>
-                    ) : (
-                      // C2C (обычное объявление) - "Написать в чат" + "В избранное"
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          className="btn btn-primary btn-sm flex-1"
-                          onClick={() =>
-                            console.log('Chat with seller:', deal.id)
-                          }
-                        >
-                          <FiMessageCircle className="w-4 h-4 mr-1" />
-                          {t('writeToSeller')}
-                        </button>
-                        <button
-                          className="btn btn-outline btn-sm"
-                          onClick={() =>
-                            console.log('Add to favorites:', deal.id)
-                          }
-                        >
-                          <FiHeart className="w-4 h-4" />
-                        </button>
+                      {deal.rating && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <FiStar className="w-3 h-3 fill-warning text-warning" />
+                          <span>{deal.rating}</span>
+                          <span className="text-base-content/60">
+                            ({deal.reviews})
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mt-2">
+                        {deal.oldPrice && (
+                          <span className="text-base-content/40 line-through text-sm">
+                            {deal.oldPrice}
+                          </span>
+                        )}
+                        <p className="text-xl font-bold text-primary">
+                          {deal.price}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                </motion.div>
+
+                      {/* Кнопки действий в зависимости от типа объявления */}
+                      {deal.isStorefront ? (
+                        // B2C (витрина) - кнопка "В корзину" + "Написать в чат"
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            className="btn btn-primary btn-sm flex-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log(
+                                'Add to cart:',
+                                deal.product_id || deal.id
+                              );
+                            }}
+                          >
+                            {t('addToCart')}
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleStartChat(deal);
+                            }}
+                          >
+                            <FiMessageCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        // C2C (обычное объявление) - "Написать в чат" + "В избранное"
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            className="btn btn-primary btn-sm flex-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleStartChat(deal);
+                            }}
+                          >
+                            <FiMessageCircle className="w-4 h-4 mr-1" />
+                            {t('writeToSeller')}
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Add to favorites:', deal.id);
+                            }}
+                          >
+                            <FiHeart className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           )}

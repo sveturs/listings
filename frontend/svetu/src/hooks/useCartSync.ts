@@ -19,20 +19,13 @@ export function useCartSync() {
 
     const syncCarts = async () => {
       try {
-        console.log(`[CartSync] Starting cart sync for user ${user.id}`);
-
         // ВАЖНО: Сначала загружаем корзины с сервера
         // Это нужно чтобы не потерять существующие товары
         await dispatch(fetchUserCarts(user.id)).unwrap();
-        console.log(`[CartSync] Server carts loaded for user ${user.id}`);
 
         // Теперь мигрируем локальную корзину на сервер
         // Товары из локальной корзины добавятся к существующим на сервере
         if (localCart && localCart.items && localCart.items.length > 0) {
-          console.log(
-            `[CartSync] Migrating ${localCart.items.length} items from local cart`
-          );
-
           // Группируем товары по витринам
           const itemsByStorefront = localCart.items.reduce(
             (acc, item) => {
@@ -63,9 +56,6 @@ export function useCartSync() {
                     },
                   })
                 ).unwrap();
-                console.log(
-                  `[CartSync] Successfully migrated item ${item.productId}`
-                );
               } catch (error) {
                 console.error(
                   `[CartSync] Failed to migrate item ${item.productId}:`,
@@ -80,9 +70,6 @@ export function useCartSync() {
           // Очищаем локальную корзину только после миграции
           if (migrationSuccess) {
             dispatch(clearLocalCart());
-            console.log(
-              `[CartSync] Local cart cleared after successful migration`
-            );
           } else {
             console.warn(
               `[CartSync] Some items failed to migrate, keeping local cart`
@@ -93,8 +80,6 @@ export function useCartSync() {
         // Загружаем обновленные корзины с сервера еще раз
         // чтобы синхронизировать состояние после миграции
         await dispatch(fetchUserCarts(user.id)).unwrap();
-
-        console.log(`[CartSync] Cart sync completed for user ${user.id}`);
       } catch (error) {
         console.error('[CartSync] Failed to sync carts:', error);
       }

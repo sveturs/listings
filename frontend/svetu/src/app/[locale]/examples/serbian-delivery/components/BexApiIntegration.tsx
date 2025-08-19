@@ -333,24 +333,24 @@ export default function BexApiIntegration() {
                 </pre>
                 <pre data-prefix=">" className="text-warning">
                   <code className="text-xs">
-                    -H "X-AUTH-TOKEN: your-api-token"
+                    -H &quot;X-AUTH-TOKEN: your-api-token&quot;
                   </code>
                 </pre>
                 <pre data-prefix=">" className="text-info">
                   <code className="text-xs">
-                    -H "Content-Type: application/json"
+                    -H &quot;Content-Type: application/json&quot;
                   </code>
                 </pre>
                 <pre data-prefix=">" className="text-success">
                   <code className="text-xs">
-                    -d '
+                    -d &apos;
                     {JSON.stringify(
                       apiExamples[activeEndpoint as keyof typeof apiExamples]
                         ?.request || {},
                       null,
                       2
                     ).slice(0, 200)}
-                    ...'
+                    ...&apos;
                   </code>
                 </pre>
               </div>

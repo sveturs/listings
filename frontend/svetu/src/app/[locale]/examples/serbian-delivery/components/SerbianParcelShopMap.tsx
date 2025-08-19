@@ -159,25 +159,13 @@ export default function SerbianParcelShopMap() {
     return matchesSearch && matchesCity && matchesCompany;
   });
 
-  const getShopColor = (type: string) => {
-    switch (type) {
-      case 'bex':
-        return 'bg-purple-500 text-white';
-      case 'svetu-warehouse':
-        return 'bg-green-500 text-white';
-      case 'post-express':
-        return 'bg-blue-500 text-white';
-      case 'yettel':
-        return 'bg-orange-500 text-white';
-      default:
-        return 'bg-base-100';
-    }
-  };
+  // Unused function removed - getShopColor
 
   const getMarkerIcon = (type: string) => {
     if (!isClient) return null;
 
-    const L = require('leaflet');
+    // Dynamic import handled by leaflet-react
+    const L = (window as any).L;
     const iconHtml =
       {
         bex: `<div class="flex items-center justify-center w-8 h-8 bg-purple-600 rounded-full text-white shadow-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></div>`,

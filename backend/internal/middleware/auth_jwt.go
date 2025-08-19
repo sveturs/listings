@@ -85,7 +85,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		if method == "GET" && (strings.Contains(path, "/slug/") || strings.HasSuffix(path, "/storefronts") ||
 			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") ||
 			strings.Contains(path, "/map") || strings.Contains(path, "/building") ||
-			strings.Contains(path, "/staff")) {
+			strings.Contains(path, "/staff") || strings.Contains(path, "/products/")) {
 			logger.Info().Str("path", path).Msg("Skipping auth for public storefront route")
 			return c.Next()
 		}

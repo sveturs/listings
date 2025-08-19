@@ -61,22 +61,36 @@ export default function ChatClient() {
     if (!user || chatInitialized) return;
 
     // Если есть параметры URL для конкретного чата
-    if (listingId && sellerId) {
-      // Проверяем, что это не собственное объявление
+    if ((listingId && sellerId) || (storefrontProductId && sellerId)) {
+      // Проверяем, что это не собственное объявление/товар
       if (user.id.toString() === sellerId) {
         router.replace(`/${locale}/chat`);
         return;
       }
 
-      // Ищем существующий чат с этим продавцом по этому объявлению
-      const existingChat = chats.find(
-        (chat) =>
-          chat.listing_id === parseInt(listingId) &&
-          ((chat.buyer_id === user.id &&
-            chat.seller_id === parseInt(sellerId)) ||
-            (chat.seller_id === user.id &&
-              chat.buyer_id === parseInt(sellerId)))
-      );
+      // Ищем существующий чат с этим продавцом
+      const existingChat = chats.find((chat) => {
+        if (listingId) {
+          // Для обычных объявлений
+          return (
+            chat.listing_id === parseInt(listingId) &&
+            ((chat.buyer_id === user.id &&
+              chat.seller_id === parseInt(sellerId)) ||
+              (chat.seller_id === user.id &&
+                chat.buyer_id === parseInt(sellerId)))
+          );
+        } else if (storefrontProductId) {
+          // Для товаров витрин
+          return (
+            chat.storefront_product_id === parseInt(storefrontProductId) &&
+            ((chat.buyer_id === user.id &&
+              chat.seller_id === parseInt(sellerId)) ||
+              (chat.seller_id === user.id &&
+                chat.buyer_id === parseInt(sellerId)))
+          );
+        }
+        return false;
+      });
 
       if (existingChat) {
         // Если чат существует, выбираем его
@@ -97,6 +111,7 @@ export default function ChatClient() {
   }, [
     user,
     listingId,
+    storefrontProductId,
     sellerId,
     chats,
     chatInitialized,

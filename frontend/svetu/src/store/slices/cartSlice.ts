@@ -80,12 +80,10 @@ const initialState: CartState = {
 export const fetchUserCarts = createAsyncThunk(
   'cart/fetchUserCarts',
   async (userId: number) => {
-    console.log('[fetchUserCarts] Starting with userId:', userId);
     // Сначала очищаем старые корзины при входе нового пользователя
     clearOldCartStorage();
 
     const carts = await cartService.getUserCarts();
-    console.log('[fetchUserCarts] Received carts:', carts);
     // Если есть корзины, берем последнюю обновленную для текущего storefront
     // или первую из списка как активную
     return { carts, userId };
@@ -314,8 +312,6 @@ const cartSlice = createSlice({
       .addCase(fetchUserCarts.fulfilled, (state, action) => {
         state.loading = false;
         const { carts, userId } = action.payload;
-
-        console.log('[CartSlice] fetchUserCarts fulfilled:', { carts, userId });
 
         // Сохраняем все корзины
         state.allCarts = carts || [];

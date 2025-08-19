@@ -24,7 +24,7 @@ export function ChatAttachments({
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null
   );
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
 
   const getImageUrl = (url: string) => {
     if (url.startsWith('/chat-files/')) {

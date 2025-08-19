@@ -156,6 +156,20 @@ class StorefrontApiService {
   }
 
   /**
+   * Получение витрины по ID
+   */
+  async getStorefront(id: number): Promise<Storefront> {
+    const endpoint = `/api/v1/storefronts/${id}`;
+    const storefront = await this.request<Storefront>(endpoint);
+
+    if (!storefront) {
+      throw new Error('Storefront not found');
+    }
+
+    return storefront;
+  }
+
+  /**
    * Получение витрин текущего пользователя
    */
   async getMyStorefronts(): Promise<StorefrontsListResponse> {
