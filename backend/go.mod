@@ -33,6 +33,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v72 v72.122.0
 	github.com/swaggo/swag v1.16.4
+	github.com/tealeg/xlsx v1.0.5
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
 	github.com/twpayne/go-geom v1.6.1
