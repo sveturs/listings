@@ -44,7 +44,14 @@ const shippingAddressSchema = z.object({
   city: z.string().min(2, 'City is required'),
   postalCode: z.string().min(5, 'Postal code is required'),
   country: z.string().min(2, 'Country is required'),
-  shippingMethod: z.enum(['standard', 'express', 'pickup']),
+  shippingMethod: z.enum([
+    'standard',
+    'express',
+    'pickup',
+    'bex_courier',
+    'bex_pickup_point',
+    'bex_warehouse_pickup',
+  ]),
 });
 
 const paymentSchema = z.object({
@@ -207,8 +214,32 @@ export default function CheckoutPage() {
   };
 
   const calculateShipping = () => {
-    if (formData.shipping?.shippingMethod === 'pickup') return 0;
-    if (formData.shipping?.shippingMethod === 'express') return 500;
+    const method = formData.shipping?.shippingMethod;
+
+    // Старые методы доставки
+    if (method === 'pickup') return 0;
+    if (method === 'express') return 500;
+    if (method === 'standard') return total >= 5000 ? 0 : 300;
+
+    // BEX Express методы
+    if (method === 'bex_warehouse_pickup') return 0;
+    if (method === 'bex_pickup_point') {
+      // Базовая цена со скидкой 20%
+      const basePrice = 350;
+      return Math.round(basePrice * 0.8);
+    }
+    if (method === 'bex_courier') {
+      // Базовая цена в зависимости от веса (расчет приблизительный)
+      const totalWeight = items.reduce(
+        (weight, item) => weight + item.quantity * 1,
+        0
+      ); // Предполагаем 1кг на товар
+      if (totalWeight <= 1) return 350;
+      if (totalWeight <= 2) return 450;
+      return 450 + Math.ceil(totalWeight - 2) * 100;
+    }
+
+    // Дефолтная логика для неизвестных методов
     return total >= 5000 ? 0 : 300;
   };
 
@@ -599,6 +630,81 @@ export default function CheckoutPage() {
                                   </p>
                                 </div>
                                 <span className="font-semibold">
+                                  {t('free')}
+                                </span>
+                              </label>
+
+                              {/* BEX Express Options */}
+                              <div className="divider">BEX Express</div>
+
+                              <label className="label cursor-pointer justify-start gap-4">
+                                <input
+                                  type="radio"
+                                  className="radio radio-secondary"
+                                  value="bex_courier"
+                                  {...shippingForm.register('shippingMethod')}
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="label-text">
+                                      BEX Курьерская доставка
+                                    </span>
+                                    <span className="badge badge-secondary badge-xs">
+                                      Новое
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-base-content/60">
+                                    Доставка до двери, отслеживание в реальном
+                                    времени
+                                  </p>
+                                </div>
+                                <span className="font-semibold">
+                                  от 350 RSD
+                                </span>
+                              </label>
+
+                              <label className="label cursor-pointer justify-start gap-4">
+                                <input
+                                  type="radio"
+                                  className="radio radio-secondary"
+                                  value="bex_pickup_point"
+                                  {...shippingForm.register('shippingMethod')}
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="label-text">
+                                      BEX Пункт выдачи
+                                    </span>
+                                    <span className="badge badge-success badge-xs">
+                                      -20%
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-base-content/60">
+                                    Более 200 пунктов по всей Сербии, удобное
+                                    время получения
+                                  </p>
+                                </div>
+                                <span className="font-semibold">
+                                  от 280 RSD
+                                </span>
+                              </label>
+
+                              <label className="label cursor-pointer justify-start gap-4">
+                                <input
+                                  type="radio"
+                                  className="radio radio-accent"
+                                  value="bex_warehouse_pickup"
+                                  {...shippingForm.register('shippingMethod')}
+                                />
+                                <div className="flex-1">
+                                  <span className="label-text">
+                                    BEX Самовывоз со склада
+                                  </span>
+                                  <p className="text-sm text-base-content/60">
+                                    Бесплатно, г. Нови Сад, Мике Манојловића 53
+                                  </p>
+                                </div>
+                                <span className="font-semibold text-success">
                                   {t('free')}
                                 </span>
                               </label>

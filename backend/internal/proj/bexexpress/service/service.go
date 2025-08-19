@@ -12,12 +12,18 @@ import (
 	"backend/internal/proj/bexexpress/models"
 )
 
+// NotificationService интерфейс для отправки уведомлений
+type NotificationService interface {
+	SendDeliveryStatusNotification(ctx context.Context, userID int, orderID int, deliveryProvider string, status string, statusText string, trackingNumber string) error
+}
+
 // Service представляет сервис для работы с BEX Express
 type Service struct {
-	db       *sql.DB
-	cfg      *config.Config
-	client   *BEXClient
-	settings *models.BEXSettings
+	db                   *sql.DB
+	cfg                  *config.Config
+	client               *BEXClient
+	settings             *models.BEXSettings
+	notificationService  NotificationService
 }
 
 // NewService создает новый сервис BEX Express
@@ -26,15 +32,30 @@ func NewService(db *sql.DB, cfg *config.Config) (*Service, error) {
 		db:  db,
 		cfg: cfg,
 	}
+	return s.init()
+}
+
+// NewServiceWithNotifications создает новый сервис BEX Express с поддержкой уведомлений
+func NewServiceWithNotifications(db *sql.DB, cfg *config.Config, notificationService NotificationService) (*Service, error) {
+	s := &Service{
+		db:                  db,
+		cfg:                 cfg,
+		notificationService: notificationService,
+	}
+	return s.init()
+}
+
+// init инициализирует сервис
+func (s *Service) init() (*Service, error) {
 
 	// Load settings from database or use defaults from config
 	settings, err := s.loadSettings()
 	if err != nil {
 		// Use defaults from config
 		settings = &models.BEXSettings{
-			AuthToken:   cfg.BEXAuthToken,
-			ClientID:    cfg.BEXClientID,
-			APIEndpoint: cfg.BEXAPIURL,
+			AuthToken:   s.cfg.BEXAuthToken,
+			ClientID:    s.cfg.BEXClientID,
+			APIEndpoint: s.cfg.BEXAPIURL,
 			Enabled:     true,
 		}
 	}
@@ -279,6 +300,47 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to update shipment status: %w", err)
+		}
+		
+		// Отправляем уведомление об изменении статуса
+		if s.notificationService != nil {
+			// Определяем пользователя для уведомления
+			var userID int
+			var orderID int
+			
+			if shipment.MarketplaceOrderID != nil {
+				orderID = *shipment.MarketplaceOrderID
+				// Получаем user_id из marketplace_orders
+				userQuery := "SELECT user_id FROM marketplace_orders WHERE id = $1"
+				err = s.db.QueryRowContext(ctx, userQuery, orderID).Scan(&userID)
+			} else if shipment.StorefrontOrderID != nil {
+				orderID = int(*shipment.StorefrontOrderID)
+				// Получаем user_id из storefront_orders
+				userQuery := "SELECT user_id FROM storefront_orders WHERE id = $1"
+				err = s.db.QueryRowContext(ctx, userQuery, orderID).Scan(&userID)
+			}
+			
+			if err == nil && userID > 0 {
+				// Отправляем уведомление
+				statusText := "Неизвестно"
+				if shipment.StatusText != nil {
+					statusText = *shipment.StatusText
+				}
+				
+				trackingNumber := ""
+				if shipment.TrackingNumber != nil {
+					trackingNumber = *shipment.TrackingNumber
+				}
+				
+				notificationErr := s.notificationService.SendDeliveryStatusNotification(
+					ctx, userID, orderID, "BEX Express",
+					fmt.Sprintf("%d", newStatus), statusText, trackingNumber,
+				)
+				if notificationErr != nil {
+					// Логируем ошибку, но не прерываем выполнение
+					fmt.Printf("Failed to send delivery notification: %v", notificationErr)
+				}
+			}
 		}
 	}
 

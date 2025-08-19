@@ -12,6 +12,7 @@ const (
 	NotificationTypeReviewResponse = "review_response"
 	NotificationTypeListingStatus  = "listing_status"
 	NotificationTypeFavoritePrice  = "favorite_price"
+	NotificationTypeDeliveryStatus = "delivery_status"
 )
 
 // PaginatedResponse представляет пагинированный ответ

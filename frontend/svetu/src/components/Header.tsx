@@ -225,7 +225,10 @@ export default function Header() {
       {/* Мобильная поисковая строка - скрываем на странице поиска и главной */}
       {!isSearchPage && !isHomePage && (
         <div className="lg:hidden bg-base-100 border-t border-base-300 px-4 py-2 fixed top-16 left-0 right-0 z-[99]">
-          <SearchBar className="w-full" placeholder={t('header.search.placeholder')} />
+          <SearchBar
+            className="w-full"
+            placeholder={t('header.search.placeholder')}
+          />
         </div>
       )}
     </>
