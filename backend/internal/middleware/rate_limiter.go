@@ -336,3 +336,119 @@ func (m *Middleware) RefreshTokenRateLimit() fiber.Handler {
 		SkipSuccessfulRequests: false,
 	})
 }
+
+// PaymentAPIRateLimit создает rate limiter для платежных API
+// Строгие ограничения для защиты от злоупотреблений и мошенничества
+func (m *Middleware) PaymentAPIRateLimit() fiber.Handler {
+	return limiter.New(limiter.Config{
+		// Максимум 10 запросов на создание платежа за 1 минуту
+		Max:        10,
+		Expiration: 1 * time.Minute,
+
+		// Генерация ключа по userID если авторизован, иначе по IP
+		KeyGenerator: func(c *fiber.Ctx) string {
+			userID, ok := c.Locals("user_id").(int)
+			if ok && userID > 0 {
+				return fmt.Sprintf("payment_user_%d", userID)
+			}
+			return fmt.Sprintf("payment_ip_%s", c.IP())
+		},
+
+		// Обработка превышения лимита
+		LimitReached: func(c *fiber.Ctx) error {
+			logger.Warn().
+				Str("ip", c.IP()).
+				Interface("user_id", c.Locals("user_id")).
+				Str("path", c.Path()).
+				Msg("Payment API rate limit exceeded")
+			return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "payments.errors.tooManyRequests")
+		},
+
+		// Пропускаем localhost только в режиме разработки
+		Next: func(c *fiber.Ctx) bool {
+			if m.config.Environment == envDevelopment || m.config.Environment == envDev {
+				return c.IP() == localhostIPv4 || c.IP() == localhostIPv6
+			}
+			return false
+		},
+
+		SkipFailedRequests:     false, // Учитываем все попытки для безопасности
+		SkipSuccessfulRequests: false,
+	})
+}
+
+// WebhookRateLimit создает rate limiter для webhook endpoints
+// Более высокие лимиты для внешних сервисов
+func (m *Middleware) WebhookRateLimit() fiber.Handler {
+	return limiter.New(limiter.Config{
+		// Максимум 100 webhook запросов за 1 минуту
+		Max:        100,
+		Expiration: 1 * time.Minute,
+
+		// Генерация ключа по IP и endpoint
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return fmt.Sprintf("webhook_%s_%s", c.IP(), c.Path())
+		},
+
+		// Обработка превышения лимита
+		LimitReached: func(c *fiber.Ctx) error {
+			logger.Warn().
+				Str("ip", c.IP()).
+				Str("path", c.Path()).
+				Str("webhook_signature", c.Get("X-Webhook-Signature")).
+				Msg("Webhook rate limit exceeded")
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Rate limit exceeded",
+			})
+		},
+
+		// Webhooks не пропускаем даже в dev режиме для тестирования
+		Next: nil,
+
+		SkipFailedRequests:     false,
+		SkipSuccessfulRequests: false,
+	})
+}
+
+// StrictPaymentRateLimit создает очень строгий rate limiter для критических платежных операций
+// Используется для операций типа capture, refund, etc.
+func (m *Middleware) StrictPaymentRateLimit() fiber.Handler {
+	return limiter.New(limiter.Config{
+		// Максимум 3 критические операции за 5 минут
+		Max:        3,
+		Expiration: 5 * time.Minute,
+
+		// Генерация ключа по userID
+		KeyGenerator: func(c *fiber.Ctx) string {
+			userID, ok := c.Locals("user_id").(int)
+			if ok && userID > 0 {
+				return fmt.Sprintf("strict_payment_user_%d", userID)
+			}
+			// Для неавторизованных запрещаем полностью
+			return fmt.Sprintf("strict_payment_ip_%s", c.IP())
+		},
+
+		// Обработка превышения лимита с уведомлением
+		LimitReached: func(c *fiber.Ctx) error {
+			userID, _ := c.Locals("user_id").(int)
+
+			logger.Error().
+				Str("ip", c.IP()).
+				Interface("user_id", userID).
+				Str("path", c.Path()).
+				Msg("CRITICAL: Strict payment rate limit exceeded - possible fraud attempt")
+
+			// Record metrics for monitoring
+			if m.metrics != nil {
+				m.metrics.RecordRateLimitExceeded(c.Path(), userID, c.IP())
+			}
+
+			return utils.ErrorResponse(c, fiber.StatusTooManyRequests, "payments.errors.suspiciousActivity")
+		},
+
+		Next: nil, // Не пропускаем никого, даже в dev режиме
+
+		SkipFailedRequests:     false,
+		SkipSuccessfulRequests: false,
+	})
+}

@@ -16,13 +16,11 @@ import (
 // ErrNotImplementedInMock возвращается когда метод мока не реализован
 var ErrNotImplementedInMock = errors.New("method not implemented in mock")
 
-// Константы статусов платежей (определяем локально для тестов)
+// Дополнительные константы статусов платежей для тестов
 const (
-	PaymentStatusPending    = "pending"
 	PaymentStatusAuthorized = "authorized"
 	PaymentStatusCaptured   = "captured"
 	PaymentStatusSuccess    = "success"
-	PaymentStatusFailed     = "failed"
 	PaymentStatusRefunded   = "refunded"
 )
 
@@ -187,7 +185,7 @@ func createTestService(
 		userRepo:       userRepo,
 		listingRepo:    listingRepo,
 		config:         config,
-		logger:         *logger,
+		logger:         logger,
 		commissionRate: config.MarketplaceCommissionRate,
 	}
 

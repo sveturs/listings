@@ -237,9 +237,20 @@ func (r *OrderRepository) GetByFilter(ctx context.Context, filter *models.OrderF
 		}
 	}
 
-	// Сортировка
+	// Сортировка - валидируем допустимые поля для предотвращения SQL injection
+	allowedSortFields := map[string]bool{
+		"created_at":   true,
+		"updated_at":   true,
+		"order_number": true,
+		"total_amount": true,
+		"status":       true,
+		"confirmed_at": true,
+		"shipped_at":   true,
+		"delivered_at": true,
+	}
+
 	sortBy := "created_at"
-	if filter.SortBy != "" {
+	if filter.SortBy != "" && allowedSortFields[filter.SortBy] {
 		sortBy = filter.SortBy
 	}
 

@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 const DistrictManager = () => {
-  const router = useRouter();
   const [districts, setDistricts] = useState<any[]>([]);
   const [selectedDistricts, setSelectedDistricts] = useState<Set<string>>(
     new Set()
@@ -42,7 +40,7 @@ const DistrictManager = () => {
           return;
         }
       }
-    } catch (error) {
+    } catch {
       console.log('Using fallback district data');
     }
 
@@ -952,7 +950,7 @@ const DistrictManager = () => {
                       <option value="Serbia">Вся Сербия</option>
                     </select>
                     <div className="text-xs text-base-content/60 mt-1">
-                      💡 Для пригородов выберите "Широкий поиск"
+                      💡 Для пригородов выберите &quot;Широкий поиск&quot;
                     </div>
                   </div>
                 )}
@@ -1138,9 +1136,11 @@ const DistrictManager = () => {
                 </h4>
                 <ol className="text-sm space-y-1 ml-4">
                   <li>1. Введите название района на английском или сербском</li>
-                  <li>2. Нажмите "Найти" для поиска в OpenStreetMap</li>
+                  <li>
+                    2. Нажмите &quot;Найти&quot; для поиска в OpenStreetMap
+                  </li>
                   <li>3. Выберите правильный результат из списка</li>
-                  <li>4. Нажмите "Добавить" для добавления района</li>
+                  <li>4. Нажмите &quot;Добавить&quot; для добавления района</li>
                 </ol>
                 <div className="mt-3 p-2 bg-success/10 rounded text-sm">
                   <strong>✅ Исправлено:</strong> Overpass API теперь ищет и по
@@ -1240,8 +1240,8 @@ const DistrictManager = () => {
               <div className="p-4 bg-base-200 rounded-lg">
                 <h3 className="font-semibold mb-2">Добавление района:</h3>
                 <code className="text-sm font-mono block p-2 bg-base-300 rounded">
-                  node scripts/novi-sad-districts/auto_add_district.js "District
-                  Name" "Novi Sad" Serbia
+                  node scripts/novi-sad-districts/auto_add_district.js
+                  &quot;District Name&quot; &quot;Novi Sad&quot; Serbia
                 </code>
               </div>
 

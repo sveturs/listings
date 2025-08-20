@@ -18,9 +18,13 @@ func NewSensitiveDataMasker() *SensitiveDataMasker {
 			"token":         regexp.MustCompile(`(?i)(token|jwt|bearer)["\s:=]+([^"\s,}]+)`),
 			"cookie":        regexp.MustCompile(`(?i)(cookie|session)["\s:=]+([^"\s,}]+)`),
 			"authorization": regexp.MustCompile(`(?i)(authorization)["\s:=]+([^"\s,}]+)`),
-			"api_key":       regexp.MustCompile(`(?i)(api_key|apikey)["\s:=]+([^"\s,}]+)`),
+			"api_key":       regexp.MustCompile(`(?i)(api_key|apikey|secret)["\s:=]+([^"\s,}]+)`),
 			"credit_card":   regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),
+			"cvv":           regexp.MustCompile(`(?i)(cvv|cvc|cvv2|cvc2)["\s:=]+(\d{3,4})`),
 			"email":         regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`),
+			"phone":         regexp.MustCompile(`\+?\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,4}`),
+			"ssn":           regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`),
+			"iban":          regexp.MustCompile(`[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}([A-Z0-9]?){0,16}`),
 		},
 	}
 }
@@ -63,6 +67,29 @@ func (m *SensitiveDataMasker) Mask(input string) string {
 			return parts[0][:3] + "***@" + parts[1]
 		}
 		return "***@***"
+	})
+
+	// Маскируем номера кредитных карт
+	output = m.patterns["credit_card"].ReplaceAllString(output, "****-****-****-****")
+
+	// Маскируем CVV
+	output = m.patterns["cvv"].ReplaceAllStringFunc(output, func(match string) string {
+		parts := m.patterns["cvv"].FindStringSubmatch(match)
+		if len(parts) > 1 {
+			return parts[1] + `: "***"`
+		}
+		return match
+	})
+
+	// Маскируем номера телефонов
+	output = m.patterns["phone"].ReplaceAllString(output, "+XX-XXX-XXX-XXXX")
+
+	// Маскируем IBAN
+	output = m.patterns["iban"].ReplaceAllStringFunc(output, func(match string) string {
+		if len(match) > 8 {
+			return match[:4] + "****" + match[len(match)-4:]
+		}
+		return "****"
 	})
 
 	return output

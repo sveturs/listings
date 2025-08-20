@@ -104,6 +104,8 @@ export default async function RootLayout({
     'search', // Добавляем search для SearchBar
     'checkout', // Добавляем checkout для страницы оформления заказа
     'orders', // Добавляем orders для страницы успешного заказа
+    'storefronts', // Добавляем storefronts для страниц витрин
+    'userContacts', // Добавляем userContacts для страницы контактов
   ]);
 
   return (

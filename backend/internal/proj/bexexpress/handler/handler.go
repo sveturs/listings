@@ -6,6 +6,7 @@ import (
 
 	"backend/internal/proj/bexexpress/models"
 	"backend/internal/proj/bexexpress/service"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,12 +15,14 @@ import (
 // Handler представляет HTTP handler для BEX Express
 type Handler struct {
 	service *service.Service
+	logger  *logger.Logger
 }
 
 // NewHandler создает новый handler
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
 		service: service,
+		logger:  logger.GetLogger(),
 	}
 }
 
@@ -409,10 +412,10 @@ func (h *Handler) HandleStatusWebhook(c *fiber.Ctx) error {
 	}
 
 	// Update shipment status
-	_, err := h.service.GetShipmentStatus(c.Context(), int(shipmentID))
-	if err != nil {
+	if _, err := h.service.GetShipmentStatus(c.Context(), int(shipmentID)); err != nil {
 		// Log error but return success to BEX
 		// We don't want them to retry
+		h.logger.Error("Failed to update shipment status from webhook: %v", err)
 	}
 
 	return utils.SuccessResponse(c, nil)

@@ -10,6 +10,7 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/proj/bexexpress/models"
+	"backend/pkg/logger"
 )
 
 // NotificationService интерфейс для отправки уведомлений
@@ -24,13 +25,15 @@ type Service struct {
 	client              *BEXClient
 	settings            *models.BEXSettings
 	notificationService NotificationService
+	logger              *logger.Logger
 }
 
 // NewService создает новый сервис BEX Express
 func NewService(db *sql.DB, cfg *config.Config) (*Service, error) {
 	s := &Service{
-		db:  db,
-		cfg: cfg,
+		db:     db,
+		cfg:    cfg,
+		logger: logger.GetLogger(),
 	}
 	return s.init()
 }
@@ -41,6 +44,7 @@ func NewServiceWithNotifications(db *sql.DB, cfg *config.Config, notificationSer
 		db:                  db,
 		cfg:                 cfg,
 		notificationService: notificationService,
+		logger:              logger.GetLogger(),
 	}
 	return s.init()
 }
@@ -225,7 +229,9 @@ func (s *Service) CreateShipment(ctx context.Context, req *models.CreateShipment
 
 			// Update database with label
 			updateQuery := `UPDATE bex_shipments SET label_base64 = $1 WHERE id = $2`
-			s.db.ExecContext(ctx, updateQuery, labelBase64, shipment.ID)
+			if _, err := s.db.ExecContext(ctx, updateQuery, labelBase64, shipment.ID); err != nil {
+				s.logger.Error("Failed to update label in database: %v", err)
+			}
 		}
 	}
 
@@ -268,12 +274,21 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 		case models.ShipmentStatusReturnedToSender:
 			shipment.ReturnedAt = &now
 			s.updateStatistics(0, 0, 1)
+		case models.ShipmentStatusNotFound,
+			models.ShipmentStatusDeleted,
+			models.ShipmentStatusNotSentYet,
+			models.ShipmentStatusAddressVerify,
+			models.ShipmentStatusReturnToSender,
+			models.ShipmentStatusCODPaid:
+			// These statuses don't require specific timestamp updates
 		}
 
 		// Add to status history
 		var history []map[string]interface{}
 		if shipment.StatusHistory != nil {
-			json.Unmarshal(shipment.StatusHistory, &history)
+			if err := json.Unmarshal(shipment.StatusHistory, &history); err != nil {
+				s.logger.Error("Failed to unmarshal status history: %v", err)
+			}
 		}
 		history = append(history, map[string]interface{}{
 			"status":      newStatus,
@@ -366,7 +381,9 @@ func (s *Service) GetShipmentLabel(ctx context.Context, shipmentID int, pageSize
 	// Save label to database
 	labelBase64 := base64Encode(labelData)
 	updateQuery := `UPDATE bex_shipments SET label_base64 = $1 WHERE id = $2`
-	s.db.ExecContext(ctx, updateQuery, labelBase64, shipment.ID)
+	if _, err := s.db.ExecContext(ctx, updateQuery, labelBase64, shipment.ID); err != nil {
+		s.logger.Error("Failed to update label in database: %v", err)
+	}
 
 	return labelData, nil
 }
@@ -481,6 +498,10 @@ func (s *Service) SearchAddress(ctx context.Context, req *models.SearchAddressRe
 			s.StreetName, s.PostalCode, s.PlaceName, s.Municipality)
 
 		suggestions = append(suggestions, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return suggestions, nil
@@ -614,6 +635,10 @@ func (s *Service) GetParcelShops(ctx context.Context, city string) ([]models.BEX
 		shops = append(shops, shop)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
 	return shops, nil
 }
 
@@ -674,7 +699,9 @@ func (s *Service) updateStatistics(total, successful, failed int) {
 		    updated_at = $4
 		WHERE id = $5`
 
-	s.db.Exec(query, total, successful, failed, time.Now(), s.settings.ID)
+	if _, err := s.db.Exec(query, total, successful, failed, time.Now(), s.settings.ID); err != nil {
+		s.logger.Error("Failed to update sync stats: %v", err)
+	}
 }
 
 func ptrStr(s string) *string {

@@ -3,6 +3,10 @@ version: "2"
 run:
   timeout: 5m
   go: "1.24"
+  skip-dirs:
+    - scripts
+  skip-files:
+    - "scripts/.*\\.go"
 
 linters:
   enable:

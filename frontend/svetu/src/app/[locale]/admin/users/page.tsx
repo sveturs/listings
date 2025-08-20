@@ -3,6 +3,9 @@ import { getTranslations } from 'next-intl/server';
 import UsersPageClient from './UsersPageClient';
 import AdminGuard from '@/components/AdminGuard';
 
+// Отключаем статическую генерацию для admin страниц
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {

@@ -11,10 +11,7 @@ export default async function DocsLayout({
   const { locale } = await params;
 
   // Загружаем необходимые модули для страницы документации
-  const messages = await loadMessages(locale as any, [
-    'common',
-    'auth-shared',
-  ]);
+  const messages = await loadMessages(locale as any, ['common', 'auth-shared']);
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
