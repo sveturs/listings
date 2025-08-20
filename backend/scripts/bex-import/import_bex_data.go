@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -121,7 +122,7 @@ func importPlaces(db *sql.DB) error {
 		// Сначала получаем ID муниципалитета из нашей БД
 		var munID sql.NullInt64
 		err := db.QueryRow("SELECT id FROM bex_municipalities WHERE bex_id = $1", municipalityID).Scan(&munID)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			log.Printf("Ошибка поиска муниципалитета %d: %v", municipalityID, err)
 			continue
 		}
@@ -195,7 +196,7 @@ func importStreets(db *sql.DB) error {
 		// Получаем ID места из нашей БД
 		var pID sql.NullInt64
 		err = db.QueryRow("SELECT id FROM bex_places WHERE bex_id = $1", placeID).Scan(&pID)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			continue
 		}
 
@@ -254,7 +255,7 @@ func importStreetsFromExcel(db *sql.DB) error {
 		// Получаем ID места из нашей БД
 		var pID sql.NullInt64
 		err := db.QueryRow("SELECT id FROM bex_places WHERE bex_id = $1", placeID).Scan(&pID)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			continue
 		}
 
