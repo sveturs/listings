@@ -512,7 +512,7 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		return nil, 0, fmt.Errorf("failed to count storefronts: %w", err)
 	}
 
-	// Сортировка
+	// Сортировка - валидируем допустимые поля
 	const createdAtField = "created_at"
 	orderBy := createdAtField + " DESC"
 	if filter.SortBy != "" {
@@ -528,8 +528,13 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 			}
 		case createdAtField:
 			orderBy = createdAtField
+		case "name":
+			orderBy = "name"
+		case "updated_at":
+			orderBy = "updated_at"
 		default:
-			orderBy = filter.SortBy
+			// Если поле не в белом списке, используем дефолтное
+			orderBy = createdAtField
 		}
 
 		if filter.SortOrder == "desc" {

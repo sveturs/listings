@@ -18,6 +18,14 @@ import (
 // ErrStorefrontProductNotFound возвращается когда товар витрины не найден
 var ErrStorefrontProductNotFound = errors.New("storefront product not found")
 
+// Sort field constants
+const (
+	sortFieldName          = "name"
+	sortFieldPrice         = "price"
+	sortFieldStockQuantity = "stock_quantity"
+	sortFieldCreatedAt     = "created_at"
+)
+
 // GetBySlug retrieves a storefront by slug
 func (s *Database) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
 	return s.storefrontRepo.GetBySlug(ctx, slug)
@@ -104,13 +112,13 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 	sortBy := "p.created_at"
 	if filter.SortBy != "" {
 		switch filter.SortBy {
-		case "name":
+		case sortFieldName:
 			sortBy = "p.name"
-		case "price":
+		case sortFieldPrice:
 			sortBy = "p.price"
-		case "stock_quantity":
+		case sortFieldStockQuantity:
 			sortBy = "p.stock_quantity"
-		case "created_at":
+		case sortFieldCreatedAt:
 			sortBy = "p.created_at"
 		}
 	}

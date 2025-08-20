@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import dynamicImport from 'next/dynamic';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import {
@@ -12,14 +13,19 @@ import {
   List,
   Layers,
 } from 'lucide-react';
-import { QuickView } from '@/components/ui/QuickView';
-import { PriceHistoryModal } from '@/components/marketplace/PriceHistoryModal';
-import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
-import { EnhancedListingCard } from '@/components/marketplace/EnhancedListingCard';
-import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
-import { ImageGallery } from '@/components/reviews/ImageGallery';
 import type { MarketplaceItem } from '@/types/marketplace';
 import type { UnifiedProduct } from '@/types/unified-product';
+
+// Динамические импорты для компонентов с браузерными API
+const QuickView = dynamicImport(() => import('@/components/ui/QuickView').then(mod => ({ default: mod.QuickView })), { ssr: false });
+const PriceHistoryModal = dynamicImport(() => import('@/components/marketplace/PriceHistoryModal').then(mod => ({ default: mod.PriceHistoryModal })), { ssr: false });
+const VariantSelectionModal = dynamicImport(() => import('@/components/cart/VariantSelectionModal'), { ssr: false });
+const EnhancedListingCard = dynamicImport(() => import('@/components/marketplace/EnhancedListingCard').then(mod => ({ default: mod.EnhancedListingCard })), { ssr: false });
+const UnifiedProductCard = dynamicImport(() => import('@/components/common/UnifiedProductCard').then(mod => ({ default: mod.UnifiedProductCard })), { ssr: false });
+const ImageGallery = dynamicImport(() => import('@/components/reviews/ImageGallery').then(mod => ({ default: mod.ImageGallery })), { ssr: false });
+
+// Отключаем статическую генерацию для этой страницы
+export const dynamic = 'force-dynamic';
 
 export default function ViewDemoPage() {
   const locale = useLocale();

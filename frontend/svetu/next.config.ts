@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
     // During production builds, do not run ESLint
     ignoreDuringBuilds: true,
   },
+  // Remove console.log in production builds
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'], // Keep error and warn for debugging
+          }
+        : false,
+  },
   images: {
     remotePatterns: [
       // Динамически создаем список хостов из переменных окружения

@@ -8,19 +8,23 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/logger"
+	"backend/internal/monitoring"
 	globalService "backend/internal/proj/global/service"
+	pkglogger "backend/pkg/logger"
 	"backend/pkg/utils"
 )
 
 type Middleware struct {
 	config   *config.Config
 	services globalService.ServicesInterface
+	metrics  *monitoring.MetricsCollector
 }
 
 func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface) *Middleware {
 	return &Middleware{
 		config:   cfg,
 		services: services,
+		metrics:  monitoring.NewMetricsCollector(pkglogger.GetLogger()),
 	}
 }
 

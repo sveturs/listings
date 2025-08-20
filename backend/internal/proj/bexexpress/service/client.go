@@ -365,13 +365,14 @@ func BuildShipmentData(req *models.CreateShipmentRequest, senderClientID string)
 
 // CalculateShipmentCategory определяет категорию отправления по весу
 func CalculateShipmentCategory(weightKg float64) int {
-	if weightKg <= 0.5 {
+	switch {
+	case weightKg <= 0.5:
 		return 1 // Documents up to 0.5kg
-	} else if weightKg <= 1.0 {
+	case weightKg <= 1.0:
 		return 2 // Package up to 1kg
-	} else if weightKg <= 2.0 {
+	case weightKg <= 2.0:
 		return 3 // Package up to 2kg
-	} else {
+	default:
 		return 31 // Package per kg
 	}
 }

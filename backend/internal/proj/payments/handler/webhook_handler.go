@@ -57,17 +57,20 @@ func (h *WebhookHandler) HandleAllSecureWebhook(c *fiber.Ctx) error {
 
 	// Проверяем подпись
 	if !h.verifySignature(payload, signature) {
-		h.logger.Error("Invalid webhook signature: %s", signature)
+		// Don't log the actual signature value for security
+		h.logger.Error("Invalid webhook signature received")
 		return utils.ErrorResponse(c, 400, "invalid signature")
 	}
 
-	// Логируем webhook для отладки
-	h.logger.Info("Received AllSecure webhook (payload_size: %d, signature: %s)", len(payload), signature)
+	// Логируем webhook без sensitive данных
+	h.logger.Info("Received AllSecure webhook (payload_size: %d, signature_present: %v)",
+		len(payload), signature != "")
 
 	// Обрабатываем webhook
 	err := h.service.ProcessWebhook(c.Context(), payload)
 	if err != nil {
-		h.logger.Error("Failed to process AllSecure webhook: %v (payload: %s)", err, string(payload))
+		// Don't log the actual payload which may contain sensitive payment data
+		h.logger.Error("Failed to process AllSecure webhook: %v", err)
 		return utils.ErrorResponse(c, 500, "webhook processing failed")
 	}
 

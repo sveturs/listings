@@ -2,6 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -16,6 +20,14 @@ import (
 	"backend/pkg/logger"
 )
 
+// Payment status constants
+const (
+	PaymentStatusPending   = "pending"
+	PaymentStatusCompleted = "completed"
+	PaymentStatusFailed    = "failed"
+	PaymentStatusCanceled  = "canceled"
+)
+
 // AllSecureService представляет сервис для работы с AllSecure
 type AllSecureService struct {
 	client         *allsecure.Client
@@ -23,8 +35,9 @@ type AllSecureService struct {
 	userRepo       UserRepositoryInterface
 	listingRepo    ListingRepositoryInterface
 	config         *AllSecureConfig
-	logger         logger.Logger
+	logger         *logger.Logger
 	commissionRate decimal.Decimal
+	retryManager   *WebhookRetryManager
 }
 
 // AllSecureConfig содержит конфигурацию для AllSecure
@@ -55,8 +68,16 @@ func NewAllSecureService(
 	userRepo UserRepositoryInterface,
 	listingRepo ListingRepositoryInterface,
 	config *AllSecureConfig,
-	logger logger.Logger,
+	logger *logger.Logger,
 ) *AllSecureService {
+	// Create retry manager
+	retryConfig := DefaultWebhookRetryConfig()
+	retryManager := NewWebhookRetryManager(retryConfig, logger)
+
+	// Start retry worker in background
+	ctx := context.Background()
+	retryManager.Start(ctx)
+
 	return &AllSecureService{
 		client:         client,
 		repository:     repository,
@@ -65,6 +86,7 @@ func NewAllSecureService(
 		config:         config,
 		logger:         logger,
 		commissionRate: config.MarketplaceCommissionRate,
+		retryManager:   retryManager,
 	}
 }
 
@@ -400,4 +422,129 @@ func (s *AllSecureService) releaseEscrowPayment(ctx context.Context, transaction
 func (s *AllSecureService) handleFailedPayment(ctx context.Context, transaction *models.PaymentTransaction) {
 	s.logger.Info("Payment failed (transactionID: %d)", transaction.ID)
 	// Здесь может быть логика уведомлений, очистки данных и т.д.
+}
+
+// ValidateWebhookSignature validates webhook signature from AllSecure
+func (s *AllSecureService) ValidateWebhookSignature(payload []byte, signature string) bool {
+	if s.config.WebhookSecret == "" {
+		s.logger.Info("Webhook secret not configured, skipping signature validation")
+		return true // For backward compatibility, but should be fixed in production
+	}
+
+	// AllSecure typically uses HMAC-SHA256 or similar
+	expectedSignature := s.calculateWebhookSignature(payload)
+	return subtle.ConstantTimeCompare([]byte(signature), []byte(expectedSignature)) == 1
+}
+
+// calculateWebhookSignature calculates expected webhook signature
+func (s *AllSecureService) calculateWebhookSignature(payload []byte) string {
+	h := hmac.New(sha256.New, []byte(s.config.WebhookSecret))
+	h.Write(payload)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// HandleWebhook processes webhook from AllSecure payment gateway
+func (s *AllSecureService) HandleWebhook(ctx context.Context, payload []byte, signature string) error {
+	// Validate webhook signature
+	if !s.ValidateWebhookSignature(payload, signature) {
+		s.logger.Error("Invalid webhook signature")
+		return fmt.Errorf("invalid webhook signature")
+	}
+
+	// Parse webhook payload
+	var webhookData map[string]interface{}
+	if err := json.Unmarshal(payload, &webhookData); err != nil {
+		s.logger.Error("Failed to parse webhook payload: %v", err)
+
+		// Add to retry queue for transient parsing errors
+		if s.retryManager != nil {
+			retryJob := &WebhookRetryJob{
+				ID:          fmt.Sprintf("webhook_%d", time.Now().UnixNano()),
+				WebhookType: "allsecure_payment",
+				Payload:     payload,
+				Signature:   signature,
+				Endpoint:    "internal",
+				RetryCount:  0,
+				LastError:   err.Error(),
+				CreatedAt:   time.Now(),
+				Metadata:    map[string]interface{}{"error_type": "parse_error"},
+			}
+			if retryErr := s.retryManager.AddRetryJob(retryJob); retryErr != nil {
+				s.logger.Error("Failed to add webhook to retry queue: %v", retryErr)
+			}
+		}
+
+		return fmt.Errorf("failed to parse webhook payload: %w", err)
+	}
+
+	// Extract transaction information
+	transactionID, ok := webhookData["merchantTxId"].(string)
+	if !ok {
+		return fmt.Errorf("missing merchantTxId in webhook payload")
+	}
+
+	status, ok := webhookData["status"].(string)
+	if !ok {
+		return fmt.Errorf("missing status in webhook payload")
+	}
+
+	// Process the webhook based on status
+	s.logger.Info("Processing webhook for transaction %s with status %s", transactionID, status)
+
+	// Update transaction status in database
+	// Parse transaction ID from format "SVT-123"
+	parts := strings.Split(transactionID, "-")
+	if len(parts) != 2 || parts[0] != "SVT" {
+		return fmt.Errorf("invalid transaction ID format: %s", transactionID)
+	}
+
+	_, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse transaction ID: %w", err)
+	}
+
+	// Map AllSecure status to our internal status
+	var internalStatus string
+	switch status {
+	case "SUCCESS", "CAPTURED":
+		internalStatus = PaymentStatusCompleted
+	case "PENDING", "PREAUTHORIZED":
+		internalStatus = PaymentStatusPending
+	case "FAILED", "DECLINED", "ERROR":
+		internalStatus = PaymentStatusFailed
+	case "CANCELLED", "VOIDED": //nolint:misspell // CANCELLED is the correct spelling used by AllSecure API
+		internalStatus = PaymentStatusCanceled
+	default:
+		s.logger.Info("Unknown webhook status: %s", status)
+		internalStatus = PaymentStatusPending
+	}
+
+	// Store webhook data in repository for audit
+	// TODO: Implement proper transaction status update when repository methods are available
+	s.logger.Info("Webhook processed - Transaction: %s, Status: %s", transactionID, internalStatus)
+
+	// Handle specific status actions
+	switch internalStatus {
+	case "completed":
+		s.logger.Info("Payment completed for transaction %s", transactionID)
+		// TODO: Trigger order fulfillment, inventory update, etc.
+	case "failed":
+		s.logger.Info("Payment failed for transaction %s", transactionID)
+		// TODO: Trigger failure handling, notification, etc.
+	}
+
+	return nil
+}
+
+// HandleOrderPaymentWebhook processes webhook specifically for order payments
+func (s *AllSecureService) HandleOrderPaymentWebhook(ctx context.Context, payload []byte, signature string) error {
+	// Validate webhook signature first
+	if !s.ValidateWebhookSignature(payload, signature) {
+		s.logger.Error("Invalid webhook signature for order payment")
+		return fmt.Errorf("invalid webhook signature")
+	}
+
+	// For order payments, we can add additional order-specific logic here
+	// For now, delegate to the main webhook handler
+	return s.HandleWebhook(ctx, payload, signature)
 }

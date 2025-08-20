@@ -48,7 +48,9 @@ func (h *OrderWebhookHandler) HandleOrderPaymentWebhook(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "empty payload")
 	}
 
-	h.logger.Info("Order payment webhook received (signature: %s, payloadSize: %d)", signature, len(payload))
+	// Don't log sensitive signature data
+	h.logger.Info("Order payment webhook received (payloadSize: %d, signature present: %v)",
+		len(payload), signature != "")
 
 	// Обрабатываем webhook
 	err := h.service.HandleOrderPaymentWebhook(c.Context(), payload, signature)
