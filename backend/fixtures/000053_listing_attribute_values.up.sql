@@ -1,0 +1,66 @@
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (158, 98, 2801, NULL, NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (159, 98, 2802, NULL, NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (160, 98, 2004, NULL, NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (161, 98, 2002, 'new', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (166, 106, 2201, 'фе', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (77, 31, 2204, 'diesel', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (78, 31, 2205, 'automatic', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (79, 31, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (80, 31, 2004, 'silver', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (167, 106, 2202, NULL, 1.00000, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (168, 106, 2204, 'petrol', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (169, 106, 2205, 'automatic', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (170, 106, 2210, 'Lamborghini', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (85, 32, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (86, 32, 2004, 'silver', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (87, 32, 2204, 'diesel', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (88, 32, 2205, 'manual', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (2, 8, 2003, 'Samsung', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (3, 8, 2004, 'silver', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (4, 8, 2101, '512GB', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (5, 8, 2102, 'Android', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (7, 17, 2003, 'Samsung', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (8, 17, 2004, 'blue', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (9, 17, 2202, NULL, 456.00000, NULL, NULL, '', 'numeric');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (10, 17, 2402, NULL, 564.00000, NULL, NULL, '', 'numeric');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (12, 18, 2002, 'new', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (13, 18, 2003, 'Apple', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (14, 18, 2004, 'red', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (16, 19, 2002, 'used', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (17, 19, 2003, 'HP', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (19, 20, 2002, 'used', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (20, 20, 2003, 'Apple', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (22, 21, 2003, 'Samsung', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (97, 33, 2205, 'manual', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (98, 33, 2203, NULL, 189000.00000, NULL, NULL, '', 'numeric');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (99, 33, 3001, '2', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (100, 33, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (101, 33, 2201, 'Touran', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (102, 33, 2202, NULL, 2012.00000, NULL, NULL, '', 'numeric');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (103, 33, 2004, 'silver', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (33, 26, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (34, 26, 2004, 'grey', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (35, 26, 2205, 'automatic', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (36, 26, 2002, 'used', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (104, 33, 2204, 'diesel', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (44, 27, 2205, 'автомат', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (46, 27, 2204, 'дизель', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (47, 27, 2002, 'БУ', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (48, 27, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (49, 27, 2004, 'серый металлик', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (54, 28, 2003, 'Volkswagen', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (55, 28, 2205, 'Automatic', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (56, 28, 2004, 'Grey', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (123, 34, 2004, 'silver', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (124, 34, 2202, NULL, 2008.00000, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (125, 34, 2203, NULL, 198000.00000, NULL, NULL, 'km', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (128, 39, 2202, NULL, 2.00000, NULL, NULL, '', 'numeric');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (129, 39, 2201, '1', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (150, 49, 2101, '128GB', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (151, 49, 2002, 'used', NULL, NULL, NULL, '', 'text');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, json_value, unit, value_type) VALUES (153, 50, 2101, '128GB', NULL, NULL, NULL, '', 'text');
+
+
+--
+-- Data for Name: listing_views; Type: TABLE DATA; Schema: public; Owner: -
+--
