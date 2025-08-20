@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/proj/bexexpress/models"
 	"backend/internal/proj/bexexpress/service"
 	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Handler представляет HTTP handler для BEX Express
@@ -25,37 +26,37 @@ func NewHandler(service *service.Service) *Handler {
 // RegisterRoutes регистрирует маршруты
 func (h *Handler) RegisterRoutes(api fiber.Router) {
 	bex := api.Group("/bex")
-	
+
 	// Создание отправления
 	bex.Post("/shipments", h.CreateShipment)
-	
+
 	// Получение информации об отправлении
 	bex.Get("/shipments/:id", h.GetShipment)
-	
+
 	// Получение статуса отправления
 	bex.Get("/shipments/:id/status", h.GetShipmentStatus)
-	
+
 	// Получение этикетки для печати
 	bex.Get("/shipments/:id/label", h.GetShipmentLabel)
-	
+
 	// Отмена отправления
 	bex.Delete("/shipments/:id", h.CancelShipment)
-	
+
 	// Расчет стоимости доставки
 	bex.Post("/calculate-rate", h.CalculateRate)
-	
+
 	// Поиск адреса
 	bex.Post("/search-address", h.SearchAddress)
-	
+
 	// Получение списка пунктов выдачи
 	bex.Get("/parcel-shops", h.GetParcelShops)
-	
+
 	// Отслеживание посылки по номеру
 	bex.Get("/track/:tracking", h.TrackShipment)
-	
+
 	// Массовое создание отправлений
 	bex.Post("/shipments/bulk", h.CreateBulkShipments)
-	
+
 	// Webhook для обновления статусов
 	bex.Post("/webhook/status", h.HandleStatusWebhook)
 }
@@ -289,7 +290,7 @@ func (h *Handler) SearchAddress(c *fiber.Ctx) error {
 // @Router /api/v1/bex/parcel-shops [get]
 func (h *Handler) GetParcelShops(c *fiber.Ctx) error {
 	city := c.Query("city")
-	
+
 	shops, err := h.service.GetParcelShops(c.Context(), city)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.fetchFailed")
@@ -416,4 +417,3 @@ func (h *Handler) HandleStatusWebhook(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, nil)
 }
-

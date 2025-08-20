@@ -4,20 +4,17 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslations } from 'next-intl';
 import BEXDeliverySelector from './BEXDeliverySelector';
 import BEXAddressForm, { type BEXAddressData } from './BEXAddressForm';
 import BEXParcelShopSelector from './BEXParcelShopSelector';
 import {
   TruckIcon,
-  CurrencyDollarIcon,
   ClockIcon,
   ShieldCheckIcon,
   InformationCircleIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // Схема валидации для BEX доставки
 const bexDeliverySchema = z
@@ -131,9 +128,6 @@ export default function BEXDeliveryStep({
   allowCOD = true,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
-  const tCheckout = useTranslations('checkout');
-
   const [deliveryData, setDeliveryData] = useState<Partial<BEXDeliveryData>>({
     method: 'courier',
     cod_amount: 0,

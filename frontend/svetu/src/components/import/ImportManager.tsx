@@ -23,7 +23,7 @@ export default function ImportManager({
   storefrontSlug,
 }: ImportManagerProps) {
   const dispatch = useAppDispatch();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const { jobs, formats } = useAppSelector((state) => state.import);
 
   useEffect(() => {

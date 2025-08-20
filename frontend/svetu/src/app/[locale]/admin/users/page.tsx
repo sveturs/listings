@@ -1,7 +1,5 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { loadMessages } from '@/i18n/loadMessages';
 import UsersPageClient from './UsersPageClient';
 import AdminGuard from '@/components/AdminGuard';
 
@@ -18,18 +16,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function UsersPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const messages = await loadMessages(locale as any, ['admin', 'common']);
-
-  if (!messages) {
-    notFound();
-  }
-
+export default async function UsersPage() {
   return (
     <AdminGuard>
       <UsersPageClient />

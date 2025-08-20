@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import {
   BuildingStorefrontIcon,
   MapPinIcon,
@@ -44,7 +43,6 @@ export default function BEXParcelShopSelector({
   selectedShop,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
   const [shops, setShops] = useState<ParcelShop[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

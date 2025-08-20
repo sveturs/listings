@@ -592,6 +592,21 @@
     "rating": "Rating",
     "goToStore": "Go to store"
   },
+  "seller": {
+    "title": "Seller",
+    "noReviews": "No reviews yet",
+    "memberSince": "Member since",
+    "responseRate": "Response rate",
+    "responseTime": "Response time",
+    "verified": "Verified",
+    "yourListing": "This is your listing",
+    "edit": "Edit",
+    "platformProtection": "Platform protection active",
+    "showPhone": "Show phone",
+    "allItems": "All items",
+    "signInToContact": "Sign in to contact seller",
+    "signIn": "Sign in"
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",

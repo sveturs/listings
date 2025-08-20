@@ -19,11 +19,11 @@ type NotificationService interface {
 
 // Service представляет сервис для работы с BEX Express
 type Service struct {
-	db                   *sql.DB
-	cfg                  *config.Config
-	client               *BEXClient
-	settings             *models.BEXSettings
-	notificationService  NotificationService
+	db                  *sql.DB
+	cfg                 *config.Config
+	client              *BEXClient
+	settings            *models.BEXSettings
+	notificationService NotificationService
 }
 
 // NewService создает новый сервис BEX Express
@@ -47,7 +47,6 @@ func NewServiceWithNotifications(db *sql.DB, cfg *config.Config, notificationSer
 
 // init инициализирует сервис
 func (s *Service) init() (*Service, error) {
-
 	// Load settings from database or use defaults from config
 	settings, err := s.loadSettings()
 	if err != nil {
@@ -134,7 +133,7 @@ func (s *Service) CreateShipment(ctx context.Context, req *models.CreateShipment
 		StorefrontOrderID:  req.StorefrontOrderID,
 		BexShipmentID:      &result.ShipmentID,
 		TrackingNumber:     ptrStr(fmt.Sprintf("%d", result.ShipmentID)),
-		
+
 		// Sender info from settings
 		SenderName:       s.settings.SenderName,
 		SenderAddress:    s.settings.SenderAddress,
@@ -210,7 +209,6 @@ func (s *Service) CreateShipment(ctx context.Context, req *models.CreateShipment
 		shipment.CommentPublic, shipment.CommentPrivate, shipment.DeliveryInstructions,
 		shipment.Status, shipment.RegisteredAt, shipment.CreatedAt, shipment.UpdatedAt,
 	).Scan(&shipment.ID)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to save shipment to database: %w", err)
 	}
@@ -224,7 +222,7 @@ func (s *Service) CreateShipment(ctx context.Context, req *models.CreateShipment
 		if err == nil {
 			labelBase64 := base64Encode(labelData)
 			shipment.LabelBase64 = &labelBase64
-			
+
 			// Update database with label
 			updateQuery := `UPDATE bex_shipments SET label_base64 = $1 WHERE id = $2`
 			s.db.ExecContext(ctx, updateQuery, labelBase64, shipment.ID)
@@ -278,9 +276,9 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 			json.Unmarshal(shipment.StatusHistory, &history)
 		}
 		history = append(history, map[string]interface{}{
-			"status":     newStatus,
+			"status":      newStatus,
 			"status_text": statusResp.StatusText,
-			"timestamp":  now,
+			"timestamp":   now,
 		})
 		historyJSON, _ := json.Marshal(history)
 		shipment.StatusHistory = historyJSON
@@ -301,13 +299,13 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 		if err != nil {
 			return nil, fmt.Errorf("failed to update shipment status: %w", err)
 		}
-		
+
 		// Отправляем уведомление об изменении статуса
 		if s.notificationService != nil {
 			// Определяем пользователя для уведомления
 			var userID int
 			var orderID int
-			
+
 			if shipment.MarketplaceOrderID != nil {
 				orderID = *shipment.MarketplaceOrderID
 				// Получаем user_id из marketplace_orders
@@ -319,19 +317,19 @@ func (s *Service) GetShipmentStatus(ctx context.Context, shipmentID int) (*model
 				userQuery := "SELECT user_id FROM storefront_orders WHERE id = $1"
 				err = s.db.QueryRowContext(ctx, userQuery, orderID).Scan(&userID)
 			}
-			
+
 			if err == nil && userID > 0 {
 				// Отправляем уведомление
 				statusText := "Неизвестно"
 				if shipment.StatusText != nil {
 					statusText = *shipment.StatusText
 				}
-				
+
 				trackingNumber := ""
 				if shipment.TrackingNumber != nil {
 					trackingNumber = *shipment.TrackingNumber
 				}
-				
+
 				notificationErr := s.notificationService.SendDeliveryStatusNotification(
 					ctx, userID, orderID, "BEX Express",
 					fmt.Sprintf("%d", newStatus), statusText, trackingNumber,
@@ -572,7 +570,6 @@ func (s *Service) GetShipmentByTracking(ctx context.Context, tracking string) (*
 		&shipment.FailedAt, &shipment.ReturnedAt,
 		&shipment.StatusHistory, &shipment.CreatedAt, &shipment.UpdatedAt,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("shipment not found: %w", err)
 	}

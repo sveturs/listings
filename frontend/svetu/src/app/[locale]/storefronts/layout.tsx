@@ -22,7 +22,7 @@ export default async function StorefrontsLayout({
   ]);
 
   return (
-    <NextIntlClientProvider messages={additionalMessages}>
+    <NextIntlClientProvider locale={locale} messages={additionalMessages}>
       {children}
     </NextIntlClientProvider>
   );

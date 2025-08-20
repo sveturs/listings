@@ -257,7 +257,7 @@ func (c *BEXClient) ListParcelShops(city string) ([]models.BEXParcelShop, error)
 // BuildShipmentData создает структуру данных отправления для API BEX
 func BuildShipmentData(req *models.CreateShipmentRequest, senderClientID string) *models.BEXShipmentData {
 	now := time.Now()
-	
+
 	// Pickup task (sender)
 	pickupTask := models.BEXShipmentTask{
 		Type:            1, // Pickup
@@ -265,7 +265,7 @@ func BuildShipmentData(req *models.CreateShipmentRequest, senderClientID string)
 		Name1:           senderClientID,
 		Name2:           "",
 		TaxID:           "",
-		AddressType:     3, // Using IDs
+		AddressType:     3,   // Using IDs
 		Municipalities:  104, // Novi Sad
 		Place:           "0",
 		Street:          "0",

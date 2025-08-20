@@ -6,7 +6,7 @@ import { AnimatedSection } from '@/components/ui/AnimatedSection';
 import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 
 const StorefrontImportDemo = () => {
-  const _t = useTranslations('import');
+  const _t = useTranslations('storefronts');
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TruckIcon,
@@ -12,8 +11,6 @@ import {
   ArrowPathIcon,
   DocumentDuplicateIcon,
   PhoneIcon,
-  EnvelopeIcon,
-  ChevronRightIcon,
   MapIcon,
   ListBulletIcon,
 } from '@heroicons/react/24/outline';
@@ -89,7 +86,6 @@ export default function BEXTracker({
   onTrackingUpdate,
   className = '',
 }: Props) {
-  const t = useTranslations('tracking');
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [shipment, setShipment] = useState<BEXShipment | null>(null);
   const [loading, setLoading] = useState(false);

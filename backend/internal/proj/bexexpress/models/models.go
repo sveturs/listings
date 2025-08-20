@@ -44,61 +44,61 @@ type BEXSettings struct {
 
 // BEXMunicipality представляет муниципалитет из справочника BEX
 type BEXMunicipality struct {
-	ID           int    `json:"id" db:"id"`
-	BexID        int    `json:"bex_id" db:"bex_id"`
-	Name         string `json:"name" db:"name"`
-	NameCyrillic string `json:"name_cyrillic" db:"name_cyrillic"`
-	Code         string `json:"code" db:"code"`
-	Region       string `json:"region" db:"region"`
-	IsActive     bool   `json:"is_active" db:"is_active"`
+	ID           int       `json:"id" db:"id"`
+	BexID        int       `json:"bex_id" db:"bex_id"`
+	Name         string    `json:"name" db:"name"`
+	NameCyrillic string    `json:"name_cyrillic" db:"name_cyrillic"`
+	Code         string    `json:"code" db:"code"`
+	Region       string    `json:"region" db:"region"`
+	IsActive     bool      `json:"is_active" db:"is_active"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // BEXPlace представляет населенный пункт из справочника BEX
 type BEXPlace struct {
-	ID             int     `json:"id" db:"id"`
-	BexID          string  `json:"bex_id" db:"bex_id"`
-	MunicipalityID int     `json:"municipality_id" db:"municipality_id"`
-	Name           string  `json:"name" db:"name"`
-	NameCyrillic   string  `json:"name_cyrillic" db:"name_cyrillic"`
-	PostalCode     string  `json:"postal_code" db:"postal_code"`
-	Latitude       *float64 `json:"latitude,omitempty" db:"latitude"`
-	Longitude      *float64 `json:"longitude,omitempty" db:"longitude"`
-	IsActive       bool    `json:"is_active" db:"is_active"`
+	ID             int       `json:"id" db:"id"`
+	BexID          string    `json:"bex_id" db:"bex_id"`
+	MunicipalityID int       `json:"municipality_id" db:"municipality_id"`
+	Name           string    `json:"name" db:"name"`
+	NameCyrillic   string    `json:"name_cyrillic" db:"name_cyrillic"`
+	PostalCode     string    `json:"postal_code" db:"postal_code"`
+	Latitude       *float64  `json:"latitude,omitempty" db:"latitude"`
+	Longitude      *float64  `json:"longitude,omitempty" db:"longitude"`
+	IsActive       bool      `json:"is_active" db:"is_active"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // BEXStreet представляет улицу из справочника BEX
 type BEXStreet struct {
-	ID           int    `json:"id" db:"id"`
-	BexID        string `json:"bex_id" db:"bex_id"`
-	PlaceID      int    `json:"place_id" db:"place_id"`
-	Name         string `json:"name" db:"name"`
-	NameCyrillic string `json:"name_cyrillic" db:"name_cyrillic"`
-	StreetType   string `json:"street_type" db:"street_type"`
-	IsActive     bool   `json:"is_active" db:"is_active"`
+	ID           int       `json:"id" db:"id"`
+	BexID        string    `json:"bex_id" db:"bex_id"`
+	PlaceID      int       `json:"place_id" db:"place_id"`
+	Name         string    `json:"name" db:"name"`
+	NameCyrillic string    `json:"name_cyrillic" db:"name_cyrillic"`
+	StreetType   string    `json:"street_type" db:"street_type"`
+	IsActive     bool      `json:"is_active" db:"is_active"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // BEXParcelShop представляет пункт выдачи BEX
 type BEXParcelShop struct {
-	ID           int      `json:"id" db:"id"`
-	BexID        int      `json:"bex_id" db:"bex_id"`
-	Code         string   `json:"code" db:"code"`
-	Name         string   `json:"name" db:"name"`
-	Address      string   `json:"address" db:"address"`
-	City         string   `json:"city" db:"city"`
-	PostalCode   string   `json:"postal_code" db:"postal_code"`
-	Phone        string   `json:"phone" db:"phone"`
+	ID           int             `json:"id" db:"id"`
+	BexID        int             `json:"bex_id" db:"bex_id"`
+	Code         string          `json:"code" db:"code"`
+	Name         string          `json:"name" db:"name"`
+	Address      string          `json:"address" db:"address"`
+	City         string          `json:"city" db:"city"`
+	PostalCode   string          `json:"postal_code" db:"postal_code"`
+	Phone        string          `json:"phone" db:"phone"`
 	WorkingHours json.RawMessage `json:"working_hours" db:"working_hours"`
-	Latitude     *float64 `json:"latitude,omitempty" db:"latitude"`
-	Longitude    *float64 `json:"longitude,omitempty" db:"longitude"`
-	IsActive     bool     `json:"is_active" db:"is_active"`
-	CreatedAt    time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at" db:"updated_at"`
+	Latitude     *float64        `json:"latitude,omitempty" db:"latitude"`
+	Longitude    *float64        `json:"longitude,omitempty" db:"longitude"`
+	IsActive     bool            `json:"is_active" db:"is_active"`
+	CreatedAt    time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at" db:"updated_at"`
 }
 
 // ShipmentStatus представляет статус отправления BEX
@@ -150,13 +150,13 @@ type BEXShipment struct {
 	TotalPackages    int     `json:"total_packages" db:"total_packages"`
 
 	// Услуги
-	PayType               int      `json:"pay_type" db:"pay_type"`
-	CODAmount             *float64 `json:"cod_amount,omitempty" db:"cod_amount"`
-	InsuranceAmount       *float64 `json:"insurance_amount,omitempty" db:"insurance_amount"`
-	PersonalDelivery      bool     `json:"personal_delivery" db:"personal_delivery"`
-	ReturnSignedInvoices  bool     `json:"return_signed_invoices" db:"return_signed_invoices"`
-	ReturnSignedConfirmation bool  `json:"return_signed_confirmation" db:"return_signed_confirmation"`
-	ReturnPackage         bool     `json:"return_package" db:"return_package"`
+	PayType                  int      `json:"pay_type" db:"pay_type"`
+	CODAmount                *float64 `json:"cod_amount,omitempty" db:"cod_amount"`
+	InsuranceAmount          *float64 `json:"insurance_amount,omitempty" db:"insurance_amount"`
+	PersonalDelivery         bool     `json:"personal_delivery" db:"personal_delivery"`
+	ReturnSignedInvoices     bool     `json:"return_signed_invoices" db:"return_signed_invoices"`
+	ReturnSignedConfirmation bool     `json:"return_signed_confirmation" db:"return_signed_confirmation"`
+	ReturnPackage            bool     `json:"return_package" db:"return_package"`
 
 	// Комментарии
 	CommentPublic        *string `json:"comment_public,omitempty" db:"comment_public"`
@@ -164,9 +164,9 @@ type BEXShipment struct {
 	DeliveryInstructions *string `json:"delivery_instructions,omitempty" db:"delivery_instructions"`
 
 	// Статус
-	Status         ShipmentStatus `json:"status" db:"status"`
-	StatusText     *string        `json:"status_text,omitempty" db:"status_text"`
-	FailedReason   *string        `json:"failed_reason,omitempty" db:"failed_reason"`
+	Status       ShipmentStatus `json:"status" db:"status"`
+	StatusText   *string        `json:"status_text,omitempty" db:"status_text"`
+	FailedReason *string        `json:"failed_reason,omitempty" db:"failed_reason"`
 
 	// Документы
 	LabelBase64 *string `json:"label_base64,omitempty" db:"label_base64"`
@@ -190,8 +190,8 @@ type BEXShipment struct {
 
 // CreateShipmentRequest представляет запрос на создание отправления BEX
 type CreateShipmentRequest struct {
-	OrderID           *int    `json:"order_id,omitempty"`
-	StorefrontOrderID *int64  `json:"storefront_order_id,omitempty"`
+	OrderID           *int   `json:"order_id,omitempty"`
+	StorefrontOrderID *int64 `json:"storefront_order_id,omitempty"`
 
 	RecipientName       string  `json:"recipient_name" validate:"required"`
 	RecipientAddress    string  `json:"recipient_address" validate:"required"`
@@ -200,10 +200,10 @@ type CreateShipmentRequest struct {
 	RecipientPhone      string  `json:"recipient_phone" validate:"required"`
 	RecipientEmail      *string `json:"recipient_email,omitempty"`
 
-	WeightKg         float64  `json:"weight_kg" validate:"required,min=0.1,max=50"`
-	TotalPackages    int      `json:"total_packages" validate:"required,min=1,max=99"`
-	ShipmentCategory int      `json:"shipment_category" validate:"required"`
-	ShipmentContents int      `json:"shipment_contents" validate:"required"`
+	WeightKg         float64 `json:"weight_kg" validate:"required,min=0.1,max=50"`
+	TotalPackages    int     `json:"total_packages" validate:"required,min=1,max=99"`
+	ShipmentCategory int     `json:"shipment_category" validate:"required"`
+	ShipmentContents int     `json:"shipment_contents" validate:"required"`
 
 	CODAmount            *float64 `json:"cod_amount,omitempty"`
 	InsuranceAmount      *float64 `json:"insurance_amount,omitempty"`
@@ -217,25 +217,25 @@ type CreateShipmentRequest struct {
 
 // BEXShipmentTask представляет задачу (pickup/delivery) для API BEX
 type BEXShipmentTask struct {
-	Type             int    `json:"type"`
-	NameType         int    `json:"nameType"`
-	Name1            string `json:"name1"`
-	Name2            string `json:"name2"`
-	TaxID            string `json:"taxId"`
-	AddressType      int    `json:"adressType"`
-	Municipalities   int    `json:"municipalities"`
-	Place            string `json:"place"`
-	Street           string `json:"street"`
-	HouseNumber      int    `json:"houseNumber"`
-	Apartment        string `json:"apartment"`
-	ContactPerson    string `json:"contactPerson"`
-	Phone            string `json:"phone"`
-	Date             string `json:"date"`
-	TimeFrom         string `json:"timeFrom"`
-	TimeTo           string `json:"timeTo"`
-	PreNotification  int    `json:"preNotification"`
-	Comment          string `json:"comment"`
-	ParcelShop       int    `json:"parcelShop"`
+	Type            int    `json:"type"`
+	NameType        int    `json:"nameType"`
+	Name1           string `json:"name1"`
+	Name2           string `json:"name2"`
+	TaxID           string `json:"taxId"`
+	AddressType     int    `json:"adressType"`
+	Municipalities  int    `json:"municipalities"`
+	Place           string `json:"place"`
+	Street          string `json:"street"`
+	HouseNumber     int    `json:"houseNumber"`
+	Apartment       string `json:"apartment"`
+	ContactPerson   string `json:"contactPerson"`
+	Phone           string `json:"phone"`
+	Date            string `json:"date"`
+	TimeFrom        string `json:"timeFrom"`
+	TimeTo          string `json:"timeTo"`
+	PreNotification int    `json:"preNotification"`
+	Comment         string `json:"comment"`
+	ParcelShop      int    `json:"parcelShop"`
 }
 
 // BEXShipmentData представляет данные отправления для API BEX
@@ -309,12 +309,12 @@ type BEXStatusRequest struct {
 
 // BEXStatusResponse представляет ответ со статусом
 type BEXStatusResponse struct {
-	Status      int    `json:"status"`
-	StatusText  string `json:"status_text"`
-	DateSent    string `json:"date_sent"`
-	DateDelivered string `json:"date_delivered"`
-	CODAmount   float64 `json:"cod_amount"`
-	Notes       string `json:"notes"`
+	Status        int     `json:"status"`
+	StatusText    string  `json:"status_text"`
+	DateSent      string  `json:"date_sent"`
+	DateDelivered string  `json:"date_delivered"`
+	CODAmount     float64 `json:"cod_amount"`
+	Notes         string  `json:"notes"`
 }
 
 // SearchAddressRequest представляет запрос поиска адреса
@@ -328,25 +328,25 @@ type SearchAddressRequest struct {
 
 // AddressSuggestion представляет предложение адреса
 type AddressSuggestion struct {
-	PlaceID        string  `json:"place_id"`
-	PlaceName      string  `json:"place_name"`
-	StreetID       string  `json:"street_id"`
-	StreetName     string  `json:"street_name"`
-	PostalCode     string  `json:"postal_code"`
-	MunicipalityID int     `json:"municipality_id"`
-	Municipality   string  `json:"municipality"`
-	FullAddress    string  `json:"full_address"`
+	PlaceID        string   `json:"place_id"`
+	PlaceName      string   `json:"place_name"`
+	StreetID       string   `json:"street_id"`
+	StreetName     string   `json:"street_name"`
+	PostalCode     string   `json:"postal_code"`
+	MunicipalityID int      `json:"municipality_id"`
+	Municipality   string   `json:"municipality"`
+	FullAddress    string   `json:"full_address"`
 	Latitude       *float64 `json:"latitude,omitempty"`
 	Longitude      *float64 `json:"longitude,omitempty"`
 }
 
 // CalculateRateRequest представляет запрос расчета стоимости
 type CalculateRateRequest struct {
-	RecipientPostalCode string  `json:"recipient_postal_code" validate:"required"`
-	WeightKg           float64 `json:"weight_kg" validate:"required,min=0.1,max=50"`
-	ShipmentCategory   int     `json:"shipment_category" validate:"required"`
-	CODAmount          *float64 `json:"cod_amount,omitempty"`
-	InsuranceAmount    *float64 `json:"insurance_amount,omitempty"`
+	RecipientPostalCode string   `json:"recipient_postal_code" validate:"required"`
+	WeightKg            float64  `json:"weight_kg" validate:"required,min=0.1,max=50"`
+	ShipmentCategory    int      `json:"shipment_category" validate:"required"`
+	CODAmount           *float64 `json:"cod_amount,omitempty"`
+	InsuranceAmount     *float64 `json:"insurance_amount,omitempty"`
 }
 
 // CalculateRateResponse представляет ответ с расчетом стоимости

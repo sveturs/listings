@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +13,6 @@ import {
   HomeIcon,
   BuildingOfficeIcon,
   ChatBubbleBottomCenterTextIcon,
-  MagnifyingGlassIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
@@ -70,7 +68,6 @@ export default function BEXAddressForm({
   deliveryMethod = 'courier',
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
   const [addressSuggestions, setAddressSuggestions] = useState<
     AddressSuggestion[]
   >([]);
@@ -79,7 +76,7 @@ export default function BEXAddressForm({
   const [selectedCity, setSelectedCity] = useState<string>(
     initialAddress?.city || ''
   );
-  const [selectedPlace, setSelectedPlace] = useState<AddressSuggestion | null>(
+  const [_selectedPlace, setSelectedPlace] = useState<AddressSuggestion | null>(
     null
   );
 

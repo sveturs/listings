@@ -11,8 +11,8 @@ import { toast } from '@/utils/toast';
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000, 10000];
 
 export default function DepositPage() {
-  const t = useTranslations('admin');
-  const tAdmin = useTranslations('admin');
+  const t = useTranslations('balance');
+  const tAdmin = useTranslations('balance');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const locale = useLocale();

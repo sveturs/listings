@@ -64,7 +64,7 @@ func importMunicipalities(db *sql.DB) error {
 	}
 
 	sheet := file.Sheets[0]
-	
+
 	// Начинаем со второй строки (пропускаем заголовок)
 	for i := 1; i < len(sheet.Rows); i++ {
 		row := sheet.Rows[i]
@@ -86,7 +86,6 @@ func importMunicipalities(db *sql.DB) error {
 			SET name = EXCLUDED.name,
 			    updated_at = NOW()
 		`, bexID, name, name)
-
 		if err != nil {
 			log.Printf("Ошибка вставки муниципалитета %d: %v", bexID, err)
 		}
@@ -102,7 +101,7 @@ func importPlaces(db *sql.DB) error {
 	}
 
 	sheet := file.Sheets[0]
-	
+
 	// Начинаем со второй строки (пропускаем заголовок)
 	for i := 1; i < len(sheet.Rows); i++ {
 		row := sheet.Rows[i]
@@ -136,7 +135,6 @@ func importPlaces(db *sql.DB) error {
 			    municipality_id = EXCLUDED.municipality_id,
 			    updated_at = NOW()
 		`, bexID, name, name, postalCode, munID)
-
 		if err != nil {
 			log.Printf("Ошибка вставки населенного пункта %d: %v", bexID, err)
 		}
@@ -155,7 +153,7 @@ func importStreets(db *sql.DB) error {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	
+
 	// Пропускаем заголовок
 	if _, err := reader.Read(); err != nil {
 		return err
@@ -223,7 +221,7 @@ func importStreetsFromExcel(db *sql.DB) error {
 	}
 
 	sheet := file.Sheets[0]
-	
+
 	stmt, err := db.Prepare(`
 		INSERT INTO bex_streets (bex_id, name, name_cyrillic, place_id, is_active, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, true, NOW(), NOW())

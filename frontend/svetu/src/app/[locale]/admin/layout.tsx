@@ -1,4 +1,5 @@
 import { loadMessages } from '@/lib/i18n/loadMessages';
+import { NextIntlClientProvider } from 'next-intl';
 import AdminLayoutClient from './layout-client';
 
 export default async function AdminLayout({
@@ -11,11 +12,16 @@ export default async function AdminLayout({
   const { locale } = await params;
 
   // Загружаем необходимые модули для админ панели
-  const _messages = await loadMessages(locale as any, [
+  const messages = await loadMessages(locale as any, [
     'admin',
     'misc',
     'common',
+    'auth-shared',
   ]);
 
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <AdminLayoutClient>{children}</AdminLayoutClient>
+    </NextIntlClientProvider>
+  );
 }

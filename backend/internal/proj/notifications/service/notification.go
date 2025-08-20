@@ -184,7 +184,7 @@ func (s *NotificationService) SendListingUpdateNotification(ctx context.Context,
 
 func (s *NotificationService) SendDeliveryStatusNotification(ctx context.Context, userID int, orderID int, deliveryProvider string, status string, statusText string, trackingNumber string) error {
 	var message string
-	
+
 	switch status {
 	case "0": // NotSentYet
 		message = fmt.Sprintf("Ваш заказ #%d готов к отправке через %s. Трек-номер: %s", orderID, deliveryProvider, trackingNumber)
@@ -201,7 +201,7 @@ func (s *NotificationService) SendDeliveryStatusNotification(ctx context.Context
 	default:
 		message = fmt.Sprintf("Статус доставки заказа #%d изменен: %s. Трек-номер: %s", orderID, statusText, trackingNumber)
 	}
-	
+
 	// Отправляем уведомление
 	return s.SendNotification(ctx, userID, models.NotificationTypeDeliveryStatus, message, orderID)
 }

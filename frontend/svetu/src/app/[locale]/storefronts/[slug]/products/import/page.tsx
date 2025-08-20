@@ -9,7 +9,7 @@ import { ImportManager } from '@/components/import';
 export default function ProductImportPage() {
   const params = useParams();
   const router = useRouter();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const { currentStorefront, isLoading, error, loadStorefrontBySlug } =
     useStorefronts();
 

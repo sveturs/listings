@@ -383,12 +383,12 @@ func (s *Server) registerProjectRoutes() {
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
-	
+
 	// Добавляем BEX Express если он инициализирован
 	if s.bexexpress != nil {
 		registrars = append(registrars, s.bexexpress)
 	}
-	
+
 	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
 
 	// Регистрируем роуты каждого проекта

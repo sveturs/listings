@@ -15,6 +15,8 @@ export type TranslationModule =
   | 'marketplace' // Маркетплейс и объявления
   | 'admin' // Админ панель
   | 'storefronts' // Витрины магазинов
+  | 'create_storefront' // Создание витрин
+  | 'create_listing' // Создание объявлений
   | 'cars' // Автомобильный раздел
   | 'chat' // Чат и сообщения
   | 'cart' // Корзина и заказы
@@ -87,6 +89,14 @@ export async function loadMessages(
           break;
         case 'storefronts':
           moduleData = await import(`@/messages/${locale}/storefronts.json`);
+          break;
+        case 'create_storefront':
+          moduleData = await import(
+            `@/messages/${locale}/create_storefront.json`
+          );
+          break;
+        case 'create_listing':
+          moduleData = await import(`@/messages/${locale}/create_listing.json`);
           break;
         case 'cars':
           moduleData = await import(`@/messages/${locale}/cars.json`);
@@ -199,6 +209,12 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     modules.push('storefronts');
     modules.push('products');
     modules.push('reviews');
+  }
+  if (pathname.includes('/create-storefront')) {
+    modules.push('create_storefront');
+  }
+  if (pathname.includes('/create-listing')) {
+    modules.push('create_listing');
   }
   if (pathname.includes('/cars') || pathname.includes('/automotive')) {
     modules.push('cars');

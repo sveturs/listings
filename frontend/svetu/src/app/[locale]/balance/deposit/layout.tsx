@@ -1,4 +1,5 @@
 import { loadMessages } from '@/lib/i18n/loadMessages';
+import { NextIntlClientProvider } from 'next-intl';
 
 export default async function DepositLayout({
   children,
@@ -10,12 +11,16 @@ export default async function DepositLayout({
   const { locale } = await params;
 
   // Загружаем необходимые модули для страниц депозита
-  const _messages = await loadMessages(locale as any, [
-    'admin',
+  const messages = await loadMessages(locale as any, [
+    'balance',
     'misc',
     'profile',
     'common',
   ]);
 
-  return <>{children}</>;
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
+  );
 }

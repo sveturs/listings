@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import {
   TruckIcon,
   HomeModernIcon,
@@ -46,7 +45,6 @@ export default function BEXDeliverySelector({
   recipientCity,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
   const [calculatedPrices, setCalculatedPrices] = useState<
     Record<string, number>
   >({});
