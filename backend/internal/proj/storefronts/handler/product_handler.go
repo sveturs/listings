@@ -155,6 +155,41 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 	return c.JSON(product)
 }
 
+// GetProductByID retrieves a single product by its ID without requiring storefront slug
+// @Summary Get a storefront product by ID
+// @Description Returns details of a specific product using only product ID
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param id path int true "Product ID"
+// @Success 200 {object} models.StorefrontProduct "Product details"
+// @Failure 404 {object} models.ErrorResponse "Product not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Router /api/v1/storefronts/products/{id} [get]
+func (h *ProductHandler) GetProductByID(c *fiber.Ctx) error {
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	product, err := h.productService.GetProductByID(c.Context(), productID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get product",
+		})
+	}
+
+	if product == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Product not found",
+		})
+	}
+
+	return c.JSON(product)
+}
+
 // CreateProduct creates a new product
 // @Summary Create a storefront product
 // @Description Creates a new product for the storefront with optional variants support

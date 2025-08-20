@@ -89,6 +89,9 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	// Регистрируем защищенный маршрут /my первым, чтобы он имел приоритет
 	api.Get("/storefronts/my", mw.AuthRequiredJWT, m.storefrontHandler.GetMyStorefronts)
 
+	// Публичный endpoint для получения товара по ID (для чата) - ВАЖНО: должен быть ПЕРЕД группой /storefronts
+	api.Get("/storefronts/products/:id", m.productHandler.GetProductByID)
+
 	// Публичные маршруты витрин (без авторизации)
 	public := api.Group("/storefronts")
 	{
@@ -830,6 +833,11 @@ func (s *storageAdapter) GetStorefrontProducts(ctx context.Context, filter model
 // GetStorefrontProduct delegates to database
 func (s *storageAdapter) GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error) {
 	return s.db.GetStorefrontProduct(ctx, storefrontID, productID)
+}
+
+// GetStorefrontProductByID delegates to database
+func (s *storageAdapter) GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProductByID(ctx, productID)
 }
 
 // CreateStorefrontProduct delegates to database

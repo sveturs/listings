@@ -33,6 +33,15 @@ export default function ExamplesPage() {
       badge: 'HOT',
     },
     {
+      title: '📦 Импорт товаров в витрины',
+      description:
+        'Универсальная система импорта: CSV, XML, Excel, API интеграции, FTP синхронизация',
+      href: '/examples/storefront-import',
+      color: 'bg-gradient-to-r from-indigo-600 to-purple-600',
+      icon: '📦',
+      badge: 'NEW',
+    },
+    {
       title: 'Toast Notifications',
       description:
         'Interactive toast messages with different types and positions',
@@ -243,7 +252,7 @@ export default function ExamplesPage() {
           </div>
           <div className="stat">
             <div className="stat-title">New</div>
-            <div className="stat-value text-accent">4</div>
+            <div className="stat-value text-accent">5</div>
             <div className="stat-desc">Latest additions</div>
           </div>
         </div>
@@ -297,7 +306,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 26 UI/UX improvements have been successfully implemented!
+              All 27 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

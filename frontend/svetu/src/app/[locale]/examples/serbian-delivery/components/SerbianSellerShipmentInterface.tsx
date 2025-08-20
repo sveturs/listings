@@ -1,14 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  UserIcon,
-  MapPinIcon,
-  CubeIcon,
-  ScaleIcon,
-  CurrencyDollarIcon,
-  PrinterIcon,
-} from '@heroicons/react/24/outline';
+import { PrinterIcon } from '@heroicons/react/24/outline';
 
 export default function SerbianSellerShipmentInterface() {
   const [formData, setFormData] = useState({

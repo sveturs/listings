@@ -109,7 +109,8 @@ class ApiClient {
    */
   async request<T = any>(
     endpoint: string,
-    options: ApiClientOptions = {}
+    options: ApiClientOptions = {},
+    isRetryAfter401: boolean = false
   ): Promise<ApiResponse<T>> {
     const {
       internal = false,
@@ -143,12 +144,19 @@ class ApiClient {
 
     // Добавляем токен авторизации если нужно
     if (includeAuth && typeof window !== 'undefined') {
-      const token = await tokenManager.getAccessToken();
-      // console.log('[ApiClient] Token check:', {
-      //   includeAuth,
-      //   hasToken: !!token,
-      //   endpoint,
-      // });
+      let token = await tokenManager.getAccessToken();
+
+      // Если токен истек, пытаемся обновить его
+      if (token && tokenManager.isTokenExpired(token)) {
+        console.log('[ApiClient] Token expired, attempting to refresh...');
+        try {
+          token = await tokenManager.refreshAccessToken();
+        } catch (error) {
+          console.error('[ApiClient] Failed to refresh token:', error);
+          token = null;
+        }
+      }
+
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -205,7 +213,35 @@ class ApiClient {
 
       // Обрабатываем ошибки
       if (!response.ok) {
-        // Если получили 401, удаляем невалидный токен
+        // Если получили 401 и это не повторный запрос после обновления токена
+        if (
+          response.status === 401 &&
+          typeof window !== 'undefined' &&
+          !isRetryAfter401
+        ) {
+          console.log(
+            '[ApiClient] Got 401, attempting to refresh token and retry...'
+          );
+
+          try {
+            // Пытаемся обновить токен
+            const newToken = await tokenManager.refreshAccessToken();
+
+            if (newToken) {
+              console.log(
+                '[ApiClient] Token refreshed successfully, retrying request...'
+              );
+              // Повторяем запрос с новым токеном
+              return this.request<T>(endpoint, options, true);
+            }
+          } catch (refreshError) {
+            console.error('[ApiClient] Token refresh failed:', refreshError);
+            // Очищаем токены если обновление не удалось
+            tokenManager.clearTokens();
+          }
+        }
+
+        // Если это повторная 401 после обновления токена или обновление не удалось
         if (response.status === 401 && typeof window !== 'undefined') {
           tokenManager.clearTokens();
         }

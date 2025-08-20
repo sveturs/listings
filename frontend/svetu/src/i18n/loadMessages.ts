@@ -8,7 +8,7 @@ export async function loadMessages(
 ): Promise<Messages> {
   try {
     // Загрузка базовых модулей
-    const baseModules = ['common', 'nav', 'home'];
+    const baseModules = ['common'];
 
     // Объединение с дополнительными модулями
     const allModules = [...baseModules, ...modules];
@@ -46,12 +46,25 @@ export function getRequiredModules(pathname: string): string[] {
   // Определение необходимых модулей на основе пути
   const modules: string[] = [];
 
+  // Общие модули для защищенных страниц
+  if (
+    pathname.includes('/admin') ||
+    pathname.includes('/profile') ||
+    pathname.includes('/balance')
+  ) {
+    modules.push('auth-shared');
+  }
+
   if (pathname.includes('/admin')) {
     modules.push('admin');
   }
 
   if (pathname.includes('/profile')) {
     modules.push('profile');
+  }
+
+  if (pathname.includes('/balance')) {
+    modules.push('balance', 'profile'); // profile для общих ключей
   }
 
   if (pathname.includes('/marketplace')) {
@@ -63,7 +76,19 @@ export function getRequiredModules(pathname: string): string[] {
   }
 
   if (pathname.includes('/storefront')) {
-    modules.push('storefront');
+    modules.push('storefronts'); // Исправлено на правильное имя модуля
+  }
+
+  if (pathname.includes('/orders')) {
+    modules.push('orders');
+  }
+
+  if (pathname.includes('/cart') || pathname.includes('/checkout')) {
+    modules.push('cart', 'checkout');
+  }
+
+  if (pathname.includes('/reviews')) {
+    modules.push('reviews');
   }
 
   return modules;

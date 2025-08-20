@@ -592,7 +592,7 @@ const EMOJI_CATEGORIES = {
 };
 
 export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const [selectedCategory, setSelectedCategory] =
     useState<keyof typeof EMOJI_CATEGORIES>('all');
   const [recentEmojis, setRecentEmojis] = useState<string[]>([]);

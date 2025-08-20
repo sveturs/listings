@@ -13,7 +13,8 @@ interface ErrorMessages {
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  messages: ErrorMessages;
+  messages?: ErrorMessages;
+  name?: string;
 }
 
 interface State {
@@ -32,16 +33,25 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Auth Error Boundary caught an error:', error, errorInfo);
+    const boundaryName = this.props.name || 'ErrorBoundary';
+    console.error(`[${boundaryName}] caught an error:`, error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
+      const defaultMessages: ErrorMessages = {
+        title: 'Что-то пошло не так',
+        description:
+          'Произошла ошибка при загрузке. Пожалуйста, попробуйте обновить страницу.',
+        details: 'Подробности ошибки',
+        reload: 'Обновить страницу',
+      };
+
       return (
         this.props.fallback || (
           <DefaultErrorFallback
             error={this.state.error}
-            messages={this.props.messages}
+            messages={this.props.messages || defaultMessages}
           />
         )
       );

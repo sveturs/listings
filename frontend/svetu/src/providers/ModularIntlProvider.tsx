@@ -30,12 +30,15 @@ export function ModularIntlProvider({
 
       if (pathname.includes('/marketplace')) {
         nextModules.push('cart', 'chat');
+      } else if (pathname.includes('/chat')) {
+        // Для страницы чата загружаем модуль chat
+        nextModules.push('chat');
       } else if (pathname.includes('/admin')) {
         nextModules.push('marketplace', 'storefront');
       } else if (pathname.includes('/map')) {
         nextModules.push('map');
       } else if (pathname === '/') {
-        nextModules.push('marketplace', 'auth');
+        nextModules.push('marketplace', 'auth', 'chat');
       }
 
       if (nextModules.length > 0) {

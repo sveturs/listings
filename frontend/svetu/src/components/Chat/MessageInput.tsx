@@ -10,6 +10,7 @@ import { FileUploadProgress } from '@/components/Chat/FileUploadProgress';
 import { toast } from '@/utils/toast';
 import { validateFiles, formatFileSize } from '@/utils/fileValidation';
 import Image from 'next/image';
+import { useObjectURLs } from '@/hooks/useObjectURL';
 
 interface MessageInputProps {
   chat?: MarketplaceChat;
@@ -24,7 +25,7 @@ export default function MessageInput({
   initialStorefrontProductId,
   initialSellerId,
 }: MessageInputProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -242,6 +243,9 @@ export default function MessageInput({
   // Получаем массив загружаемых файлов
   const uploadingFilesList = Object.values(uploadingFiles);
 
+  // Создаем безопасные URLs для выбранных файлов
+  const fileUrls = useObjectURLs(selectedFiles);
+
   return (
     <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 backdrop-blur-sm">
       {/* Отображение загружаемых файлов */}
@@ -282,7 +286,7 @@ export default function MessageInput({
               <div className="flex flex-wrap gap-2">
                 {selectedFiles.map((file, index) => {
                   const isImage = file.type.startsWith('image/');
-                  const fileUrl = URL.createObjectURL(file);
+                  const fileUrl = fileUrls[index];
 
                   return (
                     <div
@@ -301,7 +305,6 @@ export default function MessageInput({
                             alt={file.name}
                             fill
                             className="object-cover"
-                            onLoad={() => URL.revokeObjectURL(fileUrl)}
                           />
                           <button
                             onClick={() => removeSelectedFile(index)}

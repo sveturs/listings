@@ -5,13 +5,8 @@ import {
   CubeIcon,
   UserIcon,
   MapPinIcon,
-  PhoneIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
   DocumentCheckIcon,
-  ShieldCheckIcon,
   TruckIcon,
-  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface ShipmentData {

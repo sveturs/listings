@@ -12,7 +12,7 @@ interface AdminGuardProps {
 
 export default function AdminGuard({ children, loading }: AdminGuardProps) {
   const { user, isLoading } = useAuth();
-  const t = useTranslations('admin');
+  const t = useTranslations('auth-shared');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 

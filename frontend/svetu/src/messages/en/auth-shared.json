@@ -1,0 +1,20 @@
+{
+  "authRequired": "Authentication Required",
+  "authRequiredDescription": "Please sign in to access this page",
+  "login": "Sign In",
+  "logout": "Sign Out",
+  "register": "Register",
+  "accessDenied": "Access Denied",
+  "accessDeniedDescription": "You don't have permission to access this page",
+  "adminOnly": "Admin Only",
+  "adminOnlyDescription": "This area is restricted to administrators",
+  "userNotFound": "User not found",
+  "invalidCredentials": "Invalid credentials",
+  "sessionExpired": "Your session has expired",
+  "pleaseLogin": "Please login to continue",
+  "loading": "Loading...",
+  "redirecting": "Redirecting...",
+  "verifyingAccess": "Verifying access...",
+  "unauthorized": "Unauthorized",
+  "forbidden": "Forbidden"
+}

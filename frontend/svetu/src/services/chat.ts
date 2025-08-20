@@ -53,9 +53,6 @@ class ChatService {
     options?: RequestInit
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Chat API request:', url, options);
-    }
 
     // Получаем JWT токен
     const accessToken = tokenManager.getAccessToken();
@@ -82,10 +79,6 @@ class ChatService {
       headers,
       credentials: 'include',
     });
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Chat API response status:', response.status);
-    }
 
     if (!response.ok) {
       let error: { message?: string; error?: string } = { message: '' };
@@ -125,9 +118,6 @@ class ChatService {
     }
 
     const data = await response.json();
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Chat API response data:', data);
-    }
     return data;
   }
 
@@ -179,8 +169,6 @@ class ChatService {
       signal: params.signal,
     });
 
-    console.log('Chat API response data:', response);
-
     // Если сервер возвращает обернутый ответ, разворачиваем его
     if (response && response.success && response.data) {
       const data = response.data;
@@ -196,7 +184,6 @@ class ChatService {
         };
       } else if (data && typeof data === 'object' && 'messages' in data) {
         // Новый формат со структурированным ответом
-        console.log('New format detected, messages:', data.messages?.length);
         return {
           messages: Array.isArray(data.messages) ? data.messages : [],
           total: data.total || -1,
@@ -307,8 +294,6 @@ class ChatService {
       xhr.withCredentials = true; // Включаем отправку куки
 
       const uploadUrl = `${this.baseUrl}/messages/${messageId}/attachments`;
-      console.log('Uploading attachments to:', uploadUrl);
-
       xhr.open('POST', uploadUrl);
 
       // Добавляем JWT токен
@@ -441,18 +426,9 @@ class ChatService {
       wsUrl = `${apiUrl}/ws/chat?token=${accessToken}`;
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(
-        '[ChatService] Connecting WebSocket:',
-        wsUrl.replace(/token=.*/, 'token=***')
-      );
-    }
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('WebSocket connected');
-      }
       // Сбрасываем счетчик попыток при успешном подключении
       this.reconnectAttempts = 0;
     };
@@ -464,8 +440,6 @@ class ChatService {
     };
 
     ws.onclose = (event) => {
-      console.log('WebSocket disconnected', event.code, event.reason);
-
       // Если отключение из-за отсутствия аутентификации
       if (event.code === 1008 || event.reason === 'Unauthorized') {
         console.error('WebSocket: Authentication required');
@@ -489,14 +463,7 @@ class ChatService {
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
       this.reconnectAttempts++;
 
-      console.log(
-        `WebSocket: Will reconnect in ${delay / 1000}s (attempt ${this.reconnectAttempts})`
-      );
-
       setTimeout(() => {
-        console.log(
-          `WebSocket: Reconnecting... (attempt ${this.reconnectAttempts})`
-        );
         this.connectWebSocket(onMessage);
       }, delay);
     };

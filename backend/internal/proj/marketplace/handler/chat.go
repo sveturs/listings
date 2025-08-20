@@ -5,6 +5,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -458,6 +459,60 @@ func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, attachment)
+}
+
+// GetAttachmentFile получает файл вложения с проверкой авторизации
+// @Summary Download attachment file
+// @Description Downloads an attachment file with authorization check
+// @Tags marketplace-chat
+// @Accept json
+// @Produce octet-stream
+// @Param id path int true "Attachment ID"
+// @Success 200 "File content"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.attachmentNotFound"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/attachments/{id}/download [get]
+func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	attachmentID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")
+	}
+
+	// Получаем вложение
+	attachment, err := h.services.ChatAttachment().GetAttachment(c.Context(), attachmentID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.attachmentNotFound")
+	}
+
+	// Проверяем доступ к вложению через сообщение
+	message, err := h.services.Storage().GetMessageByID(c.Context(), attachment.MessageID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
+	}
+
+	// Пользователь должен быть участником чата
+	if message.SenderID != userID && message.ReceiverID != userID {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.accessDenied")
+	}
+
+	// Получаем файл из хранилища
+	fileReader, err := h.services.ChatAttachment().GetAttachmentFile(c.Context(), attachment.FilePath)
+	if err != nil {
+		logger.Error().Err(err).Str("filePath", attachment.FilePath).Msg("Error getting attachment file")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.fileNotFound")
+	}
+	defer fileReader.Close()
+
+	// Устанавливаем заголовки для файла
+	c.Set("Content-Type", attachment.ContentType)
+	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", attachment.FileName))
+
+	// Отправляем файл
+	return c.SendStream(fileReader)
 }
 
 // DeleteAttachment удаляет вложение

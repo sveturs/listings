@@ -4,6 +4,7 @@ import { MarketplaceItem } from './marketplace';
 export interface MarketplaceChat {
   id: number;
   listing_id: number;
+  storefront_product_id?: number;
   buyer_id: number;
   seller_id: number;
   last_message_at: string;

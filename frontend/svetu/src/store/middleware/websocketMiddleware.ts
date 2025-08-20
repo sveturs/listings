@@ -15,6 +15,8 @@ import type { RootState } from '../index';
 
 let ws: WebSocket | null = null;
 let heartbeatInterval: NodeJS.Timeout | null = null;
+let reconnectTimeout: NodeJS.Timeout | null = null;
+let isConnecting = false;
 
 export const websocketMiddleware: Middleware =
   (store: any) => (next) => (action: any) => {
@@ -25,10 +27,32 @@ export const websocketMiddleware: Middleware =
       const currentUserId = getCurrentUserId();
       store.dispatch(setCurrentUserId(currentUserId));
 
-      // Закрываем существующее соединение
-      if (ws) {
-        ws.close();
+      // Предотвращаем множественные соединения
+      if (isConnecting) {
+        console.log('[WebSocket] Connection already in progress, skipping...');
+        return next(action);
       }
+
+      // Если уже есть активное соединение, проверяем его состояние
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        console.log('[WebSocket] Already connected, skipping initialization');
+        return next(action);
+      }
+
+      // Закрываем существующее соединение если оно не активно
+      if (ws && ws.readyState !== WebSocket.OPEN) {
+        ws.close();
+        ws = null;
+      }
+
+      // Очищаем таймауты
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+
+      // Устанавливаем флаг подключения
+      isConnecting = true;
 
       // Создаем новое подключение
       ws = chatService.connectWebSocket((event) => {
@@ -139,6 +163,7 @@ export const websocketMiddleware: Middleware =
 
       // Запрашиваем статус всех пользователей при подключении
       ws.addEventListener('open', () => {
+        isConnecting = false; // Сбрасываем флаг подключения
         if (process.env.NODE_ENV === 'development') {
           console.log('WebSocket connected, requesting user statuses');
         }
@@ -174,14 +199,21 @@ export const websocketMiddleware: Middleware =
       });
 
       ws.addEventListener('close', () => {
+        isConnecting = false; // Сбрасываем флаг при закрытии
         if (heartbeatInterval) {
           clearInterval(heartbeatInterval);
           heartbeatInterval = null;
         }
       });
+
+      ws.addEventListener('error', () => {
+        isConnecting = false; // Сбрасываем флаг при ошибке
+        console.error('[WebSocket] Connection error occurred');
+      });
     }
 
     if (action.type === 'chat/closeWebSocket') {
+      isConnecting = false; // Сбрасываем флаг
       if (ws) {
         ws.close();
         ws = null;
@@ -189,6 +221,10 @@ export const websocketMiddleware: Middleware =
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
       }
       store.dispatch(setWebSocket(null));
     }

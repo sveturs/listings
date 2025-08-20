@@ -127,16 +127,40 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		LEFT JOIN marketplace_images mi ON mi.listing_id = c.listing_id
 		WHERE c.buyer_id = $1 OR c.seller_id = $1
 		GROUP BY c.id
+	),
+	storefront_product_images AS (
+		SELECT 
+			c.id as chat_id,
+			json_agg(
+				json_build_object(
+					'id', spi.id,
+					'storefront_product_id', spi.storefront_product_id,
+					'image_url', spi.image_url,
+					'public_url', spi.image_url,
+					'is_main', spi.is_default,
+					'is_default', spi.is_default,
+					'created_at', to_char(spi.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')
+				) ORDER BY spi.is_default DESC, spi.id ASC
+			) as images
+		FROM marketplace_chats c
+		LEFT JOIN storefront_product_images spi ON spi.storefront_product_id = c.storefront_product_id
+		WHERE c.storefront_product_id IS NOT NULL AND (c.buyer_id = $1 OR c.seller_id = $1)
+		GROUP BY c.id
 	)
 	SELECT
-		c.id, COALESCE(c.listing_id, 0), c.buyer_id, c.seller_id,
+		c.id, COALESCE(c.listing_id, 0), COALESCE(c.storefront_product_id, 0), c.buyer_id, c.seller_id,
 		c.last_message_at, c.created_at, c.updated_at, c.is_archived,
 		CASE 
-			WHEN c.listing_id IS NULL THEN '__DIRECT_MESSAGE__'
-			WHEN l.id IS NULL THEN '__DELETED_LISTING__'
-			ELSE l.title
+			WHEN c.storefront_product_id IS NOT NULL AND sp.id IS NOT NULL THEN sp.name
+			WHEN c.listing_id IS NULL AND c.storefront_product_id IS NULL THEN '__DIRECT_MESSAGE__'
+			WHEN c.listing_id IS NOT NULL AND l.id IS NULL THEN '__DELETED_LISTING__'
+			WHEN c.listing_id IS NOT NULL THEN l.title
+			ELSE '__DIRECT_MESSAGE__'
 		END as listing_title,
-		COALESCE(l.price, 0) as listing_price,
+		CASE
+			WHEN c.storefront_product_id IS NOT NULL THEN COALESCE(sp.price, 0)
+			ELSE COALESCE(l.price, 0)
+		END as listing_price,
 		COALESCE(uc.unread_count, 0) as unread_count,
 		-- Информация о пользователе
 		CASE
@@ -148,13 +172,19 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			ELSE buyer.picture_url
 		END as other_user_picture,
 		-- Изображения листинга
-		COALESCE(ci.images, '[]'::json) as listing_images
+		CASE
+			WHEN c.storefront_product_id IS NOT NULL THEN COALESCE(spi.images, '[]'::json)
+			ELSE COALESCE(ci.images, '[]'::json)
+		END as listing_images
 	FROM marketplace_chats c
 	LEFT JOIN marketplace_listings l ON c.listing_id = l.id
+	LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
+	LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
 	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
 	LEFT JOIN users buyer ON c.buyer_id = buyer.id
 	LEFT JOIN users seller ON c.seller_id = seller.id
 	LEFT JOIN chat_images ci ON c.id = ci.chat_id
+	LEFT JOIN storefront_product_images spi ON c.id = spi.chat_id
 	WHERE c.buyer_id = $1 OR c.seller_id = $1
 	ORDER BY c.last_message_at DESC`
 
@@ -175,7 +205,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		chat.Listing = &models.MarketplaceListing{}
 
 		err := rows.Scan(
-			&chat.ID, &chat.ListingID, &chat.BuyerID, &chat.SellerID,
+			&chat.ID, &chat.ListingID, &chat.StorefrontProductID, &chat.BuyerID, &chat.SellerID,
 			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
 			&chat.Listing.Title, &chat.Listing.Price,
 			&chat.UnreadCount,
@@ -594,7 +624,8 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		}
 	} else {
 		// Только для нового чата проверяем листинг
-		if msg.ListingID > 0 && listingExists {
+		switch {
+		case msg.ListingID > 0 && listingExists:
 			// Get seller ID and check listing existence
 			err = tx.QueryRow(ctx, `
                 SELECT user_id
@@ -614,7 +645,10 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			} else {
 				buyerID = msg.SenderID
 			}
-		} else {
+		case msg.StorefrontProductID > 0:
+			// Для товаров витрин: buyerID и sellerID уже определены выше (строки 563-564)
+			// Ничего не делаем, используем уже определенные значения
+		default:
 			// Это прямое сообщение без привязки к объявлению или
 			// существующий чат с удаленным листингом
 			if msg.ReceiverID == msg.SenderID {

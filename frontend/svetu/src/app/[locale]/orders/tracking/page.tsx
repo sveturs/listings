@@ -39,8 +39,8 @@ interface Order {
 }
 
 function OrderTrackingContent() {
-  const t = useTranslations('orders');
-  const tCommon = useTranslations('common');
+  const _t = useTranslations('orders');
+  const _tCommon = useTranslations('common');
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'order' | 'tracking'>('order');
@@ -505,8 +505,8 @@ function OrderTrackingContent() {
               <MagnifyingGlassIcon className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
               <h3 className="text-lg font-semibold mb-2">Заказы не найдены</h3>
               <p className="text-base-content/60">
-                По запросу "{searchQuery}" ничего не найдено. Проверьте
-                правильность номера.
+                По запросу &quot;{searchQuery}&quot; ничего не найдено.
+                Проверьте правильность номера.
               </p>
             </div>
           )}

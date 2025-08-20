@@ -20,7 +20,7 @@ export default function ChatLayout({
   initialSellerId,
   initialContactId,
 }: ChatLayoutProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations('chat');
   const [isMobileListOpen, setIsMobileListOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const { currentChat, setCurrentChat } = useChat();

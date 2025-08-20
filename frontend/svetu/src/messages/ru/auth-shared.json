@@ -1,0 +1,20 @@
+{
+  "authRequired": "Требуется авторизация",
+  "authRequiredDescription": "Пожалуйста, войдите в систему для доступа к этой странице",
+  "login": "Войти",
+  "logout": "Выйти",
+  "register": "Регистрация",
+  "accessDenied": "Доступ запрещен",
+  "accessDeniedDescription": "У вас нет прав для доступа к этой странице",
+  "adminOnly": "Только для администраторов",
+  "adminOnlyDescription": "Эта область доступна только администраторам",
+  "userNotFound": "Пользователь не найден",
+  "invalidCredentials": "Неверные учетные данные",
+  "sessionExpired": "Ваша сессия истекла",
+  "pleaseLogin": "Пожалуйста, войдите для продолжения",
+  "loading": "Загрузка...",
+  "redirecting": "Перенаправление...",
+  "verifyingAccess": "Проверка доступа...",
+  "unauthorized": "Не авторизован",
+  "forbidden": "Запрещено"
+}

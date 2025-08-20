@@ -5,11 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/hooks/useChat';
 import { tokenManager } from '@/utils/tokenManager';
 
+// Глобальный флаг для предотвращения множественных инициализаций
+let globalWebSocketInitialized = false;
+
 export default function WebSocketManager() {
   const { user, isAuthenticated } = useAuth();
   const { initWebSocket, closeWebSocket, loadChats } = useChat();
-  const isInitialized = useRef(false);
+  const localInitRef = useRef(false);
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Очищаем предыдущий таймаут
@@ -19,33 +23,46 @@ export default function WebSocketManager() {
     }
 
     // Инициализируем WebSocket только если пользователь авторизован
-    if (isAuthenticated && user && !isInitialized.current) {
-      // Небольшая задержка для того, чтобы токен успел сохраниться
-      initTimeoutRef.current = setTimeout(() => {
-        const hasToken = tokenManager.getAccessToken() !== null;
+    if (isAuthenticated && user) {
+      // Проверяем, изменился ли пользователь
+      const userChanged =
+        userIdRef.current !== null && userIdRef.current !== user.id;
+      userIdRef.current = user.id;
 
-        if (hasToken && !isInitialized.current) {
-          // console.log(
-          //   '[WebSocketManager] Initializing WebSocket for user:',
-          //   user.id,
-          //   'Token available:',
-          //   hasToken
-          // );
-          isInitialized.current = true;
-          // Инициализируем WebSocket с функцией получения ID пользователя
-          initWebSocket(() => user.id);
-          // Загружаем чаты только если пользователь авторизован
-          loadChats();
-        } else {
-          // console.log('[WebSocketManager] Waiting for token, will retry...');
-        }
-      }, 500); // Задержка 500мс
+      // Если пользователь изменился, закрываем старое соединение
+      if (userChanged && localInitRef.current) {
+        globalWebSocketInitialized = false;
+        localInitRef.current = false;
+        closeWebSocket();
+      }
+
+      // Инициализируем только если еще не инициализировано
+      if (!globalWebSocketInitialized && !localInitRef.current) {
+        // Небольшая задержка для того, чтобы токен успел сохраниться
+        initTimeoutRef.current = setTimeout(() => {
+          const hasToken = tokenManager.getAccessToken() !== null;
+
+          if (
+            hasToken &&
+            !globalWebSocketInitialized &&
+            !localInitRef.current
+          ) {
+            globalWebSocketInitialized = true;
+            localInitRef.current = true;
+            // Инициализируем WebSocket с функцией получения ID пользователя
+            initWebSocket(() => user.id);
+            // Загружаем чаты только если пользователь авторизован
+            loadChats();
+          }
+        }, 500); // Задержка 500мс
+      }
     }
 
     // Отключаем WebSocket при выходе
-    if (!isAuthenticated && isInitialized.current) {
-      // console.log('[WebSocketManager] User logged out, cleaning up WebSocket');
-      isInitialized.current = false;
+    if (!isAuthenticated && localInitRef.current) {
+      globalWebSocketInitialized = false;
+      localInitRef.current = false;
+      userIdRef.current = null;
       closeWebSocket();
     }
 
@@ -55,11 +72,11 @@ export default function WebSocketManager() {
         clearTimeout(initTimeoutRef.current);
         initTimeoutRef.current = null;
       }
-      if (isInitialized.current) {
-        // console.log(
-        //   '[WebSocketManager] Component unmounting, cleaning up WebSocket'
-        // );
-        closeWebSocket();
+      // При размонтировании сбрасываем только локальный флаг
+      // глобальный флаг сбрасывается только при выходе или смене пользователя
+      if (localInitRef.current) {
+        localInitRef.current = false;
+        // Не закрываем WebSocket при размонтировании, если компонент может быть перемонтирован
       }
     };
   }, [isAuthenticated, user, initWebSocket, closeWebSocket, loadChats]);

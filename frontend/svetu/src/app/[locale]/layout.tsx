@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
-import { loadMessages } from '@/lib/i18n/loadMessages';
+import { loadMessages } from '@/i18n/loadMessages';
 import HeaderWrapper from '@/components/HeaderWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
@@ -14,6 +14,7 @@ import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesCo
 import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
 import { CartSyncProvider } from '@/components/CartSyncProvider';
 import { themeInitScript } from '@/scripts/theme-init';
+import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -90,11 +91,15 @@ export default async function RootLayout({
   const messages = await loadMessages(locale as any, [
     'common',
     'auth',
+    'auth-shared', // Добавляем для AdminGuard и других компонентов защиты
+    'balance', // Добавляем для BalanceWidget
     'misc',
     'cart',
+    'chat', // Добавляем chat модуль для страницы чата
     'map', // Добавляем map модуль для компонентов GIS
     'marketplace', // И marketplace, так как многие компоненты его используют
     'admin', // Добавляем admin для страниц админки
+    'profile', // Добавляем profile для страниц профиля
     'cars', // Добавляем cars для car-selector
     'search', // Добавляем search для SearchBar
     'checkout', // Добавляем checkout для страницы оформления заказа
@@ -116,13 +121,15 @@ export default async function RootLayout({
             <AuthProvider>
               <VisibleCitiesProvider>
                 <CartSyncProvider>
-                  <AuthStateManager />
-                  <WebSocketManager />
-                  <HeaderWrapper />
-                  <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                    {children}
-                  </main>
-                  <SmartMobileBottomNav />
+                  <ErrorBoundaryClass name="RootLayout">
+                    <AuthStateManager />
+                    <WebSocketManager />
+                    <HeaderWrapper />
+                    <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                      {children}
+                    </main>
+                    <SmartMobileBottomNav />
+                  </ErrorBoundaryClass>
                 </CartSyncProvider>
               </VisibleCitiesProvider>
             </AuthProvider>

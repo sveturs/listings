@@ -4,16 +4,9 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import {
-  Eye,
-  ShoppingBag,
   Package,
-  CreditCard,
-  Map,
-  Image as ImageIcon,
   Layout,
   Maximize2,
-  MessageSquare,
-  TrendingUp,
   Settings,
   Grid,
   List,
@@ -35,7 +28,7 @@ export default function ViewDemoPage() {
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [gridColumns, setGridColumns] = useState<1 | 2 | 3 | 4>(3);
+  const [gridColumns, setGridColumns] = useState<1 | 2 | 3>(3);
 
   // Примеры реальных ID из базы данных
   const marketplaceListingId = 106; // Volkswagen Atlas Cross Sport
@@ -47,15 +40,12 @@ export default function ViewDemoPage() {
   const sampleMarketplaceListing: MarketplaceItem = {
     id: 106,
     user_id: 8,
-    category_id: 1003,
     title: 'Volkswagen Atlas Cross Sport',
     description: 'Отличный автомобиль в хорошем состоянии',
     price: 500000,
     condition: 'used',
     status: 'active',
     location: 'Белград',
-    latitude: 44.8178131,
-    longitude: 20.4568974,
     views_count: 125,
     created_at: '2025-08-02T22:11:25Z',
     updated_at: '2025-08-02T22:11:25Z',
@@ -80,36 +70,16 @@ export default function ViewDemoPage() {
     },
     attributes: [
       {
-        id: 2204,
         attribute_id: 2204,
-        name: 'fuel_type',
         attribute_name: 'fuel_type',
-        display_name: 'Gorivo',
-        attribute_type: 'select',
-        text_value: 'petrol',
-        display_value: 'Benzin',
         value: 'petrol',
-        is_required: true,
-        show_in_card: true,
-        show_in_list: false,
       },
       {
-        id: 2205,
         attribute_id: 2205,
-        name: 'transmission',
         attribute_name: 'transmission',
-        display_name: 'Menjač',
-        attribute_type: 'select',
-        text_value: 'automatic',
-        display_value: 'Automatik',
         value: 'automatic',
-        is_required: true,
-        show_in_card: true,
-        show_in_list: false,
       },
     ],
-    is_favorite: false,
-    show_on_map: true,
     has_discount: false,
   };
 
@@ -122,8 +92,9 @@ export default function ViewDemoPage() {
     currency: 'RSD',
     images: [
       {
-        id: '1',
+        id: 1,
         url: 'http://localhost:9000/listings/109/1754253315899650123.jpg',
+        publicUrl: 'http://localhost:9000/listings/109/1754253315899650123.jpg',
         isMain: true,
       },
     ],
@@ -139,7 +110,7 @@ export default function ViewDemoPage() {
       id: 1,
       name: 'Demo Store',
       rating: 4.8,
-      reviewsCount: 125,
+      totalReviews: 125,
     },
     location: {
       city: 'Белград',
@@ -154,7 +125,6 @@ export default function ViewDemoPage() {
       name: 'Агентство недвижимости',
       slug: 'agenstvo',
     },
-    isFavorite: false,
     viewsCount: 250,
     variants: [],
   };
@@ -377,11 +347,11 @@ export default function ViewDemoPage() {
 
             {viewMode === 'grid' && (
               <div className="btn-group">
-                {[1, 2, 3, 4].map((cols) => (
+                {[1, 2, 3].map((cols) => (
                   <button
                     key={cols}
                     className={`btn ${gridColumns === cols ? 'btn-active' : ''}`}
-                    onClick={() => setGridColumns(cols as 1 | 2 | 3 | 4)}
+                    onClick={() => setGridColumns(cols as 1 | 2 | 3)}
                   >
                     {cols} кол.
                   </button>
@@ -611,7 +581,6 @@ export default function ViewDemoPage() {
           isOpen={showPriceHistory}
           onClose={() => setShowPriceHistory(false)}
           listingId={marketplaceListingId}
-          currentPrice={500000}
         />
       )}
 
@@ -639,12 +608,12 @@ export default function ViewDemoPage() {
 
       {showImageGallery && (
         <ImageGallery
+          isOpen={showImageGallery}
           images={[
             'http://localhost:9000/listings/106/1754172685620502083.jpg',
             'http://localhost:9000/listings/109/1754253315899650123.jpg',
             'http://localhost:9000/listings/110/1754410715141164922.jpg',
           ]}
-          currentIndex={0}
           onClose={() => setShowImageGallery(false)}
         />
       )}

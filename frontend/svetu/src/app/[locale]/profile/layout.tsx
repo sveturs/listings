@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { loadMessages } from '@/lib/i18n/loadMessages';
+import { loadMessages } from '@/i18n/loadMessages';
 
 export default async function ProfileLayout({
   children,
@@ -16,6 +16,7 @@ export default async function ProfileLayout({
     'storefronts',
     'admin',
     'orders',
+    'balance', // Добавляем модуль balance для BalanceWidget
   ]);
 
   return (

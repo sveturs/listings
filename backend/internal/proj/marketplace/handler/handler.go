@@ -413,6 +413,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Роуты для работы с вложениями с rate limiting
 	chat.Post("/messages/:id/attachments", mw.RateLimitMessages(), h.Chat.UploadAttachments)
 	chat.Get("/attachments/:id", h.Chat.GetAttachment)
+	chat.Get("/attachments/:id/download", h.Chat.GetAttachmentFile) // Новый защищенный роут для скачивания файлов
 	chat.Delete("/attachments/:id", h.Chat.DeleteAttachment)
 	chat.Get("/unread-count", h.Chat.GetUnreadCount)
 

@@ -7,7 +7,6 @@ import {
   MapPinIcon,
   CheckCircleIcon,
   ClockIcon,
-  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface TrackingEvent {

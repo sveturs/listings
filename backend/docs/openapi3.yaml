@@ -8867,6 +8867,48 @@ paths:
       summary: Get attachment info
       tags:
         - marketplace-chat
+  "/api/v1/marketplace/attachments/{id}/download":
+    get:
+      description: Downloads an attachment file with authorization check
+      parameters:
+        - description: Attachment ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: File content
+        "400":
+          description: marketplace.invalidAttachmentId
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "401":
+          description: auth.required
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "403":
+          description: marketplace.accessDenied
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: marketplace.attachmentNotFound
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Download attachment file
+      tags:
+        - marketplace-chat
   /api/v1/marketplace/categories:
     get:
       description: Returns all marketplace categories
@@ -10764,6 +10806,47 @@ paths:
       summary: Moderate image content
       tags:
         - marketplace-images
+  /api/v1/marketplace/neighborhood-stats:
+    get:
+      description: Get statistics about listings in user's neighborhood
+      parameters:
+        - description: Center latitude
+          in: query
+          name: lat
+          schema:
+            type: number
+        - description: Center longitude
+          in: query
+          name: lon
+          schema:
+            type: number
+        - description: Radius in kilometers (default 5)
+          in: query
+          name: radius
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_marketplace_handler.NeighborhoodStats\
+                          Response"
+                    type: object
+        "500":
+          description: marketplace.statsError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get neighborhood statistics
+      tags:
+        - marketplace
   "/api/v1/marketplace/orders/{id}":
     get:
       description: Get detailed information about specific order
@@ -15105,7 +15188,7 @@ paths:
         - search-config
   /api/v1/search/suggestions:
     get:
-      description: Returns autocomplete suggestions based on query
+      description: Returns autocomplete suggestions with types (search, product, category)
       parameters:
         - description: Search query (alias for prefix)
           in: query
@@ -15129,9 +15212,15 @@ paths:
           schema:
             type: integer
             default: 10
+        - description: "Comma-separated types: queries,categories,products"
+          in: query
+          name: types
+          schema:
+            type: string
+            default: '"queries,categories,products"'
       responses:
         "200":
-          description: Suggestions list
+          description: Enhanced suggestions list
           content:
             application/json:
               schema:
@@ -15140,7 +15229,8 @@ paths:
                   - properties:
                       data:
                         items:
-                          type: string
+                          $ref: "#/components/schemas/backend_internal_proj_marketplace_service.Suggestio\
+                            nItem"
                         type: array
                     type: object
         "400":
@@ -18393,6 +18483,38 @@ paths:
       tags:
         - storefronts
         - map
+  "/api/v1/storefronts/products/{id}":
+    get:
+      description: Returns details of a specific product using only product ID
+      parameters:
+        - description: Product ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_internal_domain_models.StorefrontProduct"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      summary: Get a storefront product by ID
+      tags:
+        - storefront-products
   /api/v1/storefronts/search:
     get:
       description: Performs advanced search of storefronts using OpenSearch engine
@@ -24795,6 +24917,37 @@ components:
         similarity_score:
           type: number
       type: object
+    backend_internal_proj_marketplace_service.SuggestionItem:
+      properties:
+        category_id:
+          type: integer
+        count:
+          type: integer
+        icon:
+          type: string
+        label:
+          type: string
+        metadata:
+          additionalProperties: true
+          type: object
+        product_id:
+          type: integer
+        type:
+          $ref: "#/components/schemas/backend_internal_proj_marketplace_service.Suggestio\
+            nType"
+        value:
+          type: string
+      type: object
+    backend_internal_proj_marketplace_service.SuggestionType:
+      enum:
+        - query
+        - category
+        - product
+      type: string
+      x-enum-varnames:
+        - SuggestionTypeQuery
+        - SuggestionTypeCategory
+        - SuggestionTypeProduct
     backend_internal_proj_postexpress_models.CalculateRateRequest:
       properties:
         cod_amount:
@@ -26658,6 +26811,21 @@ components:
           items:
             type: string
           type: array
+      type: object
+    internal_proj_marketplace_handler.NeighborhoodStatsResponse:
+      properties:
+        center_lat:
+          type: number
+        center_lon:
+          type: number
+        new_today:
+          type: integer
+        radius_km:
+          type: number
+        total_listings:
+          type: integer
+        within_radius:
+          type: integer
       type: object
     internal_proj_marketplace_handler.OpenDisputeRequest:
       properties:

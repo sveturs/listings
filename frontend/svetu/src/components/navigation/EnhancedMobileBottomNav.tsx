@@ -24,7 +24,7 @@ export const EnhancedMobileBottomNav: React.FC<
   EnhancedMobileBottomNavProps
 > = ({ onClose }) => {
   const pathname = usePathname();
-  const t = useTranslations('navigation');
+  const t = useTranslations('common');
   const { isAuthenticated } = useAuthContext();
   const [mounted, setMounted] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -36,30 +36,30 @@ export const EnhancedMobileBottomNav: React.FC<
   const navItems: NavItem[] = [
     {
       icon: Home,
-      label: t('home'),
+      label: t('navigation.home'),
       href: '/',
     },
     {
       icon: Search,
-      label: t('search'),
+      label: t('navigation.search'),
       href: '/search',
     },
     {
       icon: PlusCircle,
-      label: t('create'),
+      label: t('navigation.create'),
       href: '/create-listing-choice',
       color: 'text-primary',
     },
     {
       icon: MessageCircle,
-      label: t('chats'),
+      label: t('navigation.chats'),
       href: '/chat',
       authRequired: true,
       badge: 3, // TODO: подключить реальные уведомления
     },
     {
       icon: User,
-      label: t('profile'),
+      label: t('navigation.profile'),
       href: mounted && isAuthenticated ? '/profile' : '/auth/login',
     },
   ];
@@ -180,7 +180,7 @@ export const EnhancedMobileBottomNav: React.FC<
           <button
             onClick={onClose}
             className="btn btn-ghost btn-sm btn-circle ml-2"
-            aria-label={t('close')}
+            aria-label={t('navigation.close')}
           >
             <X className="w-5 h-5" />
           </button>
