@@ -14,7 +14,7 @@ import { IMPORT_STATUS_COLORS, IMPORT_STATUS_ICONS } from '@/types/import';
 
 export default function ImportJobDetails() {
   const dispatch = useAppDispatch();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const { isJobDetailsModalOpen, currentJob, isLoading } = useAppSelector(
     (state) => state.import
   );

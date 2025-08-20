@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { BalanceWidget } from '@/components/balance/BalanceWidget';
 
 export default function SuccessClient() {
-  const t = useTranslations('admin');
+  const t = useTranslations('balance');
   const tProfile = useTranslations('profile');
   const locale = useLocale();
   const searchParams = useSearchParams();

@@ -43,7 +43,9 @@ export const ThemeToggle: React.FC = () => {
     <button
       onClick={toggleTheme}
       className="btn btn-ghost btn-circle tooltip tooltip-bottom"
-      data-tip={theme === 'light' ? t('header.theme.dark') : t('header.theme.light')}
+      data-tip={
+        theme === 'light' ? t('header.theme.dark') : t('header.theme.light')
+      }
       aria-label={
         theme === 'light' ? 'Включить темную тему' : 'Включить светлую тему'
       }

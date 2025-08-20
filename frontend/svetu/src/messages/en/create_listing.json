@@ -1,0 +1,366 @@
+{
+  "auth_required": "You need to log in to create a listing",
+  "location_detected_from_photo": "Location detected from photo",
+  "privacy_settings": "Privacy settings",
+
+  "choice": {
+    "title": "Choose how to create your listing",
+    "subtitle": "Create a listing the traditional way or with AI assistance",
+    "selected": "Selected",
+
+    "free_option": {
+      "badge": "Free",
+      "title": "Traditional Creation",
+      "subtitle": "Step-by-step listing creation with guidance",
+      "time_value": "5-10",
+      "time": "minutes",
+      "conversion_value": "85%",
+      "conversion": "conversion",
+      "cost_value": "$0",
+      "cost": "cost",
+      "info": "Proven method for creating quality listings",
+
+      "features": {
+        "templates": "Ready-made templates",
+        "drag_drop": "Easy photo upload",
+        "price_compare": "Price comparison",
+        "optimal_time": "Optimal posting time",
+        "social_import": "Social media import",
+        "error_check": "Error checking"
+      }
+    },
+
+    "ai_option": {
+      "badge": "AI Assistant",
+      "title": "AI Creation",
+      "subtitle": "Smart assistant creates listing for you",
+      "time_value": "2-3",
+      "time": "minutes",
+      "conversion_value": "95%",
+      "conversion": "conversion",
+      "cost_value": "Free",
+      "cost": "in beta",
+      "info": "Experimental feature. Some inaccuracies may occur.",
+
+      "features": {
+        "photo_recognition": "Product recognition from photos",
+        "auto_description": "Automatic description",
+        "price_analysis": "Market price analysis",
+        "ab_testing": "A/B testing for titles",
+        "multilingual": "Auto-translation to 3 languages",
+        "forecast": "Sales forecast"
+      }
+    },
+
+    "comparison": {
+      "title": "Feature Comparison",
+      "feature": "Feature",
+      "free_column": "Traditional",
+      "ai_column": "With AI",
+      "creation_time": "Creation time",
+      "creation_time_free": "5-10 min",
+      "creation_time_ai": "2-3 min",
+      "photo_recognition": "Photo recognition",
+      "auto_description": "Auto description",
+      "auto_description_free": "Templates",
+      "auto_description_ai": "AI generation",
+      "price_analysis": "Price analysis",
+      "price_analysis_free": "Manual",
+      "price_analysis_ai": "Automatic",
+      "ab_testing": "A/B testing",
+      "multilingual": "Multilingual",
+      "multilingual_ai": "Auto-translation",
+      "cost": "Cost",
+      "cost_free": "Free",
+      "cost_ai": "Free (beta)"
+    }
+  },
+
+  "ai": {
+    "title": "AI-Powered Listing Creation",
+    "subtitle": "Upload photos - we'll handle the rest",
+    "back_to_choice": "Back to choice",
+
+    "stats": {
+      "creation_time": "2 min",
+      "creation_label": "creation",
+      "accuracy": "95%",
+      "accuracy_label": "accuracy",
+      "languages": "3",
+      "languages_label": "languages"
+    },
+
+    "upload": {
+      "title": "Upload product photos",
+      "subtitle": "AI will automatically detect category, create description and set price",
+      "ai_recognition": "AI recognition",
+      "time": "2-3 min",
+      "add_more": "Add more",
+      "import_instagram": "Import from Instagram",
+      "import_facebook": "Import from Facebook",
+      "voice_input": "Voice input",
+      "stop_recording": "Stop recording",
+      "create_with_ai": "Create with AI"
+    },
+
+    "processing": {
+      "title": "AI is analyzing your photos...",
+      "recognizing": "Recognizing product from photos",
+      "analyzing_market": "Analyzing market prices",
+      "generating_description": "Generating description",
+      "seo_optimization": "SEO optimization",
+      "creating_translations": "Creating translations"
+    },
+
+    "enhance": {
+      "success_title": "AI analysis complete!",
+      "success_subtitle": "Review and edit the data if needed",
+      "photos_title": "Photos",
+      "main_photo": "Main",
+      "ai_recommends": "AI recommends adding:",
+      "category_title": "Category",
+      "category_auto_selected": "AI automatically selected category: {category}",
+      "manual_category_selection": "Change category manually:",
+      "select_category": "Select category",
+      "title_ab_testing": "A/B testing for titles",
+      "change": "Change",
+      "ai_choice": "AI choice",
+      "ai_will_test": "AI will automatically test all variants and choose the best one",
+      "description_title": "Description",
+      "seo_optimized": "SEO optimized",
+      "keywords": "Keywords",
+      "location_condition_title": "Location and condition",
+      "city": "City",
+      "condition": "Condition",
+      "condition_new": "New",
+      "condition_used": "Used",
+      "condition_refurbished": "Refurbished"
+    },
+
+    "location": {
+      "detected_from": "Location detected",
+      "from_photo": "from photo",
+      "from_profile": "from profile",
+      "manually": "manually",
+      "coordinates": "Coordinates:",
+      "not_detected": "Location not detected",
+      "not_detected_hint": "Add address manually or select on map",
+      "refine_on_map": "Refine on map",
+      "select_on_map": "Select on map",
+      "ai_suggests": "AI suggests:"
+    },
+
+    "price": {
+      "title": "Price with AI analysis",
+      "currency": "RSD",
+      "min": "Min:",
+      "max": "Max:",
+      "ai_analyzed": "AI analyzed market prices"
+    },
+
+    "attributes": {
+      "title": "Attributes",
+      "ai_detected": "(AI detected)",
+      "category_based": "(for category)",
+      "choose": "Choose"
+    },
+
+    "translations": {
+      "title": "Translations",
+      "update": "Update",
+      "language_title": "Title",
+      "language_description": "Description",
+      "info": "AI will automatically translate the listing to all languages"
+    },
+
+    "social": {
+      "title": "Social media posts"
+    },
+
+    "prediction": {
+      "title": "Effectiveness forecast",
+      "views": "views per day",
+      "messages": "messages",
+      "days_to_sell": "days to sell",
+      "sell_probability": "sell probability"
+    },
+
+    "actions": {
+      "continue_to_publish": "Continue to publish",
+      "save_draft": "Save draft",
+      "publishing": "Publishing...",
+      "publish_now": "Publish now",
+      "back_to_edit": "Back to edit"
+    },
+
+    "publish": {
+      "title": "Ready to publish!",
+      "subtitle": "Your listing is created and ready to be posted",
+      "specifications": "Specifications",
+      "views_per_day": "views per day",
+      "high_interest": "High interest",
+      "optimal_time": "Optimal time",
+      "optimal_time_desc": "Best time to publish: {time}",
+      "schedule": "Schedule",
+      "social_auto": "Auto-posting",
+      "social_auto_desc": "Automatically post to social media",
+      "enable": "Enable",
+      "ai_insights_title": "AI Insights",
+      "demand": "Demand",
+      "target_audience": "Target audience",
+      "recommendations": "Recommendations",
+      "location_picker_title": "Location picker",
+      "social_proof": "Already {count} users created listings with AI"
+    },
+
+    "features": {
+      "voice_coming_soon": "Voice input coming soon",
+      "import_coming_soon": "Import from {platform} coming soon"
+    },
+
+    "errors": {
+      "ai_processing": "Error during AI analysis. Please try again.",
+      "description_generation": "Error generating description",
+      "translation_update": "Error updating translations",
+      "publish_error": "Error publishing listing",
+      "attribute_error": "Error in product attributes",
+      "validation_error": "Data validation error",
+      "network_error": "Network error. Check your internet connection",
+      "missing_attributes": "Please fill required fields: {attributes}"
+    },
+
+    "success_messages": {
+      "description_updated": "Description updated",
+      "translations_updated": "Translations updated",
+      "listing_created": "Listing successfully created!",
+      "location_updated": "Location updated"
+    },
+
+    "category_detection": {
+      "low_confidence": "AI is not confident about the category. Please check selection.",
+      "success": "AI detected category: {category}"
+    },
+
+    "description_section": {
+      "update": "Update"
+    }
+  },
+
+  "draft": {
+    "saving": "Saving draft...",
+    "unsavedChanges": "Unsaved changes",
+    "viewDrafts": "View drafts",
+    "offlineMode": "Offline mode",
+    "myDrafts": "My drafts",
+    "noDrafts": "You don't have any drafts yet",
+    "untitled": "Untitled",
+    "complete": "complete",
+    "open": "Open",
+    "export": "Export",
+    "delete": "Delete",
+    "close": "Close",
+    "deleted": "Draft deleted",
+    "deleteError": "Error deleting draft",
+    "exported": "Draft exported"
+  },
+
+  "category": "Category",
+  "trust": "Trust",
+  "delivery": "Delivery",
+  "title": "Listing title",
+  "description": "Listing description",
+  "selected": "Selected",
+  "tip_title": "Tip",
+  "tip_description": "Choose the most accurate category for better visibility",
+
+  "basic_info": {
+    "title": "Basic information",
+    "description": "Enter title, description and price of the item"
+  },
+
+  "script_mode": "Writing mode",
+  "characters": "characters",
+  "price": "Price",
+  "currency": "Currency",
+  "condition": "Condition",
+
+  "regional_tips": {
+    "title": "Regional tips",
+    "pricing": "Use dinars (RSD) for pricing",
+    "description": "Use clear local terms",
+    "honesty": "Be honest about condition"
+  },
+
+  "uploading": "Uploading photos...",
+  "upload_instruction": "Drag photos here or click to select",
+  "supported_formats": "Supported formats: JPEG, PNG, WebP",
+  "max_size": "Max size: 10 MB",
+  "photos": "photos",
+  "gallery": "Gallery",
+  "set_main": "Set as main",
+  "remove": "Remove",
+  "main": "Main",
+
+  "photos": {
+    "tips": {
+      "title": "Photo tips",
+      "quality": "Take clear, quality shots",
+      "lighting": "Use good lighting",
+      "angles": "Shoot from different angles",
+      "defects": "Show all defects honestly"
+    },
+    "trust_tip": {
+      "title": "Trust tip",
+      "description": "Quality photos increase buyer trust by 40%"
+    }
+  },
+
+  "setup_title": "Trust setup",
+  "setup_description": "Configure settings to increase buyer trust",
+  "phone_verification": "Phone verification",
+  "phone_verification_info": "Verify your phone number to increase trust",
+  "local_operators_only": "We work only with local operators",
+  "verifying": "Verifying...",
+  "verify_phone": "Verify phone",
+  "phone_verified": "Phone verified",
+  "preferred_meeting": "Preferred meeting",
+  "meeting_places": "Meeting places",
+  "meeting_places_hint": "Specify convenient places to meet with buyers",
+  "available_hours": "Available hours",
+  "available_hours_hint": "When you're available for meetings and calls",
+
+  "methods_title": "Payment methods",
+  "cod_calculator": "Cash on delivery calculator",
+  "cod_fee": "Cash on delivery fee",
+  "example": "Example",
+  "negotiable_price": "Price negotiable",
+  "bundle_deals": "Discounts for multiple items",
+
+  "attributes": {
+    "title": "Product attributes",
+    "description": "Fill in attributes for your category",
+    "none_required": "No required attributes for this category",
+    "tip": "Tip",
+    "tip_description": "Filling attributes helps buyers find your item",
+
+    "groups": {
+      "basic": "Basic",
+      "technical": "Technical",
+      "condition": "Condition",
+      "accessories": "Accessories",
+      "dimensions": "Dimensions",
+      "other": "Other",
+      "car_selection": "Car selection"
+    }
+  },
+
+  "errors": {
+    "image_upload_failed": "Image upload failed",
+    "publish_failed": "Failed to publish listing",
+    "draft_save_failed": "Failed to save draft"
+  },
+
+  "cars": {
+    "selectCar": "Select car"
+  }
+}

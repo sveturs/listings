@@ -40,7 +40,7 @@ export default function ImportWizard({
   onClose,
 }: ImportWizardProps) {
   const dispatch = useAppDispatch();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const {
     isImportModalOpen,
     selectedFiles,

@@ -230,6 +230,15 @@ export default function ExamplesPage() {
       icon: '🇷🇸',
       badge: 'NEW',
     },
+    {
+      title: 'Районы Нови-Сада',
+      description:
+        'Интерактивная карта с полигонами районов: Ветерник, Адице, Детелинара и другие',
+      href: '/examples/novi-sad-districts',
+      color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+      icon: '🗺️',
+      badge: 'NEW',
+    },
   ];
 
   return (
@@ -306,7 +315,7 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 27 UI/UX improvements have been successfully implemented!
+              All 28 UI/UX improvements have been successfully implemented!
             </p>
           </div>
         </div>

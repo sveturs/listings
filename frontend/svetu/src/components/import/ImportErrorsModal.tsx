@@ -9,7 +9,7 @@ import type { ImportError } from '@/types/import';
 
 export default function ImportErrorsModal() {
   const dispatch = useAppDispatch();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const { isErrorsModalOpen, currentJob } = useAppSelector(
     (state) => state.import
   );

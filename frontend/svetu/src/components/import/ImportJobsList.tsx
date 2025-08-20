@@ -27,7 +27,7 @@ export default function ImportJobsList({
   refreshInterval = 5000,
 }: ImportJobsListProps) {
   const dispatch = useAppDispatch();
-  const t = useTranslations('import');
+  const t = useTranslations('storefronts');
   const { jobs, isLoading } = useAppSelector((state) => state.import);
 
   const [selectedStatus, setSelectedStatus] = useState<string>('all');

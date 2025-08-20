@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { PostExpressTracker } from '@/components/delivery/postexpress';
+import { BEXTracker } from '@/components/delivery/bexexpress';
 import { PageTransition } from '@/components/ui/PageTransition';
 import {
   TruckIcon,
@@ -167,8 +168,9 @@ function OrderTrackingContent() {
               Отслеживание заказов
             </h1>
             <p className="text-base-content/70 max-w-2xl mx-auto">
-              Найдите свой заказ по номеру заказа или трек-номеру Post Express и
-              отследите статус доставки в реальном времени
+              Найдите свой заказ по номеру заказа или трек-номеру BEX Express /
+              Post Express и отследите статус доставки в реальном времени с
+              картой маршрута
             </p>
           </div>
 
@@ -206,7 +208,7 @@ function OrderTrackingContent() {
                       placeholder={
                         searchType === 'order'
                           ? 'Введите номер заказа (например: ORD-2024-001)'
-                          : 'Введите трек-номер Post Express (например: PE123456789RS)'
+                          : 'Введите трек-номер BEX или Post Express (например: BEX123456789RS)'
                       }
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -464,7 +466,18 @@ function OrderTrackingContent() {
                   <PostExpressTracker
                     initialTrackingNumber={selectedOrder.tracking_number}
                     onTrackingUpdate={(shipment) => {
-                      console.log('Tracking updated:', shipment);
+                      console.log('PostExpress tracking updated:', shipment);
+                    }}
+                  />
+                )}
+
+              {/* BEX Express Tracking */}
+              {selectedOrder.tracking_number &&
+                selectedOrder.delivery_provider === 'bex' && (
+                  <BEXTracker
+                    initialTrackingNumber={selectedOrder.tracking_number}
+                    onTrackingUpdate={(shipment) => {
+                      console.log('BEX tracking updated:', shipment);
                     }}
                   />
                 )}
@@ -477,12 +490,47 @@ function OrderTrackingContent() {
             !orders.length &&
             !loading &&
             !error && (
-              <PostExpressTracker
-                initialTrackingNumber={searchQuery}
-                onTrackingUpdate={(shipment) => {
-                  console.log('Tracking updated:', shipment);
-                }}
-              />
+              <div className="space-y-6">
+                {/* Определяем провайдера по формату трек-номера */}
+                {searchQuery.toLowerCase().startsWith('pe') ||
+                searchQuery.toLowerCase().includes('postexpress') ? (
+                  <PostExpressTracker
+                    initialTrackingNumber={searchQuery}
+                    onTrackingUpdate={(shipment) => {
+                      console.log('PostExpress tracking updated:', shipment);
+                    }}
+                  />
+                ) : searchQuery.toLowerCase().startsWith('bex') ||
+                  searchQuery.toLowerCase().includes('bex') ? (
+                  <BEXTracker
+                    initialTrackingNumber={searchQuery}
+                    onTrackingUpdate={(shipment) => {
+                      console.log('BEX tracking updated:', shipment);
+                    }}
+                  />
+                ) : (
+                  // Пробуем оба провайдера
+                  <>
+                    <div className="text-center">
+                      <p className="text-base-content/70 mb-4">
+                        Проверяем трек-номер в различных службах доставки...
+                      </p>
+                    </div>
+                    <BEXTracker
+                      initialTrackingNumber={searchQuery}
+                      onTrackingUpdate={(shipment) => {
+                        console.log('BEX tracking updated:', shipment);
+                      }}
+                    />
+                    <PostExpressTracker
+                      initialTrackingNumber={searchQuery}
+                      onTrackingUpdate={(shipment) => {
+                        console.log('PostExpress tracking updated:', shipment);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
             )}
 
           {/* Empty State */}
@@ -493,8 +541,8 @@ function OrderTrackingContent() {
                 Отслеживание заказов
               </h3>
               <p className="text-base-content/60 max-w-md mx-auto">
-                Введите номер заказа или трек-номер Post Express для получения
-                информации о статусе доставки
+                Введите номер заказа или трек-номер BEX Express / Post Express
+                для получения информации о статусе доставки с картой маршрута
               </p>
             </div>
           )}

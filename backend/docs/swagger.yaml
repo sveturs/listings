@@ -4468,6 +4468,296 @@ definitions:
       transport_mode:
         type: string
     type: object
+  backend_internal_proj_bexexpress_models.AddressSuggestion:
+    properties:
+      full_address:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      municipality:
+        type: string
+      municipality_id:
+        type: integer
+      place_id:
+        type: string
+      place_name:
+        type: string
+      postal_code:
+        type: string
+      street_id:
+        type: string
+      street_name:
+        type: string
+    type: object
+  backend_internal_proj_bexexpress_models.BEXParcelShop:
+    properties:
+      address:
+        type: string
+      bex_id:
+        type: integer
+      city:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      updated_at:
+        type: string
+      working_hours:
+        items:
+          type: integer
+        type: array
+    type: object
+  backend_internal_proj_bexexpress_models.BEXShipment:
+    properties:
+      bex_shipment_id:
+        description: BEX идентификаторы
+        type: integer
+      cod_amount:
+        type: number
+      comment_private:
+        type: string
+      comment_public:
+        description: Комментарии
+        type: string
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      delivery_instructions:
+        type: string
+      failed_at:
+        type: string
+      failed_reason:
+        type: string
+      id:
+        type: integer
+      insurance_amount:
+        type: number
+      label_base64:
+        description: Документы
+        type: string
+      label_url:
+        type: string
+      marketplace_order_id:
+        type: integer
+      pay_type:
+        description: Услуги
+        type: integer
+      personal_delivery:
+        type: boolean
+      picked_up_at:
+        type: string
+      recipient_address:
+        type: string
+      recipient_city:
+        type: string
+      recipient_email:
+        type: string
+      recipient_name:
+        description: Получатель
+        type: string
+      recipient_phone:
+        type: string
+      recipient_postal_code:
+        type: string
+      registered_at:
+        description: Временные метки
+        type: string
+      return_package:
+        type: boolean
+      return_signed_confirmation:
+        type: boolean
+      return_signed_invoices:
+        type: boolean
+      returned_at:
+        type: string
+      sender_address:
+        type: string
+      sender_city:
+        type: string
+      sender_email:
+        type: string
+      sender_name:
+        description: Отправитель
+        type: string
+      sender_phone:
+        type: string
+      sender_postal_code:
+        type: string
+      shipment_category:
+        type: integer
+      shipment_contents:
+        type: integer
+      shipment_type:
+        description: Параметры посылки
+        type: integer
+      status:
+        allOf:
+        - $ref: '#/definitions/backend_internal_proj_bexexpress_models.ShipmentStatus'
+        description: Статус
+      status_history:
+        description: История статусов
+        items:
+          type: integer
+        type: array
+      status_text:
+        type: string
+      storefront_order_id:
+        type: integer
+      total_packages:
+        type: integer
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+      weight_kg:
+        type: number
+    type: object
+  backend_internal_proj_bexexpress_models.CalculateRateRequest:
+    properties:
+      cod_amount:
+        type: number
+      insurance_amount:
+        type: number
+      recipient_postal_code:
+        type: string
+      shipment_category:
+        type: integer
+      weight_kg:
+        maximum: 50
+        minimum: 0.1
+        type: number
+    required:
+    - recipient_postal_code
+    - shipment_category
+    - weight_kg
+    type: object
+  backend_internal_proj_bexexpress_models.CalculateRateResponse:
+    properties:
+      base_price:
+        type: number
+      cod_fee:
+        type: number
+      delivery_days_max:
+        type: integer
+      delivery_days_min:
+        type: integer
+      insurance_fee:
+        type: number
+      service_available:
+        type: boolean
+      total_price:
+        type: number
+    type: object
+  backend_internal_proj_bexexpress_models.CreateShipmentRequest:
+    properties:
+      cod_amount:
+        type: number
+      delivery_instructions:
+        type: string
+      insurance_amount:
+        type: number
+      notes:
+        type: string
+      order_id:
+        type: integer
+      personal_delivery:
+        type: boolean
+      pre_notification_minutes:
+        description: Уведомления
+        type: integer
+      recipient_address:
+        type: string
+      recipient_city:
+        type: string
+      recipient_email:
+        type: string
+      recipient_name:
+        type: string
+      recipient_phone:
+        type: string
+      recipient_postal_code:
+        type: string
+      shipment_category:
+        type: integer
+      shipment_contents:
+        type: integer
+      storefront_order_id:
+        type: integer
+      total_packages:
+        maximum: 99
+        minimum: 1
+        type: integer
+      weight_kg:
+        maximum: 50
+        minimum: 0.1
+        type: number
+    required:
+    - recipient_address
+    - recipient_city
+    - recipient_name
+    - recipient_phone
+    - recipient_postal_code
+    - shipment_category
+    - shipment_contents
+    - total_packages
+    - weight_kg
+    type: object
+  backend_internal_proj_bexexpress_models.SearchAddressRequest:
+    properties:
+      city:
+        type: string
+      limit:
+        type: integer
+      municipality_id:
+        type: integer
+      place_id:
+        type: integer
+      query:
+        minLength: 2
+        type: string
+    required:
+    - query
+    type: object
+  backend_internal_proj_bexexpress_models.ShipmentStatus:
+    enum:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    type: integer
+    x-enum-varnames:
+    - ShipmentStatusNotFound
+    - ShipmentStatusDeleted
+    - ShipmentStatusNotSentYet
+    - ShipmentStatusPickedUp
+    - ShipmentStatusDelivered
+    - ShipmentStatusAddressVerify
+    - ShipmentStatusReturnToSender
+    - ShipmentStatusReturnedToSender
+    - ShipmentStatusCODPaid
   backend_internal_proj_gis_types.AddressComponents:
     properties:
       city:
@@ -14176,6 +14466,336 @@ paths:
       summary: Get transaction history
       tags:
       - balance
+  /api/v1/bex/calculate-rate:
+    post:
+      consumes:
+      - application/json
+      description: Calculate shipping cost for given parameters
+      parameters:
+      - description: Rate calculation parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_bexexpress_models.CalculateRateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_bexexpress_models.CalculateRateResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Calculate shipping rate
+      tags:
+      - BEX Express
+  /api/v1/bex/parcel-shops:
+    get:
+      description: Get list of BEX parcel shops
+      parameters:
+      - description: Filter by city
+        in: query
+        name: city
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXParcelShop'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get parcel shops
+      tags:
+      - BEX Express
+  /api/v1/bex/search-address:
+    post:
+      consumes:
+      - application/json
+      description: Search for addresses in BEX database
+      parameters:
+      - description: Search parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_bexexpress_models.SearchAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_bexexpress_models.AddressSuggestion'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Search addresses
+      tags:
+      - BEX Express
+  /api/v1/bex/shipments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new shipment through BEX Express
+      parameters:
+      - description: Shipment details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_bexexpress_models.CreateShipmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXShipment'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Create BEX shipment
+      tags:
+      - BEX Express
+  /api/v1/bex/shipments/{id}:
+    delete:
+      description: Cancel a shipment
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel shipment
+      tags:
+      - BEX Express
+    get:
+      description: Get shipment information by ID
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXShipment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get shipment details
+      tags:
+      - BEX Express
+  /api/v1/bex/shipments/{id}/label:
+    get:
+      description: Get printable label for shipment
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 4
+        description: Page size (4 for A4, 6 for A6)
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get shipment label
+      tags:
+      - BEX Express
+  /api/v1/bex/shipments/{id}/status:
+    get:
+      description: Get current status of shipment
+      parameters:
+      - description: Shipment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXShipment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get shipment status
+      tags:
+      - BEX Express
+  /api/v1/bex/shipments/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Create multiple shipments at once
+      parameters:
+      - description: Array of shipment details
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/backend_internal_proj_bexexpress_models.CreateShipmentRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXShipment'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Create bulk shipments
+      tags:
+      - BEX Express
+  /api/v1/bex/track/{tracking}:
+    get:
+      description: Track shipment by tracking number
+      parameters:
+      - description: Tracking number
+        in: path
+        name: tracking
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_bexexpress_models.BEXShipment'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Track shipment
+      tags:
+      - BEX Express
+  /api/v1/bex/webhook/status:
+    post:
+      consumes:
+      - application/json
+      description: Receive status updates from BEX
+      parameters:
+      - description: Webhook data
+        in: body
+        name: webhook
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+      summary: Handle BEX status webhook
+      tags:
+      - BEX Express
   /api/v1/cars/makes:
     get:
       consumes:

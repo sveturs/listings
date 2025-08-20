@@ -38,6 +38,9 @@ type Config struct {
 	Docs                  DocsConfig        `yaml:"docs"`
 	AllSecure             AllSecureConfig   `yaml:"allsecure"`
 	PostExpress           PostExpressConfig `yaml:"postexpress"`
+	BEXAuthToken          string            `yaml:"bex_auth_token"`
+	BEXClientID           string            `yaml:"bex_client_id"`
+	BEXAPIURL             string            `yaml:"bex_api_url"`
 	SearchWeights         *SearchWeights    `yaml:"search_weights"`
 	Redis                 RedisConfig       `yaml:"redis"`
 	MigrationsOnAPI       string            `yaml:"migrations_on_api"` // off, schema, full
@@ -184,6 +187,15 @@ func NewConfig() (*Config, error) {
 	// Получаем ключ DeepL API (необязательный)
 	config.DeepLAPIKey = os.Getenv("DEEPL_API_KEY")
 	config.DeepLUseFreeAPI = os.Getenv("DEEPL_USE_FREE_API") == envValueTrue
+
+	// BEX Express configuration
+	config.BEXAuthToken = os.Getenv("BEX_AUTH_TOKEN")
+	config.BEXClientID = os.Getenv("BEX_CLIENT_ID")
+	bexAPIURL := os.Getenv("BEX_API_URL")
+	if bexAPIURL == "" {
+		bexAPIURL = "https://api.bex.rs:62502"
+	}
+	config.BEXAPIURL = bexAPIURL
 
 	// Получаем публичный URL для MinIO (по умолчанию localhost)
 	minioPublicURL := os.Getenv("MINIO_PUBLIC_URL")

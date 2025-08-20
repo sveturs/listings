@@ -527,6 +527,21 @@
     "map": "Mapa",
     "view": "Prikaz"
   },
+  "seller": {
+    "title": "Prodavac",
+    "noReviews": "Još nema recenzija",
+    "memberSince": "Član od",
+    "responseRate": "Stopa odgovora",
+    "responseTime": "Vreme odgovora",
+    "verified": "Verifikovan",
+    "yourListing": "Ovo je vaš oglas",
+    "edit": "Uredi",
+    "platformProtection": "Zaštita platforme aktivna",
+    "showPhone": "Prikaži telefon",
+    "allItems": "Svi proizvodi",
+    "signInToContact": "Prijavite se da kontaktirate prodavca",
+    "signIn": "Prijavite se"
+  },
   "common": {
     "loading": "Učitavanje...",
     "save": "Sačuvaj",

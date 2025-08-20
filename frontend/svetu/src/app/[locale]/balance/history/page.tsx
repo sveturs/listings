@@ -19,7 +19,7 @@ interface Transaction {
 }
 
 export default function TransactionHistoryPage() {
-  const t = useTranslations('admin');
+  const t = useTranslations('balance');
   const tProfile = useTranslations('profile');
   const locale = useLocale();
   const [transactions, setTransactions] = useState<Transaction[]>([]);

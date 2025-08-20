@@ -58,6 +58,7 @@ func (s *NotificationService) UpdateNotificationSettings(ctx context.Context, se
 		models.NotificationTypeReviewResponse: true,
 		models.NotificationTypeListingStatus:  true,
 		models.NotificationTypeFavoritePrice:  true,
+		models.NotificationTypeDeliveryStatus: true,
 	}
 
 	if !validTypes[settings.NotificationType] {
@@ -181,6 +182,30 @@ func (s *NotificationService) SendListingUpdateNotification(ctx context.Context,
 	return s.storage.CreateNotification(ctx, notification)
 }
 
+func (s *NotificationService) SendDeliveryStatusNotification(ctx context.Context, userID int, orderID int, deliveryProvider string, status string, statusText string, trackingNumber string) error {
+	var message string
+
+	switch status {
+	case "0": // NotSentYet
+		message = fmt.Sprintf("Ваш заказ #%d готов к отправке через %s. Трек-номер: %s", orderID, deliveryProvider, trackingNumber)
+	case "1": // InTransit
+		message = fmt.Sprintf("Ваш заказ #%d в пути. Отследить можно по номеру: %s", orderID, trackingNumber)
+	case "2": // Delivered
+		message = fmt.Sprintf("Ваш заказ #%d успешно доставлен. Спасибо за покупку!", orderID)
+	case "3": // ReturnedToSender
+		message = fmt.Sprintf("Заказ #%d возвращен отправителю. Свяжитесь с нами для уточнения причин.", orderID)
+	case "4": // PickedUp
+		message = fmt.Sprintf("Ваш заказ #%d забран курьером %s для доставки. Трек-номер: %s", orderID, deliveryProvider, trackingNumber)
+	case "5": // Deleted
+		message = fmt.Sprintf("Доставка заказа #%d отменена. Обратитесь в службу поддержки.", orderID)
+	default:
+		message = fmt.Sprintf("Статус доставки заказа #%d изменен: %s. Трек-номер: %s", orderID, statusText, trackingNumber)
+	}
+
+	// Отправляем уведомление
+	return s.SendNotification(ctx, userID, models.NotificationTypeDeliveryStatus, message, orderID)
+}
+
 // Изменяем сигнатуру метода, добавляя listingID
 func (s *NotificationService) SendNotification(ctx context.Context, userID int, notificationType string, message string, listingID int) error {
 	// Проверяем настройки пользователя
@@ -273,6 +298,8 @@ func (s *NotificationService) getNotificationTitle(notificationType string) stri
 		return "Обновление объявления"
 	case models.NotificationTypeFavoritePrice:
 		return "Изменение цены"
+	case models.NotificationTypeDeliveryStatus:
+		return "Статус доставки"
 	default:
 		return "Уведомление SveTu.rs"
 	}

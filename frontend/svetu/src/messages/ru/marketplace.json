@@ -592,6 +592,21 @@
     "rating": "Рейтинг",
     "goToStore": "Перейти в магазин"
   },
+  "seller": {
+    "title": "Продавец",
+    "noReviews": "Пока нет отзывов",
+    "memberSince": "Участник с",
+    "responseRate": "Ответ",
+    "responseTime": "Время ответа",
+    "verified": "Проверен",
+    "yourListing": "Это ваше объявление",
+    "edit": "Редактировать",
+    "platformProtection": "Защита платформы активна",
+    "showPhone": "Показать телефон",
+    "allItems": "Все товары",
+    "signInToContact": "Войдите для связи с продавцом",
+    "signIn": "Войти"
+  },
   "common": {
     "loading": "Загрузка...",
     "save": "Сохранить",

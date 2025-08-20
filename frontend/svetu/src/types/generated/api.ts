@@ -8862,6 +8862,582 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/bex/calculate-rate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate shipping rate
+     * @description Calculate shipping cost for given parameters
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Rate calculation parameters */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CalculateRateRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.CalculateRateResponse'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/parcel-shops': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get parcel shops
+     * @description Get list of BEX parcel shops
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by city */
+          city?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXParcelShop'][];
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/search-address': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search addresses
+     * @description Search for addresses in BEX database
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Search parameters */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.SearchAddressRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.AddressSuggestion'][];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/shipments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create BEX shipment
+     * @description Create a new shipment through BEX Express
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Shipment details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CreateShipmentRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXShipment'];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/shipments/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment details
+     * @description Get shipment information by ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXShipment'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Cancel shipment
+     * @description Cancel a shipment
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            '*/*': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            '*/*': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/shipments/{id}/label': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment label
+     * @description Get printable label for shipment
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page size (4 for A4, 6 for A6) */
+          size?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': string;
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/pdf': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/shipments/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment status
+     * @description Get current status of shipment
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXShipment'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/shipments/bulk': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create bulk shipments
+     * @description Create multiple shipments at once
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Array of shipment details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_bexexpress_models.CreateShipmentRequest'][];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXShipment'][];
+            };
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/track/{tracking}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Track shipment
+     * @description Track shipment by tracking number
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Tracking number */
+          tracking: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_bexexpress_models.BEXShipment'];
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/bex/webhook/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle BEX status webhook
+     * @description Receive status updates from BEX
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Webhook data */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/cars/makes': {
     parameters: {
       query?: never;
@@ -31207,6 +31783,146 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
+    'backend_internal_proj_bexexpress_models.AddressSuggestion': {
+      full_address?: string;
+      latitude?: number;
+      longitude?: number;
+      municipality?: string;
+      municipality_id?: number;
+      place_id?: string;
+      place_name?: string;
+      postal_code?: string;
+      street_id?: string;
+      street_name?: string;
+    };
+    'backend_internal_proj_bexexpress_models.BEXParcelShop': {
+      address?: string;
+      bex_id?: number;
+      city?: string;
+      code?: string;
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      latitude?: number;
+      longitude?: number;
+      name?: string;
+      phone?: string;
+      postal_code?: string;
+      updated_at?: string;
+      working_hours?: number[];
+    };
+    'backend_internal_proj_bexexpress_models.BEXShipment': {
+      /** @description BEX идентификаторы */
+      bex_shipment_id?: number;
+      cod_amount?: number;
+      comment_private?: string;
+      /** @description Комментарии */
+      comment_public?: string;
+      created_at?: string;
+      delivered_at?: string;
+      delivery_instructions?: string;
+      failed_at?: string;
+      failed_reason?: string;
+      id?: number;
+      insurance_amount?: number;
+      /** @description Документы */
+      label_base64?: string;
+      label_url?: string;
+      marketplace_order_id?: number;
+      /** @description Услуги */
+      pay_type?: number;
+      personal_delivery?: boolean;
+      picked_up_at?: string;
+      recipient_address?: string;
+      recipient_city?: string;
+      recipient_email?: string;
+      /** @description Получатель */
+      recipient_name?: string;
+      recipient_phone?: string;
+      recipient_postal_code?: string;
+      /** @description Временные метки */
+      registered_at?: string;
+      return_package?: boolean;
+      return_signed_confirmation?: boolean;
+      return_signed_invoices?: boolean;
+      returned_at?: string;
+      sender_address?: string;
+      sender_city?: string;
+      sender_email?: string;
+      /** @description Отправитель */
+      sender_name?: string;
+      sender_phone?: string;
+      sender_postal_code?: string;
+      shipment_category?: number;
+      shipment_contents?: number;
+      /** @description Параметры посылки */
+      shipment_type?: number;
+      /** @description Статус */
+      status?: components['schemas']['backend_internal_proj_bexexpress_models.ShipmentStatus'];
+      /** @description История статусов */
+      status_history?: number[];
+      status_text?: string;
+      storefront_order_id?: number;
+      total_packages?: number;
+      tracking_number?: string;
+      updated_at?: string;
+      weight_kg?: number;
+    };
+    'backend_internal_proj_bexexpress_models.CalculateRateRequest': {
+      cod_amount?: number;
+      insurance_amount?: number;
+      recipient_postal_code: string;
+      shipment_category: number;
+      weight_kg: number;
+    };
+    'backend_internal_proj_bexexpress_models.CalculateRateResponse': {
+      base_price?: number;
+      cod_fee?: number;
+      delivery_days_max?: number;
+      delivery_days_min?: number;
+      insurance_fee?: number;
+      service_available?: boolean;
+      total_price?: number;
+    };
+    'backend_internal_proj_bexexpress_models.CreateShipmentRequest': {
+      cod_amount?: number;
+      delivery_instructions?: string;
+      insurance_amount?: number;
+      notes?: string;
+      order_id?: number;
+      personal_delivery?: boolean;
+      /** @description Уведомления */
+      pre_notification_minutes?: number;
+      recipient_address: string;
+      recipient_city: string;
+      recipient_email?: string;
+      recipient_name: string;
+      recipient_phone: string;
+      recipient_postal_code: string;
+      shipment_category: number;
+      shipment_contents: number;
+      storefront_order_id?: number;
+      total_packages: number;
+      weight_kg: number;
+    };
+    'backend_internal_proj_bexexpress_models.SearchAddressRequest': {
+      city?: string;
+      limit?: number;
+      municipality_id?: number;
+      place_id?: number;
+      query: string;
+    };
+    /** @enum {integer} */
+    'backend_internal_proj_bexexpress_models.ShipmentStatus':
+      | 1
+      | 2
+      | 3
+      | 4
+      | 5
+      | 6
+      | 7
+      | 8
+      | 9;
     'backend_internal_proj_gis_types.AddressComponents': {
       city?: string;
       country?: string;

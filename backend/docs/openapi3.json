@@ -10360,6 +10360,614 @@
                 }
             }
         },
+        "/api/v1/bex/calculate-rate": {
+            "post": {
+                "description": "Calculate shipping cost for given parameters",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Calculate shipping rate",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.CalculateRateRequest"
+                            }
+                        }
+                    },
+                    "description": "Rate calculation parameters",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.CalculateRateResponse"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/parcel-shops": {
+            "get": {
+                "description": "Get list of BEX parcel shops",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Get parcel shops",
+                "parameters": [
+                    {
+                        "description": "Filter by city",
+                        "name": "city",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXParcelShop"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/search-address": {
+            "post": {
+                "description": "Search for addresses in BEX database",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Search addresses",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.SearchAddressRequest"
+                            }
+                        }
+                    },
+                    "description": "Search parameters",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.AddressSuggestion"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/shipments": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new shipment through BEX Express",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Create BEX shipment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.CreateShipmentRequest"
+                            }
+                        }
+                    },
+                    "description": "Shipment details",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXShipment"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/shipments/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create multiple shipments at once",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Create bulk shipments",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.CreateShipmentRequest"
+                                }
+                            }
+                        }
+                    },
+                    "description": "Array of shipment details",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXShipment"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/shipments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get shipment information by ID",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Get shipment details",
+                "parameters": [
+                    {
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXShipment"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel a shipment",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Cancel shipment",
+                "parameters": [
+                    {
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/shipments/{id}/label": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get printable label for shipment",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Get shipment label",
+                "parameters": [
+                    {
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Page size (4 for A4, 6 for A6)",
+                        "name": "size",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/shipments/{id}/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get current status of shipment",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Get shipment status",
+                "parameters": [
+                    {
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXShipment"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/track/{tracking}": {
+            "get": {
+                "description": "Track shipment by tracking number",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Track shipment",
+                "parameters": [
+                    {
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.BEXShipment"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/bex/webhook/status": {
+            "post": {
+                "description": "Receive status updates from BEX",
+                "tags": [
+                    "BEX Express"
+                ],
+                "summary": "Handle BEX status webhook",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Webhook data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cars/makes": {
             "get": {
                 "description": "Get all available car makes from the database",
@@ -39829,6 +40437,425 @@
                         "type": "string"
                     }
                 }
+            },
+            "backend_internal_proj_bexexpress_models.AddressSuggestion": {
+                "type": "object",
+                "properties": {
+                    "full_address": {
+                        "type": "string"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "municipality": {
+                        "type": "string"
+                    },
+                    "municipality_id": {
+                        "type": "integer"
+                    },
+                    "place_id": {
+                        "type": "string"
+                    },
+                    "place_name": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "street_id": {
+                        "type": "string"
+                    },
+                    "street_name": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.BEXParcelShop": {
+                "type": "object",
+                "properties": {
+                    "address": {
+                        "type": "string"
+                    },
+                    "bex_id": {
+                        "type": "integer"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "postal_code": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "working_hours": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.BEXShipment": {
+                "type": "object",
+                "properties": {
+                    "bex_shipment_id": {
+                        "description": "BEX идентификаторы",
+                        "type": "integer"
+                    },
+                    "cod_amount": {
+                        "type": "number"
+                    },
+                    "comment_private": {
+                        "type": "string"
+                    },
+                    "comment_public": {
+                        "description": "Комментарии",
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "delivered_at": {
+                        "type": "string"
+                    },
+                    "delivery_instructions": {
+                        "type": "string"
+                    },
+                    "failed_at": {
+                        "type": "string"
+                    },
+                    "failed_reason": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "insurance_amount": {
+                        "type": "number"
+                    },
+                    "label_base64": {
+                        "description": "Документы",
+                        "type": "string"
+                    },
+                    "label_url": {
+                        "type": "string"
+                    },
+                    "marketplace_order_id": {
+                        "type": "integer"
+                    },
+                    "pay_type": {
+                        "description": "Услуги",
+                        "type": "integer"
+                    },
+                    "personal_delivery": {
+                        "type": "boolean"
+                    },
+                    "picked_up_at": {
+                        "type": "string"
+                    },
+                    "recipient_address": {
+                        "type": "string"
+                    },
+                    "recipient_city": {
+                        "type": "string"
+                    },
+                    "recipient_email": {
+                        "type": "string"
+                    },
+                    "recipient_name": {
+                        "description": "Получатель",
+                        "type": "string"
+                    },
+                    "recipient_phone": {
+                        "type": "string"
+                    },
+                    "recipient_postal_code": {
+                        "type": "string"
+                    },
+                    "registered_at": {
+                        "description": "Временные метки",
+                        "type": "string"
+                    },
+                    "return_package": {
+                        "type": "boolean"
+                    },
+                    "return_signed_confirmation": {
+                        "type": "boolean"
+                    },
+                    "return_signed_invoices": {
+                        "type": "boolean"
+                    },
+                    "returned_at": {
+                        "type": "string"
+                    },
+                    "sender_address": {
+                        "type": "string"
+                    },
+                    "sender_city": {
+                        "type": "string"
+                    },
+                    "sender_email": {
+                        "type": "string"
+                    },
+                    "sender_name": {
+                        "description": "Отправитель",
+                        "type": "string"
+                    },
+                    "sender_phone": {
+                        "type": "string"
+                    },
+                    "sender_postal_code": {
+                        "type": "string"
+                    },
+                    "shipment_category": {
+                        "type": "integer"
+                    },
+                    "shipment_contents": {
+                        "type": "integer"
+                    },
+                    "shipment_type": {
+                        "description": "Параметры посылки",
+                        "type": "integer"
+                    },
+                    "status": {
+                        "description": "Статус",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_proj_bexexpress_models.ShipmentStatus"
+                            }
+                        ]
+                    },
+                    "status_history": {
+                        "description": "История статусов",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "status_text": {
+                        "type": "string"
+                    },
+                    "storefront_order_id": {
+                        "type": "integer"
+                    },
+                    "total_packages": {
+                        "type": "integer"
+                    },
+                    "tracking_number": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "weight_kg": {
+                        "type": "number"
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.CalculateRateRequest": {
+                "type": "object",
+                "required": [
+                    "recipient_postal_code",
+                    "shipment_category",
+                    "weight_kg"
+                ],
+                "properties": {
+                    "cod_amount": {
+                        "type": "number"
+                    },
+                    "insurance_amount": {
+                        "type": "number"
+                    },
+                    "recipient_postal_code": {
+                        "type": "string"
+                    },
+                    "shipment_category": {
+                        "type": "integer"
+                    },
+                    "weight_kg": {
+                        "type": "number",
+                        "maximum": 50,
+                        "minimum": 0.1
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.CalculateRateResponse": {
+                "type": "object",
+                "properties": {
+                    "base_price": {
+                        "type": "number"
+                    },
+                    "cod_fee": {
+                        "type": "number"
+                    },
+                    "delivery_days_max": {
+                        "type": "integer"
+                    },
+                    "delivery_days_min": {
+                        "type": "integer"
+                    },
+                    "insurance_fee": {
+                        "type": "number"
+                    },
+                    "service_available": {
+                        "type": "boolean"
+                    },
+                    "total_price": {
+                        "type": "number"
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.CreateShipmentRequest": {
+                "type": "object",
+                "required": [
+                    "recipient_address",
+                    "recipient_city",
+                    "recipient_name",
+                    "recipient_phone",
+                    "recipient_postal_code",
+                    "shipment_category",
+                    "shipment_contents",
+                    "total_packages",
+                    "weight_kg"
+                ],
+                "properties": {
+                    "cod_amount": {
+                        "type": "number"
+                    },
+                    "delivery_instructions": {
+                        "type": "string"
+                    },
+                    "insurance_amount": {
+                        "type": "number"
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "order_id": {
+                        "type": "integer"
+                    },
+                    "personal_delivery": {
+                        "type": "boolean"
+                    },
+                    "pre_notification_minutes": {
+                        "description": "Уведомления",
+                        "type": "integer"
+                    },
+                    "recipient_address": {
+                        "type": "string"
+                    },
+                    "recipient_city": {
+                        "type": "string"
+                    },
+                    "recipient_email": {
+                        "type": "string"
+                    },
+                    "recipient_name": {
+                        "type": "string"
+                    },
+                    "recipient_phone": {
+                        "type": "string"
+                    },
+                    "recipient_postal_code": {
+                        "type": "string"
+                    },
+                    "shipment_category": {
+                        "type": "integer"
+                    },
+                    "shipment_contents": {
+                        "type": "integer"
+                    },
+                    "storefront_order_id": {
+                        "type": "integer"
+                    },
+                    "total_packages": {
+                        "type": "integer",
+                        "maximum": 99,
+                        "minimum": 1
+                    },
+                    "weight_kg": {
+                        "type": "number",
+                        "maximum": 50,
+                        "minimum": 0.1
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.SearchAddressRequest": {
+                "type": "object",
+                "required": [
+                    "query"
+                ],
+                "properties": {
+                    "city": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "municipality_id": {
+                        "type": "integer"
+                    },
+                    "place_id": {
+                        "type": "integer"
+                    },
+                    "query": {
+                        "type": "string",
+                        "minLength": 2
+                    }
+                }
+            },
+            "backend_internal_proj_bexexpress_models.ShipmentStatus": {
+                "type": "integer",
+                "enum": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9
+                ],
+                "x-enum-varnames": [
+                    "ShipmentStatusNotFound",
+                    "ShipmentStatusDeleted",
+                    "ShipmentStatusNotSentYet",
+                    "ShipmentStatusPickedUp",
+                    "ShipmentStatusDelivered",
+                    "ShipmentStatusAddressVerify",
+                    "ShipmentStatusReturnToSender",
+                    "ShipmentStatusReturnedToSender",
+                    "ShipmentStatusCODPaid"
+                ]
             },
             "backend_internal_proj_gis_types.AddressComponents": {
                 "type": "object",

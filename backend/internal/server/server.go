@@ -23,6 +23,7 @@ import (
 	"backend/internal/proj/analytics"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
+	"backend/internal/proj/bexexpress"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -60,6 +61,7 @@ type Server struct {
 	balance            *balanceHandler.Handler
 	payments           *paymentHandler.Handler
 	postexpress        *postexpressHandler.Handler
+	bexexpress         *bexexpress.Module
 	orders             *orders.Module
 	storefront         *storefronts.Module
 	geocode            *geocodeHandler.Handler
@@ -159,6 +161,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	)
 	postexpressHandlerInstance := postexpressHandler.NewHandler(postexpressServiceInstance, *pkglogger.New())
 
+	// BEX Express инициализация
+	bexexpressModule, err := bexexpress.NewModule(db.GetSQLXDB().DB, cfg)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to initialize BEX Express module, continuing without it")
+		// Не возвращаем ошибку, продолжаем без BEX
+	}
+
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
@@ -210,6 +219,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		balance:            balanceHandler,
 		payments:           paymentsHandler,
 		postexpress:        postexpressHandlerInstance,
+		bexexpress:         bexexpressModule,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
@@ -372,7 +382,14 @@ func (s *Server) registerProjectRoutes() {
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
-		s.geocode, s.gis, s.contacts, s.payments, s.postexpress, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
+		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
+
+	// Добавляем BEX Express если он инициализирован
+	if s.bexexpress != nil {
+		registrars = append(registrars, s.bexexpress)
+	}
+
+	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
