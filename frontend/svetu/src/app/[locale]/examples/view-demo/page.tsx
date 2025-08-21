@@ -17,12 +17,45 @@ import type { MarketplaceItem } from '@/types/marketplace';
 import type { UnifiedProduct } from '@/types/unified-product';
 
 // Динамические импорты для компонентов с браузерными API
-const QuickView = dynamicImport(() => import('@/components/ui/QuickView').then(mod => ({ default: mod.QuickView })), { ssr: false });
-const PriceHistoryModal = dynamicImport(() => import('@/components/marketplace/PriceHistoryModal').then(mod => ({ default: mod.PriceHistoryModal })), { ssr: false });
-const VariantSelectionModal = dynamicImport(() => import('@/components/cart/VariantSelectionModal'), { ssr: false });
-const EnhancedListingCard = dynamicImport(() => import('@/components/marketplace/EnhancedListingCard').then(mod => ({ default: mod.EnhancedListingCard })), { ssr: false });
-const UnifiedProductCard = dynamicImport(() => import('@/components/common/UnifiedProductCard').then(mod => ({ default: mod.UnifiedProductCard })), { ssr: false });
-const ImageGallery = dynamicImport(() => import('@/components/reviews/ImageGallery').then(mod => ({ default: mod.ImageGallery })), { ssr: false });
+const QuickView = dynamicImport(
+  () =>
+    import('@/components/ui/QuickView').then((mod) => ({
+      default: mod.QuickView,
+    })),
+  { ssr: false }
+);
+const PriceHistoryModal = dynamicImport(
+  () =>
+    import('@/components/marketplace/PriceHistoryModal').then((mod) => ({
+      default: mod.PriceHistoryModal,
+    })),
+  { ssr: false }
+);
+const VariantSelectionModal = dynamicImport(
+  () => import('@/components/cart/VariantSelectionModal'),
+  { ssr: false }
+);
+const EnhancedListingCard = dynamicImport(
+  () =>
+    import('@/components/marketplace/EnhancedListingCard').then((mod) => ({
+      default: mod.EnhancedListingCard,
+    })),
+  { ssr: false }
+);
+const UnifiedProductCard = dynamicImport(
+  () =>
+    import('@/components/common/UnifiedProductCard').then((mod) => ({
+      default: mod.UnifiedProductCard,
+    })),
+  { ssr: false }
+);
+const ImageGallery = dynamicImport(
+  () =>
+    import('@/components/reviews/ImageGallery').then((mod) => ({
+      default: mod.ImageGallery,
+    })),
+  { ssr: false }
+);
 
 // Отключаем статическую генерацию для этой страницы
 export const dynamic = 'force-dynamic';

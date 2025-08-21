@@ -126,7 +126,8 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+      const redirectPath =
+        typeof window !== 'undefined' ? window.location.pathname : '/';
       router.push(
         `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
       );
@@ -147,7 +148,8 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+      const redirectPath =
+        typeof window !== 'undefined' ? window.location.pathname : '/';
       router.push(
         `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
       );
@@ -172,7 +174,8 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+      const redirectPath =
+        typeof window !== 'undefined' ? window.location.pathname : '/';
       router.push(
         `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
       );

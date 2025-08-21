@@ -605,7 +605,8 @@
     "showPhone": "Show phone",
     "allItems": "All items",
     "signInToContact": "Sign in to contact seller",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "sendMessage": "Send message"
   },
   "common": {
     "loading": "Loading...",

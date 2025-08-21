@@ -83,5 +83,10 @@
     "reviews": "recenzija",
     "verified": "[SR] Verified",
     "withPhotos": "sa fotografijama"
-  }
+  },
+  "terrible": "Užasno",
+  "bad": "Loše",
+  "normal": "Normalno",
+  "good": "Dobro",
+  "excellent": "Odlično"
 }

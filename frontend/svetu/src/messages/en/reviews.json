@@ -83,5 +83,10 @@
     "reviews": "reviews",
     "verified": "Verified",
     "withPhotos": "with photos"
-  }
+  },
+  "terrible": "Terrible",
+  "bad": "Bad",
+  "normal": "Normal",
+  "good": "Good",
+  "excellent": "Excellent"
 }

@@ -239,6 +239,15 @@ export default function ExamplesPage() {
       icon: '🗺️',
       badge: 'NEW',
     },
+    {
+      title: 'Enhanced Districts Fetcher',
+      description:
+        'Улучшенный инструмент для получения точных границ районов с многоуровневой fallback системой',
+      href: '/examples/enhanced-districts',
+      color: 'bg-gradient-to-r from-violet-600 to-purple-600',
+      icon: '🏘️',
+      badge: 'ADVANCED',
+    },
   ];
 
   return (
@@ -261,7 +270,7 @@ export default function ExamplesPage() {
           </div>
           <div className="stat">
             <div className="stat-title">New</div>
-            <div className="stat-value text-accent">5</div>
+            <div className="stat-value text-accent">6</div>
             <div className="stat-desc">Latest additions</div>
           </div>
         </div>

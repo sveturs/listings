@@ -158,10 +158,29 @@ func (r *Repository) PrepareIndex(ctx context.Context) error {
 }
 
 func (r *Repository) IndexListing(ctx context.Context, listing *models.MarketplaceListing) error {
+	if listing == nil {
+		logger.Error().Msg("ERROR: Попытка индексации nil объявления")
+		return fmt.Errorf("listing is nil")
+	}
+
+	if listing.ID == 0 {
+		logger.Error().Msg("ERROR: Попытка индексации объявления с ID=0")
+		return fmt.Errorf("listing ID is 0")
+	}
+
 	doc := r.listingToDoc(ctx, listing)
 	docJSON, _ := json.MarshalIndent(doc, "", "  ")
-	logger.Info().Msgf("Индексация объявления %d с данными: %s", listing.ID, string(docJSON))
-	return r.client.IndexDocument(ctx, r.indexName, fmt.Sprintf("%d", listing.ID), doc)
+	logger.Info().Msgf("INFO: Начинаем индексацию объявления ID=%d в индекс '%s'", listing.ID, r.indexName)
+	logger.Debug().Msgf("DEBUG: Данные для индексации: %s", string(docJSON))
+
+	err := r.client.IndexDocument(ctx, r.indexName, fmt.Sprintf("%d", listing.ID), doc)
+	if err != nil {
+		logger.Error().Msgf("ERROR: Ошибка индексации объявления ID=%d в OpenSearch: %v", listing.ID, err)
+		return err
+	}
+
+	logger.Info().Msgf("SUCCESS: Объявление ID=%d успешно проиндексировано в OpenSearch", listing.ID)
+	return nil
 }
 
 // BulkIndexListings индексирует несколько объявлений
@@ -206,7 +225,21 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		queryJSON, _ := json.MarshalIndent(query, "", "  ")
 		logger.Info().Msgf("Используем специальный запрос для поиска: %s", string(queryJSON))
 	} else {
-		query = r.buildSearchQuery(ctx, params)
+		// Используем улучшенную версию для более точного поиска
+		// если есть поисковый запрос
+		if params.Query != "" {
+			logger.Info().Msgf("Используем улучшенный поиск для запроса: %s", params.Query)
+			query = r.buildImprovedSearchQuery(ctx, params)
+		} else {
+			// Для фильтрации без текстового запроса используем старый метод
+			query = r.buildSearchQuery(ctx, params)
+		}
+	}
+
+	// Логируем финальный запрос для отладки
+	if logger.Info().Enabled() {
+		queryJSON, _ := json.MarshalIndent(query, "", "  ")
+		logger.Info().Msgf("Финальный запрос к OpenSearch:\n%s", string(queryJSON))
 	}
 
 	response, err := r.client.Search(ctx, r.indexName, query)

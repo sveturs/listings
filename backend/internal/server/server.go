@@ -20,6 +20,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/logger"
 	"backend/internal/middleware"
+	adminLogistics "backend/internal/proj/admin/logistics"
 	"backend/internal/proj/analytics"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
@@ -62,6 +63,7 @@ type Server struct {
 	payments           *paymentHandler.Handler
 	postexpress        *postexpressHandler.Handler
 	bexexpress         *bexexpress.Module
+	adminLogistics     *adminLogistics.Module
 	orders             *orders.Module
 	storefront         *storefronts.Module
 	geocode            *geocodeHandler.Handler
@@ -168,6 +170,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		// Не возвращаем ошибку, продолжаем без BEX
 	}
 
+	// Admin Logistics инициализация
+	adminLogisticsModule, err := adminLogistics.NewModule(db.GetSQLXDB().DB, cfg)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to initialize Admin Logistics module, continuing without it")
+		// Не возвращаем ошибку, продолжаем без админки логистики
+	}
+
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
@@ -220,6 +229,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		payments:           paymentsHandler,
 		postexpress:        postexpressHandlerInstance,
 		bexexpress:         bexexpressModule,
+		adminLogistics:     adminLogisticsModule,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
@@ -387,6 +397,11 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем BEX Express если он инициализирован
 	if s.bexexpress != nil {
 		registrars = append(registrars, s.bexexpress)
+	}
+
+	// Добавляем Admin Logistics если он инициализирован
+	if s.adminLogistics != nil {
+		registrars = append(registrars, s.adminLogistics)
 	}
 
 	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
