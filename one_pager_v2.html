@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVE-TU MARKETPLACE - Investor One Pager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            border-radius: 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header .subtitle {
+            font-size: 1.4rem;
+            font-weight: 300;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 0;
+        }
+        
+        .section {
+            padding: 60px 40px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section.dark {
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #1e3c72;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            color: #2a5298;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #e0e6ed;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .metric {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .check-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .check-list li {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .check-list li::before {
+            content: '✅';
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #a8e6cf 0%, #dcedc1 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border-left: 5px solid #28a745;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            opacity: 0.3;
+        }
+        
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .table th, .table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e0e6ed;
+        }
+        
+        .table th {
+            background: #1e3c72;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .emoji {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        .investment-box {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .investment-amount {
+            font-size: 4rem;
+            font-weight: 800;
+            margin: 20px 0;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 1.3rem;
+            text-align: center;
+            margin: 40px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            border-left: 5px solid #ff6b6b;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            
+            body {
+                background: white !important;
+                font-size: 11pt;
+                line-height: 1.4;
+                color: #000 !important;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+                color: white !important;
+                padding: 30px 20px;
+                page-break-after: avoid;
+            }
+            
+            .header h1 {
+                font-size: 28pt;
+                margin-bottom: 5px;
+            }
+            
+            .header .subtitle {
+                font-size: 14pt;
+            }
+            
+            .section {
+                padding: 20px 15px;
+                border-bottom: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+            
+            .section h2 {
+                font-size: 18pt;
+                color: #1e3c72 !important;
+                margin-bottom: 15px;
+                page-break-after: avoid;
+            }
+            
+            .section h3 {
+                font-size: 14pt;
+                color: #2a5298 !important;
+                margin: 15px 0 10px 0;
+            }
+            
+            .grid {
+                display: block;
+                margin: 15px 0;
+            }
+            
+            .card {
+                background: #f8f9fa !important;
+                border: 1px solid #ddd !important;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-radius: 8px;
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+            
+            .card:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            
+            .metric {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                color: white !important;
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+                margin: 10px 0;
+                page-break-inside: avoid;
+            }
+            
+            .metric-value {
+                font-size: 18pt;
+                font-weight: bold;
+            }
+            
+            .metric-label {
+                font-size: 10pt;
+            }
+            
+            .check-list li {
+                background: #f0f0f0 !important;
+                border-left: 3px solid #28a745 !important;
+                margin: 8px 0;
+                padding: 8px;
+                page-break-inside: avoid;
+            }
+            
+            .highlight {
+                background: #e8f5e8 !important;
+                border-left: 4px solid #28a745 !important;
+                padding: 15px;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .investment-box {
+                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+                color: white !important;
+                padding: 25px;
+                border-radius: 12px;
+                text-align: center;
+                margin: 20px 0;
+                page-break-inside: avoid;
+            }
+            
+            .investment-amount {
+                font-size: 32pt;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+            
+            .cta-section {
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+                color: white !important;
+                padding: 25px 15px;
+                page-break-inside: avoid;
+            }
+            
+            .quote {
+                background: #fff2e6 !important;
+                border-left: 4px solid #ff6b6b !important;
+                padding: 15px;
+                margin: 15px 0;
+                font-size: 12pt;
+                page-break-inside: avoid;
+            }
+            
+            .table {
+                background: white !important;
+                border: 1px solid #ddd;
+                width: 100%;
+                margin: 15px 0;
+                page-break-inside: avoid;
+            }
+            
+            .table th {
+                background: #1e3c72 !important;
+                color: white !important;
+                padding: 8px 10px;
+                font-size: 10pt;
+            }
+            
+            .table td {
+                padding: 6px 10px;
+                font-size: 10pt;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .contact-info {
+                display: block;
+                text-align: center;
+            }
+            
+            .contact-item {
+                display: block;
+                margin: 10px 0;
+                font-size: 12pt;
+            }
+            
+            .emoji {
+                font-size: 12pt;
+            }
+            
+            /* Разрывы страниц */
+            .section:nth-child(3), 
+            .section:nth-child(6),
+            .section:nth-child(9) {
+                page-break-before: always;
+            }
+            
+            /* Скрыть элементы для печати */
+            .header::before,
+            .cta-section::before {
+                display: none !important;
+            }
+            
+            /* Оптимизация текста */
+            p, li {
+                font-size: 10pt;
+                line-height: 1.3;
+            }
+            
+            ul, ol {
+                margin: 10px 0;
+                padding-left: 20px;
+            }
+            
+            /* Убрать лишние отступы */
+            .section.dark {
+                background: #f9f9f9 !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section {
+                padding: 40px 20px;
+            }
+            
+            .section h2 {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .investment-amount {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SVE-TU MARKETPLACE</h1>
+            <p class="subtitle">Первый гибридный C2C/B2C маркетплейс на Балканах с геолокацией</p>
+        </div>
+
+        <div class="content">
+            <section class="section">
+                <h2><span class="emoji">🎯</span>ПРОБЛЕМА</h2>
+                
+                <div class="highlight">
+                    <strong>50 млн человек на Балканах</strong> используют разрозненные платформы:
+                </div>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>C2C проблемы</h3>
+                        <ul>
+                            <li>Facebook Marketplace (нет защиты покупателя)</li>
+                            <li>KupujemProdajem (устаревший UX из 2000-х)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>B2C проблемы</h3>
+                        <ul>
+                            <li>Десятки мелких e-shops</li>
+                            <li>Нет единого каталога</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-value">70%</div>
+                    <div class="metric-label">сделок срываются из-за недоверия или неудобства</div>
+                </div>
+            </section>
+
+            <section class="section dark">
+                <h2><span class="emoji">💡</span>РЕШЕНИЕ</h2>
+                
+                <div class="quote">
+                    <strong>Sve-Tu</strong> ("Всё здесь") - единая платформа где соседи и бизнес торгуют вместе
+                </div>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>Ключевые преимущества:</h3>
+                        <ul class="check-list">
+                            <li><strong>Гибридная модель</strong> - покупай у соседа или магазина в одном месте</li>
+                            <li><strong>Карта товаров</strong> - найди нужное в своем районе за 30 секунд</li>
+                            <li><strong>Эскроу защита</strong> - деньги продавцу только после получения товара</li>
+                            <li><strong>0% комиссия C2C</strong> - частные продавцы торгуют бесплатно</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2><span class="emoji">📊</span>ГОТОВНОСТЬ К ЗАПУСКУ</h2>
+                
+                <h3>Платформа полностью готова:</h3>
+                <ul class="check-list">
+                    <li><strong>Работающий продукт</strong> на svetu.rs (демо-режим)</li>
+                    <li><strong>Интеграция платежей</strong> AllSecure/PaySpot готова к активации</li>
+                    <li><strong>Логистика подключена</strong> Post Express + BEX для доставки</li>
+                    <li><strong>3 языка интерфейса</strong> (сербский, русский, английский)</li>
+                    <li><strong>AI функционал внедрен</strong> и протестирован</li>
+                </ul>
+                
+                <h3>AI преимущества для пользователей:</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Создание за 30 секунд</h4>
+                        <p>AI генерирует описание по фото</p>
+                    </div>
+                    <div class="card">
+                        <h4>Умный поиск</h4>
+                        <p>Находит похожие товары по изображению</p>
+                    </div>
+                    <div class="card">
+                        <h4>Гео-рекомендации</h4>
+                        <p>AI предлагает товары рядом</p>
+                    </div>
+                    <div class="card">
+                        <h4>Авто-категоризация</h4>
+                        <p>AI определяет категорию с 95% точностью</p>
+                    </div>
+                    <div class="card">
+                        <h4>Чат-ассистент</h4>
+                        <p>Помогает с переговорами и сделками</p>
+                    </div>
+                </div>
+
+                <h3>Прогнозируемая unit-экономика:</h3>
+                <div class="grid">
+                    <div class="metric">
+                        <div class="metric-value">8x</div>
+                        <div class="metric-label">CAC C2C: €3 → LTV: €25</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">42x</div>
+                        <div class="metric-label">CAC B2C: €200 → LTV: €8,400</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">3 мес</div>
+                        <div class="metric-label">Payback период</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section dark">
+                <h2><span class="emoji">💰</span>БИЗНЕС-МОДЕЛЬ</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>Монетизация B2C (80% выручки):</h3>
+                        <ul>
+                            <li><strong>Транзакционная комиссия:</strong> 3-7% от продаж</li>
+                            <li><strong>Подписки:</strong> €29-299/мес за продвинутые функции</li>
+                            <li><strong>Валовая маржа:</strong> 65%</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Дополнительные доходы C2C (20%):</h3>
+                        <ul>
+                            <li><strong>Промо-размещение:</strong> €5-15 за объявление</li>
+                            <li><strong>Premium функции:</strong> аналитика, дополнительные фото</li>
+                            <li><strong>Без базовой комиссии</strong> - привлекаем массовый рынок</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2><span class="emoji">🚀</span>РЫНОК И ВОЗМОЖНОСТИ</h2>
+                
+                <div class="highlight">
+                    <h3>TAM (Total Addressable Market):</h3>
+                    <ul>
+                        <li><strong>€1.5 млрд</strong> - e-commerce Сербии + соседние страны</li>
+                        <li><strong>Рост 35%</strong> год к году в регионе</li>
+                        <li><strong>Проникновение 15%</strong> vs 60% в Западной Европе</li>
+                    </ul>
+                </div>
+
+                <h3>Наш план захвата:</h3>
+                <div class="grid">
+                    <div class="metric">
+                        <div class="metric-value">2025</div>
+                        <div class="metric-label">Сербия (7М) → €500K GMV/мес</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">2026</div>
+                        <div class="metric-label">Ex-Югославия (25М) → €3M GMV/мес</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">2027</div>
+                        <div class="metric-label">Балканы (50М) → €10M GMV/мес</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section dark">
+                <h2><span class="emoji">🏆</span>КОНКУРЕНТНЫЕ ПРЕИМУЩЕСТВА</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>1. AI-First платформа</h3>
+                        <ul>
+                            <li><strong>95% точность</strong> категоризации vs 60% у конкурентов</li>
+                            <li><strong>10x быстрее</strong> создание объявлений благодаря AI</li>
+                            <li><strong>3x выше конверсия</strong> через персонализированные рекомендации</li>
+                            <li>Единственные с AI на всех этапах user journey</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>2. Первые на рынке</h3>
+                        <ul>
+                            <li><strong>Единственный</strong> гибрид C2C+B2C на Балканах</li>
+                            <li><strong>Первые</strong> с картой товаров в реальном времени</li>
+                            <li><strong>Единственные</strong> с эскроу для C2C сделок</li>
+                            <li><strong>Готовые интеграции</strong> с локальными сервисами</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>3. Технологическая готовность</h3>
+                        <ul>
+                            <li>Платформа построена и работает</li>
+                            <li>Платежи и логистика интегрированы</li>
+                            <li>Масштабируемая архитектура (Go + PostgreSQL + OpenSearch)</li>
+                            <li>Mobile-ready Progressive Web App</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2><span class="emoji">📈</span>ФИНАНСОВЫЕ ПРОЕКЦИИ</h2>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Метрика</th>
+                            <th>2025</th>
+                            <th>2026</th>
+                            <th>2027</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>GMV</strong></td>
+                            <td>€6M</td>
+                            <td>€36M</td>
+                            <td>€120M</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Выручка</strong></td>
+                            <td>€450K</td>
+                            <td>€2.7M</td>
+                            <td>€9M</td>
+                        </tr>
+                        <tr>
+                            <td><strong>EBITDA</strong></td>
+                            <td>-€200K</td>
+                            <td>€800K</td>
+                            <td>€3.6M</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Маржа EBITDA</strong></td>
+                            <td>-</td>
+                            <td>30%</td>
+                            <td>40%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="highlight">
+                    <strong>Точка безубыточности:</strong> Q3 2026
+                </div>
+            </section>
+
+            <section class="section dark">
+                <h2><span class="emoji">💸</span>ИНВЕСТИЦИОННЫЙ РАУНД</h2>
+                
+                <div class="investment-box">
+                    <h3>Привлекаем:</h3>
+                    <div class="investment-amount">€1.5M</div>
+                    <p>Seed Round</p>
+                </div>
+                
+                <h3>Использование средств:</h3>
+                <div class="grid">
+                    <div class="metric">
+                        <div class="metric-value">40%</div>
+                        <div class="metric-label">User acquisition и маркетинг</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">30%</div>
+                        <div class="metric-label">Разработка продукта</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">20%</div>
+                        <div class="metric-label">Команда (найм 10 человек)</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">10%</div>
+                        <div class="metric-label">Операционные расходы</div>
+                    </div>
+                </div>
+                
+                <h3>Условия:</h3>
+                <ul class="check-list">
+                    <li><strong>Оценка:</strong> €8M pre-money</li>
+                    <li><strong>Доля:</strong> 15-20%</li>
+                    <li><strong>Lead инвестор:</strong> получает место в совете директоров</li>
+                </ul>
+            </section>
+
+            <section class="section">
+                <h2><span class="emoji">🎯</span>БЛИЖАЙШИЕ MILESTONE</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>Q1 2025:</h3>
+                        <ul class="check-list">
+                            <li>Запуск мобильного приложения</li>
+                            <li>10,000 активных пользователей</li>
+                            <li>100 B2C витрин</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Q2 2025:</h3>
+                        <ul>
+                            <li>Экспансия в Хорватию</li>
+                            <li>AI-рекомендации товаров</li>
+                            <li>Интеграция платежных систем</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>Q4 2025:</h3>
+                        <ul>
+                            <li>Series A раунд (€5M)</li>
+                            <li>100K пользователей</li>
+                            <li>Выход на операционную прибыль</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section dark">
+                <h2><span class="emoji">🔑</span>ПОЧЕМУ СЕЙЧАС?</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h3>1. Окно возможностей</h3>
+                        <p>Локальные игроки не инвестируют в tech</p>
+                    </div>
+                    <div class="card">
+                        <h3>2. AI революция</h3>
+                        <p>Первые внедрившие AI получат весь рынок</p>
+                    </div>
+                    <div class="card">
+                        <h3>3. Поколенческий сдвиг</h3>
+                        <p>Миллениалы становятся основными покупателями</p>
+                    </div>
+                    <div class="card">
+                        <h3>4. Post-COVID тренд</h3>
+                        <p>Рост онлайн-торговли на 300% за 3 года</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="quote">
+                    <strong>One-liner:</strong><br>
+                    "Представьте Vinted + Shopify + Google Maps для 50 миллионов человек на Балканах"
+                </div>
+                
+                <div class="quote">
+                    <strong>Наша миссия:</strong><br>
+                    Сделать локальную торговлю простой, безопасной и доступной для каждого
+                </div>
+            </section>
+
+            <section class="section cta-section">
+                <h2 style="color: white;"><span class="emoji">📞</span>КОНТАКТЫ</h2>
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="emoji">📧</span>
+                        <strong>investors@svetu.rs</strong>
+                    </div>
+                    <div class="contact-item">
+                        <span class="emoji">🌐</span>
+                        <strong>https://svetu.rs</strong>
+                    </div>
+                    <div class="contact-item">
+                        <span class="emoji">📋</span>
+                        <strong>Pitch Deck: По запросу (NDA)</strong>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
