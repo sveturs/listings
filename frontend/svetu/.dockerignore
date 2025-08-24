@@ -94,3 +94,7 @@ jest.setup.js
 
 # Memory bank (project specific)
 memory-bank
+
+# Test pages that require API keys
+src/app/[locale]/test-geocoding
+**/test-geocoding/**
