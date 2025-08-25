@@ -301,81 +301,117 @@ func (c *OpenSearchClient) Suggest(ctx context.Context, indexName, field, prefix
 
 // Execute выполняет прямой запрос к OpenSearch с указанным методом, путём и телом запроса
 func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, body []byte) ([]byte, error) {
-	var bodyReader strings.Reader
-	if body != nil {
-		bodyReader = *strings.NewReader(string(body))
-	} else {
-		bodyReader = *strings.NewReader("")
-	}
+	// Для универсальных запросов используем существующие методы API
+	// В зависимости от типа запроса выбираем соответствующий метод
 
-	// В зависимости от метода используем соответствующий API
-	var resp *opensearchapi.Response
+	var res *opensearchapi.Response
 	var err error
 
-	switch method {
-	case "GET":
-		req := opensearchapi.SearchRequest{
-			Index: []string{path},
-			Body:  &bodyReader,
-		}
-		resp, err = req.Do(ctx, c.client)
-	case "POST":
-		// Проверяем, содержит ли путь "_search" - если да, то это запрос поиска
-		if strings.Contains(path, "_search") {
-			parts := strings.Split(path, "/_search")
-			index := parts[0]
-			req := opensearchapi.SearchRequest{
-				Index: []string{index},
-				Body:  &bodyReader,
+	// Обрабатываем запросы к служебным API
+	if strings.HasPrefix(path, "/_") || strings.Contains(path, "/_stats") ||
+		strings.Contains(path, "/_mapping") || strings.Contains(path, "/_settings") ||
+		strings.Contains(path, "/_alias") || strings.Contains(path, "/_count") {
+		// Для запросов к служебным API используем Cat API или Indices API
+		switch {
+		case strings.Contains(path, "/_stats"):
+			// Индексная статистика
+			indexName := strings.TrimSuffix(path, "/_stats")
+			req := opensearchapi.IndicesStatsRequest{
+				Index: []string{indexName},
 			}
-			resp, err = req.Do(ctx, c.client)
-		} else {
-			// Обычный запрос индексации
-			req := opensearchapi.IndexRequest{
-				Index:      path,
-				DocumentID: "",
-				Body:       &bodyReader,
+			res, err = req.Do(ctx, c.client)
+		case strings.Contains(path, "/_mapping"):
+			// Маппинг индекса
+			indexName := strings.TrimSuffix(path, "/_mapping")
+			req := opensearchapi.IndicesGetMappingRequest{
+				Index: []string{indexName},
 			}
-			resp, err = req.Do(ctx, c.client)
+			res, err = req.Do(ctx, c.client)
+		case strings.Contains(path, "/_settings"):
+			// Настройки индекса
+			indexName := strings.TrimSuffix(path, "/_settings")
+			req := opensearchapi.IndicesGetSettingsRequest{
+				Index: []string{indexName},
+			}
+			res, err = req.Do(ctx, c.client)
+		case strings.Contains(path, "/_alias"):
+			// Алиасы индекса
+			indexName := strings.TrimSuffix(path, "/_alias")
+			req := opensearchapi.IndicesGetAliasRequest{
+				Index: []string{indexName},
+			}
+			res, err = req.Do(ctx, c.client)
+		case strings.Contains(path, "/_count"):
+			// Количество документов
+			indexName := strings.TrimSuffix(path, "/_count")
+			req := opensearchapi.CountRequest{
+				Index: []string{indexName},
+			}
+			res, err = req.Do(ctx, c.client)
+		case strings.Contains(path, "/_cluster/health"):
+			// Здоровье кластера
+			parts := strings.Split(path, "/_cluster/health/")
+			var req opensearchapi.ClusterHealthRequest
+			if len(parts) > 1 {
+				req = opensearchapi.ClusterHealthRequest{
+					Index: []string{parts[1]},
+				}
+			} else {
+				req = opensearchapi.ClusterHealthRequest{}
+			}
+			res, err = req.Do(ctx, c.client)
+		default:
+			// Для остальных служебных запросов используем Info
+			req := opensearchapi.InfoRequest{}
+			res, err = req.Do(ctx, c.client)
 		}
-	case "PUT":
-		req := opensearchapi.IndexRequest{
-			Index:      path,
-			DocumentID: "",
-			Body:       &bodyReader,
+	} else {
+		// Обычные запросы к индексам (поиск и т.д.)
+		var bodyReader io.Reader
+		if body != nil {
+			bodyReader = strings.NewReader(string(body))
 		}
-		resp, err = req.Do(ctx, c.client)
-	case "DELETE":
-		req := opensearchapi.DeleteRequest{
-			Index:      path,
-			DocumentID: "",
+
+		switch method {
+		case "GET", "POST":
+			if strings.Contains(path, "/_search") {
+				// Поисковый запрос
+				parts := strings.Split(path, "/_search")
+				req := opensearchapi.SearchRequest{
+					Index: []string{parts[0]},
+					Body:  bodyReader,
+				}
+				res, err = req.Do(ctx, c.client)
+			} else {
+				// Обычный GET документа
+				req := opensearchapi.GetRequest{
+					Index:      path,
+					DocumentID: "",
+				}
+				res, err = req.Do(ctx, c.client)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported method: %s", method)
 		}
-		resp, err = req.Do(ctx, c.client)
-	default:
-		return nil, fmt.Errorf("неподдерживаемый метод HTTP: %s", method)
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
+		return nil, fmt.Errorf("failed to perform request: %w", err)
 	}
-	defer func() {
-		if closeErr := resp.Body.Close(); closeErr != nil {
-			// Логируем ошибку закрытия response body
-			_ = closeErr // Explicitly ignore error
-		}
-	}()
+	defer res.Body.Close()
 
-	if resp.IsError() {
-		return nil, fmt.Errorf("ошибка в ответе OpenSearch: %s", resp.String())
-	}
-
-	// Читаем весь ответ
-	result, err := io.ReadAll(resp.Body)
+	// Читаем ответ
+	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка чтения ответа: %w", err)
+		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
 
-	return result, nil
+	// Проверяем статус ответа
+	if res.IsError() {
+		return nil, fmt.Errorf("opensearch error: %s", res.String())
+	}
+
+	return responseBody, nil
 }
 
 func (c *OpenSearchClient) DeleteIndex(ctx context.Context, indexName string) error {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"backend/internal/domain"
 
@@ -24,6 +25,19 @@ type SearchConfigRepository struct {
 
 func NewSearchConfigRepository(db *sqlx.DB) *SearchConfigRepository {
 	return &SearchConfigRepository{db: db}
+}
+
+// GetLastReindexTime получает время последней переиндексации
+func (r *SearchConfigRepository) GetLastReindexTime(ctx context.Context, lastReindex *time.Time) error {
+	query := `SELECT MAX(created_at) FROM admin_logs WHERE action = 'reindex_search'`
+	return r.db.QueryRowContext(ctx, query).Scan(lastReindex)
+}
+
+// LogReindexAction логирует действие переиндексации
+func (r *SearchConfigRepository) LogReindexAction(ctx context.Context, userID int, details string) error {
+	query := `INSERT INTO admin_logs (user_id, action, details, created_at) VALUES ($1, $2, $3, NOW())`
+	_, err := r.db.ExecContext(ctx, query, userID, "reindex_search", details)
+	return err
 }
 
 // Weights methods

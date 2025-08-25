@@ -2755,6 +2755,1535 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/logistics/analytics/couriers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Сравнение курьерских служб
+     * @description Возвращает сравнительную аналитику по курьерским службам
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Дата начала периода (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата окончания периода (YYYY-MM-DD) */
+          date_to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Courier comparison */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.CourierStats'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/analytics/export': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Экспортировать отчет
+     * @description Экспортирует отчет по логистике в указанном формате
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Формат экспорта (csv, xlsx) */
+          format?: string;
+          /** @description Тип отчета (shipments, problems, performance) */
+          report_type?: string;
+          /** @description Дата начала периода (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата окончания периода (YYYY-MM-DD) */
+          date_to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Report file */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': string;
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/octet-stream': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/analytics/financial': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить финансовый отчет
+     * @description Возвращает финансовые показатели логистики за указанный период
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Дата начала периода (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата окончания периода (YYYY-MM-DD) */
+          date_to?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Financial report */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden - insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/analytics/performance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить метрики производительности
+     * @description Возвращает метрики производительности логистики за указанный период
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Дата начала периода (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description Дата окончания периода (YYYY-MM-DD) */
+          date_to?: string;
+          /** @description Группировка (day, week, month) */
+          group_by?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Performance metrics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/dashboard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить статистику для dashboard логистики
+     * @description Возвращает агрегированные метрики и статистику для отображения на dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.DashboardStats'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden - insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/dashboard/chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить данные для недельного графика
+     * @description Возвращает статистику доставок за последние 7 дней для графиков
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Weekly chart data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.DailyStats'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить список проблемных отправлений
+     * @description Возвращает список проблем с отправлениями с возможностью фильтрации
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Фильтр по статусу проблемы */
+          status?: string;
+          /** @description Фильтр по критичности (low, medium, high, critical) */
+          severity?: string;
+          /** @description Фильтр по типу проблемы */
+          problem_type?: string;
+          /** @description Фильтр по назначенному пользователю */
+          assigned_to?: number;
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Количество элементов на странице */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of problems */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Создать новую проблему
+     * @description Создает новую запись о проблеме с отправлением
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные проблемы */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_logistics.ProblemShipment'];
+        };
+      };
+      responses: {
+        /** @description Created problem */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemShipment'];
+            };
+          };
+        };
+        /** @description Bad request - invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Обновить проблему
+     * @description Обновляет информацию о проблеме с отправлением
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Обновляемые поля */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Updated problem */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemShipment'];
+            };
+          };
+        };
+        /** @description Bad request - invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}/assign': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Назначить проблему пользователю
+     * @description Назначает проблему на конкретного пользователя для решения
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description ID пользователя для назначения */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Problem assigned */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad request - invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}/comments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить комментарии к проблеме
+     * @description Возвращает список всех комментариев к проблеме
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of comments */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemComment'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Добавить комментарий к проблеме
+     * @description Добавляет комментарий к существующей проблеме
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Текст комментария */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Added comment */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemComment'];
+            };
+          };
+        };
+        /** @description Bad request - invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}/details': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить детальную информацию о проблеме
+     * @description Возвращает полную информацию о проблеме включая комментарии и историю
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Problem details with comments and history */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemShipment'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить историю изменений проблемы
+     * @description Возвращает историю всех изменений статуса и назначения проблемы
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description History of changes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemStatusHistory'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/problems/{id}/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Решить проблему
+     * @description Отмечает проблему как решенную с указанием резолюции
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID проблемы */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Резолюция проблемы */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Problem resolved */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad request - invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Problem not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/shipments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить список отправлений с фильтрами
+     * @description Возвращает список отправлений с возможностью фильтрации и пагинации
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Фильтр по статусу */
+          status?: string;
+          /** @description Фильтр по курьерской службе (bex, postexpress) */
+          courier_service?: string;
+          /** @description Дата начала периода (RFC3339) */
+          date_from?: string;
+          /** @description Дата окончания периода (RFC3339) */
+          date_to?: string;
+          /** @description Фильтр по городу */
+          city?: string;
+          /** @description Поиск по трек-номеру */
+          tracking_number?: string;
+          /** @description Только проблемные отправления */
+          has_problems?: boolean;
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Количество элементов на странице */
+          limit?: number;
+          /** @description Поле для сортировки */
+          sort_by?: string;
+          /** @description Порядок сортировки (asc, desc) */
+          sort_order?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of shipments with total count */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Bad request - invalid filters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/shipments/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить детальную информацию об отправлении
+     * @description Возвращает полную информацию об отправлении включая историю статусов и проблемы
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Тип отправления (bex, postexpress) */
+          type: string;
+        };
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Shipment details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_logistics.ShipmentDetails'];
+            };
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/shipments/{id}/action': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Выполнить действие над отправлением
+     * @description Выполняет специальное действие (связаться с курьером, отправить уведомление и т.д.)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Действие и параметры */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Action performed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden - insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/shipments/{id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Обновить статус отправления
+     * @description Изменяет статус отправления и добавляет запись в лог
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Новый статус */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Status updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden - insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/logistics/shipments/{provider}/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить детальную информацию об отправлении по провайдеру
+     * @description Возвращает полную информацию об отправлении включая историю статусов
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Провайдер (BEX, PostExpress) */
+          provider: string;
+          /** @description ID отправления */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Shipment details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Bad request - invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/marketplace/attributes': {
     parameters: {
       query?: never;
@@ -4123,6 +5652,287 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/documents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search indexed documents
+     * @description Search and filter indexed documents
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query */
+          query?: string;
+          /** @description Document type (listing/product) */
+          type?: string;
+          /** @description Category ID */
+          category_id?: number;
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexedDocument'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/info': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search index information
+     * @description Returns detailed information about the search index
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexInfo'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/reindex': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reindex search documents
+     * @description Trigger reindexing of all marketplace documents
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/statistics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search index statistics
+     * @description Returns statistics about indexed documents
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexStatistics'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -29627,6 +31437,162 @@ export interface components {
       /** @description Если не передан, будет сгенерирован */
       session_id?: string;
     };
+    'backend_internal_domain_logistics.Address': {
+      city?: string;
+      country?: string;
+      name?: string;
+      phone?: string;
+      postal_code?: string;
+      street?: string;
+    };
+    'backend_internal_domain_logistics.CourierStats': {
+      avg_time?: number;
+      delivered?: number;
+      name?: string;
+      shipments?: number;
+      success_rate?: number;
+    };
+    'backend_internal_domain_logistics.DailyStats': {
+      date?: string;
+      delivered?: number;
+      in_transit?: number;
+      problems?: number;
+      shipments?: number;
+    };
+    'backend_internal_domain_logistics.DashboardStats': {
+      active_shipments?: number;
+      avg_delivery_time?: number;
+      courier_performance?: components['schemas']['backend_internal_domain_logistics.CourierStats'][];
+      delivery_success_rate?: number;
+      problem_shipments?: number;
+      status_distribution?: {
+        [key: string]: number;
+      };
+      today_delivered?: number;
+      today_shipments?: number;
+      weekly_deliveries?: components['schemas']['backend_internal_domain_logistics.DailyStats'][];
+    };
+    'backend_internal_domain_logistics.Document': {
+      created_at?: string;
+      name?: string;
+      /** @description label, invoice, customs */
+      type?: string;
+      url?: string;
+    };
+    'backend_internal_domain_logistics.JSONB': {
+      [key: string]: unknown;
+    };
+    'backend_internal_domain_logistics.OrderInfo': {
+      order_id?: number;
+      price?: number;
+      product_image?: string;
+      product_name?: string;
+      quantity?: number;
+    };
+    'backend_internal_domain_logistics.ProblemComment': {
+      /** @description JOIN поля */
+      admin?: components['schemas']['backend_internal_domain_logistics.User'];
+      admin_id?: number;
+      comment?: string;
+      /** @description 'comment', 'status_change', 'assignment', 'resolution' */
+      comment_type?: string;
+      created_at?: string;
+      id?: number;
+      metadata?: components['schemas']['backend_internal_domain_logistics.JSONB'];
+      problem_id?: number;
+    };
+    /** @enum {string} */
+    'backend_internal_domain_logistics.ProblemSeverity':
+      | 'low'
+      | 'medium'
+      | 'high'
+      | 'critical';
+    'backend_internal_domain_logistics.ProblemShipment': {
+      assigned_to?: number;
+      assigned_user?: components['schemas']['backend_internal_domain_logistics.User'];
+      /** @description Дополнительные поля */
+      comments?: components['schemas']['backend_internal_domain_logistics.ProblemComment'][];
+      created_at?: string;
+      description?: string;
+      history?: components['schemas']['backend_internal_domain_logistics.ProblemStatusHistory'][];
+      id?: number;
+      metadata?: components['schemas']['backend_internal_domain_logistics.JSONB'];
+      order_id?: number;
+      problem_type?: components['schemas']['backend_internal_domain_logistics.ProblemType'];
+      resolution?: string;
+      resolved_at?: string;
+      severity?: components['schemas']['backend_internal_domain_logistics.ProblemSeverity'];
+      shipment_id?: number;
+      shipment_type?: string;
+      status?: components['schemas']['backend_internal_domain_logistics.ProblemStatus'];
+      tracking_number?: string;
+      updated_at?: string;
+      user?: components['schemas']['backend_internal_domain_logistics.User'];
+      user_id?: number;
+    };
+    /** @enum {string} */
+    'backend_internal_domain_logistics.ProblemStatus':
+      | 'open'
+      | 'investigating'
+      | 'waiting_response'
+      | 'resolved'
+      | 'closed';
+    'backend_internal_domain_logistics.ProblemStatusHistory': {
+      /** @description JOIN поля */
+      admin?: components['schemas']['backend_internal_domain_logistics.User'];
+      admin_id?: number;
+      comment?: string;
+      created_at?: string;
+      id?: number;
+      metadata?: components['schemas']['backend_internal_domain_logistics.JSONB'];
+      new_assigned?: components['schemas']['backend_internal_domain_logistics.User'];
+      new_assigned_to?: number;
+      new_status?: string;
+      old_assigned?: components['schemas']['backend_internal_domain_logistics.User'];
+      old_assigned_to?: number;
+      old_status?: string;
+      problem_id?: number;
+    };
+    /** @enum {string} */
+    'backend_internal_domain_logistics.ProblemType':
+      | 'delayed'
+      | 'lost'
+      | 'damaged'
+      | 'return_requested'
+      | 'wrong_address'
+      | 'complaint';
+    'backend_internal_domain_logistics.ShipmentDetails': {
+      created_at?: string;
+      delivered_at?: string;
+      /** @description Документы */
+      documents?: components['schemas']['backend_internal_domain_logistics.Document'][];
+      id?: number;
+      /** @description Информация о товаре */
+      order_info?: components['schemas']['backend_internal_domain_logistics.OrderInfo'];
+      /** @description Проблемы */
+      problems?: components['schemas']['backend_internal_domain_logistics.ProblemShipment'][];
+      receiver_address?: components['schemas']['backend_internal_domain_logistics.Address'];
+      /** @description Адреса */
+      sender_address?: components['schemas']['backend_internal_domain_logistics.Address'];
+      status?: string;
+      /** @description История статусов */
+      status_history?: components['schemas']['backend_internal_domain_logistics.StatusHistoryEntry'][];
+      tracking_number?: string;
+      /** @description bex, postexpress, marketplace */
+      type?: string;
+      updated_at?: string;
+    };
+    'backend_internal_domain_logistics.StatusHistoryEntry': {
+      location?: string;
+      status?: string;
+      status_text?: string;
+      timestamp?: string;
+    };
+    'backend_internal_domain_logistics.User': {
+      email?: string;
+      id?: number;
+      name?: string;
+    };
     'backend_internal_domain_models.AITranslateBatchRequest': {
       items: components['schemas']['backend_internal_domain_models.TranslationItem'][];
       provider?: string;
@@ -31783,6 +33749,37 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
+    'backend_internal_proj_analytics_service.ItemPerformance': {
+      category_id?: number;
+      clicks?: number;
+      conversions?: number;
+      ctr?: number;
+      item_id?: number;
+      revenue?: number;
+      title?: string;
+      views?: number;
+    };
+    'backend_internal_proj_analytics_service.SearchMetrics': {
+      avg_click_position?: number;
+      avg_results_shown?: number;
+      ctr?: number;
+      search_trends?: components['schemas']['backend_internal_proj_analytics_service.SearchTrend'][];
+      top_queries?: components['schemas']['backend_internal_proj_analytics_service.TopQuery'][];
+      total_searches?: number;
+      unique_searches?: number;
+      zero_result_rate?: number;
+    };
+    'backend_internal_proj_analytics_service.SearchTrend': {
+      ctr?: number;
+      date?: string;
+      searches?: number;
+    };
+    'backend_internal_proj_analytics_service.TopQuery': {
+      avg_results?: number;
+      count?: number;
+      ctr?: number;
+      query?: string;
+    };
     'backend_internal_proj_bexexpress_models.AddressSuggestion': {
       full_address?: string;
       latitude?: number;
@@ -32561,6 +34558,54 @@ export interface components {
       total_volume_m3?: number;
       warehouse_id?: number;
       warehouse_name?: string;
+    };
+    'backend_internal_proj_search_admin_service.IndexInfo': {
+      aliases?: string[];
+      created_at?: string;
+      document_count?: number;
+      health?: string;
+      index_name?: string;
+      last_updated?: string;
+      mappings?: {
+        [key: string]: unknown;
+      };
+      number_of_shards?: number;
+      settings?: {
+        [key: string]: unknown;
+      };
+      size_formatted?: string;
+      size_in_bytes?: number;
+      status?: string;
+    };
+    'backend_internal_proj_search_admin_service.IndexStatistics': {
+      documents_by_category?: {
+        [key: string]: number;
+      };
+      documents_by_status?: {
+        [key: string]: number;
+      };
+      index_health?: string;
+      last_reindexed?: string;
+      listings_count?: number;
+      products_count?: number;
+      searchable_fields?: string[];
+      total_documents?: number;
+    };
+    'backend_internal_proj_search_admin_service.IndexedDocument': {
+      category_id?: number;
+      category_name?: string;
+      id?: string;
+      indexed_at?: string;
+      last_modified?: string;
+      searchable_fields?: {
+        [key: string]: unknown;
+      };
+      status?: string;
+      storefront_id?: number;
+      title?: string;
+      /** @description listing или product */
+      type?: string;
+      user_id?: number;
     };
     'backend_internal_proj_search_optimization_service.OptimizationConfig': {
       default_analysis_period_days?: number;

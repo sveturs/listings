@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/domain"
 	"backend/internal/proj/search_admin/service"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,11 +16,13 @@ import (
 
 type Handler struct {
 	service *service.Service
+	logger  *logger.Logger
 }
 
-func NewHandler(service *service.Service) *Handler {
+func NewHandler(service *service.Service, logger *logger.Logger) *Handler {
 	return &Handler{
 		service: service,
+		logger:  logger,
 	}
 }
 

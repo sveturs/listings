@@ -605,7 +605,8 @@
     "showPhone": "Показать телефон",
     "allItems": "Все товары",
     "signInToContact": "Войдите для связи с продавцом",
-    "signIn": "Войти"
+    "signIn": "Войти",
+    "sendMessage": "Написать сообщение"
   },
   "common": {
     "loading": "Загрузка...",

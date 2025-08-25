@@ -12,6 +12,8 @@ const NoviSadDistricts = () => {
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
   const [showOverpassVersion, setShowOverpassVersion] =
     useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] =
+    useState<boolean>(false);
 
   // Данные районов с полигонами, полученными через Nominatim API
   const districts = [
@@ -9251,24 +9253,44 @@ const NoviSadDistricts = () => {
       {/* Header */}
       <div className="navbar bg-base-100 shadow-lg">
         <div className="navbar-start">
+          {/* Mobile menu button */}
+          <button
+            className="btn btn-ghost btn-circle lg:hidden"
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
           <SveTuLogoStatic variant="gradient" width={120} height={40} />
         </div>
         <div className="navbar-center">
-          <h1 className="text-xl font-bold">
-            🏘️ Районы Нови-Сада - Интерактивная карта
+          <h1 className="text-sm sm:text-lg lg:text-xl font-bold">
+            🏘️ <span className="hidden sm:inline">Районы Нови-Сада - </span>
+            <span className="hidden md:inline">Интерактивная </span>карта
           </h1>
         </div>
-        <div className="navbar-end gap-4">
+        <div className="navbar-end gap-1 sm:gap-2 lg:gap-4">
           {/* Кнопка управления районами */}
           <Link
             href="/ru/examples/novi-sad-districts/manage"
-            className="btn btn-sm btn-outline btn-primary"
+            className="btn btn-sm btn-outline btn-primary hidden sm:flex"
           >
-            ⚙️ Управление
+            ⚙️ <span className="hidden md:inline">Управление</span>
           </Link>
 
           {/* Кнопка переключения между версиями API */}
-          <div className="form-control">
+          <div className="form-control hidden md:block">
             <label className="label cursor-pointer gap-2">
               <span className="label-text text-xs">
                 {showOverpassVersion ? 'Overpass API' : 'Nominatim API'}
@@ -9282,14 +9304,14 @@ const NoviSadDistricts = () => {
             </label>
           </div>
 
-          <div className="stats stats-horizontal shadow-md">
+          <div className="stats stats-horizontal shadow-md hidden sm:flex">
             <div className="stat p-2">
               <div className="stat-title text-xs">Всего районов</div>
               <div className="stat-value text-lg text-primary">
                 {districts.length}
               </div>
             </div>
-            <div className="stat p-2">
+            <div className="stat p-2 hidden lg:block">
               <div className="stat-title text-xs">Население</div>
               <div className="stat-value text-lg text-secondary">91k+</div>
             </div>
@@ -9297,11 +9319,26 @@ const NoviSadDistricts = () => {
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-64px)]">
+      {/* Mobile Instructions */}
+      <div className="lg:hidden bg-info/10 border-b border-info/20 p-2">
+        <div className="flex items-center justify-center gap-2 text-sm text-info">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Нажмите ☰ для списка районов, тапните по району на карте для
+          подробностей
+        </div>
+      </div>
+
+      <div className="flex h-[calc(100vh-104px)] lg:h-[calc(100vh-64px)] relative">
         {/* Map Container */}
         <div className="flex-1 relative">
           {/* Real Map with Leaflet */}
-          <div className="w-full h-full p-4">
+          <div className="w-full h-full p-2 sm:p-4">
             <MapWithRealBase
               districts={districts}
               selectedDistrict={selectedDistrict}
@@ -9313,7 +9350,7 @@ const NoviSadDistricts = () => {
           {selectedDistrict && (
             <AnimatedSection
               animation="slideUp"
-              className="absolute bottom-4 left-4 right-96"
+              className="absolute bottom-4 left-4 right-96 hidden lg:block"
             >
               <div className="card bg-base-100 shadow-xl">
                 <div className="card-body p-6">
@@ -9365,8 +9402,8 @@ const NoviSadDistricts = () => {
           )}
         </div>
 
-        {/* Sidebar with District Info */}
-        <AnimatedSection animation="slideLeft" className="w-96">
+        {/* Sidebar with District Info - Desktop */}
+        <AnimatedSection animation="slideLeft" className="w-96 hidden lg:block">
           <div className="w-full h-full bg-base-100 shadow-xl p-6 overflow-y-auto">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               📊 Статистика по районам
@@ -9609,6 +9646,212 @@ const NoviSadDistricts = () => {
             </div>
           </div>
         </AnimatedSection>
+
+        {/* Mobile Sidebar Overlay */}
+        {isMobileSidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          >
+            <div
+              className="absolute right-0 top-0 w-80 h-full bg-base-100 shadow-xl transform transition-transform duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold">📊 Статистика районов</h2>
+                  <button
+                    className="btn btn-ghost btn-circle btn-sm"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Mobile API Toggle */}
+                <div className="form-control mt-4">
+                  <label className="label cursor-pointer gap-2">
+                    <span className="label-text text-sm">
+                      {showOverpassVersion ? 'Overpass API' : 'Nominatim API'}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-primary toggle-sm"
+                      checked={showOverpassVersion}
+                      onChange={(e) => setShowOverpassVersion(e.target.checked)}
+                    />
+                  </label>
+                </div>
+
+                {/* Mobile Stats */}
+                <div className="stats stats-vertical shadow-md mt-4 w-full">
+                  <div className="stat">
+                    <div className="stat-title text-xs">Всего районов</div>
+                    <div className="stat-value text-lg text-primary">
+                      {districts.length}
+                    </div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title text-xs">Население</div>
+                    <div className="stat-value text-lg text-secondary">
+                      91k+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 overflow-y-auto h-full">
+                {/* Mobile Districts List */}
+                <div className="space-y-3">
+                  {districts.map((district) => (
+                    <div
+                      key={district.id}
+                      className={`card cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                        selectedDistrict?.id === district.id
+                          ? 'bg-primary/10 border-primary shadow-lg'
+                          : 'bg-base-200 hover:bg-base-300'
+                      }`}
+                      onClick={() => {
+                        setSelectedDistrict(district);
+                        setIsMobileSidebarOpen(false);
+                      }}
+                    >
+                      <div className="card-body p-3">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                            style={{ backgroundColor: district.color }}
+                          >
+                            {district.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-sm">
+                              {district.name}
+                            </div>
+                            <div className="text-xs text-base-content/60">
+                              {district.nameEn}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center">
+                            <div className="font-semibold text-primary">
+                              {district.stats.properties}
+                            </div>
+                            <div className="text-base-content/60">Объектов</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-semibold text-secondary">
+                              {district.stats.avgPrice}
+                            </div>
+                            <div className="text-base-content/60">Ср. цена</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-semibold text-success">
+                              {district.stats.growth}
+                            </div>
+                            <div className="text-base-content/60">Рост</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mobile Summary */}
+                <div className="card bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 mt-4">
+                  <div className="card-body p-3">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-sm">
+                      🏙️ Сводка по Нови-Саду
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span>Общее население:</span>
+                        <span className="font-bold text-primary">
+                          91,127 чел.
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Общая площадь:</span>
+                        <span className="font-bold text-secondary">
+                          35.9 км²
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Всего объектов:</span>
+                        <span className="font-bold text-accent">8,145</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Средний рост цен:</span>
+                        <span className="font-bold text-success">+10.5%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Selected District Info - Bottom Sheet */}
+        {selectedDistrict && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-100 shadow-xl border-t-2 border-primary rounded-t-xl max-h-48 overflow-y-auto">
+            <div className="p-4">
+              <button
+                className="btn btn-sm btn-circle absolute right-2 top-2"
+                onClick={() => setSelectedDistrict(null)}
+              >
+                ✕
+              </button>
+
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-lg font-bold"
+                  style={{ backgroundColor: selectedDistrict.color }}
+                >
+                  {selectedDistrict.name.charAt(0)}
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold mb-1">
+                    {selectedDistrict.name}
+                  </h3>
+                  <p className="text-xs text-base-content/60 mb-2">
+                    {selectedDistrict.nameEn}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="stat bg-base-200 rounded-lg p-2">
+                      <div className="stat-title text-xs">Население</div>
+                      <div className="stat-value text-sm">
+                        {selectedDistrict.population}
+                      </div>
+                    </div>
+                    <div className="stat bg-base-200 rounded-lg p-2">
+                      <div className="stat-title text-xs">Площадь</div>
+                      <div className="stat-value text-sm">
+                        {selectedDistrict.area}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

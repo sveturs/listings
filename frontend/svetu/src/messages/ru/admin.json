@@ -6,6 +6,7 @@
   "accessDenied": "Доступ запрещен",
   "adminOnly": "Только администраторы могут получить доступ к этой странице",
   "manage": "Управление",
+  "loadError": "Ошибка загрузки данных",
   "availableBalance": "Доступный баланс",
   "deposit": "Пополнить",
   "withdraw": "Вывести",
@@ -394,6 +395,7 @@
     "attributeGroups": "Группы атрибутов",
     "system": "Система",
     "search": "Поиск",
+    "logistics": "Логистика",
     "content": "Контент",
     "listings": "Объявления",
     "users": "Пользователи",
@@ -640,7 +642,52 @@
   },
   "search": {
     "title": "Поиск",
-    "description": "Управление поиском"
+    "description": "Управление поиском",
+    "index": {
+      "title": "Управление поисковым индексом",
+      "description": "Просмотр состояния индекса и управление индексацией",
+      "confirmReindex": "Вы уверены, что хотите запустить переиндексацию? Это может занять некоторое время.",
+      "reindex": "Переиндексировать",
+      "reindexing": "Переиндексация...",
+      "reindexStarted": "Переиндексация запущена",
+      "reindexError": "Ошибка при запуске переиндексации",
+      "tabs": {
+        "overview": "Обзор",
+        "documents": "Документы",
+        "mappings": "Маппинги"
+      },
+      "info": "Информация об индексе",
+      "name": "Имя индекса",
+      "documents": "Документов",
+      "size": "Размер",
+      "health": "Состояние",
+      "status": "Статус",
+      "shards": "Шарды",
+      "statistics": "Статистика",
+      "totalDocs": "Всего документов",
+      "listings": "Объявления",
+      "products": "Товары",
+      "lastReindexed": "Последняя переиндексация",
+      "byCategory": "Документы по категориям",
+      "searchableFields": "Поля для поиска",
+      "searchPlaceholder": "Поиск документов...",
+      "allTypes": "Все типы",
+      "typeListings": "Объявления",
+      "typeProducts": "Товары",
+      "categoryId": "ID категории",
+      "search": "Искать",
+      "docId": "ID",
+      "docType": "Тип",
+      "docTitle": "Заголовок",
+      "docCategory": "Категория",
+      "docStatus": "Статус",
+      "docIndexedAt": "Индексирован",
+      "docSearchFields": "Поля",
+      "viewFields": "Просмотр",
+      "noDocuments": "Документы не найдены",
+      "pageInfo": "Страница {current} из {total}",
+      "mappingsTitle": "Структура индекса (маппинги)"
+    }
   },
   "searchLabel": "Поиск",
   "listings": {
@@ -734,7 +781,8 @@
     "weights": "Веса",
     "synonyms": "Синонимы",
     "optimization": "Оптимизация",
-    "transliteration": "Транслитерация"
+    "transliteration": "Транслитерация",
+    "index": "Индекс"
   },
   "description": "Описание",
   "timeRange": "Временной период",
@@ -843,5 +891,233 @@
   "created": "Создано",
   "create": "Создать",
   "checkError": "[MISSING_RU] checkError",
-  "required": "[MISSING_RU] required"
+  "required": "[MISSING_RU] required",
+  "logistics": {
+    "title": "Управление логистикой",
+    "dashboard": "Дашборд",
+    "shipments": {
+      "title": "Отправления",
+      "description": "Управление и отслеживание всех отправлений",
+      "results": "Найдено отправлений",
+      "noResults": "Отправления не найдены"
+    },
+    "shipmentDetails": {
+      "title": "Детали отправления",
+      "description": "Полная информация об отправлении"
+    },
+    "problems": {
+      "title": "Проблемные доставки",
+      "description": "Управление проблемными отправлениями",
+      "problemType": "Тип проблемы",
+      "allTypes": "Все типы",
+      "types": {
+        "delayed": "Задержанные",
+        "lost": "Потерянные",
+        "return": "Возвраты",
+        "complaint": "Жалобы"
+      },
+      "status": {
+        "open": "Открыто",
+        "investigating": "Расследуется",
+        "resolved": "Решено"
+      },
+      "stats": {
+        "open": "Открытые",
+        "investigating": "В работе",
+        "resolved": "Решенные",
+        "returns": "Возвраты"
+      },
+      "list": "Список проблем",
+      "noProblems": "Нет проблемных отправлений",
+      "type": "Тип",
+      "description": "Описание",
+      "assignedTo": "Назначено",
+      "table": {
+        "id": "ID",
+        "tracking_number": "Номер отслеживания",
+        "type": "Тип",
+        "priority": "Приоритет",
+        "status": "Статус",
+        "assigned_to": "Назначен",
+        "created_at": "Создано",
+        "actions": "Действия"
+      }
+    },
+    "analytics": {
+      "title": "Аналитика и отчеты",
+      "description": "Детальная аналитика по доставкам",
+      "courier_performance": {
+        "title": "Производительность курьеров"
+      },
+      "financial": {
+        "title": "Финансовая отчетность"
+      },
+      "performance": {
+        "title": "Метрики производительности"
+      }
+    },
+    "filters": {
+      "title": "Фильтры",
+      "tracking_number": "Трек-номер",
+      "tracking_placeholder": "Введите трек-номер",
+      "status": "Статус",
+      "all_statuses": "Все статусы",
+      "provider": "Курьерская служба",
+      "all_providers": "Все службы",
+      "city": "Город",
+      "city_placeholder": "Введите город",
+      "date_from": "Дата от",
+      "date_to": "Дата до",
+      "search": "Поиск",
+      "reset": "Сбросить"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "in_transit": "В пути",
+      "delivered": "Доставлено",
+      "failed": "Не доставлено",
+      "cancelled": "Отменено",
+      "returned": "Возвращено"
+    },
+    "table": {
+      "tracking_number": "Трек-номер",
+      "status": "Статус",
+      "provider": "Служба",
+      "recipient": "Получатель",
+      "sender": "Отправитель",
+      "cod": "Наложенный платеж",
+      "weight": "Вес",
+      "created": "Создано",
+      "delivered": "Доставлено",
+      "updated_at": "Обновлено",
+      "destination": "Направление",
+      "actions": "Действия"
+    },
+    "actions": {
+      "view": "Просмотр",
+      "edit": "Редактировать",
+      "track": "Отследить",
+      "delete": "Удалить",
+      "export": "Экспорт",
+      "new_shipment": "Новое отправление",
+      "resolve": "Решить",
+      "assign": "Назначить",
+      "comments": "Комментарии",
+      "view_details": "Детали",
+      "update_status": "Обновить статус",
+      "contact_courier": "Связаться с курьером"
+    },
+    "pagination": {
+      "page": "Страница",
+      "of": "из",
+      "showing": "Показано",
+      "total": "всего"
+    },
+    "stats": {
+      "today_shipments": "Отправлений сегодня",
+      "today_delivered": "Доставлено сегодня",
+      "active_shipments": "Активные отправления",
+      "problem_shipments": "Проблемные",
+      "avg_delivery_time": "Среднее время доставки",
+      "delivery_success_rate": "Процент успешных доставок",
+      "weekly_deliveries": "Доставки за неделю",
+      "status_distribution": "Распределение по статусам",
+      "courier_performance": "Производительность курьерских служб"
+    },
+    "view_all_shipments": "Просмотр всех отправлений",
+    "problem_shipments": "Проблемные отправления",
+    "export_report": "Экспорт отчета",
+    "monitoring_settings": "Настройки мониторинга",
+    "trackingNumber": "Трек-номер",
+    "provider": "Провайдер",
+    "codAmount": "Наложенный платеж",
+    "notAvailable": "Не доступно",
+    "shipmentNotFound": "Отправление не найдено",
+    "sender": "Отправитель",
+    "recipient": "Получатель",
+    "packageDetails": "Детали посылки",
+    "weight": "Вес",
+    "contents": "Содержимое",
+    "referenceNumber": "Референс номер",
+    "createdAt": "Создано",
+    "statusHistory": "История статусов",
+    "failedReason": "Причина неудачи",
+    "actions": {
+      "view": "Просмотр",
+      "updateStatus": "Обновить статус",
+      "contact": "Связаться",
+      "printLabel": "Печать этикетки"
+    },
+    "assignModal": {
+      "title": "Назначить администратора",
+      "selectAdmin": "Выберите администратора",
+      "assign": "Назначить"
+    },
+    "resolveModal": {
+      "title": "Решить проблему",
+      "problemDescription": "Описание проблемы",
+      "resolution": "Решение",
+      "resolutionPlaceholder": "Опишите, как была решена проблема...",
+      "resolve": "Решить"
+    },
+    "problemComments": {
+      "title": "Комментарии к проблеме",
+      "problemDescription": "Описание проблемы",
+      "noComments": "Пока нет комментариев",
+      "addComment": "Добавить комментарий",
+      "commentPlaceholder": "Напишите ваш комментарий..."
+    },
+    "errors": {
+      "update_status_error": "Не удалось обновить статус отправления",
+      "action_error": "Не удалось выполнить действие над отправлением"
+    },
+    "success": {
+      "status_updated_successfully": "Статус отправления успешно обновлён",
+      "action_completed_successfully": "Действие выполнено успешно"
+    },
+    "quickActions": {
+      "title": "Быстрые действия"
+    },
+    "table": {
+      "date": "Дата",
+      "sent": "Отправлено",
+      "delivered": "Доставлено",
+      "in_transit": "В пути",
+      "problems": "Проблемы",
+      "courier_service": "Служба доставки",
+      "shipments": "Отправлений",
+      "success_rate": "Успешность",
+      "avg_time": "Ср. время"
+    },
+    "status": {
+      "processing": "Обработка"
+    },
+    "map": {
+      "all": "Все",
+      "in_transit": "В пути",
+      "delivered": "Доставлено",
+      "problems": "Проблемы",
+      "loading": "Загрузка карты...",
+      "legend": "Легенда",
+      "sender": "Отправитель",
+      "receiver": "Получатель",
+      "problem": "Проблема"
+    },
+    "dashboard": "Панель мониторинга логистики",
+    "stats": {
+      "today_shipments": "Отправлений сегодня",
+      "today_delivered": "Доставлено сегодня",
+      "active_shipments": "В пути",
+      "problem_shipments": "Проблемные",
+      "avg_delivery_time": "Ср. время доставки",
+      "delivery_success_rate": "Успешность доставки",
+      "weekly_deliveries": "Доставки за последние 7 дней",
+      "status_distribution": "Распределение по статусам",
+      "courier_performance": "Производительность курьерских служб"
+    },
+    "view_all_shipments": "Просмотр всех отправлений",
+    "problem_shipments": "Проблемные отправления",
+    "export_report": "Экспорт отчета",
+    "monitoring_settings": "Настройки мониторинга"
+  }
 }

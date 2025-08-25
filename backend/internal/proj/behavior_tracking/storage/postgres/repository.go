@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,6 +29,27 @@ func NewBehaviorTrackingRepository(pool *pgxpool.Pool) BehaviorTrackingRepositor
 	}
 }
 
+// sanitizeUTF8 удаляет невалидные UTF-8 символы из строки
+func sanitizeUTF8(s string) string {
+	if utf8.ValidString(s) {
+		return s
+	}
+
+	// Построить новую строку только с валидными UTF-8 символами
+	var builder strings.Builder
+	builder.Grow(len(s))
+
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if r != utf8.RuneError {
+			builder.WriteRune(r)
+		}
+		i += size
+	}
+
+	return builder.String()
+}
+
 // SaveEvent сохраняет одно событие
 func (r *behaviorTrackingRepository) SaveEvent(ctx context.Context, event *behavior.BehaviorEvent) error {
 	query := `
@@ -36,6 +59,12 @@ func (r *behaviorTrackingRepository) SaveEvent(ctx context.Context, event *behav
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at
 	`
+
+	// Очищаем строковые поля от невалидных UTF-8 символов
+	sessionID := sanitizeUTF8(event.SessionID)
+	searchQuery := sanitizeUTF8(event.SearchQuery)
+	itemID := sanitizeUTF8(event.ItemID)
+	itemType := sanitizeUTF8(string(event.ItemType))
 
 	// Конвертируем metadata в JSON
 	var metadataJSON []byte
@@ -52,8 +81,8 @@ func (r *behaviorTrackingRepository) SaveEvent(ctx context.Context, event *behav
 	// Выполняем запрос
 	err = r.pool.QueryRow(
 		ctx, query,
-		event.EventType, event.UserID, event.SessionID, event.SearchQuery,
-		event.ItemID, event.ItemType, event.Position, metadataJSON,
+		event.EventType, event.UserID, sessionID, searchQuery,
+		itemID, itemType, event.Position, metadataJSON,
 	).Scan(&event.ID, &event.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to save event: %w", err)
@@ -120,6 +149,35 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 	// Сохраняем события по одному в рамках транзакции
 	validEvents := 0
 	for _, event := range events {
+		// Очищаем строковые поля от невалидных UTF-8 символов
+		sessionID := sanitizeUTF8(event.SessionID)
+		searchQuery := sanitizeUTF8(event.SearchQuery)
+		itemID := sanitizeUTF8(event.ItemID)
+		itemType := sanitizeUTF8(string(event.ItemType))
+
+		// Также очищаем metadata, если есть строковые поля
+		if event.Metadata != nil {
+			// Очищаем строковые поля в metadata
+			if userAgent, ok := event.Metadata["userAgent"].(string); ok {
+				event.Metadata["userAgent"] = sanitizeUTF8(userAgent)
+			}
+			if browser, ok := event.Metadata["browser"].(string); ok {
+				event.Metadata["browser"] = sanitizeUTF8(browser)
+			}
+			if os, ok := event.Metadata["os"].(string); ok {
+				event.Metadata["os"] = sanitizeUTF8(os)
+			}
+			if device, ok := event.Metadata["device"].(string); ok {
+				event.Metadata["device"] = sanitizeUTF8(device)
+			}
+			if referrer, ok := event.Metadata["referrer"].(string); ok {
+				event.Metadata["referrer"] = sanitizeUTF8(referrer)
+			}
+			if currentUrl, ok := event.Metadata["currentUrl"].(string); ok {
+				event.Metadata["currentUrl"] = sanitizeUTF8(currentUrl)
+			}
+		}
+
 		var metadataJSON []byte
 		if event.Metadata != nil {
 			metadataJSON, err = json.Marshal(event.Metadata)
@@ -131,10 +189,10 @@ func (r *behaviorTrackingRepository) SaveEventsBatch(ctx context.Context, events
 			metadataJSON = []byte("{}")
 		}
 
-		// Выполняем INSERT
+		// Выполняем INSERT с очищенными данными
 		_, err = tx.Exec(ctx, query,
-			event.EventType, event.UserID, event.SessionID, event.SearchQuery,
-			event.ItemID, event.ItemType, event.Position, metadataJSON,
+			event.EventType, event.UserID, sessionID, searchQuery,
+			itemID, itemType, event.Position, metadataJSON,
 		)
 		if err != nil {
 			logger.Error().Err(err).Int("index", validEvents).Msg("Failed to insert event")

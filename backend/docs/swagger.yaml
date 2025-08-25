@@ -236,6 +236,308 @@ definitions:
     required:
     - event_type
     type: object
+  backend_internal_domain_logistics.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+    type: object
+  backend_internal_domain_logistics.CourierStats:
+    properties:
+      avg_time:
+        type: number
+      delivered:
+        type: integer
+      name:
+        type: string
+      shipments:
+        type: integer
+      success_rate:
+        type: number
+    type: object
+  backend_internal_domain_logistics.DailyStats:
+    properties:
+      date:
+        type: string
+      delivered:
+        type: integer
+      in_transit:
+        type: integer
+      problems:
+        type: integer
+      shipments:
+        type: integer
+    type: object
+  backend_internal_domain_logistics.DashboardStats:
+    properties:
+      active_shipments:
+        type: integer
+      avg_delivery_time:
+        type: number
+      courier_performance:
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.CourierStats'
+        type: array
+      delivery_success_rate:
+        type: number
+      problem_shipments:
+        type: integer
+      status_distribution:
+        additionalProperties:
+          type: integer
+        type: object
+      today_delivered:
+        type: integer
+      today_shipments:
+        type: integer
+      weekly_deliveries:
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.DailyStats'
+        type: array
+    type: object
+  backend_internal_domain_logistics.Document:
+    properties:
+      created_at:
+        type: string
+      name:
+        type: string
+      type:
+        description: label, invoice, customs
+        type: string
+      url:
+        type: string
+    type: object
+  backend_internal_domain_logistics.JSONB:
+    additionalProperties: true
+    type: object
+  backend_internal_domain_logistics.OrderInfo:
+    properties:
+      order_id:
+        type: integer
+      price:
+        type: number
+      product_image:
+        type: string
+      product_name:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  backend_internal_domain_logistics.ProblemComment:
+    properties:
+      admin:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_logistics.User'
+        description: JOIN поля
+      admin_id:
+        type: integer
+      comment:
+        type: string
+      comment_type:
+        description: '''comment'', ''status_change'', ''assignment'', ''resolution'''
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      metadata:
+        $ref: '#/definitions/backend_internal_domain_logistics.JSONB'
+      problem_id:
+        type: integer
+    type: object
+  backend_internal_domain_logistics.ProblemSeverity:
+    enum:
+    - low
+    - medium
+    - high
+    - critical
+    type: string
+    x-enum-varnames:
+    - SeverityLow
+    - SeverityMedium
+    - SeverityHigh
+    - SeverityCritical
+  backend_internal_domain_logistics.ProblemShipment:
+    properties:
+      assigned_to:
+        type: integer
+      assigned_user:
+        $ref: '#/definitions/backend_internal_domain_logistics.User'
+      comments:
+        description: Дополнительные поля
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.ProblemComment'
+        type: array
+      created_at:
+        type: string
+      description:
+        type: string
+      history:
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.ProblemStatusHistory'
+        type: array
+      id:
+        type: integer
+      metadata:
+        $ref: '#/definitions/backend_internal_domain_logistics.JSONB'
+      order_id:
+        type: integer
+      problem_type:
+        $ref: '#/definitions/backend_internal_domain_logistics.ProblemType'
+      resolution:
+        type: string
+      resolved_at:
+        type: string
+      severity:
+        $ref: '#/definitions/backend_internal_domain_logistics.ProblemSeverity'
+      shipment_id:
+        type: integer
+      shipment_type:
+        type: string
+      status:
+        $ref: '#/definitions/backend_internal_domain_logistics.ProblemStatus'
+      tracking_number:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/backend_internal_domain_logistics.User'
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_logistics.ProblemStatus:
+    enum:
+    - open
+    - investigating
+    - waiting_response
+    - resolved
+    - closed
+    type: string
+    x-enum-varnames:
+    - StatusOpen
+    - StatusInvestigating
+    - StatusWaitingResponse
+    - StatusResolved
+    - StatusClosed
+  backend_internal_domain_logistics.ProblemStatusHistory:
+    properties:
+      admin:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_logistics.User'
+        description: JOIN поля
+      admin_id:
+        type: integer
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      metadata:
+        $ref: '#/definitions/backend_internal_domain_logistics.JSONB'
+      new_assigned:
+        $ref: '#/definitions/backend_internal_domain_logistics.User'
+      new_assigned_to:
+        type: integer
+      new_status:
+        type: string
+      old_assigned:
+        $ref: '#/definitions/backend_internal_domain_logistics.User'
+      old_assigned_to:
+        type: integer
+      old_status:
+        type: string
+      problem_id:
+        type: integer
+    type: object
+  backend_internal_domain_logistics.ProblemType:
+    enum:
+    - delayed
+    - lost
+    - damaged
+    - return_requested
+    - wrong_address
+    - complaint
+    type: string
+    x-enum-varnames:
+    - ProblemTypeDelayed
+    - ProblemTypeLost
+    - ProblemTypeDamaged
+    - ProblemTypeReturnRequested
+    - ProblemTypeWrongAddress
+    - ProblemTypeComplaint
+  backend_internal_domain_logistics.ShipmentDetails:
+    properties:
+      created_at:
+        type: string
+      delivered_at:
+        type: string
+      documents:
+        description: Документы
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.Document'
+        type: array
+      id:
+        type: integer
+      order_info:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_logistics.OrderInfo'
+        description: Информация о товаре
+      problems:
+        description: Проблемы
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.ProblemShipment'
+        type: array
+      receiver_address:
+        $ref: '#/definitions/backend_internal_domain_logistics.Address'
+      sender_address:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_logistics.Address'
+        description: Адреса
+      status:
+        type: string
+      status_history:
+        description: История статусов
+        items:
+          $ref: '#/definitions/backend_internal_domain_logistics.StatusHistoryEntry'
+        type: array
+      tracking_number:
+        type: string
+      type:
+        description: bex, postexpress, marketplace
+        type: string
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_logistics.StatusHistoryEntry:
+    properties:
+      location:
+        type: string
+      status:
+        type: string
+      status_text:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  backend_internal_domain_logistics.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   backend_internal_domain_models.AITranslateBatchRequest:
     properties:
       items:
@@ -4468,6 +4770,68 @@ definitions:
       transport_mode:
         type: string
     type: object
+  backend_internal_proj_analytics_service.ItemPerformance:
+    properties:
+      category_id:
+        type: integer
+      clicks:
+        type: integer
+      conversions:
+        type: integer
+      ctr:
+        type: number
+      item_id:
+        type: integer
+      revenue:
+        type: number
+      title:
+        type: string
+      views:
+        type: integer
+    type: object
+  backend_internal_proj_analytics_service.SearchMetrics:
+    properties:
+      avg_click_position:
+        type: number
+      avg_results_shown:
+        type: number
+      ctr:
+        type: number
+      search_trends:
+        items:
+          $ref: '#/definitions/backend_internal_proj_analytics_service.SearchTrend'
+        type: array
+      top_queries:
+        items:
+          $ref: '#/definitions/backend_internal_proj_analytics_service.TopQuery'
+        type: array
+      total_searches:
+        type: integer
+      unique_searches:
+        type: integer
+      zero_result_rate:
+        type: number
+    type: object
+  backend_internal_proj_analytics_service.SearchTrend:
+    properties:
+      ctr:
+        type: number
+      date:
+        type: string
+      searches:
+        type: integer
+    type: object
+  backend_internal_proj_analytics_service.TopQuery:
+    properties:
+      avg_results:
+        type: integer
+      count:
+        type: integer
+      ctr:
+        type: number
+      query:
+        type: string
+    type: object
   backend_internal_proj_bexexpress_models.AddressSuggestion:
     properties:
       full_address:
@@ -6095,6 +6459,89 @@ definitions:
         type: integer
       warehouse_name:
         type: string
+    type: object
+  backend_internal_proj_search_admin_service.IndexInfo:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      document_count:
+        type: integer
+      health:
+        type: string
+      index_name:
+        type: string
+      last_updated:
+        type: string
+      mappings:
+        additionalProperties: true
+        type: object
+      number_of_shards:
+        type: integer
+      settings:
+        additionalProperties: true
+        type: object
+      size_formatted:
+        type: string
+      size_in_bytes:
+        type: integer
+      status:
+        type: string
+    type: object
+  backend_internal_proj_search_admin_service.IndexStatistics:
+    properties:
+      documents_by_category:
+        additionalProperties:
+          type: integer
+        type: object
+      documents_by_status:
+        additionalProperties:
+          type: integer
+        type: object
+      index_health:
+        type: string
+      last_reindexed:
+        type: string
+      listings_count:
+        type: integer
+      products_count:
+        type: integer
+      searchable_fields:
+        items:
+          type: string
+        type: array
+      total_documents:
+        type: integer
+    type: object
+  backend_internal_proj_search_admin_service.IndexedDocument:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      id:
+        type: string
+      indexed_at:
+        type: string
+      last_modified:
+        type: string
+      searchable_fields:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      storefront_id:
+        type: integer
+      title:
+        type: string
+      type:
+        description: listing или product
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_proj_search_optimization_service.OptimizationConfig:
     properties:
@@ -10784,6 +11231,955 @@ paths:
       summary: Update category keyword
       tags:
       - marketplace-admin-categories
+  /api/v1/admin/logistics/analytics/couriers:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает сравнительную аналитику по курьерским службам
+      parameters:
+      - description: Дата начала периода (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата окончания периода (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Courier comparison
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_logistics.CourierStats'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Сравнение курьерских служб
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/analytics/export:
+    get:
+      consumes:
+      - application/json
+      description: Экспортирует отчет по логистике в указанном формате
+      parameters:
+      - default: csv
+        description: Формат экспорта (csv, xlsx)
+        in: query
+        name: format
+        type: string
+      - default: shipments
+        description: Тип отчета (shipments, problems, performance)
+        in: query
+        name: report_type
+        type: string
+      - description: Дата начала периода (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата окончания периода (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Report file
+          schema:
+            type: file
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Экспортировать отчет
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/analytics/financial:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает финансовые показатели логистики за указанный период
+      parameters:
+      - description: Дата начала периода (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата окончания периода (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Financial report
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить финансовый отчет
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/analytics/performance:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает метрики производительности логистики за указанный период
+      parameters:
+      - description: Дата начала периода (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата окончания периода (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      - default: day
+        description: Группировка (day, week, month)
+        in: query
+        name: group_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Performance metrics
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить метрики производительности
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает агрегированные метрики и статистику для отображения
+        на dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.DashboardStats'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить статистику для dashboard логистики
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/dashboard/chart:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику доставок за последние 7 дней для графиков
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weekly chart data
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_logistics.DailyStats'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить данные для недельного графика
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список проблем с отправлениями с возможностью фильтрации
+      parameters:
+      - description: Фильтр по статусу проблемы
+        in: query
+        name: status
+        type: string
+      - description: Фильтр по критичности (low, medium, high, critical)
+        in: query
+        name: severity
+        type: string
+      - description: Фильтр по типу проблемы
+        in: query
+        name: problem_type
+        type: string
+      - description: Фильтр по назначенному пользователю
+        in: query
+        name: assigned_to
+        type: integer
+      - default: 1
+        description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Количество элементов на странице
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of problems
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список проблемных отправлений
+      tags:
+      - admin-logistics
+    post:
+      consumes:
+      - application/json
+      description: Создает новую запись о проблеме с отправлением
+      parameters:
+      - description: Данные проблемы
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_logistics.ProblemShipment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created problem
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.ProblemShipment'
+              type: object
+        "400":
+          description: Bad request - invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать новую проблему
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о проблеме с отправлением
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Обновляемые поля
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated problem
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.ProblemShipment'
+              type: object
+        "400":
+          description: Bad request - invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить проблему
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}/assign:
+    post:
+      consumes:
+      - application/json
+      description: Назначает проблему на конкретного пользователя для решения
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID пользователя для назначения
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Problem assigned
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad request - invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Назначить проблему пользователю
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}/comments:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех комментариев к проблеме
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of comments
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_logistics.ProblemComment'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить комментарии к проблеме
+      tags:
+      - admin-logistics
+    post:
+      consumes:
+      - application/json
+      description: Добавляет комментарий к существующей проблеме
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Текст комментария
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Added comment
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.ProblemComment'
+              type: object
+        "400":
+          description: Bad request - invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить комментарий к проблеме
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}/details:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает полную информацию о проблеме включая комментарии и историю
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Problem details with comments and history
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.ProblemShipment'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить детальную информацию о проблеме
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает историю всех изменений статуса и назначения проблемы
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: History of changes
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_logistics.ProblemStatusHistory'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить историю изменений проблемы
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/problems/{id}/resolve:
+    post:
+      consumes:
+      - application/json
+      description: Отмечает проблему как решенную с указанием резолюции
+      parameters:
+      - description: ID проблемы
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Резолюция проблемы
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Problem resolved
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad request - invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Problem not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Решить проблему
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/shipments:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список отправлений с возможностью фильтрации и пагинации
+      parameters:
+      - description: Фильтр по статусу
+        in: query
+        name: status
+        type: string
+      - description: Фильтр по курьерской службе (bex, postexpress)
+        in: query
+        name: courier_service
+        type: string
+      - description: Дата начала периода (RFC3339)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата окончания периода (RFC3339)
+        in: query
+        name: date_to
+        type: string
+      - description: Фильтр по городу
+        in: query
+        name: city
+        type: string
+      - description: Поиск по трек-номеру
+        in: query
+        name: tracking_number
+        type: string
+      - description: Только проблемные отправления
+        in: query
+        name: has_problems
+        type: boolean
+      - default: 1
+        description: Номер страницы
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Количество элементов на странице
+        in: query
+        name: limit
+        type: integer
+      - default: created_at
+        description: Поле для сортировки
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: Порядок сортировки (asc, desc)
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of shipments with total count
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad request - invalid filters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список отправлений с фильтрами
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/shipments/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает полную информацию об отправлении включая историю статусов
+        и проблемы
+      parameters:
+      - description: ID отправления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Тип отправления (bex, postexpress)
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shipment details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_logistics.ShipmentDetails'
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Shipment not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить детальную информацию об отправлении
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/shipments/{id}/action:
+    post:
+      consumes:
+      - application/json
+      description: Выполняет специальное действие (связаться с курьером, отправить
+        уведомление и т.д.)
+      parameters:
+      - description: ID отправления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Действие и параметры
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Action performed successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Выполнить действие над отправлением
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/shipments/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Изменяет статус отправления и добавляет запись в лог
+      parameters:
+      - description: ID отправления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новый статус
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить статус отправления
+      tags:
+      - admin-logistics
+  /api/v1/admin/logistics/shipments/{provider}/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает полную информацию об отправлении включая историю статусов
+      parameters:
+      - description: Провайдер (BEX, PostExpress)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: ID отправления
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shipment details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad request - invalid parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Shipment not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить детальную информацию об отправлении по провайдеру
+      tags:
+      - admin-logistics
   /api/v1/admin/marketplace/attributes:
     get:
       consumes:
@@ -11678,6 +13074,162 @@ paths:
       summary: Создание резервной копии весов
       tags:
       - Search Optimization
+  /api/v1/admin/search/index/documents:
+    get:
+      consumes:
+      - application/json
+      description: Search and filter indexed documents
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        type: string
+      - description: Document type (listing/product)
+        in: query
+        name: type
+        type: string
+      - description: Category ID
+        in: query
+        name: category_id
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexedDocument'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Search indexed documents
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/info:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about the search index
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get search index information
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/reindex:
+    post:
+      consumes:
+      - application/json
+      description: Trigger reindexing of all marketplace documents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex search documents
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics about indexed documents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexStatistics'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get search index statistics
+      tags:
+      - admin-search
   /api/v1/admin/search/optimization-cancel/{session_id}:
     post:
       description: Отменяет запущенный процесс оптимизации весов

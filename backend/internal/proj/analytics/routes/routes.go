@@ -17,4 +17,13 @@ func RegisterAnalyticsRoutes(app *fiber.App, h *handler.AnalyticsHandler, authMi
 		// Запись событий (может быть анонимной)
 		public.Post("/event", h.RecordEvent)
 	}
+
+	// Защищенные маршруты (требуют авторизации)
+	protected := api.Group("", authMiddleware.AuthRequiredJWT)
+	{
+		// Метрики поиска (только для админов)
+		protected.Get("/metrics/search", h.GetSearchMetrics)
+		// Производительность товаров (только для админов)
+		protected.Get("/metrics/items", h.GetItemsPerformance)
+	}
 }

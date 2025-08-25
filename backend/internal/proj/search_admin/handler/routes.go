@@ -67,6 +67,13 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminSearchRoutes.Put("/transliteration/:id", h.UpdateTransliterationRule)
 	adminSearchRoutes.Delete("/transliteration/:id", h.DeleteTransliterationRule)
 
+	// Управление индексом
+	indexGroup := adminSearchRoutes.Group("/index")
+	indexGroup.Get("/info", h.GetIndexInfo)
+	indexGroup.Get("/statistics", h.GetIndexStatistics)
+	indexGroup.Get("/documents", h.SearchIndexedDocuments)
+	indexGroup.Post("/reindex", h.ReindexDocuments)
+
 	return nil
 }
 

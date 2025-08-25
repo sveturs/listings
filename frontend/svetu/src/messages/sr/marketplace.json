@@ -540,7 +540,8 @@
     "showPhone": "Prikaži telefon",
     "allItems": "Svi proizvodi",
     "signInToContact": "Prijavite se da kontaktirate prodavca",
-    "signIn": "Prijavite se"
+    "signIn": "Prijavite se",
+    "sendMessage": "Pošalji poruku"
   },
   "common": {
     "loading": "Učitavanje...",

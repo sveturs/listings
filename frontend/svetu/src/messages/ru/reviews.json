@@ -83,5 +83,10 @@
     "reviews": "отзывов",
     "verified": "[RU] Verified",
     "withPhotos": "с фотографиями"
-  }
+  },
+  "terrible": "Ужасно",
+  "bad": "Плохо",
+  "normal": "Нормально",
+  "good": "Хорошо",
+  "excellent": "Отлично"
 }

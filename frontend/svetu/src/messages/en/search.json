@@ -4,6 +4,7 @@
   "fuzzySearchHint": "typo-tolerant search",
   "fuzzySearchTooltip": "Search will work even with small typos",
   "suggestions": "Suggestions",
+  "noSuggestions": "No suggestions available",
   "history": "Search History",
   "trending": "Trending Searches",
   "noResults": "No Results",
@@ -54,6 +55,7 @@
   "city": "City",
   "enterCity": "Enter City",
   "category": "Category",
+  "product": "Product",
   "allCategories": "All Categories",
   "inCategory": "In Category",
   "search": {
@@ -62,5 +64,20 @@
   },
   "popularSearches": "Popular Searches",
   "categoryResults": "Products in category",
-  "reset": "Reset"
+  "reset": "Reset",
+  "clearCategories": "Clear",
+  "condition": "Condition",
+  "allConditions": "All conditions",
+  "conditionNew": "New",
+  "conditionLikeNew": "Like new",
+  "conditionGood": "Good",
+  "conditionUsed": "Used",
+  "location": "Location",
+  "enterCity": "Enter city name",
+  "searchRadius": "Search radius",
+  "showMore": "Show more",
+  "showLess": "Show less",
+  "expandAll": "Expand all",
+  "collapseAll": "Collapse all",
+  "noCategories": "No categories available"
 }

@@ -205,12 +205,19 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		}(ctx)
 	}
 
+	// Получаем полное объявление для индексации в OpenSearch
 	fullListing, err := s.storage.GetListingByID(ctx, listingID)
 	if err != nil {
-		log.Printf("Ошибка получения полного объявления для индексации: %v", err)
+		log.Printf("ERROR: Ошибка получения полного объявления ID=%d для индексации в OpenSearch: %v", listingID, err)
+		// Даже если не удалось получить полное объявление, возвращаем успех создания
+		// так как объявление уже создано в PostgreSQL
 	} else {
+		log.Printf("INFO: Индексируем объявление ID=%d в OpenSearch", listingID)
 		if err := s.storage.IndexListing(ctx, fullListing); err != nil {
-			log.Printf("Ошибка индексации объявления в OpenSearch: %v", err)
+			log.Printf("ERROR: Ошибка индексации объявления ID=%d в OpenSearch: %v", listingID, err)
+			// Не возвращаем ошибку, так как объявление уже создано в PostgreSQL
+		} else {
+			log.Printf("SUCCESS: Объявление ID=%d успешно проиндексировано в OpenSearch", listingID)
 		}
 	}
 
@@ -706,13 +713,16 @@ func (s *MarketplaceService) UpdateListing(ctx context.Context, listing *models.
 	// Получаем полное объявление со всеми связанными данными после обновления
 	fullListing, err := s.storage.GetListingByID(ctx, listing.ID)
 	if err != nil {
-		log.Printf("Ошибка получения полного объявления для обновления индекса: %v", err)
+		log.Printf("ERROR: Ошибка получения полного объявления ID=%d для обновления индекса: %v", listing.ID, err)
 		return nil
 	}
 
 	// Обновляем объявление в OpenSearch
+	log.Printf("INFO: Обновляем объявление ID=%d в OpenSearch", listing.ID)
 	if err := s.storage.IndexListing(ctx, fullListing); err != nil {
-		log.Printf("Ошибка обновления объявления в OpenSearch: %v", err)
+		log.Printf("ERROR: Ошибка обновления объявления ID=%d в OpenSearch: %v", listing.ID, err)
+	} else {
+		log.Printf("SUCCESS: Объявление ID=%d успешно обновлено в OpenSearch", listing.ID)
 	}
 
 	return nil

@@ -108,7 +108,8 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+      const redirectPath =
+        typeof window !== 'undefined' ? window.location.pathname : '/';
       router.push(
         `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
       );
@@ -140,7 +141,8 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
     } else {
       // Для обычных товаров маркетплейса требуется авторизация для покупки
       if (!isAuthenticated) {
-        const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+        const redirectPath =
+          typeof window !== 'undefined' ? window.location.pathname : '/';
         router.push(
           `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
         );
@@ -155,7 +157,8 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      const redirectPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+      const redirectPath =
+        typeof window !== 'undefined' ? window.location.pathname : '/';
       router.push(
         `/${locale}/auth/login?redirect=${encodeURIComponent(redirectPath)}`
       );

@@ -3,7 +3,7 @@
  */
 
 import { Suspense } from 'react';
-import { ExampleBehaviorTrackingComponent } from '@/hooks/__tests__/useBehaviorTracking.example';
+// import { ExampleBehaviorTrackingComponent } from '@/hooks/__tests__/useBehaviorTracking.example';
 
 export default function TestBehaviorTrackingPage() {
   return (
@@ -13,7 +13,8 @@ export default function TestBehaviorTrackingPage() {
           <div className="loading loading-spinner loading-lg mx-auto"></div>
         }
       >
-        <ExampleBehaviorTrackingComponent userId="test-user-123" />
+        {/* <ExampleBehaviorTrackingComponent userId="test-user-123" /> */}
+        <div>Behavior tracking test page - component not available</div>
       </Suspense>
     </div>
   );

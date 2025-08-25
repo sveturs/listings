@@ -3,6 +3,7 @@
   "required": "Administrator privileges required",
   "title": "Administration",
   "manage": "Manage",
+  "loadError": "Failed to load data",
   "availableBalance": "Available balance",
   "deposit": "Deposit",
   "withdraw": "Withdraw",
@@ -391,6 +392,7 @@
     "attributeGroups": "Attribute Groups",
     "system": "System",
     "search": "Search",
+    "logistics": "Logistics",
     "content": "Content",
     "listings": "Listings",
     "users": "Users",
@@ -642,7 +644,52 @@
   },
   "search": {
     "title": "Search",
-    "description": "Search management"
+    "description": "Search management",
+    "index": {
+      "title": "Search Index Management",
+      "description": "View index status and manage indexing",
+      "confirmReindex": "Are you sure you want to start reindexing? This may take some time.",
+      "reindex": "Reindex",
+      "reindexing": "Reindexing...",
+      "reindexStarted": "Reindexing started",
+      "reindexError": "Error starting reindexing",
+      "tabs": {
+        "overview": "Overview",
+        "documents": "Documents",
+        "mappings": "Mappings"
+      },
+      "info": "Index Information",
+      "name": "Index Name",
+      "documents": "Documents",
+      "size": "Size",
+      "health": "Health",
+      "status": "Status",
+      "shards": "Shards",
+      "statistics": "Statistics",
+      "totalDocs": "Total Documents",
+      "listings": "Listings",
+      "products": "Products",
+      "lastReindexed": "Last Reindexed",
+      "byCategory": "Documents by Category",
+      "searchableFields": "Searchable Fields",
+      "searchPlaceholder": "Search documents...",
+      "allTypes": "All Types",
+      "typeListings": "Listings",
+      "typeProducts": "Products",
+      "categoryId": "Category ID",
+      "search": "Search",
+      "docId": "ID",
+      "docType": "Type",
+      "docTitle": "Title",
+      "docCategory": "Category",
+      "docStatus": "Status",
+      "docIndexedAt": "Indexed At",
+      "docSearchFields": "Fields",
+      "viewFields": "View",
+      "noDocuments": "No documents found",
+      "pageInfo": "Page {current} of {total}",
+      "mappingsTitle": "Index Structure (Mappings)"
+    }
   },
   "searchLabel": "Search",
   "analytics": {
@@ -731,7 +778,8 @@
     "weights": "Weights",
     "synonyms": "Synonyms",
     "optimization": "Optimization",
-    "transliteration": "Transliteration"
+    "transliteration": "Transliteration",
+    "index": "Index"
   },
   "description": "Description",
   "timeRange": "Time Range",
@@ -838,5 +886,257 @@
   "synonym": "Synonym",
   "synonymPlaceholder": "e.g., iphone",
   "created": "Created",
-  "create": "Create"
+  "create": "Create",
+  "logistics": {
+    "title": "Logistics Management",
+    "dashboard": "Dashboard",
+    "shipments": {
+      "title": "Shipments",
+      "description": "Manage and track all shipments",
+      "results": "Shipments found",
+      "noResults": "No shipments found"
+    },
+    "shipmentDetails": {
+      "title": "Shipment Details",
+      "description": "Complete shipment information"
+    },
+    "problems": {
+      "title": "Problem Deliveries",
+      "description": "Manage problematic shipments",
+      "problemType": "Problem Type",
+      "allTypes": "All types",
+      "types": {
+        "delayed": "Delayed",
+        "lost": "Lost",
+        "return": "Returns",
+        "complaint": "Complaints"
+      },
+      "status": {
+        "open": "Open",
+        "investigating": "Investigating",
+        "resolved": "Resolved"
+      },
+      "stats": {
+        "open": "Open",
+        "investigating": "In Progress",
+        "resolved": "Resolved",
+        "returns": "Returns"
+      },
+      "list": "Problems List",
+      "noProblems": "No problem shipments",
+      "type": "Type",
+      "description": "Description",
+      "assignedTo": "Assigned To",
+      "table": {
+        "id": "ID",
+        "tracking_number": "Tracking Number",
+        "type": "Type",
+        "priority": "Priority",
+        "status": "Status",
+        "assigned_to": "Assigned To",
+        "created_at": "Created",
+        "actions": "Actions"
+      }
+    },
+    "analytics": {
+      "title": "Analytics & Reports",
+      "description": "Detailed delivery analytics",
+      "courier_performance": {
+        "title": "Courier Performance"
+      },
+      "financial": {
+        "title": "Financial Reports"
+      },
+      "performance": {
+        "title": "Performance Metrics"
+      }
+    },
+    "filters": {
+      "title": "Filters",
+      "tracking_number": "Tracking Number",
+      "tracking_placeholder": "Enter tracking number",
+      "status": "Status",
+      "all_statuses": "All statuses",
+      "provider": "Courier Service",
+      "all_providers": "All services",
+      "city": "City",
+      "city_placeholder": "Enter city",
+      "date_from": "Date from",
+      "date_to": "Date to",
+      "search": "Search",
+      "reset": "Reset"
+    },
+    "status": {
+      "pending": "Pending",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "returned": "Returned"
+    },
+    "table": {
+      "tracking_number": "Tracking Number",
+      "status": "Status",
+      "provider": "Provider",
+      "recipient": "Recipient",
+      "sender": "Sender",
+      "cod": "COD",
+      "weight": "Weight",
+      "created": "Created",
+      "delivered": "Delivered",
+      "updated_at": "Updated",
+      "destination": "Destination",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "track": "Track",
+      "delete": "Delete",
+      "export": "Export",
+      "new_shipment": "New Shipment",
+      "resolve": "Resolve",
+      "assign": "Assign",
+      "comments": "Comments",
+      "view_details": "Details",
+      "update_status": "Update Status",
+      "contact_courier": "Contact Courier"
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of",
+      "showing": "Showing",
+      "total": "total"
+    },
+    "stats": {
+      "today_shipments": "Today's Shipments",
+      "today_delivered": "Delivered Today",
+      "active_shipments": "Active Shipments",
+      "problem_shipments": "Problem Shipments",
+      "avg_delivery_time": "Avg. Delivery Time",
+      "delivery_success_rate": "Delivery Success Rate",
+      "weekly_deliveries": "Weekly Deliveries",
+      "status_distribution": "Status Distribution",
+      "courier_performance": "Courier Performance"
+    },
+    "view_all_shipments": "View All Shipments",
+    "problem_shipments": "Problem Shipments",
+    "export_report": "Export Report",
+    "monitoring_settings": "Monitoring Settings",
+    "trackingNumber": "Tracking Number",
+    "provider": "Provider",
+    "codAmount": "COD Amount",
+    "notAvailable": "Not available",
+    "shipmentNotFound": "Shipment not found",
+    "sender": "Sender",
+    "recipient": "Recipient",
+    "packageDetails": "Package Details",
+    "weight": "Weight",
+    "contents": "Contents",
+    "referenceNumber": "Reference Number",
+    "createdAt": "Created at",
+    "statusHistory": "Status History",
+    "failedReason": "Failed Reason",
+    "actions": {
+      "view": "View",
+      "updateStatus": "Update Status",
+      "contact": "Contact",
+      "printLabel": "Print Label"
+    },
+    "assignModal": {
+      "title": "Assign Administrator",
+      "selectAdmin": "Select Administrator",
+      "assign": "Assign"
+    },
+    "resolveModal": {
+      "title": "Resolve Problem",
+      "problemDescription": "Problem Description",
+      "resolution": "Resolution",
+      "resolutionPlaceholder": "Describe how the problem was resolved...",
+      "resolve": "Resolve"
+    },
+    "problemComments": {
+      "title": "Problem Comments",
+      "problemDescription": "Problem Description",
+      "noComments": "No comments yet",
+      "addComment": "Add Comment",
+      "commentPlaceholder": "Write your comment..."
+    },
+    "errors": {
+      "update_status_error": "Failed to update shipment status",
+      "action_error": "Failed to perform action on shipment"
+    },
+    "success": {
+      "status_updated_successfully": "Shipment status updated successfully",
+      "action_completed_successfully": "Action completed successfully"
+    },
+    "quickActions": {
+      "title": "Quick Actions"
+    },
+    "table": {
+      "date": "Date",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "in_transit": "In Transit",
+      "problems": "Problems",
+      "courier_service": "Courier Service",
+      "shipments": "Shipments",
+      "success_rate": "Success Rate",
+      "avg_time": "Avg Time"
+    },
+    "status": {
+      "processing": "Processing"
+    },
+    "map": {
+      "all": "All",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "problems": "Problems",
+      "loading": "Loading map...",
+      "legend": "Legend",
+      "sender": "Sender",
+      "receiver": "Receiver",
+      "problem": "Problem"
+    },
+    "logistics": {
+      "actions": {
+        "track": "Track",
+        "export": "Export"
+      },
+      "status": {
+        "pending": "Pending",
+        "in_transit": "In Transit",
+        "delivered": "Delivered",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "table": {
+        "tracking_number": "Tracking Number",
+        "status": "Status",
+        "provider": "Provider",
+        "recipient": "Recipient",
+        "sender": "Sender",
+        "cod": "Cash on Delivery",
+        "weight": "Weight",
+        "created": "Created",
+        "actions": "Actions"
+      }
+    },
+    "dashboard": "Logistics Monitoring Dashboard",
+    "stats": {
+      "today_shipments": "Today's Shipments",
+      "today_delivered": "Delivered Today",
+      "active_shipments": "In Transit",
+      "problem_shipments": "Problem Shipments",
+      "avg_delivery_time": "Avg Delivery Time",
+      "delivery_success_rate": "Delivery Success Rate",
+      "weekly_deliveries": "Deliveries for Last 7 Days",
+      "status_distribution": "Status Distribution",
+      "courier_performance": "Courier Performance"
+    },
+    "view_all_shipments": "View All Shipments",
+    "problem_shipments": "Problem Shipments",
+    "export_report": "Export Report",
+    "monitoring_settings": "Monitoring Settings"
+  }
 }
