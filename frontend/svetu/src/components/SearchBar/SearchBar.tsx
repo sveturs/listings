@@ -8,8 +8,10 @@ import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
 import {
   UnifiedSearchService,
   SearchSuggestion,
+  EnhancedSuggestion,
 } from '@/services/unifiedSearch';
-import { SearchIcon, CloseIcon, TrendingIcon } from './icons';
+import { SearchIcon, CloseIcon } from './icons';
+import SearchAutocomplete from './SearchAutocomplete';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -43,7 +45,9 @@ export default function SearchBar({
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [fuzzy, setFuzzy] = useState(initialFuzzy);
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<
+    (SearchSuggestion | EnhancedSuggestion)[]
+  >([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -258,7 +262,9 @@ export default function SearchBar({
     }
   };
 
-  const handleSuggestionClick = async (suggestion: SearchSuggestion) => {
+  const handleSuggestionClick = async (
+    suggestion: SearchSuggestion | EnhancedSuggestion
+  ) => {
     setShowSuggestions(false);
 
     // Трекинг клика по результату поиска (предложению)
@@ -270,13 +276,24 @@ export default function SearchBar({
 
         // Определяем тип элемента на основе metadata
         let itemType = 'marketplace';
-        if (suggestion.metadata?.source_type === 'storefront') {
+        if (
+          suggestion.metadata &&
+          'source_type' in suggestion.metadata &&
+          suggestion.metadata.source_type === 'storefront'
+        ) {
           itemType = 'storefront';
         }
 
+        const itemId =
+          'product' in suggestion && suggestion.product
+            ? suggestion.product.id.toString()
+            : 'product_id' in suggestion && suggestion.product_id
+              ? suggestion.product_id.toString()
+              : suggestion.text;
+
         await trackResultClicked({
           search_query: query,
-          clicked_item_id: suggestion.product_id?.toString() || suggestion.text,
+          clicked_item_id: itemId,
           click_position: position,
           total_results: suggestions.length,
           click_time_from_search_ms: Date.now() - Date.now(), // приблизительное время
@@ -295,19 +312,32 @@ export default function SearchBar({
       return;
     }
 
-    // Если это товар, переходим на соответствующую страницу
-    if (suggestion.type === 'product' && suggestion.product_id) {
+    // Если это товар (может быть EnhancedSuggestion или SearchSuggestion)
+    const productId =
+      'product' in suggestion && suggestion.product
+        ? suggestion.product.id
+        : 'product_id' in suggestion
+          ? suggestion.product_id
+          : undefined;
+
+    if (suggestion.type === 'product' && productId) {
       // Проверяем тип товара через metadata
       if (
-        suggestion.metadata?.source_type === 'storefront' &&
-        suggestion.metadata?.storefront_id
+        suggestion.metadata &&
+        'source_type' in suggestion.metadata &&
+        suggestion.metadata.source_type === 'storefront' &&
+        'storefront_id' in suggestion.metadata &&
+        suggestion.metadata.storefront_id
       ) {
         // Для товаров витрин нужен правильный URL
         // Получаем slug витрины из metadata или делаем запрос
-        const storefrontSlug = suggestion.metadata?.storefront_slug;
+        const storefrontSlug =
+          'storefront_slug' in suggestion.metadata
+            ? suggestion.metadata.storefront_slug
+            : undefined;
         if (storefrontSlug) {
           router.push(
-            `/${locale}/storefronts/${storefrontSlug}/products/${suggestion.product_id}`
+            `/${locale}/storefronts/${storefrontSlug}/products/${productId}`
           );
         } else {
           // Если нет slug, переходим на страницу поиска с фильтром
@@ -317,7 +347,7 @@ export default function SearchBar({
         }
       } else {
         // Для товаров маркетплейса
-        router.push(`/${locale}/marketplace/${suggestion.product_id}`);
+        router.push(`/${locale}/marketplace/${productId}`);
       }
       return;
     }
@@ -332,45 +362,6 @@ export default function SearchBar({
     setSuggestions([]);
     setShowSuggestions(false);
     inputRef.current?.focus();
-  };
-
-  const renderSuggestionIcon = (type: string) => {
-    switch (type) {
-      case 'category':
-        return (
-          <svg
-            className="w-4 h-4 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"
-            />
-          </svg>
-        );
-      case 'product':
-        return (
-          <svg
-            className="w-4 h-4 text-secondary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-          </svg>
-        );
-      default:
-        return <SearchIcon className="w-4 h-4 text-base-content/60" />;
-    }
   };
 
   const getSearchBarClasses = () => {
@@ -516,167 +507,26 @@ export default function SearchBar({
         )}
       </div>
 
-      {/* Предложения автодополнения */}
-      {showSuggestions && (
-        <div
-          ref={suggestionRef}
-          className="absolute top-full left-0 right-0 bg-base-100/95 backdrop-blur-md border border-base-300/50 rounded-xl mt-2 shadow-2xl z-[100] max-h-96 overflow-y-auto"
-        >
-          {/* Результаты поиска */}
-          {suggestions.length > 0 && (
-            <div className="p-2">
-              {suggestions.map((suggestion, index) => (
-                <div
-                  key={`suggestion-${index}`}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150 ${
-                    index === selectedIndex
-                      ? 'bg-base-200'
-                      : 'hover:bg-base-200'
-                  } active:scale-[0.98]`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {renderSuggestionIcon(suggestion.type)}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-base-content truncate">
-                      {suggestion.text}
-                    </div>
-                    {suggestion.category && (
-                      <div className="text-xs text-base-content/60 truncate">
-                        {t('inCategory')}:{' '}
-                        {suggestion.category.translations &&
-                        suggestion.category.translations[locale]
-                          ? suggestion.category.translations[locale]
-                          : suggestion.category.name}
-                      </div>
-                    )}
-                    {suggestion.type === 'product' && suggestion.metadata && (
-                      <div className="flex items-center gap-2 mt-1">
-                        {suggestion.metadata.source_type === 'storefront' && (
-                          <span className="badge badge-sm badge-secondary">
-                            {suggestion.metadata.storefront || t('storefront')}
-                          </span>
-                        )}
-                        {suggestion.metadata.price && (
-                          <span className="text-xs text-primary font-semibold">
-                            {suggestion.metadata.price} RSD
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {suggestion.type === 'category' && (
-                    <div className="flex items-center gap-2">
-                      <div className="badge badge-primary badge-sm">
-                        {t('category')}
-                      </div>
-                      <svg
-                        className="w-3 h-3 text-base-content/40"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                  {suggestion.type === 'product' && (
-                    <svg
-                      className="w-3 h-3 text-base-content/40"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* История поиска */}
-          {suggestions.length === 0 && searchHistory.length > 0 && (
-            <div className="p-2">
-              <div className="px-3 py-2 text-xs font-semibold text-base-content/60 uppercase">
-                {t('searchHistory')}
-              </div>
-              {searchHistory.slice(0, 5).map((historyItem, index) => (
-                <div
-                  key={`history-${index}`}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                    suggestions.length + index === selectedIndex
-                      ? 'bg-base-200'
-                      : 'hover:bg-base-200'
-                  }`}
-                  onClick={() => {
-                    setQuery(historyItem);
-                    handleSearch(historyItem);
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4 text-base-content/40"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="text-sm flex-1 truncate">{historyItem}</span>
-                </div>
-              ))}
-              <button
-                className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-base-200 rounded-lg transition-colors"
-                onClick={() => {
-                  UnifiedSearchService.clearHistory();
-                  setSearchHistory([]);
-                }}
-              >
-                {t('clearHistory')}
-              </button>
-            </div>
-          )}
-
-          {/* Популярные запросы */}
-          {suggestions.length === 0 &&
-            searchHistory.length === 0 &&
-            trendingSearches.length > 0 &&
-            showTrending && (
-              <div className="p-2">
-                <div className="px-3 py-2 text-xs font-semibold text-base-content/60 uppercase flex items-center gap-2">
-                  <TrendingIcon className="w-4 h-4" />
-                  {t('popularSearches')}
-                </div>
-                {trendingSearches.map((trending, index) => (
-                  <div
-                    key={`trending-${index}`}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
-                    onClick={() => {
-                      setQuery(trending);
-                      handleSearch(trending);
-                    }}
-                  >
-                    <span className="text-sm flex-1">{trending}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-        </div>
-      )}
+      {/* Автодополнение с новым компонентом */}
+      <SearchAutocomplete
+        suggestions={suggestions}
+        searchHistory={searchHistory}
+        trendingSearches={trendingSearches}
+        showSuggestions={showSuggestions}
+        selectedIndex={selectedIndex}
+        query={query}
+        isLoading={isLoadingSuggestions}
+        onSelect={(value) => {
+          setQuery(value);
+          handleSearch(value);
+        }}
+        onCategorySelect={(categoryId) => {
+          router.push(`/${locale}/category/${categoryId}`);
+        }}
+        onProductSelect={(productId) => {
+          router.push(`/${locale}/marketplace/${productId}`);
+        }}
+      />
     </div>
   );
 }

@@ -12,8 +12,6 @@ import {
   FiMapPin,
   FiPhone,
   FiMail,
-  FiCalendar,
-  FiDollarSign,
   FiInfo,
 } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';

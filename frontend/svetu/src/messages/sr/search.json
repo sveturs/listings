@@ -62,5 +62,20 @@
   },
   "popularSearches": "[SR] Popular Searches",
   "categoryResults": "Proizvodi u kategoriji",
-  "reset": "Resetuj"
+  "reset": "Resetuj",
+  "clearCategories": "Obriši",
+  "condition": "Stanje",
+  "allConditions": "Sva stanja",
+  "conditionNew": "Novo",
+  "conditionLikeNew": "Kao novo",
+  "conditionGood": "Dobro",
+  "conditionUsed": "Polovno",
+  "location": "Lokacija",
+  "enterCity": "Unesite naziv grada",
+  "searchRadius": "Radius pretrage",
+  "showMore": "Prikaži više",
+  "showLess": "Prikaži manje",
+  "expandAll": "Proširi sve",
+  "collapseAll": "Skupi sve",
+  "noCategories": "Nema dostupnih kategorija"
 }

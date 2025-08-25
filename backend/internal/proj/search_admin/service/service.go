@@ -5,18 +5,21 @@ import (
 	"fmt"
 
 	"backend/internal/domain"
+	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type Service struct {
-	repo *postgres.SearchConfigRepository
+	repo     *postgres.SearchConfigRepository
+	osClient *opensearch.OpenSearchClient
 }
 
-func NewService(db *sqlx.DB) *Service {
+func NewService(db *sqlx.DB, osClient *opensearch.OpenSearchClient) *Service {
 	return &Service{
-		repo: postgres.NewSearchConfigRepository(db),
+		repo:     postgres.NewSearchConfigRepository(db),
+		osClient: osClient,
 	}
 }
 

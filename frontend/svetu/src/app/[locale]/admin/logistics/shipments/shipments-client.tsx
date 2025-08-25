@@ -24,7 +24,7 @@ interface Shipment {
   provider: string;
 }
 
-interface ShipmentsResponse {
+interface _ShipmentsResponse {
   shipments: Shipment[];
   total: number;
   page: number;

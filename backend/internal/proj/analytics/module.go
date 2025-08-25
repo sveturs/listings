@@ -5,6 +5,7 @@ import (
 	"backend/internal/proj/analytics/handler"
 	"backend/internal/proj/analytics/routes"
 	"backend/internal/proj/analytics/service"
+	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,9 +17,9 @@ type Module struct {
 }
 
 // NewModule создает новый модуль аналитики
-func NewModule(db *postgres.Database) *Module {
+func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient) *Module {
 	storefrontRepo := postgres.NewStorefrontRepository(db)
-	analyticsService := service.NewAnalyticsService(storefrontRepo)
+	analyticsService := service.NewAnalyticsService(storefrontRepo, osClient, db)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 
 	return &Module{

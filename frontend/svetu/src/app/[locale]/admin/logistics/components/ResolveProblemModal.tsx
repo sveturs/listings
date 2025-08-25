@@ -16,7 +16,6 @@ export default function ResolveProblemModal({
   isOpen,
   onClose,
   onResolve,
-  problemId,
   problemDescription,
 }: ResolveProblemModalProps) {
   const t = useTranslations('admin');

@@ -83,3 +83,99 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 		"message": "Event recorded successfully",
 	})
 }
+
+// GetSearchMetrics возвращает метрики поиска
+// @Summary Get search metrics
+// @Description Returns search analytics metrics
+// @Tags analytics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param date_from query string false "Start date (YYYY-MM-DD)"
+// @Param date_to query string false "End date (YYYY-MM-DD)"
+// @Param period query string false "Period (day, week, month)" default(week)
+// @Success 200 {object} utils.SuccessResponseSwag{data=service.SearchMetrics} "Search metrics"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/analytics/metrics/search [get]
+func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
+	// Проверяем права админа - используем тот же подход как в search_admin
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
+	}
+
+	// Hardcoded admin users (как в других админских модулях)
+	adminUsers := []int{1, 2, 3, 4, 5}
+	isAdmin := false
+	for _, adminID := range adminUsers {
+		if userID == adminID {
+			isAdmin = true
+			break
+		}
+	}
+
+	if !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.error.access_denied")
+	}
+
+	dateFrom := c.Query("date_from", "")
+	dateTo := c.Query("date_to", "")
+	period := c.Query("period", "week")
+
+	metrics, err := h.service.GetSearchMetrics(c.Context(), dateFrom, dateTo, period)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get search metrics")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "analytics.error.failed_to_get_metrics")
+	}
+
+	return utils.SuccessResponse(c, metrics)
+}
+
+// GetItemsPerformance возвращает производительность товаров
+// @Summary Get items performance
+// @Description Returns performance metrics for items
+// @Tags analytics
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param date_from query string false "Start date (YYYY-MM-DD)"
+// @Param date_to query string false "End date (YYYY-MM-DD)"
+// @Param limit query int false "Limit" default(20)
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]service.ItemPerformance} "Items performance"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/analytics/metrics/items [get]
+func (h *AnalyticsHandler) GetItemsPerformance(c *fiber.Ctx) error {
+	// Проверяем права админа - используем тот же подход как в search_admin
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
+	}
+
+	// Hardcoded admin users (как в других админских модулях)
+	adminUsers := []int{1, 2, 3, 4, 5}
+	isAdmin := false
+	for _, adminID := range adminUsers {
+		if userID == adminID {
+			isAdmin = true
+			break
+		}
+	}
+
+	if !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.error.access_denied")
+	}
+
+	dateFrom := c.Query("date_from", "")
+	dateTo := c.Query("date_to", "")
+	limit := c.QueryInt("limit", 20)
+
+	items, err := h.service.GetItemsPerformance(c.Context(), dateFrom, dateTo, limit)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get items performance")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "analytics.error.failed_to_get_items")
+	}
+
+	return utils.SuccessResponse(c, items)
+}

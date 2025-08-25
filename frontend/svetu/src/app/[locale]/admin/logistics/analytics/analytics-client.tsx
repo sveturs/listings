@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -10,7 +9,6 @@ import {
   FiClock,
   FiTarget,
   FiDownload,
-  FiCalendar,
   FiMap,
 } from 'react-icons/fi';
 import { apiClientAuth } from '@/lib/api-client-auth';
@@ -58,7 +56,6 @@ interface MapMarker {
 }
 
 export default function AnalyticsClient() {
-  const t = useTranslations('admin');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [performanceMetrics, setPerformanceMetrics] =

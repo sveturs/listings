@@ -8,6 +8,7 @@ import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
 import { adaptMarketplaceItem } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
 import { SearchResultCard } from '@/components/search';
+import CategoryFilter from '@/components/search/CategoryFilter';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
@@ -23,12 +24,15 @@ import { PageTransition } from '@/components/ui/PageTransition';
 
 interface SearchFilters {
   category_id?: string;
+  category_ids?: number[];
   price_min?: number;
   price_max?: number;
   product_types?: string[];
   sort_by?: string;
   sort_order?: string;
   city?: string;
+  condition?: string;
+  distance?: number;
 }
 
 export default function SearchPage() {
@@ -703,6 +707,16 @@ export default function SearchPage() {
                     </div>
 
                     <div className="space-y-6">
+                      {/* Категории */}
+                      <CategoryFilter
+                        selectedCategories={filters.category_ids || []}
+                        onCategoryChange={(categories) =>
+                          handleFilterChange({ category_ids: categories })
+                        }
+                      />
+
+                      <div className="divider my-4"></div>
+
                       {/* Тип товаров - карточки вместо чекбоксов */}
                       <div>
                         <label className="label">
@@ -857,6 +871,112 @@ export default function SearchPage() {
                               />
                             </label>
                           </div>
+                        </div>
+                      </div>
+
+                      <div className="divider my-4"></div>
+
+                      {/* Состояние товара */}
+                      <div>
+                        <label className="label">
+                          <span className="label-text font-medium flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {t('condition')}
+                          </span>
+                        </label>
+                        <select
+                          className="select select-bordered w-full bg-base-100"
+                          value={filters.condition || ''}
+                          onChange={(e) =>
+                            handleFilterChange({
+                              condition: e.target.value || undefined,
+                            })
+                          }
+                        >
+                          <option value="">{t('allConditions')}</option>
+                          <option value="new">{t('conditionNew')}</option>
+                          <option value="like_new">
+                            {t('conditionLikeNew')}
+                          </option>
+                          <option value="good">{t('conditionGood')}</option>
+                          <option value="used">{t('conditionUsed')}</option>
+                        </select>
+                      </div>
+
+                      <div className="divider my-4"></div>
+
+                      {/* Местоположение */}
+                      <div>
+                        <label className="label">
+                          <span className="label-text font-medium flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                            </svg>
+                            {t('location')}
+                          </span>
+                        </label>
+                        <input
+                          type="text"
+                          className="input input-bordered w-full"
+                          placeholder={t('enterCity')}
+                          value={filters.city || ''}
+                          onChange={(e) =>
+                            handleFilterChange({
+                              city: e.target.value || undefined,
+                            })
+                          }
+                        />
+
+                        {/* Радиус поиска */}
+                        <label className="label mt-2">
+                          <span className="label-text text-sm">
+                            {t('searchRadius')}
+                          </span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={filters.distance || 0}
+                            className="range range-primary range-sm flex-1"
+                            onChange={(e) =>
+                              handleFilterChange({
+                                distance: Number(e.target.value) || undefined,
+                              })
+                            }
+                          />
+                          <span className="text-sm font-medium w-12">
+                            {filters.distance || 0} km
+                          </span>
                         </div>
                       </div>
 

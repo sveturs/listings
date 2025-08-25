@@ -96,10 +96,14 @@ export function getBrowserInfo(
   for (const browser of browsers) {
     const match = ua.match(browser.regex);
     if (match) {
+      const version = (match[1] || 'Unknown').replace(
+        /[\x00-\x1F\x7F-\x9F]/g,
+        ''
+      );
       return {
         name: browser.name,
-        version: match[1],
-        full: `${browser.name} ${match[1]}`,
+        version: version,
+        full: `${browser.name} ${version}`,
       };
     }
   }
@@ -169,18 +173,27 @@ export function getUserAgentInfo(
   const { os, osVersion } = getOSInfo(userAgent);
   const deviceType = getDeviceType(userAgent);
 
+  // Санитизация строк для предотвращения проблем с кодировкой
+  const sanitizeString = (str: string): string => {
+    // Удаляем непечатаемые символы и заменяем проблемные символы
+    return str.replace(/[\x00-\x1F\x7F-\x9F]/g, '').trim();
+  };
+
   return {
     browser,
     device: {
       type: deviceType,
-      os,
-      osVersion,
+      os: sanitizeString(os),
+      osVersion: sanitizeString(osVersion),
       isMobile: deviceType === 'mobile',
       isTablet: deviceType === 'tablet',
       isDesktop: deviceType === 'desktop',
     },
-    userAgent,
-    platform: typeof navigator !== 'undefined' ? navigator.platform : 'Unknown',
+    userAgent: sanitizeString(userAgent),
+    platform:
+      typeof navigator !== 'undefined'
+        ? sanitizeString(navigator.platform)
+        : 'Unknown',
   };
 }
 

@@ -5658,6 +5658,287 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/search/index/documents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search indexed documents
+     * @description Search and filter indexed documents
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query */
+          query?: string;
+          /** @description Document type (listing/product) */
+          type?: string;
+          /** @description Category ID */
+          category_id?: number;
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexedDocument'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/info': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search index information
+     * @description Returns detailed information about the search index
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexInfo'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/reindex': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reindex search documents
+     * @description Trigger reindexing of all marketplace documents
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/search/index/statistics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get search index statistics
+     * @description Returns statistics about indexed documents
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_search_admin_service.IndexStatistics'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/search/optimization-cancel/{session_id}': {
     parameters: {
       query?: never;
@@ -33468,6 +33749,37 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
+    'backend_internal_proj_analytics_service.ItemPerformance': {
+      category_id?: number;
+      clicks?: number;
+      conversions?: number;
+      ctr?: number;
+      item_id?: number;
+      revenue?: number;
+      title?: string;
+      views?: number;
+    };
+    'backend_internal_proj_analytics_service.SearchMetrics': {
+      avg_click_position?: number;
+      avg_results_shown?: number;
+      ctr?: number;
+      search_trends?: components['schemas']['backend_internal_proj_analytics_service.SearchTrend'][];
+      top_queries?: components['schemas']['backend_internal_proj_analytics_service.TopQuery'][];
+      total_searches?: number;
+      unique_searches?: number;
+      zero_result_rate?: number;
+    };
+    'backend_internal_proj_analytics_service.SearchTrend': {
+      ctr?: number;
+      date?: string;
+      searches?: number;
+    };
+    'backend_internal_proj_analytics_service.TopQuery': {
+      avg_results?: number;
+      count?: number;
+      ctr?: number;
+      query?: string;
+    };
     'backend_internal_proj_bexexpress_models.AddressSuggestion': {
       full_address?: string;
       latitude?: number;
@@ -34246,6 +34558,54 @@ export interface components {
       total_volume_m3?: number;
       warehouse_id?: number;
       warehouse_name?: string;
+    };
+    'backend_internal_proj_search_admin_service.IndexInfo': {
+      aliases?: string[];
+      created_at?: string;
+      document_count?: number;
+      health?: string;
+      index_name?: string;
+      last_updated?: string;
+      mappings?: {
+        [key: string]: unknown;
+      };
+      number_of_shards?: number;
+      settings?: {
+        [key: string]: unknown;
+      };
+      size_formatted?: string;
+      size_in_bytes?: number;
+      status?: string;
+    };
+    'backend_internal_proj_search_admin_service.IndexStatistics': {
+      documents_by_category?: {
+        [key: string]: number;
+      };
+      documents_by_status?: {
+        [key: string]: number;
+      };
+      index_health?: string;
+      last_reindexed?: string;
+      listings_count?: number;
+      products_count?: number;
+      searchable_fields?: string[];
+      total_documents?: number;
+    };
+    'backend_internal_proj_search_admin_service.IndexedDocument': {
+      category_id?: number;
+      category_name?: string;
+      id?: string;
+      indexed_at?: string;
+      last_modified?: string;
+      searchable_fields?: {
+        [key: string]: unknown;
+      };
+      status?: string;
+      storefront_id?: number;
+      title?: string;
+      /** @description listing или product */
+      type?: string;
+      user_id?: number;
     };
     'backend_internal_proj_search_optimization_service.OptimizationConfig': {
       default_analysis_period_days?: number;

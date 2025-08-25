@@ -225,6 +225,9 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 			"shipment": s,
 		})
 	}
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating BEX shipments")
+	}
 
 	// Get recent Post Express shipments
 	postQuery := `
@@ -261,6 +264,9 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 			"provider": "PostExpress",
 			"shipment": s,
 		})
+	}
+	if err = rows2.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating Post Express shipments")
 	}
 
 	return shipments, nil
@@ -380,6 +386,9 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			"delivered_at":    s.DeliveredAt,
 		})
 	}
+	if err = rows.Err(); err != nil {
+		return nil, 0, errors.Wrap(err, "error iterating BEX shipments")
+	}
 
 	// Аналогично для Post Express
 	postQuery := `
@@ -484,6 +493,9 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 				"delivered_at":    s.DeliveredAt,
 			})
 		}
+		if err = rows2.Err(); err != nil {
+			return nil, 0, errors.Wrap(err, "error iterating Post Express shipments")
+		}
 	}
 
 	total = bexCount + postCount
@@ -523,7 +535,8 @@ func getStatusString(code int) string {
 func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[string]interface{}, error) {
 	var result map[string]interface{}
 
-	if provider == "BEX" {
+	switch provider {
+	case "BEX":
 		query := `
 			SELECT 
 				id, marketplace_order_id, storefront_order_id, tracking_number,
@@ -591,7 +604,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 		// Parse status history
 		var statusHistory []map[string]interface{}
 		if s.StatusHistory != nil {
-			json.Unmarshal(s.StatusHistory, &statusHistory)
+			_ = json.Unmarshal(s.StatusHistory, &statusHistory)
 		}
 
 		result = map[string]interface{}{
@@ -630,7 +643,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			"updated_at":       s.UpdatedAt,
 		}
 
-	} else if provider == "PostExpress" {
+	case "PostExpress":
 		query := `
 			SELECT 
 				id, marketplace_order_id, storefront_order_id, tracking_number,
@@ -699,7 +712,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 		// Parse status history
 		var statusHistory []map[string]interface{}
 		if s.StatusHistory != nil {
-			json.Unmarshal(s.StatusHistory, &statusHistory)
+			_ = json.Unmarshal(s.StatusHistory, &statusHistory)
 		}
 
 		result = map[string]interface{}{
@@ -738,7 +751,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			"created_at":            s.CreatedAt,
 			"updated_at":            s.UpdatedAt,
 		}
-	} else {
+	default:
 		return nil, errors.New("invalid provider")
 	}
 
@@ -804,6 +817,9 @@ func (r *ShipmentsRepository) GetProblemShipments() ([]interface{}, error) {
 			"registered_at":   p.RegisteredAt,
 		})
 	}
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating BEX problems")
+	}
 
 	// Get Post Express problems
 	postQuery := `
@@ -859,6 +875,9 @@ func (r *ShipmentsRepository) GetProblemShipments() ([]interface{}, error) {
 			"failed_reason":   p.FailedReason,
 			"registered_at":   p.RegisteredAt,
 		})
+	}
+	if err = rows2.Err(); err != nil {
+		return nil, errors.Wrap(err, "error iterating Post Express problems")
 	}
 
 	return problems, nil

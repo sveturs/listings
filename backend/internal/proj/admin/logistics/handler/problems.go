@@ -7,20 +7,27 @@ import (
 
 	"backend/internal/domain/logistics"
 	"backend/internal/proj/admin/logistics/service"
+	"backend/pkg/logger"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	problemNotFoundErr = "problem not found"
+)
+
 // ProblemsHandler обработчик для управления проблемными отправлениями
 type ProblemsHandler struct {
 	problemService *service.ProblemService
+	logger         *logger.Logger
 }
 
 // NewProblemsHandler создает новый обработчик проблем
-func NewProblemsHandler(problemService *service.ProblemService) *ProblemsHandler {
+func NewProblemsHandler(problemService *service.ProblemService, logger *logger.Logger) *ProblemsHandler {
 	return &ProblemsHandler{
 		problemService: problemService,
+		logger:         logger,
 	}
 }
 
@@ -174,7 +181,7 @@ func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 	// Обновляем проблему
 	updatedProblem, err := h.problemService.UpdateProblem(c.Context(), problemID, updates)
 	if err != nil {
-		if err.Error() == "problem not found" {
+		if err.Error() == problemNotFoundErr {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.update_error")
@@ -229,7 +236,7 @@ func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 	// Решаем проблему
 	err = h.problemService.ResolveProblem(c.Context(), problemID, request.Resolution, userIDInt)
 	if err != nil {
-		if err.Error() == "problem not found" {
+		if err.Error() == problemNotFoundErr {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.resolve_error")
@@ -246,6 +253,7 @@ func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 	if err != nil {
 		// Логируем ошибку, но не прерываем выполнение
 		// так как основное действие уже выполнено
+		h.logger.Error("Failed to add problem history for resolution: %v", err)
 	}
 
 	return utils.SuccessResponse(c, map[string]interface{}{
@@ -298,7 +306,7 @@ func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 	// Назначаем проблему
 	err = h.problemService.AssignProblem(c.Context(), problemID, request.AssignTo)
 	if err != nil {
-		if err.Error() == "problem not found" {
+		if err.Error() == problemNotFoundErr {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem.assign_error")
@@ -314,6 +322,7 @@ func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 		})
 	if err != nil {
 		// Логируем ошибку, но не прерываем выполнение
+		h.logger.Error("Failed to add problem history for assignment: %v", err)
 	}
 
 	return utils.SuccessResponse(c, map[string]interface{}{
@@ -368,7 +377,7 @@ func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 	// Добавляем комментарий
 	comment, err := h.problemService.AddProblemComment(c.Context(), problemID, userIDInt, request.Comment, "comment", map[string]interface{}{})
 	if err != nil {
-		if err.Error() == "problem not found" {
+		if err.Error() == problemNotFoundErr {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.comment.add_error")
@@ -477,7 +486,7 @@ func (h *ProblemsHandler) GetProblemDetails(c *fiber.Ctx) error {
 	// Получаем детали проблемы
 	problem, err := h.problemService.GetProblemWithDetails(c.Context(), problemID)
 	if err != nil {
-		if err.Error() == "problem not found" {
+		if err.Error() == problemNotFoundErr {
 			return utils.ErrorResponse(c, fiber.StatusNotFound, "logistics.problem_not_found")
 		}
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.problem_details.get_error")

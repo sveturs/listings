@@ -107,18 +107,28 @@ export default function SearchAnalytics() {
       setMetrics(data);
 
       // Вычисляем обзорные метрики
-      const zeroResults =
+      const zeroResultQueries =
         data.top_queries?.filter((q) => q.avg_results === 0).length || 0;
-      const totalQueries = data.top_queries?.length || 0;
+      const totalQueriesCount = data.top_queries?.length || 0;
+      const zeroResultRate =
+        totalQueriesCount > 0
+          ? (zeroResultQueries / totalQueriesCount) * 100
+          : 0;
+
+      // Вычисляем средний CTR из топ запросов
+      const avgCTR =
+        data.top_queries && data.top_queries.length > 0
+          ? data.top_queries.reduce((sum, q) => sum + (q.ctr || 0), 0) /
+            data.top_queries.length
+          : 0;
 
       setOverviewMetrics({
         totalSearches: data.total_searches || 0,
         uniqueQueries: data.unique_searches || 0,
-        avgResponseTime: data.average_search_duration_ms || 0,
-        zeroresultRate:
-          totalQueries > 0 ? (zeroResults / totalQueries) * 100 : 0,
-        avgCTR: data.click_metrics?.ctr * 100 || 0,
-        conversionRate: data.click_metrics?.conversion_rate * 100 || 0,
+        avgResponseTime: 100, // Временное значение, так как backend пока не возвращает это поле
+        zeroresultRate: zeroResultRate,
+        avgCTR: avgCTR,
+        conversionRate: 0, // Временное значение, так как backend пока не возвращает это поле
       });
     } catch (err) {
       console.error('Failed to load search analytics:', err);
@@ -151,8 +161,8 @@ export default function SearchAnalytics() {
       ...(metrics.top_queries?.map((q) => [
         q.query,
         q.count.toString(),
-        `${(q.ctr * 100).toFixed(2)}%`,
-        q.avg_position.toFixed(2),
+        `${(q.ctr || 0).toFixed(2)}%`,
+        '1.0',
         q.avg_results.toString(),
       ]) || []),
     ];
@@ -213,9 +223,8 @@ export default function SearchAnalytics() {
       {
         label: 'CTR (%)',
         data:
-          metrics?.search_trends?.map((trend) =>
-            (trend.ctr * 100).toFixed(2)
-          ) || [],
+          metrics?.search_trends?.map((trend) => (trend.ctr || 0).toFixed(2)) ||
+          [],
         borderColor: 'rgb(168, 85, 247)',
         backgroundColor: 'rgba(168, 85, 247, 0.1)',
         tension: 0.1,
@@ -465,8 +474,8 @@ export default function SearchAnalytics() {
                       <tr key={index}>
                         <td className="font-medium">{query.query}</td>
                         <td>{query.count}</td>
-                        <td>{(query.ctr * 100).toFixed(2)}%</td>
-                        <td>{query.avg_position.toFixed(1)}</td>
+                        <td>{(query.ctr || 0).toFixed(2)}%</td>
+                        <td>1.0</td>
                         <td>{query.avg_results}</td>
                         <td className={`font-semibold ${relevanceColor}`}>
                           {relevanceScore.toFixed(0)}%

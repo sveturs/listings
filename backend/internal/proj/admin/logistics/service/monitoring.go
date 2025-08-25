@@ -114,7 +114,7 @@ func (s *MonitoringService) getTestDashboardStats() *logistics.DashboardStats {
 			"in_transit": 156,
 			"pending":    42,
 			"processing": 28,
-			"cancelled":  12,
+			"canceled":   12,
 			"returned":   8,
 		},
 		CourierPerformance: []logistics.CourierStats{
@@ -194,127 +194,6 @@ func (s *MonitoringService) GetShipments(ctx context.Context, filter logistics.S
 	}
 
 	return result, total, nil
-}
-
-// getWeeklyStats получает статистику за последние 7 дней
-func (s *MonitoringService) getWeeklyStats(ctx context.Context) ([]logistics.DailyStats, error) {
-	query := `
-		WITH dates AS (
-			SELECT generate_series(
-				CURRENT_DATE - INTERVAL '6 days',
-				CURRENT_DATE,
-				'1 day'::interval
-			)::date as date
-		),
-		daily_stats AS (
-			SELECT 
-				DATE(created_at) as date,
-				COUNT(*) as shipments,
-				COUNT(*) FILTER (WHERE status = 'completed') as delivered,
-				COUNT(*) FILTER (WHERE status IN ('pending', 'processing', 'shipped')) as in_transit
-			FROM marketplace_orders
-			WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
-			GROUP BY DATE(created_at)
-		)
-		SELECT 
-			d.date,
-			COALESCE(ds.shipments, 0) as shipments,
-			COALESCE(ds.delivered, 0) as delivered,
-			COALESCE(ds.in_transit, 0) as in_transit
-		FROM dates d
-		LEFT JOIN daily_stats ds ON d.date = ds.date
-		ORDER BY d.date
-	`
-
-	rows, err := s.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var stats []logistics.DailyStats
-	for rows.Next() {
-		var stat logistics.DailyStats
-		var date time.Time
-		err := rows.Scan(&date, &stat.Shipments, &stat.Delivered, &stat.InTransit)
-		if err != nil {
-			return nil, err
-		}
-		stat.Date = date.Format("2006-01-02")
-
-		// Получаем количество проблем за этот день
-		err = s.db.QueryRowContext(ctx, `
-			SELECT COUNT(*) 
-			FROM problem_shipments 
-			WHERE DATE(created_at) = $1
-		`, date).Scan(&stat.Problems)
-		if err != nil {
-			stat.Problems = 0
-		}
-
-		stats = append(stats, stat)
-	}
-
-	return stats, rows.Err()
-}
-
-// getStatusDistribution получает распределение отправлений по статусам
-func (s *MonitoringService) getStatusDistribution(ctx context.Context) (map[string]int, error) {
-	query := `
-		SELECT status, COUNT(*) as count
-		FROM marketplace_orders
-		WHERE created_at >= NOW() - INTERVAL '30 days'
-		GROUP BY status
-	`
-
-	rows, err := s.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	distribution := make(map[string]int)
-	for rows.Next() {
-		var status string
-		var count int
-		err := rows.Scan(&status, &count)
-		if err != nil {
-			return nil, err
-		}
-		distribution[status] = count
-	}
-
-	return distribution, rows.Err()
-}
-
-// getCourierPerformance получает статистику по курьерским службам
-func (s *MonitoringService) getCourierPerformance(ctx context.Context) ([]logistics.CourierStats, error) {
-	// Пока возвращаем тестовые данные для демонстрации
-	stats := []logistics.CourierStats{
-		{
-			Name:        "BEX Express",
-			Shipments:   127,
-			Delivered:   115,
-			SuccessRate: 90.5,
-			AvgTime:     28.5,
-		},
-		{
-			Name:        "Post Express",
-			Shipments:   89,
-			Delivered:   82,
-			SuccessRate: 92.1,
-			AvgTime:     32.0,
-		},
-		{
-			Name:        "DHL",
-			Shipments:   45,
-			Delivered:   44,
-			SuccessRate: 97.8,
-			AvgTime:     18.5,
-		},
-	}
-
-	return stats, nil
 }
 
 // GetShipmentDetailsByProvider получает детальную информацию об отправлении используя репозиторий
@@ -544,7 +423,7 @@ func (s *MonitoringService) getShipmentProblems(ctx context.Context, shipmentID 
 
 		// Парсим metadata
 		if len(metadataBytes) > 0 {
-			json.Unmarshal(metadataBytes, &p.Metadata)
+			_ = json.Unmarshal(metadataBytes, &p.Metadata)
 		}
 
 		// Добавляем информацию о назначенном пользователе

@@ -4,7 +4,9 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/proj/search_admin/handler"
 	"backend/internal/proj/search_admin/service"
+	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"backend/pkg/logger"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,9 +18,9 @@ type Module struct {
 }
 
 // NewModule создает новый экземпляр модуля
-func NewModule(db *postgres.Database) *Module {
-	searchService := service.NewService(db.GetSQLXDB())
-	searchHandler := handler.NewHandler(searchService)
+func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient, logger *logger.Logger) *Module {
+	searchService := service.NewService(db.GetSQLXDB(), osClient)
+	searchHandler := handler.NewHandler(searchService, logger)
 
 	return &Module{
 		handler: searchHandler,

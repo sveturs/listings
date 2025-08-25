@@ -6064,6 +6064,263 @@
                 }
             }
         },
+        "/api/v1/admin/search/index/documents": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Search and filter indexed documents",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-search"
+                ],
+                "summary": "Search indexed documents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Document type (listing/product)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_search_admin_service.IndexedDocument"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/index/info": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns detailed information about the search index",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-search"
+                ],
+                "summary": "Get search index information",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_search_admin_service.IndexInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/index/reindex": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Trigger reindexing of all marketplace documents",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-search"
+                ],
+                "summary": "Reindex search documents",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/search/index/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns statistics about indexed documents",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-search"
+                ],
+                "summary": "Get search index statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_search_admin_service.IndexStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/search/optimization-cancel/{session_id}": {
             "post": {
                 "security": [
@@ -37566,6 +37823,101 @@
                 }
             }
         },
+        "backend_internal_proj_analytics_service.ItemPerformance": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "clicks": {
+                    "type": "integer"
+                },
+                "conversions": {
+                    "type": "integer"
+                },
+                "ctr": {
+                    "type": "number"
+                },
+                "item_id": {
+                    "type": "integer"
+                },
+                "revenue": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_analytics_service.SearchMetrics": {
+            "type": "object",
+            "properties": {
+                "avg_click_position": {
+                    "type": "number"
+                },
+                "avg_results_shown": {
+                    "type": "number"
+                },
+                "ctr": {
+                    "type": "number"
+                },
+                "search_trends": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_analytics_service.SearchTrend"
+                    }
+                },
+                "top_queries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_analytics_service.TopQuery"
+                    }
+                },
+                "total_searches": {
+                    "type": "integer"
+                },
+                "unique_searches": {
+                    "type": "integer"
+                },
+                "zero_result_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_analytics_service.SearchTrend": {
+            "type": "object",
+            "properties": {
+                "ctr": {
+                    "type": "number"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "searches": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_analytics_service.TopQuery": {
+            "type": "object",
+            "properties": {
+                "avg_results": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "ctr": {
+                    "type": "number"
+                },
+                "query": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_proj_bexexpress_models.AddressSuggestion": {
             "type": "object",
             "properties": {
@@ -39953,6 +40305,130 @@
                 },
                 "warehouse_name": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_search_admin_service.IndexInfo": {
+            "type": "object",
+            "properties": {
+                "aliases": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "document_count": {
+                    "type": "integer"
+                },
+                "health": {
+                    "type": "string"
+                },
+                "index_name": {
+                    "type": "string"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "mappings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "number_of_shards": {
+                    "type": "integer"
+                },
+                "settings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "size_formatted": {
+                    "type": "string"
+                },
+                "size_in_bytes": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_search_admin_service.IndexStatistics": {
+            "type": "object",
+            "properties": {
+                "documents_by_category": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "documents_by_status": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "index_health": {
+                    "type": "string"
+                },
+                "last_reindexed": {
+                    "type": "string"
+                },
+                "listings_count": {
+                    "type": "integer"
+                },
+                "products_count": {
+                    "type": "integer"
+                },
+                "searchable_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_documents": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_search_admin_service.IndexedDocument": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "category_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "indexed_at": {
+                    "type": "string"
+                },
+                "last_modified": {
+                    "type": "string"
+                },
+                "searchable_fields": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "listing или product",
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },

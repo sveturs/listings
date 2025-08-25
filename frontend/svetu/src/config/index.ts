@@ -205,12 +205,19 @@ class ConfigManager {
       return config.api.internalUrl;
     }
 
-    // В development на клиенте используем относительные пути
-    // чтобы запросы шли через прокси Next.js и сохранялись cookies
+    // В development на клиенте проверяем, откуда идет доступ
+    // Если доступ через localhost - используем относительные пути для прокси Next.js
+    // Если доступ через IP - используем полный URL из конфигурации
     if (config.env.isDevelopment && !config.env.isServer) {
-      // Возвращаем пустую строку чтобы использовались относительные пути
-      // Например: /api/v1/auth/refresh вместо http://100.88.44.15:3000/api/v1/auth/refresh
-      return '';
+      // Проверяем текущий hostname
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        // Если доступ через localhost или 127.0.0.1 - используем относительные пути
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return '';
+        }
+      }
+      // Для всех остальных случаев (доступ по IP или домену) используем полный URL
     }
 
     return config.api.url;

@@ -2,13 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  FiMapPin,
-  FiTruck,
-  FiClock,
-  FiCheckCircle,
-  FiAlertTriangle,
-} from 'react-icons/fi';
+import { FiTruck, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 
 interface MapMarker {
   id: string;
@@ -87,7 +81,7 @@ export default function DeliveryMap({
   }, []);
 
   // Инициализация карты
-  const initializeMap = (L: any) => {
+  const initializeMap = (L: typeof import('leaflet')) => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapRef.current, {
@@ -107,7 +101,7 @@ export default function DeliveryMap({
   };
 
   // Обновление маркеров на карте
-  const updateMarkers = (L: any) => {
+  const updateMarkers = (L: typeof import('leaflet')) => {
     if (!mapInstanceRef.current || !markersLayerRef.current || !leafletLoaded)
       return;
 
@@ -129,13 +123,15 @@ export default function DeliveryMap({
 
     // Подгоняем границы карты под маркеры
     if (filteredMarkers.length > 0) {
-      const group = new L.featureGroup(markersLayerRef.current.getLayers());
+      const group = new (L as any).featureGroup(
+        markersLayerRef.current.getLayers()
+      );
       mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
     }
   };
 
   // Создание кастомной иконки
-  const createCustomIcon = (L: any, type: string) => {
+  const createCustomIcon = (L: typeof import('leaflet'), type: string) => {
     const colors = {
       sender: '#3b82f6', // синий
       receiver: '#10b981', // зеленый
@@ -254,8 +250,9 @@ export default function DeliveryMap({
     if (leafletLoaded) {
       // Небольшая задержка для корректного обновления
       setTimeout(() => {
-        const L = require('leaflet');
-        updateMarkers(L);
+        import('leaflet').then((L) => {
+          updateMarkers(L);
+        });
       }, 100);
     }
   }, [filteredMarkers, leafletLoaded]);

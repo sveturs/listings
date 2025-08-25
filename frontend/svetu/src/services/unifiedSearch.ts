@@ -231,7 +231,7 @@ export class UnifiedSearchService {
   static async getSuggestions(
     prefix: string,
     size: number = 10
-  ): Promise<SearchSuggestion[]> {
+  ): Promise<(SearchSuggestion | EnhancedSuggestion)[]> {
     const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/enhanced-suggestions`;
     const params = new URLSearchParams({
       query: prefix,

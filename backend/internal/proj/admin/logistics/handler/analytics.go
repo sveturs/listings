@@ -11,6 +11,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	rowEndTag = `</row>`
+)
+
 // AnalyticsHandler обработчик для аналитики и отчетов
 type AnalyticsHandler struct {
 	analyticsService *service.AnalyticsService
@@ -337,7 +341,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 			xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>`,
 				string(rune('A'+colIndex)), rowIndex, header)
 		}
-		xmlContent += `</row>`
+		xmlContent += rowEndTag
 		rowIndex++
 
 		// Данные
@@ -353,7 +357,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 					xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%v</t></is></c>`,
 						string(rune('A'+colIndex)), rowIndex, value)
 				}
-				xmlContent += `</row>`
+				xmlContent += rowEndTag
 				rowIndex++
 			}
 		}
@@ -366,7 +370,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 			xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>`,
 				string(rune('A'+colIndex)), rowIndex, header)
 		}
-		xmlContent += `</row>`
+		xmlContent += rowEndTag
 		rowIndex++
 
 		// Данные
@@ -382,7 +386,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 					xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%v</t></is></c>`,
 						string(rune('A'+colIndex)), rowIndex, value)
 				}
-				xmlContent += `</row>`
+				xmlContent += rowEndTag
 				rowIndex++
 			}
 		}
@@ -395,7 +399,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 			xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>`,
 				string(rune('A'+colIndex)), rowIndex, header)
 		}
-		xmlContent += `</row>`
+		xmlContent += rowEndTag
 		rowIndex++
 
 		// Данные
@@ -411,7 +415,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 					xmlContent += fmt.Sprintf(`<c r="%s%d" t="inlineStr"><is><t>%v</t></is></c>`,
 						string(rune('A'+colIndex)), rowIndex, value)
 				}
-				xmlContent += `</row>`
+				xmlContent += rowEndTag
 				rowIndex++
 			}
 		}

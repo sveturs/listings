@@ -171,7 +171,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	// Admin Logistics инициализация
-	adminLogisticsModule, err := adminLogistics.NewModule(db.GetSQLXDB().DB, cfg)
+	adminLogisticsModule, err := adminLogistics.NewModule(db.GetSQLXDB().DB, cfg, pkglogger.New())
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to initialize Admin Logistics module, continuing without it")
 		// Не возвращаем ошибку, продолжаем без админки логистики
@@ -181,10 +181,10 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
-	analyticsModule := analytics.NewModule(db)
+	analyticsModule := analytics.NewModule(db, osClient)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
 	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService)
-	searchAdminModule := search_admin.NewModule(db)
+	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New())
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
 

@@ -23,7 +23,6 @@ export default function AssignProblemModal({
   isOpen,
   onClose,
   onAssign,
-  problemId,
   currentAssignedTo,
 }: AssignProblemModalProps) {
   const t = useTranslations('admin');

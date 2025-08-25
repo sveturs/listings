@@ -255,7 +255,7 @@ func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 	// Обновляем статус через сервис
 	err = h.monitoringService.UpdateShipmentStatus(c.Context(), shipmentID, request.ShipmentType, request.Status, adminID, request.Comment)
 	if err != nil {
-		h.logger.Error("Failed to update shipment status", err)
+		h.logger.Error("Failed to update shipment status: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.update_status_error")
 	}
 
@@ -311,7 +311,7 @@ func (h *ShipmentsHandler) PerformShipmentAction(c *fiber.Ctx) error {
 	// Выполняем действие через сервис
 	err = h.monitoringService.PerformShipmentAction(c.Context(), shipmentID, request.ShipmentType, request.Action, adminID, request.Parameters)
 	if err != nil {
-		h.logger.Error("Failed to perform shipment action", err)
+		h.logger.Error("Failed to perform shipment action: %v", err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.action_error")
 	}
 

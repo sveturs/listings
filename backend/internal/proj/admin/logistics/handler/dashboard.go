@@ -42,7 +42,7 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 	stats, err := h.monitoringService.GetDashboardStats(c.Context())
 	if err != nil {
 		// Логируем ошибку для отладки
-		c.App().Config().ErrorHandler(c, err)
+		_ = c.App().Config().ErrorHandler(c, err)
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "logistics.dashboard.error")
 	}
 

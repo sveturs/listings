@@ -7,6 +7,7 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/proj/admin/logistics/handler"
 	"backend/internal/proj/admin/logistics/service"
+	"backend/pkg/logger"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -23,7 +24,7 @@ type Module struct {
 }
 
 // NewModule создает новый модуль админки логистики
-func NewModule(db *sql.DB, cfg *config.Config) (*Module, error) {
+func NewModule(db *sql.DB, cfg *config.Config, logger *logger.Logger) (*Module, error) {
 	// Создаем сервисы
 	monitoringService := service.NewMonitoringService(db)
 	problemService := service.NewProblemService(db)
@@ -32,7 +33,7 @@ func NewModule(db *sql.DB, cfg *config.Config) (*Module, error) {
 	// Создаем handlers
 	dashboardHandler := handler.NewDashboardHandler(monitoringService)
 	shipmentsHandler := handler.NewShipmentsHandler(monitoringService, problemService)
-	problemsHandler := handler.NewProblemsHandler(problemService)
+	problemsHandler := handler.NewProblemsHandler(problemService, logger)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
 
 	return &Module{

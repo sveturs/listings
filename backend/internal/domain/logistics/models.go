@@ -17,7 +17,7 @@ type LogisticsMetrics struct {
 	InTransit      int `json:"in_transit" db:"in_transit"`
 	Problems       int `json:"problems" db:"problems"`
 	Returns        int `json:"returns" db:"returns"`
-	Cancelled      int `json:"cancelled" db:"cancelled"`
+	Canceled       int `json:"canceled" db:"canceled"`
 
 	// Метрики по курьерским службам
 	BexShipments         int `json:"bex_shipments" db:"bex_shipments"`

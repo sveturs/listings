@@ -217,7 +217,7 @@ func (s *AnalyticsService) GetFinancialReport(ctx context.Context, fromDate, toD
 
 	// Получаем стоимость возвратов
 	var returnCosts sql.NullFloat64
-	err = s.db.QueryRowContext(ctx, `
+	if err := s.db.QueryRowContext(ctx, `
 		SELECT SUM(shipping_cost * 0.5) -- Предполагаем 50% от стоимости доставки за возврат
 		FROM (
 			SELECT shipping_cost FROM bex_shipments 
@@ -226,7 +226,10 @@ func (s *AnalyticsService) GetFinancialReport(ctx context.Context, fromDate, toD
 			SELECT price as shipping_cost FROM post_express_shipments 
 			WHERE status = 'returned' AND created_at BETWEEN $1 AND $2
 		) returns
-	`, fromDate, toDate).Scan(&returnCosts)
+	`, fromDate, toDate).Scan(&returnCosts); err != nil {
+		s.logger.Error("Failed to get return costs: %v", err)
+		// Продолжаем с нулевым значением
+	}
 
 	// Формируем отчет
 	totalShippingCost := bexCosts.TotalCost.Float64 + postCosts.TotalCost.Float64
@@ -309,6 +312,9 @@ func (s *AnalyticsService) GetFinancialReport(ctx context.Context, fromDate, toD
 			"total_cost": totalCost.Float64,
 			"shipments":  shipments,
 		})
+	}
+	if err = rows.Err(); err != nil {
+		s.logger.Error("error iterating monthly data rows: %v", err)
 	}
 
 	report["monthly"] = monthly

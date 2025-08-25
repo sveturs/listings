@@ -4770,6 +4770,68 @@ definitions:
       transport_mode:
         type: string
     type: object
+  backend_internal_proj_analytics_service.ItemPerformance:
+    properties:
+      category_id:
+        type: integer
+      clicks:
+        type: integer
+      conversions:
+        type: integer
+      ctr:
+        type: number
+      item_id:
+        type: integer
+      revenue:
+        type: number
+      title:
+        type: string
+      views:
+        type: integer
+    type: object
+  backend_internal_proj_analytics_service.SearchMetrics:
+    properties:
+      avg_click_position:
+        type: number
+      avg_results_shown:
+        type: number
+      ctr:
+        type: number
+      search_trends:
+        items:
+          $ref: '#/definitions/backend_internal_proj_analytics_service.SearchTrend'
+        type: array
+      top_queries:
+        items:
+          $ref: '#/definitions/backend_internal_proj_analytics_service.TopQuery'
+        type: array
+      total_searches:
+        type: integer
+      unique_searches:
+        type: integer
+      zero_result_rate:
+        type: number
+    type: object
+  backend_internal_proj_analytics_service.SearchTrend:
+    properties:
+      ctr:
+        type: number
+      date:
+        type: string
+      searches:
+        type: integer
+    type: object
+  backend_internal_proj_analytics_service.TopQuery:
+    properties:
+      avg_results:
+        type: integer
+      count:
+        type: integer
+      ctr:
+        type: number
+      query:
+        type: string
+    type: object
   backend_internal_proj_bexexpress_models.AddressSuggestion:
     properties:
       full_address:
@@ -6397,6 +6459,89 @@ definitions:
         type: integer
       warehouse_name:
         type: string
+    type: object
+  backend_internal_proj_search_admin_service.IndexInfo:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      document_count:
+        type: integer
+      health:
+        type: string
+      index_name:
+        type: string
+      last_updated:
+        type: string
+      mappings:
+        additionalProperties: true
+        type: object
+      number_of_shards:
+        type: integer
+      settings:
+        additionalProperties: true
+        type: object
+      size_formatted:
+        type: string
+      size_in_bytes:
+        type: integer
+      status:
+        type: string
+    type: object
+  backend_internal_proj_search_admin_service.IndexStatistics:
+    properties:
+      documents_by_category:
+        additionalProperties:
+          type: integer
+        type: object
+      documents_by_status:
+        additionalProperties:
+          type: integer
+        type: object
+      index_health:
+        type: string
+      last_reindexed:
+        type: string
+      listings_count:
+        type: integer
+      products_count:
+        type: integer
+      searchable_fields:
+        items:
+          type: string
+        type: array
+      total_documents:
+        type: integer
+    type: object
+  backend_internal_proj_search_admin_service.IndexedDocument:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      id:
+        type: string
+      indexed_at:
+        type: string
+      last_modified:
+        type: string
+      searchable_fields:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      storefront_id:
+        type: integer
+      title:
+        type: string
+      type:
+        description: listing или product
+        type: string
+      user_id:
+        type: integer
     type: object
   backend_internal_proj_search_optimization_service.OptimizationConfig:
     properties:
@@ -12929,6 +13074,162 @@ paths:
       summary: Создание резервной копии весов
       tags:
       - Search Optimization
+  /api/v1/admin/search/index/documents:
+    get:
+      consumes:
+      - application/json
+      description: Search and filter indexed documents
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        type: string
+      - description: Document type (listing/product)
+        in: query
+        name: type
+        type: string
+      - description: Category ID
+        in: query
+        name: category_id
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexedDocument'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Search indexed documents
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/info:
+    get:
+      consumes:
+      - application/json
+      description: Returns detailed information about the search index
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get search index information
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/reindex:
+    post:
+      consumes:
+      - application/json
+      description: Trigger reindexing of all marketplace documents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Reindex search documents
+      tags:
+      - admin-search
+  /api/v1/admin/search/index/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics about indexed documents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_search_admin_service.IndexStatistics'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get search index statistics
+      tags:
+      - admin-search
   /api/v1/admin/search/optimization-cancel/{session_id}:
     post:
       description: Отменяет запущенный процесс оптимизации весов

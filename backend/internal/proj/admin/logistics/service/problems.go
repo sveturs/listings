@@ -90,7 +90,7 @@ func (s *ProblemService) GetProblems(ctx context.Context, filter ProblemsFilter)
 	baseQuery += " ORDER BY p.created_at DESC"
 
 	// Получаем общее количество
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM problem_shipments p WHERE 1=1")
+	countQuery := "SELECT COUNT(*) FROM problem_shipments p WHERE 1=1"
 	for _, cond := range conditions {
 		countQuery += " AND " + cond
 	}
@@ -713,7 +713,7 @@ func (s *ProblemService) GetProblemWithDetails(ctx context.Context, problemID in
 	// Получаем комментарии
 	comments, err := s.GetProblemComments(ctx, problemID)
 	if err != nil {
-		s.logger.Error("Failed to get problem comments", "error", err, "problem_id", problemID)
+		s.logger.Error("Failed to get problem comments: error=%v problem_id=%d", err, problemID)
 		// Не возвращаем ошибку, просто логируем
 		comments = []logistics.ProblemComment{}
 	}
@@ -721,7 +721,7 @@ func (s *ProblemService) GetProblemWithDetails(ctx context.Context, problemID in
 	// Получаем историю
 	history, err := s.GetProblemHistory(ctx, problemID)
 	if err != nil {
-		s.logger.Error("Failed to get problem history", "error", err, "problem_id", problemID)
+		s.logger.Error("Failed to get problem history: error=%v problem_id=%d", err, problemID)
 		// Не возвращаем ошибку, просто логируем
 		history = []logistics.ProblemStatusHistory{}
 	}
