@@ -29,6 +29,7 @@ ENV NEXT_PUBLIC_IMAGE_HOSTS=http:localhost:9000,https:svetu.rs:443,http:localhos
 ENV NEXT_PUBLIC_IMAGE_PATH_PATTERN=/listings/**
 ENV NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:3000
 ENV NEXT_PUBLIC_ENABLE_PAYMENTS=false
+ENV NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=dummy_token_for_build
 
 # Build the application
 RUN yarn build

@@ -1,0 +1,193 @@
+services:
+  db:
+    build:
+      context: ./docker/postgres-postgis
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASS:-password}
+      POSTGRES_DB: ${DATABASE_DBNAME:-svetu_db}
+    ports:
+      - "${DATABASE_PORT:-5433}:5432"  # Другой порт для dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 10s
+    stop_signal: SIGINT
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6380}:6379"  # Другой порт для dev
+    volumes:
+      - redis_data_dev:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    environment:
+      - "discovery.type=single-node"
+      - "bootstrap.memory_lock=true"
+      - "OPENSEARCH_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data_dev:/usr/share/opensearch/data
+    ports:
+      - "${OPENSEARCH_PORT:-9201}:9200"  # Другой порт для dev
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    ports:
+      - "${OPENSEARCH_DASHBOARD_PORT:-5602}:5601"  # Другой порт для dev
+    environment:
+      - "OPENSEARCH_HOSTS=http://opensearch:9200"
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    networks:
+      - svetu_network_dev
+    depends_on:
+      - opensearch
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2023-09-30T07-02-29Z
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-1321321321321}
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:${MINIO_CONSOLE_PORT:-9003}
+      MINIO_SERVER_URL: http://localhost:${MINIO_PORT:-9002}
+    volumes:
+      - minio_data_dev:/data
+    ports:
+      - "${MINIO_PORT:-9002}:9000"  # Другой порт для dev
+      - "${MINIO_CONSOLE_PORT:-9003}:9001"  # Другой порт для dev
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-1321321321321}
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb --ignore-existing myminio/listings;
+      /usr/bin/mc policy set public myminio/listings;
+      /usr/bin/mc mb --ignore-existing myminio/chat-files;
+      /usr/bin/mc anonymous set public myminio/chat-files;
+      exit 0;
+      "
+    networks:
+      - svetu_network_dev
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-3002}:3000"  # Другой порт для dev
+    depends_on:
+      db:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+    environment:
+      APP_MODE: production
+      ENV_FILE: .env
+      WS_ENABLED: true
+      UPLOAD_DIR: /app/uploads
+      DATABASE_URL: postgres://${DATABASE_USER:-postgres}:${DATABASE_PASS:-password}@db:5432/${DATABASE_DBNAME:-svetu_db}?sslmode=disable
+      OPENSEARCH_URL: http://opensearch:9200
+      OPENSEARCH_MARKETPLACE_INDEX: ${OPENSEARCH_MARKETPLACE_INDEX:-marketplace}
+      FILE_STORAGE_PROVIDER: ${FILE_STORAGE_PROVIDER:-minio}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-1321321321321}
+      MINIO_USE_SSL: false
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-listings}
+      MINIO_LOCATION: ${MINIO_LOCATION:-eu-central-1}
+      FILE_STORAGE_PUBLIC_URL: ${FILE_STORAGE_PUBLIC_URL:-http://localhost:3002}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MIGRATIONS_ON_API: full
+    user: "101:101"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    init: true
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend/svetu
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3003}:3000"  # Другой порт для dev
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3002}
+      NEXT_PUBLIC_MINIO_URL: ${NEXT_PUBLIC_MINIO_URL:-http://localhost:9002}
+      NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS:-http:localhost:9002,https:dev.svetu.rs:443,http:localhost:3002}
+      NEXT_PUBLIC_IMAGE_PATH_PATTERN: ${NEXT_PUBLIC_IMAGE_PATH_PATTERN:-/listings/**}
+      NEXT_PUBLIC_WEBSOCKET_URL: ${NEXT_PUBLIC_WEBSOCKET_URL:-ws://localhost:3002}
+      NEXT_PUBLIC_ENABLE_PAYMENTS: ${NEXT_PUBLIC_ENABLE_PAYMENTS:-false}
+    networks:
+      - svetu_network_dev
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
+  opensearch-data_dev:
+  redis_data_dev:
+  minio_data_dev:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/minio_dev
+
+networks:
+  svetu_network_dev:
+    driver: bridge
