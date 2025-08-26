@@ -683,25 +683,13 @@ export default function HomePageClient({
 
               {/* Поисковая строка */}
               <div className="flex-1 max-w-3xl">
-                <div className="flex gap-2">
-                  {/* Селектор категорий с вложенностью */}
-                  <NestedCategorySelector
-                    categories={categories}
-                    selectedCategory={selectedCategory}
-                    onChange={setSelectedCategory}
-                    placeholder={t('allCategories')}
-                    showCounts={true}
-                    className="w-48 hidden md:block"
-                  />
-
-                  {/* Поисковая строка с автодополнением */}
-                  <SearchAutocomplete
-                    placeholder={t('searchPlaceholder')}
-                    selectedCategory={selectedCategory}
-                    locale={locale}
-                    className="flex-1"
-                  />
-                </div>
+                {/* Поисковая строка с автодополнением */}
+                <SearchAutocomplete
+                  placeholder={t('searchPlaceholder')}
+                  selectedCategory={selectedCategory}
+                  locale={locale}
+                  className="w-full"
+                />
               </div>
 
               {/* Действия пользователя */}
@@ -774,7 +762,7 @@ export default function HomePageClient({
                         <div className="w-10 h-3 bg-base-300 rounded"></div>
                       </div>
                     ))
-                  : popularCategories.slice(0, 8).map((cat) => {
+                  : popularCategories.slice(0, 7).map((cat) => {
                       const Icon = cat.icon || BsHandbag;
                       const count = cat.listing_count || cat.count || 0;
                       const formattedCount =
@@ -793,9 +781,20 @@ export default function HomePageClient({
                         </Link>
                       );
                     })}
-                <Link href="/categories" className="text-primary font-medium">
-                  {t('allCategories')} →
-                </Link>
+                {/* Селектор всех категорий как кнопка */}
+                <div className="ml-auto">
+                  <NestedCategorySelector
+                    categories={categories}
+                    selectedCategory={selectedCategory}
+                    onChange={(categoryId) => {
+                      // При выборе категории переходим на страницу поиска
+                      router.push(`/${locale}/search?category=${categoryId}`);
+                    }}
+                    placeholder={t('allCategories')}
+                    showCounts={true}
+                    className="btn btn-sm btn-primary"
+                  />
+                </div>
               </div>
             </div>
           </div>
