@@ -106,6 +106,7 @@ export default async function RootLayout({
     'orders', // Добавляем orders для страницы успешного заказа
     'storefronts', // Добавляем storefronts для страниц витрин
     'userContacts', // Добавляем userContacts для страницы контактов
+    'subscription', // Добавляем subscription для страниц подписки
   ]);
 
   return (

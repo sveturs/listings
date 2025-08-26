@@ -1,6 +1,46 @@
 {
   "title": "Kreiranje izloga",
   "subtitle": "Kreirajte svoj izlog za prodaju proizvoda i usluga",
+  "basic_info_title": "Osnovne informacije",
+  "business_details_title": "Poslovni detalji",
+  "location_title": "Lokacija",
+  "business_hours_title": "Radno vreme",
+  "staff_setup_title": "Podešavanje osoblja",
+  "countries": {
+    "Serbia": "Srbija",
+    "Србија": "Srbija",
+    "Сербия": "Srbija",
+    "RS": "Srbija",
+    "Srbija": "Srbija"
+  },
+  "steps": {
+    "basic_info": "Osnovne informacije",
+    "business_details": "Poslovni detalji",
+    "location": "Lokacija",
+    "business_hours": "Radno vreme",
+    "payment_delivery": "Plaćanje i dostava",
+    "staff_setup": "Podešavanje osoblja",
+    "preview": "Pregled"
+  },
+  "category": "Izaberite kategoriju koja najbolje opisuje vaš biznis",
+  "basic_info": {
+    "name": "Naziv izloga",
+    "name_placeholder": "Unesite naziv izloga",
+    "slug": "URL adresa",
+    "slug_placeholder": "moja-prodavnica",
+    "description": "Opis",
+    "description_placeholder": "Opišite vaš izlog",
+    "business_type": "Tip biznisa",
+    "logo": "Logo",
+    "logo_hint": "Preporučena veličina: 200x200px",
+    "choose_logo": "Izaberite logo",
+    "logo_requirements": "PNG, JPG do 2MB",
+    "banner": "Baner",
+    "banner_hint": "Preporučena veličina: 1200x400px",
+    "click_to_upload_banner": "Kliknite za upload banera",
+    "change_banner": "Promenite baner",
+    "banner_requirements": "PNG, JPG do 5MB, 1200x400px"
+  },
   "name": "Naziv izloga",
   "name_placeholder": "Unesite naziv izloga",
   "slug": "URL adresa",
@@ -36,14 +76,27 @@
     "city": "Grad",
     "postal_code": "Poštanski broj",
     "country": "Zemlja",
-    "coordinates": "Koordinate"
+    "coordinates": "Koordinate",
+    "storefront_location": "Lokacija izloga",
+    "address_placeholder": "Unesite adresu",
+    "postal_code_placeholder": "Unesite poštanski broj",
+    "floor": "Sprat",
+    "floor_placeholder": "npr. 2, prizemlje",
+    "unit_number": "Broj lokala",
+    "unit_number_placeholder": "npr. 12A",
+    "amenities": "Pogodnosti",
+    "has_parking": "Ima parking",
+    "has_elevator": "Ima lift",
+    "accessibility_notes": "Napomene o pristupačnosti",
+    "accessibility_notes_placeholder": "npr. pristup za invalidska kolica, rampa na ulazu",
+    "selected_location": "Izabrana lokacija",
+    "accuracy": "Preciznost"
   },
   "business_hours": {
     "title": "Radno vreme",
     "subtitle": "Postavite radno vreme vašeg izloga",
     "tip": "Kupci će videti ove informacije na strani izloga"
   },
-  "payment_methods": "Načini plaćanja",
   "payment_methods": {
     "cash": "Gotovina",
     "card": "Bankovna kartica",
@@ -66,14 +119,28 @@
   "delivery_time": "Vreme dostave (minuti)",
   "delivery_cost": "Cena dostave (RSD)",
   "free_threshold": "Besplatna dostava od (RSD)",
-  "staff_setup": "Podešavanje osoblja",
+  "staff_setup": {
+    "title": "Podešavanje osoblja",
+    "subtitle": "Dodajte članove tima za upravljanje vašim izlogom",
+    "email_placeholder": "Unesite email adresu"
+  },
   "current_staff": "Trenutno osoblje",
   "add_member": "Dodajte člana osoblja",
   "role": "Uloga",
+  "roles": {
+    "staff": "Osoblje",
+    "manager": "Menadžer",
+    "admin": "Administrator"
+  },
   "staff": "Osoblje",
   "manager": "Menadžer",
   "admin": "Administrator",
   "permissions": "Dozvole",
+  "permission_labels": {
+    "products": "Upravljanje proizvodima",
+    "orders": "Upravljanje porudžbinama",
+    "settings": "Upravljanje podešavanjima"
+  },
   "products": "Proizvodi",
   "orders": "Porudžbine",
   "settings": "Podešavanja",
@@ -82,22 +149,25 @@
     "title": "Pregled",
     "subtitle": "Pregledajte informacije pre objavljivanja"
   },
-  "basic_info": "Osnovne informacije",
-  "basic_info": {
-    "name": "Naziv",
-    "slug": "URL",
-    "description": "Opis",
-    "business_type": "Tip biznisa"
-  },
-  "business_details": "Poslovni detalji",
   "business_details": {
     "tax_number": "Poreski broj",
     "vat_number": "PDV broj",
     "phone": "Telefon",
     "email": "Email",
-    "website": "Veb sajt"
+    "website": "Veb sajt",
+    "title": "Poslovni detalji",
+    "subtitle": "Unesite informacije o vašem poslovanju",
+    "registration_number": "Registracioni broj",
+    "registration_number_placeholder": "Unesite registracioni broj",
+    "tax_number_placeholder": "Unesite poreski broj",
+    "vat_number_placeholder": "Unesite PDV broj",
+    "phone_placeholder": "Unesite broj telefona",
+    "email_placeholder": "Unesite email adresu",
+    "website_placeholder": "https://www.vasasajt.rs"
   },
   "payment_delivery": "Plaćanje i dostava",
+  "payment_methods_title": "Načini plaćanja",
+  "delivery_options_title": "Opcije dostave",
   "open": "Otvoreno",
   "closed": "Zatvoreno",
   "back": "Nazad",
@@ -106,15 +176,16 @@
   "city_required": "Grad je obavezan",
   "postal_code_required": "Poštanski broj je obavezan",
   "errors": {
-    "name_required": "Naziv je obavezan",
+    "name_required": "Naziv izloga je obavezan",
     "slug_required": "URL adresa je obavezna",
-    "slug_invalid": "URL adresa može sadržavati samo slova, brojeve i crtice",
-    "logo_too_large": "Logo fajl je prevelik (max 2MB)",
-    "banner_too_large": "Baner fajl je prevelik (max 5MB)",
-    "email_required": "Email je obavezan",
-    "email_invalid": "Neispravna email adresa",
-    "email_duplicate": "Korisnik sa ovim email-om je već dodat",
-    "phone_invalid": "Neispravan broj telefona",
-    "website_invalid": "Neispravan URL veb sajta"
-  }
+    "slug_invalid": "URL adresa može sadržati samo slova, brojeve i crtice",
+    "description_required": "Opis izloga je obavezan",
+    "logo_too_large": "Logo fajl ne sme biti veći od 2MB",
+    "banner_too_large": "Baner fajl ne sme biti veći od 5MB",
+    "email_invalid": "Email adresa nije validna",
+    "phone_invalid": "Broj telefona nije valjan",
+    "website_invalid": "URL veb sajta nije valjan"
+  },
+  "trust": "Za vaš oglas garantuje SveTu",
+  "delivery": "Dostava putem Post Express-a"
 }

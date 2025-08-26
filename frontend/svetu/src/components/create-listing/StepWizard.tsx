@@ -11,14 +11,24 @@ interface StepWizardProps {
   steps: Step[];
   currentStep: number;
   onStepClick: (step: number) => void;
+  namespace?: string;
+  subKey?: string;
 }
 
 export default function StepWizard({
   steps,
   currentStep,
   onStepClick,
+  namespace = 'misc',
+  subKey = 'create_listing',
 }: StepWizardProps) {
-  const t = useTranslations('create_listing');
+  const t = useTranslations(namespace as any);
+  const getTranslation = (key: string) => {
+    if (subKey && subKey !== '') {
+      return t(`${subKey}.${key}`);
+    }
+    return t(key);
+  };
 
   return (
     <div className="w-full mb-8">
@@ -90,7 +100,7 @@ export default function StepWizard({
                 ${index <= currentStep ? 'text-base-content font-medium' : 'text-base-content/50'}
               `}
               >
-                {t(step.label)}
+                {getTranslation(step.label)}
               </span>
             </div>
           ))}
@@ -110,7 +120,7 @@ export default function StepWizard({
               {currentStep + 1}
             </div>
             <span className="text-sm font-medium">
-              {t(steps[currentStep].label)}
+              {getTranslation(steps[currentStep].label)}
             </span>
           </div>
         </div>
@@ -119,13 +129,19 @@ export default function StepWizard({
       {/* Региональные подсказки */}
       <div className="mt-4 text-center">
         {currentStep === 0 && (
-          <p className="text-xs text-base-content/60">💡 {t('category')}</p>
+          <p className="text-xs text-base-content/60">
+            💡 {getTranslation('category')}
+          </p>
         )}
         {currentStep === 2 && (
-          <p className="text-xs text-base-content/60">🤝 {t('trust')}</p>
+          <p className="text-xs text-base-content/60">
+            🤝 {getTranslation('trust')}
+          </p>
         )}
         {currentStep === 6 && (
-          <p className="text-xs text-base-content/60">📦 {t('delivery')}</p>
+          <p className="text-xs text-base-content/60">
+            📦 {getTranslation('delivery')}
+          </p>
         )}
       </div>
     </div>

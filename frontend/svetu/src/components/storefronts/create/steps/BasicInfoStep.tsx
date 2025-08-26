@@ -86,9 +86,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
     }
 
     if (!formData.description || formData.description.length < 20) {
-      newErrors.description = t(
-        'create_storefront.errors.description_required'
-      );
+      newErrors.description = t('errors.description_required');
     }
 
     setErrors(newErrors);
@@ -110,12 +108,12 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full">
             <label className="label">
-              <span className="label-text">{t('name')}</span>
+              <span className="label-text">{t('basic_info.name')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <input
               type="text"
-              placeholder={t('name_placeholder')}
+              placeholder={t('basic_info.name_placeholder')}
               className={`input input-bordered w-full ${errors.name ? 'input-error' : ''}`}
               value={formData.name}
               onChange={(e) => updateFormData({ name: e.target.value })}
@@ -129,14 +127,14 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">{t('slug')}</span>
+              <span className="label-text">{t('basic_info.slug')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <div className="flex items-center gap-2">
               <span className="text-base-content/70">svetu.rs/</span>
               <input
                 type="text"
-                placeholder={t('slug_placeholder')}
+                placeholder={t('basic_info.slug_placeholder')}
                 className={`input input-bordered flex-1 ${errors.slug ? 'input-error' : ''}`}
                 value={formData.slug}
                 onChange={(e) =>
@@ -153,14 +151,12 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">{t('description')}</span>
+              <span className="label-text">{t('basic_info.description')}</span>
               <span className="label-text-alt text-error">*</span>
             </label>
             <textarea
               className={`textarea textarea-bordered h-24 ${errors.description ? 'textarea-error' : ''}`}
-              placeholder={t(
-                'create_storefront.basic_info.description_placeholder'
-              )}
+              placeholder={t('basic_info.description_placeholder')}
               value={formData.description}
               onChange={(e) => updateFormData({ description: e.target.value })}
             />
@@ -175,7 +171,9 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
 
           <div className="form-control w-full mt-4">
             <label className="label">
-              <span className="label-text">{t('business_type')}</span>
+              <span className="label-text">
+                {t('basic_info.business_type')}
+              </span>
             </label>
             <select
               className="select select-bordered w-full"
@@ -195,9 +193,9 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
           {/* Logo Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">{t('logo')}</span>
+              <span className="label-text">{t('basic_info.logo')}</span>
               <span className="label-text-alt text-base-content/60">
-                {t('logo_hint')}
+                {t('basic_info.logo_hint')}
               </span>
             </label>
             <div className="flex items-center gap-4">
@@ -252,10 +250,10 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
                   className="btn btn-sm btn-outline"
                   onClick={() => logoInputRef.current?.click()}
                 >
-                  {t('choose_logo')}
+                  {t('basic_info.choose_logo')}
                 </button>
                 <p className="text-xs text-base-content/60 mt-1">
-                  {t('logo_requirements')}
+                  {t('basic_info.logo_requirements')}
                 </p>
               </div>
             </div>
@@ -269,9 +267,9 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
           {/* Banner Upload */}
           <div className="form-control w-full mt-6">
             <label className="label">
-              <span className="label-text">{t('banner')}</span>
+              <span className="label-text">{t('basic_info.banner')}</span>
               <span className="label-text-alt text-base-content/60">
-                {t('banner_hint')}
+                {t('basic_info.banner_hint')}
               </span>
             </label>
             <div
@@ -301,13 +299,13 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
                     />
                   </svg>
                   <span className="text-sm text-base-content/60">
-                    {t('click_to_upload_banner')}
+                    {t('basic_info.click_to_upload_banner')}
                   </span>
                 </div>
               )}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {t('change_banner')}
+                  {t('basic_info.change_banner')}
                 </span>
               </div>
             </div>
@@ -319,7 +317,7 @@ export default function BasicInfoStep({ onNext }: BasicInfoStepProps) {
               onChange={handleBannerChange}
             />
             <p className="text-xs text-base-content/60 mt-2">
-              {t('banner_requirements')}
+              {t('basic_info.banner_requirements')}
             </p>
             {errors.banner && (
               <label className="label">

@@ -91,5 +91,9 @@ export function getRequiredModules(pathname: string): string[] {
     modules.push('reviews');
   }
 
+  if (pathname.includes('/subscription')) {
+    modules.push('subscription');
+  }
+
   return modules;
 }

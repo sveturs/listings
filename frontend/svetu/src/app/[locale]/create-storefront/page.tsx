@@ -16,13 +16,13 @@ import { CreateStorefrontProvider } from '@/contexts/CreateStorefrontContext';
 import { toast } from '@/utils/toast';
 
 const steps = [
-  { id: 'basic_info', label: 'create_storefront.steps.basic_info' },
-  { id: 'business_details', label: 'create_storefront.steps.business_details' },
-  { id: 'location', label: 'create_storefront.steps.location' },
-  { id: 'business_hours', label: 'create_storefront.steps.business_hours' },
-  { id: 'payment_delivery', label: 'create_storefront.steps.payment_delivery' },
-  { id: 'staff_setup', label: 'create_storefront.steps.staff_setup' },
-  { id: 'preview', label: 'create_storefront.steps.preview' },
+  { id: 'basic_info', label: 'steps.basic_info' },
+  { id: 'business_details', label: 'steps.business_details' },
+  { id: 'location', label: 'steps.location' },
+  { id: 'business_hours', label: 'steps.business_hours' },
+  { id: 'payment_delivery', label: 'steps.payment_delivery' },
+  { id: 'staff_setup', label: 'steps.staff_setup' },
+  { id: 'preview', label: 'steps.preview' },
 ];
 
 export default function CreateStorefrontPage() {
@@ -135,6 +135,8 @@ export default function CreateStorefrontPage() {
           steps={steps}
           currentStep={currentStep}
           onStepClick={handleStepChange}
+          namespace="create_storefront"
+          subKey=""
         />
 
         <div className="mt-4 sm:mt-8">{renderStep()}</div>

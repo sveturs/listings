@@ -1,8 +1,8 @@
 import axios from 'axios';
-import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 
 const api = axios.create({
-  baseURL: configManager.getApiUrl(),
+  baseURL: '', // Use relative paths to go through Next.js proxy
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,9 +13,8 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Можно добавить токен авторизации если нужно
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    // Получаем токен из tokenManager
+    const token = tokenManager.getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,12 +30,22 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Обработка ошибки авторизации
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        // Можно добавить редирект на страницу логина
+      // Пытаемся обновить токен
+      try {
+        const newToken = await tokenManager.refreshAccessToken();
+        if (newToken && error.config && !error.config._retry) {
+          // Помечаем запрос как повторный чтобы избежать бесконечного цикла
+          error.config._retry = true;
+          // Обновляем заголовок авторизации с новым токеном
+          error.config.headers.Authorization = `Bearer ${newToken}`;
+          // Повторяем оригинальный запрос с новым токеном
+          return api(error.config);
+        }
+      } catch {
+        // Если обновление токена не удалось, очищаем токены
+        tokenManager.clearTokens();
       }
     }
     return Promise.reject(error);

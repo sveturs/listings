@@ -50,18 +50,24 @@ export default function BusinessDetailsStep({
     <div className="max-w-2xl mx-auto">
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">{t('title')}</h2>
-          <p className="text-base-content/70 mb-6">{t('subtitle')}</p>
+          <h2 className="card-title text-2xl mb-4">
+            {t('business_details.title')}
+          </h2>
+          <p className="text-base-content/70 mb-6">
+            {t('business_details.subtitle')}
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('registration_number')}</span>
+                <span className="label-text">
+                  {t('business_details.registration_number')}
+                </span>
               </label>
               <input
                 type="text"
                 placeholder={t(
-                  'create_storefront.business_details.registration_number_placeholder'
+                  'business_details.registration_number_placeholder'
                 )}
                 className="input input-bordered w-full"
                 value={formData.registrationNumber || ''}
@@ -73,13 +79,13 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('tax_number')}</span>
+                <span className="label-text">
+                  {t('business_details.tax_number')}
+                </span>
               </label>
               <input
                 type="text"
-                placeholder={t(
-                  'create_storefront.business_details.tax_number_placeholder'
-                )}
+                placeholder={t('business_details.tax_number_placeholder')}
                 className="input input-bordered w-full"
                 value={formData.taxNumber || ''}
                 onChange={(e) => updateFormData({ taxNumber: e.target.value })}
@@ -88,13 +94,13 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('vat_number')}</span>
+                <span className="label-text">
+                  {t('business_details.vat_number')}
+                </span>
               </label>
               <input
                 type="text"
-                placeholder={t(
-                  'create_storefront.business_details.vat_number_placeholder'
-                )}
+                placeholder={t('business_details.vat_number_placeholder')}
                 className="input input-bordered w-full"
                 value={formData.vatNumber || ''}
                 onChange={(e) => updateFormData({ vatNumber: e.target.value })}
@@ -103,13 +109,13 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('phone')}</span>
+                <span className="label-text">
+                  {t('business_details.phone')}
+                </span>
               </label>
               <input
                 type="tel"
-                placeholder={t(
-                  'create_storefront.business_details.phone_placeholder'
-                )}
+                placeholder={t('business_details.phone_placeholder')}
                 className={`input input-bordered w-full ${errors.phone ? 'input-error' : ''}`}
                 value={formData.phone || ''}
                 onChange={(e) => updateFormData({ phone: e.target.value })}
@@ -125,13 +131,13 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('email')}</span>
+                <span className="label-text">
+                  {t('business_details.email')}
+                </span>
               </label>
               <input
                 type="email"
-                placeholder={t(
-                  'create_storefront.business_details.email_placeholder'
-                )}
+                placeholder={t('business_details.email_placeholder')}
                 className={`input input-bordered w-full ${errors.email ? 'input-error' : ''}`}
                 value={formData.email || ''}
                 onChange={(e) => updateFormData({ email: e.target.value })}
@@ -147,13 +153,13 @@ export default function BusinessDetailsStep({
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">{t('website')}</span>
+                <span className="label-text">
+                  {t('business_details.website')}
+                </span>
               </label>
               <input
                 type="url"
-                placeholder={t(
-                  'create_storefront.business_details.website_placeholder'
-                )}
+                placeholder={t('business_details.website_placeholder')}
                 className={`input input-bordered w-full ${errors.website ? 'input-error' : ''}`}
                 value={formData.website || ''}
                 onChange={(e) => updateFormData({ website: e.target.value })}

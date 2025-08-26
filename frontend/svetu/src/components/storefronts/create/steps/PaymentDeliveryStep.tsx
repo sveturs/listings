@@ -92,7 +92,7 @@ export default function PaymentDeliveryStep({
           {/* Payment Methods */}
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-4">
-              {t('payment_methods')}
+              {t('payment_methods_title')}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {paymentMethods.map((method) => (
@@ -116,7 +116,7 @@ export default function PaymentDeliveryStep({
           {/* Delivery Options */}
           <div>
             <h3 className="text-lg font-semibold mb-4">
-              {t('delivery_options')}
+              {t('delivery_options_title')}
             </h3>
 
             {/* Existing delivery options */}

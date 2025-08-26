@@ -32,7 +32,7 @@ var (
 )
 
 // Лимиты по тарифным планам
-var planLimits = map[models.SubscriptionPlan]struct {
+var planLimits = map[models.SubscriptionPlanType]struct {
 	MaxStorefronts  int
 	MaxProducts     int
 	MaxStaff        int
@@ -549,7 +549,8 @@ func (s *StorefrontServiceImpl) canCreateStorefront(ctx context.Context, userID 
 	}
 	logger.Info().Int("userID", userID).Int("count", len(currentStorefronts)).Msg("canCreateStorefront: текущее количество витрин")
 
-	// TODO: получить план пользователя
+	// TODO: Интеграция с сервисом подписок для получения актуального плана пользователя
+	// Пока используем бесплатный план по умолчанию
 	userPlan := models.SubscriptionPlanStarter
 
 	limits, ok := planLimits[userPlan]

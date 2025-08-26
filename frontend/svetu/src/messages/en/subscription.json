@@ -1,0 +1,56 @@
+{
+  "paymentMock": {
+    "title": "Complete Your Payment",
+    "description": "Mock payment processor for testing",
+    "testNotice": "This is a test payment page for development",
+    "processingPayment": "Processing your payment...",
+    "paymentDetails": "Payment Details",
+    "plan": "Plan",
+    "billingCycle": "Billing Cycle",
+    "amount": "Amount",
+    "paymentId": "Payment ID",
+    "testCardDetails": "Test Card Details",
+    "cardNumber": "Card Number",
+    "expiryDate": "MM/YY",
+    "cvc": "CVC",
+    "simulateFailure": "Simulate Failure",
+    "completePayment": "Complete Payment",
+    "processing": "Processing...",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "success": {
+      "title": "Payment Successful!",
+      "description": "Your subscription has been activated. Redirecting..."
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "description": "The payment could not be processed. Please try again.",
+      "backToPricing": "Back to Pricing"
+    }
+  },
+  "plans": {
+    "starter": "Starter",
+    "professional": "Professional",
+    "business": "Business",
+    "enterprise": "Enterprise"
+  },
+  "features": {
+    "storefronts": "Storefronts",
+    "products": "Products per storefront",
+    "staff": "Staff members",
+    "images": "Images per product",
+    "aiAssistant": "AI Assistant",
+    "liveSupport": "Live Support",
+    "dataExport": "Data Export",
+    "customDomain": "Custom Domain"
+  },
+  "upgrade": {
+    "title": "Upgrade Your Plan",
+    "description": "Get more storefronts and unlock powerful features",
+    "currentPlan": "Current Plan",
+    "selectPlan": "Select Plan",
+    "changePlan": "Change Plan",
+    "confirmUpgrade": "Confirm Upgrade",
+    "confirmDowngrade": "Confirm Downgrade"
+  }
+}

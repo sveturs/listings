@@ -290,6 +290,7 @@
     "auth_required": "Molimo prijavite se za kreiranje vitrine",
     "success": "Vitrina je uspešno kreirana!",
     "error": "Nije uspelo kreiranje vitrine",
+    "trust": "Pouzdan biznis",
     "steps": {
       "basic_info": "Osnovne informacije",
       "business_details": "Podaci o biznisu",
@@ -346,7 +347,21 @@
       "postal_code_placeholder": "npr. 11000",
       "country": "Zemlja",
       "find_on_map": "Pronađi na mapi",
-      "coordinates": "Koordinate"
+      "coordinates": "Koordinate",
+      "storefront_location": "Lokacija prodavnice",
+      "search_address": "Pretraži adresu",
+      "select_on_map": "Izaberi na mapi",
+      "floor": "Sprat (opciono)",
+      "floor_placeholder": "npr. 2, prizemlje, podrum",
+      "unit_number": "Broj lokala/kancelarije (opciono)",
+      "unit_number_placeholder": "npr. 10A, Lokal 5",
+      "amenities": "Pogodnosti",
+      "has_parking": "Ima parking",
+      "has_elevator": "Ima lift",
+      "accessibility_notes": "Napomene o pristupačnosti (opciono)",
+      "accessibility_notes_placeholder": "npr. Pristupačno za invalidska kolica, rampa na ulazu",
+      "selected_location": "Izabrana lokacija",
+      "accuracy": "Tačnost"
     },
     "business_hours": {
       "title": "Radno vreme",
@@ -385,6 +400,7 @@
       "grocery": "Prodavnica namirnica",
       "other": "Ostalo"
     },
+    "category": "Kategorija",
     "errors": {
       "name_required": "Naziv biznisa mora imati najmanje 3 karaktera",
       "slug_required": "URL prodavnice mora imati najmanje 3 karaktera",
@@ -430,6 +446,29 @@
     "settings": "Upravljanje podešavanjima"
   },
   "storefronts": {
+    "upgrade": {
+      "title": "Nadogradite vaš plan",
+      "subtitle": "Dobijte više vitrina i otključajte moćne funkcije",
+      "limitReached": "Dostigli ste limit vitrina za vaš trenutni plan. Nadogradite da biste kreirali više vitrina.",
+      "currentPlan": "Trenutni plan",
+      "recommended": "Preporučeno",
+      "upgrade": "Nadogradi sada",
+      "contactSales": "Kontaktirajte prodaju",
+      "needHelp": "Potrebna vam je pomoć u izboru pravog plana?",
+      "contactSupport": "Kontaktirajte naš tim za podršku",
+      "features": {
+        "storefronts": "{count} Vitrina",
+        "storefrontsUnlimited": "Neograničene vitrine",
+        "products": "Do {count} proizvoda",
+        "productsUnlimited": "Neograničeni proizvodi",
+        "staff": "Do {count} članova osoblja",
+        "staffUnlimited": "Neograničeno osoblje",
+        "customDomain": "Prilagođeni domen",
+        "aiAssistant": "AI asistent",
+        "liveShopping": "Događaji uživo kupovine",
+        "exportData": "Izvoz podataka"
+      }
+    },
     "variants": {
       "title": "Varijante robe",
       "selectVariant": "Izaberi varijantu",
@@ -1880,6 +1919,16 @@
         "voice_coming_soon": "Glasovni unos će biti dostupan uskoro",
         "import_coming_soon": "Uvoz iz {platform} će biti dostupan uskoro"
       }
+    },
+    "location_picker": {
+      "search_address": "Pretraži adresu",
+      "select_on_map": "Izaberi na mapi",
+      "location_selected": "Lokacija izabrana",
+      "address": "Adresa",
+      "city": "Grad",
+      "coordinates": "Koordinate",
+      "click_on_map": "Kliknite na mapu da izaberete lokaciju",
+      "min_chars_hint": "Unesite najmanje 2 karaktera za pretragu adresa"
     }
   }
 }

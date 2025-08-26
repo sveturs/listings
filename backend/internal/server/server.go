@@ -43,6 +43,7 @@ import (
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
 	"backend/internal/proj/storefronts"
+	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/translation_admin"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/storage/filestorage"
@@ -76,6 +77,7 @@ type Server struct {
 	searchOptimization *search_optimization.Module
 	global             *globalHandler.Handler
 	gis                *gisHandler.Handler
+	subscriptions      *subscriptions.Module
 	fileStorage        filestorage.FileStorageInterface
 }
 
@@ -188,6 +190,10 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
 
+	// Инициализация модуля подписок
+	// Используем nil для AllSecure - модуль автоматически переключится на mock payments
+	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New())
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
@@ -242,6 +248,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		searchOptimization: searchOptimizationModule,
 		global:             globalHandlerInstance,
 		gis:                gisHandlerInstance,
+		subscriptions:      subscriptionsModule,
 		fileStorage:        fileStorage,
 	}
 
@@ -391,7 +398,15 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
-	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.marketplace, s.balance, s.orders, s.storefront,
+	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
+	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)
+
+	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
+	if s.subscriptions != nil {
+		registrars = append(registrars, s.subscriptions)
+	}
+
+	registrars = append(registrars, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
 
 	// Добавляем BEX Express если он инициализирован

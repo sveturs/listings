@@ -724,6 +724,7 @@
     "auth_required": "Please sign in to create a storefront",
     "success": "Storefront created successfully!",
     "error": "Failed to create storefront",
+    "trust": "Trusted business",
     "steps": {
       "basic_info": "Basic Information",
       "business_details": "Business Details",
@@ -780,7 +781,21 @@
       "postal_code_placeholder": "e.g., 11000",
       "country": "Country",
       "find_on_map": "Find on Map",
-      "coordinates": "Coordinates"
+      "coordinates": "Coordinates",
+      "storefront_location": "Storefront Location",
+      "search_address": "Search for address",
+      "select_on_map": "Select on map",
+      "floor": "Floor (optional)",
+      "floor_placeholder": "e.g., 2, ground floor, basement",
+      "unit_number": "Unit/Office Number (optional)",
+      "unit_number_placeholder": "e.g., 10A, Local 5",
+      "amenities": "Amenities",
+      "has_parking": "Has parking",
+      "has_elevator": "Has elevator",
+      "accessibility_notes": "Accessibility notes (optional)",
+      "accessibility_notes_placeholder": "e.g., Wheelchair accessible, ramp at entrance",
+      "selected_location": "Selected location",
+      "accuracy": "Accuracy"
     },
     "business_hours": {
       "title": "Business Hours",
@@ -819,6 +834,7 @@
       "grocery": "Grocery Store",
       "other": "Other"
     },
+    "category": "Category",
     "errors": {
       "name_required": "Business name must be at least 3 characters",
       "slug_required": "Store URL must be at least 3 characters",
@@ -864,6 +880,29 @@
     "settings": "Manage Settings"
   },
   "storefronts": {
+    "upgrade": {
+      "title": "Upgrade Your Plan",
+      "subtitle": "Get more storefronts and unlock powerful features",
+      "limitReached": "You've reached the storefront limit for your current plan. Upgrade to create more storefronts.",
+      "currentPlan": "Current Plan",
+      "recommended": "Recommended",
+      "upgrade": "Upgrade Now",
+      "contactSales": "Contact Sales",
+      "needHelp": "Need help choosing the right plan?",
+      "contactSupport": "Contact our support team",
+      "features": {
+        "storefronts": "{count} Storefront",
+        "storefrontsUnlimited": "Unlimited Storefronts",
+        "products": "Up to {count} Products",
+        "productsUnlimited": "Unlimited Products",
+        "staff": "Up to {count} Staff Members",
+        "staffUnlimited": "Unlimited Staff",
+        "customDomain": "Custom Domain",
+        "aiAssistant": "AI Assistant",
+        "liveShopping": "Live Shopping Events",
+        "exportData": "Export Data"
+      }
+    },
     "variants": {
       "title": "Product Variants",
       "selectVariant": "Select variant",
@@ -1880,6 +1919,16 @@
       "title": "Updates",
       "newPerHour": "{count} new per hour",
       "priceDrops": "{count} price drops"
+    },
+    "location_picker": {
+      "search_address": "Search address",
+      "select_on_map": "Select on map",
+      "location_selected": "Location selected",
+      "address": "Address",
+      "city": "City",
+      "coordinates": "Coordinates",
+      "click_on_map": "Click on map to select location",
+      "min_chars_hint": "Enter at least 2 characters to search addresses"
     }
   }
 }

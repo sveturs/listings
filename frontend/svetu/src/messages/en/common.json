@@ -665,6 +665,26 @@
     "confidentiality": "Privacy",
     "cookie": "Cookie",
     "appStore": "App Store",
-    "googlePlay": "Google Play"
+    "googlePlay": "Google Play",
+    "location_picker": {
+      "search_address": "Search address",
+      "select_on_map": "Select on map",
+      "location_selected": "Location selected",
+      "address": "Address",
+      "city": "City",
+      "coordinates": "Coordinates",
+      "click_on_map": "Click on map to select location",
+      "min_chars_hint": "Enter at least 2 characters to search addresses"
+    }
+  },
+  "location_picker": {
+    "search_address": "Search address",
+    "select_on_map": "Select on map",
+    "min_chars_hint": "Enter at least 3 characters to search",
+    "click_on_map": "Click on map to select location",
+    "location_selected": "Location selected",
+    "address": "Address",
+    "city": "City",
+    "coordinates": "Coordinates"
   }
 }

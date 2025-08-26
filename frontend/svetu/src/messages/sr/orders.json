@@ -92,14 +92,14 @@
     "thisYear": "Ove godine",
     "title": "Statistika porudžbina",
     "totalSpent": "Ukupno potrošeno",
-    "inProgress": "[MISSING_SR] inProgress",
-    "allTime": "[MISSING_SR] allTime",
-    "monthlyComparison": "[MISSING_SR] monthlyComparison",
-    "orders": "[MISSING_SR] orders",
-    "perOrder": "[MISSING_SR] perOrder",
-    "spendingDecrease": "[MISSING_SR] spendingDecrease {percent}",
-    "spendingIncrease": "[MISSING_SR] spendingIncrease {percent}",
-    "spent": "[MISSING_SR] spent"
+    "inProgress": "u toku",
+    "allTime": "za sve vreme",
+    "monthlyComparison": "Mesečno poređenje",
+    "orders": "porudžbina",
+    "perOrder": "po porudžbini",
+    "spendingDecrease": "Trošenje je smanjeno za {percent}% u odnosu na prošli mesec",
+    "spendingIncrease": "Trošenje je uvećano za {percent}% u odnosu na prošli mesec",
+    "spent": "Potrošeno"
   },
   "status": {
     "cancelled": "Otkazana",
@@ -150,8 +150,8 @@
   "unknown": "Nepoznato",
   "viewDetails": "Detalji",
   "you": "Vi",
-  "activeFilters": "[MISSING_SR] activeFilters",
-  "advancedFilters": "[MISSING_SR] advancedFilters",
-  "filter": "[MISSING_SR] filter",
-  "search": "[MISSING_SR] search"
+  "activeFilters": "Aktivni filteri",
+  "advancedFilters": "Napredni filteri",
+  "filter": "Filter",
+  "search": "Pretraga"
 }

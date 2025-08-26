@@ -9681,6 +9681,79 @@
                 }
             }
         },
+        "/api/v1/admin/users/{user_id}/subscription": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get subscription details for a specific user (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get user subscription (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User subscription",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserSubscriptionInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/variant-attributes/{id}/mappings": {
             "get": {
                 "security": [
@@ -29599,6 +29672,528 @@
                 }
             }
         },
+        "/api/v1/subscriptions": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create new subscription for user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Create subscription",
+                "parameters": [
+                    {
+                        "description": "Create subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.CreateSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created subscription",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserSubscription"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "409": {
+                        "description": "User already has subscription",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Cancel current subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Cancel subscription",
+                "parameters": [
+                    {
+                        "description": "Cancellation reason",
+                        "name": "reason",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription cancelled",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Subscription not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/check-limits": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Check if user can use a resource within subscription limits",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Check subscription limits",
+                "parameters": [
+                    {
+                        "description": "Check limit request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.CheckLimitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Limit check result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.CheckLimitResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/complete-payment": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Complete payment process after returning from payment gateway",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Complete payment for subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment intent ID",
+                        "name": "payment_intent",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment completed",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserSubscription"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/current": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get current user's subscription details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Get current subscription",
+                "responses": {
+                    "200": {
+                        "description": "Current subscription",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserSubscriptionInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/initiate-payment": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Initiate payment process for subscription plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Initiate payment for subscription",
+                "parameters": [
+                    {
+                        "description": "Payment initiation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_subscriptions_handler.InitiatePaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment initiation response",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_subscriptions_service.PaymentInitiationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/plans": {
+            "get": {
+                "description": "Get all available subscription plans",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Get subscription plans",
+                "responses": {
+                    "200": {
+                        "description": "List of plans",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_domain_models.SubscriptionPlanDetails"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Upgrade existing subscription to a new plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Upgrade subscription",
+                "parameters": [
+                    {
+                        "description": "Upgrade subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.UpgradeSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Upgraded subscription",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.UserSubscription"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Subscription not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/translation/limits": {
             "get": {
                 "description": "Returns current usage limits and statistics for the translation service",
@@ -32002,6 +32597,17 @@
                 }
             }
         },
+        "backend_internal_domain_models.BillingCycle": {
+            "type": "string",
+            "enum": [
+                "monthly",
+                "yearly"
+            ],
+            "x-enum-varnames": [
+                "BillingCycleMonthly",
+                "BillingCycleYearly"
+            ]
+        },
         "backend_internal_domain_models.BreakdownItem": {
             "type": "object",
             "properties": {
@@ -32738,6 +33344,49 @@
                 }
             }
         },
+        "backend_internal_domain_models.CheckLimitRequest": {
+            "type": "object",
+            "required": [
+                "resource_type"
+            ],
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "resource_type": {
+                    "type": "string",
+                    "enum": [
+                        "storefront",
+                        "product",
+                        "staff",
+                        "image"
+                    ]
+                }
+            }
+        },
+        "backend_internal_domain_models.CheckLimitResponse": {
+            "type": "object",
+            "properties": {
+                "allowed": {
+                    "type": "boolean"
+                },
+                "current_usage": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "required_plan": {
+                    "type": "string"
+                },
+                "resource_type": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.ComponentTemplate": {
             "type": "object",
             "properties": {
@@ -33166,6 +33815,40 @@
                     "minimum": 1
                 },
                 "storefront_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.CreateSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "billing_cycle",
+                "payment_method",
+                "plan_code",
+                "user_id"
+            ],
+            "properties": {
+                "billing_cycle": {
+                    "enum": [
+                        "monthly",
+                        "yearly"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.BillingCycle"
+                        }
+                    ]
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "plan_code": {
+                    "type": "string"
+                },
+                "start_trial": {
+                    "type": "boolean"
+                },
+                "user_id": {
                     "type": "integer"
                 }
             }
@@ -35550,7 +36233,7 @@
                     "description": "Подписка (монетизация)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/backend_internal_domain_models.SubscriptionPlan"
+                            "$ref": "#/definitions/backend_internal_domain_models.SubscriptionPlanType"
                         }
                     ]
                 },
@@ -36456,6 +37139,9 @@
                 "group_buying_enabled": {
                     "type": "boolean"
                 },
+                "is_active": {
+                    "type": "boolean"
+                },
                 "live_shopping_enabled": {
                     "type": "boolean"
                 },
@@ -36499,7 +37185,78 @@
                 }
             }
         },
-        "backend_internal_domain_models.SubscriptionPlan": {
+        "backend_internal_domain_models.SubscriptionPlanDetails": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "commission_rate": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "free_trial_days": {
+                    "type": "integer"
+                },
+                "has_ai_assistant": {
+                    "type": "boolean"
+                },
+                "has_analytics": {
+                    "type": "boolean"
+                },
+                "has_custom_domain": {
+                    "type": "boolean"
+                },
+                "has_export_data": {
+                    "type": "boolean"
+                },
+                "has_live_shopping": {
+                    "type": "boolean"
+                },
+                "has_priority_support": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_recommended": {
+                    "type": "boolean"
+                },
+                "max_images_total": {
+                    "type": "integer"
+                },
+                "max_products_per_storefront": {
+                    "type": "integer"
+                },
+                "max_staff_per_storefront": {
+                    "type": "integer"
+                },
+                "max_storefronts": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price_monthly": {
+                    "type": "number"
+                },
+                "price_yearly": {
+                    "type": "number"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.SubscriptionPlanType": {
             "type": "string",
             "enum": [
                 "starter",
@@ -36512,6 +37269,23 @@
                 "SubscriptionPlanProfessional",
                 "SubscriptionPlanBusiness",
                 "SubscriptionPlanEnterprise"
+            ]
+        },
+        "backend_internal_domain_models.SubscriptionStatus": {
+            "type": "string",
+            "enum": [
+                "active",
+                "trial",
+                "expired",
+                "cancelled",
+                "suspended"
+            ],
+            "x-enum-varnames": [
+                "SubscriptionStatusActive",
+                "SubscriptionStatusTrial",
+                "SubscriptionStatusExpired",
+                "SubscriptionStatusCancelled",
+                "SubscriptionStatusSuspended"
             ]
         },
         "backend_internal_domain_models.TextChange": {
@@ -37157,6 +37931,28 @@
                 }
             }
         },
+        "backend_internal_domain_models.UpgradeSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "plan_code"
+            ],
+            "properties": {
+                "billing_cycle": {
+                    "enum": [
+                        "monthly",
+                        "yearly"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.BillingCycle"
+                        }
+                    ]
+                },
+                "plan_code": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.User": {
             "type": "object",
             "properties": {
@@ -37393,6 +38189,136 @@
                     "type": "integer"
                 },
                 "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.UserSubscription": {
+            "type": "object",
+            "properties": {
+                "auto_renew": {
+                    "type": "boolean"
+                },
+                "billing_cycle": {
+                    "$ref": "#/definitions/backend_internal_domain_models.BillingCycle"
+                },
+                "cancelled_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_period_end": {
+                    "type": "string"
+                },
+                "current_period_start": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_payment_at": {
+                    "type": "string"
+                },
+                "last_payment_id": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/backend_internal_domain_models.JSONB"
+                },
+                "next_payment_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "plan": {
+                    "$ref": "#/definitions/backend_internal_domain_models.SubscriptionPlanDetails"
+                },
+                "plan_id": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/backend_internal_domain_models.SubscriptionStatus"
+                },
+                "trial_ends_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "used_storefronts": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_domain_models.UserSubscriptionInfo": {
+            "type": "object",
+            "properties": {
+                "billing_cycle": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "has_ai": {
+                    "type": "boolean"
+                },
+                "has_custom_domain": {
+                    "type": "boolean"
+                },
+                "has_export": {
+                    "type": "boolean"
+                },
+                "has_live": {
+                    "type": "boolean"
+                },
+                "max_images": {
+                    "type": "integer"
+                },
+                "max_products": {
+                    "type": "integer"
+                },
+                "max_staff": {
+                    "type": "integer"
+                },
+                "max_storefronts": {
+                    "type": "integer"
+                },
+                "next_payment_at": {
+                    "type": "string"
+                },
+                "plan_code": {
+                    "type": "string"
+                },
+                "plan_name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "subscription_id": {
+                    "type": "integer"
+                },
+                "trial_ends_at": {
+                    "type": "string"
+                },
+                "used_storefronts": {
                     "type": "integer"
                 }
             }
@@ -40917,6 +41843,29 @@
                 }
             }
         },
+        "backend_internal_proj_subscriptions_service.PaymentInitiationResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "payment_intent_id": {
+                    "type": "string"
+                },
+                "payment_required": {
+                    "type": "boolean"
+                },
+                "redirect_url": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_proj_translation_admin_ratelimit.Status": {
             "type": "object",
             "properties": {
@@ -43267,6 +44216,23 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_proj_subscriptions_handler.InitiatePaymentRequest": {
+            "type": "object",
+            "required": [
+                "plan_code"
+            ],
+            "properties": {
+                "billing_cycle": {
+                    "$ref": "#/definitions/backend_internal_domain_models.BillingCycle"
+                },
+                "plan_code": {
+                    "type": "string"
+                },
+                "return_url": {
+                    "type": "string"
                 }
             }
         },

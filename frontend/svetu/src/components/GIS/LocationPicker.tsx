@@ -8,7 +8,7 @@ import {
   useAddressGeocoding,
 } from '@/hooks/useAddressGeocoding';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 interface LocationData {
@@ -47,6 +47,7 @@ export default function LocationPicker({
   mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
 }: LocationPickerProps) {
   const locale = useLocale();
+  const t = useTranslations('common');
   const { getMultilingualAddress } = useAddressGeocoding({ language: locale });
   const [mode, setMode] = useState<'search' | 'map'>('search');
   const [address, setAddress] = useState(value?.address || '');
@@ -237,7 +238,7 @@ export default function LocationPicker({
           className={`btn btn-sm flex-1 ${mode === 'search' ? 'btn-primary' : 'btn-outline'}`}
         >
           <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
-          Поиск по адресу
+          {t('location_picker.search_address')}
         </button>
         <button
           type="button"
@@ -245,7 +246,7 @@ export default function LocationPicker({
           className={`btn btn-sm flex-1 ${mode === 'map' ? 'btn-primary' : 'btn-outline'}`}
         >
           <MapPinIcon className="w-4 h-4 mr-1" />
-          Выбрать на карте
+          {t('location_picker.select_on_map')}
         </button>
       </div>
 
@@ -282,11 +283,13 @@ export default function LocationPicker({
           {selectedLocation && (
             <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
               <h4 className="font-medium text-success-content mb-2">
-                ✅ Местоположение выбрано
+                ✅ {t('location_picker.location_selected')}
               </h4>
               <div className="text-sm text-success-content/80 space-y-2">
                 <div>
-                  <label className="font-medium">Адрес:</label>
+                  <label className="font-medium">
+                    {t('location_picker.address')}:
+                  </label>
                   <div className="relative">
                     <input
                       type="text"
@@ -311,7 +314,9 @@ export default function LocationPicker({
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium">Город:</label>
+                  <label className="font-medium">
+                    {t('location_picker.city')}:
+                  </label>
                   <input
                     type="text"
                     value={selectedLocation.city}
@@ -328,7 +333,7 @@ export default function LocationPicker({
                   />
                 </div>
                 <p>
-                  <strong>Координаты:</strong>{' '}
+                  <strong>{t('location_picker.coordinates')}:</strong>{' '}
                   {selectedLocation.latitude.toFixed(6)},{' '}
                   {selectedLocation.longitude.toFixed(6)}
                 </p>
@@ -343,7 +348,7 @@ export default function LocationPicker({
         <div className="space-y-4">
           <div className="alert alert-info">
             <MapPinIcon className="w-5 h-5" />
-            <span>Кликните на карте, чтобы выбрать местоположение</span>
+            <span>{t('location_picker.click_on_map')}</span>
           </div>
 
           <div
@@ -385,11 +390,13 @@ export default function LocationPicker({
           {selectedLocation && (
             <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
               <h4 className="font-medium text-success-content mb-2">
-                ✅ Местоположение выбрано
+                ✅ {t('location_picker.location_selected')}
               </h4>
               <div className="text-sm text-success-content/80 space-y-2">
                 <div>
-                  <label className="font-medium">Адрес:</label>
+                  <label className="font-medium">
+                    {t('location_picker.address')}:
+                  </label>
                   <div className="relative">
                     <input
                       type="text"
@@ -414,7 +421,9 @@ export default function LocationPicker({
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium">Город:</label>
+                  <label className="font-medium">
+                    {t('location_picker.city')}:
+                  </label>
                   <input
                     type="text"
                     value={selectedLocation.city}
@@ -431,7 +440,7 @@ export default function LocationPicker({
                   />
                 </div>
                 <p>
-                  <strong>Координаты:</strong>{' '}
+                  <strong>{t('location_picker.coordinates')}:</strong>{' '}
                   {selectedLocation.latitude.toFixed(6)},{' '}
                   {selectedLocation.longitude.toFixed(6)}
                 </p>

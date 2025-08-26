@@ -1,0 +1,56 @@
+{
+  "paymentMock": {
+    "title": "Довршите плаћање",
+    "description": "Тест процесор плаћања",
+    "testNotice": "Ово је тест страница плаћања за развој",
+    "processingPayment": "Обрада вашег плаћања...",
+    "paymentDetails": "Детаљи плаћања",
+    "plan": "План",
+    "billingCycle": "Период наплате",
+    "amount": "Износ",
+    "paymentId": "ID плаћања",
+    "testCardDetails": "Тест подаци картице",
+    "cardNumber": "Број картице",
+    "expiryDate": "MM/ГГ",
+    "cvc": "CVC",
+    "simulateFailure": "Симулирај грешку",
+    "completePayment": "Доврши плаћање",
+    "processing": "Обрада...",
+    "monthly": "Месечно",
+    "yearly": "Годишње",
+    "success": {
+      "title": "Плаћање успешно!",
+      "description": "Ваша претплата је активирана. Преусмеравање..."
+    },
+    "failed": {
+      "title": "Грешка плаћања",
+      "description": "Плаћање није могло бити обрађено. Молимо покушајте поново.",
+      "backToPricing": "Назад на ценовник"
+    }
+  },
+  "plans": {
+    "starter": "Почетни",
+    "professional": "Професионални",
+    "business": "Пословни",
+    "enterprise": "Корпоративни"
+  },
+  "features": {
+    "storefronts": "Излога",
+    "products": "Производа по излогу",
+    "staff": "Чланова особља",
+    "images": "Слика по производу",
+    "aiAssistant": "AI асистент",
+    "liveSupport": "Подршка уживо",
+    "dataExport": "Извоз података",
+    "customDomain": "Прилагођен домен"
+  },
+  "upgrade": {
+    "title": "Унапредите свој план",
+    "description": "Добијте више излога и откључајте моћне функције",
+    "currentPlan": "Тренутни план",
+    "selectPlan": "Изаберите план",
+    "changePlan": "Промени план",
+    "confirmUpgrade": "Потврди унапређење",
+    "confirmDowngrade": "Потврди смањење"
+  }
+}

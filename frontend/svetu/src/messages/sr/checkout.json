@@ -24,7 +24,9 @@
     "express": "Ekspres dostava",
     "expressDesc": "Dostava u roku od 1-2 radna dana",
     "pickup": "Preuzimanje",
-    "pickupDesc": "Preuzmite narudžbu na mestu preuzimanja"
+    "pickupDesc": "Preuzmite narudžbu na mestu preuzimanja",
+    "bex_warehouse_pickup": "BEX preuzimanje sa skladišta",
+    "bex_warehouse_pickupDesc": "Besplatno, Novi Sad, Mike Manojlovića 53"
   },
   "payment": {
     "title": "Način plaćanja",

@@ -24,7 +24,9 @@
     "express": "Express Shipping",
     "expressDesc": "Delivery in 1-2 business days",
     "pickup": "Pickup",
-    "pickupDesc": "Pick up your order at the pickup point"
+    "pickupDesc": "Pick up your order at the pickup point",
+    "bex_warehouse_pickup": "BEX Warehouse Pickup",
+    "bex_warehouse_pickupDesc": "Free, Novi Sad, Mike Manojlovića 53"
   },
   "payment": {
     "title": "Payment Method",

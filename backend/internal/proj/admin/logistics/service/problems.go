@@ -258,6 +258,7 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, problemID int, updat
 	argCount++
 	args = append(args, problemID)
 
+	//nolint:gosec // setClauses are controlled, not user input
 	query := fmt.Sprintf(`
 		UPDATE problem_shipments 
 		SET %s, updated_at = NOW()

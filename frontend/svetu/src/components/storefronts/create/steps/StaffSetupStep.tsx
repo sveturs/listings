@@ -22,8 +22,6 @@ export default function StaffSetupStep({
   onBack,
 }: StaffSetupStepProps) {
   const t = useTranslations('create_storefront');
-  const _tPermissions = useTranslations('permissions');
-  const _tRoles = useTranslations('roles');
   const tCommon = useTranslations('common');
   const { formData, updateFormData } = useCreateStorefrontContext();
   const [newStaffMember, setNewStaffMember] = useState<StaffMember>({
@@ -143,9 +141,7 @@ export default function StaffSetupStep({
                   <input
                     type="email"
                     className={`input input-bordered ${errors.email ? 'input-error' : ''}`}
-                    placeholder={t(
-                      'create_storefront.staff_setup.email_placeholder'
-                    )}
+                    placeholder={t('staff_setup.email_placeholder')}
                     value={newStaffMember.email}
                     onChange={(e) => {
                       setNewStaffMember({

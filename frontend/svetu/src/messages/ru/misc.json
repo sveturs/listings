@@ -724,6 +724,7 @@
     "auth_required": "Пожалуйста, войдите для создания витрины",
     "success": "Витрина успешно создана!",
     "error": "Не удалось создать витрину",
+    "trust": "Надежный бизнес",
     "steps": {
       "basic_info": "Основная информация",
       "business_details": "Данные о бизнесе",
@@ -780,7 +781,21 @@
       "postal_code_placeholder": "например, 11000",
       "country": "Страна",
       "find_on_map": "Найти на карте",
-      "coordinates": "Координаты"
+      "coordinates": "Координаты",
+      "storefront_location": "Местоположение витрины",
+      "search_address": "Поиск по адресу",
+      "select_on_map": "Выбрать на карте",
+      "floor": "Этаж (необязательно)",
+      "floor_placeholder": "Например: 2, приземье, подвал",
+      "unit_number": "Номер помещения/офиса (необязательно)",
+      "unit_number_placeholder": "Например: 10А, Локал 5",
+      "amenities": "Удобства",
+      "has_parking": "Есть парковка",
+      "has_elevator": "Есть лифт",
+      "accessibility_notes": "Заметки о доступности (необязательно)",
+      "accessibility_notes_placeholder": "Например: Доступно для инвалидных колясок, пандус у входа",
+      "selected_location": "Выбранное местоположение",
+      "accuracy": "Точность"
     },
     "business_hours": {
       "title": "Часы работы",
@@ -819,6 +834,7 @@
       "grocery": "Продуктовый магазин",
       "other": "Другое"
     },
+    "category": "Категория",
     "errors": {
       "name_required": "Название бизнеса должно быть не менее 3 символов",
       "slug_required": "URL магазина должен быть не менее 3 символов",
@@ -864,6 +880,29 @@
     "settings": "Управление настройками"
   },
   "storefronts": {
+    "upgrade": {
+      "title": "Улучшите ваш план",
+      "subtitle": "Получите больше витрин и разблокируйте мощные функции",
+      "limitReached": "Вы достигли лимита витрин для вашего текущего плана. Обновитесь, чтобы создавать больше витрин.",
+      "currentPlan": "Текущий план",
+      "recommended": "Рекомендуется",
+      "upgrade": "Обновить сейчас",
+      "contactSales": "Связаться с отделом продаж",
+      "needHelp": "Нужна помощь в выборе подходящего плана?",
+      "contactSupport": "Свяжитесь с нашей службой поддержки",
+      "features": {
+        "storefronts": "{count} Витрина",
+        "storefrontsUnlimited": "Неограниченные витрины",
+        "products": "До {count} товаров",
+        "productsUnlimited": "Неограниченные товары",
+        "staff": "До {count} сотрудников",
+        "staffUnlimited": "Неограниченный персонал",
+        "customDomain": "Пользовательский домен",
+        "aiAssistant": "ИИ-ассистент",
+        "liveShopping": "События живых покупок",
+        "exportData": "Экспорт данных"
+      }
+    },
     "variants": {
       "title": "Варианты товара",
       "selectVariant": "Выбрать вариант",
@@ -1880,6 +1919,16 @@
       "title": "Обновления",
       "newPerHour": "{count} новых за час",
       "priceDrops": "{count} снижений цен"
+    },
+    "location_picker": {
+      "search_address": "Поиск по адресу",
+      "select_on_map": "Выбрать на карте",
+      "location_selected": "Местоположение выбрано",
+      "address": "Адрес",
+      "city": "Город",
+      "coordinates": "Координаты",
+      "click_on_map": "Кликните на карте, чтобы выбрать местоположение",
+      "min_chars_hint": "Введите минимум 2 символа для поиска адресов"
     }
   }
 }

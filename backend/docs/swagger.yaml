@@ -860,6 +860,14 @@ definitions:
       translated_count:
         type: integer
     type: object
+  backend_internal_domain_models.BillingCycle:
+    enum:
+    - monthly
+    - yearly
+    type: string
+    x-enum-varnames:
+    - BillingCycleMonthly
+    - BillingCycleYearly
   backend_internal_domain_models.BreakdownItem:
     properties:
       average:
@@ -1350,6 +1358,35 @@ definitions:
         description: URL превью для видео
         type: string
     type: object
+  backend_internal_domain_models.CheckLimitRequest:
+    properties:
+      count:
+        type: integer
+      resource_type:
+        enum:
+        - storefront
+        - product
+        - staff
+        - image
+        type: string
+    required:
+    - resource_type
+    type: object
+  backend_internal_domain_models.CheckLimitResponse:
+    properties:
+      allowed:
+        type: boolean
+      current_usage:
+        type: integer
+      limit:
+        type: integer
+      message:
+        type: string
+      required_plan:
+        type: string
+      resource_type:
+        type: string
+    type: object
   backend_internal_domain_models.ComponentTemplate:
     properties:
       category_id:
@@ -1648,6 +1685,28 @@ definitions:
     - entity_type
     - original_language
     - rating
+    type: object
+  backend_internal_domain_models.CreateSubscriptionRequest:
+    properties:
+      billing_cycle:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.BillingCycle'
+        enum:
+        - monthly
+        - yearly
+      payment_method:
+        type: string
+      plan_code:
+        type: string
+      start_trial:
+        type: boolean
+      user_id:
+        type: integer
+    required:
+    - billing_cycle
+    - payment_method
+    - plan_code
+    - user_id
     type: object
   backend_internal_domain_models.CreateTemplateRequest:
     properties:
@@ -3258,7 +3317,7 @@ definitions:
         type: string
       subscription_plan:
         allOf:
-        - $ref: '#/definitions/backend_internal_domain_models.SubscriptionPlan'
+        - $ref: '#/definitions/backend_internal_domain_models.SubscriptionPlanType'
         description: Подписка (монетизация)
       theme:
         $ref: '#/definitions/backend_internal_domain_models.JSONB'
@@ -3853,6 +3912,8 @@ definitions:
         type: string
       group_buying_enabled:
         type: boolean
+      is_active:
+        type: boolean
       live_shopping_enabled:
         type: boolean
       location:
@@ -3880,7 +3941,54 @@ definitions:
       website:
         type: string
     type: object
-  backend_internal_domain_models.SubscriptionPlan:
+  backend_internal_domain_models.SubscriptionPlanDetails:
+    properties:
+      code:
+        type: string
+      commission_rate:
+        type: number
+      created_at:
+        type: string
+      free_trial_days:
+        type: integer
+      has_ai_assistant:
+        type: boolean
+      has_analytics:
+        type: boolean
+      has_custom_domain:
+        type: boolean
+      has_export_data:
+        type: boolean
+      has_live_shopping:
+        type: boolean
+      has_priority_support:
+        type: boolean
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_recommended:
+        type: boolean
+      max_images_total:
+        type: integer
+      max_products_per_storefront:
+        type: integer
+      max_staff_per_storefront:
+        type: integer
+      max_storefronts:
+        type: integer
+      name:
+        type: string
+      price_monthly:
+        type: number
+      price_yearly:
+        type: number
+      sort_order:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.SubscriptionPlanType:
     enum:
     - starter
     - professional
@@ -3892,6 +4000,20 @@ definitions:
     - SubscriptionPlanProfessional
     - SubscriptionPlanBusiness
     - SubscriptionPlanEnterprise
+  backend_internal_domain_models.SubscriptionStatus:
+    enum:
+    - active
+    - trial
+    - expired
+    - cancelled
+    - suspended
+    type: string
+    x-enum-varnames:
+    - SubscriptionStatusActive
+    - SubscriptionStatusTrial
+    - SubscriptionStatusExpired
+    - SubscriptionStatusCancelled
+    - SubscriptionStatusSuspended
   backend_internal_domain_models.TextChange:
     properties:
       length:
@@ -4326,6 +4448,19 @@ definitions:
         minimum: 0
         type: integer
     type: object
+  backend_internal_domain_models.UpgradeSubscriptionRequest:
+    properties:
+      billing_cycle:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.BillingCycle'
+        enum:
+        - monthly
+        - yearly
+      plan_code:
+        type: string
+    required:
+    - plan_code
+    type: object
   backend_internal_domain_models.User:
     properties:
       created_at:
@@ -4482,6 +4617,92 @@ definitions:
       total_reviews:
         type: integer
       user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.UserSubscription:
+    properties:
+      auto_renew:
+        type: boolean
+      billing_cycle:
+        $ref: '#/definitions/backend_internal_domain_models.BillingCycle'
+      cancelled_at:
+        type: string
+      created_at:
+        type: string
+      current_period_end:
+        type: string
+      current_period_start:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: integer
+      last_payment_at:
+        type: string
+      last_payment_id:
+        type: integer
+      metadata:
+        $ref: '#/definitions/backend_internal_domain_models.JSONB'
+      next_payment_at:
+        type: string
+      notes:
+        type: string
+      payment_method:
+        type: string
+      plan:
+        $ref: '#/definitions/backend_internal_domain_models.SubscriptionPlanDetails'
+      plan_id:
+        type: integer
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/backend_internal_domain_models.SubscriptionStatus'
+      trial_ends_at:
+        type: string
+      updated_at:
+        type: string
+      used_storefronts:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.UserSubscriptionInfo:
+    properties:
+      billing_cycle:
+        type: string
+      expires_at:
+        type: string
+      has_ai:
+        type: boolean
+      has_custom_domain:
+        type: boolean
+      has_export:
+        type: boolean
+      has_live:
+        type: boolean
+      max_images:
+        type: integer
+      max_products:
+        type: integer
+      max_staff:
+        type: integer
+      max_storefronts:
+        type: integer
+      next_payment_at:
+        type: string
+      plan_code:
+        type: string
+      plan_name:
+        type: string
+      price:
+        type: number
+      status:
+        type: string
+      subscription_id:
+        type: integer
+      trial_ends_at:
+        type: string
+      used_storefronts:
         type: integer
     type: object
   backend_internal_domain_models.VINDecodeResult:
@@ -6871,6 +7092,21 @@ definitions:
       total:
         type: integer
     type: object
+  backend_internal_proj_subscriptions_service.PaymentInitiationResponse:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      message:
+        type: string
+      payment_intent_id:
+        type: string
+      payment_required:
+        type: boolean
+      redirect_url:
+        type: string
+    type: object
   backend_internal_proj_translation_admin_ratelimit.Status:
     properties:
       limit:
@@ -8474,6 +8710,17 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  internal_proj_subscriptions_handler.InitiatePaymentRequest:
+    properties:
+      billing_cycle:
+        $ref: '#/definitions/backend_internal_domain_models.BillingCycle'
+      plan_code:
+        type: string
+      return_url:
+        type: string
+    required:
+    - plan_code
     type: object
   internal_proj_translation_admin.ProviderCosts:
     properties:
@@ -15305,6 +15552,50 @@ paths:
       summary: Get user transactions (Admin)
       tags:
       - admin-users
+  /api/v1/admin/users/{user_id}/subscription:
+    get:
+      consumes:
+      - application/json
+      description: Get subscription details for a specific user (Admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User subscription
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserSubscriptionInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get user subscription (Admin)
+      tags:
+      - admin
   /api/v1/admin/variant-attributes/{id}/mappings:
     get:
       description: Gets all category attribute mappings for a variant attribute
@@ -27735,6 +28026,316 @@ paths:
       summary: Update image display order
       tags:
       - storefront-images
+  /api/v1/subscriptions:
+    post:
+      consumes:
+      - application/json
+      description: Create new subscription for user
+      parameters:
+      - description: Create subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CreateSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created subscription
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserSubscription'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "409":
+          description: User already has subscription
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Create subscription
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel current subscription
+      parameters:
+      - description: Cancellation reason
+        in: body
+        name: reason
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription cancelled
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Cancel subscription
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/check-limits:
+    post:
+      consumes:
+      - application/json
+      description: Check if user can use a resource within subscription limits
+      parameters:
+      - description: Check limit request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CheckLimitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Limit check result
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.CheckLimitResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Check subscription limits
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/complete-payment:
+    post:
+      consumes:
+      - application/json
+      description: Complete payment process after returning from payment gateway
+      parameters:
+      - description: Payment intent ID
+        in: query
+        name: payment_intent
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment completed
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserSubscription'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Complete payment for subscription
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/current:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's subscription details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current subscription
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserSubscriptionInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get current subscription
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/initiate-payment:
+    post:
+      consumes:
+      - application/json
+      description: Initiate payment process for subscription plan
+      parameters:
+      - description: Payment initiation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_subscriptions_handler.InitiatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment initiation response
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_subscriptions_service.PaymentInitiationResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Initiate payment for subscription
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/plans:
+    get:
+      consumes:
+      - application/json
+      description: Get all available subscription plans
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of plans
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.SubscriptionPlanDetails'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get subscription plans
+      tags:
+      - subscriptions
+  /api/v1/subscriptions/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: Upgrade existing subscription to a new plan
+      parameters:
+      - description: Upgrade subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UpgradeSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upgraded subscription
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.UserSubscription'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Subscription not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Upgrade subscription
+      tags:
+      - subscriptions
   /api/v1/translation/limits:
     get:
       consumes:

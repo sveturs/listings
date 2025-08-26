@@ -39,6 +39,7 @@ func (s *AnalyticsService) GetPerformanceMetrics(ctx context.Context, fromDate, 
 	}
 
 	// Запрос для получения метрик
+	//nolint:gosec // dateFormat is controlled, not user input
 	query := fmt.Sprintf(`
 		WITH shipment_data AS (
 			SELECT 

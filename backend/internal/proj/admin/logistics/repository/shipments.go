@@ -320,7 +320,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 	}
 
 	// Подсчет общего количества BEX
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s) t", bexQuery)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s) t", bexQuery) //nolint:gosec // bexQuery is controlled
 	var bexCount int
 	err := r.db.QueryRow(countQuery, bexArgs...).Scan(&bexCount)
 	if err != nil {
