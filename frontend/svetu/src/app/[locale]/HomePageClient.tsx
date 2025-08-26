@@ -14,6 +14,8 @@ import { AuthButton } from '@/components/AuthButton';
 import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -704,19 +706,41 @@ export default function HomePageClient({
 
               {/* Действия пользователя */}
               <div className="flex items-center gap-2">
+                {/* Карта */}
+                <Link 
+                  href={`/${locale}/map`}
+                  className="btn btn-ghost btn-circle tooltip tooltip-bottom"
+                  data-tip={tCommon('header.nav.map')}
+                >
+                  <FiMapPin className="w-5 h-5" />
+                </Link>
+                
+                {/* Избранное */}
                 <button className="btn btn-ghost btn-circle relative">
                   <FiHeart className="w-5 h-5" />
                   <span className="badge badge-sm badge-error absolute -top-1 -right-1">
                     2
                   </span>
                 </button>
+                
+                {/* Корзина */}
                 <CartIcon />
+                
+                {/* Создать объявление */}
                 <Link
                   href="/create-listing-choice"
                   className="btn btn-secondary hidden lg:inline-flex"
                 >
                   {createListingText}
                 </Link>
+                
+                {/* Переключатель темы */}
+                <ThemeToggle />
+                
+                {/* Переключатель языка */}
+                <LanguageSwitcher />
+                
+                {/* Кнопка входа/профиль */}
                 <AuthButton />
               </div>
 
