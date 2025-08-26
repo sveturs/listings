@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ export default function PaymentMockPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('subscription');
-  const tCommon = useTranslations('common');
+  const _tCommon = useTranslations('common');
 
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<'pending' | 'success' | 'failed'>(

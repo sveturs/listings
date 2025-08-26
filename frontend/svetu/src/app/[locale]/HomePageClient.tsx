@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Image from 'next/image';
+// import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { PageTransition } from '@/components/ui/PageTransition';
@@ -11,11 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
-import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
-import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
+// import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -39,8 +36,8 @@ const EnhancedMapSection = dynamic(
 import {
   FiSearch,
   FiMapPin,
-  FiMenu,
-  FiX,
+  // FiMenu,
+  // FiX,
   FiChevronRight,
   FiTruck,
   FiShield,
@@ -86,17 +83,14 @@ export default function HomePageClient({
   const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | number>(
-    'all'
-  );
+  const [_selectedCategory] = useState<string | number>('all');
   const [currentBanner, setCurrentBanner] = useState(0);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [_showMobileMenu, _setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation] = useState([44.7866, 20.4489]); // Координаты Белграда
-  const [userLocationName] = useState('Белград');
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [_categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [officialStores, setOfficialStores] = useState<any[]>([]);
@@ -139,7 +133,7 @@ export default function HomePageClient({
 
     if (!user) {
       // Если пользователь не авторизован, перенаправляем на страницу входа
-      router.push(`/${locale}/login`);
+      router.push('/login');
       return;
     }
 
@@ -635,171 +629,6 @@ export default function HomePageClient({
   return (
     <PageTransition mode="fade">
       <div className="min-h-screen bg-gradient-to-b from-base-100 to-base-200">
-        {/* Шапка сайта */}
-        <header className="sticky top-0 z-50 bg-base-100/95 backdrop-blur-md border-b border-base-300">
-          {/* Верхняя панель */}
-          <div className="bg-primary text-primary-content py-1 text-sm">
-            <div className="container mx-auto px-4 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <FiMapPin className="w-3 h-3" />
-                  {userLocationName}
-                </span>
-                <Link href="/map" className="hover:underline">
-                  {t('selectOtherCity')}
-                </Link>
-              </div>
-              <div className="flex items-center gap-4">
-                <Link href="/business" className="hover:underline">
-                  {t('forBusiness')}
-                </Link>
-                <Link href="/help" className="hover:underline">
-                  {t('help')}
-                </Link>
-                <Link href="/app" className="hover:underline">
-                  {t('app')}
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Основная шапка */}
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
-              {/* Логотип */}
-              <Link href="/" className="flex items-center gap-2">
-                <div className="text-2xl">
-                  <Image
-                    src="/logos/svetu-gradient-48x48.png"
-                    alt="SveTu"
-                    width={32}
-                    height={32}
-                  />
-                </div>
-                <span className="text-xl font-bold hidden md:inline">
-                  SveTu
-                </span>
-              </Link>
-
-              {/* Поисковая строка */}
-              <div className="flex-1 max-w-3xl">
-                {/* Поисковая строка с автодополнением */}
-                <SearchAutocomplete
-                  placeholder={t('searchPlaceholder')}
-                  selectedCategory={selectedCategory}
-                  locale={locale}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Действия пользователя */}
-              <div className="flex items-center gap-2">
-                {/* Карта */}
-                <Link 
-                  href={`/${locale}/map`}
-                  className="btn btn-ghost btn-circle tooltip tooltip-bottom"
-                  data-tip={tCommon('header.nav.map')}
-                >
-                  <FiMapPin className="w-5 h-5" />
-                </Link>
-                
-                {/* Избранное */}
-                <button className="btn btn-ghost btn-circle relative">
-                  <FiHeart className="w-5 h-5" />
-                  <span className="badge badge-sm badge-error absolute -top-1 -right-1">
-                    2
-                  </span>
-                </button>
-                
-                {/* Корзина */}
-                <CartIcon />
-                
-                {/* Создать объявление */}
-                <Link
-                  href="/create-listing-choice"
-                  className="btn btn-secondary hidden lg:inline-flex"
-                >
-                  {createListingText}
-                </Link>
-                
-                {/* Переключатель темы */}
-                <ThemeToggle />
-                
-                {/* Переключатель языка */}
-                <LanguageSwitcher />
-                
-                {/* Кнопка входа/профиль */}
-                <AuthButton />
-              </div>
-
-              {/* Мобильное меню */}
-              <button
-                className="btn btn-ghost btn-circle lg:hidden"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-              >
-                {showMobileMenu ? (
-                  <FiX className="w-5 h-5" />
-                ) : (
-                  <FiMenu className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Категории под поиском */}
-          <div className="border-t border-base-300 py-2 hidden lg:block">
-            <div className="container mx-auto px-4">
-              <div className="flex items-center gap-6 text-sm">
-                {isLoadingCategories
-                  ? // Скелетон при загрузке
-                    [...Array(8)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 animate-pulse"
-                      >
-                        <div className="w-4 h-4 bg-base-300 rounded"></div>
-                        <div className="w-20 h-4 bg-base-300 rounded"></div>
-                        <div className="w-10 h-3 bg-base-300 rounded"></div>
-                      </div>
-                    ))
-                  : popularCategories.slice(0, 7).map((cat) => {
-                      const Icon = cat.icon || BsHandbag;
-                      const count = cat.listing_count || cat.count || 0;
-                      const formattedCount =
-                        count > 1000 ? `${Math.floor(count / 1000)}K+` : count;
-                      return (
-                        <Link
-                          key={cat.id}
-                          href={`/${locale}/search?category=${cat.id}`}
-                          className="flex items-center gap-2 hover:text-primary transition-colors"
-                        >
-                          <Icon className={`w-4 h-4 ${cat.color}`} />
-                          <span>{cat.name}</span>
-                          <span className="text-base-content/50">
-                            ({formattedCount})
-                          </span>
-                        </Link>
-                      );
-                    })}
-                {/* Селектор всех категорий как кнопка */}
-                <div className="ml-auto">
-                  <NestedCategorySelector
-                    categories={categories}
-                    selectedCategory={selectedCategory}
-                    onChange={(categoryId) => {
-                      // При выборе категории переходим на страницу поиска
-                      router.push(`/${locale}/search?category=${categoryId}`);
-                    }}
-                    placeholder={t('allCategories')}
-                    showCounts={true}
-                    className="btn btn-sm btn-primary"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Hero секция с баннерами */}
         <section className="relative overflow-hidden">
           <div className="container mx-auto px-4 py-6">
@@ -916,7 +745,7 @@ export default function HomePageClient({
                   return (
                     <Link
                       key={cat.id}
-                      href={`/${locale}/search?category=${cat.id}`}
+                      href={`/search?category=${cat.id}`}
                       className="group"
                     >
                       <div className="card bg-base-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">

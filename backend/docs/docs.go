@@ -29786,7 +29786,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Subscription cancelled",
+                        "description": "Subscription canceled",
                         "schema": {
                             "allOf": [
                                 {
@@ -37283,14 +37283,14 @@ const docTemplate = `{
                 "active",
                 "trial",
                 "expired",
-                "cancelled",
+                "canceled",
                 "suspended"
             ],
             "x-enum-varnames": [
                 "SubscriptionStatusActive",
                 "SubscriptionStatusTrial",
                 "SubscriptionStatusExpired",
-                "SubscriptionStatusCancelled",
+                "SubscriptionStatusCanceled",
                 "SubscriptionStatusSuspended"
             ]
         },
@@ -38208,7 +38208,7 @@ const docTemplate = `{
                 "billing_cycle": {
                     "$ref": "#/definitions/backend_internal_domain_models.BillingCycle"
                 },
-                "cancelled_at": {
+                "canceled_at": {
                     "type": "string"
                 },
                 "created_at": {

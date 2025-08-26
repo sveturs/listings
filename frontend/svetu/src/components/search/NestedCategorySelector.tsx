@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiChevronDown, FiChevronRight, FiCheck } from 'react-icons/fi';
+import { FiChevronDown, FiChevronRight, FiCheck, FiGrid } from 'react-icons/fi';
 import {
   BsHouseDoor,
   BsLaptop,
@@ -302,11 +302,14 @@ export const NestedCategorySelector: React.FC<NestedCategorySelectorProps> = ({
   };
 
   return (
-    <div ref={dropdownRef} className={`relative ${className}`}>
+    <div ref={dropdownRef} className="relative">
       {/* Кнопка открытия */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="select select-bordered w-full flex items-center justify-between"
+        className={
+          className ||
+          'select select-bordered w-full flex items-center justify-between'
+        }
       >
         <div className="flex items-center gap-2">
           {selectedCategoryData ? (
@@ -319,7 +322,10 @@ export const NestedCategorySelector: React.FC<NestedCategorySelectorProps> = ({
               <span>{selectedCategoryData.name}</span>
             </>
           ) : (
-            <span>{placeholder}</span>
+            <>
+              <FiGrid className="w-4 h-4" />
+              <span>{placeholder}</span>
+            </>
           )}
         </div>
         <FiChevronDown

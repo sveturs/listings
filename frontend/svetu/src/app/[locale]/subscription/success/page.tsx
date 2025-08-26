@@ -13,9 +13,9 @@ import confetti from 'canvas-confetti';
 
 export default function SubscriptionSuccessPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const _router = useRouter();
   const t = useTranslations('subscription');
-  const tCommon = useTranslations('common');
+  const _tCommon = useTranslations('common');
 
   const planCode = searchParams.get('plan');
 
@@ -58,7 +58,7 @@ export default function SubscriptionSuccessPage() {
     if (!planCode) {
       return t('plans.starter'); // Default to starter if no plan specified
     }
-    
+
     const planKey = `plans.${planCode}` as const;
     return t(planKey);
   };
@@ -82,7 +82,9 @@ export default function SubscriptionSuccessPage() {
           </p>
 
           <div className="bg-base-200 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold mb-4">{t('success.whatsNext')}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t('success.whatsNext')}
+            </h3>
             <div className="space-y-3 text-left max-w-md mx-auto">
               <div className="flex items-start gap-3">
                 <div className="badge badge-primary badge-sm mt-1">1</div>

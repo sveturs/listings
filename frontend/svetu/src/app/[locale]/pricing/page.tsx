@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,7 +32,7 @@ export default function PricingPage() {
     error,
     selectPlan,
     upgradePlan,
-    canUseFeature,
+    canUseFeature: _canUseFeature,
   } = useSubscription();
 
   const [selectedCycle, setSelectedCycle] = useState<'monthly' | 'yearly'>(

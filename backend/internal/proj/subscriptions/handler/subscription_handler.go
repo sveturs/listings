@@ -37,7 +37,7 @@ func NewSubscriptionHandler(service *service.SubscriptionService, logger *logger
 func (h *SubscriptionHandler) GetPlans(c *fiber.Ctx) error {
 	plans, err := h.service.GetPlans(c.Context())
 	if err != nil {
-		h.logger.Error("Failed to get plans", "error", err)
+		h.logger.Error("Failed to get plans: %v", err)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.getPlansError")
 	}
 
@@ -67,7 +67,7 @@ func (h *SubscriptionHandler) GetCurrentSubscription(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -75,7 +75,7 @@ func (h *SubscriptionHandler) GetCurrentSubscription(c *fiber.Ctx) error {
 
 	subscription, err := h.service.GetUserSubscription(c.Context(), userID)
 	if err != nil {
-		h.logger.Error("Failed to get subscription", "error", err, "user_id", userID)
+		h.logger.Error("Failed to get subscription: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.getSubscriptionError")
 	}
 
@@ -108,7 +108,7 @@ func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -127,7 +127,7 @@ func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
 		if err.Error() == "user already has active subscription" {
 			return utils.SendError(c, fiber.StatusConflict, "subscriptions.alreadyHasSubscription")
 		}
-		h.logger.Error("Failed to create subscription", "error", err, "user_id", userID)
+		h.logger.Error("Failed to create subscription: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.createError")
 	}
 
@@ -160,7 +160,7 @@ func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -176,7 +176,7 @@ func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
 		if err.Error() == "no active subscription found" {
 			return utils.SendError(c, fiber.StatusNotFound, "subscriptions.notFound")
 		}
-		h.logger.Error("Failed to upgrade subscription", "error", err, "user_id", userID)
+		h.logger.Error("Failed to upgrade subscription: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.upgradeError")
 	}
 
@@ -191,7 +191,7 @@ func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param reason body map[string]string false "Cancellation reason"
-// @Success 200 {object} utils.SuccessResponseSwag{message=string} "Subscription cancelled"
+// @Success 200 {object} utils.SuccessResponseSwag{message=string} "Subscription canceled"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Subscription not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -208,7 +208,7 @@ func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -229,7 +229,7 @@ func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
 		if err.Error() == "no active subscription found" {
 			return utils.SendError(c, fiber.StatusNotFound, "subscriptions.notFound")
 		}
-		h.logger.Error("Failed to cancel subscription", "error", err, "user_id", userID)
+		h.logger.Error("Failed to cancel subscription: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.cancelError")
 	}
 
@@ -261,7 +261,7 @@ func (h *SubscriptionHandler) CheckLimits(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -274,7 +274,7 @@ func (h *SubscriptionHandler) CheckLimits(c *fiber.Ctx) error {
 
 	response, err := h.service.CheckLimits(c.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to check limits", "error", err, "user_id", userID)
+		h.logger.Error("Failed to check limits: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.checkLimitsError")
 	}
 
@@ -328,7 +328,7 @@ func (h *SubscriptionHandler) InitiatePayment(c *fiber.Ctx) error {
 
 	response, err := h.service.InitiatePayment(c.Context(), userID, req.PlanCode, req.BillingCycle, returnURL)
 	if err != nil {
-		h.logger.Error("Failed to initiate payment", "error", err, "user_id", userID)
+		h.logger.Error("Failed to initiate payment: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.paymentInitiationError")
 	}
 
@@ -367,7 +367,7 @@ func (h *SubscriptionHandler) CompletePayment(c *fiber.Ctx) error {
 		// Try int64 as fallback
 		userID64, ok := userIDVal.(int64)
 		if !ok {
-			h.logger.Error("Invalid userId type in context", "userId", userIDVal)
+			h.logger.Error("Invalid userId type in context: %v", userIDVal)
 			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
 		}
 		userID = int(userID64)
@@ -387,7 +387,7 @@ func (h *SubscriptionHandler) CompletePayment(c *fiber.Ctx) error {
 	// Process payment
 	err = h.service.ProcessSubscriptionPayment(c.Context(), userID, *sub.SubscriptionID, paymentIntentID)
 	if err != nil {
-		h.logger.Error("Failed to complete payment", "error", err, "user_id", userID)
+		h.logger.Error("Failed to complete payment: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.paymentError")
 	}
 
@@ -420,7 +420,7 @@ func (h *SubscriptionHandler) AdminGetUserSubscription(c *fiber.Ctx) error {
 
 	subscription, err := h.service.GetUserSubscription(c.Context(), userID)
 	if err != nil {
-		h.logger.Error("Failed to get user subscription", "error", err, "user_id", userID)
+		h.logger.Error("Failed to get user subscription: %v (user_id: %d)", err, userID)
 		return utils.SendError(c, fiber.StatusInternalServerError, "subscriptions.getSubscriptionError")
 	}
 

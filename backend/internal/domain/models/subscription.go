@@ -14,7 +14,7 @@ const (
 	SubscriptionStatusActive    SubscriptionStatus = "active"
 	SubscriptionStatusTrial     SubscriptionStatus = "trial"
 	SubscriptionStatusExpired   SubscriptionStatus = "expired"
-	SubscriptionStatusCancelled SubscriptionStatus = "cancelled"
+	SubscriptionStatusCanceled  SubscriptionStatus = "canceled"
 	SubscriptionStatusSuspended SubscriptionStatus = "suspended"
 )
 
@@ -34,7 +34,7 @@ const (
 	SubscriptionActionUpgraded   SubscriptionAction = "upgraded"
 	SubscriptionActionDowngraded SubscriptionAction = "downgraded"
 	SubscriptionActionRenewed    SubscriptionAction = "renewed"
-	SubscriptionActionCancelled  SubscriptionAction = "cancelled"
+	SubscriptionActionCanceled   SubscriptionAction = "canceled"
 	SubscriptionActionExpired    SubscriptionAction = "expired"
 )
 
@@ -86,7 +86,7 @@ type UserSubscription struct {
 	TrialEndsAt        *time.Time               `json:"trial_ends_at,omitempty" db:"trial_ends_at"`
 	CurrentPeriodStart time.Time                `json:"current_period_start" db:"current_period_start"`
 	CurrentPeriodEnd   time.Time                `json:"current_period_end" db:"current_period_end"`
-	CancelledAt        *time.Time               `json:"cancelled_at,omitempty" db:"cancelled_at"`
+	CanceledAt         *time.Time               `json:"canceled_at,omitempty" db:"canceled_at"`
 	ExpiresAt          *time.Time               `json:"expires_at,omitempty" db:"expires_at"`
 	LastPaymentID      *int                     `json:"last_payment_id,omitempty" db:"last_payment_id"`
 	LastPaymentAt      *time.Time               `json:"last_payment_at,omitempty" db:"last_payment_at"`

@@ -20694,7 +20694,7 @@ paths:
         description: Cancellation reason
       responses:
         "200":
-          description: Subscription cancelled
+          description: Subscription canceled
           content:
             application/json:
               schema:
@@ -25793,14 +25793,14 @@ components:
         - active
         - trial
         - expired
-        - cancelled
+        - canceled
         - suspended
       type: string
       x-enum-varnames:
         - SubscriptionStatusActive
         - SubscriptionStatusTrial
         - SubscriptionStatusExpired
-        - SubscriptionStatusCancelled
+        - SubscriptionStatusCanceled
         - SubscriptionStatusSuspended
     backend_internal_domain_models.TextChange:
       properties:
@@ -26413,7 +26413,7 @@ components:
           type: boolean
         billing_cycle:
           $ref: "#/components/schemas/backend_internal_domain_models.BillingCycle"
-        cancelled_at:
+        canceled_at:
           type: string
         created_at:
           type: string

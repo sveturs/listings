@@ -72,7 +72,7 @@ func (r *SubscriptionRepository) GetUserSubscription(ctx context.Context, userID
 	query := `
 		SELECT us.id, us.user_id, us.plan_id, us.status, us.billing_cycle,
 			us.started_at, us.trial_ends_at, us.current_period_start, us.current_period_end,
-			us.cancelled_at, us.expires_at, us.last_payment_id, us.last_payment_at,
+			us.canceled_at, us.expires_at, us.last_payment_id, us.last_payment_at,
 			us.next_payment_at, us.payment_method, us.auto_renew, us.used_storefronts,
 			us.metadata, us.notes, us.created_at, us.updated_at
 		FROM user_subscriptions us
@@ -288,10 +288,10 @@ func (r *SubscriptionRepository) CancelSubscription(ctx context.Context, userID 
 	now := time.Now()
 	updateQuery := `
 		UPDATE user_subscriptions
-		SET status = $1, cancelled_at = $2, expires_at = $3, auto_renew = false, updated_at = CURRENT_TIMESTAMP
+		SET status = $1, canceled_at = $2, expires_at = $3, auto_renew = false, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $4`
 
-	_, err = tx.ExecContext(ctx, updateQuery, models.SubscriptionStatusCancelled, now, currentSub.CurrentPeriodEnd, currentSub.ID)
+	_, err = tx.ExecContext(ctx, updateQuery, models.SubscriptionStatusCanceled, now, currentSub.CurrentPeriodEnd, currentSub.ID)
 	if err != nil {
 		return fmt.Errorf("failed to cancel subscription: %w", err)
 	}
@@ -301,7 +301,7 @@ func (r *SubscriptionRepository) CancelSubscription(ctx context.Context, userID 
 		INSERT INTO subscription_history (subscription_id, user_id, action, from_plan_id, reason)
 		VALUES ($1, $2, $3, $4, $5)`
 
-	_, err = tx.ExecContext(ctx, historyQuery, currentSub.ID, userID, models.SubscriptionActionCancelled, currentSub.PlanID, reason)
+	_, err = tx.ExecContext(ctx, historyQuery, currentSub.ID, userID, models.SubscriptionActionCanceled, currentSub.PlanID, reason)
 	if err != nil {
 		return fmt.Errorf("failed to add history: %w", err)
 	}

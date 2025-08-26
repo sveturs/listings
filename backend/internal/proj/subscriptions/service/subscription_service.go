@@ -171,7 +171,7 @@ func (s *SubscriptionService) CancelSubscription(ctx context.Context, userID int
 		return fmt.Errorf("failed to cancel subscription: %w", err)
 	}
 
-	s.logger.Info("Cancelled subscription for user %d (reason: %s)", userID, reason)
+	s.logger.Info("Canceled subscription for user %d (reason: %s)", userID, reason)
 	return nil
 }
 
@@ -312,7 +312,7 @@ func (s *SubscriptionService) ProcessExpiredSubscriptions(ctx context.Context) e
 
 	result, err := s.repo.GetDB().ExecContext(ctx, query, time.Now())
 	if err != nil {
-		s.logger.Error("Failed to process expired subscriptions", "error", err)
+		s.logger.Error("Failed to process expired subscriptions: %v", err)
 		return fmt.Errorf("failed to process expired subscriptions: %w", err)
 	}
 

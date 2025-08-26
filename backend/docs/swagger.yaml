@@ -4005,14 +4005,14 @@ definitions:
     - active
     - trial
     - expired
-    - cancelled
+    - canceled
     - suspended
     type: string
     x-enum-varnames:
     - SubscriptionStatusActive
     - SubscriptionStatusTrial
     - SubscriptionStatusExpired
-    - SubscriptionStatusCancelled
+    - SubscriptionStatusCanceled
     - SubscriptionStatusSuspended
   backend_internal_domain_models.TextChange:
     properties:
@@ -4625,7 +4625,7 @@ definitions:
         type: boolean
       billing_cycle:
         $ref: '#/definitions/backend_internal_domain_models.BillingCycle'
-      cancelled_at:
+      canceled_at:
         type: string
       created_at:
         type: string
@@ -28088,7 +28088,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Subscription cancelled
+          description: Subscription canceled
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'

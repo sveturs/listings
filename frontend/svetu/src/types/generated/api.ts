@@ -30263,7 +30263,7 @@ export interface paths {
         };
       };
       responses: {
-        /** @description Subscription cancelled */
+        /** @description Subscription canceled */
         200: {
           headers: {
             [name: string]: unknown;
@@ -33979,7 +33979,7 @@ export interface components {
       | 'active'
       | 'trial'
       | 'expired'
-      | 'cancelled'
+      | 'canceled'
       | 'suspended';
     'backend_internal_domain_models.TextChange': {
       length?: number;
@@ -34293,7 +34293,7 @@ export interface components {
     'backend_internal_domain_models.UserSubscription': {
       auto_renew?: boolean;
       billing_cycle?: components['schemas']['backend_internal_domain_models.BillingCycle'];
-      cancelled_at?: string;
+      canceled_at?: string;
       created_at?: string;
       current_period_end?: string;
       current_period_start?: string;
