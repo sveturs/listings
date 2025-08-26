@@ -727,12 +727,13 @@
     "statistics": "Statistics show keyword effectiveness"
   },
   "tabs": {
-    "analytics": "Analytics",
-    "behavior": "Behavior",
-    "weights": "Weights",
-    "synonyms": "Synonyms",
-    "optimization": "Optimization",
-    "transliteration": "Transliteration"
+    "analytics": "Аналитика",
+    "behavior": "Понашање",
+    "weights": "Тежине",
+    "synonyms": "Синоними",
+    "optimization": "Оптимизација",
+    "transliteration": "Транслитерација",
+    "index": "Индекс"
   },
   "description": "Description",
   "timeRange": "Time Range",

@@ -52,5 +52,24 @@
     "changePlan": "Change Plan",
     "confirmUpgrade": "Confirm Upgrade",
     "confirmDowngrade": "Confirm Downgrade"
+  },
+  "success": {
+    "welcomeTitle": "Welcome to {plan}!",
+    "description": "Your subscription has been successfully activated. You now have access to all {plan} features.",
+    "whatsNext": "What's Next?",
+    "step1": {
+      "title": "Create Your First Storefront",
+      "description": "Set up your online store and start selling"
+    },
+    "step2": {
+      "title": "Add Your Products",
+      "description": "List your items with photos and descriptions"
+    },
+    "step3": {
+      "title": "Start Accepting Orders",
+      "description": "Manage orders and grow your business"
+    },
+    "createStorefront": "Create Storefront",
+    "goToDashboard": "Go to Dashboard"
   }
 }

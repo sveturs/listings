@@ -55,18 +55,12 @@ export default function SubscriptionSuccessPage() {
   }, []);
 
   const getPlanName = () => {
-    switch (planCode) {
-      case 'starter':
-        return 'Starter';
-      case 'professional':
-        return 'Professional';
-      case 'business':
-        return 'Business';
-      case 'enterprise':
-        return 'Enterprise';
-      default:
-        return 'Plan';
+    if (!planCode) {
+      return t('plans.starter'); // Default to starter if no plan specified
     }
+    
+    const planKey = `plans.${planCode}` as const;
+    return t(planKey);
   };
 
   return (
@@ -80,41 +74,40 @@ export default function SubscriptionSuccessPage() {
           </div>
 
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Welcome to {getPlanName()}!
+            {t('success.welcomeTitle', { plan: getPlanName() })}
           </h1>
 
           <p className="text-lg text-base-content/70 mb-8">
-            Your subscription has been successfully activated. You now have
-            access to all {getPlanName()} features.
+            {t('success.description', { plan: getPlanName() })}
           </p>
 
           <div className="bg-base-200 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold mb-4">What's Next?</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('success.whatsNext')}</h3>
             <div className="space-y-3 text-left max-w-md mx-auto">
               <div className="flex items-start gap-3">
                 <div className="badge badge-primary badge-sm mt-1">1</div>
                 <div>
-                  <p className="font-medium">Create Your First Storefront</p>
+                  <p className="font-medium">{t('success.step1.title')}</p>
                   <p className="text-sm text-base-content/60">
-                    Set up your online store and start selling
+                    {t('success.step1.description')}
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="badge badge-primary badge-sm mt-1">2</div>
                 <div>
-                  <p className="font-medium">Add Your Products</p>
+                  <p className="font-medium">{t('success.step2.title')}</p>
                   <p className="text-sm text-base-content/60">
-                    List your items with photos and descriptions
+                    {t('success.step2.description')}
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="badge badge-primary badge-sm mt-1">3</div>
                 <div>
-                  <p className="font-medium">Start Accepting Orders</p>
+                  <p className="font-medium">{t('success.step3.title')}</p>
                   <p className="text-sm text-base-content/60">
-                    Manage orders and grow your business
+                    {t('success.step3.description')}
                   </p>
                 </div>
               </div>
@@ -127,10 +120,10 @@ export default function SubscriptionSuccessPage() {
               className="btn btn-primary btn-lg gap-2"
             >
               <RocketLaunchIcon className="w-5 h-5" />
-              Create Storefront
+              {t('success.createStorefront')}
             </Link>
             <Link href="/dashboard" className="btn btn-ghost btn-lg">
-              Go to Dashboard
+              {t('success.goToDashboard')}
             </Link>
           </div>
         </div>

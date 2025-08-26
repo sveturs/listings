@@ -29,7 +29,8 @@ export type TranslationModule =
   | 'notifications' // Уведомления
   | 'orders' // Заказы
   | 'products' // Товары
-  | 'reviews'; // Отзывы
+  | 'reviews' // Отзывы
+  | 'subscription'; // Подписки и тарифы
 
 // Кэш для загруженных модулей
 const moduleCache = new Map<string, any>();
@@ -136,6 +137,9 @@ export async function loadMessages(
           break;
         case 'notifications':
           moduleData = await import(`@/messages/${locale}/notifications.json`);
+          break;
+        case 'subscription':
+          moduleData = await import(`@/messages/${locale}/subscription.json`);
           break;
         default:
           console.warn(`Unknown translation module: ${mod}`);
