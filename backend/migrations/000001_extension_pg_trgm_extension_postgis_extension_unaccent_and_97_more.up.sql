@@ -190,62 +190,6 @@ CREATE SEQUENCE public.balance_transactions_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.bex_municipalities_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_parcel_shops_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_places_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_rates_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_settings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_shipments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_streets_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.bex_tracking_events_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.car_generations_id_seq
     AS integer
     START WITH 1
@@ -338,12 +282,6 @@ CREATE SEQUENCE public.custom_ui_templates_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.escrow_payments_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.failed_webhooks_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -511,55 +449,6 @@ CREATE SEQUENCE public.permissions_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.post_express_api_logs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_locations_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_offices_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_rates_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_settings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_shipments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.post_express_tracking_events_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.price_history_id_seq
     AS integer
     START WITH 1
@@ -705,13 +594,6 @@ CREATE SEQUENCE public.storefront_delivery_options_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.storefront_fbs_settings_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.storefront_hours_id_seq
     AS integer
     START WITH 1
@@ -747,6 +629,124 @@ CREATE SEQUENCE public.storefront_payment_methods_id_seq
     CACHE 1;
 CREATE SEQUENCE public.storefront_product_attributes_id_seq
     AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.storefront_product_images_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.storefront_product_variant_images_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.storefront_product_variants_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.storefront_staff_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.storefronts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.subscription_history_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.subscription_payments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.subscription_plans_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.subscription_usage_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_audit_log_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_providers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_quality_metrics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_sync_conflicts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_tasks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.transliteration_rules_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.unified_geo_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE

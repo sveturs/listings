@@ -32,8 +32,12 @@ dump2migrate/
 
 # Database dumps
 db_dumps_*/
-*.sql
 *.tar.gz
+
+# SQL файлы - игнорируем все, кроме миграций и фикстур
+*.sql
+!backend/migrations/*.sql
+!backend/fixtures/*.sql
 /backend/backend
 /backend/reindex
 /frontend/svetu/src/app/api/ai/analyze/route.ts.backup
