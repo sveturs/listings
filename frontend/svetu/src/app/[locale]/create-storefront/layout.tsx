@@ -10,8 +10,11 @@ export default async function CreateStorefrontLayout({
 }) {
   const { locale } = await params;
 
-  // Загружаем дополнительный модуль create_storefront
-  const messages = await loadMessages(locale as any, ['create_storefront']);
+  // Загружаем дополнительные модули create_storefront и misc (для ошибок)
+  const messages = await loadMessages(locale as any, [
+    'create_storefront',
+    'misc',
+  ]);
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>

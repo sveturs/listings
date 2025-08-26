@@ -463,7 +463,7 @@ func (s *MonitoringService) UpdateShipmentStatus(ctx context.Context, shipmentID
 	}
 
 	// Обновляем статус
-	query := fmt.Sprintf("UPDATE %s SET status = $1, updated_at = NOW() WHERE id = $2", tableName)
+	query := fmt.Sprintf("UPDATE %s SET status = $1, updated_at = NOW() WHERE id = $2", tableName) //nolint:gosec // tableName is controlled
 	_, err = tx.ExecContext(ctx, query, newStatus, shipmentID)
 	if err != nil {
 		return err

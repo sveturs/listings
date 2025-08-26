@@ -66,7 +66,7 @@ export type JSONB =
 
 // Enum типы
 export type SubscriptionPlan =
-  components['schemas']['backend_internal_domain_models.SubscriptionPlan'];
+  components['schemas']['backend_internal_domain_models.SubscriptionPlanType'];
 export type StaffRole =
   components['schemas']['backend_internal_domain_models.StaffRole'];
 export type PaymentMethodType =

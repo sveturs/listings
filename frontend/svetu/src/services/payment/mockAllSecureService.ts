@@ -50,13 +50,13 @@ export class MockAllSecureService implements IPaymentService {
       this.scheduleWebhook(payment.id);
     }
 
-    // const locale = data.locale || 'ru'; // Will be used when we add locale support to redirects
+    const locale = data.locale || 'ru';
 
     return {
       id: payment.id,
       redirectUrl: requires3DS
-        ? `/payment/mock?id=${payment.id}&require3ds=true`
-        : `/payment/mock?id=${payment.id}`,
+        ? `/${locale}/payment/mock?id=${payment.id}&require3ds=true`
+        : `/${locale}/payment/mock?id=${payment.id}`,
       status: 'pending',
     };
   }

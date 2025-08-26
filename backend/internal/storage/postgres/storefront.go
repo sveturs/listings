@@ -377,6 +377,11 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 		args = append(args, dto.SEOMeta)
 		argCount++
 	}
+	if dto.IsActive != nil {
+		setClauses = append(setClauses, fmt.Sprintf("is_active = $%d", argCount))
+		args = append(args, *dto.IsActive)
+		argCount++
+	}
 	if dto.AIAgentEnabled != nil {
 		setClauses = append(setClauses, fmt.Sprintf("ai_agent_enabled = $%d", argCount))
 		args = append(args, *dto.AIAgentEnabled)

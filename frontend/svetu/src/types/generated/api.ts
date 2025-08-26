@@ -9485,6 +9485,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/users/{user_id}/subscription': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user subscription (Admin)
+     * @description Get subscription details for a specific user (Admin only)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description User ID */
+          user_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User subscription */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UserSubscriptionInfo'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/variant-attributes/{id}/mappings': {
     parameters: {
       query?: never;
@@ -30072,6 +30152,571 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/subscriptions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create subscription
+     * @description Create new subscription for user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Create subscription request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CreateSubscriptionRequest'];
+        };
+      };
+      responses: {
+        /** @description Created subscription */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UserSubscription'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description User already has subscription */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel subscription
+     * @description Cancel current subscription
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Cancellation reason */
+      requestBody?: {
+        content: {
+          'application/json': {
+            [key: string]: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Subscription canceled */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              message?: string;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Subscription not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/check-limits': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check subscription limits
+     * @description Check if user can use a resource within subscription limits
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Check limit request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CheckLimitRequest'];
+        };
+      };
+      responses: {
+        /** @description Limit check result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.CheckLimitResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/complete-payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete payment for subscription
+     * @description Complete payment process after returning from payment gateway
+     */
+    post: {
+      parameters: {
+        query: {
+          /** @description Payment intent ID */
+          payment_intent: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Payment completed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UserSubscription'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/current': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get current subscription
+     * @description Get current user's subscription details
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Current subscription */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UserSubscriptionInfo'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/initiate-payment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Initiate payment for subscription
+     * @description Initiate payment process for subscription plan
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Payment initiation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_subscriptions_handler.InitiatePaymentRequest'];
+        };
+      };
+      responses: {
+        /** @description Payment initiation response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_subscriptions_service.PaymentInitiationResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/plans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get subscription plans
+     * @description Get all available subscription plans
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of plans */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.SubscriptionPlanDetails'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/subscriptions/upgrade': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upgrade subscription
+     * @description Upgrade existing subscription to a new plan
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Upgrade subscription request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UpgradeSubscriptionRequest'];
+        };
+      };
+      responses: {
+        /** @description Upgraded subscription */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UserSubscription'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Subscription not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/translation/limits': {
     parameters: {
       query?: never;
@@ -31742,6 +32387,8 @@ export interface components {
       results?: components['schemas']['backend_internal_domain_models.TranslateResult'][];
       translated_count?: number;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.BillingCycle': 'monthly' | 'yearly';
     'backend_internal_domain_models.BreakdownItem': {
       average?: number;
       count?: number;
@@ -31985,6 +32632,19 @@ export interface components {
       /** @description URL превью для видео */
       thumbnail_url?: string;
     };
+    'backend_internal_domain_models.CheckLimitRequest': {
+      count?: number;
+      /** @enum {string} */
+      resource_type: 'storefront' | 'product' | 'staff' | 'image';
+    };
+    'backend_internal_domain_models.CheckLimitResponse': {
+      allowed?: boolean;
+      current_usage?: number;
+      limit?: number;
+      message?: string;
+      required_plan?: string;
+      resource_type?: string;
+    };
     'backend_internal_domain_models.ComponentTemplate': {
       category_id?: number;
       component_id?: number;
@@ -32106,6 +32766,14 @@ export interface components {
       pros?: string;
       rating: number;
       storefront_id?: number;
+    };
+    'backend_internal_domain_models.CreateSubscriptionRequest': {
+      /** @enum {unknown} */
+      billing_cycle: 'monthly' | 'yearly';
+      payment_method: string;
+      plan_code: string;
+      start_trial?: boolean;
+      user_id: number;
     };
     'backend_internal_domain_models.CreateTemplateRequest': {
       component_id: number;
@@ -32946,7 +33614,7 @@ export interface components {
       slug?: string;
       subscription_expires_at?: string;
       /** @description Подписка (монетизация) */
-      subscription_plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlan'];
+      subscription_plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlanType'];
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
       updated_at?: string;
       /** @description Связанные данные */
@@ -33261,6 +33929,7 @@ export interface components {
       description?: string;
       email?: string;
       group_buying_enabled?: boolean;
+      is_active?: boolean;
       live_shopping_enabled?: boolean;
       /** @description Локация */
       location?: components['schemas']['backend_internal_domain_models.Location'];
@@ -33275,12 +33944,43 @@ export interface components {
       theme?: components['schemas']['backend_internal_domain_models.JSONB'];
       website?: string;
     };
+    'backend_internal_domain_models.SubscriptionPlanDetails': {
+      code?: string;
+      commission_rate?: number;
+      created_at?: string;
+      free_trial_days?: number;
+      has_ai_assistant?: boolean;
+      has_analytics?: boolean;
+      has_custom_domain?: boolean;
+      has_export_data?: boolean;
+      has_live_shopping?: boolean;
+      has_priority_support?: boolean;
+      id?: number;
+      is_active?: boolean;
+      is_recommended?: boolean;
+      max_images_total?: number;
+      max_products_per_storefront?: number;
+      max_staff_per_storefront?: number;
+      max_storefronts?: number;
+      name?: string;
+      price_monthly?: number;
+      price_yearly?: number;
+      sort_order?: number;
+      updated_at?: string;
+    };
     /** @enum {string} */
-    'backend_internal_domain_models.SubscriptionPlan':
+    'backend_internal_domain_models.SubscriptionPlanType':
       | 'starter'
       | 'professional'
       | 'business'
       | 'enterprise';
+    /** @enum {string} */
+    'backend_internal_domain_models.SubscriptionStatus':
+      | 'active'
+      | 'trial'
+      | 'expired'
+      | 'canceled'
+      | 'suspended';
     'backend_internal_domain_models.TextChange': {
       length?: number;
       new_text?: string;
@@ -33502,6 +34202,11 @@ export interface components {
       sku?: string;
       stock_quantity?: number;
     };
+    'backend_internal_domain_models.UpgradeSubscriptionRequest': {
+      /** @enum {unknown} */
+      billing_cycle?: 'monthly' | 'yearly';
+      plan_code: string;
+    };
     'backend_internal_domain_models.User': {
       created_at?: string;
       email?: string;
@@ -33584,6 +34289,50 @@ export interface components {
       rating_5?: number;
       total_reviews?: number;
       user_id?: number;
+    };
+    'backend_internal_domain_models.UserSubscription': {
+      auto_renew?: boolean;
+      billing_cycle?: components['schemas']['backend_internal_domain_models.BillingCycle'];
+      canceled_at?: string;
+      created_at?: string;
+      current_period_end?: string;
+      current_period_start?: string;
+      expires_at?: string;
+      id?: number;
+      last_payment_at?: string;
+      last_payment_id?: number;
+      metadata?: components['schemas']['backend_internal_domain_models.JSONB'];
+      next_payment_at?: string;
+      notes?: string;
+      payment_method?: string;
+      plan?: components['schemas']['backend_internal_domain_models.SubscriptionPlanDetails'];
+      plan_id?: number;
+      started_at?: string;
+      status?: components['schemas']['backend_internal_domain_models.SubscriptionStatus'];
+      trial_ends_at?: string;
+      updated_at?: string;
+      used_storefronts?: number;
+      user_id?: number;
+    };
+    'backend_internal_domain_models.UserSubscriptionInfo': {
+      billing_cycle?: string;
+      expires_at?: string;
+      has_ai?: boolean;
+      has_custom_domain?: boolean;
+      has_export?: boolean;
+      has_live?: boolean;
+      max_images?: number;
+      max_products?: number;
+      max_staff?: number;
+      max_storefronts?: number;
+      next_payment_at?: string;
+      plan_code?: string;
+      plan_name?: string;
+      price?: number;
+      status?: string;
+      subscription_id?: number;
+      trial_ends_at?: string;
+      used_storefronts?: number;
     };
     'backend_internal_domain_models.VINDecodeResult': {
       body_type?: string;
@@ -34791,6 +35540,14 @@ export interface components {
       storefronts?: components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'][];
       total?: number;
     };
+    'backend_internal_proj_subscriptions_service.PaymentInitiationResponse': {
+      amount?: number;
+      currency?: string;
+      message?: string;
+      payment_intent_id?: string;
+      payment_required?: boolean;
+      redirect_url?: string;
+    };
     'backend_internal_proj_translation_admin_ratelimit.Status': {
       limit?: number;
       remaining?: number;
@@ -35744,6 +36501,11 @@ export interface components {
       offset?: number;
       storefronts?: components['schemas']['backend_internal_domain_models.Storefront'][];
       total?: number;
+    };
+    'internal_proj_subscriptions_handler.InitiatePaymentRequest': {
+      billing_cycle?: components['schemas']['backend_internal_domain_models.BillingCycle'];
+      plan_code: string;
+      return_url?: string;
     };
     'internal_proj_translation_admin.ProviderCosts': {
       /** @description map[date]cost */

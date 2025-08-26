@@ -6,6 +6,7 @@ import {
   AddressGeocodingResult,
 } from '@/hooks/useAddressGeocoding';
 import { toast } from '@/utils/toast';
+import { useTranslations } from 'next-intl';
 
 export interface SmartAddressInputProps {
   value: string;
@@ -39,6 +40,7 @@ export default function SmartAddressInput({
   error,
   className = '',
 }: SmartAddressInputProps) {
+  const t = useTranslations('common');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -387,7 +389,7 @@ export default function SmartAddressInput({
         !loading &&
         suggestions.length === 0 && (
           <div className="mt-1 text-xs text-base-content/50">
-            Введите минимум 2 символа для поиска адресов
+            {t('location_picker.min_chars_hint')}
           </div>
         )}
     </div>

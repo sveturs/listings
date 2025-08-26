@@ -24,7 +24,6 @@ export default function PreviewPublishStep({
 }: PreviewPublishStepProps) {
   const t = useTranslations('create_storefront');
   const tCommon = useTranslations('common');
-  const _tPermissions = useTranslations('permissions');
   const { formData, isSubmitting, submitStorefront } =
     useCreateStorefrontContext();
 
@@ -47,7 +46,7 @@ export default function PreviewPublishStep({
             {/* Basic Info */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">{t('basic_info')}</h3>
+                <h3 className="card-title text-lg">{t('basic_info_title')}</h3>
                 <div className="space-y-2">
                   <p>
                     <strong>{t('basic_info.name')}:</strong> {formData.name}
@@ -62,9 +61,7 @@ export default function PreviewPublishStep({
                   </p>
                   <p>
                     <strong>{t('basic_info.business_type')}:</strong>{' '}
-                    {t(
-                      `create_storefront.business_types.${formData.businessType}`
-                    )}
+                    {t(`business_types.${formData.businessType}`)}
                   </p>
                 </div>
               </div>
@@ -73,15 +70,14 @@ export default function PreviewPublishStep({
             {/* Business Details */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">{t('business_details')}</h3>
+                <h3 className="card-title text-lg">
+                  {t('business_details_title')}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {formData.registrationNumber && (
                     <p>
                       <strong>
-                        {t(
-                          'create_storefront.business_details.registration_number'
-                        )}
-                        :
+                        {t('business_details.registration_number')}:
                       </strong>{' '}
                       {formData.registrationNumber}
                     </p>
@@ -123,7 +119,7 @@ export default function PreviewPublishStep({
             {/* Location */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">{t('location')}</h3>
+                <h3 className="card-title text-lg">{t('location_title')}</h3>
                 <div className="space-y-2">
                   <p>
                     <strong>{t('location.address')}:</strong> {formData.address}
@@ -153,12 +149,14 @@ export default function PreviewPublishStep({
             {/* Business Hours */}
             <div className="card bg-base-200">
               <div className="card-body">
-                <h3 className="card-title text-lg">{t('business_hours')}</h3>
+                <h3 className="card-title text-lg">
+                  {t('business_hours_title')}
+                </h3>
                 <div className="space-y-1">
                   {formData.businessHours.map((hours) => (
                     <p key={hours.dayOfWeek}>
                       <strong>
-                        {t(`common.days.${dayNames[hours.dayOfWeek]}`)}:
+                        {tCommon(`days.${dayNames[hours.dayOfWeek]}`)}:
                       </strong>{' '}
                       {hours.isClosed
                         ? tCommon('closed')
@@ -178,10 +176,7 @@ export default function PreviewPublishStep({
                   formData.paymentMethods.length > 0 && (
                     <div className="mb-4">
                       <h4 className="font-semibold mb-2">
-                        {t(
-                          'create_storefront.payment_delivery.payment_methods'
-                        )}
-                        :
+                        {t('payment_methods_title')}:
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {formData.paymentMethods.map((method) => (
@@ -197,10 +192,7 @@ export default function PreviewPublishStep({
                   formData.deliveryOptions.length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-2">
-                        {t(
-                          'create_storefront.payment_delivery.delivery_options'
-                        )}
-                        :
+                        {t('delivery_options_title')}:
                       </h4>
                       <div className="space-y-1">
                         {formData.deliveryOptions.map((option, index) => (
@@ -222,7 +214,9 @@ export default function PreviewPublishStep({
             {formData.staff && formData.staff.length > 0 && (
               <div className="card bg-base-200">
                 <div className="card-body">
-                  <h3 className="card-title text-lg">{t('staff_setup')}</h3>
+                  <h3 className="card-title text-lg">
+                    {t('staff_setup_title')}
+                  </h3>
                   <div className="space-y-2">
                     {formData.staff.map((member, index) => (
                       <div key={index}>

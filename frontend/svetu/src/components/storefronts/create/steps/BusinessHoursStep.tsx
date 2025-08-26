@@ -54,8 +54,8 @@ export default function BusinessHoursStep({
                 <div key={index} className="flex items-center gap-4">
                   <div className="w-32">
                     <span className="font-medium">
-                      {t(
-                        `common.days.${dayNames[hours.dayOfWeek] || 'monday'}`
+                      {_tCommon(
+                        `days.${dayNames[hours.dayOfWeek] || 'monday'}`
                       )}
                     </span>
                   </div>

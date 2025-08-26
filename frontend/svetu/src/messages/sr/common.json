@@ -39,11 +39,11 @@
     }
   },
   "search": {
-    "notFound": "[SR] Not Found",
-    "addressPlaceholder": "[SR] Address Placeholder",
-    "address": "[SR] Address",
-    "byAddress": "[SR] By Address",
-    "byDistrict": "[SR] By District"
+    "notFound": "Nije pronađeno",
+    "addressPlaceholder": "Unesite adresu",
+    "address": "Adresa",
+    "byAddress": "Po adresi",
+    "byDistrict": "Po opštini"
   },
   "validation": {
     "nameRequired": "Ime je obavezno",
@@ -74,10 +74,10 @@
     "HR": "Croatia",
     "ME": "Montenegro",
     "MK": "North Macedonia",
-    "Сербия": "[MISSING_SR] Сербия",
-    "Serbia": "[MISSING_SR] Serbia",
-    "Srbija": "[MISSING_SR] Srbija",
-    "Србија": "[MISSING_SR] Србија"
+    "Сербия": "Srbija",
+    "Serbia": "Srbija",
+    "Srbija": "Srbija",
+    "Србија": "Srbija"
   },
   "header": {
     "nav": {
@@ -160,15 +160,15 @@
         "centralHeating": "Centralno grejanje",
         "partlyFurnished": "Polunamešten",
         "unfurnished": "Nenamešten",
-        "withBalcony": "[MISSING_SR] withBalcony",
-        "withParking": "[MISSING_SR] withParking",
-        "withGarden": "[MISSING_SR] withGarden",
-        "withGarage": "[MISSING_SR] withGarage",
-        "likeNew": "[MISSING_SR] likeNew",
-        "inBox": "[MISSING_SR] inBox",
-        "fullTime": "[MISSING_SR] fullTime",
-        "remote": "[MISSING_SR] remote",
-        "noExperience": "[MISSING_SR] noExperience"
+        "withBalcony": "Sa balkonom",
+        "withParking": "Sa parkingom",
+        "withGarden": "Sa baštom",
+        "withGarage": "Sa garažom",
+        "likeNew": "Kao novo",
+        "inBox": "U kutiji",
+        "fullTime": "Puno radno vreme",
+        "remote": "Rad na daljinu",
+        "noExperience": "Bez iskustva"
       }
     },
     "cluster": {
@@ -188,50 +188,50 @@
       "condition": "Stanje"
     },
     "results": {
-      "showing": "[MISSING_SR] showing",
-      "listings": "[MISSING_SR] listings"
+      "showing": "Prikazano",
+      "listings": "oglasi"
     },
     "actions": {
-      "apply": "[MISSING_SR] apply",
-      "reset": "[MISSING_SR] reset"
+      "apply": "Primeni",
+      "reset": "Resetuj"
     },
     "geolocation": {
-      "findMe": "[MISSING_SR] findMe",
-      "error": "[MISSING_SR] error"
+      "findMe": "Pronađi me",
+      "error": "Greška"
     },
     "gis": {
-      "accessibilitySettings": "[MISSING_SR] accessibilitySettings",
-      "kilometers": "[MISSING_SR] kilometers",
-      "meters": "[MISSING_SR] meters",
-      "minutes": "[MISSING_SR] minutes",
-      "min": "[MISSING_SR] min",
-      "byRadius": "[MISSING_SR] byRadius",
-      "byWalkingTime": "[MISSING_SR] byWalkingTime",
-      "searchRadius": "[MISSING_SR] searchRadius",
-      "walkingTime": "[MISSING_SR] walkingTime",
-      "walkingSpeedNote": "[MISSING_SR] walkingSpeedNote",
-      "atAverageSpeed": "[MISSING_SR] atAverageSpeed",
-      "searchAreaSettings": "[MISSING_SR] searchAreaSettings"
+      "accessibilitySettings": "Podešavanja dostupnosti",
+      "kilometers": "kilometri",
+      "meters": "metri",
+      "minutes": "minuti",
+      "min": "min",
+      "byRadius": "Po radijusu",
+      "byWalkingTime": "Po vremenu hoda",
+      "searchRadius": "Radijus pretrage",
+      "walkingTime": "Vreme hoda",
+      "walkingSpeedNote": "Računanje na osnovu prosečne brzine hoda",
+      "atAverageSpeed": "pri prosečnoj brzini",
+      "searchAreaSettings": "Podešavanja oblasti pretrage"
     },
-    "showAll": "[MISSING_SR] showAll",
-    "popularDistricts": "[MISSING_SR] popularDistricts",
+    "showAll": "Prikaži sve",
+    "popularDistricts": "Popularni delovi grada",
     "controls": {
-      "walkingAccessibility": "[MISSING_SR] walkingAccessibility",
-      "searchRadius": "[MISSING_SR] searchRadius",
-      "minutes": "[MISSING_SR] minutes",
-      "km": "[MISSING_SR] km",
-      "m": "[MISSING_SR] m",
-      "changeModeHint": "[MISSING_SR] changeModeHint",
-      "holdForSettings": "[MISSING_SR] holdForSettings",
-      "singleClickHint": "[MISSING_SR] singleClickHint",
-      "mobileHint": "[MISSING_SR] mobileHint",
-      "desktopHint": "[MISSING_SR] desktopHint",
-      "updatingIsochrone": "[MISSING_SR] updatingIsochrone",
-      "radiusControl": "[MISSING_SR] radiusControl",
-      "walkingMode": "[MISSING_SR] walkingMode",
-      "distanceMode": "[MISSING_SR] distanceMode",
-      "minUnit": "[MISSING_SR] minUnit",
-      "kmUnit": "[MISSING_SR] kmUnit"
+      "walkingAccessibility": "Pešačka dostupnost",
+      "searchRadius": "Radijus pretrage",
+      "minutes": "minuti",
+      "km": "km",
+      "m": "m",
+      "changeModeHint": "Kliknite za promenu režima",
+      "holdForSettings": "Držite za podešavanja",
+      "singleClickHint": "Jedan klik - promena režima",
+      "mobileHint": "Na mobilnom: tap za promenu režima",
+      "desktopHint": "Na desktopu: klik ili držanje",
+      "updatingIsochrone": "Ažuriranje zone dostupnosti...",
+      "radiusControl": "Kontrola radijusa",
+      "walkingMode": "Režim hoda",
+      "distanceMode": "Režim udaljenosti",
+      "minUnit": "min",
+      "kmUnit": "km"
     }
   },
   "justNow": "Upravo sada",
@@ -259,11 +259,11 @@
   "distance": {
     "fromYou": "Od vas",
     "walkingDistance": "Pešačka udaljenost",
-    "meters": "[MISSING_SR] meters {count}",
-    "kilometers": "[MISSING_SR] kilometers {count}",
-    "walking": "[MISSING_SR] walking {time}",
-    "minutes": "[MISSING_SR] minutes {count}",
-    "hours": "[MISSING_SR] hours {count}"
+    "meters": "{count} metara",
+    "kilometers": "{count} kilometara",
+    "walking": "Peške: ~{time}",
+    "minutes": "{count} min",
+    "hours": "{count} h"
   },
   "products": {
     "title": "Naslov",
@@ -311,8 +311,8 @@
   "quickView": "Brzi pregled",
   "stockStatus": {
     "out_of_stock": "Nema na stanju",
-    "in_stock": "[MISSING_SR] in_stock",
-    "low_stock": "[MISSING_SR] low_stock"
+    "in_stock": "Na stanju",
+    "low_stock": "Malo na stanju"
   },
   "storefront": "Prodavnica",
   "units": "Jedinice",
@@ -486,8 +486,8 @@
     "listings": "oglasi"
   },
   "actions": {
-    "apply": "[SR] Apply",
-    "reset": "[SR] Reset"
+    "apply": "Primeni",
+    "reset": "Resetuj"
   },
   "loadError": "Greška učitavanja",
   "ctr": {
@@ -621,22 +621,70 @@
   "collapse": "Smanji",
   "required": "Obavezno",
   "common": {
-    "minutes": "[SR] Minutes",
-    "km": "[SR] Km",
-    "m": "[SR] M",
-    "resetFilters": "[SR] Reset Filters",
-    "translate": "[SR] Translate",
-    "systemName": "[SR] System Name",
-    "sortOrder": "[SR] Sort Order",
-    "isActive": "[SR] Is Active",
-    "translating": "[SR] Translating",
-    "saveSuccess": "[SR] Save Success",
-    "confirmDelete": "[SR] Confirm Delete",
-    "deleteSuccess": "[SR] Delete Success"
+    "minutes": "Minuti",
+    "km": "km",
+    "m": "m",
+    "resetFilters": "Resetuj filtere",
+    "translate": "Prevedi",
+    "systemName": "Sistemsko ime",
+    "sortOrder": "Redosled sortiranja",
+    "isActive": "Aktivno",
+    "translating": "Prevodi se...",
+    "saveSuccess": "Uspešno sačuvano",
+    "confirmDelete": "Potvrdite brisanje",
+    "deleteSuccess": "Uspešno obrisano"
   },
   "location": {
-    "latitude": "[MISSING_SR] latitude",
-    "longitude": "[MISSING_SR] longitude",
-    "specifyLocation": "[MISSING_SR] specifyLocation"
+    "latitude": "Geogr. širina",
+    "longitude": "Geogr. dužina",
+    "specifyLocation": "Odredite lokaciju"
+  },
+  "footer": {
+    "company": "SveTu",
+    "companyDescription": "Najveća platforma za kupovinu i prodaju robe u Srbiji. Bezbedne transakcije, brza dostava, najbolje cene.",
+    "buyers": "Kupcima",
+    "howToBuy": "Kako kupiti",
+    "delivery": "Dostava",
+    "payment": "Plaćanje",
+    "return": "Povraćaj",
+    "warranty": "Garancija",
+    "sellers": "Prodavcima",
+    "howToSell": "Kako prodati",
+    "tariffs": "Tarife",
+    "promotion": "Promocija",
+    "stores": "Prodavnice",
+    "api": "API",
+    "help": "Pomoć",
+    "frequentQuestions": "Česta pitanja",
+    "support": "Podrška",
+    "rules": "Pravila",
+    "blog": "Blog",
+    "contacts": "Kontakti",
+    "copyright": "© 2025 SveTu. Sva prava zadržana.",
+    "termsOfUse": "Uslovi korišćenja",
+    "confidentiality": "Privatnost",
+    "cookie": "Kolačići",
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "location_picker": {
+      "search_address": "Pretraži adresu",
+      "select_on_map": "Izaberi na mapi",
+      "location_selected": "Lokacija izabrana",
+      "address": "Adresa",
+      "city": "Grad",
+      "coordinates": "Koordinate",
+      "click_on_map": "Kliknite na mapu da izaberete lokaciju",
+      "min_chars_hint": "Unesite najmanje 2 karaktera za pretragu adresa"
+    }
+  },
+  "location_picker": {
+    "search_address": "Pretražite adresu",
+    "select_on_map": "Izaberite na mapi",
+    "min_chars_hint": "Unesite najmanje 3 karaktera za pretragu",
+    "click_on_map": "Kliknite na mapu da izaberete lokaciju",
+    "location_selected": "Lokacija izabrana",
+    "address": "Adresa",
+    "city": "Grad",
+    "coordinates": "Koordinate"
   }
 }

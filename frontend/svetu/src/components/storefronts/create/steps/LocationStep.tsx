@@ -102,15 +102,15 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
           <h2 className="card-title text-2xl mb-4">{t('location.title')}</h2>
           <p className="text-base-content/70 mb-6">{t('location.subtitle')}</p>
 
-          {/* Выбор местоположения */}
+          {/* Location selection */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">
-              📍 Местоположение витрины
+              📍 {t('location.storefront_location')}
             </h3>
             <LocationPicker
               value={location}
               onChange={handleLocationChange}
-              placeholder="Введите адрес вашей витрины или выберите точку на карте"
+              placeholder={t('location.address_placeholder')}
               height="400px"
               showCurrentLocation={false}
               defaultCountry="Србија"
@@ -120,10 +120,10 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
             )}
           </div>
 
-          {/* Дополнительная информация */}
+          {/* Additional information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              {/* Почтовый индекс */}
+              {/* Postal code */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text">
@@ -133,9 +133,7 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                 </label>
                 <input
                   type="text"
-                  placeholder={t(
-                    'create_storefront.location.postal_code_placeholder'
-                  )}
+                  placeholder={t('location.postal_code_placeholder')}
                   className={`input input-bordered w-full ${errors.postalCode ? 'input-error' : ''}`}
                   value={postalCode}
                   onChange={(e) => setPostalCode(e.target.value)}
@@ -149,14 +147,14 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                 )}
               </div>
 
-              {/* Этаж */}
+              {/* Floor */}
               <div className="form-control w-full">
                 <label className="label">
-                  <span className="label-text">Этаж (необязательно)</span>
+                  <span className="label-text">{t('location.floor')}</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Например: 2, приземље, подрум"
+                  placeholder={t('location.floor_placeholder')}
                   className="input input-bordered w-full"
                   value={additionalInfo.floor}
                   onChange={(e) =>
@@ -168,16 +166,16 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                 />
               </div>
 
-              {/* Номер помещения */}
+              {/* Unit number */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text">
-                    Номер помещения/офиса (необязательно)
+                    {t('location.unit_number')}
                   </span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Например: 12, A3, Локал 5"
+                  placeholder={t('location.unit_number_placeholder')}
                   className="input input-bordered w-full"
                   value={additionalInfo.suite}
                   onChange={(e) =>
@@ -191,10 +189,10 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
             </div>
 
             <div className="space-y-4">
-              {/* Удобства */}
+              {/* Amenities */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Удобства</span>
+                  <span className="label-text">{t('location.amenities')}</span>
                 </label>
                 <div className="space-y-2">
                   <label className="label cursor-pointer justify-start gap-3">
@@ -209,7 +207,9 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                         })
                       }
                     />
-                    <span className="label-text">🚗 Есть парковка</span>
+                    <span className="label-text">
+                      🚗 {t('location.has_parking')}
+                    </span>
                   </label>
                   <label className="label cursor-pointer justify-start gap-3">
                     <input
@@ -223,21 +223,23 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
                         })
                       }
                     />
-                    <span className="label-text">🛗 Есть лифт</span>
+                    <span className="label-text">
+                      🛗 {t('location.has_elevator')}
+                    </span>
                   </label>
                 </div>
               </div>
 
-              {/* Заметки о доступности */}
+              {/* Accessibility notes */}
               <div className="form-control w-full">
                 <label className="label">
                   <span className="label-text">
-                    Заметки о доступности (необязательно)
+                    {t('location.accessibility_notes')}
                   </span>
                 </label>
                 <textarea
                   className="textarea textarea-bordered h-24"
-                  placeholder="Например: вход со двора, рампа для инвалидов, широкие двери"
+                  placeholder={t('location.accessibility_notes_placeholder')}
                   value={additionalInfo.accessibilityNotes}
                   onChange={(e) =>
                     setAdditionalInfo({
@@ -250,30 +252,31 @@ export default function LocationStep({ onNext, onBack }: LocationStepProps) {
             </div>
           </div>
 
-          {/* Информация о выбранном местоположении */}
+          {/* Selected location information */}
           {location && (
             <div className="mt-6 p-4 bg-info/10 border border-info/20 rounded-lg">
               <h4 className="font-medium text-info-content mb-2">
-                📍 Выбранное местоположение
+                📍 {t('location.selected_location')}
               </h4>
               <div className="text-sm text-info-content/80 grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <p>
-                    <strong>Адрес:</strong> {location.address}
+                    <strong>{t('location.address')}:</strong> {location.address}
                   </p>
                   {location.city && (
                     <p>
-                      <strong>Город:</strong> {location.city}
+                      <strong>{t('location.city')}:</strong> {location.city}
                     </p>
                   )}
                 </div>
                 <div>
                   <p>
-                    <strong>Координаты:</strong> {location.latitude.toFixed(6)},{' '}
+                    <strong>{t('location.coordinates')}:</strong>{' '}
+                    {location.latitude.toFixed(6)},{' '}
                     {location.longitude.toFixed(6)}
                   </p>
                   <p>
-                    <strong>Точность:</strong>{' '}
+                    <strong>{t('location.accuracy')}:</strong>{' '}
                     {Math.round(location.confidence * 100)}%
                   </p>
                 </div>

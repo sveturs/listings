@@ -208,14 +208,14 @@
       }
     }
   },
-  "remove": "[SR] Remove",
-  "empty": "[SR] Empty",
-  "clear": "[SR] Clear",
+  "remove": "Ukloni",
+  "empty": "Prazno",
+  "clear": "Obriši",
   "miniCart": {
-    "title": "[SR] Title",
-    "empty": "[SR] Empty",
-    "total": "[SR] Total",
-    "viewCart": "[SR] View Cart",
-    "checkout": "[SR] Checkout"
+    "title": "Korpa",
+    "empty": "Prazno",
+    "total": "Ukupno",
+    "viewCart": "Pogledaj korpu",
+    "checkout": "Završi kupovinu"
   }
 }

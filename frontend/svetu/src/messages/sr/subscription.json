@@ -1,0 +1,75 @@
+{
+  "paymentMock": {
+    "title": "Dovršite plaćanje",
+    "description": "Test procesor plaćanja",
+    "testNotice": "Ovo je test stranica plaćanja za razvoj",
+    "processingPayment": "Obrada vašeg plaćanja...",
+    "paymentDetails": "Detalji plaćanja",
+    "plan": "Plan",
+    "billingCycle": "Period naplate",
+    "amount": "Iznos",
+    "paymentId": "ID plaćanja",
+    "testCardDetails": "Test podaci kartice",
+    "cardNumber": "Broj kartice",
+    "expiryDate": "MM/GG",
+    "cvc": "CVC",
+    "simulateFailure": "Simuliraj grešku",
+    "completePayment": "Dovrši plaćanje",
+    "processing": "Obrada...",
+    "monthly": "Mesečno",
+    "yearly": "Godišnje",
+    "success": {
+      "title": "Plaćanje uspešno!",
+      "description": "Vaša pretplata je aktivirana. Preusmeravanje..."
+    },
+    "failed": {
+      "title": "Greška plaćanja",
+      "description": "Plaćanje nije moglo biti obrađeno. Molimo pokušajte ponovo.",
+      "backToPricing": "Nazad na cenovnik"
+    }
+  },
+  "plans": {
+    "starter": "Početni",
+    "professional": "Profesionalni",
+    "business": "Poslovni",
+    "enterprise": "Korporativni"
+  },
+  "features": {
+    "storefronts": "Izloga",
+    "products": "Proizvoda po izlogu",
+    "staff": "Članova osoblja",
+    "images": "Slika po proizvodu",
+    "aiAssistant": "AI asistent",
+    "liveSupport": "Podrška uživo",
+    "dataExport": "Izvoz podataka",
+    "customDomain": "Prilagođen domen"
+  },
+  "upgrade": {
+    "title": "Unapredite svoj plan",
+    "description": "Dobijte više izloga i otključajte moćne funkcije",
+    "currentPlan": "Trenutni plan",
+    "selectPlan": "Izaberite plan",
+    "changePlan": "Promeni plan",
+    "confirmUpgrade": "Potvrdi unapređenje",
+    "confirmDowngrade": "Potvrdi smanjenje"
+  },
+  "success": {
+    "welcomeTitle": "Dobrodošli u {plan}!",
+    "description": "Vaša pretplata je uspešno aktivirana. Sada imate pristup svim funkcijama {plan} plana.",
+    "whatsNext": "Šta dalje?",
+    "step1": {
+      "title": "Napravite svoj prvi izlog",
+      "description": "Podesite svoju onlajn prodavnicu i počnite da prodajete"
+    },
+    "step2": {
+      "title": "Dodajte proizvode",
+      "description": "Postavite artikle sa fotografijama i opisima"
+    },
+    "step3": {
+      "title": "Počnite da primate narudžbine",
+      "description": "Upravljajte narudžbinama i razvijajte svoj biznis"
+    },
+    "createStorefront": "Napravi izlog",
+    "goToDashboard": "Idi na kontrolnu tablu"
+  }
+}

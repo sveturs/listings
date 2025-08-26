@@ -11,6 +11,12 @@ import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import { storefrontApi } from '@/services/storefrontApi';
 import type { StorefrontCreateDTO } from '@/types/storefront';
+import dynamic from 'next/dynamic';
+
+const UpgradePrompt = dynamic(
+  () => import('@/components/storefronts/UpgradePrompt'),
+  { ssr: false }
+);
 
 interface StorefrontFormData {
   // Basic Info
@@ -125,8 +131,10 @@ export const CreateStorefrontProvider: React.FC<
   CreateStorefrontProviderProps
 > = ({ children }) => {
   const t = useTranslations('create_storefront');
+  const tMisc = useTranslations('misc');
   const [formData, setFormData] = useState<StorefrontFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const updateFormData = useCallback((data: Partial<StorefrontFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -205,13 +213,38 @@ export const CreateStorefrontProvider: React.FC<
         throw new Error('Failed to create storefront');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t('error');
-      toast.error(errorMessage);
+      let errorMessage = error instanceof Error ? error.message : t('error');
+
+      // Проверяем, является ли это ошибкой лимита витрин
+      const isLimitError = errorMessage === 'storefronts.error.limit_reached';
+
+      // Попытаемся перевести ключ ошибки, если он похож на ключ перевода
+      if (errorMessage && errorMessage.includes('.')) {
+        try {
+          // Проверяем, является ли это ключом перевода из misc
+          // Backend отправляет "storefronts.error.limit_reached"
+          // но в misc.json это находится по пути "storefronts.error.limit_reached"
+          const translatedError = tMisc(errorMessage as any);
+          if (translatedError && translatedError !== errorMessage) {
+            errorMessage = translatedError;
+          }
+        } catch {
+          // Если не удалось перевести, используем оригинальное сообщение
+        }
+      }
+
+      // Если это ошибка лимита, показываем upgrade prompt вместо toast
+      if (isLimitError) {
+        setShowUpgradePrompt(true);
+      } else {
+        toast.error(errorMessage);
+      }
+
       return { success: false, error: errorMessage };
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, t, resetFormData]);
+  }, [formData, t, tMisc, resetFormData]);
 
   return (
     <CreateStorefrontContext.Provider
@@ -224,6 +257,12 @@ export const CreateStorefrontProvider: React.FC<
       }}
     >
       {children}
+      {showUpgradePrompt && (
+        <UpgradePrompt
+          currentPlan="starter"
+          onClose={() => setShowUpgradePrompt(false)}
+        />
+      )}
     </CreateStorefrontContext.Provider>
   );
 };

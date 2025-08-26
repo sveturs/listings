@@ -34,5 +34,76 @@
     "cityMaxLength": "Naziv grada ne može biti duži od 100 karaktera",
     "countryMaxLength": "Naziv zemlje ne može biti duži od 100 karaktera"
   },
-  "notProvided": "Nije navedeno"
+  "notProvided": "Nije navedeno",
+  "settings": {
+    "title": "Podešavanja",
+    "comingSoon": "Uskoro",
+    "tabs": {
+      "privacy": "Privatnost",
+      "notifications": "Obaveštenja",
+      "security": "Bezbednost"
+    },
+    "privacy": {
+      "title": "Podešavanja privatnosti",
+      "description": "Upravljajte ko može da vas kontaktira i vidi vaše informacije",
+      "allowContactRequests": "Dozvoli zahteve za dodavanje u kontakte",
+      "allowContactRequestsDesc": "Omogućiti drugim korisnicima da vam šalju zahteve za dodavanje u kontakte",
+      "messagesFromContactsOnly": "Poruke samo od kontakata",
+      "messagesFromContactsOnlyDesc": "Primaj poruke samo od korisnika iz vaših kontakata",
+      "locationPrivacy": "Privatnost lokacije",
+      "locationPrivacyDesc": "Upravljajte kako se prikazuje vaša lokacija u oglasima",
+      "locationExact": "Prikaži tačnu lokaciju",
+      "locationArea": "Prikaži opštu oblast (po default-u)",
+      "locationCity": "Prikaži samo grad",
+      "locationHidden": "Sakrij lokaciju",
+      "locationNote": "Podešavanja privatnosti lokacije biće uskoro dostupna",
+      "error": {
+        "fetchFailed": "Neuspešno učitavanje podešavanja privatnosti",
+        "saveFailed": "Neuspešno čuvanje podešavanja privatnosti"
+      }
+    },
+    "danger": {
+      "title": "Opasna zona",
+      "description": "Nepovratne akcije sa vašim nalogom",
+      "deactivateAccount": "Deaktiviraj nalog",
+      "deleteAccount": "Obriši nalog",
+      "warning": "Ove akcije još nisu dostupne. Kontaktirajte podršku ako je potrebno."
+    },
+    "actions": {
+      "save": "Sačuvaj podešavanja",
+      "saving": "Čuvanje..."
+    },
+    "messages": {
+      "saveSuccess": "Podešavanja su uspešno sačuvana"
+    }
+  },
+  "contacts": {
+    "title": "Kontakti",
+    "addContact": "Dodaj kontakt",
+    "searchPlaceholder": "Pretraži kontakte...",
+    "enterEmail": "Unesite email adresu",
+    "emailPlaceholder": "user@example.com",
+    "adding": "Dodavanje...",
+    "accept": "Prihvati",
+    "decline": "Odbaci",
+    "unblock": "Odblokiraj",
+    "message": "Poruka",
+    "remove": "Ukloni",
+    "confirmRemove": "Da li ste sigurni da želite da uklonite ovaj kontakt?",
+    "tabs": {
+      "contacts": "Kontakti",
+      "pending": "Na čekanju",
+      "blocked": "Blokirano"
+    },
+    "noContacts": "Još nema kontakata",
+    "noPending": "Nema zahteva na čekanju",
+    "noBlocked": "Nema blokiranih korisnika",
+    "error": {
+      "fetchFailed": "Neuspešno učitavanje kontakata",
+      "addFailed": "Neuspešno dodavanje kontakta",
+      "updateFailed": "Neuspešno ažuriranje statusa kontakta",
+      "removeFailed": "Neuspešno uklanjanje kontakta",
+      "userNotFound": "Korisnik sa tim email-om nije pronađen"
+    }
+  }
 }

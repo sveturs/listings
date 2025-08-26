@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-// SubscriptionPlan тип тарифного плана
-type SubscriptionPlan string
+// SubscriptionPlanType тип тарифного плана
+type SubscriptionPlanType string
 
 const (
-	SubscriptionPlanStarter      SubscriptionPlan = "starter"
-	SubscriptionPlanProfessional SubscriptionPlan = "professional"
-	SubscriptionPlanBusiness     SubscriptionPlan = "business"
-	SubscriptionPlanEnterprise   SubscriptionPlan = "enterprise"
+	SubscriptionPlanStarter      SubscriptionPlanType = "starter"
+	SubscriptionPlanProfessional SubscriptionPlanType = "professional"
+	SubscriptionPlanBusiness     SubscriptionPlanType = "business"
+	SubscriptionPlanEnterprise   SubscriptionPlanType = "enterprise"
 )
 
 // StaffRole роль сотрудника витрины
@@ -146,9 +146,9 @@ type Storefront struct {
 	ViewsCount       int        `json:"views_count" db:"views_count"`
 
 	// Подписка (монетизация)
-	SubscriptionPlan      SubscriptionPlan `json:"subscription_plan" db:"subscription_plan"`
-	SubscriptionExpiresAt *time.Time       `json:"subscription_expires_at,omitempty" db:"subscription_expires_at"`
-	CommissionRate        float64          `json:"commission_rate" db:"commission_rate"`
+	SubscriptionPlan      SubscriptionPlanType `json:"subscription_plan" db:"subscription_plan"`
+	SubscriptionExpiresAt *time.Time           `json:"subscription_expires_at,omitempty" db:"subscription_expires_at"`
+	CommissionRate        float64              `json:"commission_rate" db:"commission_rate"`
 
 	// AI и killer features
 	AIAgentEnabled      bool  `json:"ai_agent_enabled" db:"ai_agent_enabled"`
@@ -354,6 +354,7 @@ type StorefrontCreateDTO struct {
 type StorefrontUpdateDTO struct {
 	Name        *string `json:"name,omitempty" validate:"omitempty,min=3,max=255"`
 	Description *string `json:"description,omitempty"`
+	IsActive    *bool   `json:"is_active,omitempty"`
 
 	// Брендинг
 	LogoURL   *string `json:"logo_url,omitempty"`
@@ -396,7 +397,7 @@ type StorefrontFilter struct {
 	MinRating *float64 `json:"min_rating,omitempty"`
 
 	// Тарифный план
-	SubscriptionPlans []SubscriptionPlan `json:"subscription_plans,omitempty"`
+	SubscriptionPlans []SubscriptionPlanType `json:"subscription_plans,omitempty"`
 
 	// Методы оплаты
 	PaymentMethods []PaymentMethodType `json:"payment_methods,omitempty"`

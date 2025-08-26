@@ -2,12 +2,12 @@
   "comment": {
     "error": "Greška",
     "label": "Oznaka",
-    "placeholder": "[SR] Placeholder",
-    "tooShort": "[SR] Too Short"
+    "placeholder": "Unesite komentar",
+    "tooShort": "Komentar je prekratak"
   },
   "cons": {
     "label": "Oznaka",
-    "placeholder": "[SR] Placeholder"
+    "placeholder": "Unesite mane proizvoda"
   },
   "form": {
     "cancel": "Otkaži",
