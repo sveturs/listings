@@ -1,57 +1,57 @@
 {
   "paymentMock": {
-    "title": "Довршите плаћање",
-    "description": "Тест процесор плаћања",
-    "testNotice": "Ово је тест страница плаћања за развој",
-    "processingPayment": "Обрада вашег плаћања...",
-    "paymentDetails": "Детаљи плаћања",
-    "plan": "План",
-    "billingCycle": "Период наплате",
-    "amount": "Износ",
-    "paymentId": "ID плаћања",
-    "testCardDetails": "Тест подаци картице",
-    "cardNumber": "Број картице",
-    "expiryDate": "MM/ГГ",
+    "title": "Dovršite plaćanje",
+    "description": "Test procesor plaćanja",
+    "testNotice": "Ovo je test stranica plaćanja za razvoj",
+    "processingPayment": "Obrada vašeg plaćanja...",
+    "paymentDetails": "Detalji plaćanja",
+    "plan": "Plan",
+    "billingCycle": "Period naplate",
+    "amount": "Iznos",
+    "paymentId": "ID plaćanja",
+    "testCardDetails": "Test podaci kartice",
+    "cardNumber": "Broj kartice",
+    "expiryDate": "MM/GG",
     "cvc": "CVC",
-    "simulateFailure": "Симулирај грешку",
-    "completePayment": "Доврши плаћање",
-    "processing": "Обрада...",
-    "monthly": "Месечно",
-    "yearly": "Годишње",
+    "simulateFailure": "Simuliraj grešku",
+    "completePayment": "Dovrši plaćanje",
+    "processing": "Obrada...",
+    "monthly": "Mesečno",
+    "yearly": "Godišnje",
     "success": {
-      "title": "Плаћање успешно!",
-      "description": "Ваша претплата је активирана. Преусмеравање..."
+      "title": "Plaćanje uspešno!",
+      "description": "Vaša pretplata je aktivirana. Preusmeravanje..."
     },
     "failed": {
-      "title": "Грешка плаћања",
-      "description": "Плаћање није могло бити обрађено. Молимо покушајте поново.",
-      "backToPricing": "Назад на ценовник"
+      "title": "Greška plaćanja",
+      "description": "Plaćanje nije moglo biti obrađeno. Molimo pokušajte ponovo.",
+      "backToPricing": "Nazad na cenovnik"
     }
   },
   "plans": {
-    "starter": "Почетни",
-    "professional": "Професионални",
-    "business": "Пословни",
-    "enterprise": "Корпоративни"
+    "starter": "Početni",
+    "professional": "Profesionalni",
+    "business": "Poslovni",
+    "enterprise": "Korporativni"
   },
   "features": {
-    "storefronts": "Излога",
-    "products": "Производа по излогу",
-    "staff": "Чланова особља",
-    "images": "Слика по производу",
-    "aiAssistant": "AI асистент",
-    "liveSupport": "Подршка уживо",
-    "dataExport": "Извоз података",
-    "customDomain": "Прилагођен домен"
+    "storefronts": "Izloga",
+    "products": "Proizvoda po izlogu",
+    "staff": "Članova osoblja",
+    "images": "Slika po proizvodu",
+    "aiAssistant": "AI asistent",
+    "liveSupport": "Podrška uživo",
+    "dataExport": "Izvoz podataka",
+    "customDomain": "Prilagođen domen"
   },
   "upgrade": {
-    "title": "Унапредите свој план",
-    "description": "Добијте више излога и откључајте моћне функције",
-    "currentPlan": "Тренутни план",
-    "selectPlan": "Изаберите план",
-    "changePlan": "Промени план",
-    "confirmUpgrade": "Потврди унапређење",
-    "confirmDowngrade": "Потврди смањење"
+    "title": "Unapredite svoj plan",
+    "description": "Dobijte više izloga i otključajte moćne funkcije",
+    "currentPlan": "Trenutni plan",
+    "selectPlan": "Izaberite plan",
+    "changePlan": "Promeni plan",
+    "confirmUpgrade": "Potvrdi unapređenje",
+    "confirmDowngrade": "Potvrdi smanjenje"
   },
   "success": {
     "welcomeTitle": "Dobrodošli u {plan}!",
