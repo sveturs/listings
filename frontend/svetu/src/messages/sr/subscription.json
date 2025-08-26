@@ -54,22 +54,22 @@
     "confirmDowngrade": "Потврди смањење"
   },
   "success": {
-    "welcomeTitle": "Добродошли у {plan}!",
-    "description": "Ваша претплата је успешно активирана. Сада имате приступ свим функцијама {plan} плана.",
-    "whatsNext": "Шта даље?",
+    "welcomeTitle": "Dobrodošli u {plan}!",
+    "description": "Vaša pretplata je uspešno aktivirana. Sada imate pristup svim funkcijama {plan} plana.",
+    "whatsNext": "Šta dalje?",
     "step1": {
-      "title": "Направите свој први излог",
-      "description": "Подесите своју онлајн продавницу и почните да продајете"
+      "title": "Napravite svoj prvi izlog",
+      "description": "Podesite svoju onlajn prodavnicu i počnite da prodajete"
     },
     "step2": {
-      "title": "Додајте производе",
-      "description": "Поставите артикле са фотографијама и описима"
+      "title": "Dodajte proizvode",
+      "description": "Postavite artikle sa fotografijama i opisima"
     },
     "step3": {
-      "title": "Почните да примате наруџбине",
-      "description": "Управљајте наруџбинама и развијајте свој бизнис"
+      "title": "Počnite da primate narudžbine",
+      "description": "Upravljajte narudžbinama i razvijajte svoj biznis"
     },
-    "createStorefront": "Направи излог",
-    "goToDashboard": "Иди на контролну таблу"
+    "createStorefront": "Napravi izlog",
+    "goToDashboard": "Idi na kontrolnu tablu"
   }
 }
