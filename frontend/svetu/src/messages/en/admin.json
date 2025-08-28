@@ -395,6 +395,8 @@
     "logistics": "Logistics",
     "content": "Content",
     "listings": "Listings",
+    "storefronts": "Storefronts",
+    "storefrontProducts": "Storefront Products",
     "users": "Users",
     "analytics": "Analytics",
     "usersDescription": "Users Description",
@@ -466,9 +468,63 @@
     "dragToReorder": "Drag To Reorder"
   },
   "listings": {
-    "title": "Title",
-    "comingSoon": "Coming Soon",
-    "description": "Description"
+    "title": "Listings",
+    "description": "Manage all marketplace listings and products",
+    "createNew": "Create Listing",
+    "export": "Export",
+    "stats": {
+      "total": "Total Listings",
+      "totalDesc": "All time",
+      "active": "Active",
+      "activeDesc": "Available for viewing",
+      "pending": "Pending",
+      "pendingDesc": "Awaiting review",
+      "views": "Views",
+      "viewsDesc": "Last 30 days"
+    },
+    "search": {
+      "placeholder": "Search by title, description..."
+    },
+    "filter": {
+      "allStatuses": "All statuses",
+      "allCategories": "All categories"
+    },
+    "sort": {
+      "dateDesc": "Newest first",
+      "dateAsc": "Oldest first",
+      "priceDesc": "Most expensive first",
+      "priceAsc": "Cheapest first",
+      "viewsDesc": "Most popular first"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "sold": "Sold"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Image",
+      "title": "Title",
+      "price": "Price",
+      "category": "Category",
+      "user": "User",
+      "status": "Status",
+      "views": "Views",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "deleteSelected": "Delete selected",
+    "confirmBulkDelete": "Are you sure you want to delete the selected listings?",
+    "deleteModal": {
+      "title": "Delete Listing",
+      "message": "Are you sure you want to delete this listing? This action cannot be undone."
+    },
+    "edit": {
+      "title": "Edit Listing",
+      "description": "Modify listing information",
+      "comingSoon": "Edit functionality will be available soon"
+    }
   },
   "users": {
     "title": "User Management",
@@ -889,7 +945,7 @@
   "create": "Create",
   "logistics": {
     "title": "Logistics Management",
-    "dashboard": "Dashboard",
+    "dashboard": "Logistics Monitoring Dashboard",
     "shipments": {
       "title": "Shipments",
       "description": "Manage and track all shipments",
@@ -902,7 +958,7 @@
     },
     "problems": {
       "title": "Problem Deliveries",
-      "description": "Manage problematic shipments",
+      "description": "Description",
       "problemType": "Problem Type",
       "allTypes": "All types",
       "types": {
@@ -925,7 +981,6 @@
       "list": "Problems List",
       "noProblems": "No problem shipments",
       "type": "Type",
-      "description": "Description",
       "assignedTo": "Assigned To",
       "table": {
         "id": "ID",
@@ -967,40 +1022,24 @@
       "reset": "Reset"
     },
     "status": {
-      "pending": "Pending",
-      "in_transit": "In Transit",
-      "delivered": "Delivered",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "returned": "Returned"
+      "processing": "Processing"
     },
     "table": {
-      "tracking_number": "Tracking Number",
-      "status": "Status",
-      "provider": "Provider",
-      "recipient": "Recipient",
-      "sender": "Sender",
-      "cod": "COD",
-      "weight": "Weight",
-      "created": "Created",
+      "date": "Date",
+      "sent": "Sent",
       "delivered": "Delivered",
-      "updated_at": "Updated",
-      "destination": "Destination",
-      "actions": "Actions"
+      "in_transit": "In Transit",
+      "problems": "Problems",
+      "courier_service": "Courier Service",
+      "shipments": "Shipments",
+      "success_rate": "Success Rate",
+      "avg_time": "Avg Time"
     },
     "actions": {
       "view": "View",
-      "edit": "Edit",
-      "track": "Track",
-      "delete": "Delete",
-      "export": "Export",
-      "new_shipment": "New Shipment",
-      "resolve": "Resolve",
-      "assign": "Assign",
-      "comments": "Comments",
-      "view_details": "Details",
-      "update_status": "Update Status",
-      "contact_courier": "Contact Courier"
+      "updateStatus": "Update Status",
+      "contact": "Contact",
+      "printLabel": "Print Label"
     },
     "pagination": {
       "page": "Page",
@@ -1011,11 +1050,11 @@
     "stats": {
       "today_shipments": "Today's Shipments",
       "today_delivered": "Delivered Today",
-      "active_shipments": "Active Shipments",
+      "active_shipments": "In Transit",
       "problem_shipments": "Problem Shipments",
-      "avg_delivery_time": "Avg. Delivery Time",
+      "avg_delivery_time": "Avg Delivery Time",
       "delivery_success_rate": "Delivery Success Rate",
-      "weekly_deliveries": "Weekly Deliveries",
+      "weekly_deliveries": "Deliveries for Last 7 Days",
       "status_distribution": "Status Distribution",
       "courier_performance": "Courier Performance"
     },
@@ -1037,12 +1076,6 @@
     "createdAt": "Created at",
     "statusHistory": "Status History",
     "failedReason": "Failed Reason",
-    "actions": {
-      "view": "View",
-      "updateStatus": "Update Status",
-      "contact": "Contact",
-      "printLabel": "Print Label"
-    },
     "assignModal": {
       "title": "Assign Administrator",
       "selectAdmin": "Select Administrator",
@@ -1072,20 +1105,6 @@
     },
     "quickActions": {
       "title": "Quick Actions"
-    },
-    "table": {
-      "date": "Date",
-      "sent": "Sent",
-      "delivered": "Delivered",
-      "in_transit": "In Transit",
-      "problems": "Problems",
-      "courier_service": "Courier Service",
-      "shipments": "Shipments",
-      "success_rate": "Success Rate",
-      "avg_time": "Avg Time"
-    },
-    "status": {
-      "processing": "Processing"
     },
     "map": {
       "all": "All",
@@ -1121,22 +1140,178 @@
         "created": "Created",
         "actions": "Actions"
       }
-    },
-    "dashboard": "Logistics Monitoring Dashboard",
+    }
+  },
+  "storefrontProducts": {
+    "title": "Storefront Products Management",
+    "description": "View and manage all products in storefronts",
+    "createNew": "New Product",
+    "export": "Export Products",
+    "import": "Import Products",
     "stats": {
-      "today_shipments": "Today's Shipments",
-      "today_delivered": "Delivered Today",
-      "active_shipments": "In Transit",
-      "problem_shipments": "Problem Shipments",
-      "avg_delivery_time": "Avg Delivery Time",
-      "delivery_success_rate": "Delivery Success Rate",
-      "weekly_deliveries": "Deliveries for Last 7 Days",
-      "status_distribution": "Status Distribution",
-      "courier_performance": "Courier Performance"
+      "total": "Total Products",
+      "totalDesc": "All products in system",
+      "active": "Active Products",
+      "activeDesc": "Products available for sale",
+      "outOfStock": "Out of Stock",
+      "outOfStockDesc": "Products without stock",
+      "sales": "Sales",
+      "salesDesc": "Total sales count"
     },
-    "view_all_shipments": "View All Shipments",
-    "problem_shipments": "Problem Shipments",
-    "export_report": "Export Report",
-    "monitoring_settings": "Monitoring Settings"
+    "search": {
+      "placeholder": "Search by name, SKU or description..."
+    },
+    "filter": {
+      "allStatuses": "All statuses",
+      "allStorefronts": "All storefronts",
+      "allCategories": "All categories",
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "lowStock": "Low stock"
+    },
+    "sort": {
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "priceAsc": "Price (Low to High)",
+      "priceDesc": "Price (High to Low)",
+      "dateDesc": "Newest first",
+      "dateAsc": "Oldest first",
+      "stockAsc": "Stock (Low to High)",
+      "stockDesc": "Stock (High to Low)",
+      "salesDesc": "Best sellers first",
+      "salesAsc": "Worst sellers first"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Image",
+      "name": "Product Name",
+      "sku": "SKU",
+      "price": "Price",
+      "stock": "Stock",
+      "storefront": "Storefront",
+      "status": "Status",
+      "actions": "Actions",
+      "unlimited": "Unlimited",
+      "outOfStock": "Out of stock",
+      "lowStock": "Low stock ({count})",
+      "inStock": "In stock ({count})",
+      "category": "Category",
+      "sales": "Sales",
+      "created": "Created"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "view": "View in store",
+      "analytics": "Analytics",
+      "confirmDelete": "Are you sure you want to delete this product?",
+      "confirmDeleteDesc": "This action cannot be undone.",
+      "deleteSuccess": "Product deleted successfully",
+      "deleteError": "Failed to delete product",
+      "duplicateSuccess": "Product duplicated successfully",
+      "duplicateError": "Failed to duplicate product"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "noProducts": "No products found",
+    "noProductsDesc": "Create your first product or adjust filters",
+    "stockStatus": {
+      "inStock": "In stock",
+      "outOfStock": "Out of stock",
+      "lowStock": "Low stock",
+      "unlimited": "Unlimited"
+    },
+    "bulkActions": {
+      "title": "Bulk Actions",
+      "activate": "Activate Selected",
+      "deactivate": "Deactivate Selected",
+      "delete": "Delete Selected",
+      "export": "Export Selected",
+      "confirmDelete": "Are you sure you want to delete {count} products?",
+      "confirmDeleteDesc": "This action cannot be undone.",
+      "success": "Successfully updated {count} products",
+      "error": "Failed to update products"
+    },
+    "confirmBulkDelete": "Are you sure you want to delete the selected products?",
+    "deleteModal": {
+      "title": "Delete Product",
+      "message": "Are you sure you want to delete this product? This action cannot be undone."
+    },
+    "noStorefronts": "You don't have any storefronts yet",
+    "noStorefrontsDescription": "Create your first storefront to start selling products",
+    "createStorefront": "Create Storefront"
+  },
+  "storefronts": {
+    "title": "Storefront Management",
+    "description": "View and manage all user storefronts",
+    "createNew": "Create Storefront",
+    "export": "Export",
+    "searchPlaceholder": "Search storefronts...",
+    "active": "Active",
+    "inactive": "Inactive",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "viewProducts": "Products",
+    "bulkActions": "Bulk Actions",
+    "activateSelected": "Activate Selected",
+    "deactivateSelected": "Deactivate Selected",
+    "deleteSelected": "Delete Selected",
+    "confirmBulkDelete": "Are you sure you want to delete the selected storefronts?",
+    "confirmDeleteTitle": "Delete Storefront",
+    "confirmDeleteMessage": "Are you sure you want to delete this storefront? This action cannot be undone.",
+    "noData": "No data to display",
+    "filters": {
+      "allStatus": "All Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "allVerification": "All",
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)",
+      "mostProducts": "Most Products",
+      "mostSales": "Most Sales",
+      "bestRating": "Best Rating"
+    },
+    "table": {
+      "name": "Name",
+      "owner": "Owner",
+      "location": "Location",
+      "products": "Products",
+      "sales": "Sales",
+      "rating": "Rating",
+      "status": "Status",
+      "verified": "Verified",
+      "actions": "Actions"
+    },
+    "stats": {
+      "total": "Total Storefronts",
+      "totalDesc": "All storefronts in the system",
+      "active": "Active",
+      "activeDesc": "Currently active storefronts",
+      "verified": "Verified",
+      "verifiedDesc": "Verified storefronts",
+      "products": "Total Products",
+      "productsDesc": "Products across all storefronts",
+      "sales": "Total Sales",
+      "salesDesc": "Sales across all storefronts"
+    },
+    "deleteType": "Delete Type",
+    "softDelete": "Soft Delete",
+    "hardDelete": "Hard Delete",
+    "softDeleteDesc": "Deactivates the storefront (can be restored)",
+    "hardDeleteDesc": "Permanently removes the storefront from database (irreversible)"
   }
 }

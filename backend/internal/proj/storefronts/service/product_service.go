@@ -80,6 +80,13 @@ func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepos
 
 // ValidateStorefrontOwnership checks if user owns the storefront
 func (s *ProductService) ValidateStorefrontOwnership(ctx context.Context, storefrontID, userID int) error {
+	// Проверяем, является ли пользователь администратором
+	if isAdmin, ok := ctx.Value("is_admin").(bool); ok && isAdmin {
+		// Администратор имеет доступ ко всем витринам
+		logger.Info().Msgf("Admin user %d accessing storefront %d", userID, storefrontID)
+		return nil
+	}
+
 	storefront, err := s.storage.GetStorefrontByID(ctx, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to get storefront: %w", err)

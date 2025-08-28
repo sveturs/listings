@@ -19,21 +19,26 @@ func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserP
 
 	// Используем нативные nullable типы для полей, которые могут быть NULL
 	var city, country sql.NullString
+	var roleID sql.NullInt64
+	var roleName, roleDisplayName, roleDescription sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
         SELECT 
-            id, name, email, google_id, picture_url, created_at,
-            phone, bio, notification_email, 
-            timezone, last_seen, account_status, settings,
-            city, country
-        FROM users 
-        WHERE id = $1
+            u.id, u.name, u.email, u.google_id, u.picture_url, u.created_at,
+            u.phone, u.bio, u.notification_email, 
+            u.timezone, u.last_seen, u.account_status, u.settings,
+            u.city, u.country, u.role_id,
+            r.name, r.display_name, r.description
+        FROM users u
+        LEFT JOIN roles r ON u.role_id = r.id
+        WHERE u.id = $1
     `, userID).Scan(
 		&profile.ID, &profile.Name, &profile.Email, &profile.GoogleID, &profile.PictureURL,
 		&profile.CreatedAt, &profile.Phone, &profile.Bio, &profile.NotificationEmail,
 		&profile.Timezone, &profile.LastSeen,
 		&profile.AccountStatus, &profile.Settings,
-		&city, &country,
+		&city, &country, &roleID,
+		&roleName, &roleDisplayName, &roleDescription,
 	)
 	if err != nil {
 		return nil, err
@@ -45,6 +50,25 @@ func (s *Storage) GetUserProfile(ctx context.Context, userID int) (*models.UserP
 	}
 	if country.Valid {
 		profile.Country = country.String
+	}
+	if roleID.Valid {
+		roleIDInt := int(roleID.Int64)
+		profile.RoleID = &roleIDInt
+
+		// Если есть роль, заполняем её данные
+		if roleName.Valid {
+			profile.Role = &models.Role{
+				ID:          roleIDInt,
+				Name:        roleName.String,
+				DisplayName: roleDisplayName.String,
+				Description: roleDescription.String,
+			}
+
+			// Устанавливаем флаг IsAdmin на основе роли
+			if roleName.String == "admin" || roleName.String == "super_admin" {
+				profile.IsAdmin = true
+			}
+		}
 	}
 
 	return profile, nil

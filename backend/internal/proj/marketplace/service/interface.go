@@ -19,6 +19,7 @@ type MarketplaceServiceInterface interface {
 	GenerateUniqueSlug(ctx context.Context, baseSlug string, excludeID int) (string, error)
 	UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListing(ctx context.Context, id int, userID int) error
+	DeleteListingWithAdmin(ctx context.Context, id int, userID int, isAdmin bool) error
 	ProcessImage(file *multipart.FileHeader) (string, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error)

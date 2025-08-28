@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -178,11 +179,12 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 
 // DeleteStorefront удаляет витрину
 // @Summary Delete storefront
-// @Description Soft deletes a storefront (marks as inactive)
+// @Description Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal
 // @Tags storefronts
 // @Accept json
 // @Produce json
 // @Param id path int true "Storefront ID"
+// @Param hard query bool false "Hard delete (permanent removal, admin only). Default: false (soft delete)"
 // @Success 200 {object} map[string]string "Storefront deleted"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Only owner can delete storefront"
@@ -198,7 +200,15 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
 	}
 
-	err = h.service.Delete(c.Context(), userID, id)
+	// Pass admin status and hard delete flag through context
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	hardDelete := c.Query("hard") == "true" // Query parameter для выбора жесткого удаления
+
+	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+	ctx = context.WithValue(ctx, userIDKey, userID)
+	ctx = context.WithValue(ctx, hardDeleteKey, hardDelete)
+
+	err = h.service.Delete(ctx, userID, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUnauthorized):
@@ -243,13 +253,31 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 		Offset: 0,
 	}
 
+	// Проверяем, является ли пользователь админом
+	isAdmin := false
+	if userIDLocal := c.Locals("user_id"); userIDLocal != nil {
+		// Проверяем роль пользователя (предполагаем, что есть поле is_admin или role)
+		if adminLocal := c.Locals("is_admin"); adminLocal != nil {
+			isAdmin = adminLocal.(bool)
+		}
+	}
+
+	// Set admin flag in filter for repository
+	filter.IsAdminRequest = isAdmin
+
 	// Парсим query параметры
 	if userID := c.QueryInt("user_id"); userID > 0 {
 		filter.UserID = &userID
 	}
 
+	// Для админа и владельца (если указан userID) не применяем фильтр по активности по умолчанию
+	// Для публичных запросов - применяем
 	if isActive := c.Query("is_active"); isActive != "" {
 		active := isActive == boolValueTrue
+		filter.IsActive = &active
+	} else if !isAdmin && filter.UserID == nil {
+		// Для публичных запросов (не админ и не запрос конкретного пользователя) показываем только активные
+		active := true
 		filter.IsActive = &active
 	}
 
@@ -293,6 +321,7 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 
 	storefronts, total, err := h.service.Search(c.Context(), filter)
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to list storefronts")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.list_failed")
 	}
 

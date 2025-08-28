@@ -31125,7 +31125,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft deletes a storefront (marks as inactive)",
+                "description": "Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal",
                 "tags": [
                     "storefronts"
                 ],
@@ -31138,6 +31138,14 @@
                         "required": true,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Hard delete (permanent removal, admin only). Default: false (soft delete)",
+                        "name": "hard",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
                         }
                     }
                 ],

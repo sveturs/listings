@@ -178,7 +178,7 @@ psql "postgres://postgres:password@localhost:5432/svetubd?sslmode=disable" -c "S
 sudo systemctl restart postgresql
 ```
 
-## Проект: Sve Tu Platform - Marketplace
+## Проект: Sve Tu Platforma - Marketplace
 
 Состоит из
 - frontend: React, NextJS, Tailwind, DaisyUI

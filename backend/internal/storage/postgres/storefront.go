@@ -25,6 +25,7 @@ type StorefrontRepository interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, id int, updates *models.StorefrontUpdateDTO) error
 	Delete(ctx context.Context, id int) error
+	HardDelete(ctx context.Context, id int) error
 
 	// Поиск и фильтрация
 	List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
@@ -438,6 +439,51 @@ func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
+// HardDelete полностью удаляет витрину из базы данных (только для администраторов)
+func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
+	// Начинаем транзакцию для атомарного удаления
+	tx, err := r.db.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Удаляем связанные записи в правильном порядке
+	// 1. Удаляем заказы
+	_, err = tx.Exec(ctx, "DELETE FROM storefront_orders WHERE storefront_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront orders: %w", err)
+	}
+
+	// 2. Удаляем товары
+	_, err = tx.Exec(ctx, "DELETE FROM storefront_products WHERE storefront_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront products: %w", err)
+	}
+
+	// 3. Удаляем сотрудников
+	_, err = tx.Exec(ctx, "DELETE FROM storefront_staff WHERE storefront_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront staff: %w", err)
+	}
+
+	// 4. Удаляем саму витрину
+	result, err := tx.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to hard delete storefront: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
 // List возвращает список витрин с фильтрацией
 func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error) {
 	// Строим динамический запрос
@@ -453,12 +499,24 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		argCount++
 	}
 
+	// Фильтр по активности:
+	// - Если IsActive явно передан, используем его значение
+	// - Если не передан И запрашивает конкретный пользователь (UserID != nil) - показываем ВСЕ его витрины
+	// - Если не передан И это админ запрос - показываем ВСЕ витрины
+	// - Если не передан И это общий публичный запрос - показываем только активные
 	if filter.IsActive != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		args = append(args, *filter.IsActive)
 		argCount++
+	} else if filter.UserID == nil && !filter.IsAdminRequest {
+		// Для публичных запросов (без UserID и не от админа) показываем только активные
+		whereConditions = append(whereConditions, fmt.Sprintf("is_active = $%d", argCount))
+		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
+		args = append(args, true)
+		argCount++
 	}
+	// Если UserID указан и IsActive не указан - показываем ВСЕ витрины пользователя
 
 	if filter.IsVerified != nil {
 		whereConditions = append(whereConditions, fmt.Sprintf("is_verified = $%d", argCount))
@@ -549,7 +607,7 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		}
 	}
 
-	// Основной запрос с подсчетом товаров и средним рейтингом
+	// Основной запрос - используем поля из БД вместо вычисления через подзапросы
 	query := fmt.Sprintf(`
 		SELECT 
 			s.id, s.user_id, s.slug, s.name, s.description,
@@ -558,23 +616,7 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 			s.address, s.city, s.postal_code, s.country, s.latitude, s.longitude,
 			s.settings, s.seo_meta,
 			s.is_active, s.is_verified, s.verification_date,
-			COALESCE(
-				(SELECT AVG(r.rating) 
-				 FROM reviews r 
-				 WHERE r.entity_type = 'storefront_product' 
-				   AND r.entity_id IN (SELECT id FROM storefront_products WHERE storefront_id = s.id)
-				   AND r.status = 'published'
-				), 0
-			) as rating,
-			COALESCE(
-				(SELECT COUNT(*) 
-				 FROM reviews r 
-				 WHERE r.entity_type = 'storefront_product' 
-				   AND r.entity_id IN (SELECT id FROM storefront_products WHERE storefront_id = s.id)
-				   AND r.status = 'published'
-				), 0
-			) as reviews_count,
-			COALESCE((SELECT COUNT(*) FROM storefront_products WHERE storefront_id = s.id AND is_active = true), 0) as products_count, 
+			s.rating, s.reviews_count, s.products_count,
 			s.sales_count, s.views_count,
 			s.subscription_plan, s.subscription_expires_at, s.commission_rate,
 			s.ai_agent_enabled, s.ai_agent_config, s.live_shopping_enabled, s.group_buying_enabled,

@@ -118,19 +118,19 @@ func (s *MarketplaceService) CreateListing(ctx context.Context, listing *models.
 		storefront, err := s.storage.GetStorefrontByID(ctx, *listing.StorefrontID)
 		if err == nil && storefront != nil {
 			// Применяем данные о местоположении из витрины
-			if listing.City == "" && storefront.City != "" {
-				listing.City = storefront.City
-				log.Printf("Using city from storefront: %s", storefront.City)
+			if listing.City == "" && storefront.City != nil && *storefront.City != "" {
+				listing.City = *storefront.City
+				log.Printf("Using city from storefront: %s", *storefront.City)
 			}
 
-			if listing.Country == "" && storefront.Country != "" {
-				listing.Country = storefront.Country
-				log.Printf("Using country from storefront: %s", storefront.Country)
+			if listing.Country == "" && storefront.Country != nil && *storefront.Country != "" {
+				listing.Country = *storefront.Country
+				log.Printf("Using country from storefront: %s", *storefront.Country)
 			}
 
-			if listing.Location == "" && storefront.Address != "" {
-				listing.Location = storefront.Address
-				log.Printf("Using address from storefront: %s", storefront.Address)
+			if listing.Location == "" && storefront.Address != nil && *storefront.Address != "" {
+				listing.Location = *storefront.Address
+				log.Printf("Using address from storefront: %s", *storefront.Address)
 			}
 
 			// Если нет координат
@@ -1026,6 +1026,29 @@ func (s *MarketplaceService) DeleteListing(ctx context.Context, id int, userID i
 	// Вызываем существующий метод для удаления объявления из БД
 	if err := s.storage.DeleteListing(ctx, id, userID); err != nil {
 		return err
+	}
+
+	// Удаляем объявление из OpenSearch
+	if err := s.storage.DeleteListingIndex(ctx, fmt.Sprintf("%d", id)); err != nil {
+		log.Printf("Ошибка удаления объявления из OpenSearch: %v", err)
+		// Не возвращаем ошибку, чтобы не блокировать операцию, если OpenSearch недоступен
+	}
+
+	return nil
+}
+
+// DeleteListingWithAdmin удаляет объявление с учетом прав администратора
+func (s *MarketplaceService) DeleteListingWithAdmin(ctx context.Context, id int, userID int, isAdmin bool) error {
+	// Если пользователь администратор, удаляем без проверки владельца
+	if isAdmin {
+		if err := s.storage.DeleteListingAdmin(ctx, id); err != nil {
+			return err
+		}
+	} else {
+		// Обычное удаление с проверкой владельца
+		if err := s.storage.DeleteListing(ctx, id, userID); err != nil {
+			return err
+		}
 	}
 
 	// Удаляем объявление из OpenSearch

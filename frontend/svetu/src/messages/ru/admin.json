@@ -398,6 +398,8 @@
     "logistics": "Логистика",
     "content": "Контент",
     "listings": "Объявления",
+    "storefronts": "Витрины",
+    "storefrontProducts": "Товары витрин",
     "users": "Пользователи",
     "analytics": "Аналитика",
     "usersDescription": "Управление пользователями",
@@ -692,8 +694,62 @@
   "searchLabel": "Поиск",
   "listings": {
     "title": "Объявления",
-    "comingSoon": "Скоро",
-    "description": "Управление объявлениями"
+    "description": "Управление всеми объявлениями и товарами маркетплейса",
+    "createNew": "Создать объявление",
+    "export": "Экспорт",
+    "stats": {
+      "total": "Всего объявлений",
+      "totalDesc": "За все время",
+      "active": "Активные",
+      "activeDesc": "Доступны для просмотра",
+      "pending": "На модерации",
+      "pendingDesc": "Ожидают проверки",
+      "views": "Просмотры",
+      "viewsDesc": "За последние 30 дней"
+    },
+    "search": {
+      "placeholder": "Поиск по названию, описанию..."
+    },
+    "filter": {
+      "allStatuses": "Все статусы",
+      "allCategories": "Все категории"
+    },
+    "sort": {
+      "dateDesc": "Новые первыми",
+      "dateAsc": "Старые первыми",
+      "priceDesc": "Дорогие первыми",
+      "priceAsc": "Дешевые первыми",
+      "viewsDesc": "Популярные первыми"
+    },
+    "status": {
+      "active": "Активно",
+      "inactive": "Неактивно",
+      "pending": "На модерации",
+      "sold": "Продано"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Фото",
+      "title": "Название",
+      "price": "Цена",
+      "category": "Категория",
+      "user": "Пользователь",
+      "status": "Статус",
+      "views": "Просмотры",
+      "created": "Создано",
+      "actions": "Действия"
+    },
+    "deleteSelected": "Удалить выбранные",
+    "confirmBulkDelete": "Вы уверены, что хотите удалить выбранные объявления?",
+    "deleteModal": {
+      "title": "Удалить объявление",
+      "message": "Вы уверены, что хотите удалить это объявление? Это действие невозможно отменить."
+    },
+    "edit": {
+      "title": "Редактировать объявление",
+      "description": "Изменить информацию об объявлении",
+      "comingSoon": "Функционал редактирования будет доступен в ближайшее время"
+    }
   },
   "analytics": {
     "error": {
@@ -894,7 +950,7 @@
   "required": "[MISSING_RU] required",
   "logistics": {
     "title": "Управление логистикой",
-    "dashboard": "Дашборд",
+    "dashboard": "Панель мониторинга логистики",
     "shipments": {
       "title": "Отправления",
       "description": "Управление и отслеживание всех отправлений",
@@ -907,7 +963,7 @@
     },
     "problems": {
       "title": "Проблемные доставки",
-      "description": "Управление проблемными отправлениями",
+      "description": "Описание",
       "problemType": "Тип проблемы",
       "allTypes": "Все типы",
       "types": {
@@ -930,7 +986,6 @@
       "list": "Список проблем",
       "noProblems": "Нет проблемных отправлений",
       "type": "Тип",
-      "description": "Описание",
       "assignedTo": "Назначено",
       "table": {
         "id": "ID",
@@ -972,40 +1027,24 @@
       "reset": "Сбросить"
     },
     "status": {
-      "pending": "Ожидает",
-      "in_transit": "В пути",
-      "delivered": "Доставлено",
-      "failed": "Не доставлено",
-      "cancelled": "Отменено",
-      "returned": "Возвращено"
+      "processing": "Обработка"
     },
     "table": {
-      "tracking_number": "Трек-номер",
-      "status": "Статус",
-      "provider": "Служба",
-      "recipient": "Получатель",
-      "sender": "Отправитель",
-      "cod": "Наложенный платеж",
-      "weight": "Вес",
-      "created": "Создано",
+      "date": "Дата",
+      "sent": "Отправлено",
       "delivered": "Доставлено",
-      "updated_at": "Обновлено",
-      "destination": "Направление",
-      "actions": "Действия"
+      "in_transit": "В пути",
+      "problems": "Проблемы",
+      "courier_service": "Служба доставки",
+      "shipments": "Отправлений",
+      "success_rate": "Успешность",
+      "avg_time": "Ср. время"
     },
     "actions": {
       "view": "Просмотр",
-      "edit": "Редактировать",
-      "track": "Отследить",
-      "delete": "Удалить",
-      "export": "Экспорт",
-      "new_shipment": "Новое отправление",
-      "resolve": "Решить",
-      "assign": "Назначить",
-      "comments": "Комментарии",
-      "view_details": "Детали",
-      "update_status": "Обновить статус",
-      "contact_courier": "Связаться с курьером"
+      "updateStatus": "Обновить статус",
+      "contact": "Связаться",
+      "printLabel": "Печать этикетки"
     },
     "pagination": {
       "page": "Страница",
@@ -1016,11 +1055,11 @@
     "stats": {
       "today_shipments": "Отправлений сегодня",
       "today_delivered": "Доставлено сегодня",
-      "active_shipments": "Активные отправления",
+      "active_shipments": "В пути",
       "problem_shipments": "Проблемные",
-      "avg_delivery_time": "Среднее время доставки",
-      "delivery_success_rate": "Процент успешных доставок",
-      "weekly_deliveries": "Доставки за неделю",
+      "avg_delivery_time": "Ср. время доставки",
+      "delivery_success_rate": "Успешность доставки",
+      "weekly_deliveries": "Доставки за последние 7 дней",
       "status_distribution": "Распределение по статусам",
       "courier_performance": "Производительность курьерских служб"
     },
@@ -1042,12 +1081,6 @@
     "createdAt": "Создано",
     "statusHistory": "История статусов",
     "failedReason": "Причина неудачи",
-    "actions": {
-      "view": "Просмотр",
-      "updateStatus": "Обновить статус",
-      "contact": "Связаться",
-      "printLabel": "Печать этикетки"
-    },
     "assignModal": {
       "title": "Назначить администратора",
       "selectAdmin": "Выберите администратора",
@@ -1078,20 +1111,6 @@
     "quickActions": {
       "title": "Быстрые действия"
     },
-    "table": {
-      "date": "Дата",
-      "sent": "Отправлено",
-      "delivered": "Доставлено",
-      "in_transit": "В пути",
-      "problems": "Проблемы",
-      "courier_service": "Служба доставки",
-      "shipments": "Отправлений",
-      "success_rate": "Успешность",
-      "avg_time": "Ср. время"
-    },
-    "status": {
-      "processing": "Обработка"
-    },
     "map": {
       "all": "Все",
       "in_transit": "В пути",
@@ -1102,22 +1121,179 @@
       "sender": "Отправитель",
       "receiver": "Получатель",
       "problem": "Проблема"
-    },
-    "dashboard": "Панель мониторинга логистики",
+    }
+  },
+  "storefrontProducts": {
+    "title": "Управление товарами витрин",
+    "description": "Просмотр и управление всеми товарами в витринах",
+    "createNew": "Новый товар",
+    "export": "Экспортировать товары",
+    "import": "Импортировать товары",
     "stats": {
-      "today_shipments": "Отправлений сегодня",
-      "today_delivered": "Доставлено сегодня",
-      "active_shipments": "В пути",
-      "problem_shipments": "Проблемные",
-      "avg_delivery_time": "Ср. время доставки",
-      "delivery_success_rate": "Успешность доставки",
-      "weekly_deliveries": "Доставки за последние 7 дней",
-      "status_distribution": "Распределение по статусам",
-      "courier_performance": "Производительность курьерских служб"
+      "total": "Всего товаров",
+      "totalDesc": "Все товары в системе",
+      "active": "Активные товары",
+      "activeDesc": "Товары доступные для продажи",
+      "outOfStock": "Нет в наличии",
+      "outOfStockDesc": "Товары без остатков",
+      "sales": "Продажи",
+      "salesDesc": "Общее количество продаж"
     },
-    "view_all_shipments": "Просмотр всех отправлений",
-    "problem_shipments": "Проблемные отправления",
-    "export_report": "Экспорт отчета",
-    "monitoring_settings": "Настройки мониторинга"
+    "search": {
+      "placeholder": "Поиск по названию, артикулу или описанию..."
+    },
+    "filter": {
+      "allStatuses": "Все статусы",
+      "allStorefronts": "Все витрины",
+      "allCategories": "Все категории",
+      "inStock": "В наличии",
+      "outOfStock": "Нет в наличии",
+      "lowStock": "Мало на складе"
+    },
+    "sort": {
+      "nameAsc": "Название (А-Я)",
+      "nameDesc": "Название (Я-А)",
+      "priceAsc": "Цена (по возрастанию)",
+      "priceDesc": "Цена (по убыванию)",
+      "dateDesc": "Сначала новые",
+      "dateAsc": "Сначала старые",
+      "stockAsc": "Остаток (по возрастанию)",
+      "stockDesc": "Остаток (по убыванию)",
+      "salesDesc": "Сначала бестселлеры",
+      "salesAsc": "Сначала менее популярные"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Изображение",
+      "name": "Название товара",
+      "sku": "Артикул",
+      "price": "Цена",
+      "stock": "Остаток",
+      "storefront": "Витрина",
+      "status": "Статус",
+      "actions": "Действия",
+      "unlimited": "Неограничено",
+      "outOfStock": "Нет в наличии",
+      "lowStock": "Мало ({count})",
+      "inStock": "В наличии ({count})",
+      "category": "Категория",
+      "sales": "Продажи",
+      "created": "Создано"
+    },
+    "actions": {
+      "edit": "Редактировать",
+      "duplicate": "Дублировать",
+      "delete": "Удалить",
+      "view": "Посмотреть в магазине",
+      "analytics": "Аналитика",
+      "confirmDelete": "Вы уверены что хотите удалить этот товар?",
+      "confirmDeleteDesc": "Это действие нельзя отменить.",
+      "deleteSuccess": "Товар успешно удален",
+      "deleteError": "Не удалось удалить товар",
+      "duplicateSuccess": "Товар успешно дублирован",
+      "duplicateError": "Не удалось дублировать товар"
+    },
+    "status": {
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "draft": "Черновик",
+      "archived": "В архиве"
+    },
+    "noProducts": "Товары не найдены",
+    "noProductsDesc": "Создайте первый товар или измените фильтры",
+    "stockStatus": {
+      "inStock": "В наличии",
+      "outOfStock": "Нет в наличии",
+      "lowStock": "Мало",
+      "unlimited": "Неограничено"
+    },
+    "bulkActions": {
+      "title": "Массовые действия",
+      "activate": "Активировать выбранные",
+      "deactivate": "Деактивировать выбранные",
+      "delete": "Удалить выбранные",
+      "export": "Экспортировать выбранные",
+      "confirmDelete": "Вы уверены что хотите удалить {count} товаров?",
+      "confirmDeleteDesc": "Это действие нельзя отменить.",
+      "success": "Успешно обновлено {count} товаров",
+      "error": "Не удалось обновить товары"
+    },
+    "confirmBulkDelete": "Вы уверены, что хотите удалить выбранные товары?",
+    "deleteModal": {
+      "title": "Удалить товар",
+      "message": "Вы уверены, что хотите удалить этот товар? Это действие нельзя отменить."
+    },
+    "noProducts": "Нет товаров для отображения",
+    "noStorefronts": "У вас пока нет витрин",
+    "noStorefrontsDescription": "Создайте вашу первую витрину, чтобы начать продавать товары",
+    "createStorefront": "Создать витрину"
+  },
+  "storefronts": {
+    "title": "Управление витринами",
+    "description": "Просмотр и управление всеми витринами пользователей",
+    "createNew": "Создать витрину",
+    "export": "Экспортировать",
+    "searchPlaceholder": "Поиск витрин...",
+    "active": "Активная",
+    "inactive": "Неактивная",
+    "verified": "Проверена",
+    "unverified": "Не проверена",
+    "view": "Просмотреть",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "viewProducts": "Товары",
+    "bulkActions": "Массовые действия",
+    "activateSelected": "Активировать выбранные",
+    "deactivateSelected": "Деактивировать выбранные",
+    "deleteSelected": "Удалить выбранные",
+    "confirmBulkDelete": "Вы уверены, что хотите удалить выбранные витрины?",
+    "confirmDeleteTitle": "Удалить витрину",
+    "confirmDeleteMessage": "Вы уверены, что хотите удалить эту витрину? Это действие нельзя отменить.",
+    "noData": "Нет данных для отображения",
+    "filters": {
+      "allStatus": "Все статусы",
+      "active": "Активные",
+      "inactive": "Неактивные",
+      "allVerification": "Все",
+      "verified": "Проверенные",
+      "unverified": "Не проверенные"
+    },
+    "sort": {
+      "newest": "Самые новые",
+      "oldest": "Самые старые",
+      "nameAsc": "Имя (А-Я)",
+      "nameDesc": "Имя (Я-А)",
+      "mostProducts": "Больше товаров",
+      "mostSales": "Больше продаж",
+      "bestRating": "Лучший рейтинг"
+    },
+    "table": {
+      "name": "Название",
+      "owner": "Владелец",
+      "location": "Местоположение",
+      "products": "Товары",
+      "sales": "Продажи",
+      "rating": "Рейтинг",
+      "status": "Статус",
+      "verified": "Проверка",
+      "actions": "Действия"
+    },
+    "stats": {
+      "total": "Всего витрин",
+      "totalDesc": "Все витрины в системе",
+      "active": "Активные",
+      "activeDesc": "Работающие витрины",
+      "verified": "Проверенные",
+      "verifiedDesc": "Проверенные витрины",
+      "products": "Всего товаров",
+      "productsDesc": "Товаров во всех витринах",
+      "sales": "Всего продаж",
+      "salesDesc": "Продаж во всех витринах"
+    },
+    "deleteType": "Тип удаления",
+    "softDelete": "Мягкое удаление",
+    "hardDelete": "Жесткое удаление",
+    "softDeleteDesc": "Деактивирует витрину (можно восстановить)",
+    "hardDeleteDesc": "Полностью удаляет витрину из базы данных (необратимо)"
   }
 }

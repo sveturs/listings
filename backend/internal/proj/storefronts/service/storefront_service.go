@@ -276,7 +276,38 @@ func (s *StorefrontServiceImpl) Update(ctx context.Context, userID int, storefro
 
 // Delete удаляет витрину
 func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefrontID int) error {
-	// Проверяем является ли пользователь владельцем
+	// Проверяем, является ли пользователь администратором из контекста
+	if isAdmin, ok := ctx.Value("is_admin").(bool); ok && isAdmin {
+		// Проверяем флаг жесткого удаления из контекста
+		hardDelete, _ := ctx.Value("hard_delete").(bool)
+
+		if hardDelete {
+			// Администратор выбрал жесткое удаление
+			logger.Info().Msgf("Admin user %d hard deleting storefront %d", userID, storefrontID)
+
+			// Жестко удаляем витрину (полное удаление из БД)
+			if err := s.repo.HardDelete(ctx, storefrontID); err != nil {
+				return fmt.Errorf("ошибка жесткого удаления витрины: %w", err)
+			}
+		} else {
+			// Администратор выбрал мягкое удаление
+			logger.Info().Msgf("Admin user %d soft deleting storefront %d", userID, storefrontID)
+
+			// Мягкое удаление (деактивация)
+			if err := s.repo.Delete(ctx, storefrontID); err != nil {
+				return fmt.Errorf("ошибка мягкого удаления витрины: %w", err)
+			}
+		}
+
+		// Удаляем из OpenSearch
+		if err := s.services.Storage().DeleteStorefrontIndex(ctx, storefrontID); err != nil {
+			logger.Error().Err(err).Msg("Ошибка удаления витрины из OpenSearch")
+		}
+
+		return nil
+	}
+
+	// Для обычных пользователей проверяем является ли пользователь владельцем
 	isOwner, err := s.repo.IsOwner(ctx, storefrontID, userID)
 	if err != nil {
 		return fmt.Errorf("ошибка проверки владельца: %w", err)

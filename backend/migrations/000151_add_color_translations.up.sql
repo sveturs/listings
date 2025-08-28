@@ -1,0 +1,38 @@
+-- Добавляем переводы для значений цветов в таблицу attribute_option_translations
+INSERT INTO attribute_option_translations (attribute_id, option_value, language_code, translation) VALUES
+-- Английский
+(2004, 'grey', 'en', 'Grey'),
+(2004, 'grey', 'ru', 'Серый'),
+(2004, 'grey', 'sr', 'Сива'),
+(2004, 'silver', 'en', 'Silver'),
+(2004, 'silver', 'ru', 'Серебристый'),
+(2004, 'silver', 'sr', 'Сребрна'),
+(2004, 'black', 'en', 'Black'),
+(2004, 'black', 'ru', 'Черный'),
+(2004, 'black', 'sr', 'Црна'),
+(2004, 'white', 'en', 'White'),
+(2004, 'white', 'ru', 'Белый'),
+(2004, 'white', 'sr', 'Бела'),
+(2004, 'blue', 'en', 'Blue'),
+(2004, 'blue', 'ru', 'Синий'),
+(2004, 'blue', 'sr', 'Плава'),
+(2004, 'red', 'en', 'Red'),
+(2004, 'red', 'ru', 'Красный'),
+(2004, 'red', 'sr', 'Црвена'),
+(2004, 'green', 'en', 'Green'),
+(2004, 'green', 'ru', 'Зеленый'),
+(2004, 'green', 'sr', 'Зелена'),
+(2004, 'yellow', 'en', 'Yellow'),
+(2004, 'yellow', 'ru', 'Желтый'),
+(2004, 'yellow', 'sr', 'Жута'),
+(2004, 'brown', 'en', 'Brown'),
+(2004, 'brown', 'ru', 'Коричневый'),
+(2004, 'brown', 'sr', 'Браон'),
+(2004, 'purple', 'en', 'Purple'),
+(2004, 'purple', 'ru', 'Фиолетовый'),
+(2004, 'purple', 'sr', 'Љубичаста'),
+(2004, 'other', 'en', 'Other'),
+(2004, 'other', 'ru', 'Другой'),
+(2004, 'other', 'sr', 'Остало')
+ON CONFLICT (attribute_id, option_value, language_code) DO UPDATE 
+SET translation = EXCLUDED.translation;

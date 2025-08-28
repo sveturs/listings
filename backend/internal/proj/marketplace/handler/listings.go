@@ -610,14 +610,37 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
+	// Получаем полный профиль пользователя с ролью
+	isAdmin := false
+	userProfile, err := h.services.User().GetUserProfile(c.Context(), userID)
+	if err == nil && userProfile != nil {
+		// Проверяем роль пользователя - админ или супер админ
+		// Флаг IsAdmin уже установлен в GetUserProfile на основе роли
+		if userProfile.IsAdmin {
+			isAdmin = true
+			roleName := ""
+			if userProfile.Role != nil {
+				roleName = userProfile.Role.Name
+			}
+			logger.Info().
+				Int("userID", userID).
+				Str("email", userProfile.Email).
+				Bool("isAdmin", userProfile.IsAdmin).
+				Str("role", roleName).
+				Msg("Admin access for deletion")
+		}
+	} else {
+		logger.Error().Err(err).Int("userID", userID).Msg("Failed to get user profile")
+	}
+
 	// Получаем ID объявления из параметров URL
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
-	// Удаляем объявление
-	err = h.marketplaceService.DeleteListing(c.Context(), id, userID)
+	// Удаляем объявление (передаем флаг администратора)
+	err = h.marketplaceService.DeleteListingWithAdmin(c.Context(), id, userID, isAdmin)
 	if err != nil {
 		logger.Error().Err(err).Int("listingId", id).Msg("Failed to delete listing")
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "permission") {

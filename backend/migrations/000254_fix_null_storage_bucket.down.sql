@@ -1,0 +1,4 @@
+-- Откат миграции не требуется, так как мы только заполняем NULL значения
+-- При необходимости можно вернуть NULL обратно, но это нежелательно
+-- UPDATE marketplace_images SET storage_bucket = NULL WHERE storage_bucket = 'listings' OR storage_bucket = '';
+-- UPDATE storefront_product_images SET storage_bucket = NULL WHERE storage_bucket = 'listings' OR storage_bucket = '';
