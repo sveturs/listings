@@ -82,7 +82,7 @@ CREATE UNIQUE INDEX user_rating_distribution_user_id_idx ON public.user_rating_d
 CREATE UNIQUE INDEX user_rating_summary_user_id_idx ON public.user_rating_summary USING btree (user_id);
 CREATE UNIQUE INDEX user_ratings_user_id_idx ON public.user_ratings USING btree (user_id);
 SELECT pg_catalog.setval('public.address_change_log_id_seq', 1, false);
-SELECT pg_catalog.setval('public.admin_users_id_seq', 24, true);
+SELECT pg_catalog.setval('public.admin_users_id_seq', 25, true);
 SELECT pg_catalog.setval('public.attribute_group_items_id_seq', 1, false);
 SELECT pg_catalog.setval('public.attribute_groups_id_seq', 1, false);
 SELECT pg_catalog.setval('public.attribute_option_translations_id_seq', 3699, true);

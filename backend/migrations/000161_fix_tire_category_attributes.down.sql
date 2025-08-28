@@ -1,3 +1,0 @@
--- This migration removes incorrect attributes, so rollback would re-add them
--- Since we don't want to restore incorrect mappings, this is intentionally empty
--- The attributes will remain unmapped to tire categories
