@@ -250,6 +250,7 @@ func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
 
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
+	var storageBucket, publicURL sql.NullString
 
 	err := db.pool.QueryRow(ctx, `
 		SELECT id, listing_id, file_path, file_name, file_size, content_type, is_main,
@@ -258,14 +259,22 @@ func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*mode
 		WHERE id = $1
 	`, imageID).Scan(
 		&image.ID, &image.ListingID, &image.FilePath, &image.FileName, &image.FileSize,
-		&image.ContentType, &image.IsMain, &image.StorageType, &image.StorageBucket,
-		&image.PublicURL, &image.CreatedAt,
+		&image.ContentType, &image.IsMain, &image.StorageType, &storageBucket,
+		&publicURL, &image.CreatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("image not found")
 		}
 		return nil, err
+	}
+
+	// Handle nullable fields
+	if storageBucket.Valid {
+		image.StorageBucket = storageBucket.String
+	}
+	if publicURL.Valid {
+		image.PublicURL = publicURL.String
 	}
 
 	return &image, nil
@@ -519,6 +528,10 @@ func (db *Database) UpdateListing(ctx context.Context, listing *models.Marketpla
 
 func (db *Database) DeleteListing(ctx context.Context, id int, userID int) error {
 	return db.marketplaceDB.DeleteListing(ctx, id, userID)
+}
+
+func (db *Database) DeleteListingAdmin(ctx context.Context, id int) error {
+	return db.marketplaceDB.DeleteListingAdmin(ctx, id)
 }
 
 func (db *Database) GetCategories(ctx context.Context) ([]models.MarketplaceCategory, error) {
@@ -1398,23 +1411,31 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 	return response, nil
 }
 
+// stringPtr creates a pointer to a string
+func stringPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 // Storefront methods
 func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *models.StorefrontCreateDTO) (*models.Storefront, error) {
 	storefront := &models.Storefront{
 		UserID:           userID,
 		Slug:             dto.Slug,
 		Name:             dto.Name,
-		Description:      dto.Description,
-		LogoURL:          "", // Будет заполнено после загрузки
-		BannerURL:        "", // Будет заполнено после загрузки
+		Description:      stringPtr(dto.Description),
+		LogoURL:          stringPtr(""), // Будет заполнено после загрузки
+		BannerURL:        stringPtr(""), // Будет заполнено после загрузки
 		Theme:            dto.Theme,
-		Phone:            dto.Phone,
-		Email:            dto.Email,
-		Website:          dto.Website,
-		Address:          dto.Location.FullAddress,
-		City:             dto.Location.City,
-		PostalCode:       dto.Location.PostalCode,
-		Country:          dto.Location.Country,
+		Phone:            stringPtr(dto.Phone),
+		Email:            stringPtr(dto.Email),
+		Website:          stringPtr(dto.Website),
+		Address:          stringPtr(dto.Location.FullAddress),
+		City:             stringPtr(dto.Location.City),
+		PostalCode:       stringPtr(dto.Location.PostalCode),
+		Country:          stringPtr(dto.Location.Country),
 		Latitude:         &dto.Location.BuildingLat,
 		Longitude:        &dto.Location.BuildingLng,
 		Settings:         dto.Settings,

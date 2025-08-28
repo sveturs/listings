@@ -383,26 +383,29 @@
     "isActive": "Is Active"
   },
   "sections": {
-    "dashboard": "Dashboard",
-    "catalog": "Catalog",
-    "categories": "Categories",
-    "attributes": "Attributes",
-    "variantAttributes": "Variant Attributes",
-    "attributeGroups": "Attribute Groups",
-    "system": "System",
-    "search": "Search",
-    "logistics": "Logistics",
-    "content": "Content",
-    "listings": "Listings",
-    "users": "Users",
-    "analytics": "Analytics",
-    "usersDescription": "Users Description",
-    "listingsDescription": "Listings Description",
-    "categoriesDescription": "Categories Description",
-    "attributesDescription": "Attributes Description",
-    "attributeGroupsDescription": "Attribute Groups Description",
-    "translations": "Translation Management",
-    "translationsDescription": "Translation management system, AI translations and synchronization"
+    "dashboard": "Kontrolna tabla",
+    "catalog": "Katalog",
+    "categories": "Kategorije",
+    "attributes": "Atributi",
+    "variantAttributes": "Atributi varijanti",
+    "attributeGroups": "Grupe atributa",
+    "system": "Sistem",
+    "search": "Pretraga",
+    "logistics": "Logistika",
+    "content": "Sadržaj",
+    "listings": "Oglasi",
+    "storefronts": "Radnje",
+    "storefrontProducts": "Proizvodi vitrina",
+    "users": "Korisnici",
+    "analytics": "Analitika",
+    "usersDescription": "Upravljanje korisnicima sistema",
+    "listingsDescription": "Upravljanje ogласima na platformi",
+    "storefrontProductsDescription": "Upravljanje proizvodima u vitrinama",
+    "categoriesDescription": "Upravljanje kategorijama",
+    "attributesDescription": "Upravljanje atributima",
+    "attributeGroupsDescription": "Upravljanje grupama atributa",
+    "translations": "Upravljanje prevodima",
+    "translationsDescription": "Sistem upravljanja prevodima, AI prevođenje i sinhronizacija"
   },
   "categories": {
     "title": "Title",
@@ -465,9 +468,150 @@
     "dragToReorder": "Drag To Reorder"
   },
   "listings": {
-    "title": "Title",
-    "comingSoon": "Coming Soon",
-    "description": "Description"
+    "title": "Upravljanje ogласima",
+    "description": "Pregled i upravljanje svim ogласima na platformi",
+    "createNew": "Novi oglas",
+    "export": "Izvezi",
+    "comingSoon": "Uskoro",
+    "stats": {
+      "total": "Ukupno oglasa",
+      "totalDesc": "Svi oglasi u sistemu",
+      "active": "Aktivni oglasi",
+      "activeDesc": "Oglasi dostupni za pregled",
+      "pending": "Na čekanju",
+      "pendingDesc": "Čekaju odobrenje",
+      "views": "Pregledi",
+      "viewsDesc": "Ukupan broj pregleda"
+    },
+    "search": {
+      "placeholder": "Pretražite po nazivu ili opisu..."
+    },
+    "filter": {
+      "allStatuses": "Svi statusi",
+      "allCategories": "Sve kategorije"
+    },
+    "sort": {
+      "dateDesc": "Najnoviji prvi",
+      "dateAsc": "Najstariji prvi",
+      "priceDesc": "Najviša cena",
+      "priceAsc": "Najniža cena",
+      "viewsDesc": "Najviše pregleda"
+    },
+    "status": {
+      "active": "Aktivan",
+      "pending": "Na čekanju",
+      "sold": "Prodato",
+      "inactive": "Neaktivan"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Slika",
+      "title": "Naslov",
+      "price": "Cena",
+      "category": "Kategorija",
+      "user": "Korisnik",
+      "status": "Status",
+      "views": "Pregledi",
+      "created": "Kreirano",
+      "actions": "Akcije"
+    },
+    "deleteModal": {
+      "title": "Brisanje oglasa",
+      "message": "Da li ste sigurni da želite da obrišete ovaj oglas? Ova akcija se ne može opozvati."
+    },
+    "confirmBulkDelete": "Da li ste sigurni da želite da obrišete izabrane oglase?",
+    "deleteSelected": "Obriši izabrane"
+  },
+  "storefrontProducts": {
+    "title": "Upravljanje proizvodima vitrina",
+    "description": "Pregled i upravljanje svim proizvodima u vitrinima",
+    "createNew": "Novi proizvod",
+    "export": "Izvezi proizvode",
+    "import": "Uvezi proizvode",
+    "stats": {
+      "total": "Ukupno proizvoda",
+      "totalDesc": "Svi proizvodi u sistemu",
+      "active": "Aktivni proizvodi",
+      "activeDesc": "Proizvodi dostupni za prodaju",
+      "outOfStock": "Nema na lageru",
+      "outOfStockDesc": "Proizvodi bez zaliha",
+      "sales": "Prodaje",
+      "salesDesc": "Ukupan broj prodaja"
+    },
+    "search": {
+      "placeholder": "Pretražite po nazivu, SKU ili opisu..."
+    },
+    "filter": {
+      "allStatuses": "Svi statusi",
+      "allStorefronts": "Sve vitrine",
+      "allCategories": "Sve kategorije",
+      "inStock": "Na lageru",
+      "outOfStock": "Nema na lageru",
+      "lowStock": "Male zalihe"
+    },
+    "sort": {
+      "nameAsc": "Naziv (A-Z)",
+      "nameDesc": "Naziv (Z-A)",
+      "priceAsc": "Najniža cena",
+      "priceDesc": "Najviša cena",
+      "stockAsc": "Najmanje zaliha",
+      "stockDesc": "Najviše zaliha",
+      "salesDesc": "Najprodavaniji",
+      "dateDesc": "Najnoviji prvi",
+      "dateAsc": "Najstariji prvi"
+    },
+    "status": {
+      "active": "Aktivan",
+      "inactive": "Neaktivan",
+      "draft": "Nacrt",
+      "archived": "Arhiviran"
+    },
+    "table": {
+      "id": "ID",
+      "image": "Slika",
+      "name": "Naziv proizvoda",
+      "sku": "SKU",
+      "price": "Cena",
+      "stock": "Zalihe",
+      "storefront": "Vitrina",
+      "category": "Kategorija",
+      "status": "Status",
+      "sales": "Prodaje",
+      "created": "Kreirano",
+      "actions": "Akcije"
+    },
+    "stockStatus": {
+      "inStock": "Na lageru",
+      "outOfStock": "Nema",
+      "lowStock": "Malo",
+      "unlimited": "Neograničeno"
+    },
+    "bulkActions": {
+      "title": "Grupne akcije",
+      "activate": "Aktiviraj izabrane",
+      "deactivate": "Deaktiviraj izabrane",
+      "delete": "Obriši izabrane",
+      "updateStock": "Ažuriraj zalihe",
+      "updatePrice": "Promeni cenu",
+      "moveToCategory": "Premesti u kategoriju"
+    },
+    "confirmBulkDelete": "Da li ste sigurni da želite da obrišete izabrane proizvode?",
+    "deleteModal": {
+      "title": "Brisanje proizvoda",
+      "message": "Da li ste sigurni da želite da obrišete ovaj proizvod? Ova akcija se ne može opozvati.",
+      "bulkMessage": "Da li ste sigurni da želite da obrišete {count} proizvoda?"
+    },
+    "editModal": {
+      "title": "Izmeni proizvod",
+      "quickEdit": "Brza izmena",
+      "fullEdit": "Potpuna izmena"
+    },
+    "confirmBulkDelete": "Da li ste sigurni da želite da obrišete izabrane proizvode?",
+    "deleteSelected": "Obriši izabrane ({count})",
+    "noProducts": "Nema proizvoda za prikaz",
+    "noStorefronts": "Još nemate nijednu vitrinu",
+    "noStorefrontsDescription": "Kreirajte vašu prvu vitrinu da biste počeli prodavati proizvode",
+    "createStorefront": "Kreiraj vitrinu"
   },
   "users": {
     "title": "User Management",
@@ -1085,5 +1229,73 @@
     "problem_shipments": "Problem Shipments",
     "export_report": "Export Report",
     "monitoring_settings": "Monitoring Settings"
+  },
+  "storefronts": {
+    "title": "Upravljanje radnjama",
+    "description": "Pregled i upravljanje svim korisničkim radnjama",
+    "createNew": "Napravi radnju",
+    "export": "Izvezi",
+    "searchPlaceholder": "Pretraži radnje...",
+    "active": "Aktivna",
+    "inactive": "Neaktivna",
+    "verified": "Verifikovana",
+    "unverified": "Neverifikovana",
+    "view": "Pregledaj",
+    "edit": "Izmeni",
+    "delete": "Obriši",
+    "viewProducts": "Proizvodi",
+    "bulkActions": "Grupne akcije",
+    "activateSelected": "Aktiviraj izabrane",
+    "deactivateSelected": "Deaktiviraj izabrane",
+    "deleteSelected": "Obriši izabrane",
+    "confirmBulkDelete": "Da li ste sigurni da želite da obrišete izabrane radnje?",
+    "confirmDeleteTitle": "Obriši radnju",
+    "confirmDeleteMessage": "Da li ste sigurni da želite da obrišete ovu radnju? Ova akcija se ne može poništiti.",
+    "noData": "Nema podataka za prikaz",
+    "filters": {
+      "allStatus": "Svi statusi",
+      "active": "Aktivne",
+      "inactive": "Neaktivne",
+      "allVerification": "Sve",
+      "verified": "Verifikovane",
+      "unverified": "Neverifikovane"
+    },
+    "sort": {
+      "newest": "Najnovije",
+      "oldest": "Najstarije",
+      "nameAsc": "Ime (A-Ž)",
+      "nameDesc": "Ime (Ž-A)",
+      "mostProducts": "Najviše proizvoda",
+      "mostSales": "Najviše prodaja",
+      "bestRating": "Najbolja ocena"
+    },
+    "table": {
+      "name": "Naziv",
+      "owner": "Vlasnik",
+      "location": "Lokacija",
+      "products": "Proizvodi",
+      "sales": "Prodaje",
+      "rating": "Ocena",
+      "status": "Status",
+      "verified": "Verifikovan",
+      "actions": "Akcije"
+    },
+    "stats": {
+      "total": "Ukupno radnji",
+      "totalDesc": "Sve radnje u sistemu",
+      "active": "Aktivne",
+      "activeDesc": "Trenutno aktivne radnje",
+      "verified": "Verifikovane",
+      "verifiedDesc": "Verifikovane radnje",
+      "products": "Ukupno proizvoda",
+      "productsDesc": "Proizvoda u svim radnjama",
+      "sales": "Ukupno prodaja",
+      "salesDesc": "Prodaja u svim radnjama"
+    },
+    "deleteType": "Tip brisanja",
+    "softDelete": "Meko brisanje",
+    "hardDelete": "Trvrdo brisanje",
+    "softDeleteDesc": "Deaktivira radnju (može se vratiti)",
+    "hardDeleteDesc": "Trajno uklanja radnju iz baze podataka (nepovratno)"
   }
 }

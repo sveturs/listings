@@ -223,7 +223,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	}
 
 	// Получаем ID изображения из параметров URL
-	imageID, err := strconv.Atoi(c.Params("id"))
+	imageID, err := strconv.Atoi(c.Params("image_id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}

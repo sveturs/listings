@@ -292,14 +292,26 @@ func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]mod
 	var images []models.MarketplaceImage
 	for rows.Next() {
 		var image models.MarketplaceImage
+		var storageBucket sql.NullString
+		var publicURL sql.NullString
+
 		err := rows.Scan(
 			&image.ID, &image.ListingID, &image.FilePath, &image.FileName,
 			&image.FileSize, &image.ContentType, &image.IsMain, &image.CreatedAt,
-			&image.StorageType, &image.StorageBucket, &image.PublicURL,
+			&image.StorageType, &storageBucket, &publicURL,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		// Обработка NULL значений
+		if storageBucket.Valid {
+			image.StorageBucket = storageBucket.String
+		}
+		if publicURL.Valid {
+			image.PublicURL = publicURL.String
+		}
+
 		images = append(images, image)
 	}
 
@@ -1087,29 +1099,270 @@ func (s *Storage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, 
 }
 
 func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
-	// Сначала удаляем записи из избранного
-	_, err := s.pool.Exec(ctx, `
-        DELETE FROM marketplace_favorites
-        WHERE listing_id = $1
-    `, id)
+	// Начинаем транзакцию для атомарного удаления
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("error removing listing from favorites: %w", err)
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Проверяем владельца и получаем изображения для удаления
+	var listingUserID int
+	err = tx.QueryRow(ctx, `
+		SELECT user_id FROM marketplace_listings WHERE id = $1
+	`, id).Scan(&listingUserID)
+	if err != nil {
+		return fmt.Errorf("listing not found: %w", err)
+	}
+	if listingUserID != userID {
+		return fmt.Errorf("you don't have permission to delete this listing")
 	}
 
-	// Удаляем объявление
-	result, err := s.pool.Exec(ctx, `
-        DELETE FROM marketplace_listings
-        WHERE id = $1 AND user_id = $2
-    `, id, userID)
+	// Получаем список изображений для удаления из MinIO
+	rows, err := tx.Query(ctx, `
+		SELECT file_path FROM marketplace_images WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error getting images: %w", err)
+	}
+	var imagePaths []string
+	for rows.Next() {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			log.Printf("Error scanning image path: %v", err)
+			continue
+		}
+		imagePaths = append(imagePaths, path)
+	}
+	rows.Close()
+
+	// Удаляем записи из избранного
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_favorites WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing from favorites: %w", err)
+	}
+
+	// Удаляем переводы
+	_, err = tx.Exec(ctx, `
+		DELETE FROM translations 
+		WHERE entity_type = 'listing' AND entity_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing translations: %w", err)
+	}
+
+	// Удаляем отзывы
+	_, err = tx.Exec(ctx, `
+		DELETE FROM reviews 
+		WHERE entity_type = 'marketplace_listing' AND entity_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing reviews: %w", err)
+	}
+
+	// Удаляем геоданные
+	_, err = tx.Exec(ctx, `
+		DELETE FROM listings_geo WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing geo data: %v", err)
+		// Не прерываем, т.к. таблица может не существовать
+	}
+
+	// Удаляем атрибуты объявления
+	_, err = tx.Exec(ctx, `
+		DELETE FROM listing_attribute_values WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing attribute values: %v", err)
+		// Не прерываем, т.к. таблица может не существовать
+	}
+
+	// Удаляем сообщения чата
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_messages WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing chat messages: %v", err)
+	}
+
+	// Удаляем чаты
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_chats WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing chats: %v", err)
+	}
+
+	// Удаляем изображения из БД (каскадное удаление должно сработать для marketplace_listings)
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_images WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing images: %w", err)
+	}
+
+	// Удаляем само объявление
+	result, err := tx.Exec(ctx, `
+		DELETE FROM marketplace_listings WHERE id = $1
+	`, id)
 	if err != nil {
 		return fmt.Errorf("error deleting listing: %w", err)
 	}
 
 	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("listing not found or you don't have permission to delete it")
+		return fmt.Errorf("listing not found")
 	}
 
+	// Коммитим транзакцию
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
+
+	// Логируем информацию об изображениях для удаления из MinIO
+	// Фактическое удаление изображений из MinIO происходит в сервисном слое
+	if len(imagePaths) > 0 {
+		log.Printf("Images marked for deletion from MinIO for listing %d: %v", id, imagePaths)
+		// Изображения будут удалены в методе сервиса после успешного удаления из БД
+	}
+
+	log.Printf("Successfully deleted listing %d with all related data from database", id)
+	return nil
+}
+
+// DeleteListingAdmin удаляет объявление без проверки владельца (для администраторов)
+func (s *Storage) DeleteListingAdmin(ctx context.Context, id int) error {
+	// Начинаем транзакцию для атомарного удаления
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Проверяем существование объявления
+	var exists bool
+	err = tx.QueryRow(ctx, `
+		SELECT EXISTS(SELECT 1 FROM marketplace_listings WHERE id = $1)
+	`, id).Scan(&exists)
+	if err != nil || !exists {
+		return fmt.Errorf("listing not found")
+	}
+
+	// Получаем список изображений для удаления из MinIO
+	rows, err := tx.Query(ctx, `
+		SELECT file_path FROM marketplace_images WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error getting images: %w", err)
+	}
+	var imagePaths []string
+	for rows.Next() {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			log.Printf("Error scanning image path: %v", err)
+			continue
+		}
+		imagePaths = append(imagePaths, path)
+	}
+	rows.Close()
+
+	// Удаляем записи из избранного
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_favorites WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing from favorites: %w", err)
+	}
+
+	// Удаляем переводы
+	_, err = tx.Exec(ctx, `
+		DELETE FROM translations 
+		WHERE entity_type = 'listing' AND entity_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing translations: %w", err)
+	}
+
+	// Удаляем отзывы
+	_, err = tx.Exec(ctx, `
+		DELETE FROM reviews 
+		WHERE entity_type = 'marketplace_listing' AND entity_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing reviews: %w", err)
+	}
+
+	// Удаляем геоданные
+	_, err = tx.Exec(ctx, `
+		DELETE FROM listings_geo WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing geo data: %v", err)
+		// Не прерываем, т.к. таблица может не существовать
+	}
+
+	// Удаляем атрибуты объявления
+	_, err = tx.Exec(ctx, `
+		DELETE FROM listing_attribute_values WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing attribute values: %v", err)
+		// Не прерываем, т.к. таблица может не существовать
+	}
+
+	// Удаляем сообщения чата
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_messages WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing chat messages: %v", err)
+	}
+
+	// Удаляем чаты
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_chats WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		log.Printf("Error removing chats: %v", err)
+	}
+
+	// Удаляем изображения из БД (каскадное удаление должно сработать для marketplace_listings)
+	_, err = tx.Exec(ctx, `
+		DELETE FROM marketplace_images WHERE listing_id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error removing images: %w", err)
+	}
+
+	// Удаляем само объявление (без проверки user_id для админа)
+	result, err := tx.Exec(ctx, `
+		DELETE FROM marketplace_listings WHERE id = $1
+	`, id)
+	if err != nil {
+		return fmt.Errorf("error deleting listing: %w", err)
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("listing not found")
+	}
+
+	// Коммитим транзакцию
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
+	}
+
+	// Логируем информацию об изображениях для удаления из MinIO
+	// Фактическое удаление изображений из MinIO происходит в сервисном слое
+	if len(imagePaths) > 0 {
+		log.Printf("Admin: Images marked for deletion from MinIO for listing %d: %v", id, imagePaths)
+		// Изображения будут удалены в методе сервиса после успешного удаления из БД
+	}
+
+	log.Printf("Admin successfully deleted listing %d with all related data from database", id)
 	return nil
 }
 

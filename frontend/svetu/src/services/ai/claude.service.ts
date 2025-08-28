@@ -41,11 +41,10 @@ export class ClaudeAIService {
   constructor() {
     this.apiKey = config.claudeApiKey || '';
     console.log(
-      'Claude API key configured:',
-      !!this.apiKey,
+      'Claude API:',
       this.apiKey
-        ? 'Key starts with: ' + this.apiKey.substring(0, 10) + '...'
-        : 'No key'
+        ? 'Key configured, starts with: ' + this.apiKey.substring(0, 10) + '...'
+        : 'Using mock mode (no key configured)'
     );
   }
 

@@ -26191,11 +26191,14 @@ export interface paths {
     post?: never;
     /**
      * Delete storefront
-     * @description Soft deletes a storefront (marks as inactive)
+     * @description Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal
      */
     delete: {
       parameters: {
-        query?: never;
+        query?: {
+          /** @description Hard delete (permanent removal, admin only). Default: false (soft delete) */
+          hard?: boolean;
+        };
         header?: never;
         path: {
           /** @description Storefront ID */

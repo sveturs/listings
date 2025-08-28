@@ -736,6 +736,7 @@ func (ts *testStorage) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, e
 }
 func (ts *testStorage) AddAdmin(ctx context.Context, admin *models.AdminUser) error { return nil }
 func (ts *testStorage) RemoveAdmin(ctx context.Context, email string) error         { return nil }
+func (ts *testStorage) DeleteListingAdmin(ctx context.Context, listingID int) error { return nil }
 func (ts *testStorage) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
 	return nil, ErrNotImplemented
 }

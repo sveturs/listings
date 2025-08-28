@@ -474,6 +474,13 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 		})
 	}
 
+	// Проверяем, является ли пользователь администратором
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	if isAdmin {
+		// Администраторы имеют полный доступ ко всем витринам
+		return nil
+	}
+
 	// Получаем витрину для проверки владельца
 	storefront, err := m.services.Storefront().GetByID(c.Context(), storefrontID)
 	if err != nil {

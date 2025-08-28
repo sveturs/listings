@@ -400,7 +400,10 @@ export default function AIPoweredListingCreationPage() {
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
-      img.crossOrigin = 'anonymous';
+      // Don't set crossOrigin for blob URLs
+      if (!imageUrl.startsWith('blob:')) {
+        img.crossOrigin = 'anonymous';
+      }
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -410,7 +413,10 @@ export default function AIPoweredListingCreationPage() {
         const base64 = canvas.toDataURL('image/jpeg', 0.8);
         resolve(base64.split(',')[1]); // Remove data:image/jpeg;base64, prefix
       };
-      img.onerror = reject;
+      img.onerror = (error) => {
+        console.error('Error loading image:', error);
+        reject(error);
+      };
       img.src = imageUrl;
     });
   };

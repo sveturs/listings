@@ -1289,14 +1289,14 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 			}
 
 			if needStorefrontInfo {
-				if listing.City == "" && storefront.City != "" {
-					doc["city"] = storefront.City
+				if listing.City == "" && storefront.City != nil && *storefront.City != "" {
+					doc["city"] = *storefront.City
 				}
-				if listing.Country == "" && storefront.Country != "" {
-					doc["country"] = storefront.Country
+				if listing.Country == "" && storefront.Country != nil && *storefront.Country != "" {
+					doc["country"] = *storefront.Country
 				}
-				if listing.Location == "" && storefront.Address != "" {
-					doc["location"] = storefront.Address
+				if listing.Location == "" && storefront.Address != nil && *storefront.Address != "" {
+					doc["location"] = *storefront.Address
 				}
 				if (listing.Latitude == nil || listing.Longitude == nil ||
 					*listing.Latitude == 0 || *listing.Longitude == 0) &&

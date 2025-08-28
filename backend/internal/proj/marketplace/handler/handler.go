@@ -268,6 +268,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Delete("/listings/:id", h.Listings.DeleteListing)
 	marketplaceProtected.Post("/listings/check-slug", h.Listings.CheckSlugAvailability)
 	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)
+	marketplaceProtected.Delete("/listings/:id/images/:image_id", h.Images.DeleteImage)
 	marketplaceProtected.Post("/listings/:id/favorite", h.Favorites.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", h.Favorites.RemoveFromFavorites)
 	marketplaceProtected.Get("/favorites", h.Favorites.GetFavorites)

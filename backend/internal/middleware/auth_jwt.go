@@ -70,6 +70,9 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		}
 	}
 
+	// Определяем, является ли это публичным маршрутом
+	isPublicRoute := false
+
 	if strings.HasPrefix(path, "/api/v1/storefronts") && !strings.Contains(path, "/my") {
 		// Проверяем что это не защищенные маршруты
 		method := c.Method()
@@ -84,18 +87,18 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") ||
 			strings.Contains(path, "/map") || strings.Contains(path, "/building") ||
 			strings.Contains(path, "/staff") || strings.Contains(path, "/products/")) {
-			logger.Info().Str("path", path).Msg("Skipping auth for public storefront route")
-			return c.Next()
+			logger.Info().Str("path", path).Msg("Public storefront route detected")
+			isPublicRoute = true
 		}
 		if method == "POST" && strings.Contains(path, "/view") {
-			logger.Info().Str("path", path).Msg("Skipping auth for storefront view tracking")
-			return c.Next()
+			logger.Info().Str("path", path).Msg("Public storefront view tracking route")
+			isPublicRoute = true
 		}
 		// Проверка на ID маршрут
 		parts := strings.Split(path, "/")
 		if len(parts) == 5 && parts[3] == "storefronts" && method == "GET" {
-			logger.Info().Str("path", path).Msg("Skipping auth for public storefront by ID")
-			return c.Next()
+			logger.Info().Str("path", path).Msg("Public storefront by ID route")
+			isPublicRoute = true
 		}
 	}
 
@@ -132,6 +135,25 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			c.Locals("auth_method", "jwt")
 			c.Locals("jwt_token", tokenString)
 
+			// Проверяем, является ли пользователь администратором
+			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
+			if err != nil {
+				logger.Warn().
+					Err(err).
+					Str("email", claims.Email).
+					Msg("Failed to check admin status")
+				// В случае ошибки считаем, что пользователь не админ
+				isAdmin = false
+			}
+			c.Locals("is_admin", isAdmin)
+
+			if isAdmin {
+				logger.Info().
+					Int("user_id", claims.UserID).
+					Str("email", claims.Email).
+					Msg("Admin user authenticated")
+			}
+
 			// Обновляем последнее посещение асинхронно
 			go func() {
 				ctx := context.Background()
@@ -158,6 +180,17 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			c.Locals("user_email", claims.Email)
 			c.Locals("auth_method", "jwt_query")
 			c.Locals("jwt_token", tokenFromQuery)
+
+			// Проверяем, является ли пользователь администратором
+			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
+			if err != nil {
+				logger.Warn().
+					Err(err).
+					Str("email", claims.Email).
+					Msg("Failed to check admin status")
+				isAdmin = false
+			}
+			c.Locals("is_admin", isAdmin)
 
 			go func() {
 				ctx := context.Background()
@@ -195,6 +228,17 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			c.Locals("user_email", claims.Email)
 			c.Locals("auth_method", "jwt_cookie")
 			c.Locals("jwt_token", jwtCookie)
+
+			// Проверяем, является ли пользователь администратором
+			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
+			if err != nil {
+				logger.Warn().
+					Err(err).
+					Str("email", claims.Email).
+					Msg("Failed to check admin status")
+				isAdmin = false
+			}
+			c.Locals("is_admin", isAdmin)
 
 			go func() {
 				ctx := context.Background()
@@ -257,6 +301,17 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		c.Locals("auth_method", "session_fallback")
 		c.Locals("auth_provider", session.Provider)
 
+		// Проверяем, является ли пользователь администратором
+		isAdmin, err := m.services.User().IsUserAdmin(c.Context(), session.Email)
+		if err != nil {
+			logger.Warn().
+				Err(err).
+				Str("email", session.Email).
+				Msg("Failed to check admin status")
+			isAdmin = false
+		}
+		c.Locals("is_admin", isAdmin)
+
 		go func() {
 			ctx := context.Background()
 			_ = m.services.User().UpdateLastSeen(ctx, session.UserID)
@@ -266,6 +321,13 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	}
 
 	// Если ни один метод аутентификации не сработал
+	// Проверяем, является ли это публичным маршрутом
+	if isPublicRoute {
+		// Для публичных маршрутов разрешаем доступ без аутентификации
+		logger.Info().Str("path", path).Msg("Allowing unauthenticated access to public route")
+		return c.Next()
+	}
+
 	if c.Get("Upgrade") == "websocket" {
 		logger.Info().
 			Str("ip", c.IP()).
@@ -289,6 +351,13 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 				c.Locals("user_id", claims.UserID)
 				c.Locals("user_email", claims.Email)
 				c.Locals("auth_method", "jwt")
+
+				// Проверяем админ статус
+				isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
+				if err != nil {
+					isAdmin = false
+				}
+				c.Locals("is_admin", isAdmin)
 			}
 		}
 	}
@@ -302,6 +371,13 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 				c.Locals("user_id", claims.UserID)
 				c.Locals("user_email", claims.Email)
 				c.Locals("auth_method", "jwt_cookie")
+
+				// Проверяем админ статус
+				isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
+				if err != nil {
+					isAdmin = false
+				}
+				c.Locals("is_admin", isAdmin)
 			}
 		}
 	}

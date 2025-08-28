@@ -187,5 +187,7 @@
     "website_invalid": "URL veb sajta nije valjan"
   },
   "trust": "Za vaš oglas garantuje SveTu",
-  "delivery": "Dostava putem Post Express-a"
+  "delivery": "Dostava putem Post Express-a",
+  "success": "Izlog je uspešno kreiran!",
+  "error": "Došlo je do greške prilikom kreiranja izloga"
 }

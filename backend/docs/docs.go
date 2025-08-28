@@ -26844,7 +26844,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Soft deletes a storefront (marks as inactive)",
+                "description": "Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal",
                 "consumes": [
                     "application/json"
                 ],
@@ -26862,6 +26862,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Hard delete (permanent removal, admin only). Default: false (soft delete)",
+                        "name": "hard",
+                        "in": "query"
                     }
                 ],
                 "responses": {

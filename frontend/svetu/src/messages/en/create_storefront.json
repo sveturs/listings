@@ -187,5 +187,7 @@
     "website_invalid": "Website URL is not valid"
   },
   "trust": "Your listing is guaranteed by SveTu",
-  "delivery": "Delivery via Post Express"
+  "delivery": "Delivery via Post Express",
+  "success": "Storefront successfully created!",
+  "error": "An error occurred while creating the storefront"
 }

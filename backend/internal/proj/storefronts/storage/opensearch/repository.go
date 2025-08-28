@@ -13,6 +13,14 @@ import (
 	osClient "backend/internal/storage/opensearch"
 )
 
+// Helper function to safely get string value from pointer
+func getStringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 // StorefrontRepository реализует интерфейс для работы с витринами в OpenSearch
 type StorefrontRepository struct {
 	client    *osClient.OpenSearchClient
@@ -112,11 +120,11 @@ func (r *StorefrontRepository) storefrontToDoc(storefront *models.Storefront) ma
 		"phone":             storefront.Phone,
 		"email":             storefront.Email,
 		"website":           storefront.Website,
-		"address":           storefront.Address,
-		"city":              storefront.City,
-		"city_lowercase":    strings.ToLower(storefront.City),
-		"postal_code":       storefront.PostalCode,
-		"country":           storefront.Country,
+		"address":           getStringValue(storefront.Address),
+		"city":              getStringValue(storefront.City),
+		"city_lowercase":    strings.ToLower(getStringValue(storefront.City)),
+		"postal_code":       getStringValue(storefront.PostalCode),
+		"country":           getStringValue(storefront.Country),
 		"rating":            storefront.Rating,
 		"reviews_count":     storefront.ReviewsCount,
 		"products_count":    storefront.ProductsCount,
@@ -141,13 +149,13 @@ func (r *StorefrontRepository) storefrontToDoc(storefront *models.Storefront) ma
 	searchKeywords := []string{
 		storefront.Name,
 		strings.ToLower(storefront.Name),
-		storefront.City,
-		strings.ToLower(storefront.City),
+		getStringValue(storefront.City),
+		strings.ToLower(getStringValue(storefront.City)),
 	}
 
 	// Добавляем слова из описания
-	if storefront.Description != "" {
-		words := strings.Fields(storefront.Description)
+	if storefront.Description != nil && *storefront.Description != "" {
+		words := strings.Fields(*storefront.Description)
 		for _, word := range words {
 			if len(word) > 3 { // Только слова длиннее 3 символов
 				searchKeywords = append(searchKeywords, strings.ToLower(word))

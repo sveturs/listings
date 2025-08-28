@@ -92,6 +92,7 @@ type Storage interface {
 	IncrementViewsCount(ctx context.Context, id int) error
 	UpdateListing(ctx context.Context, listing *models.MarketplaceListing) error
 	DeleteListing(ctx context.Context, id int, userID int) error
+	DeleteListingAdmin(ctx context.Context, id int) error
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)

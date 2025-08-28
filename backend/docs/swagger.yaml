@@ -25539,13 +25539,19 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Soft deletes a storefront (marks as inactive)
+      description: Deletes a storefront. Soft delete by default (marks as inactive).
+        Admins can use ?hard=true for permanent removal
       parameters:
       - description: Storefront ID
         in: path
         name: id
         required: true
         type: integer
+      - description: 'Hard delete (permanent removal, admin only). Default: false
+          (soft delete)'
+        in: query
+        name: hard
+        type: boolean
       produces:
       - application/json
       responses:

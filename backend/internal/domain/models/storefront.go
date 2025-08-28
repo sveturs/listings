@@ -100,30 +100,30 @@ func (j *JSONB) Scan(value interface{}) error {
 
 // Storefront представляет структуру витрины
 type Storefront struct {
-	ID          int    `json:"id" db:"id"`
-	UserID      int    `json:"user_id" db:"user_id"`
-	Slug        string `json:"slug" db:"slug"`
-	Name        string `json:"name" db:"name"`
-	Description string `json:"description,omitempty" db:"description"`
+	ID          int     `json:"id" db:"id"`
+	UserID      int     `json:"user_id" db:"user_id"`
+	Slug        string  `json:"slug" db:"slug"`
+	Name        string  `json:"name" db:"name"`
+	Description *string `json:"description,omitempty" db:"description"`
 
 	// Связанные данные
 	User *User `json:"user,omitempty"` // Владелец витрины
 
 	// Брендинг
-	LogoURL   string `json:"logo_url,omitempty" db:"logo_url"`
-	BannerURL string `json:"banner_url,omitempty" db:"banner_url"`
-	Theme     JSONB  `json:"theme" db:"theme"`
+	LogoURL   *string `json:"logo_url,omitempty" db:"logo_url"`
+	BannerURL *string `json:"banner_url,omitempty" db:"banner_url"`
+	Theme     JSONB   `json:"theme" db:"theme"`
 
 	// Контактная информация
-	Phone   string `json:"phone,omitempty" db:"phone"`
-	Email   string `json:"email,omitempty" db:"email"`
-	Website string `json:"website,omitempty" db:"website"`
+	Phone   *string `json:"phone,omitempty" db:"phone"`
+	Email   *string `json:"email,omitempty" db:"email"`
+	Website *string `json:"website,omitempty" db:"website"`
 
 	// Локация
-	Address             string                `json:"address,omitempty" db:"address"`
-	City                string                `json:"city,omitempty" db:"city"`
-	PostalCode          string                `json:"postal_code,omitempty" db:"postal_code"`
-	Country             string                `json:"country" db:"country"`
+	Address             *string               `json:"address,omitempty" db:"address"`
+	City                *string               `json:"city,omitempty" db:"city"`
+	PostalCode          *string               `json:"postal_code,omitempty" db:"postal_code"`
+	Country             *string               `json:"country,omitempty" db:"country"`
 	Latitude            *float64              `json:"latitude,omitempty" db:"latitude"`
 	Longitude           *float64              `json:"longitude,omitempty" db:"longitude"`
 	FormattedAddress    *string               `json:"formatted_address,omitempty" db:"formatted_address"`
@@ -382,11 +382,12 @@ type StorefrontUpdateDTO struct {
 // StorefrontFilter фильтры для поиска витрин
 type StorefrontFilter struct {
 	// Базовые фильтры
-	UserID     *int    `json:"user_id,omitempty"`
-	IsActive   *bool   `json:"is_active,omitempty"`
-	IsVerified *bool   `json:"is_verified,omitempty"`
-	City       *string `json:"city,omitempty"`
-	Country    *string `json:"country,omitempty"`
+	UserID         *int    `json:"user_id,omitempty"`
+	IsActive       *bool   `json:"is_active,omitempty"`
+	IsVerified     *bool   `json:"is_verified,omitempty"`
+	IsAdminRequest bool    `json:"-"` // Internal flag to indicate admin request
+	City           *string `json:"city,omitempty"`
+	Country        *string `json:"country,omitempty"`
 
 	// Геолокация
 	Latitude  *float64 `json:"latitude,omitempty"`

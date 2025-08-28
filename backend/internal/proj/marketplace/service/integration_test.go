@@ -498,6 +498,10 @@ func (m *MockStorage) GetTranslationsForEntity(ctx context.Context, entityType s
 	return nil, ErrNotImplemented
 }
 
+func (m *MockStorage) DeleteListingAdmin(ctx context.Context, listingID int) error {
+	return nil
+}
+
 func (m *MockStorage) GetPopularCategories(ctx context.Context, limit int) ([]models.MarketplaceCategory, error) {
 	return nil, ErrNotImplemented
 }

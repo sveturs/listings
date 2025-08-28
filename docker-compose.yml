@@ -3,11 +3,11 @@ services:
     build:
       context: ./docker/postgres-postgis
       dockerfile: Dockerfile
-    container_name: hostel_db
+    container_name: svetubd
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: hostel_db
+      POSTGRES_PASSWORD: mX3g1XGhMRUZEX3l
+      POSTGRES_DB: svetubd
     ports:
       - "5432:5432"
     volumes:
@@ -28,7 +28,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass LxudpSk9HBHRiCmnnj
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -45,7 +45,8 @@ services:
       - "discovery.type=single-node"
       - "bootstrap.memory_lock=true"
       - "OPENSEARCH_JAVA_OPTS=-Xms1024m -Xmx1024m"
-      - "DISABLE_SECURITY_PLUGIN=true"
+      # Security will be configured properly
+      - "DISABLE_SECURITY_PLUGIN=true" # TODO: Enable security
     ulimits:
       memlock:
         soft: -1
@@ -74,7 +75,7 @@ services:
     container_name: minio
     environment:
       MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: 1321321321321
+      MINIO_ROOT_PASSWORD: zhmEsJZZNFN0vrCO7Hya
       MINIO_BROWSER_REDIRECT_URL: http://localhost:9001
       MINIO_SERVER_URL: http://localhost:9000
     volumes:

@@ -15,11 +15,11 @@ func main() {
 		secret = "your-secret-key-here"
 	}
 
-	// Создаем claims с админскими правами
+	// Создаем claims для пользователя 7 (владелец витрин)
 	claims := jwt.MapClaims{
-		"user_id":  1,
-		"email":    "admin@example.com",
-		"is_admin": true, // Важно для доступа к админке
+		"user_id":  7,
+		"email":    "testuser7@example.com", // Test user
+		"is_admin": false,
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 		"iat":      time.Now().Unix(),
 	}

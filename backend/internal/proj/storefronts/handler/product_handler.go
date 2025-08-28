@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
@@ -354,7 +355,11 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.productService.DeleteProduct(c.Context(), storefrontID, productID, userID); err != nil {
+	// Передаем контекст с информацией об администраторе
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+
+	if err := h.productService.DeleteProduct(ctx, storefrontID, productID, userID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -588,7 +593,11 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 		})
 	}
 
-	response, err := h.productService.BulkDeleteProducts(c.Context(), storefrontID, userID, req)
+	// Передаем контекст с информацией об администраторе
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+
+	response, err := h.productService.BulkDeleteProducts(ctx, storefrontID, userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
