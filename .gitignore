@@ -11,6 +11,12 @@
 .env.test.local
 .env.production.local
 
+# Claude local configuration
+CLAUDE.local.md
+
+# MinIO dev storage
+data/minio_dev/
+
 *.log
 *.txt
 Screenshot.png
