@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
-// import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
+import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
 import configManager from '@/config';
 
@@ -84,14 +84,14 @@ export default function HomePageClient({
   const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
-  const [_selectedCategory] = useState<string | number>('all');
+  const [selectedCategory] = useState<string | number>('all');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [_showMobileMenu, _setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation] = useState([44.7866, 20.4489]); // Координаты Белграда
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
-  const [_categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [officialStores, setOfficialStores] = useState<any[]>([]);
@@ -725,10 +725,22 @@ export default function HomePageClient({
         {/* Популярные категории */}
         <section className="py-8">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <HiOutlineSparkles className="w-6 h-6 text-warning" />
-              {t('popularCategories')}
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <HiOutlineSparkles className="w-6 h-6 text-warning" />
+                {t('popularCategories')}
+              </h2>
+              <NestedCategorySelector
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onChange={(categoryId) => {
+                  router.push(`/${locale}/search?category=${categoryId}`);
+                }}
+                placeholder={t('allCategories')}
+                showCounts={true}
+                className="btn btn-primary btn-sm gap-2"
+              />
+            </div>
             {isLoadingCategories ? (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 {[...Array(8)].map((_, i) => (

@@ -14,7 +14,6 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { AuthButton } from './AuthButton';
 import LoginModal from './LoginModal';
 import { SearchAutocomplete } from './search/SearchAutocomplete';
-import { NestedCategorySelector } from './search/NestedCategorySelector';
 import { useAuthContext } from '@/contexts/AuthContext';
 import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
@@ -23,17 +22,7 @@ import ChatIcon from './ChatIcon';
 
 // Иконки
 import { FiMapPin, FiHeart, FiMenu, FiX } from 'react-icons/fi';
-import {
-  BsHouseDoor,
-  BsLaptop,
-  BsBriefcase,
-  BsPalette,
-  BsTools,
-  BsPhone,
-  BsGem,
-  BsHandbag,
-} from 'react-icons/bs';
-import { FaCar, FaTshirt } from 'react-icons/fa';
+import { BsHandbag } from 'react-icons/bs';
 
 interface HeaderProps {
   locale?: string;
@@ -56,9 +45,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [selectedCategory] = useState<string | number>('all');
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -144,36 +131,29 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
     }
   }, [isAuthenticated, isLoginModalOpen]);
 
-  // Загрузка категорий
+  // Загрузка популярных категорий для мобильного меню
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const [categoriesResponse, popularResponse] = await Promise.all([
-          api.get('/api/v1/marketplace/categories'),
-          api.get(
-            `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
-          ),
-        ]);
-
-        if (categoriesResponse.data.success) {
-          setCategories(categoriesResponse.data.data);
-        }
+        const popularResponse = await api.get(
+          `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
+        );
 
         if (popularResponse.data.success && popularResponse.data.data) {
           // Добавляем иконки для популярных категорий на основе их slug
           const iconMap: { [key: string]: any } = {
-            'real-estate': BsHouseDoor,
-            automotive: FaCar,
-            electronics: BsLaptop,
-            fashion: FaTshirt,
-            jobs: BsBriefcase,
-            services: BsTools,
-            'hobbies-entertainment': BsPalette,
+            'real-estate': BsHandbag,
+            automotive: BsHandbag,
+            electronics: BsHandbag,
+            fashion: BsHandbag,
+            jobs: BsHandbag,
+            services: BsHandbag,
+            'hobbies-entertainment': BsHandbag,
             'home-garden': BsHandbag,
-            industrial: BsTools,
-            'food-beverages': BsPhone,
-            'books-stationery': BsGem,
-            'antiques-art': BsPalette,
+            industrial: BsHandbag,
+            'food-beverages': BsHandbag,
+            'books-stationery': BsHandbag,
+            'antiques-art': BsHandbag,
           };
 
           const colorMap: { [key: string]: string } = {
@@ -203,9 +183,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
           setPopularCategories(categoriesWithIcons);
         }
       } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setIsLoadingCategories(false);
+        console.error('Failed to load popular categories:', error);
       }
     };
     loadCategories();
@@ -335,76 +313,6 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
               </div>
             )}
           </div>
-
-          {/* Категории под поиском - только на десктопе */}
-          <AnimatePresence>
-            {isVisible && (
-              <motion.div
-                className="border-t border-base-300 py-2 hidden lg:block"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="container mx-auto px-4">
-                  <div className="flex items-center gap-4 text-sm">
-                    {/* Селектор всех категорий - слева перед списком */}
-                    <div className="flex-shrink-0">
-                      <NestedCategorySelector
-                        categories={categories}
-                        selectedCategory={selectedCategory}
-                        onChange={(categoryId) => {
-                          router.push(
-                            `/${locale}/search?category=${categoryId}`
-                          );
-                        }}
-                        placeholder={tMarketplace('allCategories')}
-                        showCounts={true}
-                        className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium gap-1 px-3"
-                      />
-                    </div>
-
-                    {/* Разделитель после кнопки */}
-                    <div className="h-4 w-px bg-base-300"></div>
-
-                    {/* Список популярных категорий */}
-                    {isLoadingCategories
-                      ? [...Array(7)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2 animate-pulse"
-                          >
-                            <div className="w-4 h-4 bg-base-300 rounded"></div>
-                            <div className="w-20 h-4 bg-base-300 rounded"></div>
-                            <div className="w-10 h-3 bg-base-300 rounded"></div>
-                          </div>
-                        ))
-                      : popularCategories.slice(0, 7).map((cat) => {
-                          const Icon = cat.icon || BsHandbag;
-                          const count = cat.listing_count || cat.count || 0;
-                          const formattedCount =
-                            count > 1000
-                              ? `${Math.floor(count / 1000)}K+`
-                              : count;
-                          return (
-                            <Link
-                              key={cat.id}
-                              href={`/search?category=${cat.id}`}
-                              className="flex items-center gap-2 hover:text-primary transition-colors"
-                            >
-                              <Icon className={`w-4 h-4 ${cat.color}`} />
-                              <span>{cat.name}</span>
-                              <span className="text-base-content/50">
-                                ({formattedCount})
-                              </span>
-                            </Link>
-                          );
-                        })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </motion.header>
 
