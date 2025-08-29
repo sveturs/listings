@@ -62,7 +62,7 @@ export function ImagesSection({
         );
 
         console.log('Upload response:', response.data);
-        
+
         if (response.data?.data?.images) {
           onImagesChange([...images, ...response.data.data.images]);
         } else if (response.data?.images) {

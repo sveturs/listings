@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
-import CartIcon from '@/components/cart/CartIcon';
-import { AuthButton } from '@/components/AuthButton';
+// import CartIcon from '@/components/cart/CartIcon';
+// import { AuthButton } from '@/components/AuthButton';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
 import configManager from '@/config';
@@ -35,7 +35,7 @@ const EnhancedMapSection = dynamic(
 );
 
 import {
-  FiSearch,
+  // FiSearch,
   FiMapPin,
   // FiMenu,
   // FiX,
@@ -81,7 +81,7 @@ export default function HomePageClient({
   const router = useRouter();
   const { user } = useAuth();
   const t = useTranslations('marketplace.home');
-  const tCommon = useTranslations('common');
+  // const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
   const [selectedCategory] = useState<string | number>('all');
@@ -1476,7 +1476,6 @@ export default function HomePageClient({
             />
           </svg>
         </Link>
-
       </div>
     </PageTransition>
   );
