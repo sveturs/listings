@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import SuccessClient from './SuccessClient';
 
-export default function SuccessPage() {
+export default async function SuccessPage() {
   return (
     <Suspense
       fallback={

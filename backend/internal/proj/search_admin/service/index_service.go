@@ -473,14 +473,14 @@ func (s *Service) SearchIndexedDocuments(ctx context.Context, searchQuery string
 						// Если есть storefront_id - это товар, иначе - объявление
 						if storefrontID, ok := source["storefront_id"].(float64); ok {
 							if storefrontID > 0 {
-								doc.Type = "product"
+								doc.Type = productType
 								id := int(storefrontID)
 								doc.StorefrontID = &id
 							} else {
-								doc.Type = "listing"
+								doc.Type = listingType
 							}
 						} else {
-							doc.Type = "listing"
+							doc.Type = listingType
 						}
 
 						// Основные поля
@@ -568,7 +568,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 			WHERE ml.status = 'active'
 			ORDER BY ml.id
 		`
-		
+
 		rows, err := s.db.QueryContext(ctx, query)
 		if err != nil {
 			return fmt.Errorf("failed to get active listings: %w", err)
@@ -577,25 +577,25 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		// Подсчитываем количество для логирования
 		listingCount := 0
-		
+
 		// Индексируем пакетами для оптимизации
 		batchSize := 100
 		var batch []map[string]interface{}
-		
+
 		for rows.Next() {
 			var listing struct {
-				ID           int        `db:"id"`
-				Title        string     `db:"title"`
-				Description  string     `db:"description"`
-				CategoryID   int        `db:"category_id"`
-				UserID       int        `db:"user_id"`
-				Price        float64    `db:"price"`
-				Status       string     `db:"status"`
-				CreatedAt    time.Time  `db:"created_at"`
-				CategoryName *string    `db:"category_name"`
-				UserName     *string    `db:"user_name"`
+				ID           int       `db:"id"`
+				Title        string    `db:"title"`
+				Description  string    `db:"description"`
+				CategoryID   int       `db:"category_id"`
+				UserID       int       `db:"user_id"`
+				Price        float64   `db:"price"`
+				Status       string    `db:"status"`
+				CreatedAt    time.Time `db:"created_at"`
+				CategoryName *string   `db:"category_name"`
+				UserName     *string   `db:"user_name"`
 			}
-			
+
 			if err := rows.Scan(
 				&listing.ID,
 				&listing.Title,
@@ -615,17 +615,17 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Создаем документ для индексации
 			doc := map[string]interface{}{
-				"id":           listing.ID,
-				"title":        listing.Title,
-				"description":  listing.Description,
-				"category_id":  listing.CategoryID,
-				"user_id":      listing.UserID,
-				"price":        listing.Price,
-				"status":       listing.Status,
-				"created_at":   listing.CreatedAt,
-				"type":         "listing",
+				"id":          listing.ID,
+				"title":       listing.Title,
+				"description": listing.Description,
+				"category_id": listing.CategoryID,
+				"user_id":     listing.UserID,
+				"price":       listing.Price,
+				"status":      listing.Status,
+				"created_at":  listing.CreatedAt,
+				"type":        "listing",
 			}
-			
+
 			if listing.CategoryName != nil {
 				doc["category_name"] = *listing.CategoryName
 			}
@@ -657,7 +657,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				totalIndexed += len(batch)
 			}
 		}
-		
+
 		fmt.Printf("Indexed %d listings, %d errors\n", listingCount, totalErrors)
 	}
 
@@ -682,7 +682,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 			WHERE sp.is_active = true
 			ORDER BY sp.id
 		`
-		
+
 		rows, err := s.db.QueryContext(ctx, query)
 		if err != nil {
 			return fmt.Errorf("failed to get active products: %w", err)
@@ -692,7 +692,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 		productCount := 0
 		var batch []map[string]interface{}
 		batchSize := 100
-		
+
 		for rows.Next() {
 			var product struct {
 				ID             int       `db:"id"`
@@ -706,7 +706,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				StorefrontName *string   `db:"storefront_name"`
 				CategoryName   *string   `db:"category_name"`
 			}
-			
+
 			if err := rows.Scan(
 				&product.ID,
 				&product.StorefrontID,
@@ -736,7 +736,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				"created_at":    product.CreatedAt,
 				"type":          "product",
 			}
-			
+
 			if product.CategoryID != nil {
 				doc["category_id"] = *product.CategoryID
 			}
@@ -771,7 +771,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				totalIndexed += len(batch)
 			}
 		}
-		
+
 		fmt.Printf("Indexed %d products, %d errors\n", productCount, totalErrors)
 	}
 
@@ -807,11 +807,11 @@ func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{})
 				"_id":    docID,
 			},
 		}
-		
+
 		actionJSON, _ := json.Marshal(action)
 		bulkBody = append(bulkBody, actionJSON...)
 		bulkBody = append(bulkBody, '\n')
-		
+
 		// Добавляем документ
 		docJSON, _ := json.Marshal(doc)
 		bulkBody = append(bulkBody, docJSON...)

@@ -50,7 +50,7 @@ export default function CategoryKeywordsModal({
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
-      
+
       const response = await fetch(
         `/api/v1/admin/categories/${categoryId}/keywords`,
         { headers }
@@ -97,7 +97,7 @@ export default function CategoryKeywordsModal({
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
-      
+
       const response = await fetch(
         `/api/v1/admin/categories/${categoryId}/keywords`,
         {
@@ -137,12 +137,12 @@ export default function CategoryKeywordsModal({
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
-      
+
       const response = await fetch(
         `/api/v1/admin/categories/keywords/${keywordId}`,
         {
           method: 'DELETE',
-          headers
+          headers,
         }
       );
 
@@ -167,7 +167,7 @@ export default function CategoryKeywordsModal({
       if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
-      
+
       const response = await fetch(
         `/api/v1/admin/categories/keywords/${keywordId}`,
         {
