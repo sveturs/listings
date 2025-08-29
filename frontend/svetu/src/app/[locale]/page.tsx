@@ -18,20 +18,13 @@ export default async function Home({
   let _error: Error | null = null;
   let homePageData = null;
 
-  // ВАЖНО: SSR загрузка отключена в development из-за проблем с сетевой конфигурацией
-  // В production SSR будет работать нормально когда:
-  // 1. Frontend и backend находятся в одной Docker сети
-  // 2. Используется правильный INTERNAL_API_URL (например: http://backend:3000)
-  // 3. Настроен правильный сетевой доступ между контейнерами
-  const skipSSR = process.env.NODE_ENV === 'development';
-
-  if (!skipSSR) {
-    try {
-      homePageData = await getHomePageData(locale);
-    } catch (e) {
-      console.error('[SSR] Failed to load homepage data:', e);
-      _error = e instanceof Error ? e : new Error('Failed to load data');
-    }
+  // SSR загрузка данных для главной страницы
+  // Использует INTERNAL_API_URL для связи между контейнерами Docker
+  try {
+    homePageData = await getHomePageData(locale);
+  } catch (e) {
+    console.error('[SSR] Failed to load homepage data:', e);
+    _error = e instanceof Error ? e : new Error('Failed to load data');
   }
 
   return (

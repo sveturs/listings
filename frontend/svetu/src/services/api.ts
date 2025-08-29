@@ -2,7 +2,7 @@ import axios from 'axios';
 import { tokenManager } from '@/utils/tokenManager';
 
 const api = axios.create({
-  baseURL: '', // Use relative paths to go through Next.js proxy
+  baseURL: '', // Use relative paths - nginx will proxy /api to backend
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

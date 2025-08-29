@@ -44,7 +44,7 @@ export default function LocationPicker({
   height = '400px',
   showCurrentLocation = true,
   defaultCountry = 'Србија',
-  mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+  mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
 }: LocationPickerProps) {
   const locale = useLocale();
   const t = useTranslations('common');
