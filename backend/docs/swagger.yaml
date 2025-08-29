@@ -20369,6 +20369,63 @@ paths:
       summary: Get similar listings
       tags:
       - marketplace-search
+  /api/v1/marketplace/listings/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the status of a marketplace listing (active/inactive).
+        Only the owner can update
+      parameters:
+      - description: Listing ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status update data
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
+        "400":
+          description: marketplace.invalidData
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: marketplace.forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.notFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update listing status
+      tags:
+      - marketplace-listings
   /api/v1/marketplace/listings/check-slug:
     post:
       consumes:

@@ -1,8 +1,10 @@
 // Server-side API client for server actions
+import configManager from '@/config';
+
 const INTERNAL_API_URL =
   process.env.INTERNAL_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:3000';
+  configManager.getApiUrl({ internal: true });
 
 interface ApiClientOptions {
   headers?: Record<string, string>;

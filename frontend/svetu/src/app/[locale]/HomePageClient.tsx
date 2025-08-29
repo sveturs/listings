@@ -11,8 +11,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
 import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
-// import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
+import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -83,14 +84,14 @@ export default function HomePageClient({
   const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
-  const [_selectedCategory] = useState<string | number>('all');
+  const [selectedCategory] = useState<string | number>('all');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [_showMobileMenu, _setShowMobileMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation] = useState([44.7866, 20.4489]); // Координаты Белграда
   const [listings, setListings] = useState<any[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
-  const [_categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [officialStores, setOfficialStores] = useState<any[]>([]);
@@ -532,7 +533,9 @@ export default function HomePageClient({
                 'Сербия',
               image:
                 listing.images && listing.images.length > 0
-                  ? `http://localhost:3000${listing.images[0].url || listing.images[0].public_url}`
+                  ? configManager.buildImageUrl(
+                      listing.images[0].url || listing.images[0].public_url
+                    )
                   : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop', // fallback изображение
               rating: listing.rating || 4.0 + Math.random() * 1.0, // Используем настоящий рейтинг или генерируем
               reviews:
@@ -722,10 +725,22 @@ export default function HomePageClient({
         {/* Популярные категории */}
         <section className="py-8">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <HiOutlineSparkles className="w-6 h-6 text-warning" />
-              {t('popularCategories')}
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold flex items-center gap-2">
+                <HiOutlineSparkles className="w-6 h-6 text-warning" />
+                {t('popularCategories')}
+              </h2>
+              <NestedCategorySelector
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onChange={(categoryId) => {
+                  router.push(`/${locale}/search?category=${categoryId}`);
+                }}
+                placeholder={t('allCategories')}
+                showCounts={true}
+                className="btn btn-primary btn-sm gap-2"
+              />
+            </div>
             {isLoadingCategories ? (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 {[...Array(8)].map((_, i) => (
@@ -1462,25 +1477,6 @@ export default function HomePageClient({
           </svg>
         </Link>
 
-        {/* Мобильная навигация */}
-        <div className="btm-nav lg:hidden">
-          <button className="text-primary">
-            <FiSearch className="w-5 h-5" />
-            <span className="btm-nav-label">{t('search')}</span>
-          </button>
-          <button>
-            <FiHeart className="w-5 h-5" />
-            <span className="btm-nav-label">{t('favorites')}</span>
-          </button>
-          <div className="text-secondary">
-            <CartIcon />
-            <span className="btm-nav-label">{t('cart')}</span>
-          </div>
-          <div className="flex flex-col items-center justify-center">
-            <AuthButton />
-            <span className="btm-nav-label text-xs">{tCommon('profile')}</span>
-          </div>
-        </div>
       </div>
     </PageTransition>
   );

@@ -1,5 +1,6 @@
 import { apiClient } from './api-client';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
 import type {
   ImportJob,
   ImportJobStatus,
@@ -88,7 +89,7 @@ export class ImportApi {
 
       xhr.open(
         'POST',
-        `http://localhost:3000/api/v1/storefronts/slug/${storefrontSlug}/import/file`
+        `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/import/file`
       );
       xhr.withCredentials = true; // Include cookies
 
@@ -174,7 +175,7 @@ export class ImportApi {
 
       xhr.open(
         'POST',
-        `http://localhost:3000/api/v1/storefronts/${storefrontId}/import/file`
+        `${configManager.getApiUrl()}/api/v1/storefronts/${storefrontId}/import/file`
       );
       xhr.withCredentials = true; // Include cookies
 
@@ -265,7 +266,7 @@ export class ImportApi {
     }
 
     const response = await fetch(
-      'http://localhost:3000/api/v1/storefronts/import/csv-template',
+      `${configManager.getApiUrl()}/api/v1/storefronts/import/csv-template`,
       {
         headers,
         credentials: 'include',
@@ -311,7 +312,7 @@ export class ImportApi {
     }
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/import/jobs/${jobId}/export`,
+      `${configManager.getApiUrl()}/api/v1/import/jobs/${jobId}/export`,
       {
         headers,
         credentials: 'include',
@@ -424,7 +425,7 @@ export class ImportApi {
     }
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/storefronts/import/sample/${format}`,
+      `${configManager.getApiUrl()}/api/v1/storefronts/import/sample/${format}`,
       {
         headers,
         credentials: 'include',

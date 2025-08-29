@@ -14,7 +14,6 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { AuthButton } from './AuthButton';
 import LoginModal from './LoginModal';
 import { SearchAutocomplete } from './search/SearchAutocomplete';
-import { NestedCategorySelector } from './search/NestedCategorySelector';
 import { useAuthContext } from '@/contexts/AuthContext';
 import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
@@ -23,17 +22,7 @@ import ChatIcon from './ChatIcon';
 
 // Иконки
 import { FiMapPin, FiHeart, FiMenu, FiX } from 'react-icons/fi';
-import {
-  BsHouseDoor,
-  BsLaptop,
-  BsBriefcase,
-  BsPalette,
-  BsTools,
-  BsPhone,
-  BsGem,
-  BsHandbag,
-} from 'react-icons/bs';
-import { FaCar, FaTshirt } from 'react-icons/fa';
+import { BsHandbag } from 'react-icons/bs';
 
 interface HeaderProps {
   locale?: string;
@@ -56,9 +45,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [selectedCategory] = useState<string | number>('all');
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -144,36 +131,29 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
     }
   }, [isAuthenticated, isLoginModalOpen]);
 
-  // Загрузка категорий
+  // Загрузка популярных категорий для мобильного меню
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const [categoriesResponse, popularResponse] = await Promise.all([
-          api.get('/api/v1/marketplace/categories'),
-          api.get(
-            `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
-          ),
-        ]);
-
-        if (categoriesResponse.data.success) {
-          setCategories(categoriesResponse.data.data);
-        }
+        const popularResponse = await api.get(
+          `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
+        );
 
         if (popularResponse.data.success && popularResponse.data.data) {
           // Добавляем иконки для популярных категорий на основе их slug
           const iconMap: { [key: string]: any } = {
-            'real-estate': BsHouseDoor,
-            automotive: FaCar,
-            electronics: BsLaptop,
-            fashion: FaTshirt,
-            jobs: BsBriefcase,
-            services: BsTools,
-            'hobbies-entertainment': BsPalette,
+            'real-estate': BsHandbag,
+            automotive: BsHandbag,
+            electronics: BsHandbag,
+            fashion: BsHandbag,
+            jobs: BsHandbag,
+            services: BsHandbag,
+            'hobbies-entertainment': BsHandbag,
             'home-garden': BsHandbag,
-            industrial: BsTools,
-            'food-beverages': BsPhone,
-            'books-stationery': BsGem,
-            'antiques-art': BsPalette,
+            industrial: BsHandbag,
+            'food-beverages': BsHandbag,
+            'books-stationery': BsHandbag,
+            'antiques-art': BsHandbag,
           };
 
           const colorMap: { [key: string]: string } = {
@@ -203,9 +183,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
           setPopularCategories(categoriesWithIcons);
         }
       } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setIsLoadingCategories(false);
+        console.error('Failed to load popular categories:', error);
       }
     };
     loadCategories();
@@ -335,76 +313,6 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
               </div>
             )}
           </div>
-
-          {/* Категории под поиском - только на десктопе */}
-          <AnimatePresence>
-            {isVisible && (
-              <motion.div
-                className="border-t border-base-300 py-2 hidden lg:block"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="container mx-auto px-4">
-                  <div className="flex items-center gap-4 text-sm">
-                    {/* Селектор всех категорий - слева перед списком */}
-                    <div className="flex-shrink-0">
-                      <NestedCategorySelector
-                        categories={categories}
-                        selectedCategory={selectedCategory}
-                        onChange={(categoryId) => {
-                          router.push(
-                            `/${locale}/search?category=${categoryId}`
-                          );
-                        }}
-                        placeholder={tMarketplace('allCategories')}
-                        showCounts={true}
-                        className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium gap-1 px-3"
-                      />
-                    </div>
-
-                    {/* Разделитель после кнопки */}
-                    <div className="h-4 w-px bg-base-300"></div>
-
-                    {/* Список популярных категорий */}
-                    {isLoadingCategories
-                      ? [...Array(7)].map((_, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-2 animate-pulse"
-                          >
-                            <div className="w-4 h-4 bg-base-300 rounded"></div>
-                            <div className="w-20 h-4 bg-base-300 rounded"></div>
-                            <div className="w-10 h-3 bg-base-300 rounded"></div>
-                          </div>
-                        ))
-                      : popularCategories.slice(0, 7).map((cat) => {
-                          const Icon = cat.icon || BsHandbag;
-                          const count = cat.listing_count || cat.count || 0;
-                          const formattedCount =
-                            count > 1000
-                              ? `${Math.floor(count / 1000)}K+`
-                              : count;
-                          return (
-                            <Link
-                              key={cat.id}
-                              href={`/search?category=${cat.id}`}
-                              className="flex items-center gap-2 hover:text-primary transition-colors"
-                            >
-                              <Icon className={`w-4 h-4 ${cat.color}`} />
-                              <span>{cat.name}</span>
-                              <span className="text-base-content/50">
-                                ({formattedCount})
-                              </span>
-                            </Link>
-                          );
-                        })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </motion.header>
 
@@ -498,125 +406,6 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
         />
       )}
 
-      {/* Мобильная нижняя навигация */}
-      <div className="btm-nav lg:hidden z-50">
-        <Link href="/" className={pathname === `/${locale}` ? 'active' : ''}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-          </svg>
-          <span className="btm-nav-label text-xs">Главная</span>
-        </Link>
-        <Link
-          href="/search"
-          className={pathname?.includes('/search') ? 'active' : ''}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <span className="btm-nav-label text-xs">Поиск</span>
-        </Link>
-        <Link href="/create-listing-choice">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          <span className="btm-nav-label text-xs">Создать</span>
-        </Link>
-        {mounted && user && (
-          <Link
-            href="/chat"
-            className={pathname?.includes('/chat') ? 'active' : ''}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            <span className="btm-nav-label text-xs">Чаты</span>
-          </Link>
-        )}
-        {mounted ? (
-          <Link
-            href={user ? '/profile' : '/login'}
-            className={pathname?.includes('/profile') ? 'active' : ''}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span className="btm-nav-label text-xs">Профиль</span>
-          </Link>
-        ) : (
-          <Link href="/profile" className="">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            <span className="btm-nav-label text-xs">Профиль</span>
-          </Link>
-        )}
-      </div>
     </>
   );
 }

@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 import Link from 'next/link';
-import config from '@/config';
+import configManager from '@/config';
 
 const IdealHomepageV2 = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -106,7 +106,7 @@ const IdealHomepageV2 = () => {
       price: 899,
       oldPrice: 1199,
       discount: 25,
-      image: config.buildImageUrl('/listings/7/1753007242863504454.jpg'),
+      image: configManager.buildImageUrl('/listings/7/1753007242863504454.jpg'),
       rating: 4.8,
       reviews: 1234,
       isNew: true,
@@ -117,7 +117,7 @@ const IdealHomepageV2 = () => {
       title: 'Квартира 2-комн, 65м², центр',
       price: 85000,
       priceUnit: '',
-      image: config.buildImageUrl('/listings/8/1753097303704349399.jpg'),
+      image: configManager.buildImageUrl('/listings/8/1753097303704349399.jpg'),
       rating: 4.9,
       reviews: 67,
       isPremium: true,
@@ -128,7 +128,9 @@ const IdealHomepageV2 = () => {
       price: 1299,
       oldPrice: 1599,
       discount: 19,
-      image: config.buildImageUrl('/listings/17/1753268215885579893.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/17/1753268215885579893.jpg'
+      ),
       rating: 4.9,
       reviews: 892,
     },
@@ -138,7 +140,9 @@ const IdealHomepageV2 = () => {
       price: 249,
       oldPrice: 299,
       discount: 17,
-      image: config.buildImageUrl('/listings/19/1753351396895835946.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/19/1753351396895835946.jpg'
+      ),
       rating: 4.7,
       reviews: 3421,
       isNew: true,
@@ -147,7 +151,9 @@ const IdealHomepageV2 = () => {
       id: 5,
       title: 'BMW X5 2019 xDrive30d',
       price: 45900,
-      image: config.buildImageUrl('/listings/36/1753721116303907551.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/36/1753721116303907551.jpg'
+      ),
       rating: 5.0,
       reviews: 12,
       isPremium: true,
@@ -156,7 +162,9 @@ const IdealHomepageV2 = () => {
       id: 6,
       title: 'Дом 180м² с участком 15 соток',
       price: 120000,
-      image: config.buildImageUrl('/listings/27/1753572833638039456.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/27/1753572833638039456.jpg'
+      ),
       rating: 4.9,
       reviews: 8,
     },
@@ -170,22 +178,30 @@ const IdealHomepageV2 = () => {
       items: [
         {
           name: 'Смартфоны',
-          image: config.buildImageUrl('/listings/7/1753007242863504454.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/7/1753007242863504454.jpg'
+          ),
           count: '2.5K+',
         },
         {
           name: 'Ноутбуки',
-          image: config.buildImageUrl('/listings/17/1753268215885579893.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/17/1753268215885579893.jpg'
+          ),
           count: '1.8K+',
         },
         {
           name: 'Наушники',
-          image: config.buildImageUrl('/listings/19/1753351396895835946.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/19/1753351396895835946.jpg'
+          ),
           count: '3.2K+',
         },
         {
           name: 'Планшеты',
-          image: config.buildImageUrl('/listings/28/1753574013161901892.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/28/1753574013161901892.jpg'
+          ),
           count: '980+',
         },
       ],
@@ -196,22 +212,30 @@ const IdealHomepageV2 = () => {
       items: [
         {
           name: 'Мебель',
-          image: config.buildImageUrl('/listings/29/1753575302423995244.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/29/1753575302423995244.jpg'
+          ),
           count: '4.1K+',
         },
         {
           name: 'Декор',
-          image: config.buildImageUrl('/listings/25/1753550885742188000.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/25/1753550885742188000.jpg'
+          ),
           count: '2.7K+',
         },
         {
           name: 'Техника',
-          image: config.buildImageUrl('/listings/20/1753428897128302370.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/20/1753428897128302370.jpg'
+          ),
           count: '1.9K+',
         },
         {
           name: 'Сад',
-          image: config.buildImageUrl('/listings/26/1753554432788980038.jpg'),
+          image: configManager.buildImageUrl(
+            '/listings/26/1753554432788980038.jpg'
+          ),
           count: '890+',
         },
       ],

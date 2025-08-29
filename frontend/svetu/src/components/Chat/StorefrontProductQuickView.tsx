@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import config from '@/config';
+import configManager from '@/config';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 
@@ -112,7 +112,7 @@ export default function StorefrontProductQuickView({
             {product.images && product.images.length > 0 && (
               <div className="relative h-64 w-full rounded-lg overflow-hidden bg-base-200">
                 <Image
-                  src={config.buildImageUrl(product.images[0].image_url)}
+                  src={configManager.buildImageUrl(product.images[0].image_url)}
                   alt={product.name}
                   fill
                   className="object-contain"

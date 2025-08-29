@@ -1,3 +1,4 @@
+import configManager from '@/config';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Делаем запрос к backend
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const backendUrl = process.env.BACKEND_URL || configManager.getApiUrl();
     const response = await fetch(
       `${backendUrl}/api/v1/admin/translations/ai/costs`,
       {

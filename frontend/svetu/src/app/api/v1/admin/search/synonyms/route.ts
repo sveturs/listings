@@ -1,8 +1,9 @@
+import configManager from '@/config';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+  process.env.NEXT_PUBLIC_BACKEND_URL || configManager.getApiUrl();
 
 async function getAccessToken() {
   const cookieStore = await cookies();

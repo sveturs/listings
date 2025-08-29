@@ -22,7 +22,7 @@ import SafeImage from '@/components/SafeImage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import config from '@/config';
+import configManager from '@/config';
 import {
   formatAddressWithPrivacy,
   getFullLocalizedAddress,
@@ -115,7 +115,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
 
   const getImageUrl = (image?: MarketplaceImage) => {
     if (!image) return null;
-    return config.buildImageUrl(image.public_url);
+    return configManager.buildImageUrl(image.public_url);
   };
 
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];
@@ -517,7 +517,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
               description: item.description || '',
               images:
                 item.images?.map((img) =>
-                  config.buildImageUrl(img.public_url)
+                  configManager.buildImageUrl(img.public_url)
                 ) || [],
               category: item.category?.name || '',
               seller: {
@@ -808,8 +808,9 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
             price: formatPrice(item.price || 0, 'RSD'),
             description: item.description || '',
             images:
-              item.images?.map((img) => config.buildImageUrl(img.public_url)) ||
-              [],
+              item.images?.map((img) =>
+                configManager.buildImageUrl(img.public_url)
+              ) || [],
             category: item.category?.name || '',
             seller: {
               name: item.user?.name || '',

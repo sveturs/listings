@@ -53,7 +53,7 @@ export default function Mock3DSForm({ onSubmit, amount }: Mock3DSFormProps) {
             </div>
           </div>
 
-          {amount && (
+          {amount !== undefined && (
             <div className="alert alert-info mb-4">
               <div className="flex justify-between w-full">
                 <span>Сума за плаћање:</span>
@@ -61,6 +61,8 @@ export default function Mock3DSForm({ onSubmit, amount }: Mock3DSFormProps) {
                   {new Intl.NumberFormat('sr-RS', {
                     style: 'currency',
                     currency: 'RSD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
                   }).format(amount)}
                 </span>
               </div>
@@ -69,10 +71,11 @@ export default function Mock3DSForm({ onSubmit, amount }: Mock3DSFormProps) {
 
           <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
             <div className="form-control">
-              <label className="label">
+              <label className="label" htmlFor="verification-code">
                 <span className="label-text">Унесите код из SMS-а:</span>
               </label>
               <input
+                id="verification-code"
                 type="text"
                 className={`input input-bordered text-center font-mono text-lg ${errors.code ? 'input-error' : ''}`}
                 placeholder="123456"

@@ -27,16 +27,22 @@ func main() {
 			"Dh13B3RTPIYGR6-cIVznnpOX_w3vnN4MOMmgBWuMYxQ" // #nosec G101 -- test token for development
 	}
 
+	// Get server host
+	serverHost := os.Getenv("SERVER_HOST")
+	if serverHost == "" {
+		serverHost = "http://localhost:3000"
+	}
+
 	// Test the analytics endpoint
-	testEndpoint("http://localhost:3000/api/v1/admin/search/analytics?range=7d", jwtToken)
+	testEndpoint(serverHost+"/api/v1/admin/search/analytics?range=7d", jwtToken)
 
 	// Also test the public statistics endpoint
 	fmt.Println("\n=== Testing public statistics endpoint ===")
-	testEndpoint("http://localhost:3000/api/v1/search/statistics", "")
+	testEndpoint(serverHost+"/api/v1/search/statistics", "")
 
 	// Test popular searches
 	fmt.Println("\n=== Testing popular searches endpoint ===")
-	testEndpoint("http://localhost:3000/api/v1/search/statistics/popular", "")
+	testEndpoint(serverHost+"/api/v1/search/statistics/popular", "")
 }
 
 func testEndpoint(url string, token string) {

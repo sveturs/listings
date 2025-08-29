@@ -9,7 +9,7 @@ import { UserContact } from '@/types/contacts';
 import { contactsService } from '@/services/contacts';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
-import config from '@/config';
+import configManager from '@/config';
 
 interface ChatListProps {
   onChatSelect: (chat: MarketplaceChat) => void;
@@ -154,7 +154,9 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
 
   const getChatAvatar = (chat: MarketplaceChat) => {
     if (chat.listing?.images?.[0]?.public_url) {
-      const imageUrl = config.buildImageUrl(chat.listing.images[0].public_url);
+      const imageUrl = configManager.buildImageUrl(
+        chat.listing.images[0].public_url
+      );
       return imageUrl;
     }
     return '/placeholder-listing.jpg';

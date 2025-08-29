@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import config from '@/config';
+import configManager from '@/config';
 import {
   formatAddressWithPrivacy,
   getFullLocalizedAddress,
@@ -82,7 +82,7 @@ export default function MarketplaceCard({
   const getImageUrl = (image?: MarketplaceImage) => {
     if (!image) return null;
     // Используем config.buildImageUrl для правильного формирования URL
-    return config.buildImageUrl(image.public_url);
+    return configManager.buildImageUrl(image.public_url);
   };
 
   const mainImage = item.images?.find((img) => img.is_main) || item.images?.[0];

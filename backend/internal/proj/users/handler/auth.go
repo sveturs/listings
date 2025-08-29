@@ -44,9 +44,44 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 		origin = c.Get("Referer")
 	}
 
+	// Определяем реальный хост откуда пришел запрос
+	host := c.Get("Host")
+	const httpsProtocol = "https"
+	protocol := "http"
+	if c.Protocol() == httpsProtocol || c.Get("X-Forwarded-Proto") == httpsProtocol {
+		protocol = httpsProtocol
+	}
+
+	// Если запрос пришел не с localhost, сохраняем информацию о реальном хосте
+	if host != "" && !strings.HasPrefix(host, "localhost") {
+		// Сохраняем реальный хост в cookie для использования после OAuth callback
+		realBackendURL := fmt.Sprintf("%s://%s", protocol, host)
+		if !strings.Contains(host, ":") {
+			realBackendURL = fmt.Sprintf("%s://%s", protocol, host)
+		}
+
+		// Сохраняем как реальный backend URL, так и origin frontend
+		c.Cookie(&fiber.Cookie{
+			Name:     "oauth_real_host",
+			Value:    realBackendURL,
+			Path:     "/",
+			MaxAge:   300,   // 5 минут
+			Secure:   false, // Важно: false для работы через HTTP
+			HTTPOnly: true,
+			SameSite: "Lax",
+		})
+
+		logger.Info().
+			Str("real_backend_url", realBackendURL).
+			Str("origin", origin).
+			Msg("GoogleAuth: Saving real host for non-localhost access")
+	}
+
 	logger.Info().
 		Str("origin_header", c.Get("Origin")).
 		Str("referer_header", c.Get("Referer")).
+		Str("host_header", host).
+		Str("protocol", protocol).
 		Str("final_origin", origin).
 		Msg("GoogleAuth: processing OAuth request")
 
@@ -58,11 +93,14 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 			Name:     "returnTo",
 			Value:    returnTo,
 			Path:     "/",
-			MaxAge:   300, // 5 минут
-			Secure:   true,
+			MaxAge:   300,   // 5 минут
+			Secure:   false, // Важно: false для работы через HTTP
 			HTTPOnly: true,
+			SameSite: "Lax",
 		})
 	}
+
+	// Всегда используем стандартный GetGoogleAuthURL (с localhost callback)
 	url := h.services.Auth().GetGoogleAuthURL(origin)
 	return c.Redirect(url)
 }
@@ -85,6 +123,28 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		Str("state", state).
 		Str("code_prefix", code[:10]+"...").
 		Msg("GoogleCallback: received OAuth callback")
+
+	// Проверяем, есть ли сохраненный реальный хост (для VPN/LAN доступа)
+	realHost := c.Cookies("oauth_real_host")
+	if realHost != "" {
+		logger.Info().
+			Str("real_host", realHost).
+			Msg("GoogleCallback: Found saved real host, will redirect there")
+
+		// Формируем URL для редиректа на реальный хост с кодом
+		redirectURL := fmt.Sprintf("%s/auth/google/callback?code=%s&state=%s", realHost, code, state)
+
+		// Удаляем cookie с реальным хостом
+		c.Cookie(&fiber.Cookie{
+			Name:   "oauth_real_host",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+
+		// Перенаправляем на реальный хост для завершения OAuth процесса
+		return c.Redirect(redirectURL)
+	}
 
 	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
 	if err != nil {

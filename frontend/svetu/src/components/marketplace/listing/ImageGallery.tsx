@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import config from '@/config';
+import configManager from '@/config';
 
 interface ImageGalleryProps {
   images: Array<{
@@ -56,7 +56,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
         height: img.naturalHeight,
       });
     };
-    img.src = config.buildImageUrl(currentImage.public_url);
+    img.src = configManager.buildImageUrl(currentImage.public_url);
   }, [selectedIndex, images]);
 
   // Keyboard navigation and mouse wheel
@@ -223,7 +223,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
 
     return (
       <Image
-        src={config.buildImageUrl(image.public_url)}
+        src={configManager.buildImageUrl(image.public_url)}
         alt={`${title} ${isMain ? '' : selectedIndex + 1}`}
         fill
         className={isMain ? 'object-contain' : 'object-cover'}
@@ -332,7 +332,7 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
                 style={{
                   right: '1rem',
                   bottom: '1rem',
-                  backgroundImage: `url(${config.buildImageUrl(images[selectedIndex].public_url)})`,
+                  backgroundImage: `url(${configManager.buildImageUrl(images[selectedIndex].public_url)})`,
                   backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
                   backgroundSize: '700%',
                   backgroundRepeat: 'no-repeat',

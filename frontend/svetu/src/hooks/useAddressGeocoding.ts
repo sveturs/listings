@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiClient } from '@/services/api-client';
+import configManager from '@/config';
 
 // Типы для геокодирования
 export interface AddressGeocodingResult {
@@ -68,7 +69,8 @@ export interface UseAddressGeocodingReturn {
   clearError: () => void;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || configManager.getApiUrl();
 
 export function useAddressGeocoding(
   options: UseAddressGeocodingOptions = {}
