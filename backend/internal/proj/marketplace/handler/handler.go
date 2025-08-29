@@ -265,6 +265,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected := authedAPIGroup.Group("/marketplace")
 	marketplaceProtected.Post("/listings", h.Listings.CreateListing)
 	marketplaceProtected.Put("/listings/:id", h.Listings.UpdateListing)
+	marketplaceProtected.Patch("/listings/:id/status", h.Listings.UpdateListingStatus)
 	marketplaceProtected.Delete("/listings/:id", h.Listings.DeleteListing)
 	marketplaceProtected.Post("/listings/check-slug", h.Listings.CheckSlugAvailability)
 	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)

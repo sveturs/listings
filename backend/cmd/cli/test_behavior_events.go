@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -21,7 +22,11 @@ type BehaviorEvent struct {
 }
 
 func main() {
-	apiURL := "http://localhost:3000/api/v1/analytics/track"
+	serverHost := os.Getenv("SERVER_HOST")
+	if serverHost == "" {
+		serverHost = "http://localhost:3000"
+	}
+	apiURL := serverHost + "/api/v1/analytics/track"
 
 	// 5 пар событий с разными session_id
 	testCases := []struct {
@@ -81,8 +86,8 @@ func main() {
 			},
 			UserAgent: fmt.Sprintf("Mozilla/5.0 Test Browser %d", i+1),
 			IPAddress: fmt.Sprintf("192.168.1.%d", 100+i),
-			PageURL:   "http://localhost:3001/search",
-			Referrer:  "http://localhost:3001/",
+			PageURL:   os.Getenv("FRONTEND_URL") + "/search",
+			Referrer:  os.Getenv("FRONTEND_URL") + "/",
 		}
 
 		if err := sendEvent(apiURL, searchEvent); err != nil {
@@ -107,8 +112,8 @@ func main() {
 			},
 			UserAgent: fmt.Sprintf("Mozilla/5.0 Test Browser %d", i+1),
 			IPAddress: fmt.Sprintf("192.168.1.%d", 100+i),
-			PageURL:   fmt.Sprintf("http://localhost:3001/search?q=%s", tc.query),
-			Referrer:  "http://localhost:3001/search",
+			PageURL:   fmt.Sprintf("%s/search?q=%s", os.Getenv("FRONTEND_URL"), tc.query),
+			Referrer:  os.Getenv("FRONTEND_URL") + "/search",
 		}
 
 		if err := sendEvent(apiURL, clickEvent); err != nil {

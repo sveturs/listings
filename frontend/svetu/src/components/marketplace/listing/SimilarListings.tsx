@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import SafeImage from '@/components/SafeImage';
 import { useLocale, useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
-import config from '@/config';
+import configManager from '@/config';
 import ViewToggle from '@/components/common/ViewToggle';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -208,7 +208,9 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                     src={(() => {
                       const imageUrl =
                         listing.images && listing.images.length > 0
-                          ? config.buildImageUrl(listing.images[0].public_url)
+                          ? configManager.buildImageUrl(
+                              listing.images[0].public_url
+                            )
                           : null;
 
                       // Отладка изображений в похожих объявлениях
@@ -327,7 +329,9 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
                       src={(() => {
                         const imageUrl =
                           listing.images && listing.images.length > 0
-                            ? config.buildImageUrl(listing.images[0].public_url)
+                            ? configManager.buildImageUrl(
+                                listing.images[0].public_url
+                              )
                             : null;
 
                         // Отладка изображений в похожих объявлениях (List view)

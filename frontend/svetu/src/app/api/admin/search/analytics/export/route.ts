@@ -1,3 +1,4 @@
+import configManager from '@/config';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get('range') || '7d';
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/admin/search/analytics/export?range=${range}`,
+      `${process.env.NEXT_PUBLIC_API_URL || configManager.getApiUrl()}/api/v1/admin/search/analytics/export?range=${range}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,

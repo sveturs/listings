@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import configManager from '@/config';
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || configManager.getApiUrl();
 
 interface ApiResponse<T = any> {
   success: boolean;

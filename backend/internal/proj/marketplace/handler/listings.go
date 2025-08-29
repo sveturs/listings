@@ -538,6 +538,89 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	})
 }
 
+// UpdateListingStatus обновляет статус объявления
+// @Summary Update listing status
+// @Description Updates the status of a marketplace listing (active/inactive). Only the owner can update
+// @Tags marketplace-listings
+// @Accept json
+// @Produce json
+// @Param id path int true "Listing ID"
+// @Param body body map[string]string true "Status update data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Status updated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/listings/{id}/status [patch]
+func (h *ListingsHandler) UpdateListingStatus(c *fiber.Ctx) error {
+	// Получаем ID пользователя из контекста
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
+	}
+
+	// Получаем ID объявления из параметров URL
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
+	}
+
+	// Парсим тело запроса
+	var request struct {
+		Status string `json:"status"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		logger.Error().Err(err).Msg("Failed to parse request body")
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidData")
+	}
+
+	// Проверяем валидность статуса
+	if request.Status != "active" && request.Status != "inactive" && request.Status != "draft" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidStatus")
+	}
+
+	// Получаем существующее объявление для проверки прав
+	existingListing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+	if err != nil {
+		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get existing listing")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
+	}
+
+	// Проверяем, что пользователь является владельцем объявления
+	if existingListing.UserID != userID {
+		logger.Warn().
+			Int("userID", userID).
+			Int("ownerID", existingListing.UserID).
+			Int("listingID", id).
+			Msg("User tried to update listing status they don't own")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.forbidden")
+	}
+
+	// Обновляем только статус
+	existingListing.Status = request.Status
+
+	// Сохраняем изменения
+	err = h.marketplaceService.UpdateListing(c.Context(), existingListing)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to update listing status")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.updateError")
+	}
+
+	logger.Info().
+		Int("listingId", id).
+		Int("userId", userID).
+		Str("newStatus", request.Status).
+		Msg("Listing status updated successfully")
+
+	// Возвращаем успешный результат
+	return utils.SuccessResponse(c, MessageResponse{
+		Message: "marketplace.statusUpdateSuccess",
+	})
+}
+
 // CheckSlugAvailability проверяет доступность slug
 // @Summary Check slug availability
 // @Description Checks if a slug is available for use and suggests alternatives if not

@@ -1,3 +1,4 @@
+import configManager from '@/config';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
@@ -12,7 +13,7 @@ export async function GET(_request: NextRequest) {
       .join('; ');
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/admin/logistics/dashboard`,
+      `${process.env.NEXT_PUBLIC_API_URL || configManager.getApiUrl()}/api/v1/admin/logistics/dashboard`,
       {
         method: 'GET',
         headers: {

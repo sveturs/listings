@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { setRequestLocale } from 'next-intl/server';
 import { getTranslations } from 'next-intl/server';
 import AdminStorefrontsTable from './AdminStorefrontsTable';
+import configManager from '@/config';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -9,9 +10,12 @@ interface PageProps {
 
 async function getStorefrontsStats() {
   try {
-    const response = await fetch('http://localhost:3000/api/v1/storefronts', {
-      cache: 'no-store',
-    });
+    const response = await fetch(
+      `${configManager.getApiUrl()}/api/v1/storefronts`,
+      {
+        cache: 'no-store',
+      }
+    );
     const data = await response.json();
 
     if (data.storefronts) {

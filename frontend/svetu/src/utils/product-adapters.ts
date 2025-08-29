@@ -5,7 +5,7 @@ import type {
   UnifiedProductImage,
   UnifiedStorefrontInfo,
 } from '@/types/unified-product';
-import config from '@/config';
+import configManager from '@/config';
 
 type StorefrontProduct =
   components['schemas']['backend_internal_domain_models.StorefrontProduct'];
@@ -20,7 +20,7 @@ function adaptMarketplaceImages(
 
   return images.map((img) => ({
     id: img.id,
-    url: config.buildImageUrl(img.public_url),
+    url: configManager.buildImageUrl(img.public_url),
     publicUrl: img.public_url,
     isMain: img.is_main,
   }));

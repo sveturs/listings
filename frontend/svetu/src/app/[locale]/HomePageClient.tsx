@@ -13,6 +13,7 @@ import CartIcon from '@/components/cart/CartIcon';
 import { AuthButton } from '@/components/AuthButton';
 // import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -532,7 +533,9 @@ export default function HomePageClient({
                 'Сербия',
               image:
                 listing.images && listing.images.length > 0
-                  ? `http://localhost:3000${listing.images[0].url || listing.images[0].public_url}`
+                  ? configManager.buildImageUrl(
+                      listing.images[0].url || listing.images[0].public_url
+                    )
                   : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop', // fallback изображение
               rating: listing.rating || 4.0 + Math.random() * 1.0, // Используем настоящий рейтинг или генерируем
               reviews:

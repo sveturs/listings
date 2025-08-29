@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 import { AnimatedSection } from '@/components/ui/AnimatedSection';
 import Link from 'next/link';
-import config from '@/config';
+import configManager from '@/config';
 
 const IdealHomepage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,7 +27,7 @@ const IdealHomepage = () => {
       title: 'iPhone 14 Pro Max 256GB',
       price: 899,
       location: 'Белград',
-      image: config.buildImageUrl('/listings/7/1753007242863504454.jpg'),
+      image: configManager.buildImageUrl('/listings/7/1753007242863504454.jpg'),
       isNew: true,
       views: 234,
     },
@@ -37,7 +37,7 @@ const IdealHomepage = () => {
       price: 650,
       priceUnit: '/месяц',
       location: 'Нови Сад',
-      image: config.buildImageUrl('/listings/8/1753097303704349399.jpg'),
+      image: configManager.buildImageUrl('/listings/8/1753097303704349399.jpg'),
       isPromoted: true,
       views: 567,
     },
@@ -46,7 +46,9 @@ const IdealHomepage = () => {
       title: 'MacBook Pro M2 13"',
       price: 1299,
       location: 'Ниш',
-      image: config.buildImageUrl('/listings/17/1753268215885579893.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/17/1753268215885579893.jpg'
+      ),
       discount: 10,
       oldPrice: 1449,
       views: 189,
@@ -56,7 +58,9 @@ const IdealHomepage = () => {
       title: 'AirPods Pro 2',
       price: 249,
       location: 'Белград',
-      image: config.buildImageUrl('/listings/19/1753351396895835946.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/19/1753351396895835946.jpg'
+      ),
       isNew: true,
       views: 412,
     },
@@ -65,7 +69,9 @@ const IdealHomepage = () => {
       title: 'BMW X5 2019',
       price: 45900,
       location: 'Белград',
-      image: config.buildImageUrl('/listings/36/1753721116303907551.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/36/1753721116303907551.jpg'
+      ),
       isPromoted: true,
       views: 892,
     },
@@ -74,7 +80,9 @@ const IdealHomepage = () => {
       title: 'Дом с участком',
       price: 120000,
       location: 'Земун',
-      image: config.buildImageUrl('/listings/27/1753572833638039456.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/27/1753572833638039456.jpg'
+      ),
       isNew: true,
       views: 445,
     },
@@ -83,7 +91,9 @@ const IdealHomepage = () => {
       title: 'Samsung Galaxy S23',
       price: 1099,
       location: 'Нови Сад',
-      image: config.buildImageUrl('/listings/28/1753574013161901892.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/28/1753574013161901892.jpg'
+      ),
       discount: 15,
       oldPrice: 1299,
       views: 678,
@@ -93,7 +103,9 @@ const IdealHomepage = () => {
       title: 'Офисное кресло',
       price: 799,
       location: 'Белград',
-      image: config.buildImageUrl('/listings/29/1753575302423995244.jpg'),
+      image: configManager.buildImageUrl(
+        '/listings/29/1753575302423995244.jpg'
+      ),
       views: 234,
     },
   ];
@@ -392,7 +404,7 @@ const IdealHomepage = () => {
                 price: 599,
                 oldPrice: 899,
                 discount: 33,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/20/1753428897128302370.jpg'
                 ),
               },
@@ -401,7 +413,7 @@ const IdealHomepage = () => {
                 price: 89,
                 oldPrice: 149,
                 discount: 40,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/21/1753445822265644326.jpg'
                 ),
               },
@@ -410,7 +422,7 @@ const IdealHomepage = () => {
                 price: 449,
                 oldPrice: 549,
                 discount: 18,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/23/1753548160663849380.jpg'
                 ),
               },
@@ -419,7 +431,7 @@ const IdealHomepage = () => {
                 price: 549,
                 oldPrice: 699,
                 discount: 21,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/24/1753549239639443133.jpg'
                 ),
               },
@@ -428,7 +440,7 @@ const IdealHomepage = () => {
                 price: 2999,
                 oldPrice: 3999,
                 discount: 25,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/25/1753550885742188000.jpg'
                 ),
               },
@@ -437,7 +449,7 @@ const IdealHomepage = () => {
                 price: 399,
                 oldPrice: 599,
                 discount: 33,
-                image: config.buildImageUrl(
+                image: configManager.buildImageUrl(
                   '/listings/26/1753554432788980038.jpg'
                 ),
               },
@@ -1196,7 +1208,7 @@ const IdealHomepage = () => {
                   <div className="artboard artboard-demo phone-1 bg-base-100">
                     <div className="w-full h-full flex items-center justify-center">
                       <img
-                        src={config.buildImageUrl(
+                        src={configManager.buildImageUrl(
                           '/listings/7/1753007242863504454.jpg'
                         )}
                         alt="App Screenshot"

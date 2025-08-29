@@ -180,7 +180,7 @@ export default function MyListingsPage() {
       setUpdatingId(listingId);
 
       const response = await apiClient.patch(
-        `/api/v1/marketplace/listings/${listingId}`,
+        `/api/v1/marketplace/listings/${listingId}/status`,
         { status: newStatus }
       );
 

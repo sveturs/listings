@@ -1,11 +1,11 @@
-#\!/bin/bash
+#!/bin/bash
 
 # Скрипт для переиндексации товаров витрин в OpenSearch
 
 echo "🔄 Начинаем переиндексацию товаров витрин..."
 
 # Получаем все товары витрин из БД
-PRODUCTS=$(psql "postgres://postgres:password@localhost:5432/svetubd?sslmode=disable" -t -c "
+PRODUCTS=$(psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable" -t -c "
 SELECT json_build_object(
     'id', sp.id,
     'storefront_id', sp.storefront_id,
@@ -67,9 +67,9 @@ echo "$PRODUCTS" | while IFS= read -r product_json; do
   "product_type": "storefront",
   "storefront_id": $STOREFRONT_ID,
   "category_id": $CATEGORY_ID,
-  "name": "$NAME",
-  "name_lowercase": "$(echo "$NAME" | tr '[:upper:]' '[:lower:]')",
-  "description": "$DESCRIPTION",
+  "name": "$(echo "$NAME" | sed 's/"/\\"/g')",
+  "name_lowercase": "$(echo "$NAME" | tr '[:upper:]' '[:lower:]' | sed 's/"/\\"/g')",
+  "description": "$(echo "$DESCRIPTION" | sed 's/"/\\"/g')",
   "price": $PRICE,
   "currency": "$CURRENCY",
   "stock_quantity": $STOCK_QUANTITY,
@@ -85,8 +85,8 @@ echo "$PRODUCTS" | while IFS= read -r product_json; do
   },
   "storefront": {
     "id": $STOREFRONT_ID,
-    "name": "$STOREFRONT_NAME",
-    "slug": "$STOREFRONT_SLUG"
+    "name": "$(echo "$STOREFRONT_NAME" | sed 's/"/\\"/g')",
+    "slug": "$(echo "$STOREFRONT_SLUG" | sed 's/"/\\"/g')"
   },
   "created_at": "$(date -Iseconds)",
   "updated_at": "$(date -Iseconds)"
@@ -102,11 +102,11 @@ EOFDOC
     # Проверяем результат
     if echo "$RESPONSE" | grep -q '"result":"created"\|"result":"updated"'; then
         echo "✅ Товар ID=$ID успешно проиндексирован (остаток: $STOCK_QUANTITY)"
-        ((SUCCESS_COUNT++))
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
         echo "❌ Ошибка при индексации товара ID=$ID"
         echo "   Ответ: $RESPONSE"
-        ((FAIL_COUNT++))
+        FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
 done
 

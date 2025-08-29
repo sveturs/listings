@@ -205,21 +205,7 @@ class ConfigManager {
       return config.api.internalUrl;
     }
 
-    // В development на клиенте проверяем, откуда идет доступ
-    // Если доступ через localhost - используем относительные пути для прокси Next.js
-    // Если доступ через IP - используем полный URL из конфигурации
-    if (config.env.isDevelopment && !config.env.isServer) {
-      // Проверяем текущий hostname
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        // Если доступ через localhost или 127.0.0.1 - используем относительные пути
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return '';
-        }
-      }
-      // Для всех остальных случаев (доступ по IP или домену) используем полный URL
-    }
-
+    // Всегда используем URL из конфигурации - это проще и надежнее
     return config.api.url;
   }
 
@@ -252,20 +238,38 @@ class ConfigManager {
   }
 
   public buildImageUrl(path: string): string {
+    console.log('🔧 buildImageUrl called with path:', path);
+
     if (path.startsWith('http')) {
+      console.log('🔧 Path already has http, returning:', path);
       return path;
     }
 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    console.log('🔧 normalizedPath:', normalizedPath);
+
+    // Используем localhost для MinIO вместо IP адреса
+    const minioUrl = 'http://localhost:9000';
+
+    // Для путей типа "268/1756382511472715941.jpg", "268/image1.jpg" и "products/215/main.jpg"
+    if (normalizedPath.match(/^\/(\d+\/.*\.jpg|products\/\d+\/.*\.jpg)$/)) {
+      const result = `${minioUrl}/listings${normalizedPath}`;
+      console.log('🔧 Matched listing pattern, result:', result);
+      return result;
+    }
 
     if (
       normalizedPath.startsWith('/listings/') ||
       normalizedPath.startsWith('/chat-files/')
     ) {
-      return `${this.getImageBaseUrl()}${normalizedPath}`;
+      const result = `${minioUrl}${normalizedPath}`;
+      console.log('🔧 Matched listings/chat pattern, result:', result);
+      return result;
     }
 
-    return `${this.getConfig().api.url}${normalizedPath}`;
+    const result = `${this.getConfig().api.url}${normalizedPath}`;
+    console.log('🔧 Default fallback, result:', result);
+    return result;
   }
 }
 
