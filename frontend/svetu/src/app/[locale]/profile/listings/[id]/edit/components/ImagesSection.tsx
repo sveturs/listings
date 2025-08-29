@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useRef, useCallback } from 'react';
 import { apiClient } from '@/services/api-client';
 import Image from 'next/image';
+import configManager from '@/config';
 
 interface Image {
   id: number;
@@ -56,16 +57,18 @@ export function ImagesSection({
 
         const response = await apiClient.post(
           `/api/v1/marketplace/listings/${listingId}/images`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
+          formData
+          // Не устанавливаем Content-Type для FormData - браузер сделает это автоматически с boundary
         );
 
-        if (response.data?.images) {
+        console.log('Upload response:', response.data);
+        
+        if (response.data?.data?.images) {
+          onImagesChange([...images, ...response.data.data.images]);
+        } else if (response.data?.images) {
           onImagesChange([...images, ...response.data.images]);
+        } else {
+          console.warn('No images data in response:', response.data);
         }
       } catch (error) {
         console.error('Error uploading images:', error);
@@ -109,6 +112,10 @@ export function ImagesSection({
       console.error('Error deleting image:', error);
       // TODO: Show error toast
     }
+  };
+
+  const getImageUrl = (image: Image) => {
+    return configManager.buildImageUrl(image.public_url);
   };
 
   const handleSetMain = async (imageId: number) => {
@@ -200,7 +207,7 @@ export function ImagesSection({
               <div key={image.id} className="relative group">
                 <div className="aspect-square rounded-lg overflow-hidden bg-base-200">
                   <Image
-                    src={image.public_url}
+                    src={getImageUrl(image)}
                     alt={image.file_name}
                     fill
                     className="object-cover"

@@ -248,8 +248,8 @@ class ConfigManager {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     console.log('🔧 normalizedPath:', normalizedPath);
 
-    // Используем localhost для MinIO вместо IP адреса
-    const minioUrl = 'http://localhost:9000';
+    // Используем переменную окружения для MinIO URL
+    const minioUrl = this.getConfig().storage.minioUrl || 'http://localhost:9000';
 
     // Для путей типа "268/1756382511472715941.jpg", "268/image1.jpg" и "products/215/main.jpg"
     if (normalizedPath.match(/^\/(\d+\/.*\.jpg|products\/\d+\/.*\.jpg)$/)) {

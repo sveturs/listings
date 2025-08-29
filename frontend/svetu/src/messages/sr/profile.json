@@ -177,7 +177,8 @@
     "setAsMain": "Postavi kao glavnu",
     "helpText": "Prva slika će biti korišćena kao glavna. Možete promeniti redosled prevlačenjem slika.",
     "maxSize": "Maksimalna veličina fajla: 5MB",
-    "deleteConfirm": "Da li ste sigurni da želite da obrišete ovu sliku?"
+    "deleteConfirm": "Da li ste sigurni da želite da obrišete ovu sliku?",
+    "uploading": "Otprema..."
   },
   "saving": "Čuvanje...",
   "unsavedChanges": "Imate nesačuvane izmene. Da li ste sigurni da želite da napuštite stranicu?",

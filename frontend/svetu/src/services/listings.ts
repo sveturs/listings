@@ -167,11 +167,12 @@ export class ListingsService {
     const formData = new FormData();
 
     files.forEach((file, index) => {
-      formData.append('images', file);
-      if (index === mainImageIndex) {
-        formData.append('main_image_index', index.toString());
-      }
+      formData.append('file', file);
     });
+    
+    if (mainImageIndex >= 0 && mainImageIndex < files.length) {
+      formData.append('main_image_index', mainImageIndex.toString());
+    }
 
     // Отладочное логирование
     console.log('Uploading images:', {
