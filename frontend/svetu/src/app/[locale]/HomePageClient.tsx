@@ -1477,25 +1477,6 @@ export default function HomePageClient({
           </svg>
         </Link>
 
-        {/* Мобильная навигация */}
-        <div className="btm-nav lg:hidden">
-          <button className="text-primary">
-            <FiSearch className="w-5 h-5" />
-            <span className="btm-nav-label">{t('search')}</span>
-          </button>
-          <button>
-            <FiHeart className="w-5 h-5" />
-            <span className="btm-nav-label">{t('favorites')}</span>
-          </button>
-          <div className="text-secondary">
-            <CartIcon />
-            <span className="btm-nav-label">{t('cart')}</span>
-          </div>
-          <div className="flex flex-col items-center justify-center">
-            <AuthButton />
-            <span className="btm-nav-label text-xs">{tCommon('profile')}</span>
-          </div>
-        </div>
       </div>
     </PageTransition>
   );
