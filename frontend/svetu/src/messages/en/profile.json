@@ -152,13 +152,20 @@
     "excellent": "Excellent",
     "slug": "URL slug",
     "slugPlaceholder": "your-listing-url",
+    "slugAutoChanged": "URL was automatically changed as the specified one is already taken",
+    "slugChanged": "URL will be changed to: {suggestion}",
     "keywords": "Keywords",
     "keywordsPlaceholder": "Enter keywords separated by comma",
     "keywordsHint": "Separate keywords with comma",
     "analysis": {
       "title": "SEO Analysis",
       "titleScore": "Title",
-      "descScore": "Description"
+      "descScore": "Description",
+      "titleTooShort": "Title is too short (minimum 30 characters recommended)",
+      "titleTooLong": "Title is too long (maximum 60 characters recommended)",
+      "descTooShort": "Description is too short (minimum 100 characters recommended)",
+      "descTooLong": "Description is too long (maximum 300 characters recommended)",
+      "recommendations": "Recommendations"
     },
     "preview": {
       "title": "Search Preview"

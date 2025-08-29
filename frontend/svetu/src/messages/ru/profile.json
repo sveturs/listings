@@ -152,13 +152,20 @@
     "excellent": "Отлично",
     "slug": "URL-адрес",
     "slugPlaceholder": "url-adres-vashego-obyavleniya",
+    "slugAutoChanged": "URL был автоматически изменен, так как указанный уже занят",
+    "slugChanged": "URL будет изменен на: {suggestion}",
     "keywords": "Ключевые слова",
     "keywordsPlaceholder": "Введите ключевые слова через запятую",
     "keywordsHint": "Разделяйте ключевые слова запятой",
     "analysis": {
       "title": "SEO анализ",
       "titleScore": "Заголовок",
-      "descScore": "Описание"
+      "descScore": "Описание",
+      "titleTooShort": "Заголовок слишком короткий (рекомендуется минимум 30 символов)",
+      "titleTooLong": "Заголовок слишком длинный (рекомендуется максимум 60 символов)",
+      "descTooShort": "Описание слишком короткое (рекомендуется минимум 100 символов)",
+      "descTooLong": "Описание слишком длинное (рекомендуется максимум 300 символов)",
+      "recommendations": "Рекомендации"
     },
     "preview": {
       "title": "Предпросмотр в поиске"

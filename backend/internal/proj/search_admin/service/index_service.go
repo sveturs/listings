@@ -536,10 +536,291 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 		return fmt.Errorf("OpenSearch client not initialized")
 	}
 
-	// TODO: Реализовать переиндексацию
-	// Это должно вызывать соответствующий сервис переиндексации
+	if s.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
 
-	return fmt.Errorf("reindexing not implemented yet")
+	var totalIndexed int
+	var totalErrors int
+
+	// Определяем какие типы документов нужно переиндексировать
+	shouldIndexListings := docType == "" || docType == "listing"
+	shouldIndexProducts := docType == "" || docType == "product"
+
+	// Переиндексация объявлений маркетплейса
+	if shouldIndexListings {
+		// Получаем все активные объявления напрямую из БД
+		query := `
+			SELECT 
+				ml.id,
+				ml.title,
+				ml.description,
+				ml.category_id,
+				ml.user_id,
+				ml.price,
+				ml.status,
+				ml.created_at,
+				mc.name as category_name,
+				u.name as user_name
+			FROM marketplace_listings ml
+			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+			LEFT JOIN users u ON ml.user_id = u.id
+			WHERE ml.status = 'active'
+			ORDER BY ml.id
+		`
+		
+		rows, err := s.db.QueryContext(ctx, query)
+		if err != nil {
+			return fmt.Errorf("failed to get active listings: %w", err)
+		}
+		defer rows.Close()
+
+		// Подсчитываем количество для логирования
+		listingCount := 0
+		
+		// Индексируем пакетами для оптимизации
+		batchSize := 100
+		var batch []map[string]interface{}
+		
+		for rows.Next() {
+			var listing struct {
+				ID           int        `db:"id"`
+				Title        string     `db:"title"`
+				Description  string     `db:"description"`
+				CategoryID   int        `db:"category_id"`
+				UserID       int        `db:"user_id"`
+				Price        float64    `db:"price"`
+				Status       string     `db:"status"`
+				CreatedAt    time.Time  `db:"created_at"`
+				CategoryName *string    `db:"category_name"`
+				UserName     *string    `db:"user_name"`
+			}
+			
+			if err := rows.Scan(
+				&listing.ID,
+				&listing.Title,
+				&listing.Description,
+				&listing.CategoryID,
+				&listing.UserID,
+				&listing.Price,
+				&listing.Status,
+				&listing.CreatedAt,
+				&listing.CategoryName,
+				&listing.UserName,
+			); err != nil {
+				fmt.Printf("Error scanning listing: %v\n", err)
+				totalErrors++
+				continue
+			}
+
+			// Создаем документ для индексации
+			doc := map[string]interface{}{
+				"id":           listing.ID,
+				"title":        listing.Title,
+				"description":  listing.Description,
+				"category_id":  listing.CategoryID,
+				"user_id":      listing.UserID,
+				"price":        listing.Price,
+				"status":       listing.Status,
+				"created_at":   listing.CreatedAt,
+				"type":         "listing",
+			}
+			
+			if listing.CategoryName != nil {
+				doc["category_name"] = *listing.CategoryName
+			}
+			if listing.UserName != nil {
+				doc["user_name"] = *listing.UserName
+			}
+
+			batch = append(batch, doc)
+			listingCount++
+
+			// Индексируем пакет при достижении размера
+			if len(batch) >= batchSize {
+				if err := s.indexBatch(ctx, batch); err != nil {
+					fmt.Printf("Error indexing batch: %v\n", err)
+					totalErrors += len(batch)
+				} else {
+					totalIndexed += len(batch)
+				}
+				batch = nil
+			}
+		}
+
+		// Индексируем оставшийся пакет
+		if len(batch) > 0 {
+			if err := s.indexBatch(ctx, batch); err != nil {
+				fmt.Printf("Error indexing final batch: %v\n", err)
+				totalErrors += len(batch)
+			} else {
+				totalIndexed += len(batch)
+			}
+		}
+		
+		fmt.Printf("Indexed %d listings, %d errors\n", listingCount, totalErrors)
+	}
+
+	// Переиндексация товаров витрин
+	if shouldIndexProducts {
+		// Получаем все активные товары витрин
+		query := `
+			SELECT 
+				sp.id,
+				sp.storefront_id,
+				sp.name,
+				sp.description,
+				sp.category_id,
+				sp.price,
+				'active' as status,
+				sp.created_at,
+				sf.name as storefront_name,
+				mc.name as category_name
+			FROM storefront_products sp
+			LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
+			LEFT JOIN marketplace_categories mc ON sp.category_id = mc.id
+			WHERE sp.is_active = true
+			ORDER BY sp.id
+		`
+		
+		rows, err := s.db.QueryContext(ctx, query)
+		if err != nil {
+			return fmt.Errorf("failed to get active products: %w", err)
+		}
+		defer rows.Close()
+
+		productCount := 0
+		var batch []map[string]interface{}
+		batchSize := 100
+		
+		for rows.Next() {
+			var product struct {
+				ID             int       `db:"id"`
+				StorefrontID   int       `db:"storefront_id"`
+				Name           string    `db:"name"`
+				Description    string    `db:"description"`
+				CategoryID     *int      `db:"category_id"`
+				Price          float64   `db:"price"`
+				Status         string    `db:"status"`
+				CreatedAt      time.Time `db:"created_at"`
+				StorefrontName *string   `db:"storefront_name"`
+				CategoryName   *string   `db:"category_name"`
+			}
+			
+			if err := rows.Scan(
+				&product.ID,
+				&product.StorefrontID,
+				&product.Name,
+				&product.Description,
+				&product.CategoryID,
+				&product.Price,
+				&product.Status,
+				&product.CreatedAt,
+				&product.StorefrontName,
+				&product.CategoryName,
+			); err != nil {
+				fmt.Printf("Error scanning product: %v\n", err)
+				totalErrors++
+				continue
+			}
+
+			// Создаем документ для индексации
+			doc := map[string]interface{}{
+				"id":            fmt.Sprintf("sp_%d", product.ID),
+				"product_id":    product.ID,
+				"name":          product.Name,
+				"description":   product.Description,
+				"storefront_id": product.StorefrontID,
+				"price":         product.Price,
+				"status":        product.Status,
+				"created_at":    product.CreatedAt,
+				"type":          "product",
+			}
+			
+			if product.CategoryID != nil {
+				doc["category_id"] = *product.CategoryID
+			}
+			if product.StorefrontName != nil {
+				doc["storefront_name"] = *product.StorefrontName
+			}
+			if product.CategoryName != nil {
+				doc["category_name"] = *product.CategoryName
+			}
+
+			batch = append(batch, doc)
+			productCount++
+
+			// Индексируем пакет при достижении размера
+			if len(batch) >= batchSize {
+				if err := s.indexBatch(ctx, batch); err != nil {
+					fmt.Printf("Error indexing batch: %v\n", err)
+					totalErrors += len(batch)
+				} else {
+					totalIndexed += len(batch)
+				}
+				batch = nil
+			}
+		}
+
+		// Индексируем оставшийся пакет
+		if len(batch) > 0 {
+			if err := s.indexBatch(ctx, batch); err != nil {
+				fmt.Printf("Error indexing final batch: %v\n", err)
+				totalErrors += len(batch)
+			} else {
+				totalIndexed += len(batch)
+			}
+		}
+		
+		fmt.Printf("Indexed %d products, %d errors\n", productCount, totalErrors)
+	}
+
+	if totalErrors > 0 {
+		return fmt.Errorf("reindexing completed with %d errors, %d documents indexed", totalErrors, totalIndexed)
+	}
+
+	fmt.Printf("Reindexing completed successfully: %d documents indexed\n", totalIndexed)
+	return nil
+}
+
+// indexBatch индексирует пакет документов в OpenSearch
+func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{}) error {
+	if len(docs) == 0 {
+		return nil
+	}
+
+	// Формируем bulk запрос для OpenSearch
+	var bulkBody []byte
+	for _, doc := range docs {
+		// Определяем ID документа
+		docID := ""
+		if id, ok := doc["id"].(int); ok {
+			docID = fmt.Sprintf("%d", id)
+		} else if id, ok := doc["id"].(string); ok {
+			docID = id
+		}
+
+		// Добавляем команду индексации
+		action := map[string]interface{}{
+			"index": map[string]interface{}{
+				"_index": marketplaceIndex,
+				"_id":    docID,
+			},
+		}
+		
+		actionJSON, _ := json.Marshal(action)
+		bulkBody = append(bulkBody, actionJSON...)
+		bulkBody = append(bulkBody, '\n')
+		
+		// Добавляем документ
+		docJSON, _ := json.Marshal(doc)
+		bulkBody = append(bulkBody, docJSON...)
+		bulkBody = append(bulkBody, '\n')
+	}
+
+	// Отправляем bulk запрос
+	_, err := s.osClient.Execute(ctx, "POST", "/_bulk", bulkBody)
+	return err
 }
 
 // Вспомогательные функции

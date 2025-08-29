@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"backend/internal/domain"
+	"backend/internal/storage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 
@@ -14,13 +15,21 @@ import (
 type Service struct {
 	repo     *postgres.SearchConfigRepository
 	osClient *opensearch.OpenSearchClient
+	db       *sqlx.DB
+	storage  storage.Storage
 }
 
 func NewService(db *sqlx.DB, osClient *opensearch.OpenSearchClient) *Service {
 	return &Service{
 		repo:     postgres.NewSearchConfigRepository(db),
 		osClient: osClient,
+		db:       db,
 	}
+}
+
+// SetStorage устанавливает storage для сервиса
+func (s *Service) SetStorage(storage storage.Storage) {
+	s.storage = storage
 }
 
 // Weight management

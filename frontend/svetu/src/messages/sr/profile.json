@@ -152,13 +152,20 @@
     "excellent": "Odlično",
     "slug": "URL adresa",
     "slugPlaceholder": "url-vašeg-oglasa",
+    "slugAutoChanged": "URL je automatski promenjen jer je navedeni već zauzet",
+    "slugChanged": "URL će biti promenjen na: {suggestion}",
     "keywords": "Ključne reči",
     "keywordsPlaceholder": "Unesite ključne reči odvojene zarezom",
     "keywordsHint": "Odvojite ključne reči zarezom",
     "analysis": {
       "title": "SEO analiza",
       "titleScore": "Naslov",
-      "descScore": "Opis"
+      "descScore": "Opis",
+      "titleTooShort": "Naslov je prekratak (preporučuje se minimum 30 karaktera)",
+      "titleTooLong": "Naslov je predugačak (preporučuje se maksimum 60 karaktera)",
+      "descTooShort": "Opis je prekratak (preporučuje se minimum 100 karaktera)",
+      "descTooLong": "Opis je predugačak (preporučuje se maksimum 300 karaktera)",
+      "recommendations": "Preporuke"
     },
     "preview": {
       "title": "Pregled u pretrazi"

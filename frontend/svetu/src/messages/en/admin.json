@@ -12,6 +12,9 @@
   "allLanguages": "All Languages",
   "weight": "Weight",
   "add": "Add",
+  "usage": "Usage",
+  "deleteConfirm": "Are you sure you want to delete this keyword?",
+  "developmentStatus": "In Development",
   "negative": "Negative",
   "noKeywords": "No keywords",
   "attributesTitle": "Attributes",
@@ -341,15 +344,16 @@
     "noRecordsFound": "No records found"
   },
   "common": {
+    "back": "Back",
     "translate": "Translate",
     "edit": "Edit",
     "remove": "Remove",
+    "status": "Status",
     "selectAll": "Select All",
     "total": "Total",
     "clearFilters": "Clear Filters",
     "search": "Search",
     "all": "All",
-    "status": "Status",
     "filtered": "Filtered",
     "activeFilters": "Active Filters",
     "loading": "Loading...",
@@ -926,7 +930,6 @@
   "builtin": "Built-in",
   "builtinNotEditable": "Built-in configurations cannot be edited",
   "edit": "Edit",
-  "status": "Status",
   "languageSelect": "Select language",
   "testing": "Testing",
   "inputText": "Enter text",
@@ -1117,29 +1120,30 @@
       "receiver": "Receiver",
       "problem": "Problem"
     },
-    "logistics": {
-      "actions": {
-        "track": "Track",
-        "export": "Export"
-      },
-      "status": {
-        "pending": "Pending",
-        "in_transit": "In Transit",
-        "delivered": "Delivered",
-        "failed": "Failed",
-        "cancelled": "Cancelled"
-      },
-      "table": {
-        "tracking_number": "Tracking Number",
-        "status": "Status",
-        "provider": "Provider",
-        "recipient": "Recipient",
-        "sender": "Sender",
-        "cod": "Cash on Delivery",
-        "weight": "Weight",
-        "created": "Created",
-        "actions": "Actions"
-      }
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "table": {
+      "tracking_number": "Tracking Number",
+      "status": "Status",
+      "provider": "Provider",
+      "recipient": "Recipient",
+      "sender": "Sender",
+      "cod": "Cash on Delivery",
+      "weight": "Weight",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "actions": {
+      "track": "Track",
+      "export": "Export",
+      "view": "View",
+      "new_shipment": "New Shipment"
     }
   },
   "storefrontProducts": {
@@ -1313,5 +1317,43 @@
     "hardDelete": "Hard Delete",
     "softDeleteDesc": "Deactivates the storefront (can be restored)",
     "hardDeleteDesc": "Permanently removes the storefront from database (irreversible)"
+  },
+  "dashboard": "Logistics Monitoring Dashboard",
+  "stats": {
+    "today_shipments": "Today's Shipments",
+    "today_delivered": "Delivered Today",
+    "active_shipments": "In Transit",
+    "problem_shipments": "Problem Shipments",
+    "avg_delivery_time": "Avg Delivery Time",
+    "delivery_success_rate": "Delivery Success Rate",
+    "weekly_deliveries": "Deliveries for Last 7 Days",
+    "status_distribution": "Status Distribution",
+    "courier_performance": "Courier Performance"
+  },
+  "table": {
+    "date": "Date",
+    "sent": "Sent",
+    "delivered": "Delivered",
+    "in_transit": "In Transit",
+    "problems": "Problems",
+    "courier_service": "Courier Service",
+    "shipments": "Shipments",
+    "success_rate": "Success Rate",
+    "avg_time": "Avg Time"
+  },
+  "quickActions": {
+    "title": "Quick Actions"
+  },
+  "view_all_shipments": "View All Shipments",
+  "problem_shipments": "Problem Shipments",
+  "export_report": "Export Report",
+  "monitoring_settings": "Monitoring Settings",
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "in_transit": "In Transit",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "returned": "Returned"
   }
 }

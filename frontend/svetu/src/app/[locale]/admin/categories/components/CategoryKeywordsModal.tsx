@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Loader2, Tags, TrendingUp, Languages, Trash2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface CategoryKeyword {
   id: number;
@@ -44,8 +45,15 @@ export default function CategoryKeywordsModal({
 
     try {
       setLoading(true);
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {};
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
       const response = await fetch(
-        `/api/v1/admin/categories/${categoryId}/keywords`
+        `/api/v1/admin/categories/${categoryId}/keywords`,
+        { headers }
       );
 
       if (response.ok) {
@@ -82,13 +90,19 @@ export default function CategoryKeywordsModal({
 
     try {
       setSaving(true);
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
       const response = await fetch(
         `/api/v1/admin/categories/${categoryId}/keywords`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify(newKeyword),
         }
       );
@@ -118,10 +132,17 @@ export default function CategoryKeywordsModal({
     if (!confirm(t('deleteConfirm'))) return;
 
     try {
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {};
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
       const response = await fetch(
         `/api/v1/admin/categories/keywords/${keywordId}`,
         {
           method: 'DELETE',
+          headers
         }
       );
 
@@ -139,13 +160,19 @@ export default function CategoryKeywordsModal({
 
   const updateWeight = async (keywordId: number, newWeight: number) => {
     try {
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      
       const response = await fetch(
         `/api/v1/admin/categories/keywords/${keywordId}`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({ weight: newWeight }),
         }
       );

@@ -1,4 +1,4 @@
-import { loadMessages } from '@/lib/i18n/loadMessages';
+import { loadMessages } from '@/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 import AdminLayoutClient from './layout-client';
 
@@ -17,6 +17,7 @@ export default async function AdminLayout({
     'misc',
     'common',
     'auth-shared',
+    'marketplace', // Для IconPicker компонента
   ]);
 
   return (
