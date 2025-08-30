@@ -118,7 +118,7 @@ JSON: {bestVariant: "заголовок", scores: [{title: "...", score: чис�
       abTestCache.set(cacheKey, { result, timestamp: Date.now() });
 
       return NextResponse.json(result);
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse Claude response, using heuristics');
       const result = analyzeHeuristically(titleVariants);
       return NextResponse.json(result);

@@ -166,10 +166,10 @@ export class ListingsService {
   ): Promise<UploadImagesResponse> {
     const formData = new FormData();
 
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       formData.append('file', file);
     });
-    
+
     if (mainImageIndex >= 0 && mainImageIndex < files.length) {
       formData.append('main_image_index', mainImageIndex.toString());
     }

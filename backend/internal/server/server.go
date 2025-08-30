@@ -187,6 +187,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
 	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService)
 	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New())
+	// TODO: После рефакторинга передать storage или services для переиндексации
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())
 

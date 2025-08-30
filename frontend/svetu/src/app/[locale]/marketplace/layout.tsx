@@ -1,4 +1,4 @@
-import { loadMessages } from '@/lib/i18n/loadMessages';
+import { loadMessages } from '@/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 
 export default async function MarketplaceLayout({

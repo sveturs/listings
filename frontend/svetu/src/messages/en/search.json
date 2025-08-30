@@ -79,5 +79,6 @@
   "showLess": "Show less",
   "expandAll": "Expand all",
   "collapseAll": "Collapse all",
-  "noCategories": "No categories available"
+  "noCategories": "No categories available",
+  "updatingResults": "Updating results..."
 }

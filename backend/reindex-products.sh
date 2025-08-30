@@ -94,8 +94,8 @@ echo "$PRODUCTS" | while IFS= read -r product_json; do
 EOFDOC
 )
     
-    # Индексируем документ в OpenSearch
-    RESPONSE=$(curl -s -X POST "http://localhost:9200/marketplace/_doc/sp_$ID" \
+    # Индексируем документ в OpenSearch (в индекс storefront_products)
+    RESPONSE=$(curl -s -X POST "http://localhost:9200/storefront_products/_doc/$ID" \
         -H "Content-Type: application/json" \
         -d "$DOC")
     

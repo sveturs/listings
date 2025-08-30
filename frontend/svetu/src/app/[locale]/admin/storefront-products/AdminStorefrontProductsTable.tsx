@@ -746,7 +746,7 @@ export default function AdminStorefrontProductsTable() {
                                     ? imagePath
                                     : imagePath.startsWith('/')
                                       ? imagePath
-                                      : `/products/${imagePath}`;
+                                      : `/listings/${imagePath}`;
                                 })()}
                                 alt={product.name}
                                 className="w-full h-full object-cover rounded"

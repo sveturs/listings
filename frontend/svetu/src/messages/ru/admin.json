@@ -15,6 +15,9 @@
   "allLanguages": "Все языки",
   "weight": "Вес",
   "add": "Добавить",
+  "usage": "Использование",
+  "deleteConfirm": "Вы уверены, что хотите удалить это ключевое слово?",
+  "developmentStatus": "В разработке",
   "negative": "Отрицательные",
   "noKeywords": "Нет ключевых слов",
   "attributesTitle": "Атрибуты",
@@ -344,6 +347,7 @@
     "noRecordsFound": "[MISSING_RU] noRecordsFound"
   },
   "common": {
+    "back": "Назад",
     "translate": "Перевести",
     "edit": "Редактировать",
     "remove": "Удалить",
@@ -929,7 +933,6 @@
   "builtin": "Встроенный",
   "builtinNotEditable": "Встроенные конфигурации нельзя редактировать",
   "edit": "Редактировать",
-  "status": "Статус",
   "languageSelect": "Выберите язык",
   "testing": "Тестирование",
   "inputText": "Введите текст",
@@ -1121,6 +1124,30 @@
       "sender": "Отправитель",
       "receiver": "Получатель",
       "problem": "Проблема"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "in_transit": "В пути",
+      "delivered": "Доставлено",
+      "failed": "Не удалось",
+      "cancelled": "Отменено"
+    },
+    "table": {
+      "tracking_number": "Номер отслеживания",
+      "status": "Статус",
+      "provider": "Поставщик",
+      "recipient": "Получатель",
+      "sender": "Отправитель",
+      "cod": "Наложенный платеж",
+      "weight": "Вес",
+      "created": "Создано",
+      "actions": "Действия"
+    },
+    "actions": {
+      "track": "Отследить",
+      "export": "Экспорт",
+      "view": "Просмотреть",
+      "new_shipment": "Новое отправление"
     }
   },
   "storefrontProducts": {
@@ -1295,5 +1322,43 @@
     "hardDelete": "Жесткое удаление",
     "softDeleteDesc": "Деактивирует витрину (можно восстановить)",
     "hardDeleteDesc": "Полностью удаляет витрину из базы данных (необратимо)"
+  },
+  "dashboard": "Панель мониторинга логистики",
+  "stats": {
+    "today_shipments": "Отправлений сегодня",
+    "today_delivered": "Доставлено сегодня",
+    "active_shipments": "В пути",
+    "problem_shipments": "Проблемные",
+    "avg_delivery_time": "Ср. время доставки",
+    "delivery_success_rate": "Успешность доставки",
+    "weekly_deliveries": "Доставки за последние 7 дней",
+    "status_distribution": "Распределение по статусам",
+    "courier_performance": "Производительность курьерских служб"
+  },
+  "table": {
+    "date": "Дата",
+    "sent": "Отправлено",
+    "delivered": "Доставлено",
+    "in_transit": "В пути",
+    "problems": "Проблемы",
+    "courier_service": "Служба доставки",
+    "shipments": "Отправлений",
+    "success_rate": "Успешность",
+    "avg_time": "Ср. время"
+  },
+  "quickActions": {
+    "title": "Быстрые действия"
+  },
+  "view_all_shipments": "Просмотр всех отправлений",
+  "problem_shipments": "Проблемные отправления",
+  "export_report": "Экспорт отчета",
+  "monitoring_settings": "Настройки мониторинга",
+  "status": {
+    "pending": "В ожидании",
+    "processing": "Обработка",
+    "in_transit": "В пути",
+    "delivered": "Доставлено",
+    "cancelled": "Отменено",
+    "returned": "Возвращено"
   }
 }

@@ -1,8 +1,46 @@
 {
-  "checkError": "Failed to verify administrator privileges",
-  "required": "Administrator privileges required",
-  "title": "Administration",
-  "manage": "Manage",
+  "checkError": "Neuspešna provera administratorskih privilegija",
+  "required": "Potrebne su administratorske privilegije",
+  "title": "Administracija",
+  "manage": "Upravljaj",
+  "dashboard": "Kontrolna tabla monitoringa logistike",
+  "stats": {
+    "today_shipments": "Pošiljke danas",
+    "today_delivered": "Dostavljeno danas",
+    "active_shipments": "U tranzitu",
+    "problem_shipments": "Problematične pošiljke",
+    "avg_delivery_time": "Prosečno vreme dostave",
+    "delivery_success_rate": "Stopa uspešnosti dostave",
+    "weekly_deliveries": "Dostave za poslednjih 7 dana",
+    "status_distribution": "Distribucija po statusu",
+    "courier_performance": "Performanse kurirskih službi"
+  },
+  "table": {
+    "date": "Datum",
+    "sent": "Poslato",
+    "delivered": "Dostavljeno",
+    "in_transit": "U tranzitu",
+    "problems": "Problemi",
+    "courier_service": "Kurirska služba",
+    "shipments": "Pošiljke",
+    "success_rate": "Stopa uspešnosti",
+    "avg_time": "Prosečno vreme"
+  },
+  "status": {
+    "pending": "Na čekanju",
+    "processing": "Obrada",
+    "in_transit": "U tranzitu",
+    "delivered": "Dostavljeno",
+    "cancelled": "Otkazano",
+    "returned": "Vraćeno"
+  },
+  "quickActions": {
+    "title": "Brze akcije"
+  },
+  "view_all_shipments": "Prikaži sve pošiljke",
+  "problem_shipments": "Problematične pošiljke",
+  "export_report": "Izvezi izveštaj",
+  "monitoring_settings": "Podešavanja monitoringa",
   "availableBalance": "Available balance",
   "deposit": "Deposit",
   "withdraw": "Withdraw",
@@ -11,6 +49,9 @@
   "allLanguages": "All Languages",
   "weight": "Weight",
   "add": "Add",
+  "usage": "Usage",
+  "deleteConfirm": "Da li ste sigurni da želite da obrišete ovu ključnu reč?",
+  "developmentStatus": "U razvoju",
   "negative": "Negative",
   "noKeywords": "No keywords",
   "attributesTitle": "Attributes",
@@ -340,15 +381,16 @@
     "noRecordsFound": "No records found"
   },
   "common": {
+    "back": "Nazad",
     "translate": "Translate",
     "edit": "Edit",
     "remove": "Remove",
+    "status": "Status",
     "selectAll": "Select All",
     "total": "Total",
     "clearFilters": "Clear Filters",
     "search": "Search",
     "all": "All",
-    "status": "Status",
     "filtered": "Filtered",
     "activeFilters": "Active Filters",
     "loading": "Loading...",
@@ -968,7 +1010,6 @@
   "builtin": "Built-in",
   "builtinNotEditable": "Built-in configurations cannot be edited",
   "edit": "Edit",
-  "status": "Status",
   "languageSelect": "Select language",
   "testing": "Testing",
   "inputText": "Enter text",
@@ -1101,134 +1142,126 @@
       "contact_courier": "Kontaktiraj kurira"
     },
     "pagination": {
-      "page": "Page",
-      "of": "of",
-      "showing": "Showing",
-      "total": "total"
+      "page": "Stranica",
+      "of": "od",
+      "showing": "Prikazano",
+      "total": "ukupno"
     },
     "stats": {
-      "today_shipments": "Today's Shipments",
-      "today_delivered": "Delivered Today",
-      "active_shipments": "Active Shipments",
-      "problem_shipments": "Problem Shipments",
-      "avg_delivery_time": "Avg. Delivery Time",
-      "delivery_success_rate": "Delivery Success Rate",
-      "weekly_deliveries": "Weekly Deliveries",
-      "status_distribution": "Status Distribution",
-      "courier_performance": "Courier Performance"
+      "today_shipments": "Pošiljke danas",
+      "today_delivered": "Dostavljeno danas",
+      "active_shipments": "U tranzitu",
+      "problem_shipments": "Problematične pošiljke",
+      "avg_delivery_time": "Prosečno vreme dostave",
+      "delivery_success_rate": "Stopa uspešnosti dostave",
+      "weekly_deliveries": "Dostave za poslednjih 7 dana",
+      "status_distribution": "Distribucija po statusu",
+      "courier_performance": "Performanse kurirskih službi"
     },
-    "view_all_shipments": "View All Shipments",
-    "problem_shipments": "Problem Shipments",
-    "export_report": "Export Report",
-    "monitoring_settings": "Monitoring Settings",
-    "trackingNumber": "Tracking Number",
-    "provider": "Provider",
-    "codAmount": "COD Amount",
-    "notAvailable": "Not available",
-    "shipmentNotFound": "Shipment not found",
-    "sender": "Sender",
-    "recipient": "Recipient",
-    "packageDetails": "Package Details",
-    "weight": "Weight",
-    "contents": "Contents",
-    "referenceNumber": "Reference Number",
-    "createdAt": "Created at",
-    "statusHistory": "Status History",
-    "failedReason": "Failed Reason",
+    "view_all_shipments": "Prikaži sve pošiljke",
+    "problem_shipments": "Problematične pošiljke",
+    "export_report": "Izvezi izveštaj",
+    "monitoring_settings": "Podešavanja monitoringa",
+    "trackingNumber": "Broj praćenja",
+    "provider": "Provajder",
+    "codAmount": "Iznos otkupa",
+    "notAvailable": "Nije dostupno",
+    "shipmentNotFound": "Pošiljka nije pronađena",
+    "sender": "Pošaljilac",
+    "recipient": "Primalac",
+    "packageDetails": "Detalji paketa",
+    "weight": "Težina",
+    "contents": "Sadržaj",
+    "referenceNumber": "Referentni broj",
+    "createdAt": "Kreirano",
+    "statusHistory": "Istorija statusa",
+    "failedReason": "Razlog neuspeha",
     "actions": {
-      "view": "View",
-      "updateStatus": "Update Status",
-      "contact": "Contact",
-      "printLabel": "Print Label"
+      "view": "Pregledaj",
+      "updateStatus": "Ažuriraj status",
+      "contact": "Kontakt",
+      "printLabel": "Štampaj etiketu"
     },
     "assignModal": {
-      "title": "Assign Administrator",
-      "selectAdmin": "Select Administrator",
-      "assign": "Assign"
+      "title": "Dodeli administratora",
+      "selectAdmin": "Izaberi administratora",
+      "assign": "Dodeli"
     },
     "resolveModal": {
-      "title": "Resolve Problem",
-      "problemDescription": "Problem Description",
-      "resolution": "Resolution",
-      "resolutionPlaceholder": "Describe how the problem was resolved...",
-      "resolve": "Resolve"
+      "title": "Reši problem",
+      "problemDescription": "Opis problema",
+      "resolution": "Rešenje",
+      "resolutionPlaceholder": "Opišite kako je problem rešen...",
+      "resolve": "Reši"
+    },
+    "problemComments": {
+      "title": "Komentari o problemu",
+      "problemDescription": "Opis problema",
+      "noComments": "Još nema komentara",
+      "addComment": "Dodaj komentar",
+      "commentPlaceholder": "Napišite vaš komentar..."
     },
     "errors": {
-      "update_status_error": "Failed to update shipment status",
-      "action_error": "Failed to perform action on shipment"
+      "update_status_error": "Neuspešno ažuriranje statusa pošiljke",
+      "action_error": "Neuspešno izvršavanje akcije nad pošiljkom"
     },
     "success": {
-      "status_updated_successfully": "Shipment status updated successfully",
-      "action_completed_successfully": "Action completed successfully"
+      "status_updated_successfully": "Status pošiljke uspešno ažuriran",
+      "action_completed_successfully": "Akcija uspešno izvršena"
     },
     "quickActions": {
-      "title": "Quick Actions"
+      "title": "Brze akcije"
     },
     "table": {
-      "date": "Date",
-      "sent": "Sent",
-      "delivered": "Delivered",
-      "in_transit": "In Transit",
-      "problems": "Problems",
-      "courier_service": "Courier Service",
-      "shipments": "Shipments",
-      "success_rate": "Success Rate",
-      "avg_time": "Avg Time"
+      "date": "Datum",
+      "sent": "Poslato",
+      "delivered": "Dostavljeno",
+      "in_transit": "U tranzitu",
+      "problems": "Problemi",
+      "courier_service": "Kurirska služba",
+      "shipments": "Pošiljke",
+      "success_rate": "Stopa uspešnosti",
+      "avg_time": "Prosečno vreme"
     },
     "status": {
-      "processing": "Processing"
+      "processing": "Obrada"
     },
     "map": {
-      "all": "All",
-      "in_transit": "In Transit",
-      "delivered": "Delivered",
-      "problems": "Problems",
-      "loading": "Loading map...",
-      "legend": "Legend",
-      "sender": "Sender",
-      "receiver": "Receiver",
+      "all": "Sve",
+      "in_transit": "U tranzitu",
+      "delivered": "Dostavljeno",
+      "problems": "Problemi",
+      "loading": "Učitavanje mape...",
+      "legend": "Legenda",
+      "sender": "Pošaljilac",
+      "receiver": "Primalac",
       "problem": "Problem"
     },
-    "logistics": {
-      "actions": {
-        "track": "Track",
-        "export": "Export"
-      },
-      "status": {
-        "pending": "Pending",
-        "in_transit": "In Transit",
-        "delivered": "Delivered",
-        "failed": "Failed",
-        "cancelled": "Cancelled"
-      },
-      "table": {
-        "tracking_number": "Tracking Number",
-        "status": "Status",
-        "provider": "Provider",
-        "recipient": "Recipient",
-        "sender": "Sender",
-        "cod": "Cash on Delivery",
-        "weight": "Weight",
-        "created": "Created",
-        "actions": "Actions"
-      }
+    "status": {
+      "pending": "Na čekanju",
+      "processing": "Obrada",
+      "in_transit": "U tranzitu",
+      "delivered": "Dostavljeno",
+      "failed": "Neuspešno",
+      "cancelled": "Otkazano"
     },
-    "dashboard": "Logistics Monitoring Dashboard",
-    "stats": {
-      "today_shipments": "Today's Shipments",
-      "today_delivered": "Delivered Today",
-      "active_shipments": "In Transit",
-      "problem_shipments": "Problem Shipments",
-      "avg_delivery_time": "Avg Delivery Time",
-      "delivery_success_rate": "Delivery Success Rate",
-      "weekly_deliveries": "Deliveries for Last 7 Days",
-      "status_distribution": "Status Distribution",
-      "courier_performance": "Courier Performance"
+    "table": {
+      "tracking_number": "Broj praćenja",
+      "status": "Status",
+      "provider": "Provajder",
+      "recipient": "Primalac",
+      "sender": "Pošaljilac",
+      "cod": "Otkup",
+      "weight": "Težina",
+      "created": "Kreirano",
+      "actions": "Akcije"
     },
-    "view_all_shipments": "View All Shipments",
-    "problem_shipments": "Problem Shipments",
-    "export_report": "Export Report",
-    "monitoring_settings": "Monitoring Settings"
+    "actions": {
+      "track": "Prati",
+      "export": "Izvezi",
+      "view": "Pregledaj",
+      "new_shipment": "Nova pošiljka"
+    }
   },
   "storefronts": {
     "title": "Upravljanje radnjama",

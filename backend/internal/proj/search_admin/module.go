@@ -4,6 +4,7 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/proj/search_admin/handler"
 	"backend/internal/proj/search_admin/service"
+	"backend/internal/storage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
@@ -25,6 +26,13 @@ func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient, log
 	return &Module{
 		handler: searchHandler,
 		service: searchService,
+	}
+}
+
+// SetStorage устанавливает storage для сервиса
+func (m *Module) SetStorage(storage storage.Storage) {
+	if m.service != nil {
+		m.service.SetStorage(storage)
 	}
 }
 

@@ -129,7 +129,7 @@ export default function TransliterationConfig() {
           {t('title', { defaultValue: 'Настройка транслитерации' })}
         </h2>
         <div className="badge badge-info">
-          {t('status', { defaultValue: 'В разработке' })}
+          {t('developmentStatus', { defaultValue: 'В разработке' })}
         </div>
       </div>
 

@@ -405,7 +405,6 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
           onCheckout={handleCheckout}
         />
       )}
-
     </>
   );
 }
