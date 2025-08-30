@@ -26,10 +26,6 @@ export default function CategoryFilter({
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
   const loadCategories = useCallback(async () => {
     try {
       const data = await CategoryService.getCategories();
@@ -43,6 +39,10 @@ export default function CategoryFilter({
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const buildCategoryTree = (categories: Category[]): CategoryTreeItem[] => {
     const categoryMap = new Map<number, CategoryTreeItem>();

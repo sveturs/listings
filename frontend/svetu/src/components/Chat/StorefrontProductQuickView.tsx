@@ -42,12 +42,6 @@ export default function StorefrontProductQuickView({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && productId) {
-      fetchProduct();
-    }
-  }, [isOpen, productId, fetchProduct]);
-
   const fetchProduct = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -81,6 +75,12 @@ export default function StorefrontProductQuickView({
       setLoading(false);
     }
   }, [productId, t]);
+
+  useEffect(() => {
+    if (isOpen && productId) {
+      fetchProduct();
+    }
+  }, [isOpen, productId, fetchProduct]);
 
   if (!isOpen) return null;
 

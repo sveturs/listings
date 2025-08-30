@@ -37,19 +37,6 @@ export default function ProfileSettingsPage() {
     }
   }, [mounted, isAuthenticated, isLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchPrivacySettings();
-    }
-  }, [isAuthenticated, user, fetchPrivacySettings]);
-
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
   const fetchPrivacySettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -75,6 +62,19 @@ export default function ProfileSettingsPage() {
       setLoading(false);
     }
   }, [t]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchPrivacySettings();
+    }
+  }, [isAuthenticated, user, fetchPrivacySettings]);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const savePrivacySettings = async () => {
     try {
