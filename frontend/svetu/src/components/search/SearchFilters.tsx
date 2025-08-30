@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
+import { CategoryService, Category } from '@/services/category';
 
 interface SearchFiltersProps {
   filters: {
@@ -15,6 +17,7 @@ interface SearchFiltersProps {
   };
   searchQuery: string;
   resultsCount: number;
+  isLoading?: boolean;
   onFilterChange: (filters: Partial<SearchFiltersProps['filters']>) => void;
 }
 
@@ -26,10 +29,29 @@ export default function SearchFilters({
   filters,
   searchQuery,
   resultsCount,
+  isLoading = false,
   onFilterChange,
 }: SearchFiltersProps) {
   const t = useTranslations('search');
   const { trackSearchFilterApplied } = useBehaviorTracking();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Загружаем категории при монтировании
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoryData = await CategoryService.getCategories();
+        setCategories(categoryData);
+      } catch (error) {
+        console.error('Failed to load categories for filters:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handleFilterChange = async (
     filterType: string,
@@ -89,22 +111,31 @@ export default function SearchFilters({
   };
 
   return (
-    <div className="card bg-base-100 shadow-md">
+    <div
+      className={`card bg-base-100 shadow-md ${isLoading ? 'opacity-60' : ''}`}
+      role="region"
+      aria-label={t('filters')}
+      aria-busy={isLoading}
+    >
       <div className="card-body">
         <h3 className="card-title text-lg flex items-center gap-2">
-          <svg
-            className="w-5 h-5 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-            />
-          </svg>
+          {isLoading ? (
+            <span className="loading loading-spinner loading-sm text-primary"></span>
+          ) : (
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              />
+            </svg>
+          )}
           {t('filters')}
         </h3>
 
@@ -123,7 +154,18 @@ export default function SearchFilters({
                     ? 'ring-2 ring-primary bg-primary/5'
                     : 'bg-base-200 hover:bg-base-300'
                 }`}
-                onClick={() => handleProductTypeToggle('marketplace')}
+                onClick={() =>
+                  !isLoading && handleProductTypeToggle('marketplace')
+                }
+                role="checkbox"
+                aria-checked={filters.product_types?.includes('marketplace')}
+                aria-label={t('private')}
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' &&
+                  !isLoading &&
+                  handleProductTypeToggle('marketplace')
+                }
               >
                 <div className="card-body items-center text-center">
                   <svg
@@ -148,7 +190,18 @@ export default function SearchFilters({
                     ? 'ring-2 ring-primary bg-primary/5'
                     : 'bg-base-200 hover:bg-base-300'
                 }`}
-                onClick={() => handleProductTypeToggle('storefront')}
+                onClick={() =>
+                  !isLoading && handleProductTypeToggle('storefront')
+                }
+                role="checkbox"
+                aria-checked={filters.product_types?.includes('storefront')}
+                aria-label={t('stores')}
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' &&
+                  !isLoading &&
+                  handleProductTypeToggle('storefront')
+                }
               >
                 <div className="card-body items-center text-center">
                   <svg
@@ -201,6 +254,8 @@ export default function SearchFilters({
                     className="input input-bordered w-full"
                     value={filters.price_min || ''}
                     onChange={(e) => handlePriceChange('min', e.target.value)}
+                    disabled={isLoading}
+                    aria-label={t('priceMin') || 'Minimum price'}
                   />
                 </label>
               </div>
@@ -212,6 +267,8 @@ export default function SearchFilters({
                     className="input input-bordered w-full"
                     value={filters.price_max || ''}
                     onChange={(e) => handlePriceChange('max', e.target.value)}
+                    disabled={isLoading}
+                    aria-label={t('priceMax') || 'Maximum price'}
                   />
                 </label>
               </div>
@@ -252,6 +309,8 @@ export default function SearchFilters({
               placeholder={t('enterCity')}
               value={filters.city || ''}
               onChange={(e) => handleCityChange(e.target.value)}
+              disabled={isLoading}
+              aria-label={t('city')}
             />
           </div>
 
@@ -281,9 +340,23 @@ export default function SearchFilters({
               className="select select-bordered w-full"
               value={filters.category_id || ''}
               onChange={(e) => handleCategoryChange(e.target.value)}
+              disabled={loadingCategories || isLoading}
+              aria-label={t('selectCategory') || 'Select a category'}
             >
-              <option value="">{t('allCategories')}</option>
-              {/* TODO: Добавить динамическую загрузку категорий */}
+              <option value="">
+                {loadingCategories
+                  ? t('loadingCategories') || 'Loading...'
+                  : t('allCategories')}
+              </option>
+              {!loadingCategories &&
+                categories.map((category) => (
+                  <option key={category.id} value={category.id.toString()}>
+                    {category.name}
+                    {category.listing_count
+                      ? ` (${category.listing_count})`
+                      : ''}
+                  </option>
+                ))}
             </select>
           </div>
         </div>

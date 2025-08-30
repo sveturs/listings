@@ -1373,7 +1373,7 @@ func processCategoryPath(doc map[string]interface{}, listing *models.Marketplace
 func processCategory(doc map[string]interface{}, listing *models.MarketplaceListing) {
 	if listing.Category != nil {
 		doc["category"] = map[string]interface{}{
-			"id":   listing.Category.ID,
+			"id":   listing.CategoryID, // Используем CategoryID вместо Category.ID
 			"name": listing.Category.Name,
 			"slug": listing.Category.Slug,
 		}

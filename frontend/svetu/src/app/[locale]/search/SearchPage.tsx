@@ -56,6 +56,7 @@ export default function SearchPage() {
   const [fuzzy, setFuzzy] = useState(initialFuzzy);
   const [results, setResults] = useState<UnifiedSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [filtersLoading, setFiltersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SearchFilters>({
     product_types: ['marketplace', 'storefront'],
@@ -312,6 +313,7 @@ export default function SearchPage() {
   const handleFilterChange = async (newFilters: Partial<SearchFilters>) => {
     const prevFilters = filters;
     setFilters((prev) => ({ ...prev, ...newFilters }));
+    setFiltersLoading(true);
 
     // Трекинг изменения фильтров
     if (query) {
@@ -331,7 +333,12 @@ export default function SearchPage() {
       } catch (error) {
         console.error('Failed to track filter change:', error);
       }
+
+      // Выполняем новый поиск с обновленными фильтрами
+      await performSearch(query, 1, { ...filters, ...newFilters }, fuzzy);
     }
+
+    setFiltersLoading(false);
   };
 
   const convertToMarketplaceItem = (item: any): MarketplaceItem => {
@@ -410,6 +417,8 @@ export default function SearchPage() {
                 </button>
                 <button
                   className={`btn btn-xs sm:btn-sm lg:btn-md ${filters.product_types?.includes('storefront') ? 'btn-primary shadow-lg' : 'btn-ghost hover:btn-primary hover:btn-outline'} transition-all duration-200`}
+                  aria-pressed={filters.product_types?.includes('storefront')}
+                  aria-label="Filter by storefront items"
                   onClick={() => {
                     const types = filters.product_types || [];
                     if (types.includes('storefront') && types.length > 1) {
