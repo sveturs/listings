@@ -8,12 +8,20 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'admin' });
-
-  return {
-    title: `${t('logistics.shipments.title')} | ${t('title')}`,
-    description: t('logistics.shipments.description'),
-  };
+  
+  try {
+    const t = await getTranslations({ locale, namespace: 'admin' });
+    return {
+      title: `${t('logistics.shipments.title')} | ${t('title')}`,
+      description: t('logistics.shipments.description'),
+    };
+  } catch (error) {
+    console.error('Translation error in logistics shipments metadata:', error);
+    return {
+      title: 'Shipments | Admin',
+      description: 'Manage and track all shipments',
+    };
+  }
 }
 
 export default async function ShipmentsPage({
@@ -22,20 +30,38 @@ export default async function ShipmentsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'admin' });
+  
+  try {
+    const t = await getTranslations({ locale, namespace: 'admin' });
+    return (
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">{t('logistics.shipments.title')}</h1>
+          <p className="text-base-content/70 mt-2">
+            {t('logistics.shipments.description')}
+          </p>
+        </div>
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">{t('logistics.shipments.title')}</h1>
-        <p className="text-base-content/70 mt-2">
-          {t('logistics.shipments.description')}
-        </p>
+        {/* Client Component */}
+        <ShipmentsListClient />
       </div>
+    );
+  } catch (error) {
+    console.error('Translation error in logistics shipments page:', error);
+    return (
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Shipments</h1>
+          <p className="text-base-content/70 mt-2">
+            Manage and track all shipments
+          </p>
+        </div>
 
-      {/* Client Component */}
-      <ShipmentsListClient />
-    </div>
-  );
+        {/* Client Component */}
+        <ShipmentsListClient />
+      </div>
+    );
+  }
 }
