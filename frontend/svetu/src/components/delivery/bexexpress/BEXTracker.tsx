@@ -95,56 +95,59 @@ export default function BEXTracker({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Загрузка информации о посылке
-  const fetchShipment = async (tracking: string) => {
-    if (!tracking) return;
+  const fetchShipment = useCallback(
+    async (tracking: string) => {
+      if (!tracking) return;
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await fetch(
-        `/api/v1/bex/track/${encodeURIComponent(tracking)}`
-      );
-      const data = await response.json();
+      try {
+        const response = await fetch(
+          `/api/v1/bex/track/${encodeURIComponent(tracking)}`
+        );
+        const data = await response.json();
 
-      if (data.success && data.data) {
-        // Добавляем демо-данные для отображения
-        const enrichedShipment: BEXShipment = {
-          ...data.data,
-          current_location: data.data.current_location || {
-            city: 'Белград',
-            address: 'Сортировочный центр BEX',
-            latitude: 44.8176,
-            longitude: 20.4633,
-          },
-          delivery_location: data.data.delivery_location || {
-            city: data.data.recipient_city,
-            address: data.data.recipient_address,
-            latitude: 45.2671,
-            longitude: 19.8335,
-          },
-          events: data.data.events || getDemoEvents(data.data.status),
-          estimated_delivery:
-            data.data.estimated_delivery ||
-            new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        };
+        if (data.success && data.data) {
+          // Добавляем демо-данные для отображения
+          const enrichedShipment: BEXShipment = {
+            ...data.data,
+            current_location: data.data.current_location || {
+              city: 'Белград',
+              address: 'Сортировочный центр BEX',
+              latitude: 44.8176,
+              longitude: 20.4633,
+            },
+            delivery_location: data.data.delivery_location || {
+              city: data.data.recipient_city,
+              address: data.data.recipient_address,
+              latitude: 45.2671,
+              longitude: 19.8335,
+            },
+            events: data.data.events || getDemoEvents(data.data.status),
+            estimated_delivery:
+              data.data.estimated_delivery ||
+              new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          };
 
-        setShipment(enrichedShipment);
-        onTrackingUpdate?.(enrichedShipment);
-      } else {
-        setError(data.message || 'Посылка не найдена');
+          setShipment(enrichedShipment);
+          onTrackingUpdate?.(enrichedShipment);
+        } else {
+          setError(data.message || 'Посылка не найдена');
+        }
+      } catch (err) {
+        console.error('Tracking error:', err);
+        setError('Ошибка при отслеживании посылки');
+        // Используем демо-данные при ошибке
+        const demoShipment = getDemoShipment(tracking);
+        setShipment(demoShipment);
+        onTrackingUpdate?.(demoShipment);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Tracking error:', err);
-      setError('Ошибка при отслеживании посылки');
-      // Используем демо-данные при ошибке
-      const demoShipment = getDemoShipment(tracking);
-      setShipment(demoShipment);
-      onTrackingUpdate?.(demoShipment);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [onTrackingUpdate]
+  );
 
   // Демо-данные для тестирования
   const getDemoEvents = (status: number): BEXTrackingEvent[] => {

@@ -71,10 +71,6 @@ export default function ShipmentDetailsClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchShipmentDetails();
-  }, [fetchShipmentDetails]);
-
   const fetchShipmentDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -95,6 +91,10 @@ export default function ShipmentDetailsClient({
       setLoading(false);
     }
   }, [provider, id]);
+
+  useEffect(() => {
+    fetchShipmentDetails();
+  }, [fetchShipmentDetails]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

@@ -39,6 +39,173 @@ export default function DeliveryMap({
   const [selectedMarkerType, setSelectedMarkerType] = useState<string>('all');
   const [filteredMarkers, setFilteredMarkers] = useState<MapMarker[]>(markers);
 
+  // Получение локализованной метки статуса
+  const getStatusLabel = useCallback((status: string) => {
+    const labels: { [key: string]: string } = {
+      pending: 'Ожидает',
+      in_transit: 'В пути',
+      delivered: 'Доставлено',
+      problem: 'Проблема',
+      returned: 'Возвращено',
+    };
+    return labels[status] || status;
+  }, []);
+
+  // Инициализация карты
+  const initializeMap = useCallback((L: typeof import('leaflet')) => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [44.0165, 21.0059], // Сербия
+      zoom: 7,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    mapInstanceRef.current = map;
+    markersLayerRef.current = L.layerGroup().addTo(map);
+  }, []);
+
+  // Создание кастомной иконки - перемещаем вверх, чтобы использовать в updateMarkers
+  const createCustomIcon = useCallback(
+    (L: typeof import('leaflet'), type: string) => {
+      const colors = {
+        sender: '#3b82f6', // синий
+        receiver: '#10b981', // зеленый
+        in_transit: '#f59e0b', // желтый
+        delivered: '#10b981', // зеленый
+        problem: '#ef4444', // красный
+      };
+
+      const color = colors[type as keyof typeof colors] || '#6b7280';
+
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `
+        <div style="
+          background-color: ${color};
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 12px;
+        ">
+          ${getMarkerIcon(type)}
+        </div>
+      `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+    },
+    []
+  );
+
+  // Получение иконки для маркера - перемещаем вверх
+  const getMarkerIcon = (type: string) => {
+    switch (type) {
+      case 'sender':
+        return '📤';
+      case 'receiver':
+        return '📍';
+      case 'in_transit':
+        return '🚚';
+      case 'delivered':
+        return '✅';
+      case 'problem':
+        return '⚠️';
+      default:
+        return '📍';
+    }
+  };
+
+  // Создание содержимого попапа - перемещаем вверх
+  const createPopupContent = useCallback(
+    (marker: MapMarker) => {
+      return `
+      <div style="min-width: 200px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">
+          ${marker.tracking_number}
+        </h3>
+        <p style="margin: 4px 0; font-size: 12px;">
+          <strong>Город:</strong> ${marker.city}
+        </p>
+        <p style="margin: 4px 0; font-size: 12px;">
+          <strong>Адрес:</strong> ${marker.address}
+        </p>
+        <p style="margin: 4px 0; font-size: 12px;">
+          <strong>Статус:</strong> ${getStatusLabel(marker.status)}
+        </p>
+        ${
+          marker.delivery_time
+            ? `
+          <p style="margin: 4px 0; font-size: 12px;">
+            <strong>Время доставки:</strong> ${marker.delivery_time}
+          </p>
+        `
+            : ''
+        }
+        ${
+          marker.problem_description
+            ? `
+          <p style="margin: 4px 0; font-size: 12px; color: red;">
+            <strong>Проблема:</strong> ${marker.problem_description}
+          </p>
+        `
+            : ''
+        }
+      </div>
+    `;
+    },
+    [getStatusLabel]
+  );
+
+  // Обновление маркеров на карте
+  const updateMarkers = useCallback(
+    (L: typeof import('leaflet')) => {
+      if (!mapInstanceRef.current || !markersLayerRef.current || !leafletLoaded)
+        return;
+
+      markersLayerRef.current.clearLayers();
+
+      filteredMarkers.forEach((marker) => {
+        const icon = createCustomIcon(L, marker.type);
+
+        const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
+          .bindPopup(createPopupContent(marker))
+          .on('click', () => {
+            if (onMarkerClick) {
+              onMarkerClick(marker);
+            }
+          });
+
+        markersLayerRef.current.addLayer(leafletMarker);
+      });
+
+      // Подгоняем границы карты под маркеры
+      if (filteredMarkers.length > 0) {
+        const group = new (L as any).featureGroup(
+          markersLayerRef.current.getLayers()
+        );
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
+      }
+    },
+    [
+      filteredMarkers,
+      leafletLoaded,
+      onMarkerClick,
+      createCustomIcon,
+      createPopupContent,
+    ]
+  );
+
   // Динамическая загрузка Leaflet
   useEffect(() => {
     const loadLeaflet = async () => {
@@ -81,167 +248,6 @@ export default function DeliveryMap({
 
     loadLeaflet();
   }, [initializeMap, updateMarkers]);
-
-  // Инициализация карты
-  const initializeMap = useCallback((L: typeof import('leaflet')) => {
-    if (!mapRef.current || mapInstanceRef.current) return;
-
-    const map = L.map(mapRef.current, {
-      center: [44.0165, 21.0059], // Сербия
-      zoom: 7,
-      zoomControl: true,
-    });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
-
-    mapInstanceRef.current = map;
-    markersLayerRef.current = L.layerGroup().addTo(map);
-  }, []);
-
-  // Обновление маркеров на карте
-  const updateMarkers = useCallback(
-    (L: typeof import('leaflet')) => {
-      if (!mapInstanceRef.current || !markersLayerRef.current || !leafletLoaded)
-        return;
-
-      markersLayerRef.current.clearLayers();
-
-      filteredMarkers.forEach((marker) => {
-        const icon = createCustomIcon(L, marker.type);
-
-        const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
-          .bindPopup(createPopupContent(marker))
-          .on('click', () => {
-            if (onMarkerClick) {
-              onMarkerClick(marker);
-            }
-          });
-
-        markersLayerRef.current.addLayer(leafletMarker);
-      });
-
-      // Подгоняем границы карты под маркеры
-      if (filteredMarkers.length > 0) {
-        const group = new (L as any).featureGroup(
-          markersLayerRef.current.getLayers()
-        );
-        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
-      }
-    },
-    [
-      filteredMarkers,
-      leafletLoaded,
-      onMarkerClick,
-      createCustomIcon,
-      createPopupContent,
-    ]
-  );
-
-  // Создание кастомной иконки
-  const createCustomIcon = (L: typeof import('leaflet'), type: string) => {
-    const colors = {
-      sender: '#3b82f6', // синий
-      receiver: '#10b981', // зеленый
-      in_transit: '#f59e0b', // желтый
-      delivered: '#10b981', // зеленый
-      problem: '#ef4444', // красный
-    };
-
-    const color = colors[type as keyof typeof colors] || '#6b7280';
-
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `
-        <div style="
-          background-color: ${color};
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 12px;
-        ">
-          ${getMarkerIcon(type)}
-        </div>
-      `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    });
-  };
-
-  // Получение иконки для маркера
-  const getMarkerIcon = (type: string) => {
-    switch (type) {
-      case 'sender':
-        return '📤';
-      case 'receiver':
-        return '📍';
-      case 'in_transit':
-        return '🚚';
-      case 'delivered':
-        return '✅';
-      case 'problem':
-        return '⚠️';
-      default:
-        return '📍';
-    }
-  };
-
-  // Создание содержимого попапа
-  const createPopupContent = (marker: MapMarker) => {
-    return `
-      <div style="min-width: 200px;">
-        <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: bold;">
-          ${marker.tracking_number}
-        </h3>
-        <p style="margin: 4px 0; font-size: 12px;">
-          <strong>Город:</strong> ${marker.city}
-        </p>
-        <p style="margin: 4px 0; font-size: 12px;">
-          <strong>Адрес:</strong> ${marker.address}
-        </p>
-        <p style="margin: 4px 0; font-size: 12px;">
-          <strong>Статус:</strong> ${getStatusLabel(marker.status)}
-        </p>
-        ${
-          marker.delivery_time
-            ? `
-          <p style="margin: 4px 0; font-size: 12px;">
-            <strong>Время доставки:</strong> ${marker.delivery_time}
-          </p>
-        `
-            : ''
-        }
-        ${
-          marker.problem_description
-            ? `
-          <p style="margin: 4px 0; font-size: 12px; color: red;">
-            <strong>Проблема:</strong> ${marker.problem_description}
-          </p>
-        `
-            : ''
-        }
-      </div>
-    `;
-  };
-
-  // Получение локализованной метки статуса
-  const getStatusLabel = (status: string) => {
-    const labels: { [key: string]: string } = {
-      pending: 'Ожидает',
-      in_transit: 'В пути',
-      delivered: 'Доставлено',
-      problem: 'Проблема',
-      returned: 'Возвращено',
-    };
-    return labels[status] || status;
-  };
 
   // Фильтрация маркеров
   useEffect(() => {

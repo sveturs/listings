@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -100,8 +100,8 @@ export default function BEXAddressForm({
   });
 
   // Поиск адреса через BEX API
-  const searchAddress = useCallback(
-    debounce(async (query: string, city?: string) => {
+  const searchAddressBase = useCallback(
+    async (query: string, city?: string) => {
       if (query.length < 2) {
         setAddressSuggestions([]);
         return;
@@ -127,8 +127,14 @@ export default function BEXAddressForm({
       } finally {
         setIsSearching(false);
       }
-    }, 300),
+    },
     []
+  );
+
+  // Debounced версия функции поиска
+  const searchAddress = useMemo(
+    () => debounce(searchAddressBase, 300),
+    [searchAddressBase]
   );
 
   // Обработчик изменения города

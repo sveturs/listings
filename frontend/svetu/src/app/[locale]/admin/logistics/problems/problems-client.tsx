@@ -48,10 +48,6 @@ export default function ProblemShipmentsClient() {
   const [selectedProblem, setSelectedProblem] =
     useState<ProblemShipment | null>(null);
 
-  useEffect(() => {
-    fetchProblems();
-  }, [fetchProblems]);
-
   const fetchProblems = useCallback(async () => {
     try {
       setLoading(true);
@@ -79,6 +75,10 @@ export default function ProblemShipmentsClient() {
       setLoading(false);
     }
   }, [filterType, filterStatus]);
+
+  useEffect(() => {
+    fetchProblems();
+  }, [fetchProblems]);
 
   const getProblemIcon = (type: string) => {
     switch (type) {

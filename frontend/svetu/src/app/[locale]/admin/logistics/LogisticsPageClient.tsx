@@ -53,10 +53,6 @@ export default function LogisticsPageClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
   const fetchDashboardStats = async () => {
     try {
       const token = tokenManager.getAccessToken();
@@ -89,6 +85,10 @@ export default function LogisticsPageClient() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
 
   if (loading) {
     return (

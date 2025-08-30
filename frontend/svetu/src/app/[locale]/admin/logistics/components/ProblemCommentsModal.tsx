@@ -42,12 +42,6 @@ export default function ProblemCommentsModal({
   const [submitting, setSubmitting] = useState(false);
 
   // Загрузка комментариев при открытии модального окна
-  useEffect(() => {
-    if (isOpen) {
-      loadComments();
-    }
-  }, [isOpen, loadComments]);
-
   const loadComments = useCallback(async () => {
     setLoading(true);
     try {
@@ -60,6 +54,12 @@ export default function ProblemCommentsModal({
     }
     setLoading(false);
   }, [problemId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadComments();
+    }
+  }, [isOpen, loadComments]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
