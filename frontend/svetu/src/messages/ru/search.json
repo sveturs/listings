@@ -79,5 +79,6 @@
   "showLess": "Показать меньше",
   "expandAll": "Развернуть все",
   "collapseAll": "Свернуть все",
-  "noCategories": "Нет доступных категорий"
+  "noCategories": "Нет доступных категорий",
+  "updatingResults": "Обновляем результаты..."
 }

@@ -716,6 +716,16 @@ export default function SearchPage() {
                     </div>
 
                     <div className="space-y-6">
+                      {/* Индикатор загрузки фильтров */}
+                      {filtersLoading && (
+                        <div className="text-center py-2">
+                          <span className="loading loading-spinner loading-sm text-primary"></span>
+                          <span className="ml-2 text-sm text-base-content/60">
+                            {t('updatingResults')}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Категории */}
                       <CategoryFilter
                         selectedCategories={filters.category_ids || []}
