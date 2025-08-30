@@ -40,6 +40,8 @@ dump2migrate/
 db_dumps_*/
 *.tar.gz
 
+docker-compose.yml
+
 # SQL файлы - игнорируем все, кроме миграций и фикстур
 *.sql
 !backend/migrations/*.sql
