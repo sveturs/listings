@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiClientAuth } from '@/lib/api-client-auth';
 import {
@@ -46,9 +46,9 @@ export default function ProblemCommentsModal({
     if (isOpen) {
       loadComments();
     }
-  }, [isOpen, problemId]);
+  }, [isOpen, loadComments]);
 
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClientAuth.get(
@@ -59,7 +59,7 @@ export default function ProblemCommentsModal({
       console.error('Error loading comments:', error);
     }
     setLoading(false);
-  };
+  }, [problemId]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;

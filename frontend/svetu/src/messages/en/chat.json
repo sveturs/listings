@@ -93,5 +93,19 @@
   "addToCart": "Add to Cart",
   "viewDetails": "View Details",
   "productAddedToCart": "Product added to cart",
-  "failedToAddToCart": "Failed to add product to cart"
+  "failedToAddToCart": "Failed to add product to cart",
+  "expand": "Expand",
+  "download": "Download",
+  "selectedFiles": "Selected files",
+  "delete": "Delete",
+  "emojiCategory": {
+    "all": "All",
+    "recent": "Recent",
+    "smileys": "Smileys & Emotion",
+    "gestures": "People & Body",
+    "hearts": "Hearts & Symbols",
+    "animals": "Animals & Nature",
+    "food": "Food & Drink",
+    "objects": "Objects"
+  }
 }

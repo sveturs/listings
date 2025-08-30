@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   FiArrowLeft,
@@ -73,9 +73,9 @@ export default function ShipmentDetailsClient({
 
   useEffect(() => {
     fetchShipmentDetails();
-  }, [provider, id]);
+  }, [fetchShipmentDetails]);
 
-  const fetchShipmentDetails = async () => {
+  const fetchShipmentDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -94,7 +94,7 @@ export default function ShipmentDetailsClient({
     } finally {
       setLoading(false);
     }
-  };
+  }, [provider, id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

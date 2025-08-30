@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { PostExpressTracker } from '@/components/delivery/postexpress';
@@ -61,57 +61,83 @@ function OrderTrackingContent() {
     } else if (orderId) {
       setSearchQuery(orderId);
       setSearchType('order');
-      handleSearch(orderId, 'order');
-    }
-  }, [searchParams]);
+      // Directly call the search without dependency on handleSearch
+      (async () => {
+        if (!orderId.trim()) return;
 
-  const handleSearch = async (
-    query: string = searchQuery,
-    type: string = searchType
-  ) => {
-    if (!query.trim()) return;
+        setLoading(true);
+        setError(null);
 
-    setLoading(true);
-    setError(null);
+        try {
+          const endpoint = `/api/v1/orders/search?q=${encodeURIComponent(orderId)}`;
+          const response = await fetch(endpoint);
+          const data = await response.json();
 
-    try {
-      let endpoint = '';
-      if (type === 'order') {
-        endpoint = `/api/v1/orders/search?q=${encodeURIComponent(query)}`;
-      } else {
-        endpoint = `/api/v1/orders/by-tracking?tracking=${encodeURIComponent(query)}`;
-      }
-
-      const response = await fetch(endpoint);
-      const data = await response.json();
-
-      if (data.success) {
-        if (type === 'order') {
-          setOrders(data.data || []);
-          setSelectedOrder(null);
-        } else {
-          // For tracking search, we expect a single order
-          const order = data.data;
-          if (order) {
-            setSelectedOrder(order);
-            setOrders([order]);
+          if (data.success) {
+            setOrders(data.data || []);
+            setSelectedOrder(null);
           } else {
+            setError(data.message || 'Поиск не дал результатов');
             setOrders([]);
             setSelectedOrder(null);
           }
+        } catch (err) {
+          setError('Ошибка при поиске заказов');
+          console.error('Search error:', err);
+        } finally {
+          setLoading(false);
         }
-      } else {
-        setError(data.message || 'Поиск не дал результатов');
-        setOrders([]);
-        setSelectedOrder(null);
-      }
-    } catch (err) {
-      setError('Ошибка при поиске заказов');
-      console.error('Search error:', err);
-    } finally {
-      setLoading(false);
+      })();
     }
-  };
+  }, [searchParams]);
+
+  const handleSearch = useCallback(
+    async (query: string = searchQuery, type: string = searchType) => {
+      if (!query.trim()) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        let endpoint = '';
+        if (type === 'order') {
+          endpoint = `/api/v1/orders/search?q=${encodeURIComponent(query)}`;
+        } else {
+          endpoint = `/api/v1/orders/by-tracking?tracking=${encodeURIComponent(query)}`;
+        }
+
+        const response = await fetch(endpoint);
+        const data = await response.json();
+
+        if (data.success) {
+          if (type === 'order') {
+            setOrders(data.data || []);
+            setSelectedOrder(null);
+          } else {
+            // For tracking search, we expect a single order
+            const order = data.data;
+            if (order) {
+              setSelectedOrder(order);
+              setOrders([order]);
+            } else {
+              setOrders([]);
+              setSelectedOrder(null);
+            }
+          }
+        } else {
+          setError(data.message || 'Поиск не дал результатов');
+          setOrders([]);
+          setSelectedOrder(null);
+        }
+      } catch (err) {
+        setError('Ошибка при поиске заказов');
+        console.error('Search error:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [searchQuery, searchType]
+  );
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

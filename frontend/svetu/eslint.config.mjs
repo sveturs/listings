@@ -24,6 +24,8 @@ const eslintConfig = [
         },
       ],
       '@typescript-eslint/no-explicit-any': 'off',
+      // Отключаем предупреждения о <img> тегах для внешних изображений
+      '@next/next/no-img-element': 'off',
     },
   },
   {

@@ -272,14 +272,14 @@ export default function BEXTracker({
         }
       };
     }
-  }, [autoRefresh, trackingNumber]);
+  }, [autoRefresh, trackingNumber, fetchShipment]);
 
   // Начальная загрузка
   useEffect(() => {
     if (initialTrackingNumber) {
       fetchShipment(initialTrackingNumber);
     }
-  }, [initialTrackingNumber]);
+  }, [initialTrackingNumber, fetchShipment]);
 
   const handleSearch = () => {
     if (trackingNumber) {

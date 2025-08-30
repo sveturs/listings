@@ -23,7 +23,7 @@ jest.mock('@/services/search', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return <img {...props} />;
+    return <img alt="" {...props} />;
   },
 }));
 

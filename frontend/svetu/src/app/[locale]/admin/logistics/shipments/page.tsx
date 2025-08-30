@@ -8,7 +8,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  
+
   try {
     const t = await getTranslations({ locale, namespace: 'admin' });
     return {
@@ -30,14 +30,16 @@ export default async function ShipmentsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  
+
   try {
     const t = await getTranslations({ locale, namespace: 'admin' });
     return (
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">{t('logistics.shipments.title')}</h1>
+          <h1 className="text-3xl font-bold">
+            {t('logistics.shipments.title')}
+          </h1>
           <p className="text-base-content/70 mt-2">
             {t('logistics.shipments.description')}
           </p>

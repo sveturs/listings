@@ -61,7 +61,7 @@ export default function ContactsPage() {
     if (isAuthenticated && user) {
       fetchContacts();
     }
-  }, [isAuthenticated, user, activeTab]);
+  }, [isAuthenticated, user, fetchContacts]);
 
   const fetchContacts = useCallback(async () => {
     try {

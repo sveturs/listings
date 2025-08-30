@@ -93,5 +93,19 @@
   "addToCart": "Додај у корпу",
   "viewDetails": "Детаљније",
   "productAddedToCart": "Производ је додат у корпу",
-  "failedToAddToCart": "Није успело додавање производа у корпу"
+  "failedToAddToCart": "Није успело додавање производа у корпу",
+  "expand": "Прошири",
+  "download": "Преузми",
+  "selectedFiles": "Изабрани фајлови",
+  "delete": "Обриши",
+  "emojiCategory": {
+    "all": "Све",
+    "recent": "Недавно",
+    "smileys": "Смајлији и емоције",
+    "gestures": "Људи и гестови",
+    "hearts": "Срца и симболи",
+    "animals": "Животиње и природа",
+    "food": "Храна и пиће",
+    "objects": "Предмети"
+  }
 }

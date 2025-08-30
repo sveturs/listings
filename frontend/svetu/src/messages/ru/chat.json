@@ -93,5 +93,19 @@
   "addToCart": "Добавить в корзину",
   "viewDetails": "Подробнее",
   "productAddedToCart": "Товар добавлен в корзину",
-  "failedToAddToCart": "Не удалось добавить товар в корзину"
+  "failedToAddToCart": "Не удалось добавить товар в корзину",
+  "expand": "Развернуть",
+  "download": "Скачать",
+  "selectedFiles": "Выбранные файлы",
+  "delete": "Удалить",
+  "emojiCategory": {
+    "all": "Все",
+    "recent": "Недавние",
+    "smileys": "Смайлы и эмоции",
+    "gestures": "Люди и жесты",
+    "hearts": "Сердца и символы",
+    "animals": "Животные и природа",
+    "food": "Еда и напитки",
+    "objects": "Предметы"
+  }
 }

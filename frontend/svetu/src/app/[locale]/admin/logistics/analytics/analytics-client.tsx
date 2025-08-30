@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -70,11 +70,7 @@ export default function AnalyticsClient() {
   const [exportLoading, setExportLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [selectedPeriod]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -117,7 +113,11 @@ export default function AnalyticsClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   const loadMapData = () => {
     // Тестовые данные для карты (города Сербии)

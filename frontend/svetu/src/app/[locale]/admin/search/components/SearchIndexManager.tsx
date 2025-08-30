@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
 import config from '@/config';
@@ -123,7 +123,7 @@ export default function SearchIndexManager() {
   };
 
   // Поиск документов
-  const searchDocuments = async () => {
+  const searchDocuments = useCallback(async () => {
     setLoading(true);
     try {
       const token = tokenManager.getAccessToken();
@@ -163,7 +163,7 @@ export default function SearchIndexManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, searchQuery, docType, categoryId]);
 
   // Запуск переиндексации
   const handleReindex = async () => {
@@ -215,7 +215,7 @@ export default function SearchIndexManager() {
     if (activeTab === 'documents') {
       searchDocuments();
     }
-  }, [activeTab, currentPage, searchQuery, docType, categoryId]);
+  }, [activeTab, searchDocuments]);
 
   const getHealthBadgeClass = (health: string) => {
     switch (health) {

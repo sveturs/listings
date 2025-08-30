@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import configManager from '@/config';
@@ -46,9 +46,9 @@ export default function StorefrontProductQuickView({
     if (isOpen && productId) {
       fetchProduct();
     }
-  }, [isOpen, productId]);
+  }, [isOpen, productId, fetchProduct]);
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,7 +80,7 @@ export default function StorefrontProductQuickView({
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId, t]);
 
   if (!isOpen) return null;
 

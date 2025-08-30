@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { FiTruck, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 
@@ -71,6 +71,8 @@ export default function DeliveryMap({
 
         if (mapRef.current && !mapInstanceRef.current) {
           initializeMap(L);
+          // После инициализации карты обновляем маркеры
+          setTimeout(() => updateMarkers(L), 100);
         }
       } catch (error) {
         console.error('Error loading Leaflet:', error);
@@ -78,10 +80,10 @@ export default function DeliveryMap({
     };
 
     loadLeaflet();
-  }, []);
+  }, [initializeMap, updateMarkers]);
 
   // Инициализация карты
-  const initializeMap = (L: typeof import('leaflet')) => {
+  const initializeMap = useCallback((L: typeof import('leaflet')) => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapRef.current, {
@@ -96,39 +98,46 @@ export default function DeliveryMap({
 
     mapInstanceRef.current = map;
     markersLayerRef.current = L.layerGroup().addTo(map);
-
-    updateMarkers(L);
-  };
+  }, []);
 
   // Обновление маркеров на карте
-  const updateMarkers = (L: typeof import('leaflet')) => {
-    if (!mapInstanceRef.current || !markersLayerRef.current || !leafletLoaded)
-      return;
+  const updateMarkers = useCallback(
+    (L: typeof import('leaflet')) => {
+      if (!mapInstanceRef.current || !markersLayerRef.current || !leafletLoaded)
+        return;
 
-    markersLayerRef.current.clearLayers();
+      markersLayerRef.current.clearLayers();
 
-    filteredMarkers.forEach((marker) => {
-      const icon = createCustomIcon(L, marker.type);
+      filteredMarkers.forEach((marker) => {
+        const icon = createCustomIcon(L, marker.type);
 
-      const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
-        .bindPopup(createPopupContent(marker))
-        .on('click', () => {
-          if (onMarkerClick) {
-            onMarkerClick(marker);
-          }
-        });
+        const leafletMarker = L.marker([marker.lat, marker.lng], { icon })
+          .bindPopup(createPopupContent(marker))
+          .on('click', () => {
+            if (onMarkerClick) {
+              onMarkerClick(marker);
+            }
+          });
 
-      markersLayerRef.current.addLayer(leafletMarker);
-    });
+        markersLayerRef.current.addLayer(leafletMarker);
+      });
 
-    // Подгоняем границы карты под маркеры
-    if (filteredMarkers.length > 0) {
-      const group = new (L as any).featureGroup(
-        markersLayerRef.current.getLayers()
-      );
-      mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
-    }
-  };
+      // Подгоняем границы карты под маркеры
+      if (filteredMarkers.length > 0) {
+        const group = new (L as any).featureGroup(
+          markersLayerRef.current.getLayers()
+        );
+        mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
+      }
+    },
+    [
+      filteredMarkers,
+      leafletLoaded,
+      onMarkerClick,
+      createCustomIcon,
+      createPopupContent,
+    ]
+  );
 
   // Создание кастомной иконки
   const createCustomIcon = (L: typeof import('leaflet'), type: string) => {
@@ -255,7 +264,7 @@ export default function DeliveryMap({
         });
       }, 100);
     }
-  }, [filteredMarkers, leafletLoaded]);
+  }, [filteredMarkers, leafletLoaded, updateMarkers]);
 
   return (
     <div className="space-y-4">

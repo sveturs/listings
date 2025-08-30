@@ -60,7 +60,7 @@ export default function OrderDetailsPage({ params }: Props) {
     };
 
     fetchOrder();
-  }, [id, isAuthenticated, locale, router]);
+  }, [id, isAuthenticated, locale, router, t]);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {

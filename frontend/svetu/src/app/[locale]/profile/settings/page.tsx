@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import config from '@/config';
@@ -41,7 +41,7 @@ export default function ProfileSettingsPage() {
     if (isAuthenticated && user) {
       fetchPrivacySettings();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, fetchPrivacySettings]);
 
   useEffect(() => {
     if (success) {
@@ -50,7 +50,7 @@ export default function ProfileSettingsPage() {
     }
   }, [success]);
 
-  const fetchPrivacySettings = async () => {
+  const fetchPrivacySettings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -74,7 +74,7 @@ export default function ProfileSettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   const savePrivacySettings = async () => {
     try {
