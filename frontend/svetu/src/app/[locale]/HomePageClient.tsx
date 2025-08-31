@@ -473,28 +473,64 @@ export default function HomePageClient({
             (listing: any) => listing.product_type === 'storefront'
           );
 
-          // Создаем смешанную выборку: преимущественно C2C, но включаем B2C если есть
+          // Создаем смешанную выборку: смешиваем C2C и B2C объявления
           let selectedListings = [];
 
-          // Берем первые 6 C2C объявлений
-          selectedListings.push(...c2cListings.slice(0, 6));
+          // Смешиваем объявления для разнообразия
+          // Берем поочередно из обоих списков
+          const maxItems = 8;
+          let c2cIndex = 0;
+          let b2cIndex = 0;
 
-          // Добавляем 2 B2C объявления если есть
-          if (b2cListings.length > 0) {
-            selectedListings.push(...b2cListings.slice(0, 2));
-          } else {
-            // Если B2C нет, добавляем еще 2 C2C
-            selectedListings.push(...c2cListings.slice(6, 8));
+          // Добавляем объявления поочередно: 2 C2C, 1 B2C, повторяем
+          while (selectedListings.length < maxItems) {
+            // Добавляем 2 C2C если есть
+            for (
+              let i = 0;
+              i < 2 &&
+              c2cIndex < c2cListings.length &&
+              selectedListings.length < maxItems;
+              i++
+            ) {
+              selectedListings.push(c2cListings[c2cIndex++]);
+            }
+
+            // Добавляем 1 B2C если есть
+            if (
+              b2cIndex < b2cListings.length &&
+              selectedListings.length < maxItems
+            ) {
+              selectedListings.push(b2cListings[b2cIndex++]);
+            }
+
+            // Если закончились оба типа, выходим
+            if (
+              c2cIndex >= c2cListings.length &&
+              b2cIndex >= b2cListings.length
+            ) {
+              break;
+            }
           }
 
-          // Ограничиваем до 8 объявлений
-          selectedListings = selectedListings.slice(0, 8);
+          // Если объявлений мало, берем все что есть
+          if (selectedListings.length === 0) {
+            selectedListings = allListings.slice(0, maxItems);
+          }
 
           console.log(
-            `Mixed selection: ${selectedListings.filter((l) => !l.storefrontId).length} C2C + ${selectedListings.filter((l) => l.storefrontId).length} B2C`
+            `Mixed selection: ${selectedListings.filter((l: any) => !l.storefrontId).length} C2C + ${selectedListings.filter((l: any) => l.storefrontId).length} B2C`
           );
 
           const apiListings = selectedListings.map((listing: any) => {
+            // Логируем структуру данных для отладки
+            console.log('Processing listing:', {
+              id: listing.id,
+              name: listing.name,
+              images: listing.images,
+              hasImages: listing.images && listing.images.length > 0,
+              firstImage: listing.images && listing.images[0],
+            });
+
             // Вычисляем скидку если есть старая цена
             let discount = null;
             let oldPrice = null;
@@ -531,12 +567,41 @@ export default function HomePageClient({
                 listing.city ||
                 listing.location?.city ||
                 'Сербия',
-              image:
-                listing.images && listing.images.length > 0
-                  ? configManager.buildImageUrl(
-                      listing.images[0].url || listing.images[0].public_url
-                    )
-                  : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop', // fallback изображение
+              image: (() => {
+                // Проверяем наличие изображений
+                if (listing.images && listing.images.length > 0) {
+                  const firstImage = listing.images[0];
+                  const imageUrl =
+                    firstImage.url || firstImage.public_url || firstImage;
+
+                  // Логируем для отладки
+                  console.log(
+                    'Building image URL for listing',
+                    listing.id,
+                    ':',
+                    imageUrl
+                  );
+
+                  // Если URL уже полный (начинается с http), используем как есть
+                  if (
+                    typeof imageUrl === 'string' &&
+                    imageUrl.startsWith('http')
+                  ) {
+                    return imageUrl;
+                  }
+
+                  // Иначе строим URL через configManager
+                  return configManager.buildImageUrl(imageUrl);
+                }
+
+                // Fallback изображение
+                console.log(
+                  'No images for listing',
+                  listing.id,
+                  ', using fallback'
+                );
+                return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop';
+              })(),
               rating: listing.rating || 4.0 + Math.random() * 1.0, // Используем настоящий рейтинг или генерируем
               reviews:
                 listing.reviewCount || Math.floor(Math.random() * 500) + 10,

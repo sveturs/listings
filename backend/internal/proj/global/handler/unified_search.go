@@ -198,11 +198,17 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			params.PriceMax = p
 		}
 	}
+	// Поддерживаем два формата параметров: sort_by/sort_order и sort/sortDirection
 	if sortBy := c.Query("sort_by"); sortBy != "" {
 		params.SortBy = sortBy
+	} else if sort := c.Query("sort"); sort != "" {
+		params.SortBy = sort
 	}
+
 	if sortOrder := c.Query("sort_order"); sortOrder != "" {
 		params.SortOrder = sortOrder
+	} else if sortDirection := c.Query("sortDirection"); sortDirection != "" {
+		params.SortOrder = sortDirection
 	}
 	if storefrontID := c.Query("storefront_id"); storefrontID != "" {
 		if s, err := strconv.Atoi(storefrontID); err == nil && s > 0 {
@@ -588,7 +594,8 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Name: product.Category.Name,
 				Slug: product.Category.Slug,
 			},
-			Score: product.Score,
+			Score:     product.Score,
+			CreatedAt: product.CreatedAt,
 		}
 
 		// Логируем для отладки создание storefront товара
@@ -806,9 +813,17 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 			}
 			return items[i].Price > items[j].Price
 
-		case "date":
+		case "date", "created_at", "updated_at":
+			// Обрабатываем все варианты сортировки по дате
 			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
-				// Если нет даты, сортируем по score
+				// Если у одного элемента нет даты, он идет последним
+				if items[i].CreatedAt == nil && items[j].CreatedAt != nil {
+					return false // элемент без даты идет после
+				}
+				if items[i].CreatedAt != nil && items[j].CreatedAt == nil {
+					return true // элемент с датой идет первым
+				}
+				// Если у обоих нет даты, сортируем по score
 				return items[i].Score > items[j].Score
 			}
 			// При одинаковой дате сортируем по score

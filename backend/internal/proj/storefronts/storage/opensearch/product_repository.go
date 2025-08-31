@@ -1042,6 +1042,18 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		item.QualityScore = v
 	}
 
+	// Даты
+	if v, ok := source["created_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			item.CreatedAt = &t
+		}
+	}
+	if v, ok := source["updated_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			item.UpdatedAt = &t
+		}
+	}
+
 	// Инвентарь
 	if inventory, ok := source["inventory"].(map[string]interface{}); ok {
 		logger.Debug().
