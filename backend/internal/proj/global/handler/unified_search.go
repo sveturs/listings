@@ -216,9 +216,23 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		params.Language = lang
 	}
 
-	// Обработка product_types
-	if productTypes := c.Query("product_types"); productTypes != "" {
-		// Парсинг comma-separated значений
+	// Обработка product_types - поддержка как массива, так и comma-separated строки
+	// В Fiber v2 используем Request().URI().QueryArgs() для получения всех значений
+	args := c.Request().URI().QueryArgs()
+	var productTypesFromArray []string
+	
+	// Собираем все параметры product_types[]
+	args.VisitAll(func(key, value []byte) {
+		if string(key) == "product_types[]" {
+			productTypesFromArray = append(productTypesFromArray, string(value))
+		}
+	})
+	
+	if len(productTypesFromArray) > 0 {
+		// Если переданы как массив (product_types[]=...)
+		params.ProductTypes = productTypesFromArray
+	} else if productTypes := c.Query("product_types"); productTypes != "" {
+		// Если передано как comma-separated строка
 		params.ProductTypes = strings.Split(productTypes, ",")
 		// Очистка пробелов
 		for i, pt := range params.ProductTypes {
@@ -242,6 +256,14 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	if len(params.ProductTypes) == 0 {
 		params.ProductTypes = []string{productTypeMarketplace, productTypeStorefront}
 	}
+	
+	// Логируем параметры поиска
+	logger.Debug().
+		Str("query", params.Query).
+		Strs("product_types", params.ProductTypes).
+		Int("limit", params.Limit).
+		Int("page", params.Page).
+		Msg("UnifiedSearch params after processing")
 
 	// Выполняем поиск
 	result, err := h.performUnifiedSearch(ctx, &params)
@@ -301,7 +323,12 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	}
 
 	// Поиск в marketplace (если включен)
-	if h.containsProductType(params.ProductTypes, "marketplace") {
+	logger.Debug().
+		Strs("product_types", params.ProductTypes).
+		Bool("contains_marketplace", h.containsProductType(params.ProductTypes, productTypeMarketplace)).
+		Msg("Checking for marketplace search")
+		
+	if h.containsProductType(params.ProductTypes, productTypeMarketplace) {
 		marketplaceItems, count, took, err := h.searchMarketplaceWithLimit(ctx, params, searchLimit)
 		if err != nil {
 			logger.Error().Err(err).Msg("Marketplace search failed")
@@ -328,6 +355,30 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 	// Объединяем и ранжируем результаты
 	rankedItems := h.mergeAndRankResults(allItems, params)
+
+	// Логируем типы товаров после объединения
+	marketplaceCount := 0
+	storefrontCount := 0
+	for _, item := range rankedItems {
+		if item.ProductType == productTypeMarketplace {
+			marketplaceCount++
+		} else if item.ProductType == productTypeStorefront {
+			storefrontCount++
+		}
+		// Детальное логирование первых 5 элементов
+		if marketplaceCount + storefrontCount <= 5 {
+			logger.Debug().
+				Str("id", item.ID).
+				Str("product_type", item.ProductType).
+				Str("name", item.Name).
+				Msg("Ranked item details")
+		}
+	}
+	logger.Info().
+		Int("marketplace_items", marketplaceCount).
+		Int("storefront_items", storefrontCount).
+		Int("total_ranked_items", len(rankedItems)).
+		Msg("Items after merging and ranking")
 
 	// Применяем пагинацию к объединенным результатам
 	offset := (params.Page - 1) * params.Limit
@@ -362,6 +413,8 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 // searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
 func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
+	logger.Debug().Str("query", params.Query).Int("limit", limit).Msg("Starting marketplace search")
+	
 	// Конвертируем параметры в формат для marketplace поиска
 	searchParams := &search.ServiceParams{
 		Query:         params.Query,
@@ -378,8 +431,11 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 
 	results, err := h.services.Marketplace().SearchListingsAdvanced(ctx, searchParams)
 	if err != nil {
+		logger.Error().Err(err).Msg("Marketplace search failed")
 		return nil, 0, 0, err
 	}
+	
+	logger.Debug().Int("count", len(results.Items)).Int("total", results.Total).Msg("Marketplace search completed")
 
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Items))
@@ -439,6 +495,15 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			}
 		}
 
+		// Логируем для отладки
+		if len(items) < 3 {
+			logger.Debug().
+				Str("listing_id", item.ID).
+				Str("product_type", item.ProductType).
+				Str("name", item.Name).
+				Msg("Adding marketplace item")
+		}
+
 		items = append(items, item)
 	}
 
@@ -492,7 +557,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Products))
-	for _, product := range results.Products {
+	for i, product := range results.Products {
 		if product == nil {
 			continue
 		}
@@ -523,6 +588,16 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Slug: product.Category.Slug,
 			},
 			Score: product.Score,
+		}
+		
+		// Логируем для отладки создание storefront товара
+		if i < 3 {
+			logger.Debug().
+				Str("id", item.ID).
+				Str("product_type", item.ProductType).
+				Int("product_id", item.ProductID).
+				Str("name", item.Name).
+				Msg("Created storefront item")
 		}
 
 		// Добавляем информацию об остатках
@@ -616,15 +691,31 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 		return []UnifiedSearchItem{}
 	}
 
+	// Логируем входящие данные
+	marketplaceIn := 0
+	storefrontIn := 0
+	for _, item := range items {
+		if item.ProductType == productTypeMarketplace {
+			marketplaceIn++
+		} else if item.ProductType == productTypeStorefront {
+			storefrontIn++
+		}
+	}
+	logger.Debug().
+		Int("marketplace_in", marketplaceIn).
+		Int("storefront_in", storefrontIn).
+		Int("total_in", len(items)).
+		Msg("mergeAndRankResults input")
+
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
-		// Добавляем бонус для товаров витрин даже без поискового запроса
-		for i := range items {
-			if items[i].ProductType == productTypeStorefront {
-				// Товары витрин получают дополнительный приоритет
-				items[i].Score += 10.0
-			}
-		}
+		// Убираем приоритет витрин для равномерного отображения
+		// for i := range items {
+		// 	if items[i].ProductType == productTypeStorefront {
+		// 		// Товары витрин получают дополнительный приоритет
+		// 		items[i].Score += 10.0
+		// 	}
+		// }
 		h.sortScoredItems(items, params.SortBy, params.SortOrder)
 		return items
 	}
@@ -633,11 +724,11 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 	for i := range items {
 		items[i].Score = h.calculateRelevanceScore(&items[i], params.Query)
 
-		// Добавляем бонус для товаров витрин
-		if items[i].ProductType == productTypeStorefront {
-			// Товары витрин получают дополнительный приоритет
-			items[i].Score += 10.0
-		}
+		// Убираем приоритет витрин для равномерного отображения
+		// if items[i].ProductType == productTypeStorefront {
+		// 	// Товары витрин получают дополнительный приоритет
+		// 	items[i].Score += 10.0
+		// }
 	}
 
 	// Сортируем результаты
@@ -705,14 +796,7 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 		switch sortBy {
 		case "price":
 			if items[i].Price == items[j].Price {
-				// При одинаковой цене товары витрин идут первыми
-				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
-					return true
-				}
-				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
-					return false
-				}
-				// Если оба одного типа, сортируем по score
+				// При одинаковой цене сортируем по score
 				return items[i].Score > items[j].Score
 			}
 			if sortOrder == sortOrderAsc {
@@ -722,23 +806,11 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 
 		case "date":
 			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
-				// Если нет даты у одного, товары витрин идут первыми
-				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
-					return true
-				}
-				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
-					return false
-				}
-				return false
+				// Если нет даты, сортируем по score
+				return items[i].Score > items[j].Score
 			}
-			// При одинаковой дате товары витрин идут первыми
+			// При одинаковой дате сортируем по score
 			if items[i].CreatedAt.Equal(*items[j].CreatedAt) {
-				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
-					return true
-				}
-				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
-					return false
-				}
 				return items[i].Score > items[j].Score
 			}
 			if sortOrder == sortOrderAsc {
@@ -748,13 +820,7 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 
 		case "popularity":
 			if items[i].ViewsCount == items[j].ViewsCount {
-				// При одинаковой популярности товары витрин идут первыми
-				if items[i].ProductType == productTypeStorefront && items[j].ProductType != productTypeStorefront {
-					return true
-				}
-				if items[i].ProductType != productTypeStorefront && items[j].ProductType == productTypeStorefront {
-					return false
-				}
+				// При одинаковой популярности сортируем по score
 				return items[i].Score > items[j].Score
 			}
 			if sortOrder == sortOrderAsc {
