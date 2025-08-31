@@ -571,8 +571,16 @@ export default function HomePageClient({
                 // Проверяем наличие изображений
                 if (listing.images && listing.images.length > 0) {
                   const firstImage = listing.images[0];
-                  const imageUrl =
-                    firstImage.url || firstImage.public_url || firstImage;
+                  
+                  // Извлекаем URL из объекта изображения или используем как строку
+                  let imageUrl: string;
+                  if (typeof firstImage === 'object' && firstImage !== null) {
+                    imageUrl = firstImage.url || firstImage.public_url || '';
+                  } else if (typeof firstImage === 'string') {
+                    imageUrl = firstImage;
+                  } else {
+                    imageUrl = '';
+                  }
 
                   // Логируем для отладки
                   console.log(
@@ -582,19 +590,19 @@ export default function HomePageClient({
                     imageUrl
                   );
 
-                  // Если URL уже полный (начинается с http), используем как есть
-                  if (
-                    typeof imageUrl === 'string' &&
-                    imageUrl.startsWith('http')
-                  ) {
-                    return imageUrl;
+                  // Если у нас есть валидный URL
+                  if (imageUrl) {
+                    // Если URL уже полный (начинается с http), используем как есть
+                    if (imageUrl.startsWith('http')) {
+                      return imageUrl;
+                    }
+                    
+                    // Иначе строим URL через configManager
+                    return configManager.buildImageUrl(imageUrl);
                   }
-
-                  // Иначе строим URL через configManager
-                  return configManager.buildImageUrl(imageUrl);
                 }
 
-                // Fallback изображение
+                // Fallback изображение только если действительно нет изображений
                 console.log(
                   'No images for listing',
                   listing.id,
