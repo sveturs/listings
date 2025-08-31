@@ -40,6 +40,9 @@ async function getStorefrontsStats() {
   return { total: 0, active: 0, verified: 0, totalProducts: 0, totalSales: 0 };
 }
 
+// Делаем страницу динамической из-за API вызовов
+export const dynamic = 'force-dynamic';
+
 export default async function StorefrontsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);

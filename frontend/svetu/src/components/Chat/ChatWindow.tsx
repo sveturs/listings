@@ -221,7 +221,12 @@ export default function ChatWindow({
           });
         });
     }
-  }, [chat?.storefront_product_id, storefrontProduct]);
+  }, [
+    chat?.storefront_product_id,
+    storefrontProduct,
+    chat?.listing?.title,
+    chat?.seller_id,
+  ]);
 
   // Загрузка информации об объявлении для новых чатов
   useEffect(() => {
@@ -271,6 +276,8 @@ export default function ChatWindow({
     initialStorefrontProductId,
     isContactChat,
     listingInfo,
+    initialSellerId,
+    t,
   ]);
 
   // Прокрутка к низу только при новых сообщениях (не при загрузке старых)

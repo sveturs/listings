@@ -59,15 +59,9 @@ export async function getHomePageData(locale: string) {
       popularSearchesResponse.data
     );
 
-    // Получаем новые объявления для featured секции
-    const featuredResponse = await apiClientServer.post(
-      '/api/v1/marketplace/search',
-      {
-        sort: 'created_at',
-        sortDirection: 'desc',
-        limit: 1,
-        offset: 0,
-      }
+    // Получаем новые объявления для featured секции через унифицированный поиск
+    const featuredResponse = await apiClientServer.get(
+      '/api/v1/search?sort=created_at&sortDirection=desc&limit=1'
     );
     console.log(
       '[getHomePageData] Featured listing response:',
@@ -99,8 +93,12 @@ export async function getHomePageData(locale: string) {
     // Обрабатываем featured listing
     let featuredListing: FeaturedListing | undefined;
 
-    // Проверяем разные возможные структуры ответа
-    const listings = featuredResponse.data?.data || featuredResponse.data || [];
+    // Проверяем разные возможные структуры ответа - теперь унифицированный поиск возвращает items
+    const listings =
+      featuredResponse.data?.items ||
+      featuredResponse.data?.data ||
+      featuredResponse.data ||
+      [];
     console.log('[getHomePageData] Listings array:', listings);
 
     if (Array.isArray(listings) && listings.length > 0) {
@@ -127,17 +125,17 @@ export async function getHomePageData(locale: string) {
       };
     }
 
-    // Получаем все объявления для анализа статистики
-    const allListingsResponse = await apiClientServer.post(
-      '/api/v1/marketplace/search',
-      {
-        limit: 100,
-        offset: 0,
-      }
+    // Получаем все объявления для анализа статистики через унифицированный поиск
+    const allListingsResponse = await apiClientServer.get(
+      '/api/v1/search?limit=100'
     );
 
-    const allListings = allListingsResponse.data?.data || [];
-    const totalListings = allListingsResponse.data?.meta?.total || 0;
+    const allListings =
+      allListingsResponse.data?.items || allListingsResponse.data?.data || [];
+    const totalListings =
+      allListingsResponse.data?.total_items ||
+      allListingsResponse.data?.meta?.total ||
+      0;
 
     // Подсчитываем уникальных пользователей
     const uniqueUserIds = new Set(

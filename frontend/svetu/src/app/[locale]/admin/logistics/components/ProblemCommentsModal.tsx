@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiClientAuth } from '@/lib/api-client-auth';
 import {
@@ -35,20 +35,14 @@ export default function ProblemCommentsModal({
   problemId,
   problemDescription,
 }: ProblemCommentsModalProps) {
-  const t = useTranslations('admin.logistics');
+  const t = useTranslations('admin');
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Загрузка комментариев при открытии модального окна
-  useEffect(() => {
-    if (isOpen) {
-      loadComments();
-    }
-  }, [isOpen, problemId]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClientAuth.get(
@@ -59,7 +53,13 @@ export default function ProblemCommentsModal({
       console.error('Error loading comments:', error);
     }
     setLoading(false);
-  };
+  }, [problemId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadComments();
+    }
+  }, [isOpen, loadComments]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -120,7 +120,7 @@ export default function ProblemCommentsModal({
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-lg flex items-center gap-2">
             <FiMessageSquare />
-            {t('problemComments.title')}
+            {t('logistics.problems.problemComments.title')}
           </h3>
           <button className="btn btn-sm btn-circle btn-ghost" onClick={onClose}>
             <FiX />
@@ -130,7 +130,7 @@ export default function ProblemCommentsModal({
         {/* Описание проблемы */}
         <div className="bg-base-200 p-4 rounded-lg mb-4">
           <h4 className="font-semibold text-sm text-base-content/70 mb-2">
-            {t('problemComments.problemDescription')}
+            {t('logistics.problems.problemComments.problemDescription')}
           </h4>
           <p className="text-sm">{problemDescription}</p>
         </div>
@@ -144,7 +144,7 @@ export default function ProblemCommentsModal({
           ) : comments.length === 0 ? (
             <div className="text-center py-8 text-base-content/50">
               <FiMessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>{t('problemComments.noComments')}</p>
+              <p>{t('logistics.problems.problemComments.noComments')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -190,14 +190,16 @@ export default function ProblemCommentsModal({
         {/* Форма добавления комментария */}
         <div className="border-t pt-4">
           <h4 className="font-semibold mb-2">
-            {t('problemComments.addComment')}
+            {t('logistics.problems.problemComments.addComment')}
           </h4>
           <textarea
             className="textarea textarea-bordered w-full"
             rows={3}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t('problemComments.commentPlaceholder')}
+            placeholder={t(
+              'logistics.problems.problemComments.commentPlaceholder'
+            )}
             disabled={submitting}
           />
           <div className="flex justify-end gap-2 mt-2">
@@ -212,7 +214,7 @@ export default function ProblemCommentsModal({
               {submitting && (
                 <span className="loading loading-spinner loading-xs"></span>
               )}
-              {t('problemComments.addComment')}
+              {t('logistics.problems.problemComments.addComment')}
             </button>
           </div>
         </div>

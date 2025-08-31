@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import { ReviewsSection } from '@/components/reviews';
 import Image from 'next/image';
+import ContactSellerButton from '@/components/ContactSellerButton';
 
 interface Listing {
   id: number;
@@ -343,9 +344,12 @@ export default function ListingDetailBySlugPage() {
                   </div>
                 </div>
 
-                <button className="btn btn-primary w-full">
-                  {t('listing.contactSeller')}
-                </button>
+                <ContactSellerButton
+                  sellerId={listing.user.id}
+                  listingId={listing.id}
+                  className="w-full"
+                  size="lg"
+                />
 
                 {/* Location */}
                 {listing.location && (

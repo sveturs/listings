@@ -1,4 +1,4 @@
-import { loadMessages } from '@/i18n/loadMessages';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 
 export default async function MarketplaceLayout({
@@ -11,12 +11,10 @@ export default async function MarketplaceLayout({
   const { locale } = await params;
 
   // Загружаем дополнительные модули для страниц marketplace
-  const additionalMessages = await loadMessages(locale as any, [
-    'marketplace',
-    'reviews',
-    'misc',
-    'cart',
-  ]);
+  const additionalMessages = await loadMessages(
+    locale as any,
+    ['marketplace', 'reviews', 'misc', 'cart'] as any
+  );
 
   return (
     <NextIntlClientProvider messages={additionalMessages}>

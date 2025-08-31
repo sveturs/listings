@@ -57,12 +57,6 @@ export default function ContactsPage() {
     }
   }, [mounted, isAuthenticated, isLoading, router]);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchContacts();
-    }
-  }, [isAuthenticated, user, activeTab]);
-
   const fetchContacts = useCallback(async () => {
     try {
       setLoading(true);
@@ -103,6 +97,12 @@ export default function ContactsPage() {
       setLoading(false);
     }
   }, [activeTab, t]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchContacts();
+    }
+  }, [isAuthenticated, user, fetchContacts]);
 
   const handleAddContact = async () => {
     if (!addContactEmail.trim()) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { CategoryService, Category } from '@/services/category';
 import { renderCategoryIcon } from '@/utils/iconMapper';
@@ -26,11 +26,7 @@ export default function CategoryFilter({
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const data = await CategoryService.getCategories();
 
@@ -42,7 +38,11 @@ export default function CategoryFilter({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   const buildCategoryTree = (categories: Category[]): CategoryTreeItem[] => {
     const categoryMap = new Map<number, CategoryTreeItem>();

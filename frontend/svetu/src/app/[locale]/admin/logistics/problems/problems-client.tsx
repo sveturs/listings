@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import {
@@ -48,11 +48,7 @@ export default function ProblemShipmentsClient() {
   const [selectedProblem, setSelectedProblem] =
     useState<ProblemShipment | null>(null);
 
-  useEffect(() => {
-    fetchProblems();
-  }, [filterType, filterStatus]);
-
-  const fetchProblems = async () => {
+  const fetchProblems = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -78,7 +74,11 @@ export default function ProblemShipmentsClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, filterStatus]);
+
+  useEffect(() => {
+    fetchProblems();
+  }, [fetchProblems]);
 
   const getProblemIcon = (type: string) => {
     switch (type) {

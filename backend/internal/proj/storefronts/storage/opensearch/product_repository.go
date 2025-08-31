@@ -643,22 +643,22 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 
 	// Построение bool запроса
 	boolQuery := map[string]interface{}{}
-	if len(must) > 0 {
-		boolQuery["must"] = must
+
+	// Если нет текстового поиска, добавляем match_all
+	if len(must) == 0 {
+		must = append(must, map[string]interface{}{
+			"match_all": map[string]interface{}{},
+		})
 	}
+
+	boolQuery["must"] = must
+
 	if len(filter) > 0 {
 		boolQuery["filter"] = filter
 	}
 
-	// Если нет условий поиска, используем match_all
-	if len(must) == 0 && len(filter) == 0 {
-		query["query"] = map[string]interface{}{
-			"match_all": map[string]interface{}{},
-		}
-	} else {
-		query["query"] = map[string]interface{}{
-			"bool": boolQuery,
-		}
+	query["query"] = map[string]interface{}{
+		"bool": boolQuery,
 	}
 
 	// Сортировка
@@ -713,14 +713,16 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 			},
 		})
 	case "popularity":
+		// Используем created_at как фолбэк для популярности
 		sort = append(sort, map[string]interface{}{
-			"popularity_score": map[string]interface{}{
+			"created_at": map[string]interface{}{
 				"order": params.SortOrder,
 			},
 		})
 	case "quality":
+		// Используем created_at как фолбэк для качества
 		sort = append(sort, map[string]interface{}{
-			"quality_score": map[string]interface{}{
+			"created_at": map[string]interface{}{
 				"order": params.SortOrder,
 			},
 		})
@@ -750,7 +752,7 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 			},
 		})
 	default:
-		// По умолчанию сортировка по релевантности и популярности
+		// По умолчанию сортировка по релевантности и дате создания
 		if params.Query != "" {
 			sort = append(sort, map[string]interface{}{
 				"_score": map[string]interface{}{
@@ -758,8 +760,9 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 				},
 			})
 		}
+		// Используем created_at вместо popularity_score
 		sort = append(sort, map[string]interface{}{
-			"popularity_score": map[string]interface{}{
+			"created_at": map[string]interface{}{
 				"order": "desc",
 			},
 		})
@@ -1001,6 +1004,10 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 // parseProductSource парсит данные товара из _source
 func (r *ProductRepository) parseProductSource(source map[string]interface{}, item *ProductSearchItem) {
 	// Основные поля
+	// Сначала проверяем product_id
+	if v, ok := source["product_id"].(float64); ok {
+		item.ProductID = int(v)
+	}
 	if v, ok := source["storefront_id"].(float64); ok {
 		item.StorefrontID = int(v)
 	}
@@ -1128,6 +1135,37 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			info.Slug = v
 		}
 		item.Category = info
+	}
+
+	// Изображения
+	if images, ok := source["images"].([]interface{}); ok {
+		for _, img := range images {
+			if imgMap, ok := img.(map[string]interface{}); ok {
+				image := ProductImage{}
+				if v, ok := imgMap["id"].(float64); ok {
+					image.ID = int(v)
+				}
+				if v, ok := imgMap["url"].(string); ok {
+					image.URL = v
+				}
+				if v, ok := imgMap["alt_text"].(string); ok {
+					image.AltText = v
+				}
+				if v, ok := imgMap["is_main"].(bool); ok {
+					image.IsMain = v
+				}
+				if v, ok := imgMap["is_default"].(bool); ok {
+					image.IsMain = v
+				}
+				if v, ok := imgMap["display_order"].(float64); ok {
+					image.Position = int(v)
+				}
+				if v, ok := imgMap["position"].(float64); ok {
+					image.Position = int(v)
+				}
+				item.Images = append(item.Images, image)
+			}
+		}
 	}
 
 	// Атрибуты

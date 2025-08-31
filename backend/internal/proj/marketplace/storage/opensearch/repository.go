@@ -2618,6 +2618,15 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		}
 	}
 
+	// Если нет условий в must, добавляем match_all для получения всех результатов
+	boolQuery := query["query"].(map[string]interface{})["bool"].(map[string]interface{})
+	must := boolQuery["must"].([]interface{})
+	if len(must) == 0 {
+		boolQuery["must"] = append(must, map[string]interface{}{
+			"match_all": map[string]interface{}{},
+		})
+	}
+
 	return query
 }
 

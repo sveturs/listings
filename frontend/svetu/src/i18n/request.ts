@@ -22,6 +22,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'storefronts',
     'admin', // Добавляем admin так как он используется в storefronts странице
     'cars', // Добавляем cars для car-selector
+    'reviews', // Добавляем reviews для ImageGallery компонента
   ]);
 
   return {

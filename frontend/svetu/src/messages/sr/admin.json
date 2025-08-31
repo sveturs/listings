@@ -1075,6 +1075,25 @@
         "assigned_to": "Dodeljeno",
         "created_at": "Kreirano",
         "actions": "Akcije"
+      },
+      "assignModal": {
+        "title": "Dodeli administratora",
+        "selectAdmin": "Izaberi administratora",
+        "assign": "Dodeli"
+      },
+      "resolveModal": {
+        "title": "Reši problem",
+        "problemDescription": "Opis problema",
+        "resolution": "Rešenje",
+        "resolutionPlaceholder": "Opišite kako je problem rešen...",
+        "resolve": "Reši"
+      },
+      "problemComments": {
+        "title": "Komentari o problemu",
+        "problemDescription": "Opis problema",
+        "noComments": "Još nema komentara",
+        "addComment": "Dodaj komentar",
+        "commentPlaceholder": "Napišite vaš komentar..."
       }
     },
     "analytics": {
@@ -1260,7 +1279,13 @@
       "track": "Prati",
       "export": "Izvezi",
       "view": "Pregledaj",
-      "new_shipment": "Nova pošiljka"
+      "new_shipment": "Nova pošiljka",
+      "comments": "Komentari",
+      "assign": "Dodeli",
+      "resolve": "Reši",
+      "printLabel": "Štampaj etiketu",
+      "updateStatus": "Ažuriraj status",
+      "contact": "Kontakt"
     }
   },
   "storefronts": {

@@ -9,6 +9,7 @@ import type { components } from '@/types/generated/api';
 import SafeImage from '@/components/SafeImage';
 import AddToCartButton from '@/components/cart/AddToCartButton';
 import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
+import ContactSellerButton from '@/components/ContactSellerButton';
 import {
   formatAddressWithPrivacy,
   type LocationPrivacyLevel,
@@ -398,8 +399,8 @@ export default function StorefrontProductPage({ params }: Props) {
               </div>
             )}
 
-            {/* Add to Cart */}
-            <div className="pt-4">
+            {/* Add to Cart and Contact Seller */}
+            <div className="pt-4 space-y-3">
               <AddToCartButton
                 product={{
                   id: product.id!,
@@ -427,6 +428,16 @@ export default function StorefrontProductPage({ params }: Props) {
                   'out_of_stock'
                 }
               />
+
+              {/* Contact Seller Button */}
+              {(storefront as any)?.user_id && (
+                <ContactSellerButton
+                  sellerId={(storefront as any).user_id}
+                  storefrontProductId={product.id!}
+                  className="w-full"
+                  size="lg"
+                />
+              )}
             </div>
 
             {/* Trust Badges */}

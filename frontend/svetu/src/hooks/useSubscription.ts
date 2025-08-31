@@ -155,7 +155,7 @@ export function useSubscription(): UseSubscriptionResult {
         setIsProcessing(false);
       }
     },
-    [auth, locale, currentSubscription, plans, router]
+    [auth, locale, plans, router]
   );
 
   const upgradePlan = useCallback(

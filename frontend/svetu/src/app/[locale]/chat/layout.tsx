@@ -1,19 +1,22 @@
-import { ReactNode } from 'react';
 import { loadMessages } from '@/lib/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 
-interface Props {
-  children: ReactNode;
+export default async function ChatLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}
-
-export default async function OrderDetailsLayout({ children, params }: Props) {
+}) {
   const { locale } = await params;
 
-  // Load necessary translation modules for order details page
+  // Загружаем дополнительные модули для страницы чата
   const messages = await loadMessages(
     locale as any,
-    ['orders', 'common', 'marketplace'] as any
+    [
+      'chat',
+      'reviews', // Для компонента ImageGallery
+    ] as any
   );
 
   return (

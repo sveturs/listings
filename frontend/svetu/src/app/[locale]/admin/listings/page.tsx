@@ -31,6 +31,9 @@ async function getListingsStats() {
   return { total: 0, active: 0, pending: 0, views: 0 };
 }
 
+// Делаем страницу динамической из-за API вызовов
+export const dynamic = 'force-dynamic';
+
 export default async function ListingsPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);

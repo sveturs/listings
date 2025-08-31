@@ -1,4 +1,4 @@
-import { loadMessages } from '@/i18n/loadMessages';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 import AdminLayoutClient from './layout-client';
 
@@ -12,13 +12,16 @@ export default async function AdminLayout({
   const { locale } = await params;
 
   // Загружаем необходимые модули для админ панели
-  const messages = await loadMessages(locale as any, [
-    'admin',
-    'misc',
-    'common',
-    'auth-shared',
-    'marketplace', // Для IconPicker компонента
-  ]);
+  const messages = await loadMessages(
+    locale as any,
+    [
+      'admin',
+      'misc',
+      'common',
+      'auth-shared',
+      'marketplace', // Для IconPicker компонента
+    ] as any
+  );
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>

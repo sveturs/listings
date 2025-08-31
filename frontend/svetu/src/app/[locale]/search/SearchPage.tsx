@@ -110,10 +110,11 @@ export default function SearchPage() {
     const distance = searchParams?.get('distance') || undefined;
     const categoryId = searchParams?.get('category') || undefined;
 
-    // Если есть категория, но нет поискового запроса, используем пустой запрос для поиска всех товаров в категории
-    const effectiveQuery = searchQuery || (categoryId ? '' : null);
+    // Используем пустой запрос для показа всех товаров, если нет конкретного запроса
+    const effectiveQuery = searchQuery || '';
 
-    if (effectiveQuery !== null) {
+    // Всегда выполняем поиск при первой загрузке или изменении параметров
+    if (true) {
       // Perform search if:
       // 1. This is the initial load (!hasInitialSearchRun)
       // 2. Or the query/fuzzy params have changed
@@ -150,7 +151,7 @@ export default function SearchPage() {
 
   // Load more pages
   useEffect(() => {
-    if (query && page > 1) {
+    if (page > 1) {
       performSearch(query, page, filters, fuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,7 +161,7 @@ export default function SearchPage() {
   useEffect(() => {
     // Skip effect on mount
     const isMount = allItems.length === 0 && !results;
-    if (query && !isMount) {
+    if (!isMount) {
       setPage(1);
       setAllItems([]);
       performSearch(query, 1, filters, fuzzy);
@@ -174,8 +175,8 @@ export default function SearchPage() {
     currentFilters: SearchFilters,
     useFuzzy: boolean = true
   ) => {
-    // Разрешаем пустой запрос, если есть категория
-    if (!searchQuery.trim() && !currentFilters.category_id) return;
+    // Теперь разрешаем пустой запрос для показа всех товаров
+    // if (!searchQuery.trim() && !currentFilters.category_id) return;
 
     // Запоминаем время начала поиска для трекинга
     if (currentPage === 1) {
@@ -186,7 +187,7 @@ export default function SearchPage() {
     setError(null);
 
     try {
-      // Если есть категория, но нет запроса, используем пустую строку
+      // Если нет запроса, используем пустую строку
       const effectiveQuery = searchQuery || '';
 
       const params: UnifiedSearchParams = {

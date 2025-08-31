@@ -206,14 +206,17 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
   };
 
   // Сохранение поиска в историю
-  const saveToHistory = (searchQuery: string) => {
-    const updated = [
-      searchQuery,
-      ...recentSearches.filter((s) => s !== searchQuery),
-    ].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  };
+  const saveToHistory = useCallback(
+    (searchQuery: string) => {
+      const updated = [
+        searchQuery,
+        ...recentSearches.filter((s) => s !== searchQuery),
+      ].slice(0, 5);
+      setRecentSearches(updated);
+      localStorage.setItem('recentSearches', JSON.stringify(updated));
+    },
+    [recentSearches]
+  );
 
   // Обработка клика по подсказке
   const handleSuggestionClick = (suggestion: Suggestion) => {
