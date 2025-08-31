@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
-import { loadMessages } from '@/i18n/loadMessages';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 import HeaderWrapper from '@/components/HeaderWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
@@ -88,26 +88,28 @@ export default async function RootLayout({
   }
 
   // Загружаем базовые модули для layout
-  const messages = await loadMessages(locale as any, [
-    'common',
-    'auth',
-    'auth-shared', // Добавляем для AdminGuard и других компонентов защиты
-    'balance', // Добавляем для BalanceWidget
-    'misc',
-    'cart',
-    'chat', // Добавляем chat модуль для страницы чата
-    'map', // Добавляем map модуль для компонентов GIS
-    'marketplace', // И marketplace, так как многие компоненты его используют
-    'admin', // Добавляем admin для страниц админки
-    'profile', // Добавляем profile для страниц профиля
-    'cars', // Добавляем cars для car-selector
-    'search', // Добавляем search для SearchBar
-    'checkout', // Добавляем checkout для страницы оформления заказа
-    'orders', // Добавляем orders для страницы успешного заказа
-    'storefronts', // Добавляем storefronts для страниц витрин
-    'userContacts', // Добавляем userContacts для страницы контактов
-    'subscription', // Добавляем subscription для страниц подписки
-  ]);
+  const messages = await loadMessages(
+    locale as any,
+    [
+      'common',
+      'auth',
+      'auth-shared', // Добавляем для AdminGuard и других компонентов защиты
+      'balance', // Добавляем для BalanceWidget
+      'misc',
+      'cart',
+      'chat', // Добавляем chat модуль для страницы чата
+      'map', // Добавляем map модуль для компонентов GIS
+      'marketplace', // И marketplace, так как многие компоненты его используют
+      'admin', // Добавляем admin для страниц админки
+      'profile', // Добавляем profile для страниц профиля
+      'cars', // Добавляем cars для car-selector
+      'search', // Добавляем search для SearchBar
+      'checkout', // Добавляем checkout для страницы оформления заказа
+      'orders', // Добавляем orders для страницы успешного заказа
+      'storefronts', // Добавляем storefronts для страниц витрин
+      'subscription', // Добавляем subscription для страниц подписки
+    ] as any
+  );
 
   return (
     <html lang={locale} suppressHydrationWarning>

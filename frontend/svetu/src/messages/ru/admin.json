@@ -999,6 +999,25 @@
         "assigned_to": "Назначен",
         "created_at": "Создано",
         "actions": "Действия"
+      },
+      "assignModal": {
+        "title": "Назначить администратора",
+        "selectAdmin": "Выберите администратора",
+        "assign": "Назначить"
+      },
+      "resolveModal": {
+        "title": "Решить проблему",
+        "problemDescription": "Описание проблемы",
+        "resolution": "Решение",
+        "resolutionPlaceholder": "Опишите, как была решена проблема...",
+        "resolve": "Решить"
+      },
+      "problemComments": {
+        "title": "Комментарии к проблеме",
+        "problemDescription": "Описание проблемы",
+        "noComments": "Пока нет комментариев",
+        "addComment": "Добавить комментарий",
+        "commentPlaceholder": "Напишите ваш комментарий..."
       }
     },
     "analytics": {
@@ -1147,7 +1166,13 @@
       "track": "Отследить",
       "export": "Экспорт",
       "view": "Просмотреть",
-      "new_shipment": "Новое отправление"
+      "new_shipment": "Новое отправление",
+      "comments": "Комментарии",
+      "assign": "Назначить",
+      "resolve": "Решить",
+      "printLabel": "Печать этикетки",
+      "updateStatus": "Обновить статус",
+      "contact": "Связаться"
     }
   },
   "storefrontProducts": {

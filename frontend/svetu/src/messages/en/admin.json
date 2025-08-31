@@ -994,6 +994,25 @@
         "assigned_to": "Assigned To",
         "created_at": "Created",
         "actions": "Actions"
+      },
+      "assignModal": {
+        "title": "Assign Administrator",
+        "selectAdmin": "Select Administrator",
+        "assign": "Assign"
+      },
+      "resolveModal": {
+        "title": "Resolve Problem",
+        "problemDescription": "Problem Description",
+        "resolution": "Resolution",
+        "resolutionPlaceholder": "Describe how the problem was resolved...",
+        "resolve": "Resolve"
+      },
+      "problemComments": {
+        "title": "Problem Comments",
+        "problemDescription": "Problem Description",
+        "noComments": "No comments yet",
+        "addComment": "Add Comment",
+        "commentPlaceholder": "Write your comment..."
       }
     },
     "analytics": {
@@ -1143,7 +1162,13 @@
       "track": "Track",
       "export": "Export",
       "view": "View",
-      "new_shipment": "New Shipment"
+      "new_shipment": "New Shipment",
+      "comments": "Comments",
+      "assign": "Assign",
+      "resolve": "Resolve",
+      "printLabel": "Print Label",
+      "updateStatus": "Update Status",
+      "contact": "Contact"
     }
   },
   "storefrontProducts": {

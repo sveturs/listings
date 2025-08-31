@@ -1,4 +1,4 @@
-import { loadMessages } from '@/i18n/loadMessages';
+import { loadMessages } from '@/lib/i18n/loadMessages';
 import { NextIntlClientProvider } from 'next-intl';
 
 export default async function ChatLayout({
@@ -11,10 +11,13 @@ export default async function ChatLayout({
   const { locale } = await params;
 
   // Загружаем дополнительные модули для страницы чата
-  const messages = await loadMessages(locale as any, [
-    'chat',
-    'reviews', // Для компонента ImageGallery
-  ]);
+  const messages = await loadMessages(
+    locale as any,
+    [
+      'chat',
+      'reviews', // Для компонента ImageGallery
+    ] as any
+  );
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
