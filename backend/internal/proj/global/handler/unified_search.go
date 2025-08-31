@@ -220,14 +220,14 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	// В Fiber v2 используем Request().URI().QueryArgs() для получения всех значений
 	args := c.Request().URI().QueryArgs()
 	var productTypesFromArray []string
-	
+
 	// Собираем все параметры product_types[]
 	args.VisitAll(func(key, value []byte) {
 		if string(key) == "product_types[]" {
 			productTypesFromArray = append(productTypesFromArray, string(value))
 		}
 	})
-	
+
 	if len(productTypesFromArray) > 0 {
 		// Если переданы как массив (product_types[]=...)
 		params.ProductTypes = productTypesFromArray
@@ -256,7 +256,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	if len(params.ProductTypes) == 0 {
 		params.ProductTypes = []string{productTypeMarketplace, productTypeStorefront}
 	}
-	
+
 	// Логируем параметры поиска
 	logger.Debug().
 		Str("query", params.Query).
@@ -327,7 +327,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		Strs("product_types", params.ProductTypes).
 		Bool("contains_marketplace", h.containsProductType(params.ProductTypes, productTypeMarketplace)).
 		Msg("Checking for marketplace search")
-		
+
 	if h.containsProductType(params.ProductTypes, productTypeMarketplace) {
 		marketplaceItems, count, took, err := h.searchMarketplaceWithLimit(ctx, params, searchLimit)
 		if err != nil {
@@ -360,13 +360,14 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	marketplaceCount := 0
 	storefrontCount := 0
 	for _, item := range rankedItems {
-		if item.ProductType == productTypeMarketplace {
+		switch item.ProductType {
+		case productTypeMarketplace:
 			marketplaceCount++
-		} else if item.ProductType == productTypeStorefront {
+		case productTypeStorefront:
 			storefrontCount++
 		}
 		// Детальное логирование первых 5 элементов
-		if marketplaceCount + storefrontCount <= 5 {
+		if marketplaceCount+storefrontCount <= 5 {
 			logger.Debug().
 				Str("id", item.ID).
 				Str("product_type", item.ProductType).
@@ -414,7 +415,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 // searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
 func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
 	logger.Debug().Str("query", params.Query).Int("limit", limit).Msg("Starting marketplace search")
-	
+
 	// Конвертируем параметры в формат для marketplace поиска
 	searchParams := &search.ServiceParams{
 		Query:         params.Query,
@@ -434,7 +435,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		logger.Error().Err(err).Msg("Marketplace search failed")
 		return nil, 0, 0, err
 	}
-	
+
 	logger.Debug().Int("count", len(results.Items)).Int("total", results.Total).Msg("Marketplace search completed")
 
 	// Конвертируем результаты в унифицированный формат
@@ -589,7 +590,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 			},
 			Score: product.Score,
 		}
-		
+
 		// Логируем для отладки создание storefront товара
 		if i < 3 {
 			logger.Debug().
@@ -695,9 +696,10 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 	marketplaceIn := 0
 	storefrontIn := 0
 	for _, item := range items {
-		if item.ProductType == productTypeMarketplace {
+		switch item.ProductType {
+		case productTypeMarketplace:
 			marketplaceIn++
-		} else if item.ProductType == productTypeStorefront {
+		case productTypeStorefront:
 			storefrontIn++
 		}
 	}

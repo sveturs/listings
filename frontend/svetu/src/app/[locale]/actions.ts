@@ -94,7 +94,11 @@ export async function getHomePageData(locale: string) {
     let featuredListing: FeaturedListing | undefined;
 
     // Проверяем разные возможные структуры ответа - теперь унифицированный поиск возвращает items
-    const listings = featuredResponse.data?.items || featuredResponse.data?.data || featuredResponse.data || [];
+    const listings =
+      featuredResponse.data?.items ||
+      featuredResponse.data?.data ||
+      featuredResponse.data ||
+      [];
     console.log('[getHomePageData] Listings array:', listings);
 
     if (Array.isArray(listings) && listings.length > 0) {
@@ -126,8 +130,12 @@ export async function getHomePageData(locale: string) {
       '/api/v1/search?limit=100'
     );
 
-    const allListings = allListingsResponse.data?.items || allListingsResponse.data?.data || [];
-    const totalListings = allListingsResponse.data?.total_items || allListingsResponse.data?.meta?.total || 0;
+    const allListings =
+      allListingsResponse.data?.items || allListingsResponse.data?.data || [];
+    const totalListings =
+      allListingsResponse.data?.total_items ||
+      allListingsResponse.data?.meta?.total ||
+      0;
 
     // Подсчитываем уникальных пользователей
     const uniqueUserIds = new Set(

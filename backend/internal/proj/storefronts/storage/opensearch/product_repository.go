@@ -643,16 +643,16 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 
 	// Построение bool запроса
 	boolQuery := map[string]interface{}{}
-	
+
 	// Если нет текстового поиска, добавляем match_all
 	if len(must) == 0 {
 		must = append(must, map[string]interface{}{
 			"match_all": map[string]interface{}{},
 		})
 	}
-	
+
 	boolQuery["must"] = must
-	
+
 	if len(filter) > 0 {
 		boolQuery["filter"] = filter
 	}
