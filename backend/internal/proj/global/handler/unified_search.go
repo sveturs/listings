@@ -74,22 +74,22 @@ type UnifiedSearchResult struct {
 
 // UnifiedSearchItem унифицированный элемент поиска
 type UnifiedSearchItem struct {
-	ID             string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
-	ProductType    string                 `json:"product_type"` // "marketplace" или "storefront"
-	ProductID      int                    `json:"product_id"`
-	Name           string                 `json:"name"`
-	Description    string                 `json:"description"`
-	Price          float64                `json:"price"`
-	Currency       string                 `json:"currency"`
-	Images         []UnifiedProductImage  `json:"images"`
-	Category       UnifiedCategoryInfo    `json:"category"`
-	Location       *UnifiedLocationInfo   `json:"location,omitempty"`
-	User           *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
-	Storefront     *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
-	StorefrontID   *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
-	StorefrontSlug string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
-	Score          float64                `json:"score"`
-	Highlights     map[string][]string    `json:"highlights,omitempty"`
+	ID                 string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
+	ProductType        string                 `json:"product_type"` // "marketplace" или "storefront"
+	ProductID          int                    `json:"product_id"`
+	Name               string                 `json:"name"`
+	Description        string                 `json:"description"`
+	Price              float64                `json:"price"`
+	Currency           string                 `json:"currency"`
+	Images             []UnifiedProductImage  `json:"images"`
+	Category           UnifiedCategoryInfo    `json:"category"`
+	Location           *UnifiedLocationInfo   `json:"location,omitempty"`
+	User               *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
+	Storefront         *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
+	StorefrontID       *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
+	StorefrontSlug     string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
+	Score              float64                `json:"score"`
+	Highlights         map[string][]string    `json:"highlights,omitempty"`
 	ViewsCount         int                    `json:"views_count,omitempty"`         // Для расчета популярности
 	CreatedAt          *time.Time             `json:"created_at,omitempty"`          // Для расчета свежести
 	StockQuantity      *int                   `json:"stock_quantity,omitempty"`      // Остатки товара
@@ -465,12 +465,12 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		// Если массив не задан, но есть единичная категория, используем её
 		categoryIDs = []string{categoryID}
 	}
-	
+
 	searchParams := &search.ServiceParams{
 		Query:         params.Query,
 		Page:          1, // Всегда запрашиваем с первой страницы, так как пагинация будет после объединения
 		Size:          limit,
-		CategoryID:    categoryID, // Оставляем для обратной совместимости
+		CategoryID:    categoryID,  // Оставляем для обратной совместимости
 		CategoryIDs:   categoryIDs, // Передаем массив категорий
 		PriceMin:      params.PriceMin,
 		PriceMax:      params.PriceMax,
@@ -495,7 +495,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Items))
 	seenIDs := make(map[string]bool)
-	
+
 	for _, listing := range results.Items {
 		if listing == nil {
 			continue

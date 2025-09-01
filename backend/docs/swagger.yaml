@@ -2383,6 +2383,8 @@ definitions:
         type: string
       description:
         type: string
+      discount_percentage:
+        type: integer
       external_id:
         type: string
       has_discount:
@@ -4917,8 +4919,13 @@ definitions:
         description: поле для фильтров атрибутов
         type: object
       categoryID:
-        description: ID категории
+        description: ID категории (для обратной совместимости)
         type: string
+      categoryIDs:
+        description: Массив ID категорий для множественного выбора
+        items:
+          type: string
+        type: array
       city:
         description: Город
         type: string
@@ -7400,6 +7407,12 @@ definitions:
         type: string
       description:
         type: string
+      discount_percentage:
+        description: Процент скидки
+        type: integer
+      has_discount:
+        description: Есть ли скидка
+        type: boolean
       highlights:
         additionalProperties:
           items:
@@ -7417,6 +7430,9 @@ definitions:
         $ref: '#/definitions/internal_proj_global_handler.UnifiedLocationInfo'
       name:
         type: string
+      old_price:
+        description: Старая цена (до скидки)
+        type: number
       price:
         type: number
       product_id:
@@ -7457,12 +7473,24 @@ definitions:
         type: object
       category_id:
         type: string
+      category_ids:
+        description: Поддержка множественных категорий
+        items:
+          type: string
+        type: array
       city:
+        type: string
+      distance:
+        description: Радиус поиска
         type: string
       language:
         type: string
+      latitude:
+        type: number
       limit:
         type: integer
+      longitude:
+        type: number
       page:
         type: integer
       price_max:

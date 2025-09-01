@@ -2209,10 +2209,10 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 				},
 			})
 		}
-		
+
 		categoryFilter := map[string]interface{}{
 			"bool": map[string]interface{}{
-				"should": shouldClauses,
+				"should":               shouldClauses,
 				"minimum_should_match": 1,
 			},
 		}
@@ -2346,25 +2346,25 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 	// Если координаты не указаны, используем центр Белграда по умолчанию
 	if params.Distance != "" {
 		var lat, lon float64
-		
+
 		if params.Location != nil {
 			lat = params.Location.Lat
 			lon = params.Location.Lon
 		}
-		
+
 		// Если координаты не переданы, используем центр Белграда
 		if lat == 0 && lon == 0 {
-			lat = 44.8176  // Широта центра Белграда
-			lon = 20.4633  // Долгота центра Белграда
+			lat = 44.8176 // Широта центра Белграда
+			lon = 20.4633 // Долгота центра Белграда
 			logger.Info().Msg("Используем координаты Белграда по умолчанию для геофильтра")
 		}
-		
+
 		// Форматируем distance - если это просто число, добавляем "km"
 		distance := params.Distance
 		if _, err := strconv.Atoi(distance); err == nil {
-			distance = distance + "km"
+			distance += "km"
 		}
-		
+
 		geoFilter := map[string]interface{}{
 			"geo_distance": map[string]interface{}{
 				"distance": distance,
@@ -2374,7 +2374,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 				},
 			},
 		}
-		
+
 		logger.Info().
 			Str("distance", distance).
 			Float64("lat", lat).

@@ -33228,6 +33228,7 @@ export interface components {
       condition?: string;
       created_at?: string;
       description?: string;
+      discount_percentage?: number;
       external_id?: string;
       has_discount?: boolean;
       helpful_votes?: number;
@@ -34549,8 +34550,10 @@ export interface components {
       attributeFilters?: {
         [key: string]: string;
       };
-      /** @description ID категории */
+      /** @description ID категории (для обратной совместимости) */
       categoryID?: string;
+      /** @description Массив ID категорий для множественного выбора */
+      categoryIDs?: string[];
       /** @description Город */
       city?: string;
       /** @description Состояние (новое, б/у) */
@@ -35827,6 +35830,10 @@ export interface components {
       created_at?: string;
       currency?: string;
       description?: string;
+      /** @description Процент скидки */
+      discount_percentage?: number;
+      /** @description Есть ли скидка */
+      has_discount?: boolean;
       highlights?: {
         [key: string]: string[];
       };
@@ -35835,6 +35842,8 @@ export interface components {
       images?: components['schemas']['internal_proj_global_handler.UnifiedProductImage'][];
       location?: components['schemas']['internal_proj_global_handler.UnifiedLocationInfo'];
       name?: string;
+      /** @description Старая цена (до скидки) */
+      old_price?: number;
       price?: number;
       product_id?: number;
       /** @description "marketplace" или "storefront" */
@@ -35860,9 +35869,15 @@ export interface components {
         [key: string]: unknown;
       };
       category_id?: string;
+      /** @description Поддержка множественных категорий */
+      category_ids?: string[];
       city?: string;
+      /** @description Радиус поиска */
+      distance?: string;
       language?: string;
+      latitude?: number;
       limit?: number;
+      longitude?: number;
       page?: number;
       price_max?: number;
       price_min?: number;

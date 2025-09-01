@@ -34948,6 +34948,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "discount_percentage": {
+                    "type": "integer"
+                },
                 "external_id": {
                     "type": "string"
                 },
@@ -38751,8 +38754,15 @@ const docTemplate = `{
                     }
                 },
                 "categoryID": {
-                    "description": "ID категории",
+                    "description": "ID категории (для обратной совместимости)",
                     "type": "string"
+                },
+                "categoryIDs": {
+                    "description": "Массив ID категорий для множественного выбора",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "city": {
                     "description": "Город",
@@ -42398,6 +42408,14 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "discount_percentage": {
+                    "description": "Процент скидки",
+                    "type": "integer"
+                },
+                "has_discount": {
+                    "description": "Есть ли скидка",
+                    "type": "boolean"
+                },
                 "highlights": {
                     "type": "object",
                     "additionalProperties": {
@@ -42422,6 +42440,10 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "old_price": {
+                    "description": "Старая цена (до скидки)",
+                    "type": "number"
                 },
                 "price": {
                     "type": "number"
@@ -42484,14 +42506,31 @@ const docTemplate = `{
                 "category_id": {
                     "type": "string"
                 },
+                "category_ids": {
+                    "description": "Поддержка множественных категорий",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "city": {
+                    "type": "string"
+                },
+                "distance": {
+                    "description": "Радиус поиска",
                     "type": "string"
                 },
                 "language": {
                     "type": "string"
                 },
+                "latitude": {
+                    "type": "number"
+                },
                 "limit": {
                     "type": "integer"
+                },
+                "longitude": {
+                    "type": "number"
                 },
                 "page": {
                     "type": "integer"
