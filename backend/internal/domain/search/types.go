@@ -8,7 +8,8 @@ import (
 // SearchParams параметры поиска для OpenSearch
 type SearchParams struct {
 	Query              string                 // Текст поиска
-	CategoryID         *int                   // ID категории
+	CategoryID         *int                   // ID категории (для обратной совместимости)
+	CategoryIDs        []int                  // Массив ID категорий для множественного выбора
 	PriceMin           *float64               // Минимальная цена
 	PriceMax           *float64               // Максимальная цена
 	Condition          string                 // Состояние (новое, б/у)
@@ -36,7 +37,8 @@ type SearchParams struct {
 // SearchParams параметры поиска для OpenSearch
 type ServiceParams struct {
 	Query              string            // Текстовый запрос
-	CategoryID         string            // ID категории
+	CategoryID         string            // ID категории (для обратной совместимости)
+	CategoryIDs        []string          // Массив ID категорий для множественного выбора
 	PriceMin           float64           // Минимальная цена
 	PriceMax           float64           // Максимальная цена
 	Condition          string            // Состояние (новое, б/у)

@@ -8,6 +8,7 @@ export interface UnifiedSearchParams {
   page?: number;
   limit?: number;
   category_id?: string;
+  category_ids?: number[]; // Массив ID категорий для множественного выбора
   price_min?: number;
   price_max?: number;
   sort_by?: 'relevance' | 'price' | 'date' | 'popularity';
@@ -160,6 +161,9 @@ export class UnifiedSearchService {
 
     const url = new URL(fullUrl, baseUrl || window.location.origin);
 
+    // Debug logging
+    console.log('UnifiedSearchService - params received:', params);
+
     // Добавляем параметры в URL
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -171,7 +175,11 @@ export class UnifiedSearchService {
 
         if (Array.isArray(value)) {
           // Для массивов используем запятую в качестве разделителя
-          if (key === 'product_types') {
+          if (key === 'product_types' || key === 'category_ids') {
+            console.log(
+              `UnifiedSearchService - adding array param ${key}:`,
+              value
+            );
             url.searchParams.append(key, value.join(','));
           } else {
             value.forEach((v) => url.searchParams.append(key, v));
@@ -181,6 +189,8 @@ export class UnifiedSearchService {
         }
       }
     });
+
+    console.log('UnifiedSearchService - final URL:', url.toString());
 
     // Получаем токен авторизации
     const token = await tokenManager.getAccessToken();

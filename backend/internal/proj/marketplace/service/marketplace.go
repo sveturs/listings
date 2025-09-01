@@ -1497,9 +1497,21 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		StorefrontFilter: params.StorefrontFilter,
 	}
 	// Преобразуем числовые значения в указатели для SearchParams
-	if params.CategoryID != "" {
+	// Обрабатываем массив категорий
+	if len(params.CategoryIDs) > 0 {
+		categoryIDs := make([]int, 0, len(params.CategoryIDs))
+		for _, catIDStr := range params.CategoryIDs {
+			if catID, err := strconv.Atoi(catIDStr); err == nil {
+				categoryIDs = append(categoryIDs, catID)
+			}
+		}
+		searchParams.CategoryIDs = categoryIDs
+	} else if params.CategoryID != "" {
+		// Если массив не задан, используем единичную категорию
 		if catID, err := strconv.Atoi(params.CategoryID); err == nil {
 			searchParams.CategoryID = &catID
+			// Также добавляем в массив для унифицированной обработки
+			searchParams.CategoryIDs = []int{catID}
 		}
 	}
 	if params.PriceMin > 0 {

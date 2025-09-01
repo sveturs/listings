@@ -1,4 +1,5 @@
 import type { UnifiedProduct } from '@/types/unified-product';
+import { normalizeImageUrl } from '@/utils/imageUtils';
 
 /**
  * Получает URL продукта в зависимости от его типа
@@ -64,7 +65,8 @@ export function canStartChat(
 export function getMainImage(product: UnifiedProduct): string | null {
   const mainImage =
     product.images.find((img) => img.isMain) || product.images[0];
-  return mainImage?.url || null;
+  if (!mainImage?.url) return null;
+  return normalizeImageUrl(mainImage.url);
 }
 
 /**

@@ -14,6 +14,7 @@ import {
   selectCartTotal,
 } from '@/store/slices/cartSlice';
 import SafeImage from '@/components/SafeImage';
+import { normalizeImageUrl } from '@/utils/imageUtils';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
@@ -114,11 +115,11 @@ export default function ShoppingCartModal({
                     {/* Product Image */}
                     {item.product?.images?.[0] && (
                       <SafeImage
-                        src={
+                        src={normalizeImageUrl(
                           item.product.images[0].thumbnail_url ||
-                          item.product.images[0].image_url ||
-                          ''
-                        }
+                            item.product.images[0].image_url ||
+                            ''
+                        )}
                         alt={item.product.name || 'Product'}
                         width={64}
                         height={64}

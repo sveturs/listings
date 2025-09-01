@@ -81,3 +81,38 @@ export function filterSafeImageUrls(
  */
 export const PLACEHOLDER_IMAGE =
   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+/**
+ * Нормализует URL изображения, добавляя базовый URL если необходимо
+ */
+export function normalizeImageUrl(url: string | undefined | null): string {
+  if (!url) return '';
+
+  // Если URL уже абсолютный (начинается с http/https), возвращаем как есть
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Если URL начинается со слеша, значит он относительный от корня
+  if (url.startsWith('/')) {
+    return url;
+  }
+
+  // Если URL не начинается со слеша, добавляем его
+  return '/' + url;
+}
+
+/**
+ * Обработчик ошибок загрузки изображений
+ */
+export function handleImageError(
+  event: React.SyntheticEvent<HTMLImageElement>
+): void {
+  const img = event.currentTarget;
+
+  // Заменяем на placeholder
+  img.src = PLACEHOLDER_IMAGE;
+
+  // Добавляем класс для стилизации
+  img.classList.add('image-error');
+}

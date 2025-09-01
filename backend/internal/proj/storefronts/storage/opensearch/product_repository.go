@@ -1149,37 +1149,6 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		item.Category = info
 	}
 
-	// Изображения
-	if images, ok := source["images"].([]interface{}); ok {
-		for _, img := range images {
-			if imgMap, ok := img.(map[string]interface{}); ok {
-				image := ProductImage{}
-				if v, ok := imgMap["id"].(float64); ok {
-					image.ID = int(v)
-				}
-				if v, ok := imgMap["url"].(string); ok {
-					image.URL = v
-				}
-				if v, ok := imgMap["alt_text"].(string); ok {
-					image.AltText = v
-				}
-				if v, ok := imgMap["is_main"].(bool); ok {
-					image.IsMain = v
-				}
-				if v, ok := imgMap["is_default"].(bool); ok {
-					image.IsMain = v
-				}
-				if v, ok := imgMap["display_order"].(float64); ok {
-					image.Position = int(v)
-				}
-				if v, ok := imgMap["position"].(float64); ok {
-					image.Position = int(v)
-				}
-				item.Images = append(item.Images, image)
-			}
-		}
-	}
-
 	// Атрибуты
 	if attributes, ok := source["attributes"].([]interface{}); ok {
 		for _, attr := range attributes {

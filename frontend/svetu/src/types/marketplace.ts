@@ -59,6 +59,8 @@ export interface MarketplaceItem {
   views_count?: number;
   old_price?: number;
   has_discount?: boolean;
+  discount_percentage?: number;
+  currency?: string;
   // Добавляем для поддержки unified search
   product_type?: 'marketplace' | 'storefront';
   storefront_id?: number;

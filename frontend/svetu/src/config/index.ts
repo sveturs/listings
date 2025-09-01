@@ -238,15 +238,11 @@ class ConfigManager {
   }
 
   public buildImageUrl(path: string): string {
-    console.log('🔧 buildImageUrl called with path:', path);
-
     if (path.startsWith('http')) {
-      console.log('🔧 Path already has http, returning:', path);
       return path;
     }
 
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    console.log('🔧 normalizedPath:', normalizedPath);
 
     // Используем переменную окружения для MinIO URL
     const minioUrl =
@@ -254,23 +250,17 @@ class ConfigManager {
 
     // Для путей типа "268/1756382511472715941.jpg", "268/image1.jpg" и "products/215/main.jpg"
     if (normalizedPath.match(/^\/(\d+\/.*\.jpg|products\/\d+\/.*\.jpg)$/)) {
-      const result = `${minioUrl}/listings${normalizedPath}`;
-      console.log('🔧 Matched listing pattern, result:', result);
-      return result;
+      return `${minioUrl}/listings${normalizedPath}`;
     }
 
     if (
       normalizedPath.startsWith('/listings/') ||
       normalizedPath.startsWith('/chat-files/')
     ) {
-      const result = `${minioUrl}${normalizedPath}`;
-      console.log('🔧 Matched listings/chat pattern, result:', result);
-      return result;
+      return `${minioUrl}${normalizedPath}`;
     }
 
-    const result = `${this.getConfig().api.url}${normalizedPath}`;
-    console.log('🔧 Default fallback, result:', result);
-    return result;
+    return `${this.getConfig().api.url}${normalizedPath}`;
   }
 }
 

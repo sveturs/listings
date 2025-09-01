@@ -173,11 +173,20 @@ export default function SearchAutocomplete({
             suggestion.metadata.image && (
               <div className="flex-shrink-0">
                 <Image
-                  src={suggestion.metadata.image}
+                  src={
+                    suggestion.metadata.image.startsWith('http') ||
+                    suggestion.metadata.image.startsWith('/')
+                      ? suggestion.metadata.image
+                      : `/${suggestion.metadata.image}`
+                  }
                   alt=""
                   width={40}
                   height={40}
                   className="w-10 h-10 object-cover rounded"
+                  onError={(e) => {
+                    // Скрываем изображение при ошибке загрузки
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
                 />
               </div>
             )}

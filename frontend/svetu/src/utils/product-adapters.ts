@@ -94,8 +94,9 @@ export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
     // Цена
     price: item.price || 0,
     oldPrice: item.old_price,
-    currency: 'RSD', // TODO: Получать из API
+    currency: item.currency || 'RSD',
     hasDiscount: item.has_discount || false,
+    discountPercentage: item.discount_percentage,
 
     // Изображения
     images: adaptMarketplaceImages(item.images),

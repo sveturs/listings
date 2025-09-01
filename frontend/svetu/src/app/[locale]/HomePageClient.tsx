@@ -535,7 +535,19 @@ export default function HomePageClient({
             let discount = null;
             let oldPrice = null;
 
-            if (
+            // Проверяем наличие скидки из API или вычисляем из старой цены
+            if (listing.has_discount && listing.old_price) {
+              oldPrice = `${listing.old_price} ${listing.currency || 'РСД'}`;
+              if (listing.discount_percentage) {
+                discount = `-${listing.discount_percentage}%`;
+              } else if (listing.old_price > listing.price) {
+                const discountPercent = Math.round(
+                  ((listing.old_price - listing.price) / listing.old_price) *
+                    100
+                );
+                discount = `-${discountPercent}%`;
+              }
+            } else if (
               listing.originalPrice &&
               listing.price &&
               listing.originalPrice > listing.price
@@ -571,7 +583,7 @@ export default function HomePageClient({
                 // Проверяем наличие изображений
                 if (listing.images && listing.images.length > 0) {
                   const firstImage = listing.images[0];
-                  
+
                   // Извлекаем URL из объекта изображения или используем как строку
                   let imageUrl: string;
                   if (typeof firstImage === 'object' && firstImage !== null) {
@@ -596,7 +608,7 @@ export default function HomePageClient({
                     if (imageUrl.startsWith('http')) {
                       return imageUrl;
                     }
-                    
+
                     // Иначе строим URL через configManager
                     return configManager.buildImageUrl(imageUrl);
                   }

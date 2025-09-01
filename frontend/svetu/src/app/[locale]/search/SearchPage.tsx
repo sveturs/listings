@@ -41,28 +41,63 @@ export default function SearchPage() {
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams?.get('q') || '';
-  const initialFuzzy = searchParams?.get('fuzzy') !== 'false'; // По умолчанию true
-  const initialLat = searchParams?.get('lat')
-    ? parseFloat(searchParams.get('lat')!)
-    : undefined;
-  const initialLon = searchParams?.get('lon')
-    ? parseFloat(searchParams.get('lon')!)
-    : undefined;
-  const initialDistance = searchParams?.get('distance') || undefined;
-  const initialCategory = searchParams?.get('category') || undefined;
 
-  const [query, setQuery] = useState(initialQuery);
-  const [fuzzy, setFuzzy] = useState(initialFuzzy);
+  // Парсим ВСЕ параметры из URL
+  const parseSearchParams = () => {
+    const params = searchParams || new URLSearchParams();
+    return {
+      query: params.get('q') || '',
+      fuzzy: params.get('fuzzy') !== 'false',
+      lat: params.get('lat') ? parseFloat(params.get('lat')!) : undefined,
+      lon: params.get('lon') ? parseFloat(params.get('lon')!) : undefined,
+      distance: params.get('distance')
+        ? Number(params.get('distance'))
+        : undefined,
+      category_id: params.get('category') || undefined,
+      category_ids: (() => {
+        const categoriesParam = params.get('categories');
+        if (!categoriesParam) return undefined;
+        const ids = categoriesParam
+          .split(',')
+          .map(Number)
+          .filter((n) => !isNaN(n) && n > 0);
+        return ids.length > 0 ? ids : undefined;
+      })(),
+      price_min: params.get('price_min')
+        ? Number(params.get('price_min'))
+        : undefined,
+      price_max: params.get('price_max')
+        ? Number(params.get('price_max'))
+        : undefined,
+      product_types: params.get('types')
+        ? params.get('types')!.split(',')
+        : ['marketplace', 'storefront'],
+      sort_by: params.get('sort') || 'relevance',
+      sort_order: params.get('order') || 'desc',
+      city: params.get('city') || undefined,
+      condition: params.get('condition') || undefined,
+    };
+  };
+
+  const initialParams = parseSearchParams();
+
+  const [query, setQuery] = useState(initialParams.query);
+  const [fuzzy, setFuzzy] = useState(initialParams.fuzzy);
   const [results, setResults] = useState<UnifiedSearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [filtersLoading, setFiltersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SearchFilters>({
-    product_types: ['marketplace', 'storefront'],
-    sort_by: 'relevance',
-    sort_order: 'desc',
-    category_id: initialCategory,
+    category_id: initialParams.category_id,
+    category_ids: initialParams.category_ids,
+    price_min: initialParams.price_min,
+    price_max: initialParams.price_max,
+    product_types: initialParams.product_types,
+    sort_by: initialParams.sort_by,
+    sort_order: initialParams.sort_order,
+    city: initialParams.city,
+    condition: initialParams.condition,
+    distance: initialParams.distance,
   });
   const [page, setPage] = useState(1);
   const [allItems, setAllItems] = useState<any[]>([]);
@@ -70,9 +105,9 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
   const [geoParams, setGeoParams] = useState({
-    latitude: initialLat,
-    longitude: initialLon,
-    distance: initialDistance,
+    latitude: initialParams.lat,
+    longitude: initialParams.lon,
+    distance: initialParams.distance,
   });
 
   // Для трекинга времени поиска
@@ -97,54 +132,95 @@ export default function SearchPage() {
     onLoadMore: handleLoadMore,
   });
 
+  // Функция для обновления URL с новыми параметрами
+  const updateURL = (newParams: Partial<typeof initialParams>) => {
+    const url = new URL(window.location.href);
+    const currentParams = parseSearchParams();
+    const mergedParams = { ...currentParams, ...newParams };
+
+    // Очищаем все параметры
+    url.search = '';
+
+    // Добавляем только непустые параметры
+    if (mergedParams.query) url.searchParams.set('q', mergedParams.query);
+    if (!mergedParams.fuzzy) url.searchParams.set('fuzzy', 'false');
+    if (mergedParams.lat !== undefined)
+      url.searchParams.set('lat', mergedParams.lat.toString());
+    if (mergedParams.lon !== undefined)
+      url.searchParams.set('lon', mergedParams.lon.toString());
+    if (mergedParams.distance !== undefined)
+      url.searchParams.set('distance', mergedParams.distance.toString());
+    if (mergedParams.category_id)
+      url.searchParams.set('category', mergedParams.category_id);
+    if (mergedParams.category_ids && mergedParams.category_ids.length > 0) {
+      url.searchParams.set('categories', mergedParams.category_ids.join(','));
+    }
+    if (mergedParams.price_min !== undefined)
+      url.searchParams.set('price_min', mergedParams.price_min.toString());
+    if (mergedParams.price_max !== undefined)
+      url.searchParams.set('price_max', mergedParams.price_max.toString());
+    if (
+      mergedParams.product_types &&
+      mergedParams.product_types.join(',') !== 'marketplace,storefront'
+    ) {
+      url.searchParams.set('types', mergedParams.product_types.join(','));
+    }
+    if (mergedParams.sort_by && mergedParams.sort_by !== 'relevance')
+      url.searchParams.set('sort', mergedParams.sort_by);
+    if (mergedParams.sort_order && mergedParams.sort_order !== 'desc')
+      url.searchParams.set('order', mergedParams.sort_order);
+    if (mergedParams.city) url.searchParams.set('city', mergedParams.city);
+    if (mergedParams.condition)
+      url.searchParams.set('condition', mergedParams.condition);
+
+    window.history.replaceState({}, '', url.toString());
+  };
+
   // Handle URL query changes (this handles both initial load and subsequent changes)
   useEffect(() => {
-    const searchQuery = searchParams?.get('q');
-    const searchFuzzy = searchParams?.get('fuzzy') !== 'false';
-    const lat = searchParams?.get('lat')
-      ? parseFloat(searchParams.get('lat')!)
-      : undefined;
-    const lon = searchParams?.get('lon')
-      ? parseFloat(searchParams.get('lon')!)
-      : undefined;
-    const distance = searchParams?.get('distance') || undefined;
-    const categoryId = searchParams?.get('category') || undefined;
-
-    // Используем пустой запрос для показа всех товаров, если нет конкретного запроса
-    const effectiveQuery = searchQuery || '';
+    const params = parseSearchParams();
 
     // Всегда выполняем поиск при первой загрузке или изменении параметров
-    if (true) {
-      // Perform search if:
-      // 1. This is the initial load (!hasInitialSearchRun)
-      // 2. Or the query/fuzzy params have changed
-      // 3. Or geo params have changed
-      // 4. Or category has changed
-      if (
-        !hasInitialSearchRun ||
-        effectiveQuery !== query ||
-        searchFuzzy !== fuzzy ||
-        lat !== geoParams.latitude ||
-        lon !== geoParams.longitude ||
-        distance !== geoParams.distance ||
-        categoryId !== filters.category_id
-      ) {
-        setQuery(effectiveQuery);
-        setFuzzy(searchFuzzy);
-        setGeoParams({ latitude: lat, longitude: lon, distance });
-        if (categoryId !== filters.category_id) {
-          setFilters((prev) => ({ ...prev, category_id: categoryId }));
-        }
-        setPage(1);
-        setAllItems([]);
-        performSearch(
-          effectiveQuery,
-          1,
-          { ...filters, category_id: categoryId },
-          searchFuzzy
-        );
-        setHasInitialSearchRun(true);
-      }
+    if (!hasInitialSearchRun) {
+      setQuery(params.query);
+      setFuzzy(params.fuzzy);
+      setGeoParams({
+        latitude: params.lat,
+        longitude: params.lon,
+        distance: params.distance,
+      });
+      setFilters({
+        category_id: params.category_id,
+        category_ids: params.category_ids,
+        price_min: params.price_min,
+        price_max: params.price_max,
+        product_types: params.product_types,
+        sort_by: params.sort_by,
+        sort_order: params.sort_order,
+        city: params.city,
+        condition: params.condition,
+        distance: params.distance,
+      });
+      setPage(1);
+      setAllItems([]);
+      performSearch(
+        params.query,
+        1,
+        {
+          category_id: params.category_id,
+          category_ids: params.category_ids,
+          price_min: params.price_min,
+          price_max: params.price_max,
+          product_types: params.product_types,
+          sort_by: params.sort_by,
+          sort_order: params.sort_order,
+          city: params.city,
+          condition: params.condition,
+          distance: params.distance,
+        },
+        params.fuzzy
+      );
+      setHasInitialSearchRun(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -200,15 +276,27 @@ export default function SearchPage() {
         )[],
         sort_by: currentFilters.sort_by as any,
         sort_order: currentFilters.sort_order as any,
-        category_id: currentFilters.category_id,
+        // Передаем массив категорий если есть
+        category_ids: currentFilters.category_ids,
+        // Передаем единичную категорию только если нет массива
+        category_id:
+          !currentFilters.category_ids ||
+          currentFilters.category_ids.length === 0
+            ? currentFilters.category_id
+            : undefined,
         price_min: currentFilters.price_min,
         price_max: currentFilters.price_max,
         city: currentFilters.city,
         fuzzy: useFuzzy,
         latitude: geoParams.latitude,
         longitude: geoParams.longitude,
-        distance: geoParams.distance,
+        distance:
+          currentFilters.distance?.toString() || geoParams.distance?.toString(),
       };
+
+      // Debug logging
+      console.log('SearchPage - currentFilters:', currentFilters);
+      console.log('SearchPage - params being sent:', params);
 
       const data = await UnifiedSearchService.search(params);
       setResults(data);
@@ -304,16 +392,18 @@ export default function SearchPage() {
     setAllItems([]);
     performSearch(newQuery, 1, filters, searchFuzzy);
 
-    // Обновляем URL
-    const url = new URL(window.location.href);
-    url.searchParams.set('q', newQuery);
-    url.searchParams.set('fuzzy', searchFuzzy.toString());
-    window.history.replaceState({}, '', url.toString());
+    // Обновляем URL со всеми параметрами
+    updateURL({
+      query: newQuery,
+      fuzzy: searchFuzzy,
+      ...filters,
+    });
   };
 
   const handleFilterChange = async (newFilters: Partial<SearchFilters>) => {
     const prevFilters = filters;
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
     setFiltersLoading(true);
 
     // Трекинг изменения фильтров
@@ -336,8 +426,17 @@ export default function SearchPage() {
       }
 
       // Выполняем новый поиск с обновленными фильтрами
-      await performSearch(query, 1, { ...filters, ...newFilters }, fuzzy);
+      await performSearch(query, 1, updatedFilters, fuzzy);
     }
+
+    // Обновляем URL со всеми параметрами
+    updateURL({
+      query,
+      fuzzy,
+      ...updatedFilters,
+      lat: geoParams.latitude,
+      lon: geoParams.longitude,
+    });
 
     setFiltersLoading(false);
   };
@@ -369,6 +468,11 @@ export default function SearchPage() {
       // Добавляем информацию о типе товара и storefront
       product_type: item.product_type,
       storefront_id: item.storefront?.id,
+      // Добавляем данные о скидках
+      has_discount: item.has_discount || false,
+      old_price: item.old_price,
+      discount_percentage: item.discount_percentage,
+      currency: item.currency || 'РСД',
     };
   };
 
@@ -691,10 +795,26 @@ export default function SearchPage() {
                         <button
                           className="btn btn-ghost btn-xs text-error"
                           onClick={() => {
-                            setFilters({
+                            const resetFilters = {
                               product_types: ['marketplace', 'storefront'],
                               sort_by: 'relevance',
                               sort_order: 'desc',
+                              category_id: undefined,
+                              category_ids: undefined,
+                              price_min: undefined,
+                              price_max: undefined,
+                              city: undefined,
+                              condition: undefined,
+                              distance: undefined,
+                            };
+                            setFilters(resetFilters);
+                            // Очищаем URL
+                            updateURL({
+                              query,
+                              fuzzy,
+                              ...resetFilters,
+                              lat: geoParams.latitude,
+                              lon: geoParams.longitude,
                             });
                           }}
                         >
@@ -1138,10 +1258,26 @@ export default function SearchPage() {
                         <button
                           className="btn btn-outline btn-primary"
                           onClick={() => {
-                            setFilters({
+                            const resetFilters = {
                               product_types: ['marketplace', 'storefront'],
                               sort_by: 'relevance',
                               sort_order: 'desc',
+                              category_id: undefined,
+                              category_ids: undefined,
+                              price_min: undefined,
+                              price_max: undefined,
+                              city: undefined,
+                              condition: undefined,
+                              distance: undefined,
+                            };
+                            setFilters(resetFilters);
+                            // Очищаем URL
+                            updateURL({
+                              query,
+                              fuzzy,
+                              ...resetFilters,
+                              lat: geoParams.latitude,
+                              lon: geoParams.longitude,
                             });
                           }}
                         >
@@ -1222,6 +1358,7 @@ export default function SearchPage() {
                           )}
                           locale={locale}
                           viewMode={viewMode}
+                          index={index}
                         />
                       </SearchResultCard>
                     ))}
