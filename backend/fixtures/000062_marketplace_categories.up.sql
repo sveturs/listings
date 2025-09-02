@@ -176,16 +176,4 @@ INSERT INTO public.marketplace_categories (id, name, slug, parent_id, icon, crea
 -- Data for Name: marketplace_chats; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-
-
---
--- Data for Name: marketplace_favorites; Type: TABLE DATA; Schema: public; Owner: -
---
-
-
-
---
--- Data for Name: marketplace_images; Type: TABLE DATA; Schema: public; Owner: -
---
-
 SET CONSTRAINTS ALL IMMEDIATE;

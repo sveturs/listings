@@ -147,6 +147,83 @@ reviews.notification.listing: billi
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (41, 10, 'storefront_created', 'Витрина создана', 'Витрина ''3G Store'' успешно создана', NULL, false, NULL, '2025-08-27 20:50:33.479845');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (42, 10, 'storefront_created', 'Витрина создана', 'Витрина ''3G Store '' успешно создана', NULL, false, NULL, '2025-08-27 20:55:48.244619');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (43, 10, 'storefront_created', 'Витрина создана', 'Витрина ''41345345'' успешно создана', NULL, false, NULL, '2025-08-27 22:39:38.955087');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (44, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+321321231', NULL, false, NULL, '2025-08-29 21:28:25.86568');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (45, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+32132123', NULL, false, NULL, '2025-08-29 21:28:50.118227');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (46, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+IMG_20250717_114244.jpg', NULL, false, NULL, '2025-08-29 21:29:14.264972');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (47, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+3', NULL, false, NULL, '2025-08-30 09:17:27.857846');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (48, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+3', NULL, false, NULL, '2025-08-30 09:17:31.786985');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (49, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+уцуыа', NULL, false, NULL, '2025-08-30 10:37:20.548617');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (50, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+ывавыавыавыа', NULL, false, NULL, '2025-08-30 10:37:26.235047');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (51, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+IMG_20250717_124426.jpg', NULL, false, NULL, '2025-08-30 10:55:43.817674');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (52, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+🤑', NULL, false, NULL, '2025-08-30 11:07:24.5539');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (53, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+IMG_20250722_141712.jpg', NULL, false, NULL, '2025-08-30 17:54:48.101899');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (54, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+ок', NULL, false, NULL, '2025-08-30 17:55:20.105568');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (55, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+😍', NULL, false, NULL, '2025-08-30 17:56:15.031499');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (56, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+32132132', NULL, false, NULL, '2025-08-30 17:58:28.11244');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (57, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+23132132132', NULL, false, NULL, '2025-08-30 17:58:32.907379');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (58, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+564654654', NULL, false, NULL, '2025-08-30 17:58:39.345059');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (59, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+556465445654', NULL, false, NULL, '2025-08-30 17:58:46.496488');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (60, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+IMG_20250701_151030.jpg', NULL, false, NULL, '2025-08-30 17:58:57.462287');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (61, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+sadsad', NULL, false, NULL, '2025-08-30 22:38:00.093838');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (62, 2, 'new_message', 'Новое сообщение', 'Новое сообщение от sveturs
+Товар: Volkswagen Golf 8 2.0 TDI 2023
+
+вкпрывр', NULL, false, NULL, '2025-08-31 19:44:37.009868');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (63, 2, 'storefront_created', 'Витрина создана', 'Витрина ''3G Store'' успешно создана', NULL, false, NULL, '2025-08-31 19:47:11.180457');
 
 
 --

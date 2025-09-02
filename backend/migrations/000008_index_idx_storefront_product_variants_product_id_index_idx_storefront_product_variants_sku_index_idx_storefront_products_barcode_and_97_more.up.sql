@@ -95,6 +95,6 @@ SELECT pg_catalog.setval('public.category_attribute_groups_id_seq', 1, false);
 SELECT pg_catalog.setval('public.category_attributes_id_seq', 3236, true);
 SELECT pg_catalog.setval('public.category_keywords_id_seq', 337, true);
 SELECT pg_catalog.setval('public.category_variant_attributes_id_seq', 12, true);
-SELECT pg_catalog.setval('public.chat_attachments_id_seq', 141, false);
+SELECT pg_catalog.setval('public.chat_attachments_id_seq', 144, true);
 SELECT pg_catalog.setval('public.component_templates_id_seq', 1, false);
 SELECT pg_catalog.setval('public.custom_ui_component_usage_id_seq', 1, false);
