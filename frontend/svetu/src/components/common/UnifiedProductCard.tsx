@@ -25,6 +25,10 @@ import {
   formatAddressWithPrivacy,
   getFullLocalizedAddress,
 } from '@/utils/addressUtils';
+import {
+  getDiscountVisualConfig,
+  formatDiscountBadge,
+} from '@/utils/discount-utils';
 import { QuickView } from '@/components/ui/QuickView';
 import { DistanceBadge } from '@/components/ui/DistanceBadge';
 import { DiscountBadge } from '@/components/ui/DiscountBadge';
@@ -55,6 +59,7 @@ interface UnifiedProductCardProps {
   viewMode?: 'grid' | 'list';
   gridColumns?: GridColumns;
   onToggleFavorite?: (id: string) => Promise<void>;
+  index?: number;
 }
 
 export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
@@ -63,6 +68,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   viewMode = 'grid',
   gridColumns = 1,
   onToggleFavorite,
+  index = 0,
 }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -102,6 +108,12 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   const canChat = canStartChat(product, user?.id, isAuthenticated);
   const showSecureDeal = showSecureDealBadge(product);
   const inStock = isInStock(product);
+
+  // Получаем визуальную конфигурацию для скидки
+  const discountConfig =
+    product.hasDiscount && product.discountPercentage
+      ? getDiscountVisualConfig(product.discountPercentage)
+      : null;
 
   const handleChatClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -606,21 +618,24 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   return (
     <>
       <div
-        className={`card card-compact bg-base-100 shadow-sm hover:shadow-md transition-shadow duration-200 group ${
+        className={`card card-compact bg-base-100 shadow-sm hover:shadow-md transition-all duration-200 group ${
           product.type === 'storefront'
             ? 'border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10'
             : 'border border-base-300 dark:border-base-600'
+        } ${discountConfig ? `${discountConfig.borderClass} ${discountConfig.glowClass}` : ''} ${
+          discountConfig?.pulseAnimation ? 'animate-pulse-subtle' : ''
         }`}
       >
         {/* Изображение с оверлеями */}
         <figure className="relative aspect-square overflow-hidden">
-          <Link href={productUrl}>
+          <Link href={productUrl} className="relative block w-full h-full">
             <SafeImage
               src={mainImageUrl}
               alt={product.name}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              priority={index < 4}
               fallback={
                 <div className="flex items-center justify-center w-full h-full text-base-content/50 bg-base-200">
                   <svg
@@ -668,9 +683,28 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
             )}
           </div>
 
-          {/* Действия справа сверху */}
+          {/* Бейдж горячей скидки в правом верхнем углу */}
+          {discountConfig &&
+            discountConfig.isHot &&
+            product.discountPercentage && (
+              <div className="absolute top-2 right-2 z-20">
+                <div
+                  className={`badge ${discountConfig.badgeClass} gap-1 shadow-lg ${
+                    discountConfig.pulseAnimation ? 'animate-pulse' : ''
+                  }`}
+                >
+                  {formatDiscountBadge(product.discountPercentage, true)}
+                </div>
+              </div>
+            )}
+
+          {/* Действия справа сверху (сдвигаем вниз если есть скидка) */}
           {mounted && (
-            <div className="absolute top-2 right-2 flex gap-1">
+            <div
+              className={`absolute ${
+                discountConfig?.isHot ? 'top-12' : 'top-2'
+              } right-2 flex gap-1`}
+            >
               <button
                 onClick={handleQuickView}
                 className="btn btn-circle btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm"

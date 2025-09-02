@@ -492,26 +492,4 @@ func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, config)
 }
 
-// GetSearchAnalytics godoc
-// @Summary Get search analytics for admin
-// @Description Get comprehensive search analytics including usage metrics, popular queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.
-// @Tags search-admin
-// @Accept json
-// @Produce json
-// @Param range query string false "Time range (7d, 30d, 90d)" default(7d)
-// @Param offsetTop query int false "Offset for top queries pagination" default(0)
-// @Param offsetZero query int false "Offset for zero result queries pagination" default(0)
-// @Param limit query int false "Limit for pagination" default(25)
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Search analytics data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
-// @Router /api/v1/admin/search/analytics [get]
-func (h *Handler) GetSearchAnalytics(c *fiber.Ctx) error {
-	// Возвращаем сообщение о том, что аналитика перенесена в другой модуль
-	response := map[string]interface{}{
-		"message":  "Search analytics moved to behavior_tracking module",
-		"endpoint": "/api/v1/analytics/metrics/search",
-		"note":     "This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
-	}
-
-	return utils.SuccessResponse(c, response)
-}
+// GetSearchAnalytics - REMOVED (deprecated, use /api/v1/analytics/metrics/search instead)

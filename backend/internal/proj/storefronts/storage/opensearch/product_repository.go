@@ -1042,6 +1042,18 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		item.QualityScore = v
 	}
 
+	// Даты
+	if v, ok := source["created_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			item.CreatedAt = &t
+		}
+	}
+	if v, ok := source["updated_at"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			item.UpdatedAt = &t
+		}
+	}
+
 	// Инвентарь
 	if inventory, ok := source["inventory"].(map[string]interface{}); ok {
 		logger.Debug().
@@ -1135,37 +1147,6 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			info.Slug = v
 		}
 		item.Category = info
-	}
-
-	// Изображения
-	if images, ok := source["images"].([]interface{}); ok {
-		for _, img := range images {
-			if imgMap, ok := img.(map[string]interface{}); ok {
-				image := ProductImage{}
-				if v, ok := imgMap["id"].(float64); ok {
-					image.ID = int(v)
-				}
-				if v, ok := imgMap["url"].(string); ok {
-					image.URL = v
-				}
-				if v, ok := imgMap["alt_text"].(string); ok {
-					image.AltText = v
-				}
-				if v, ok := imgMap["is_main"].(bool); ok {
-					image.IsMain = v
-				}
-				if v, ok := imgMap["is_default"].(bool); ok {
-					image.IsMain = v
-				}
-				if v, ok := imgMap["display_order"].(float64); ok {
-					image.Position = int(v)
-				}
-				if v, ok := imgMap["position"].(float64); ok {
-					image.Position = int(v)
-				}
-				item.Images = append(item.Images, image)
-			}
-		}
 	}
 
 	// Атрибуты

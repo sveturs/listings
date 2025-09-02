@@ -4,6 +4,7 @@ package handler
 import (
 	"strconv"
 
+	"backend/internal/logger"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -93,6 +94,7 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 		neLat64, neLng64, swLat64, swLng64, zoom,
 		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get listings in bounds")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 
@@ -196,6 +198,7 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 			neLat64, neLng64, swLat64, swLng64, zoom,
 			categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 		if err != nil {
+			logger.Error().Err(err).Msg("Failed to get listings in bounds for clusters")
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 		}
 
@@ -213,6 +216,7 @@ func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 		neLat64, neLng64, swLat64, swLng64, zoom,
 		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributesFilter)
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get map clusters")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
 	}
 

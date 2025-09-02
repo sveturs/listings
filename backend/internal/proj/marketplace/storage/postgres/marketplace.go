@@ -657,7 +657,12 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 				if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
 					listing.HasDiscount = true
 					if prevPrice, ok := discount["previous_price"].(float64); ok {
-						listing.OldPrice = prevPrice
+						listing.OldPrice = &prevPrice
+					}
+					// Добавляем процент скидки если его нет
+					if discountPercent, ok := discount["discount_percent"].(float64); ok {
+						percent := int(discountPercent)
+						listing.DiscountPercentage = &percent
 					}
 				}
 			}
@@ -2841,13 +2846,14 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		if discount, ok := listing.Metadata["discount"].(map[string]interface{}); ok {
 			listing.HasDiscount = true
 			if prevPrice, ok := discount["previous_price"].(float64); ok {
-				listing.OldPrice = prevPrice
+				listing.OldPrice = &prevPrice
 
 				// Пересчитываем актуальный процент скидки, чтобы он всегда соответствовал
 				// текущей разнице между старой и новой ценой
 				if prevPrice > listing.Price {
 					discountPercent := int((prevPrice - listing.Price) / prevPrice * 100)
 					discount["discount_percent"] = discountPercent
+					listing.DiscountPercentage = &discountPercent
 
 					log.Printf("Обновлен процент скидки для просмотра объявления %d: %d%%",
 						id, discountPercent)

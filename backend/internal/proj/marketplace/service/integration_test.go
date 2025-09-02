@@ -658,71 +658,7 @@ func TestMarketplaceService_GetSimilarListings_Integration(t *testing.T) {
 	mockStorage.AssertExpectations(t)
 }
 
-func TestMarketplaceService_GetEnhancedSuggestions_Integration(t *testing.T) {
-	service := createTestService()
-	mockStorage := service.storage.(*MockStorage)
-
-	query := "квартир"
-
-	// Мок для популярных запросов
-	popularQueries := []interface{}{
-		SearchQuery{
-			Query:       "3-комнатная квартира",
-			SearchCount: 50,
-		},
-		SearchQuery{
-			Query:       "квартира в центре",
-			SearchCount: 30,
-		},
-	}
-	mockStorage.On("GetPopularSearchQueries", mock.Anything, query, 5).Return(popularQueries, nil)
-
-	// Мок для категорий
-	categories := []models.MarketplaceCategory{
-		{
-			ID:           1100,
-			Name:         "Квартиры",
-			Slug:         "apartments",
-			ListingCount: 150,
-		},
-	}
-	mockStorage.On("SearchCategories", mock.Anything, query, 5).Return(categories, nil)
-
-	// Мок для поиска товаров
-	searchResult := &search.SearchResult{
-		Listings: []*models.MarketplaceListing{
-			{
-				ID:    1,
-				Title: "3-комнатная квартира в центре",
-				Price: 200000,
-				Category: &models.MarketplaceCategory{
-					Name: "Квартиры",
-				},
-			},
-		},
-		Total: 1,
-	}
-	mockStorage.On("SearchListingsOpenSearch", mock.Anything, mock.Anything).Return(searchResult, nil)
-
-	// Выполнение теста
-	suggestions, err := service.GetEnhancedSuggestions(context.Background(), query, 10, "queries,categories,products")
-
-	// Проверки
-	assert.NoError(t, err)
-	assert.GreaterOrEqual(t, len(suggestions), 3) // Минимум по одному из каждого типа
-
-	// Проверяем типы подсказок
-	types := make(map[SuggestionType]bool)
-	for _, suggestion := range suggestions {
-		types[suggestion.Type] = true
-	}
-
-	assert.True(t, types[SuggestionTypeQuery])
-	assert.True(t, types[SuggestionTypeCategory])
-	assert.True(t, types[SuggestionTypeProduct])
-
-	mockStorage.AssertExpectations(t)
-}
+// TestMarketplaceService_GetEnhancedSuggestions_Integration - REMOVED (enhanced suggestions functionality removed)
 
 func TestSimilarityCalculator_Performance_Integration(t *testing.T) {
 	searchWeights := config.GetDefaultSearchWeights()

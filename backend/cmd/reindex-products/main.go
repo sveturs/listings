@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -128,17 +129,25 @@ func main() {
 		var p models.StorefrontProduct
 		var categoryID, catID *int
 		var catName, catSlug *string
+		var attributesJSON []byte
 
 		err := rows.Scan(
 			&p.ID, &p.StorefrontID, &categoryID, &p.Name, &p.Description,
 			&p.Price, &p.Currency, &p.SKU, &p.Barcode, &p.StockQuantity,
-			&p.StockStatus, &p.IsActive, &p.Attributes, &p.CreatedAt, &p.UpdatedAt,
+			&p.StockStatus, &p.IsActive, &attributesJSON, &p.CreatedAt, &p.UpdatedAt,
 			&p.SoldCount, &p.ViewCount,
 			&catID, &catName, &catSlug,
 		)
 		if err != nil {
 			logger.Error().Err(err).Msg("Error scanning product")
 			continue
+		}
+
+		// Parse attributes JSON
+		if len(attributesJSON) > 0 {
+			if err := json.Unmarshal(attributesJSON, &p.Attributes); err != nil {
+				logger.Error().Err(err).Str("product_id", fmt.Sprintf("sp_%d", p.ID)).Msg("Failed to unmarshal attributes")
+			}
 		}
 
 		if categoryID != nil {

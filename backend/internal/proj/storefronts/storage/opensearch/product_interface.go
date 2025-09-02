@@ -2,6 +2,7 @@ package opensearch
 
 import (
 	"context"
+	"time"
 
 	"backend/internal/domain/models"
 )
@@ -95,6 +96,8 @@ type ProductSearchItem struct {
 	Highlights        map[string][]string // Подсвеченные фрагменты
 	PopularityScore   float64             // Показатель популярности
 	QualityScore      float64             // Показатель качества
+	CreatedAt         *time.Time          // Дата создания товара
+	UpdatedAt         *time.Time          // Дата обновления товара
 }
 
 // ProductImage изображение товара

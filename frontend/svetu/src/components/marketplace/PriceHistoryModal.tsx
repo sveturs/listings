@@ -66,8 +66,14 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
 
       const data = await response.json();
 
-      setPriceHistory(data.data || []);
-      checkForManipulation(data.data || []);
+      // Сортируем данные от старых к новым для правильного отображения на графике
+      const sortedHistory = (data.data || []).sort(
+        (a: PricePoint, b: PricePoint) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+
+      setPriceHistory(sortedHistory);
+      checkForManipulation(sortedHistory);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching price history:', error);
@@ -108,7 +114,7 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
   // Подготовка данных для графика
   const chartData = {
     labels: priceHistory.map((point) =>
-      format(new Date(point.created_at), 'dd.MM', { locale: ru })
+      format(new Date(point.created_at), 'dd MMM yyyy', { locale: ru })
     ),
     datasets: [
       {
@@ -117,8 +123,21 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.1,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: priceHistory.map((_, index) => {
+          // Выделяем последнюю точку (текущую цену) красным цветом
+          if (index === priceHistory.length - 1 && priceHistory.length > 1) {
+            const lastPrice = priceHistory[index].price;
+            const prevPrice = priceHistory[index - 1].price;
+            if (lastPrice < prevPrice) {
+              return 'rgb(34, 197, 94)'; // Зеленый для снижения цены
+            }
+          }
+          return 'rgb(59, 130, 246)'; // Стандартный синий
+        }),
+        pointBorderColor: 'white',
+        pointBorderWidth: 2,
       },
     ],
   };
@@ -231,6 +250,62 @@ export const PriceHistoryModal: React.FC<PriceHistoryModalProps> = ({
                   {t('priceHistory.currency')}
                 </div>
               </div>
+            </div>
+
+            {/* Таблица с историей изменений */}
+            <div className="divider">История изменений</div>
+            <div className="overflow-x-auto max-h-48">
+              <table className="table table-zebra table-sm">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Цена</th>
+                    <th>Изменение</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {priceHistory.map((point, index) => {
+                    const prevPrice =
+                      index > 0 ? priceHistory[index - 1].price : null;
+                    const changePercent = prevPrice
+                      ? (((point.price - prevPrice) / prevPrice) * 100).toFixed(
+                          1
+                        )
+                      : null;
+
+                    return (
+                      <tr key={index}>
+                        <td>
+                          {format(
+                            new Date(point.created_at),
+                            'dd.MM.yyyy HH:mm',
+                            { locale: ru }
+                          )}
+                        </td>
+                        <td className="font-semibold">
+                          {point.price.toLocaleString()} РСД
+                        </td>
+                        <td>
+                          {changePercent && (
+                            <span
+                              className={`badge badge-sm ${
+                                parseFloat(changePercent) < 0
+                                  ? 'badge-success'
+                                  : parseFloat(changePercent) > 0
+                                    ? 'badge-error'
+                                    : 'badge-ghost'
+                              }`}
+                            >
+                              {parseFloat(changePercent) > 0 && '+'}
+                              {changePercent}%
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

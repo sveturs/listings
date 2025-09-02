@@ -40,6 +40,7 @@ type MarketplaceServiceInterface interface {
 	// OpenSearch методы
 	SearchListingsAdvanced(ctx context.Context, params *search.ServiceParams) (*search.ServiceResult, error)
 	GetSuggestions(ctx context.Context, prefix string, size int) ([]string, error)
+	GetUnifiedSuggestions(ctx context.Context, params *models.SuggestionRequestParams) ([]models.UnifiedSuggestion, error)
 	ReindexAllListings(ctx context.Context) error
 	GetCategorySuggestions(ctx context.Context, query string, size int) ([]models.CategorySuggestion, error)
 	Storage() storage.Storage
@@ -83,7 +84,6 @@ type MarketplaceServiceInterface interface {
 	InvalidateAttributeCache(ctx context.Context, categoryID int) error
 
 	// Поиск и подсказки
-	GetEnhancedSuggestions(ctx context.Context, query string, limit int, types string) ([]SuggestionItem, error)
 	SaveSearchQuery(ctx context.Context, query string, resultsCount int, language string) error
 
 	// Карта - геопространственные методы

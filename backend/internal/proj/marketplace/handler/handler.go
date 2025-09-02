@@ -3,7 +3,6 @@
 package handler
 
 import (
-	"strconv"
 	"sync"
 	"time"
 
@@ -26,18 +25,6 @@ var (
 	categoryTreeLastUpdate time.Time
 	categoryTreeMutex      sync.RWMutex
 )
-
-// SuggestionItem представляет элемент автодополнения
-type SuggestionItem struct {
-	Type       string                 `json:"type"`
-	Value      string                 `json:"value"`
-	Label      string                 `json:"label"`
-	Count      int                    `json:"count,omitempty"`
-	CategoryID int                    `json:"category_id,omitempty"`
-	ProductID  int                    `json:"product_id,omitempty"`
-	Icon       string                 `json:"icon,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // Handler combines all marketplace handlers
 type Handler struct {
@@ -79,7 +66,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		storage := postgres.NewStorage(postgresDB.GetPool(), services.Translation())
 
 		// Создаем MarketplaceHandler
-		marketplaceHandler := NewMarketplaceHandler(storage)
+		marketplaceHandler := NewMarketplaceHandler(storage, marketplaceService)
 
 		customComponentStorage := postgres.NewCustomComponentStorage(postgresDB)
 		customComponentHandler := NewCustomComponentHandler(customComponentStorage)
@@ -188,15 +175,15 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
 	marketplace.Get("/listings/slug/:slug", h.Listings.GetListingBySlug)
 	marketplace.Get("/listings/:id", h.Listings.GetListing)
-	marketplace.Get("/search", h.Search.SearchListingsAdvanced)  // маршрут поиска GET
-	marketplace.Post("/search", h.Search.SearchListingsAdvanced) // маршрут поиска POST для расширенных фильтров
-	marketplace.Get("/suggestions", h.Search.GetSuggestions)     // маршрут автодополнения
+	marketplace.Get("/search", h.Search.SearchListingsAdvanced)      // маршрут поиска GET
+	marketplace.Post("/search", h.Search.SearchListingsAdvanced)     // маршрут поиска POST для расширенных фильтров
+	marketplace.Get("/suggestions", h.Search.GetSuggestions)         // маршрут автодополнения
+	marketplace.Get("/search/autocomplete", h.Search.GetSuggestions) // алиас для совместимости с фронтендом
 	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
 	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
-	marketplace.Get("/enhanced-suggestions", h.GetEnhancedSuggestions)
 
 	// Cars routes (public endpoints)
 	if h.Cars != nil {
@@ -240,8 +227,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	}
 
 	// Карта - геопространственные маршруты
-	marketplace.Get("/map/bounds", h.GetListingsInBounds)
-	marketplace.Get("/map/clusters", h.GetMapClusters)
+	marketplace.Get("/map/bounds", h.MarketplaceHandler.GetListingsInBounds)
+	marketplace.Get("/map/clusters", h.MarketplaceHandler.GetMapClusters)
 
 	// Neighborhood statistics
 	marketplace.Get("/neighborhood-stats", h.MarketplaceHandler.GetNeighborhoodStats)
@@ -420,245 +407,4 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	chat.Get("/unread-count", h.Chat.GetUnreadCount)
 
 	return nil
-}
-
-// GetEnhancedSuggestions returns enhanced search suggestions
-// @Summary Get enhanced search suggestions
-// @Description Returns enhanced autocomplete suggestions including queries, categories, and products
-// @Tags marketplace-search
-// @Accept json
-// @Produce json
-// @Param query query string true "Search query"
-// @Param limit query int false "Number of suggestions" default(10)
-// @Param types query string false "Comma-separated types (queries,categories,products)" default(queries,categories,products)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]SuggestionItem} "Enhanced suggestions list"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
-// @Router /api/v1/marketplace/enhanced-suggestions [get]
-func (h *Handler) GetEnhancedSuggestions(c *fiber.Ctx) error {
-	// Получаем параметры запроса
-	query := c.Query("query")
-	if query == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.queryRequired")
-	}
-
-	// Получаем лимит
-	limit := 10
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
-		}
-	}
-
-	// Получаем типы подсказок
-	types := c.Query("types", "queries,categories,products")
-
-	// Вызываем сервисный метод
-	suggestions, err := h.service.Marketplace().GetEnhancedSuggestions(c.Context(), query, limit, types)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.suggestionsError")
-	}
-
-	// Возвращаем результат
-	return utils.SuccessResponse(c, suggestions)
-}
-
-// GetListingsInBounds returns listings within specified map bounds
-// @Summary Get listings in bounds
-// @Description Returns all listings within the specified geographical bounds
-// @Tags marketplace-map
-// @Accept json
-// @Produce json
-// @Param ne_lat query number true "Northeast latitude"
-// @Param ne_lng query number true "Northeast longitude"
-// @Param sw_lat query number true "Southwest latitude"
-// @Param sw_lng query number true "Southwest longitude"
-// @Param zoom query int false "Map zoom level" default(10)
-// @Param categories query string false "Comma-separated category IDs"
-// @Param condition query string false "Item condition filter"
-// @Param min_price query number false "Minimum price filter"
-// @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MapBoundsData} "Listings within bounds"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
-// @Router /api/v1/marketplace/map/bounds [get]
-func (h *Handler) GetListingsInBounds(c *fiber.Ctx) error {
-	// Получаем параметры bounds
-	neLat := c.Query("ne_lat")
-	neLng := c.Query("ne_lng")
-	swLat := c.Query("sw_lat")
-	swLng := c.Query("sw_lng")
-	zoomStr := c.Query("zoom", "10")
-
-	// Валидируем параметры
-	if neLat == "" || neLng == "" || swLat == "" || swLng == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.missingBounds")
-	}
-
-	// Парсим координаты
-	neLat64, err := strconv.ParseFloat(neLat, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
-	}
-
-	neLng64, err := strconv.ParseFloat(neLng, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
-	}
-
-	swLat64, err := strconv.ParseFloat(swLat, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
-	}
-
-	swLng64, err := strconv.ParseFloat(swLng, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
-	}
-
-	zoom, err := strconv.Atoi(zoomStr)
-	if err != nil {
-		zoom = 10
-	}
-
-	// Получаем фильтры
-	categoryIDs := c.Query("categories", "")
-	condition := c.Query("condition", "")
-	minPrice := c.Query("min_price", "")
-	maxPrice := c.Query("max_price", "")
-
-	// Парсим цены
-	var minPriceFloat, maxPriceFloat *float64
-	if minPrice != "" {
-		if parsed, err := strconv.ParseFloat(minPrice, 64); err == nil {
-			minPriceFloat = &parsed
-		}
-	}
-	if maxPrice != "" {
-		if parsed, err := strconv.ParseFloat(maxPrice, 64); err == nil {
-			maxPriceFloat = &parsed
-		}
-	}
-
-	// Получаем атрибуты из запроса
-	attributes := c.Query("attributes", "")
-
-	// Получаем объявления в указанных границах
-	listings, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
-		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributes)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
-	}
-
-	response := MapBoundsData{
-		Listings: listings,
-		Bounds: MapBounds{
-			NE: Coordinates{Lat: neLat64, Lng: neLng64},
-			SW: Coordinates{Lat: swLat64, Lng: swLng64},
-		},
-		Zoom:  zoom,
-		Count: len(listings),
-	}
-	return utils.SuccessResponse(c, response)
-}
-
-// GetMapClusters returns clustered data for map view
-// @Summary Get map clusters
-// @Description Returns clustered listings data for efficient map rendering
-// @Tags marketplace-map
-// @Accept json
-// @Produce json
-// @Param ne_lat query number true "Northeast latitude"
-// @Param ne_lng query number true "Northeast longitude"
-// @Param sw_lat query number true "Southwest latitude"
-// @Param sw_lng query number true "Southwest longitude"
-// @Param zoom query int false "Map zoom level" default(10)
-// @Param categories query string false "Comma-separated category IDs"
-// @Param condition query string false "Item condition filter"
-// @Param min_price query number false "Minimum price filter"
-// @Param max_price query number false "Maximum price filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MapBoundsData} "Map clusters data"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
-// @Router /api/v1/marketplace/map/clusters [get]
-func (h *Handler) GetMapClusters(c *fiber.Ctx) error {
-	// Получаем параметры bounds
-	neLat := c.Query("ne_lat")
-	neLng := c.Query("ne_lng")
-	swLat := c.Query("sw_lat")
-	swLng := c.Query("sw_lng")
-	zoomStr := c.Query("zoom", "10")
-
-	// Валидируем параметры
-	if neLat == "" || neLng == "" || swLat == "" || swLng == "" {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.missingBounds")
-	}
-
-	// Парсим координаты
-	neLat64, err := strconv.ParseFloat(neLat, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
-	}
-
-	neLng64, err := strconv.ParseFloat(neLng, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
-	}
-
-	swLat64, err := strconv.ParseFloat(swLat, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLatitude")
-	}
-
-	swLng64, err := strconv.ParseFloat(swLng, 64)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLongitude")
-	}
-
-	zoom, err := strconv.Atoi(zoomStr)
-	if err != nil {
-		zoom = 10
-	}
-
-	// Получаем фильтры
-	categoryIDs := c.Query("categories", "")
-	condition := c.Query("condition", "")
-	minPrice := c.Query("min_price", "")
-	maxPrice := c.Query("max_price", "")
-
-	// Парсим цены
-	var minPriceFloat, maxPriceFloat *float64
-	if minPrice != "" {
-		if parsed, err := strconv.ParseFloat(minPrice, 64); err == nil {
-			minPriceFloat = &parsed
-		}
-	}
-	if maxPrice != "" {
-		if parsed, err := strconv.ParseFloat(maxPrice, 64); err == nil {
-			maxPriceFloat = &parsed
-		}
-	}
-
-	// Получаем атрибуты из запроса
-	attributes := c.Query("attributes", "")
-
-	clusters, err := h.service.Marketplace().GetListingsInBounds(c.Context(),
-		neLat64, neLng64, swLat64, swLng64, zoom,
-		categoryIDs, condition, minPriceFloat, maxPriceFloat, attributes)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.mapError")
-	}
-
-	// Этот метод возвращает listings, а не clusters, поэтому используем MapBoundsData
-	response := MapBoundsData{
-		Listings: clusters, // clusters здесь на самом деле listings
-		Bounds: MapBounds{
-			NE: Coordinates{Lat: neLat64, Lng: neLng64},
-			SW: Coordinates{Lat: swLat64, Lng: swLng64},
-		},
-		Zoom:  zoom,
-		Count: len(clusters),
-	}
-	return utils.SuccessResponse(c, response)
 }

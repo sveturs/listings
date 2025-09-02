@@ -11,6 +11,7 @@ import {
   formatAddressWithPrivacy,
   type LocationPrivacyLevel,
 } from '@/utils/addressUtils';
+import { normalizeImageUrl } from '@/utils/imageUtils';
 
 interface MarkerHoverPopupProps {
   marker: MapMarkerData;
@@ -65,27 +66,30 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 
   // Получаем первое изображение
   const getFirstImage = () => {
+    let imageUrl = null;
+
     // Сначала проверяем marker.imageUrl
-    if (marker.imageUrl) return marker.imageUrl;
-
-    // Затем ищем в parsedData.image (может быть строкой или массивом)
-    if (parsedData?.image) {
-      if (Array.isArray(parsedData.image)) {
-        return parsedData.image[0];
-      }
-      return parsedData.image;
+    if (marker.imageUrl) {
+      imageUrl = marker.imageUrl;
     }
-
+    // Затем ищем в parsedData.image (может быть строкой или массивом)
+    else if (parsedData?.image) {
+      if (Array.isArray(parsedData.image)) {
+        imageUrl = parsedData.image[0];
+      } else {
+        imageUrl = parsedData.image;
+      }
+    }
     // Ищем в parsedData.images (массив)
-    if (
+    else if (
       parsedData?.images &&
       Array.isArray(parsedData.images) &&
       parsedData.images.length > 0
     ) {
-      return parsedData.images[0];
+      imageUrl = parsedData.images[0];
     }
 
-    return null;
+    return imageUrl ? normalizeImageUrl(imageUrl) : null;
   };
 
   const firstImage = getFirstImage();

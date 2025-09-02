@@ -1189,8 +1189,8 @@ func createImportantAttributesMap() map[string]bool {
 
 func processDiscountData(doc map[string]interface{}, listing *models.MarketplaceListing) {
 	doc["has_discount"] = listing.HasDiscount
-	if listing.OldPrice > 0 {
-		doc["old_price"] = listing.OldPrice
+	if listing.OldPrice != nil && *listing.OldPrice > 0 {
+		doc["old_price"] = *listing.OldPrice
 	}
 
 	if strings.Contains(listing.Description, "СКИДКА") || strings.Contains(listing.Description, "СКИДКА!") {
@@ -2192,7 +2192,36 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		boolMap["should"] = should
 	}
 
-	if params.CategoryID != nil && *params.CategoryID > 0 {
+	// Обработка категорий - поддержка как единичной категории, так и массива
+	if len(params.CategoryIDs) > 0 {
+		logger.Info().Ints("category_ids", params.CategoryIDs).Msg("Applying category filter")
+		// Если есть массив категорий, создаем фильтр для всех категорий
+		shouldClauses := make([]map[string]interface{}, 0)
+		for _, catID := range params.CategoryIDs {
+			shouldClauses = append(shouldClauses, map[string]interface{}{
+				"term": map[string]interface{}{
+					"category_id": catID,
+				},
+			})
+			shouldClauses = append(shouldClauses, map[string]interface{}{
+				"term": map[string]interface{}{
+					"category_path_ids": catID,
+				},
+			})
+		}
+
+		categoryFilter := map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should":               shouldClauses,
+				"minimum_should_match": 1,
+			},
+		}
+
+		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+		filter = append(filter, categoryFilter)
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+	} else if params.CategoryID != nil && *params.CategoryID > 0 {
+		// Если нет массива, используем единичную категорию (для обратной совместимости)
 		categoryFilter := map[string]interface{}{
 			"bool": map[string]interface{}{
 				"should": []map[string]interface{}{
@@ -2313,16 +2342,44 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
-	if params.Location != nil && params.Distance != "" {
+	// Применяем геофильтр если указано расстояние
+	// Если координаты не указаны, используем центр Белграда по умолчанию
+	if params.Distance != "" {
+		var lat, lon float64
+
+		if params.Location != nil {
+			lat = params.Location.Lat
+			lon = params.Location.Lon
+		}
+
+		// Если координаты не переданы, используем центр Белграда
+		if lat == 0 && lon == 0 {
+			lat = 44.8176 // Широта центра Белграда
+			lon = 20.4633 // Долгота центра Белграда
+			logger.Info().Msg("Используем координаты Белграда по умолчанию для геофильтра")
+		}
+
+		// Форматируем distance - если это просто число, добавляем "km"
+		distance := params.Distance
+		if _, err := strconv.Atoi(distance); err == nil {
+			distance += "km"
+		}
+
 		geoFilter := map[string]interface{}{
 			"geo_distance": map[string]interface{}{
-				"distance": params.Distance,
+				"distance": distance,
 				"coordinates": map[string]interface{}{
-					"lat": params.Location.Lat,
-					"lon": params.Location.Lon,
+					"lat": lat,
+					"lon": lon,
 				},
 			},
 		}
+
+		logger.Info().
+			Str("distance", distance).
+			Float64("lat", lat).
+			Float64("lon", lon).
+			Msg("Применяем геофильтр")
 
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, geoFilter)
@@ -2648,11 +2705,21 @@ func (r *Repository) parseSearchResponse(response map[string]interface{}, langua
 			}
 		}
 
+		// Используем карту для дедупликации по ID
+		seenIDs := make(map[string]bool)
+
 		if hitsArray, ok := hits["hits"].([]interface{}); ok {
 			for _, hitI := range hitsArray {
 				if hit, ok := hitI.(map[string]interface{}); ok {
 					if source, ok := hit["_source"].(map[string]interface{}); ok {
 						if idStr, ok := hit["_id"].(string); ok {
+							// Проверяем, не видели ли мы уже этот ID
+							if seenIDs[idStr] {
+								logger.Info().Msgf("Пропускаем дублированный результат с ID: %s", idStr)
+								continue
+							}
+							seenIDs[idStr] = true
+
 							// Обрабатываем ID товаров витрин (формат sp_XXX) и обычных товаров
 							if strings.HasPrefix(idStr, "sp_") {
 								// Для товаров витрин сохраняем ID как есть
@@ -3084,7 +3151,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 	}
 
 	if oldPrice, ok := doc["old_price"].(float64); ok {
-		listing.OldPrice = oldPrice
+		listing.OldPrice = &oldPrice
 	}
 
 	// Обрабатываем метаданные и информацию о скидках
@@ -3098,9 +3165,14 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 
 			// Если есть previous_price, устанавливаем его в поле OldPrice
 			if prevPrice, ok := discount["previous_price"].(float64); ok {
-				listing.OldPrice = prevPrice
+				listing.OldPrice = &prevPrice
 				logger.Info().Msgf("Найдена скидка для объявления %d: скидка %v%%, старая цена: %.2f",
 					listing.ID, discount["discount_percent"], prevPrice)
+			}
+			// Добавляем процент скидки
+			if discountPercent, ok := discount["discount_percent"].(float64); ok {
+				percent := int(discountPercent)
+				listing.DiscountPercentage = &percent
 			}
 		}
 	}
@@ -3112,7 +3184,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.ReviewCount = int(reviewCount)
 	}
 	// Убедимся, что HasDiscount установлен корректно на основе OldPrice
-	if listing.OldPrice > 0 && listing.OldPrice > listing.Price {
+	if listing.OldPrice != nil && *listing.OldPrice > 0 && *listing.OldPrice > listing.Price {
 		listing.HasDiscount = true
 	}
 

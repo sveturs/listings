@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { normalizeImageUrl, handleImageError } from '@/utils/imageUtils';
 import {
   FiSearch,
   FiTrendingUp,
@@ -132,18 +133,25 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
           if (searchResponse.data?.items) {
             const productSuggestions: Suggestion[] = searchResponse.data.items
               .slice(0, 5)
-              .map((item: any) => ({
-                type: 'product' as const,
-                value: item.name || item.title,
-                label: item.name || item.title,
-                product_id: item.id,
-                metadata: {
-                  price: item.price,
-                  image: item.images?.[0]?.url || item.images?.[0]?.public_url,
-                  category: item.category?.name,
-                  source_type: 'marketplace',
-                },
-              }));
+              .map((item: any) => {
+                // Нормализуем URL изображения
+                const imageUrl = normalizeImageUrl(
+                  item.images?.[0]?.url || item.images?.[0]?.public_url
+                );
+
+                return {
+                  type: 'product' as const,
+                  value: item.name || item.title,
+                  label: item.name || item.title,
+                  product_id: item.id,
+                  metadata: {
+                    price: item.price,
+                    image: imageUrl,
+                    category: item.category?.name,
+                    source_type: 'marketplace',
+                  },
+                };
+              });
 
             // Добавляем поисковый запрос как первую подсказку
             setSuggestions([
@@ -361,9 +369,10 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
                     {suggestion.type === 'product' &&
                     suggestion.metadata?.image ? (
                       <img
-                        src={`http://localhost:3000${suggestion.metadata.image}`}
+                        src={normalizeImageUrl(suggestion.metadata.image)}
                         alt=""
                         className="w-10 h-10 object-cover rounded"
+                        onError={handleImageError}
                       />
                     ) : (
                       <div className="w-10 h-10 flex items-center justify-center bg-base-200 rounded">

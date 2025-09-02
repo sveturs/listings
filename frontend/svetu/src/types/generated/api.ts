@@ -5381,67 +5381,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/search/analytics': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get search analytics for admin
-     * @description Get comprehensive search analytics including usage metrics, popular queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Time range (7d, 30d, 90d) */
-          range?: string;
-          /** @description Offset for top queries pagination */
-          offsetTop?: number;
-          /** @description Offset for zero result queries pagination */
-          offsetZero?: number;
-          /** @description Limit for pagination */
-          limit?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Search analytics data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: {
-                [key: string]: unknown;
-              };
-            };
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/admin/search/analyze-weights': {
     parameters: {
       query?: never;
@@ -9750,26 +9689,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get item metrics
-     * @description Returns aggregated metrics for items (products/listings)
+     * Get items performance
+     * @description Returns performance metrics for items
      */
     get: {
       parameters: {
         query?: {
-          /** @description Item type filter (marketplace, storefront) */
-          item_type?: string;
-          /** @description Period start date (RFC3339) */
-          period_start?: string;
-          /** @description Period end date (RFC3339) */
-          period_end?: string;
-          /** @description Limit results (default: 20, max: 100) */
+          /** @description Start date (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description End date (YYYY-MM-DD) */
+          date_to?: string;
+          /** @description Limit */
           limit?: number;
-          /** @description Offset for pagination */
-          offset?: number;
-          /** @description Sort by field (views, clicks, purchases, ctr, conversion_rate) */
-          sort_by?: string;
-          /** @description Order direction (asc, desc) */
-          order_by?: string;
         };
         header?: never;
         path?: never;
@@ -9777,19 +9708,19 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Item metrics */
+        /** @description Items performance */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_behavior.ItemMetrics'][];
+              data?: components['schemas']['backend_internal_proj_analytics_service.ItemPerformance'][];
             };
           };
         };
-        /** @description Invalid request */
-        400: {
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -9825,25 +9756,17 @@ export interface paths {
     };
     /**
      * Get search metrics
-     * @description Returns aggregated search metrics for analysis
+     * @description Returns search analytics metrics
      */
     get: {
       parameters: {
         query?: {
-          /** @description Search query filter */
-          query?: string;
-          /** @description Period start date (RFC3339) */
-          period_start?: string;
-          /** @description Period end date (RFC3339) */
-          period_end?: string;
-          /** @description Limit results (default: 20, max: 100) */
-          limit?: number;
-          /** @description Offset for pagination */
-          offset?: number;
-          /** @description Sort by field (ctr, conversions, total_searches) */
-          sort_by?: string;
-          /** @description Order direction (asc, desc) */
-          order_by?: string;
+          /** @description Start date (YYYY-MM-DD) */
+          date_from?: string;
+          /** @description End date (YYYY-MM-DD) */
+          date_to?: string;
+          /** @description Period (day, week, month) */
+          period?: string;
         };
         header?: never;
         path?: never;
@@ -9858,12 +9781,12 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_behavior_tracking_handler.SearchMetricsResponse'];
+              data?: components['schemas']['backend_internal_proj_analytics_service.SearchMetrics'];
             };
           };
         };
-        /** @description Invalid request */
-        400: {
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -16243,72 +16166,6 @@ export interface paths {
         };
       };
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/marketplace/enhanced-suggestions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get enhanced search suggestions
-     * @description Returns autocomplete suggestions with categories
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Search prefix */
-          prefix: string;
-          /** @description Number of suggestions */
-          size?: number;
-          /** @description Language */
-          lang?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Enhanced suggestions list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_marketplace_handler.SuggestionItem'][];
-            };
-          };
-        };
-        /** @description marketplace.prefixRequired */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description marketplace.suggestionsError */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -24886,14 +24743,14 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Enhanced suggestions list */
+        /** @description Search suggestions list */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_service.SuggestionItem'][];
+              data?: components['schemas']['backend_internal_domain_models.UnifiedSuggestion'][];
             };
           };
         };
@@ -32141,18 +31998,6 @@ export interface components {
       | 'search_filter_applied'
       | 'search_sort_changed'
       | 'item_added_to_cart';
-    'backend_internal_domain_behavior.ItemMetrics': {
-      avg_position?: number;
-      clicks?: number;
-      conversion_rate?: number;
-      ctr?: number;
-      item_id?: string;
-      item_type?: components['schemas']['backend_internal_domain_behavior.ItemType'];
-      period_end?: string;
-      period_start?: string;
-      purchases?: number;
-      views?: number;
-    };
     /** @enum {string} */
     'backend_internal_domain_behavior.ItemType': 'marketplace' | 'storefront';
     'backend_internal_domain_behavior.TrackEventBatch': {
@@ -33228,6 +33073,7 @@ export interface components {
       condition?: string;
       created_at?: string;
       description?: string;
+      discount_percentage?: number;
       external_id?: string;
       has_discount?: boolean;
       helpful_votes?: number;
@@ -34240,6 +34086,44 @@ export interface components {
       translation_id?: number;
       version?: number;
     };
+    'backend_internal_domain_models.UnifiedSuggestion': {
+      /** @description ID категории для type="category" */
+      category_id?: number;
+      /** @description Количество результатов */
+      count?: number;
+      /** @description Иконка */
+      icon?: string;
+      /** @description Отображаемый текст */
+      label?: string;
+      /** @description Дополнительные данные */
+      metadata?: components['schemas']['backend_internal_domain_models.UnifiedSuggestionMeta'];
+      /** @description ID товара для type="product" */
+      product_id?: number;
+      /** @description "query", "product", "category" */
+      type?: string;
+      /** @description Основное значение для поиска */
+      value?: string;
+    };
+    'backend_internal_domain_models.UnifiedSuggestionMeta': {
+      /** @description Название категории */
+      category?: string;
+      /** @description URL изображения */
+      image?: string;
+      /** @description Дата последнего поиска */
+      last_searched?: string;
+      /** @description ID родительской категории */
+      parent_id?: number;
+      /** @description Цена товара */
+      price?: number;
+      /** @description "marketplace" или "storefront" */
+      source_type?: string;
+      /** @description Название витрины */
+      storefront?: string;
+      /** @description ID витрины */
+      storefront_id?: number;
+      /** @description Slug витрины */
+      storefront_slug?: string;
+    };
     'backend_internal_domain_models.UpdateAttributeGroupRequest': {
       description?: string;
       display_name?: string;
@@ -34549,8 +34433,10 @@ export interface components {
       attributeFilters?: {
         [key: string]: string;
       };
-      /** @description ID категории */
+      /** @description ID категории (для обратной совместимости) */
       categoryID?: string;
+      /** @description Массив ID категорий для множественного выбора */
+      categoryIDs?: string[];
       /** @description Город */
       city?: string;
       /** @description Состояние (новое, б/у) */
@@ -35078,23 +34964,6 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
-    'backend_internal_proj_marketplace_service.SuggestionItem': {
-      category_id?: number;
-      count?: number;
-      icon?: string;
-      label?: string;
-      metadata?: {
-        [key: string]: unknown;
-      };
-      product_id?: number;
-      type?: components['schemas']['backend_internal_proj_marketplace_service.SuggestionType'];
-      value?: string;
-    };
-    /** @enum {string} */
-    'backend_internal_proj_marketplace_service.SuggestionType':
-      | 'query'
-      | 'category'
-      | 'product';
     'backend_internal_proj_postexpress_models.CalculateRateRequest': {
       cod_amount?: number;
       declared_value?: number;
@@ -35719,33 +35588,6 @@ export interface components {
       /** @example http://localhost:3001/en/balance/deposit/success */
       return_url?: string;
     };
-    'internal_proj_behavior_tracking_handler.ClickMetricsResponse': {
-      average_click_position?: number;
-      conversion_rate?: number;
-      ctr?: number;
-      total_clicks?: number;
-    };
-    'internal_proj_behavior_tracking_handler.SearchMetricsResponse': {
-      average_search_duration_ms?: number;
-      click_metrics?: components['schemas']['internal_proj_behavior_tracking_handler.ClickMetricsResponse'];
-      search_trends?: components['schemas']['internal_proj_behavior_tracking_handler.SearchTrendResponse'][];
-      top_queries?: components['schemas']['internal_proj_behavior_tracking_handler.TopQueryResponse'][];
-      total_searches?: number;
-      unique_searches?: number;
-    };
-    'internal_proj_behavior_tracking_handler.SearchTrendResponse': {
-      clicks_count?: number;
-      ctr?: number;
-      date?: string;
-      searches_count?: number;
-    };
-    'internal_proj_behavior_tracking_handler.TopQueryResponse': {
-      avg_position?: number;
-      avg_results?: number;
-      count?: number;
-      ctr?: number;
-      query?: string;
-    };
     /** @description Ответ при удалении контакта из списка */
     'internal_proj_contacts_handler.ContactRemoveResponse': {
       /**
@@ -35827,6 +35669,10 @@ export interface components {
       created_at?: string;
       currency?: string;
       description?: string;
+      /** @description Процент скидки */
+      discount_percentage?: number;
+      /** @description Есть ли скидка */
+      has_discount?: boolean;
       highlights?: {
         [key: string]: string[];
       };
@@ -35835,6 +35681,8 @@ export interface components {
       images?: components['schemas']['internal_proj_global_handler.UnifiedProductImage'][];
       location?: components['schemas']['internal_proj_global_handler.UnifiedLocationInfo'];
       name?: string;
+      /** @description Старая цена (до скидки) */
+      old_price?: number;
       price?: number;
       product_id?: number;
       /** @description "marketplace" или "storefront" */
@@ -35860,9 +35708,15 @@ export interface components {
         [key: string]: unknown;
       };
       category_id?: string;
+      /** @description Поддержка множественных категорий */
+      category_ids?: string[];
       city?: string;
+      /** @description Радиус поиска */
+      distance?: string;
       language?: string;
+      latitude?: number;
       limit?: number;
+      longitude?: number;
       page?: number;
       price_max?: number;
       price_min?: number;
@@ -36258,18 +36112,6 @@ export interface components {
       message?: string;
       /** @example true */
       success?: boolean;
-    };
-    'internal_proj_marketplace_handler.SuggestionItem': {
-      category_id?: number;
-      count?: number;
-      icon?: string;
-      label?: string;
-      metadata?: {
-        [key: string]: unknown;
-      };
-      product_id?: number;
-      type?: string;
-      value?: string;
     };
     'internal_proj_marketplace_handler.TranslateTextRequest': {
       /** @example google */

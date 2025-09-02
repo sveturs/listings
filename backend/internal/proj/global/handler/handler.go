@@ -3,10 +3,12 @@ package handler
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/config"
+	"backend/internal/domain/models"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
 )
@@ -55,18 +57,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 // @Param limit query int false "Number of suggestions (alias for size)" default(10)
 // @Param size query int false "Number of suggestions" default(10)
 // @Param types query string false "Comma-separated types: queries,categories,products" default("queries,categories,products")
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_service.SuggestionItem} "Enhanced suggestions list"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.UnifiedSuggestion} "Search suggestions list"
 // @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.prefixRequired"
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/search/suggestions [get]
 func (h *Handler) GetSuggestions(c *fiber.Ctx) error {
 	// Получаем префикс - поддерживаем оба параметра для совместимости
-	prefix := c.Query("q")
-	if prefix == "" {
-		prefix = c.Query("prefix")
+	query := c.Query("q")
+	if query == "" {
+		query = c.Query("prefix")
 	}
 
-	if prefix == "" {
+	if query == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Query parameter is required")
 	}
 
@@ -81,10 +83,36 @@ func (h *Handler) GetSuggestions(c *fiber.Ctx) error {
 	}
 
 	// Получаем типы подсказок
-	types := c.Query("types", "queries,categories,products")
+	typesStr := c.Query("types")
+	var types []string
+	if typesStr != "" {
+		types = strings.Split(typesStr, ",")
+		// Очищаем от пробелов
+		for i, t := range types {
+			types[i] = strings.TrimSpace(t)
+		}
+	}
 
-	// Используем GetEnhancedSuggestions для получения расширенных подсказок
-	suggestions, err := h.service.Marketplace().GetEnhancedSuggestions(c.Context(), prefix, size, types)
+	// Получаем категорию и язык
+	category := c.Query("category")
+	language := c.Query("lang")
+	if language == "" {
+		language = "ru"
+	}
+
+	// Создаем параметры запроса
+	params := &models.SuggestionRequestParams{
+		Query:    query,
+		Types:    types,
+		Limit:    size,
+		Language: language,
+	}
+	if category != "" {
+		params.Category = &category
+	}
+
+	// Используем GetUnifiedSuggestions для получения структурированных подсказок
+	suggestions, err := h.service.Marketplace().GetUnifiedSuggestions(c.Context(), params)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get suggestions")
 	}

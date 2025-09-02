@@ -74,6 +74,7 @@ export interface UnifiedProduct {
   oldPrice?: number;
   currency: string;
   hasDiscount?: boolean;
+  discountPercentage?: number;
 
   // Изображения
   images: UnifiedProductImage[];

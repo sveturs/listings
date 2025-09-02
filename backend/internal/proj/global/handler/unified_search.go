@@ -46,6 +46,7 @@ type UnifiedSearchParams struct {
 	Page             int                    `json:"page" form:"page"`
 	Limit            int                    `json:"limit" form:"limit"`
 	CategoryID       string                 `json:"category_id" form:"category_id"`
+	CategoryIDs      []string               `json:"category_ids" form:"category_ids"` // Поддержка множественных категорий
 	PriceMin         float64                `json:"price_min" form:"price_min"`
 	PriceMax         float64                `json:"price_max" form:"price_max"`
 	SortBy           string                 `json:"sort_by" form:"sort_by"`
@@ -54,6 +55,9 @@ type UnifiedSearchParams struct {
 	StorefrontID     int                    `json:"storefront_id" form:"storefront_id"`
 	City             string                 `json:"city" form:"city"`
 	Language         string                 `json:"language" form:"language"`
+	Distance         string                 `json:"distance" form:"distance"` // Радиус поиска
+	Latitude         float64                `json:"latitude" form:"latitude"`
+	Longitude        float64                `json:"longitude" form:"longitude"`
 }
 
 // UnifiedSearchResult результат унифицированного поиска
@@ -70,26 +74,29 @@ type UnifiedSearchResult struct {
 
 // UnifiedSearchItem унифицированный элемент поиска
 type UnifiedSearchItem struct {
-	ID             string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
-	ProductType    string                 `json:"product_type"` // "marketplace" или "storefront"
-	ProductID      int                    `json:"product_id"`
-	Name           string                 `json:"name"`
-	Description    string                 `json:"description"`
-	Price          float64                `json:"price"`
-	Currency       string                 `json:"currency"`
-	Images         []UnifiedProductImage  `json:"images"`
-	Category       UnifiedCategoryInfo    `json:"category"`
-	Location       *UnifiedLocationInfo   `json:"location,omitempty"`
-	User           *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
-	Storefront     *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
-	StorefrontID   *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
-	StorefrontSlug string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
-	Score          float64                `json:"score"`
-	Highlights     map[string][]string    `json:"highlights,omitempty"`
-	ViewsCount     int                    `json:"views_count,omitempty"`    // Для расчета популярности
-	CreatedAt      *time.Time             `json:"created_at,omitempty"`     // Для расчета свежести
-	StockQuantity  *int                   `json:"stock_quantity,omitempty"` // Остатки товара
-	StockStatus    string                 `json:"stock_status,omitempty"`   // Статус наличия
+	ID                 string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
+	ProductType        string                 `json:"product_type"` // "marketplace" или "storefront"
+	ProductID          int                    `json:"product_id"`
+	Name               string                 `json:"name"`
+	Description        string                 `json:"description"`
+	Price              float64                `json:"price"`
+	Currency           string                 `json:"currency"`
+	Images             []UnifiedProductImage  `json:"images"`
+	Category           UnifiedCategoryInfo    `json:"category"`
+	Location           *UnifiedLocationInfo   `json:"location,omitempty"`
+	User               *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
+	Storefront         *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
+	StorefrontID       *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
+	StorefrontSlug     string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
+	Score              float64                `json:"score"`
+	Highlights         map[string][]string    `json:"highlights,omitempty"`
+	ViewsCount         int                    `json:"views_count,omitempty"`         // Для расчета популярности
+	CreatedAt          *time.Time             `json:"created_at,omitempty"`          // Для расчета свежести
+	StockQuantity      *int                   `json:"stock_quantity,omitempty"`      // Остатки товара
+	StockStatus        string                 `json:"stock_status,omitempty"`        // Статус наличия
+	HasDiscount        bool                   `json:"has_discount"`                  // Есть ли скидка
+	OldPrice           *float64               `json:"old_price,omitempty"`           // Старая цена (до скидки)
+	DiscountPercentage *int                   `json:"discount_percentage,omitempty"` // Процент скидки
 }
 
 // UnifiedProductImage изображение товара
@@ -188,6 +195,34 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	if categoryID := c.Query("category_id"); categoryID != "" {
 		params.CategoryID = categoryID
 	}
+	// Поддержка множественных категорий (поддерживаем оба параметра: categories и category_ids)
+	if categories := c.Query("categories"); categories != "" {
+		params.CategoryIDs = strings.Split(categories, ",")
+		// Очистка пробелов
+		for i, catID := range params.CategoryIDs {
+			params.CategoryIDs[i] = strings.TrimSpace(catID)
+		}
+	} else if categoryIDs := c.Query("category_ids"); categoryIDs != "" {
+		params.CategoryIDs = strings.Split(categoryIDs, ",")
+		// Очистка пробелов
+		for i, catID := range params.CategoryIDs {
+			params.CategoryIDs[i] = strings.TrimSpace(catID)
+		}
+	}
+	// Поддержка геопоиска
+	if distance := c.Query("distance"); distance != "" {
+		params.Distance = distance
+	}
+	if lat := c.Query("latitude"); lat != "" {
+		if l, err := strconv.ParseFloat(lat, 64); err == nil {
+			params.Latitude = l
+		}
+	}
+	if lon := c.Query("longitude"); lon != "" {
+		if l, err := strconv.ParseFloat(lon, 64); err == nil {
+			params.Longitude = l
+		}
+	}
 	if priceMin := c.Query("price_min"); priceMin != "" {
 		if p, err := strconv.ParseFloat(priceMin, 64); err == nil && p >= 0 {
 			params.PriceMin = p
@@ -198,11 +233,17 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			params.PriceMax = p
 		}
 	}
+	// Поддерживаем два формата параметров: sort_by/sort_order и sort/sortDirection
 	if sortBy := c.Query("sort_by"); sortBy != "" {
 		params.SortBy = sortBy
+	} else if sort := c.Query("sort"); sort != "" {
+		params.SortBy = sort
 	}
+
 	if sortOrder := c.Query("sort_order"); sortOrder != "" {
 		params.SortOrder = sortOrder
+	} else if sortDirection := c.Query("sortDirection"); sortDirection != "" {
+		params.SortOrder = sortDirection
 	}
 	if storefrontID := c.Query("storefront_id"); storefrontID != "" {
 		if s, err := strconv.Atoi(storefrontID); err == nil && s > 0 {
@@ -417,15 +458,28 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 	logger.Debug().Str("query", params.Query).Int("limit", limit).Msg("Starting marketplace search")
 
 	// Конвертируем параметры в формат для marketplace поиска
+	// Передаем массив категорий, если он задан
+	categoryID := params.CategoryID
+	categoryIDs := params.CategoryIDs
+	if len(categoryIDs) == 0 && categoryID != "" {
+		// Если массив не задан, но есть единичная категория, используем её
+		categoryIDs = []string{categoryID}
+	}
+
 	searchParams := &search.ServiceParams{
 		Query:         params.Query,
 		Page:          1, // Всегда запрашиваем с первой страницы, так как пагинация будет после объединения
 		Size:          limit,
-		CategoryID:    params.CategoryID,
+		CategoryID:    categoryID,  // Оставляем для обратной совместимости
+		CategoryIDs:   categoryIDs, // Передаем массив категорий
 		PriceMin:      params.PriceMin,
 		PriceMax:      params.PriceMax,
 		Sort:          params.SortBy,
 		SortDirection: params.SortOrder,
+		City:          params.City,
+		Distance:      params.Distance,
+		Latitude:      params.Latitude,
+		Longitude:     params.Longitude,
 		// AttributeFilters: params.AttributeFilters, // TODO: конвертировать типы
 		Language: params.Language,
 	}
@@ -440,10 +494,22 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Items))
+	seenIDs := make(map[string]bool)
+
 	for _, listing := range results.Items {
 		if listing == nil {
 			continue
 		}
+
+		// Проверяем дублирование по ID
+		itemID := "ml_" + strconv.Itoa(listing.ID)
+		if seenIDs[itemID] {
+			logger.Debug().
+				Str("listing_id", itemID).
+				Msg("Skipping duplicate marketplace item")
+			continue
+		}
+		seenIDs[itemID] = true
 
 		// Определяем тип товара на основе StorefrontID
 		// Объявления маркетплейса всегда остаются объявлениями маркетплейса
@@ -451,19 +517,22 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		productType := productTypeMarketplace
 
 		item := UnifiedSearchItem{
-			ID:          "ml_" + strconv.Itoa(listing.ID),
-			ProductType: productType,
-			ProductID:   listing.ID,
-			Name:        listing.Title,
-			Description: listing.Description,
-			Price:       listing.Price,
-			Currency:    "RSD", // TODO: получить реальную валюту из конфигурации
-			Images:      h.convertMarketplaceImages(listing.Images),
-			Category:    h.convertMarketplaceCategory(listing.Category),
-			Location:    h.convertMarketplaceLocation(listing),
-			Score:       1.0, // TODO: получить реальный score из OpenSearch
-			ViewsCount:  listing.ViewsCount,
-			CreatedAt:   &listing.CreatedAt,
+			ID:                 itemID,
+			ProductType:        productType,
+			ProductID:          listing.ID,
+			Name:               listing.Title,
+			Description:        listing.Description,
+			Price:              listing.Price,
+			Currency:           "RSD", // TODO: получить реальную валюту из конфигурации
+			Images:             h.convertMarketplaceImages(listing.Images),
+			Category:           h.convertMarketplaceCategory(listing.Category),
+			Location:           h.convertMarketplaceLocation(listing),
+			Score:              1.0, // TODO: получить реальный score из OpenSearch
+			ViewsCount:         listing.ViewsCount,
+			CreatedAt:          &listing.CreatedAt,
+			HasDiscount:        listing.HasDiscount,
+			OldPrice:           listing.OldPrice,
+			DiscountPercentage: listing.DiscountPercentage,
 		}
 
 		// Добавляем информацию о пользователе
@@ -529,9 +598,14 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 
 	// Конвертируем параметры в формат для поиска товаров витрин
 	categoryID := 0
-	if params.CategoryID != "" {
+	// Используем первую категорию из массива, если массив задан
+	categoryStr := params.CategoryID
+	if len(params.CategoryIDs) > 0 {
+		categoryStr = params.CategoryIDs[0]
+	}
+	if categoryStr != "" {
 		// Попробуем конвертировать в int
-		if id, err := strconv.Atoi(params.CategoryID); err == nil {
+		if id, err := strconv.Atoi(categoryStr); err == nil {
 			categoryID = id
 		}
 	}
@@ -588,7 +662,8 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Name: product.Category.Name,
 				Slug: product.Category.Slug,
 			},
-			Score: product.Score,
+			Score:     product.Score,
+			CreatedAt: product.CreatedAt,
 		}
 
 		// Логируем для отладки создание storefront товара
@@ -806,9 +881,17 @@ func (h *UnifiedSearchHandler) sortScoredItems(items []UnifiedSearchItem, sortBy
 			}
 			return items[i].Price > items[j].Price
 
-		case "date":
+		case "date", "created_at", "updated_at":
+			// Обрабатываем все варианты сортировки по дате
 			if items[i].CreatedAt == nil || items[j].CreatedAt == nil {
-				// Если нет даты, сортируем по score
+				// Если у одного элемента нет даты, он идет последним
+				if items[i].CreatedAt == nil && items[j].CreatedAt != nil {
+					return false // элемент без даты идет после
+				}
+				if items[i].CreatedAt != nil && items[j].CreatedAt == nil {
+					return true // элемент с датой идет первым
+				}
+				// Если у обоих нет даты, сортируем по score
 				return items[i].Score > items[j].Score
 			}
 			// При одинаковой дате сортируем по score

@@ -22,7 +22,7 @@ func NewSensitiveDataMasker() *SensitiveDataMasker {
 			"credit_card":   regexp.MustCompile(`\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b`),
 			"cvv":           regexp.MustCompile(`(?i)(cvv|cvc|cvv2|cvc2)["\s:=]+(\d{3,4})`),
 			"email":         regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`),
-			"phone":         regexp.MustCompile(`\+?\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,4}`),
+			"phone":         regexp.MustCompile(`(\+\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,4})|(\(\d{3}\)[\s.-]?\d{3}[\s.-]?\d{4})|(\d{3}[\s.-]\d{3}[\s.-]\d{4})`),
 			"ssn":           regexp.MustCompile(`\b\d{3}-\d{2}-\d{4}\b`),
 			"iban":          regexp.MustCompile(`[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}([A-Z0-9]?){0,16}`),
 		},

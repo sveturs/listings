@@ -41,8 +41,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Защищенные admin маршруты для поиска (специфичная группа)
 	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.AuthRequiredJWT, mw.AdminRequired)
 
-	// Аналитика поиска
-	adminSearchRoutes.Get("/analytics", h.GetSearchAnalytics)
+	// Аналитика поиска - REMOVED (deprecated, use /api/v1/analytics/metrics/search instead)
 
 	// Конфигурация поиска
 	adminSearchRoutes.Put("/config", h.UpdateConfig)

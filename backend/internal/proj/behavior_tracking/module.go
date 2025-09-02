@@ -42,10 +42,6 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	// Endpoint для отслеживания событий (может использоваться без авторизации)
 	api.Post("/track", m.handler.TrackEvent)
 
-	// Публичные метрики (без персональных данных)
-	api.Get("/metrics/search", m.handler.GetSearchMetrics)
-	api.Get("/metrics/items", m.handler.GetItemMetrics)
-
 	// Endpoint для получения событий сессии (публичный)
 	api.Get("/sessions/:session_id/events", m.handler.GetSessionEvents)
 
