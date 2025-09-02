@@ -53,15 +53,18 @@ Contabo Storage (500GB) - Холодные данные
 
 ### Административный доступ:
 ```bash
-# MinIO Console
-URL: https://console.s3.svetu.rs (после добавления DNS)
-Временный URL: http://194.163.132.116:9001
-Login: svetu_admin_s3
-Password: BLcLlznxtWzb6j5vdRUumFA1t
+# MinIO Console (✅ ЗАЩИЩЕНО HTTPS с заголовками безопасности)
+URL: https://console.s3.svetu.rs (✅ РАБОТАЕТ)
+🔒 Безопасность: HSTS, X-Frame-Options, X-Content-Type-Options
+Login: Хранится в /opt/minio/secrets/minio_root_user.txt
+Password: Хранится в /opt/minio/secrets/minio_root_password.txt
 
-# MinIO API Endpoint
-URL: https://s3.svetu.rs
-Прямой доступ: http://194.163.132.116:9000
+# Просмотр текущих учетных данных:
+cat /opt/minio/secrets/credentials.info
+
+# MinIO API Endpoint (✅ ЗАЩИЩЕНО HTTPS)
+URL: https://s3.svetu.rs (✅ РАБОТАЕТ)
+❌ ПРЯМОЙ ДОСТУП БЛОКИРОВАН: ~~http://194.163.132.116:9000~~ (заблокирован)
 ```
 
 ### Сервисные аккаунты:
@@ -102,8 +105,15 @@ df -h /opt/minio/data
 mc du --depth 1 local/
 mc du --depth 1 contabo/
 
-# Проверка health
+# Проверка health (ОБНОВЛЕНО для безопасности)
+# ✅ ЛОКАЛЬНО (работает):
 curl -I http://localhost:9000/minio/health/live
+
+# ✅ ЧЕРЕЗ REVERSE PROXY (рекомендуемо):
+curl -I https://s3.svetu.rs/
+
+# ❌ ПРЯМОЙ ДОСТУП БЛОКИРОВАН:
+# curl -I http://194.163.132.116:9000/minio/health/live
 ```
 
 ### 2. Мониторинг производительности
@@ -334,29 +344,85 @@ mc --version
 
 ## 🔒 БЕЗОПАСНОСТЬ
 
+### ✅ ОБНОВЛЕННЫЕ НАСТРОЙКИ БЕЗОПАСНОСТИ (2025-09-01):
+- **✅ Network Security:** MinIO порты 9000/9001 заблокированы для внешнего доступа
+- **✅ Private Buckets:** Все production bucket'ы установлены в режим PRIVATE
+- **✅ HTTPS Only:** Доступ только через nginx reverse proxy
+- **✅ Security Headers:** HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- **✅ Docker Secrets:** Учетные данные защищены через Docker secrets
+- **✅ UFW Firewall:** DENY правила для MinIO портов + ALLOW только для 80/443/22
+- **✅ SSL/TLS:** Let's Encrypt сертификаты для всех endpoints
+- **✅ Версионирование:** Включено для production bucket'ов
+- **✅ Ротация логов:** Настроена через logrotate
+
+### Статус систем безопасности:
+```bash
+# Проверка Fail2ban
+sudo systemctl status fail2ban
+sudo fail2ban-client status
+
+# Проверка UFW
+sudo ufw status verbose
+
+# Проверка SSL сертификатов
+sudo certbot certificates
+
+# Проверка Docker secrets
+docker secret ls
+```
+
 ### Регулярные задачи:
 ```bash
 # Аудит доступов (еженедельно)
 mc admin user list local
 mc admin policy list local
 
-# Проверка публичных политик
-mc anonymous list local --recursive
+# Проверка приватности bucket'ов (ОБНОВЛЕНО)
+mc anonymous list local --recursive  # Должно показать "private" для всех production bucket'ов
 
-# Ротация паролей (каждые 90 дней)
-mc admin user password local svetu_admin_s3 NEW_PASSWORD
+# Ротация паролей (каждые 90 дней) - теперь безопасно
+openssl rand -base64 32 > /opt/minio/secrets/minio_root_password.txt
+cd /opt/minio && docker-compose restart
 
 # Проверка логов доступа
 docker logs minio-hybrid | grep -i "error\|warn\|fail"
+
+# Мониторинг попыток взлома
+sudo fail2ban-client status sshd
+sudo fail2ban-client status minio
 ```
 
-### Настройка firewall:
+### Управление Fail2ban:
 ```bash
-# Текущие правила
-sudo ufw status
+# Статус всех jail'ов
+sudo fail2ban-client status
 
-# Ограничение доступа к консоли
-sudo ufw allow from YOUR_IP to any port 9001
+# Разблокировка IP
+sudo fail2ban-client set sshd unbanip <IP_ADDRESS>
+
+# Просмотр заблокированных IP
+sudo fail2ban-client get sshd banned
+```
+
+### 🔐 Проверка новых мер безопасности:
+```bash
+# Проверка блокировки прямого доступа к MinIO портам
+curl -m 5 http://194.163.132.116:9000 || echo "✅ Порт 9000 заблокирован"
+curl -m 5 http://194.163.132.116:9001 || echo "✅ Порт 9001 заблокирован"
+
+# Проверка работы через reverse proxy
+curl -s -w "%{http_code}" https://s3.svetu.rs/ | head -1  # Должно быть 403
+curl -s -w "%{http_code}" https://console.s3.svetu.rs/ | head -1  # Должно быть 200
+
+# Проверка приватности production bucket'ов
+curl -s -w "%{http_code}" https://s3.svetu.rs/production-listings/test.txt | head -1  # Должно быть 403
+
+# Проверка security headers
+curl -I https://s3.svetu.rs/ | grep -E "(Strict-Transport|X-Content)"
+curl -I https://console.s3.svetu.rs/ | grep -E "(X-Frame|Strict-Transport)"
+
+# Проверка UFW правил
+sudo ufw status | grep -E "(9000|9001)"  # Должно показать DENY
 ```
 
 ---
@@ -375,16 +441,28 @@ sudo ufw allow from YOUR_IP to any port 9001
 
 ### Расположение файлов:
 ```
-/opt/minio/              # Корневая директория MinIO
-├── docker-compose.yml   # Конфигурация Docker
-├── .env                 # Переменные окружения и пароли
-├── data/                # Данные MinIO
-├── cache/               # Кэш для горячих данных
-├── config/              # Конфигурация MinIO
-├── scripts/             # Скрипты обслуживания
-│   ├── backup.sh        # Скрипт бэкапа
-│   └── monitor.sh       # Скрипт мониторинга
-└── backup/              # Локальные бэкапы
+/opt/minio/                    # Корневая директория MinIO
+├── docker-compose.yml         # Текущая конфигурация Docker
+├── docker-compose-secure.yml  # Безопасная конфигурация
+├── .env                       # Переменные окружения (очищены)
+├── secrets/                   # Защищенные учетные данные
+│   ├── minio_root_user.txt    # Имя администратора
+│   ├── minio_root_password.txt # Пароль администратора
+│   └── credentials.info       # Сводка учетных данных
+├── data/                      # Данные MinIO
+├── cache/                     # Кэш для горячих данных
+├── config/                    # Конфигурация MinIO
+├── scripts/                   # Скрипты обслуживания
+│   ├── backup.sh              # Автоматический бэкап
+│   ├── secure_migration.sh    # Миграция на безопасную конфигурацию
+│   ├── enable_versioning.sh   # Включение версионирования
+│   └── setup_lifecycle.sh     # Настройка lifecycle политик
+├── backup/                    # Локальные бэкапы
+└── DISASTER_RECOVERY.md       # План аварийного восстановления
+
+/etc/fail2ban/jail.local       # Конфигурация Fail2ban
+/etc/logrotate.d/minio         # Настройки ротации логов
+/var/log/minio-backup.log      # Лог файлы бэкапов
 ```
 
 ---

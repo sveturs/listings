@@ -211,8 +211,8 @@ type CategorySummary struct {
 
 // SuggestionsResponse ответ с подсказками
 type SuggestionsResponse struct {
-	Success bool             `json:"success" example:"true"`
-	Data    []SuggestionItem `json:"data"`
+	Success bool     `json:"success" example:"true"`
+	Data    []string `json:"data"`
 }
 
 // MapBounds границы карты

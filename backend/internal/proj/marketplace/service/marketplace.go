@@ -1973,6 +1973,239 @@ func (s *MarketplaceService) GetSuggestions(ctx context.Context, prefix string, 
 	return suggestions, nil
 }
 
+// GetUnifiedSuggestions возвращает структурированные подсказки с типами
+func (s *MarketplaceService) GetUnifiedSuggestions(ctx context.Context, params *models.SuggestionRequestParams) ([]models.UnifiedSuggestion, error) {
+	log.Printf("Запрос унифицированных подсказок: query='%s', types=%v, limit=%d", params.Query, params.Types, params.Limit)
+
+	var results []models.UnifiedSuggestion
+	
+	// Если не указаны типы, возвращаем все типы по умолчанию
+	types := params.Types
+	if len(types) == 0 {
+		types = []string{"queries", "categories", "products"}
+	}
+	
+	// Распределяем лимит между типами
+	limitPerType := params.Limit / len(types)
+	if limitPerType < 1 {
+		limitPerType = 1
+	}
+
+	// 1. Queries (популярные поисковые запросы)
+	if contains(types, "queries") {
+		queryResults := s.getQuerySuggestions(ctx, params.Query, limitPerType)
+		results = append(results, queryResults...)
+	}
+
+	// 2. Categories (категории)
+	if contains(types, "categories") {
+		categoryResults := s.getCategorySuggestionsUnified(ctx, params.Query, limitPerType)
+		results = append(results, categoryResults...)
+	}
+
+	// 3. Products (товары)
+	if contains(types, "products") {
+		productResults := s.getProductSuggestionsUnified(ctx, params.Query, limitPerType)
+		results = append(results, productResults...)
+	}
+
+	// Ограничиваем общий размер результата
+	if len(results) > params.Limit {
+		results = results[:params.Limit]
+	}
+
+	log.Printf("Возвращено %d унифицированных подсказок", len(results))
+	return results, nil
+}
+
+// getQuerySuggestions возвращает популярные поисковые запросы
+func (s *MarketplaceService) getQuerySuggestions(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
+	// Получаем популярные запросы из таблицы search_queries
+	sqlQuery := `
+		SELECT query, COUNT(*) as search_count 
+		FROM search_queries 
+		WHERE LOWER(query) LIKE LOWER($1) 
+		  AND query != $2
+		GROUP BY query 
+		ORDER BY search_count DESC, LENGTH(query) ASC 
+		LIMIT $3`
+
+	rows, err := s.storage.Query(ctx, sqlQuery, query+"%", query, limit)
+	if err != nil {
+		log.Printf("Ошибка получения популярных запросов: %v", err)
+		return []models.UnifiedSuggestion{}
+	}
+	defer rows.Close()
+
+	var suggestions []models.UnifiedSuggestion
+	for rows.Next() {
+		var q string
+		var count int
+		if err := rows.Scan(&q, &count); err != nil {
+			continue
+		}
+		
+		suggestions = append(suggestions, models.UnifiedSuggestion{
+			Type:  "query",
+			Value: q,
+			Label: q,
+			Count: &count,
+		})
+	}
+	
+	return suggestions
+}
+
+// getCategorySuggestionsUnified возвращает подходящие категории
+func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
+	// Поиск категорий по:
+	// 1. Названию категории и переводам
+	// 2. Товарам в категории (если товар соответствует запросу, показываем его категорию)
+	// 3. Ключевым словам категории
+	sqlQuery := `
+		WITH relevant_categories AS (
+			-- Категории по прямому совпадению названия
+			SELECT DISTINCT mc.id, mc.name, mc.slug, 1 as relevance
+			FROM marketplace_categories mc
+			LEFT JOIN translations t ON t.entity_type = 'MarketplaceCategory' 
+									 AND t.entity_id = mc.id 
+									 AND t.field_name = 'name'
+			WHERE (LOWER(mc.name) LIKE LOWER($1) 
+				OR LOWER(t.translated_text) LIKE LOWER($1))
+			  AND mc.is_active = true
+			
+			UNION
+			
+			-- Категории товаров, которые соответствуют запросу
+			SELECT DISTINCT mc.id, mc.name, mc.slug, 2 as relevance
+			FROM marketplace_categories mc
+			INNER JOIN marketplace_listings ml ON mc.id = ml.category_id
+			WHERE LOWER(ml.title) LIKE LOWER($1)
+			  AND ml.status = 'active'
+			  AND mc.is_active = true
+			
+			UNION
+			
+			-- Категории по ключевым словам
+			SELECT DISTINCT mc.id, mc.name, mc.slug, 3 as relevance
+			FROM marketplace_categories mc
+			INNER JOIN category_keywords ck ON mc.id = ck.category_id
+			WHERE LOWER(ck.keyword) LIKE LOWER($1)
+			  AND mc.is_active = true
+		)
+		SELECT rc.id, rc.name, rc.slug, 
+		       COUNT(DISTINCT ml.id) as listing_count,
+		       MIN(rc.relevance) as relevance
+		FROM relevant_categories rc
+		LEFT JOIN marketplace_listings ml ON rc.id = ml.category_id AND ml.status = 'active'
+		GROUP BY rc.id, rc.name, rc.slug
+		HAVING COUNT(DISTINCT ml.id) > 0  -- Только категории с товарами
+		ORDER BY MIN(rc.relevance) ASC, COUNT(DISTINCT ml.id) DESC, LENGTH(rc.name) ASC
+		LIMIT $2`
+
+	rows, err := s.storage.Query(ctx, sqlQuery, "%"+query+"%", limit)
+	if err != nil {
+		log.Printf("Ошибка получения категорий: %v", err)
+		return []models.UnifiedSuggestion{}
+	}
+	defer rows.Close()
+
+	var suggestions []models.UnifiedSuggestion
+	for rows.Next() {
+		var id int
+		var name, slug string
+		var count int
+		var relevance int
+		if err := rows.Scan(&id, &name, &slug, &count, &relevance); err != nil {
+			log.Printf("Ошибка сканирования категории: %v", err)
+			continue
+		}
+		
+		suggestions = append(suggestions, models.UnifiedSuggestion{
+			Type:       "category",
+			Value:      name,
+			Label:      name,
+			CategoryID: &id,
+			Count:      &count,
+			Metadata: &models.UnifiedSuggestionMeta{
+				Category: &name,
+			},
+		})
+	}
+	
+	return suggestions
+}
+
+// getProductSuggestionsUnified возвращает подходящие товары
+func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
+	// Поиск товаров по названию
+	sqlQuery := `
+		SELECT ml.id, ml.title, ml.price, mc.name as category_name,
+		       COALESCE(mi.public_url, '') as image_url,
+		       ml.storefront_id, s.name as storefront_name, s.slug as storefront_slug
+		FROM marketplace_listings ml
+		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+		LEFT JOIN marketplace_images mi ON ml.id = mi.listing_id AND mi.is_main = true
+		LEFT JOIN storefronts s ON ml.storefront_id = s.id
+		WHERE LOWER(ml.title) LIKE LOWER($1)
+		  AND ml.status = 'active'
+		ORDER BY ml.views_count DESC, ml.created_at DESC
+		LIMIT $2`
+
+	rows, err := s.storage.Query(ctx, sqlQuery, "%"+query+"%", limit)
+	if err != nil {
+		log.Printf("Ошибка получения товаров: %v", err)
+		return []models.UnifiedSuggestion{}
+	}
+	defer rows.Close()
+
+	var suggestions []models.UnifiedSuggestion
+	for rows.Next() {
+		var id int
+		var title string
+		var price float64
+		var categoryName, imageURL string
+		var storefrontID *int
+		var storefrontName, storefrontSlug *string
+		
+		if err := rows.Scan(&id, &title, &price, &categoryName, &imageURL, 
+			&storefrontID, &storefrontName, &storefrontSlug); err != nil {
+			continue
+		}
+		
+		metadata := &models.UnifiedSuggestionMeta{
+			Price:      &price,
+			Category:   &categoryName,
+			SourceType: strPtr("marketplace"),
+		}
+		
+		if imageURL != "" {
+			metadata.Image = &imageURL
+		}
+		
+		if storefrontID != nil {
+			metadata.StorefrontID = storefrontID
+			metadata.Storefront = storefrontName
+			metadata.StorefrontSlug = storefrontSlug
+		}
+		
+		suggestions = append(suggestions, models.UnifiedSuggestion{
+			Type:      "product",
+			Value:     title,
+			Label:     title,
+			ProductID: &id,
+			Metadata:  metadata,
+		})
+	}
+	
+	return suggestions
+}
+
+// strPtr возвращает указатель на строку
+func strPtr(s string) *string {
+	return &s
+}
+
 // Вспомогательная функция для проверки наличия элемента в срезе
 func contains(arr []string, str string) bool {
 	for _, a := range arr {
@@ -1994,6 +2227,11 @@ func (s *MarketplaceService) Storage() storage.Storage {
 func (s *MarketplaceService) Service() *Service {
 	// Возвращаем nil, так как мы больше не создаем вложенный Service
 	return nil
+}
+
+func (s *MarketplaceService) SaveSearchQuery(ctx context.Context, query string, resultsCount int, language string) error {
+	// Вызываем метод storage для сохранения запроса
+	return s.storage.SaveSearchQuery(ctx, query, query, resultsCount, language)
 }
 
 func (s *MarketplaceService) GetPriceHistory(ctx context.Context, listingID int) ([]models.PriceHistoryEntry, error) {

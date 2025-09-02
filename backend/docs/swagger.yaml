@@ -156,29 +156,6 @@ definitions:
     - EventTypeSearchFilterApplied
     - EventTypeSearchSortChanged
     - EventTypeItemAddedToCart
-  backend_internal_domain_behavior.ItemMetrics:
-    properties:
-      avg_position:
-        type: number
-      clicks:
-        type: integer
-      conversion_rate:
-        type: number
-      ctr:
-        type: number
-      item_id:
-        type: string
-      item_type:
-        $ref: '#/definitions/backend_internal_domain_behavior.ItemType'
-      period_end:
-        type: string
-      period_start:
-        type: string
-      purchases:
-        type: integer
-      views:
-        type: integer
-    type: object
   backend_internal_domain_behavior.ItemType:
     enum:
     - marketplace
@@ -4314,6 +4291,64 @@ definitions:
       version:
         type: integer
     type: object
+  backend_internal_domain_models.UnifiedSuggestion:
+    properties:
+      category_id:
+        description: ID категории для type="category"
+        type: integer
+      count:
+        description: Количество результатов
+        type: integer
+      icon:
+        description: Иконка
+        type: string
+      label:
+        description: Отображаемый текст
+        type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.UnifiedSuggestionMeta'
+        description: Дополнительные данные
+      product_id:
+        description: ID товара для type="product"
+        type: integer
+      type:
+        description: '"query", "product", "category"'
+        type: string
+      value:
+        description: Основное значение для поиска
+        type: string
+    type: object
+  backend_internal_domain_models.UnifiedSuggestionMeta:
+    properties:
+      category:
+        description: Название категории
+        type: string
+      image:
+        description: URL изображения
+        type: string
+      last_searched:
+        description: Дата последнего поиска
+        type: string
+      parent_id:
+        description: ID родительской категории
+        type: integer
+      price:
+        description: Цена товара
+        type: number
+      source_type:
+        description: '"marketplace" или "storefront"'
+        type: string
+      storefront:
+        description: Название витрины
+        type: string
+      storefront_id:
+        description: ID витрины
+        type: integer
+      storefront_slug:
+        description: Slug витрины
+        type: string
+    type: object
   backend_internal_domain_models.UpdateAttributeGroupRequest:
     properties:
       description:
@@ -6037,36 +6072,6 @@ definitions:
       similarity_score:
         type: number
     type: object
-  backend_internal_proj_marketplace_service.SuggestionItem:
-    properties:
-      category_id:
-        type: integer
-      count:
-        type: integer
-      icon:
-        type: string
-      label:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      product_id:
-        type: integer
-      type:
-        $ref: '#/definitions/backend_internal_proj_marketplace_service.SuggestionType'
-      value:
-        type: string
-    type: object
-  backend_internal_proj_marketplace_service.SuggestionType:
-    enum:
-    - query
-    - category
-    - product
-    type: string
-    x-enum-varnames:
-    - SuggestionTypeQuery
-    - SuggestionTypeCategory
-    - SuggestionTypeProduct
   backend_internal_proj_postexpress_models.CalculateRateRequest:
     properties:
       cod_amount:
@@ -7240,60 +7245,6 @@ definitions:
         example: http://localhost:3001/en/balance/deposit/success
         type: string
     type: object
-  internal_proj_behavior_tracking_handler.ClickMetricsResponse:
-    properties:
-      average_click_position:
-        type: number
-      conversion_rate:
-        type: number
-      ctr:
-        type: number
-      total_clicks:
-        type: integer
-    type: object
-  internal_proj_behavior_tracking_handler.SearchMetricsResponse:
-    properties:
-      average_search_duration_ms:
-        type: number
-      click_metrics:
-        $ref: '#/definitions/internal_proj_behavior_tracking_handler.ClickMetricsResponse'
-      search_trends:
-        items:
-          $ref: '#/definitions/internal_proj_behavior_tracking_handler.SearchTrendResponse'
-        type: array
-      top_queries:
-        items:
-          $ref: '#/definitions/internal_proj_behavior_tracking_handler.TopQueryResponse'
-        type: array
-      total_searches:
-        type: integer
-      unique_searches:
-        type: integer
-    type: object
-  internal_proj_behavior_tracking_handler.SearchTrendResponse:
-    properties:
-      clicks_count:
-        type: integer
-      ctr:
-        type: number
-      date:
-        type: string
-      searches_count:
-        type: integer
-    type: object
-  internal_proj_behavior_tracking_handler.TopQueryResponse:
-    properties:
-      avg_position:
-        type: number
-      avg_results:
-        type: number
-      count:
-        type: integer
-      ctr:
-        type: number
-      query:
-        type: string
-    type: object
   internal_proj_contacts_handler.ContactRemoveResponse:
     description: Ответ при удалении контакта из списка
     properties:
@@ -8158,26 +8109,6 @@ definitions:
       success:
         example: true
         type: boolean
-    type: object
-  internal_proj_marketplace_handler.SuggestionItem:
-    properties:
-      category_id:
-        type: integer
-      count:
-        type: integer
-      icon:
-        type: string
-      label:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      product_id:
-        type: integer
-      type:
-        type: string
-      value:
-        type: string
     type: object
   internal_proj_marketplace_handler.TranslateTextRequest:
     properties:
@@ -13177,54 +13108,6 @@ paths:
       summary: Get all roles (Admin)
       tags:
       - admin-users
-  /api/v1/admin/search/analytics:
-    get:
-      consumes:
-      - application/json
-      description: 'Get comprehensive search analytics including usage metrics, popular
-        queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking
-        analytics endpoints instead.'
-      parameters:
-      - default: 7d
-        description: Time range (7d, 30d, 90d)
-        in: query
-        name: range
-        type: string
-      - default: 0
-        description: Offset for top queries pagination
-        in: query
-        name: offsetTop
-        type: integer
-      - default: 0
-        description: Offset for zero result queries pagination
-        in: query
-        name: offsetZero
-        type: integer
-      - default: 25
-        description: Limit for pagination
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Search analytics data
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Get search analytics for admin
-      tags:
-      - search-admin
   /api/v1/admin/search/analyze-weights:
     post:
       consumes:
@@ -15740,94 +15623,66 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns aggregated metrics for items (products/listings)
+      description: Returns performance metrics for items
       parameters:
-      - description: Item type filter (marketplace, storefront)
+      - description: Start date (YYYY-MM-DD)
         in: query
-        name: item_type
+        name: date_from
         type: string
-      - description: Period start date (RFC3339)
+      - description: End date (YYYY-MM-DD)
         in: query
-        name: period_start
+        name: date_to
         type: string
-      - description: Period end date (RFC3339)
-        in: query
-        name: period_end
-        type: string
-      - description: 'Limit results (default: 20, max: 100)'
+      - default: 20
+        description: Limit
         in: query
         name: limit
         type: integer
-      - description: Offset for pagination
-        in: query
-        name: offset
-        type: integer
-      - description: Sort by field (views, clicks, purchases, ctr, conversion_rate)
-        in: query
-        name: sort_by
-        type: string
-      - description: Order direction (asc, desc)
-        in: query
-        name: order_by
-        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Item metrics
+          description: Items performance
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/backend_internal_domain_behavior.ItemMetrics'
+                    $ref: '#/definitions/backend_internal_proj_analytics_service.ItemPerformance'
                   type: array
               type: object
-        "400":
-          description: Invalid request
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Get item metrics
+      security:
+      - BearerAuth: []
+      summary: Get items performance
       tags:
       - analytics
   /api/v1/analytics/metrics/search:
     get:
       consumes:
       - application/json
-      description: Returns aggregated search metrics for analysis
+      description: Returns search analytics metrics
       parameters:
-      - description: Search query filter
+      - description: Start date (YYYY-MM-DD)
         in: query
-        name: query
+        name: date_from
         type: string
-      - description: Period start date (RFC3339)
+      - description: End date (YYYY-MM-DD)
         in: query
-        name: period_start
+        name: date_to
         type: string
-      - description: Period end date (RFC3339)
+      - default: week
+        description: Period (day, week, month)
         in: query
-        name: period_end
-        type: string
-      - description: 'Limit results (default: 20, max: 100)'
-        in: query
-        name: limit
-        type: integer
-      - description: Offset for pagination
-        in: query
-        name: offset
-        type: integer
-      - description: Sort by field (ctr, conversions, total_searches)
-        in: query
-        name: sort_by
-        type: string
-      - description: Order direction (asc, desc)
-        in: query
-        name: order_by
+        name: period
         type: string
       produces:
       - application/json
@@ -15839,16 +15694,18 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  $ref: '#/definitions/internal_proj_behavior_tracking_handler.SearchMetricsResponse'
+                  $ref: '#/definitions/backend_internal_proj_analytics_service.SearchMetrics'
               type: object
-        "400":
-          description: Invalid request
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
       summary: Get search metrics
       tags:
       - analytics
@@ -19689,52 +19546,6 @@ paths:
       summary: Create image enhancement preview
       tags:
       - marketplace-images
-  /api/v1/marketplace/enhanced-suggestions:
-    get:
-      consumes:
-      - application/json
-      description: Returns autocomplete suggestions with categories
-      parameters:
-      - description: Search prefix
-        in: query
-        name: prefix
-        required: true
-        type: string
-      - default: 10
-        description: Number of suggestions
-        in: query
-        name: size
-        type: integer
-      - default: ru
-        description: Language
-        in: query
-        name: lang
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Enhanced suggestions list
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/internal_proj_marketplace_handler.SuggestionItem'
-                  type: array
-              type: object
-        "400":
-          description: marketplace.prefixRequired
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: marketplace.suggestionsError
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Get enhanced search suggestions
-      tags:
-      - marketplace-search
   /api/v1/marketplace/favorites:
     get:
       consumes:
@@ -24904,14 +24715,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: Enhanced suggestions list
+          description: Search suggestions list
           schema:
             allOf:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/backend_internal_proj_marketplace_service.SuggestionItem'
+                    $ref: '#/definitions/backend_internal_domain_models.UnifiedSuggestion'
                   type: array
               type: object
         "400":

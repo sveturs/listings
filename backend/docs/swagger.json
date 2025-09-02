@@ -5785,78 +5785,6 @@
                 }
             }
         },
-        "/api/v1/admin/search/analytics": {
-            "get": {
-                "description": "Get comprehensive search analytics including usage metrics, popular queries, and performance data. Note: This endpoint is deprecated. Use behavior_tracking analytics endpoints instead.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "search-admin"
-                ],
-                "summary": "Get search analytics for admin",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "7d",
-                        "description": "Time range (7d, 30d, 90d)",
-                        "name": "range",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset for top queries pagination",
-                        "name": "offsetTop",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset for zero result queries pagination",
-                        "name": "offsetZero",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 25,
-                        "description": "Limit for pagination",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Search analytics data",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/admin/search/analyze-weights": {
             "post": {
                 "security": [
@@ -9939,7 +9867,12 @@
         },
         "/api/v1/analytics/metrics/items": {
             "get": {
-                "description": "Returns aggregated metrics for items (products/listings)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns performance metrics for items",
                 "consumes": [
                     "application/json"
                 ],
@@ -9949,54 +9882,31 @@
                 "tags": [
                     "analytics"
                 ],
-                "summary": "Get item metrics",
+                "summary": "Get items performance",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Item type filter (marketplace, storefront)",
-                        "name": "item_type",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "date_from",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Period start date (RFC3339)",
-                        "name": "period_start",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Period end date (RFC3339)",
-                        "name": "period_end",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "date_to",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Limit results (default: 20, max: 100)",
+                        "default": 20,
+                        "description": "Limit",
                         "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Offset for pagination",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field (views, clicks, purchases, ctr, conversion_rate)",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Order direction (asc, desc)",
-                        "name": "order_by",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Item metrics",
+                        "description": "Items performance",
                         "schema": {
                             "allOf": [
                                 {
@@ -10008,7 +9918,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/backend_internal_domain_behavior.ItemMetrics"
+                                                "$ref": "#/definitions/backend_internal_proj_analytics_service.ItemPerformance"
                                             }
                                         }
                                     }
@@ -10016,8 +9926,8 @@
                             ]
                         }
                     },
-                    "400": {
-                        "description": "Invalid request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -10033,7 +9943,12 @@
         },
         "/api/v1/analytics/metrics/search": {
             "get": {
-                "description": "Returns aggregated search metrics for analysis",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns search analytics metrics",
                 "consumes": [
                     "application/json"
                 ],
@@ -10047,44 +9962,21 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Search query filter",
-                        "name": "query",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "date_from",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Period start date (RFC3339)",
-                        "name": "period_start",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "date_to",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Period end date (RFC3339)",
-                        "name": "period_end",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Limit results (default: 20, max: 100)",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Offset for pagination",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field (ctr, conversions, total_searches)",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Order direction (asc, desc)",
-                        "name": "order_by",
+                        "default": "week",
+                        "description": "Period (day, week, month)",
+                        "name": "period",
                         "in": "query"
                     }
                 ],
@@ -10100,15 +9992,15 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/internal_proj_behavior_tracking_handler.SearchMetricsResponse"
+                                            "$ref": "#/definitions/backend_internal_proj_analytics_service.SearchMetrics"
                                         }
                                     }
                                 }
                             ]
                         }
                     },
-                    "400": {
-                        "description": "Invalid request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -16391,79 +16283,6 @@
                     },
                     "500": {
                         "description": "marketplace.enhanceError",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/marketplace/enhanced-suggestions": {
-            "get": {
-                "description": "Returns autocomplete suggestions with categories",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "marketplace-search"
-                ],
-                "summary": "Get enhanced search suggestions",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Search prefix",
-                        "name": "prefix",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of suggestions",
-                        "name": "size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "ru",
-                        "description": "Language",
-                        "name": "lang",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Enhanced suggestions list",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/internal_proj_marketplace_handler.SuggestionItem"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "marketplace.prefixRequired",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "marketplace.suggestionsError",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -24831,7 +24650,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Enhanced suggestions list",
+                        "description": "Search suggestions list",
                         "schema": {
                             "allOf": [
                                 {
@@ -24843,7 +24662,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/backend_internal_proj_marketplace_service.SuggestionItem"
+                                                "$ref": "#/definitions/backend_internal_domain_models.UnifiedSuggestion"
                                             }
                                         }
                                     }
@@ -31635,41 +31454,6 @@
                 "EventTypeItemAddedToCart"
             ]
         },
-        "backend_internal_domain_behavior.ItemMetrics": {
-            "type": "object",
-            "properties": {
-                "avg_position": {
-                    "type": "number"
-                },
-                "clicks": {
-                    "type": "integer"
-                },
-                "conversion_rate": {
-                    "type": "number"
-                },
-                "ctr": {
-                    "type": "number"
-                },
-                "item_id": {
-                    "type": "string"
-                },
-                "item_type": {
-                    "$ref": "#/definitions/backend_internal_domain_behavior.ItemType"
-                },
-                "period_end": {
-                    "type": "string"
-                },
-                "period_start": {
-                    "type": "string"
-                },
-                "purchases": {
-                    "type": "integer"
-                },
-                "views": {
-                    "type": "integer"
-                }
-            }
-        },
         "backend_internal_domain_behavior.ItemType": {
             "type": "string",
             "enum": [
@@ -37831,6 +37615,88 @@
                 }
             }
         },
+        "backend_internal_domain_models.UnifiedSuggestion": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "description": "ID категории для type=\"category\"",
+                    "type": "integer"
+                },
+                "count": {
+                    "description": "Количество результатов",
+                    "type": "integer"
+                },
+                "icon": {
+                    "description": "Иконка",
+                    "type": "string"
+                },
+                "label": {
+                    "description": "Отображаемый текст",
+                    "type": "string"
+                },
+                "metadata": {
+                    "description": "Дополнительные данные",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_domain_models.UnifiedSuggestionMeta"
+                        }
+                    ]
+                },
+                "product_id": {
+                    "description": "ID товара для type=\"product\"",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "\"query\", \"product\", \"category\"",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Основное значение для поиска",
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.UnifiedSuggestionMeta": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "Название категории",
+                    "type": "string"
+                },
+                "image": {
+                    "description": "URL изображения",
+                    "type": "string"
+                },
+                "last_searched": {
+                    "description": "Дата последнего поиска",
+                    "type": "string"
+                },
+                "parent_id": {
+                    "description": "ID родительской категории",
+                    "type": "integer"
+                },
+                "price": {
+                    "description": "Цена товара",
+                    "type": "number"
+                },
+                "source_type": {
+                    "description": "\"marketplace\" или \"storefront\"",
+                    "type": "string"
+                },
+                "storefront": {
+                    "description": "Название витрины",
+                    "type": "string"
+                },
+                "storefront_id": {
+                    "description": "ID витрины",
+                    "type": "integer"
+                },
+                "storefront_slug": {
+                    "description": "Slug витрины",
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.UpdateAttributeGroupRequest": {
             "type": "object",
             "properties": {
@@ -40379,49 +40245,6 @@
                 }
             }
         },
-        "backend_internal_proj_marketplace_service.SuggestionItem": {
-            "type": "object",
-            "properties": {
-                "category_id": {
-                    "type": "integer"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "type": {
-                    "$ref": "#/definitions/backend_internal_proj_marketplace_service.SuggestionType"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "backend_internal_proj_marketplace_service.SuggestionType": {
-            "type": "string",
-            "enum": [
-                "query",
-                "category",
-                "product"
-            ],
-            "x-enum-varnames": [
-                "SuggestionTypeQuery",
-                "SuggestionTypeCategory",
-                "SuggestionTypeProduct"
-            ]
-        },
         "backend_internal_proj_postexpress_models.CalculateRateRequest": {
             "type": "object",
             "required": [
@@ -42160,89 +41983,6 @@
                 }
             }
         },
-        "internal_proj_behavior_tracking_handler.ClickMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "average_click_position": {
-                    "type": "number"
-                },
-                "conversion_rate": {
-                    "type": "number"
-                },
-                "ctr": {
-                    "type": "number"
-                },
-                "total_clicks": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_proj_behavior_tracking_handler.SearchMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "average_search_duration_ms": {
-                    "type": "number"
-                },
-                "click_metrics": {
-                    "$ref": "#/definitions/internal_proj_behavior_tracking_handler.ClickMetricsResponse"
-                },
-                "search_trends": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_proj_behavior_tracking_handler.SearchTrendResponse"
-                    }
-                },
-                "top_queries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_proj_behavior_tracking_handler.TopQueryResponse"
-                    }
-                },
-                "total_searches": {
-                    "type": "integer"
-                },
-                "unique_searches": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_proj_behavior_tracking_handler.SearchTrendResponse": {
-            "type": "object",
-            "properties": {
-                "clicks_count": {
-                    "type": "integer"
-                },
-                "ctr": {
-                    "type": "number"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "searches_count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_proj_behavior_tracking_handler.TopQueryResponse": {
-            "type": "object",
-            "properties": {
-                "avg_position": {
-                    "type": "number"
-                },
-                "avg_results": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "ctr": {
-                    "type": "number"
-                },
-                "query": {
-                    "type": "string"
-                }
-            }
-        },
         "internal_proj_contacts_handler.ContactRemoveResponse": {
             "description": "Ответ при удалении контакта из списка",
             "type": "object",
@@ -43512,36 +43252,6 @@
                 "success": {
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "internal_proj_marketplace_handler.SuggestionItem": {
-            "type": "object",
-            "properties": {
-                "category_id": {
-                    "type": "integer"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "product_id": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
                 }
             }
         },
