@@ -1978,13 +1978,13 @@ func (s *MarketplaceService) GetUnifiedSuggestions(ctx context.Context, params *
 	log.Printf("Запрос унифицированных подсказок: query='%s', types=%v, limit=%d", params.Query, params.Types, params.Limit)
 
 	var results []models.UnifiedSuggestion
-	
+
 	// Если не указаны типы, возвращаем все типы по умолчанию
 	types := params.Types
 	if len(types) == 0 {
 		types = []string{"queries", "categories", "products"}
 	}
-	
+
 	// Распределяем лимит между типами
 	limitPerType := params.Limit / len(types)
 	if limitPerType < 1 {
@@ -2044,7 +2044,7 @@ func (s *MarketplaceService) getQuerySuggestions(ctx context.Context, query stri
 		if err := rows.Scan(&q, &count); err != nil {
 			continue
 		}
-		
+
 		suggestions = append(suggestions, models.UnifiedSuggestion{
 			Type:  "query",
 			Value: q,
@@ -2052,7 +2052,7 @@ func (s *MarketplaceService) getQuerySuggestions(ctx context.Context, query stri
 			Count: &count,
 		})
 	}
-	
+
 	return suggestions
 }
 
@@ -2120,7 +2120,7 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 			log.Printf("Ошибка сканирования категории: %v", err)
 			continue
 		}
-		
+
 		suggestions = append(suggestions, models.UnifiedSuggestion{
 			Type:       "category",
 			Value:      name,
@@ -2132,7 +2132,7 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 			},
 		})
 	}
-	
+
 	return suggestions
 }
 
@@ -2167,28 +2167,28 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 		var categoryName, imageURL string
 		var storefrontID *int
 		var storefrontName, storefrontSlug *string
-		
-		if err := rows.Scan(&id, &title, &price, &categoryName, &imageURL, 
+
+		if err := rows.Scan(&id, &title, &price, &categoryName, &imageURL,
 			&storefrontID, &storefrontName, &storefrontSlug); err != nil {
 			continue
 		}
-		
+
 		metadata := &models.UnifiedSuggestionMeta{
 			Price:      &price,
 			Category:   &categoryName,
 			SourceType: strPtr("marketplace"),
 		}
-		
+
 		if imageURL != "" {
 			metadata.Image = &imageURL
 		}
-		
+
 		if storefrontID != nil {
 			metadata.StorefrontID = storefrontID
 			metadata.Storefront = storefrontName
 			metadata.StorefrontSlug = storefrontSlug
 		}
-		
+
 		suggestions = append(suggestions, models.UnifiedSuggestion{
 			Type:      "product",
 			Value:     title,
@@ -2197,7 +2197,7 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 			Metadata:  metadata,
 		})
 	}
-	
+
 	return suggestions
 }
 
