@@ -1,5 +1,10 @@
 {
   "home": "Home",
+  "homeSection": {
+    "title": "Home",
+    "description": "Find the best deals from individuals and stores",
+    "createListing": "Create Listing"
+  },
   "allCategories": "All Categories",
   "condition": {
     "new": "New",

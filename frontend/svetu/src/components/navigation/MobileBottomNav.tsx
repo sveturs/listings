@@ -17,7 +17,7 @@ interface NavItem {
 
 export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
-  const t = useTranslations('navigation');
+  const t = useTranslations('common');
   const { isAuthenticated } = useAuthContext();
   const [mounted, setMounted] = useState(false);
 
@@ -28,30 +28,30 @@ export const MobileBottomNav: React.FC = () => {
   const navItems: NavItem[] = [
     {
       icon: Home,
-      label: t('home'),
+      label: t('navigation.home'),
       href: '/',
     },
     {
       icon: Search,
-      label: t('search'),
+      label: t('navigation.search'),
       href: '/search',
     },
     {
       icon: PlusCircle,
-      label: t('create'),
+      label: t('navigation.create'),
       href: '/create-listing-choice',
       authRequired: true,
     },
     {
       icon: MessageCircle,
-      label: t('chats'),
+      label: t('navigation.chats'),
       href: '/chat',
       authRequired: true,
       badge: 0, // TODO: добавить реальное количество непрочитанных
     },
     {
       icon: User,
-      label: t('profile'),
+      label: t('navigation.profile'),
       href: mounted && isAuthenticated ? '/profile' : '/auth/login',
     },
   ];
