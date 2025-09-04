@@ -37,6 +37,19 @@ export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const prevCategoryIdRef = useRef<number | undefined>(categoryId);
 
+  // Use refs to store the latest values without causing re-renders
+  const baseFiltersRef = useRef(baseFilters);
+  const categoryFiltersRef = useRef(categoryFilters);
+
+  // Update refs when state changes
+  useEffect(() => {
+    baseFiltersRef.current = baseFilters;
+  }, [baseFilters]);
+
+  useEffect(() => {
+    categoryFiltersRef.current = categoryFilters;
+  }, [categoryFilters]);
+
   useEffect(() => {
     if (prevCategoryIdRef.current !== categoryId && categoryId !== undefined) {
       setIsTransitioning(true);
@@ -51,27 +64,27 @@ export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
   const handleCategoryFiltersChange = useCallback(
     (filters: Record<string, any>) => {
       setCategoryFilters(filters);
-      // Immediately notify parent of filter changes
-      const combinedFilters = { ...baseFilters, ...filters };
+      // Use ref to get latest baseFilters value
+      const combinedFilters = { ...baseFiltersRef.current, ...filters };
       onFiltersChange(combinedFilters);
     },
-    [baseFilters, onFiltersChange]
+    [onFiltersChange]
   );
 
   const handleBaseFiltersChange = useCallback(
     (filters: Record<string, any>) => {
       setBaseFilters(filters);
-      // Immediately notify parent of filter changes
-      const combinedFilters = { ...filters, ...categoryFilters };
+      // Use ref to get latest categoryFilters value
+      const combinedFilters = { ...filters, ...categoryFiltersRef.current };
       onFiltersChange(combinedFilters);
     },
-    [categoryFilters, onFiltersChange]
+    [onFiltersChange]
   );
 
   const handleRemoveFilter = useCallback(
     (key: string) => {
-      const newBaseFilters = { ...baseFilters };
-      const newCategoryFilters = { ...categoryFilters };
+      const newBaseFilters = { ...baseFiltersRef.current };
+      const newCategoryFilters = { ...categoryFiltersRef.current };
 
       delete newBaseFilters[key];
       delete newCategoryFilters[key];
@@ -83,7 +96,7 @@ export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
       const combinedFilters = { ...newBaseFilters, ...newCategoryFilters };
       onFiltersChange(combinedFilters);
     },
-    [baseFilters, categoryFilters, onFiltersChange]
+    [onFiltersChange]
   );
 
   const renderCategoryFilters = () => {
