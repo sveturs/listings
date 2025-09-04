@@ -928,6 +928,53 @@ func processAttributesFromRequest(requestBody map[string]interface{}, listing *m
 			listing.Attributes = attributes
 		}
 	}
+
+	// Обработка вариантов товара
+	if variantsRaw, ok := requestBody["productVariants"]; ok {
+		if variantsSlice, ok := variantsRaw.([]interface{}); ok {
+			var variants []models.MarketplaceListingVariant
+
+			for _, variantRaw := range variantsSlice {
+				if variantMap, ok := variantRaw.(map[string]interface{}); ok {
+					var variant models.MarketplaceListingVariant
+
+					// Обработка основных полей варианта
+					if sku, ok := variantMap["sku"].(string); ok {
+						variant.SKU = sku
+					}
+					if price, ok := variantMap["price"].(float64); ok {
+						variant.Price = &price
+					}
+					if stock, ok := variantMap["stock"].(float64); ok {
+						stockInt := int(stock)
+						variant.Stock = &stockInt
+					}
+					if imageURL, ok := variantMap["image"].(string); ok && imageURL != "" {
+						variant.ImageURL = &imageURL
+					}
+
+					// Обработка атрибутов варианта
+					if attributesRaw, ok := variantMap["attributes"]; ok {
+						if attributesMap, ok := attributesRaw.(map[string]interface{}); ok {
+							variant.Attributes = make(map[string]string)
+							for key, value := range attributesMap {
+								if strValue, ok := value.(string); ok {
+									variant.Attributes[key] = strValue
+								}
+							}
+						}
+					}
+
+					variant.IsActive = true
+					variants = append(variants, variant)
+				}
+			}
+
+			if len(variants) > 0 {
+				listing.Variants = variants
+			}
+		}
+	}
 }
 
 // detectDeviceType определяет тип устройства по User-Agent

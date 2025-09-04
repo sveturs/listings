@@ -94,6 +94,26 @@
     },
     "search": {
       "placeholder": "Поиск товаров и услуг..."
+    },
+    "autocomplete": {
+      "exact_match": "Точное совпадение",
+      "recently_used": "Недавно использовано",
+      "navigate": "навигация",
+      "enter_value": "Введите значение"
+    },
+    "colors": {
+      "popular_colors": "Популярные цвета",
+      "custom_color": "Пользовательский цвет",
+      "clear_selection": "Очистить выбор"
+    },
+    "sizes": {
+      "selected_size": "Выбранный размер",
+      "standard_sizes": "Стандартные размеры",
+      "custom_size": "Пользовательский размер",
+      "custom_placeholder": "Введите размер...",
+      "custom_examples": "Примеры: 42-44, L/M, 38.5",
+      "clothing_hint": "Указаны европейские размеры",
+      "shoe_hint": "Европейская размерная сетка"
     }
   },
   "map": {

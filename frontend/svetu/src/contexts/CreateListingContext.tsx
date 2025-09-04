@@ -10,6 +10,15 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 // import { useListingDraft } from '@/hooks/useListingDraft'; // ВРЕМЕННО ОТКЛЮЧЕНО
 
+export interface ProductVariant {
+  id: string;
+  attributes: Record<string, string>;
+  price?: number;
+  stock?: number;
+  sku?: string;
+  image?: string;
+}
+
 export interface CreateListingState {
   // Базовая информация
   category?: {
@@ -78,8 +87,14 @@ export interface CreateListingState {
     };
   };
 
-  // Атрибуты
+  // Атрибуты (старая система)
   attributes: Record<string, any>;
+
+  // Унифицированные атрибуты (новая система)
+  unifiedAttributes?: Record<number, any>;
+
+  // Варианты товара
+  productVariants?: ProductVariant[];
 
   // Переводы
   translations?: Record<string, Record<string, string>>;
@@ -124,6 +139,8 @@ type CreateListingAction =
   | { type: 'SET_MAIN_IMAGE'; payload: number }
   | { type: 'SET_LOCATION'; payload: CreateListingState['location'] }
   | { type: 'SET_ATTRIBUTES'; payload: Record<string, any> }
+  | { type: 'SET_UNIFIED_ATTRIBUTES'; payload: Record<number, any> }
+  | { type: 'SET_PRODUCT_VARIANTS'; payload: ProductVariant[] }
   | { type: 'SAVE_DRAFT' }
   | { type: 'PUBLISH' }
   | { type: 'RESET' }
@@ -230,6 +247,18 @@ function createListingReducer(
       return {
         ...state,
         attributes: { ...state.attributes, ...action.payload },
+      };
+
+    case 'SET_UNIFIED_ATTRIBUTES':
+      return {
+        ...state,
+        unifiedAttributes: { ...state.unifiedAttributes, ...action.payload },
+      };
+
+    case 'SET_PRODUCT_VARIANTS':
+      return {
+        ...state,
+        productVariants: action.payload,
       };
 
     case 'SAVE_DRAFT':

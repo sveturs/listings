@@ -435,6 +435,134 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, suggestions)
 }
 
+// GetEnhancedSuggestions возвращает расширенные предложения для поиска
+// @Summary Get enhanced search suggestions
+// @Description Returns enhanced suggestions with categories and products
+// @Tags marketplace-search
+// @Accept json
+// @Produce json
+// @Param query query string true "Search query"
+// @Param limit query int false "Number of suggestions" default(10)
+// @Security ApiKeyAuth
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Enhanced suggestions"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Router /api/v1/marketplace/enhanced-suggestions [get]
+func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
+	query := c.Query("query")
+	if query == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.queryRequired")
+	}
+
+	limit := 10
+	if l := c.QueryInt("limit"); l > 0 && l <= 50 {
+		limit = l
+	}
+
+	// Получаем язык из контекста
+	language := c.Query("lang", "ru")
+	
+	// Структура для расширенных предложений
+	enhancedSuggestions := map[string]interface{}{
+		"query": query,
+		"suggestions": []string{},
+		"categories": []map[string]interface{}{},
+		"popular_items": []map[string]interface{}{},
+	}
+
+	// Получаем обычные текстовые предложения
+	textSuggestions, err := h.marketplaceService.GetSuggestions(c.Context(), query, limit)
+	if err == nil && len(textSuggestions) > 0 {
+		enhancedSuggestions["suggestions"] = textSuggestions
+	}
+
+	// Получаем подходящие категории
+	categories, err := h.searchCategories(c.Context(), query, language, 5)
+	if err == nil && len(categories) > 0 {
+		enhancedSuggestions["categories"] = categories
+	}
+
+	// Получаем популярные товары по запросу
+	popularItems, err := h.searchPopularItems(c.Context(), query, language, 3)
+	if err == nil && len(popularItems) > 0 {
+		enhancedSuggestions["popular_items"] = popularItems
+	}
+
+	return utils.SuccessResponse(c, enhancedSuggestions)
+}
+
+// searchCategories ищет подходящие категории для запроса
+func (h *SearchHandler) searchCategories(ctx context.Context, query, language string, limit int) ([]map[string]interface{}, error) {
+	categories := []map[string]interface{}{}
+	
+	// Получаем все категории через сервис маркетплейса
+	allCategories, err := h.marketplaceService.GetCategories(ctx)
+	if err != nil {
+		return categories, err
+	}
+
+	queryLower := strings.ToLower(query)
+	
+	// Фильтруем категории по совпадению с запросом
+	for _, cat := range allCategories {
+		// Проверяем имя категории
+		name := strings.ToLower(cat.Name)
+		if strings.Contains(name, queryLower) {
+			categories = append(categories, map[string]interface{}{
+				"id": cat.ID,
+				"name": cat.Name,
+				"slug": cat.Slug,
+				"icon": cat.Icon,
+				"item_count": cat.ListingCount, // Используем ListingCount вместо ItemCount
+			})
+			
+			if len(categories) >= limit {
+				break
+			}
+		}
+	}
+	
+	return categories, nil
+}
+
+// searchPopularItems ищет популярные товары по запросу
+func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language string, limit int) ([]map[string]interface{}, error) {
+	items := []map[string]interface{}{}
+	
+	// Используем поиск для получения популярных товаров
+	searchParams := &search.ServiceParams{
+		Query:         query,
+		Page:          1,
+		Size:          limit,
+		Sort:          "created_at", // Используем дату создания вместо popularity
+		SortDirection: "desc",
+		Language:      language,
+	}
+	
+	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, searchParams)
+	if err != nil {
+		return items, err
+	}
+	
+	// Форматируем результаты для ответа
+	for _, listing := range results.Items {
+		items = append(items, map[string]interface{}{
+			"id": listing.ID,
+			"title": listing.Title,
+			"price": listing.Price,
+			"currency": "RSD", // Используем фиксированную валюту, так как поля Currency нет в модели
+			"image": func() string {
+				if len(listing.Images) > 0 {
+					return listing.Images[0].PublicURL // Используем PublicURL вместо URL
+				}
+				return ""
+			}(),
+			"location": listing.City,
+		})
+	}
+	
+	return items, nil
+}
+
 // GetCategorySuggestions возвращает предложения категорий
 // @Summary Get category suggestions
 // @Description Returns category suggestions based on query

@@ -2920,6 +2920,52 @@
                 }
             }
         },
+        "/api/v1/admin/attributes/variant-compatible": {
+            "get": {
+                "description": "Returns all attributes that can be used as product variants",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Get variant compatible attributes",
+                "responses": {
+                    "200": {
+                        "description": "List of variant compatible attributes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/categories/keywords/{keyword_id}": {
             "put": {
                 "security": [
@@ -3054,6 +3100,58 @@
                     },
                     "404": {
                         "description": "Keyword not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/categories/variant-attributes": {
+            "put": {
+                "description": "Updates all variant attributes for a category (replaces existing)",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Update category variant attributes",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttributesUpdateRequest"
+                            }
+                        }
+                    },
+                    "description": "Update request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Attributes updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid data",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11149,6 +11247,268 @@
                     },
                     "404": {
                         "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/variant-attributes/mappings": {
+            "get": {
+                "description": "Returns variant attribute mappings for a specific category",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Get category variant mappings",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category variant mappings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.VariantAttributeMapping"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new mapping between variant attribute and category",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Create variant mapping",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.VariantAttributeMappingCreateRequest"
+                            }
+                        }
+                    },
+                    "description": "Mapping data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created mapping",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.VariantAttributeMapping"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/variant-attributes/mappings/{id}": {
+            "delete": {
+                "description": "Deletes a variant attribute mapping",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Delete variant mapping",
+                "parameters": [
+                    {
+                        "description": "Mapping ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mapping deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mapping not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Updates an existing variant attribute mapping",
+                "tags": [
+                    "admin-variant-attributes"
+                ],
+                "summary": "Update variant mapping",
+                "parameters": [
+                    {
+                        "description": "Mapping ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.VariantAttributeMappingUpdateRequest"
+                            }
+                        }
+                    },
+                    "description": "Update data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mapping updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mapping not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -35935,6 +36295,741 @@
                 }
             }
         },
+        "/api/v2/admin/attributes": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create a new unified attribute (Admin only)",
+                "tags": [
+                    "marketplace-attributes-v2-admin"
+                ],
+                "summary": "Create a new attribute",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                            }
+                        }
+                    },
+                    "description": "Attribute data",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created attribute ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/admin/attributes/feature-status": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get current status of feature flags for debugging",
+                "tags": [
+                    "marketplace-attributes-v2-admin"
+                ],
+                "summary": "Get feature flags status for unified attributes",
+                "responses": {
+                    "200": {
+                        "description": "Feature flags status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/admin/attributes/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update an existing unified attribute (Admin only)",
+                "tags": [
+                    "marketplace-attributes-v2-admin"
+                ],
+                "summary": "Update an attribute",
+                "parameters": [
+                    {
+                        "description": "Attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Fields to update",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Attribute updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Attribute not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete a unified attribute (Admin only)",
+                "tags": [
+                    "marketplace-attributes-v2-admin"
+                ],
+                "summary": "Delete an attribute",
+                "parameters": [
+                    {
+                        "description": "Attribute ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Attribute deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Attribute not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/admin/categories/{category_id}/attributes/{attribute_id}": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Attach an attribute to a category with specific settings (Admin only)",
+                "tags": [
+                    "marketplace-attributes-v2-admin"
+                ],
+                "summary": "Attach attribute to category",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Attribute ID",
+                        "name": "attribute_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedCategoryAttribute"
+                            }
+                        }
+                    },
+                    "description": "Attachment settings",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Attribute attached",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/marketplace/categories/{category_id}/attributes": {
+            "get": {
+                "description": "Get all attributes available for a specific category with unified system support",
+                "tags": [
+                    "marketplace-attributes-v2"
+                ],
+                "summary": "Get attributes for a category",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of category attributes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/marketplace/categories/{category_id}/attributes/detailed": {
+            "get": {
+                "description": "Get all attributes with their category-specific settings",
+                "tags": [
+                    "marketplace-attributes-v2"
+                ],
+                "summary": "Get attributes with settings for a category",
+                "parameters": [
+                    {
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of category attributes with settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedCategoryAttribute"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid category ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/marketplace/listings/{listing_id}/attributes": {
+            "get": {
+                "description": "Get all attribute values for a specific listing",
+                "tags": [
+                    "marketplace-attributes-v2"
+                ],
+                "summary": "Get attribute values for a listing",
+                "parameters": [
+                    {
+                        "description": "Listing ID",
+                        "name": "listing_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of attribute values",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttributeValue"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid listing ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Save or update attribute values for a specific listing",
+                "tags": [
+                    "marketplace-attributes-v2"
+                ],
+                "summary": "Save attribute values for a listing",
+                "parameters": [
+                    {
+                        "description": "Listing ID",
+                        "name": "listing_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Attribute values map (attribute_id -> value)",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Values saved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/google": {
             "get": {
                 "description": "Redirects user to Google OAuth2 authorization page",
@@ -36039,6 +37134,58 @@
                                             }
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health/live": {
+            "get": {
+                "description": "Check if the service is alive",
+                "tags": [
+                    "health"
+                ],
+                "summary": "Liveness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_health.HealthStatus"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health/ready": {
+            "get": {
+                "description": "Check if the service is ready to handle requests",
+                "tags": [
+                    "health"
+                ],
+                "summary": "Readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_health.HealthStatus"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_health.HealthStatus"
                                 }
                             }
                         }
@@ -37574,6 +38721,24 @@
                     }
                 }
             },
+            "backend_internal_domain_models.AttributeEntityType": {
+                "type": "string",
+                "enum": [
+                    "listing",
+                    "product",
+                    "product_variant"
+                ],
+                "x-enum-comments": {
+                    "AttributeEntityTypeListing": "Объявление маркетплейса",
+                    "AttributeEntityTypeProduct": "Товар витрины",
+                    "AttributeEntityTypeProductVariant": "Вариант товара"
+                },
+                "x-enum-varnames": [
+                    "AttributeEntityTypeListing",
+                    "AttributeEntityTypeProduct",
+                    "AttributeEntityTypeProductVariant"
+                ]
+            },
             "backend_internal_domain_models.AttributeGroup": {
                 "type": "object",
                 "properties": {
@@ -37643,6 +38808,24 @@
                         }
                     }
                 }
+            },
+            "backend_internal_domain_models.AttributePurpose": {
+                "type": "string",
+                "enum": [
+                    "regular",
+                    "variant",
+                    "both"
+                ],
+                "x-enum-comments": {
+                    "PurposeBoth": "Может использоваться в обоих случаях",
+                    "PurposeRegular": "Обычный атрибут для фильтрации/поиска",
+                    "PurposeVariant": "Вариативный атрибут (влияет на SKU)"
+                },
+                "x-enum-varnames": [
+                    "PurposeRegular",
+                    "PurposeVariant",
+                    "PurposeBoth"
+                ]
             },
             "backend_internal_domain_models.AuditStatistics": {
                 "type": "object",
@@ -38447,6 +39630,23 @@
                     }
                 }
             },
+            "backend_internal_domain_models.CategoryVariantAttributeAssignment": {
+                "type": "object",
+                "required": [
+                    "attribute_id"
+                ],
+                "properties": {
+                    "attribute_id": {
+                        "type": "integer"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    }
+                }
+            },
             "backend_internal_domain_models.CategoryVariantAttributeUpdate": {
                 "type": "object",
                 "properties": {
@@ -38469,6 +39669,24 @@
                         "items": {
                             "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttributeUpdate"
                         }
+                    }
+                }
+            },
+            "backend_internal_domain_models.CategoryVariantAttributesUpdateRequest": {
+                "type": "object",
+                "required": [
+                    "attributes",
+                    "category_id"
+                ],
+                "properties": {
+                    "attributes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.CategoryVariantAttributeAssignment"
+                        }
+                    },
+                    "category_id": {
+                        "type": "integer"
                     }
                 }
             },
@@ -42917,6 +44135,198 @@
                     }
                 }
             },
+            "backend_internal_domain_models.UnifiedAttribute": {
+                "type": "object",
+                "properties": {
+                    "affects_price": {
+                        "type": "boolean"
+                    },
+                    "affects_stock": {
+                        "type": "boolean"
+                    },
+                    "attribute_type": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "is_filterable": {
+                        "type": "boolean"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "is_searchable": {
+                        "type": "boolean"
+                    },
+                    "is_variant_compatible": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "option_translations": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "purpose": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.AttributePurpose"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "translations": {
+                        "description": "Дополнительные поля для удобства работы",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "ui_settings": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "validation_rules": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "backend_internal_domain_models.UnifiedAttributeValue": {
+                "type": "object",
+                "properties": {
+                    "attribute": {
+                        "description": "Связанные объекты для удобства",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                            }
+                        ]
+                    },
+                    "attribute_id": {
+                        "type": "integer"
+                    },
+                    "boolean_value": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "date_value": {
+                        "type": "string"
+                    },
+                    "display_value": {
+                        "description": "Вспомогательные поля",
+                        "type": "string"
+                    },
+                    "entity_id": {
+                        "type": "integer"
+                    },
+                    "entity_type": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.AttributeEntityType"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "json_value": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "numeric_value": {
+                        "type": "number"
+                    },
+                    "text_value": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.UnifiedCategoryAttribute": {
+                "type": "object",
+                "properties": {
+                    "attribute": {
+                        "description": "Связанные объекты",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                            }
+                        ]
+                    },
+                    "attribute_id": {
+                        "type": "integer"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.MarketplaceCategory"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "category_specific_options": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_enabled": {
+                        "type": "boolean"
+                    },
+                    "is_filter": {
+                        "type": "boolean"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    }
+                }
+            },
             "backend_internal_domain_models.UnifiedSuggestion": {
                 "type": "object",
                 "properties": {
@@ -43747,6 +45157,75 @@
                     },
                     "module": {
                         "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.VariantAttributeMapping": {
+                "type": "object",
+                "properties": {
+                    "attribute": {
+                        "description": "Связанные объекты",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.UnifiedAttribute"
+                            }
+                        ]
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.MarketplaceCategory"
+                    },
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
+                    },
+                    "variant_attribute_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.VariantAttributeMappingCreateRequest": {
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "variant_attribute_id"
+                ],
+                "properties": {
+                    "category_id": {
+                        "type": "integer"
+                    },
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
+                    },
+                    "variant_attribute_id": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.VariantAttributeMappingUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "is_required": {
+                        "type": "boolean"
+                    },
+                    "sort_order": {
+                        "type": "integer"
                     }
                 }
             },
@@ -47664,6 +49143,23 @@
                         "type": "string"
                     },
                     "picture_url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "internal_proj_health.HealthStatus": {
+                "type": "object",
+                "properties": {
+                    "checks": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "timestamp": {
                         "type": "string"
                     }
                 }

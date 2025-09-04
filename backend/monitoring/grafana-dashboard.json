@@ -1,0 +1,178 @@
+{
+  "dashboard": {
+    "title": "Sve Tu Marketplace Monitoring",
+    "uid": "svetu-monitoring",
+    "version": 1,
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "rate(http_requests_total[5m])",
+          "legendFormat": "{{method}} {{endpoint}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Request Duration (95th percentile)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+          "legendFormat": "{{method}} {{endpoint}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Requests In Flight",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [{
+          "expr": "http_requests_in_flight",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Feature Flags Status",
+        "type": "table",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [{
+          "expr": "feature_flag_status",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Database Connections",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [{
+          "expr": "database_connections_active",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [{
+          "expr": "rate(cache_operations_total{result=\"hit\"}[5m]) / rate(cache_operations_total[5m]) * 100",
+          "legendFormat": "{{operation}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Unified Attributes Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [{
+          "expr": "rate(unified_attributes_usage_total[5m])",
+          "legendFormat": "{{version}} - {{operation}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Dual Write Operations",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [{
+          "expr": "rate(dual_write_operations_total[5m])",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Error Rate by Endpoint",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [{
+          "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+          "legendFormat": "{{method}} {{endpoint}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Redis Operations",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [{
+          "expr": "rate(redis_operations_total[5m])",
+          "legendFormat": "{{operation}} - {{result}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Database Query Duration",
+        "type": "heatmap",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+        "targets": [{
+          "expr": "rate(database_query_duration_seconds_bucket[5m])",
+          "format": "heatmap",
+          "legendFormat": "{{query_type}}",
+          "refId": "A"
+        }]
+      },
+      {
+        "title": "Service Health Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 36},
+        "targets": [
+          {
+            "expr": "up{job=\"svetu-backend\"}",
+            "legendFormat": "Backend",
+            "refId": "A"
+          },
+          {
+            "expr": "up{job=\"postgres\"}",
+            "legendFormat": "PostgreSQL",
+            "refId": "B"
+          },
+          {
+            "expr": "up{job=\"redis\"}",
+            "legendFormat": "Redis",
+            "refId": "C"
+          },
+          {
+            "expr": "up{job=\"opensearch\"}",
+            "legendFormat": "OpenSearch",
+            "refId": "D"
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "interval",
+          "type": "interval",
+          "options": [
+            {"text": "1m", "value": "1m"},
+            {"text": "5m", "value": "5m"},
+            {"text": "10m", "value": "10m"},
+            {"text": "30m", "value": "30m"},
+            {"text": "1h", "value": "1h"}
+          ],
+          "current": {
+            "text": "5m",
+            "value": "5m"
+          }
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(feature_flag_status[1h]) > 0",
+          "name": "Feature Flag Changes",
+          "tagKeys": "flag_name",
+          "titleFormat": "Feature flag changed"
+        }
+      ]
+    }
+  }
+}

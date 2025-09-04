@@ -1,0 +1,69 @@
+groups:
+  - name: unified_attributes_alerts
+    rules:
+      # API Performance Alerts
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="backend-api"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile latency is {{ $value }}s, above 50ms threshold"
+
+      - alert: CriticalAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="backend-api"}[5m])) > 0.10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical API latency detected"
+          description: "95th percentile latency is {{ $value }}s, above 100ms threshold"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="backend-api",status=~"5.."}[5m]) / rate(http_requests_total{job="backend-api"}[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }}, above 1% threshold"
+
+      # Cache Performance Alerts
+      - alert: LowCacheHitRate
+        expr: redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.70
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}, below 70% threshold"
+
+      # Database Performance Alerts
+      - alert: SlowDatabaseQueries
+        expr: pg_stat_activity_max_tx_duration > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Longest running query is {{ $value }}s, above 30s threshold"
+
+      # System Resource Alerts
+      - alert: HighMemoryUsage
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}, above 90%"
+
+      - alert: ServiceDown
+        expr: up{job=~"backend-api|frontend|postgresql|redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} service on {{ $labels.instance }} is down"

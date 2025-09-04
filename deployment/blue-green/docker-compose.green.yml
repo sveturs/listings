@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  backend-green:
+    image: svetu.rs/backend:${GREEN_VERSION:-v2.0.0}
+    container_name: backend-green
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - OPENSEARCH_URL=${OPENSEARCH_URL}
+      - USE_UNIFIED_ATTRIBUTES=true  # New unified system
+      - UNIFIED_ATTRIBUTES_FALLBACK=true
+      - DUAL_WRITE_ATTRIBUTES=true
+      - UNIFIED_ATTRIBUTES_PERCENT=${CANARY_PERCENT:-0}
+      - PORT=3000
+      - COLOR=green
+    ports:
+      - "3003:3000"  # Green on 3003
+    networks:
+      - svetu-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-green.rule=Host(`api-green.svetu.rs`)"
+      - "traefik.http.services.backend-green.loadbalancer.server.port=3000"
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=3000"
+      - "prometheus.io/path=/metrics"
+
+  frontend-green:
+    image: svetu.rs/frontend:${GREEN_VERSION:-v2.0.0}
+    container_name: frontend-green
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api-green.svetu.rs
+      - NEXT_PUBLIC_USE_UNIFIED_ATTRIBUTES=true
+      - NEXT_PUBLIC_UNIFIED_ATTRIBUTES_PERCENT=${CANARY_PERCENT:-0}
+      - PORT=3001
+      - COLOR=green
+    ports:
+      - "3004:3001"  # Green frontend on 3004
+    networks:
+      - svetu-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-green.rule=Host(`app-green.svetu.rs`)"
+      - "traefik.http.services.frontend-green.loadbalancer.server.port=3001"
+
+networks:
+  svetu-network:
+    external: true
+
+volumes:
+  backend-logs-green:
+    driver: local
+  frontend-logs-green:
+    driver: local

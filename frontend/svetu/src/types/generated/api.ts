@@ -2320,6 +2320,56 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/attributes/variant-compatible': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get variant compatible attributes
+     * @description Returns all attributes that can be used as product variants
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of variant compatible attributes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UnifiedAttribute'][];
+            };
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/categories/{category_id}/keywords': {
     parameters: {
       query?: never;
@@ -2750,6 +2800,68 @@ export interface paths {
         };
       };
     };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/categories/variant-attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update category variant attributes
+     * @description Updates all variant attributes for a category (replaces existing)
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Update request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.CategoryVariantAttributesUpdateRequest'];
+        };
+      };
+      responses: {
+        /** @description Attributes updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -9617,6 +9729,243 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/variant-attributes/mappings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get category variant mappings
+     * @description Returns variant attribute mappings for a specific category
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Category variant mappings */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.VariantAttributeMapping'][];
+            };
+          };
+        };
+        /** @description Invalid category ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create variant mapping
+     * @description Creates a new mapping between variant attribute and category
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Mapping data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.VariantAttributeMappingCreateRequest'];
+        };
+      };
+      responses: {
+        /** @description Created mapping */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.VariantAttributeMapping'];
+            };
+          };
+        };
+        /** @description Invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/variant-attributes/mappings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete variant mapping
+     * @description Deletes a variant attribute mapping
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Mapping ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Mapping deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Mapping not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    /**
+     * Update variant mapping
+     * @description Updates an existing variant attribute mapping
+     */
+    patch: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Mapping ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.VariantAttributeMappingUpdateRequest'];
+        };
+      };
+      responses: {
+        /** @description Mapping updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid data */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Mapping not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     trace?: never;
   };
   '/api/v1/analytics/event': {
@@ -31411,6 +31760,635 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/admin/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create a new attribute
+     * @description Create a new unified attribute (Admin only)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Attribute data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+        };
+      };
+      responses: {
+        /** @description Created attribute ID */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: number;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/admin/attributes/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update an attribute
+     * @description Update an existing unified attribute (Admin only)
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Attribute ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Fields to update */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Attribute updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Attribute not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete an attribute
+     * @description Delete a unified attribute (Admin only)
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Attribute ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Attribute deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Attribute not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/admin/attributes/feature-status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get feature flags status for unified attributes
+     * @description Get current status of feature flags for debugging
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Feature flags status */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/admin/categories/{category_id}/attributes/{attribute_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Attach attribute to category
+     * @description Attach an attribute to a category with specific settings (Admin only)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+          /** @description Attribute ID */
+          attribute_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Attachment settings */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.UnifiedCategoryAttribute'];
+        };
+      };
+      responses: {
+        /** @description Attribute attached */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/marketplace/categories/{category_id}/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get attributes for a category
+     * @description Get all attributes available for a specific category with unified system support
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of category attributes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UnifiedAttribute'][];
+            };
+          };
+        };
+        /** @description Invalid category ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/marketplace/categories/{category_id}/attributes/detailed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get attributes with settings for a category
+     * @description Get all attributes with their category-specific settings
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of category attributes with settings */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UnifiedCategoryAttribute'][];
+            };
+          };
+        };
+        /** @description Invalid category ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/marketplace/listings/{listing_id}/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get attribute values for a listing
+     * @description Get all attribute values for a specific listing
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Listing ID */
+          listing_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of attribute values */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'][];
+            };
+          };
+        };
+        /** @description Invalid listing ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Save attribute values for a listing
+     * @description Save or update attribute values for a specific listing
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Listing ID */
+          listing_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Attribute values map (attribute_id -> value) */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      responses: {
+        /** @description Values saved successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/auth/google': {
     parameters: {
       query?: never;
@@ -31533,6 +32511,93 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
               data?: components['schemas']['internal_proj_users_handler.SessionResponse'];
             };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/health/live': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Liveness probe
+     * @description Check if the service is alive
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_health.HealthStatus'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/health/ready': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Readiness probe
+     * @description Check if the service is ready to handle requests
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_health.HealthStatus'];
+          };
+        };
+        /** @description Service Unavailable */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_health.HealthStatus'];
           };
         };
       };
@@ -32267,6 +33332,11 @@ export interface components {
       is_active?: boolean;
       sort_order?: number;
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.AttributeEntityType':
+      | 'listing'
+      | 'product'
+      | 'product_variant';
     'backend_internal_domain_models.AttributeGroup': {
       created_at?: string;
       description?: string;
@@ -32290,6 +33360,11 @@ export interface components {
       sort_order?: number;
       visibility_condition?: number[];
     };
+    /** @enum {string} */
+    'backend_internal_domain_models.AttributePurpose':
+      | 'regular'
+      | 'variant'
+      | 'both';
     'backend_internal_domain_models.AuditStatistics': {
       actions_by_type?: {
         [key: string]: number;
@@ -32541,6 +33616,11 @@ export interface components {
       variant_attribute?: components['schemas']['backend_internal_domain_models.ProductVariantAttribute'];
       variant_attribute_name?: string;
     };
+    'backend_internal_domain_models.CategoryVariantAttributeAssignment': {
+      attribute_id: number;
+      is_required?: boolean;
+      sort_order?: number;
+    };
     'backend_internal_domain_models.CategoryVariantAttributeUpdate': {
       is_required?: boolean;
       sort_order?: number;
@@ -32548,6 +33628,10 @@ export interface components {
     };
     'backend_internal_domain_models.CategoryVariantAttributesRequest': {
       variant_attributes?: components['schemas']['backend_internal_domain_models.CategoryVariantAttributeUpdate'][];
+    };
+    'backend_internal_domain_models.CategoryVariantAttributesUpdateRequest': {
+      attributes: components['schemas']['backend_internal_domain_models.CategoryVariantAttributeAssignment'][];
+      category_id: number;
     };
     'backend_internal_domain_models.ChatAttachment': {
       /** @description MIME тип */
@@ -34086,6 +35170,69 @@ export interface components {
       translation_id?: number;
       version?: number;
     };
+    'backend_internal_domain_models.UnifiedAttribute': {
+      affects_price?: boolean;
+      affects_stock?: boolean;
+      attribute_type?: string;
+      code?: string;
+      created_at?: string;
+      display_name?: string;
+      id?: number;
+      is_active?: boolean;
+      is_filterable?: boolean;
+      is_required?: boolean;
+      is_searchable?: boolean;
+      is_variant_compatible?: boolean;
+      name?: string;
+      option_translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
+      options?: number[];
+      purpose?: components['schemas']['backend_internal_domain_models.AttributePurpose'];
+      sort_order?: number;
+      /** @description Дополнительные поля для удобства работы */
+      translations?: {
+        [key: string]: string;
+      };
+      ui_settings?: number[];
+      updated_at?: string;
+      validation_rules?: number[];
+    };
+    'backend_internal_domain_models.UnifiedAttributeValue': {
+      /** @description Связанные объекты для удобства */
+      attribute?: components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+      attribute_id?: number;
+      boolean_value?: boolean;
+      created_at?: string;
+      date_value?: string;
+      /** @description Вспомогательные поля */
+      display_value?: string;
+      entity_id?: number;
+      entity_type?: components['schemas']['backend_internal_domain_models.AttributeEntityType'];
+      id?: number;
+      json_value?: number[];
+      numeric_value?: number;
+      text_value?: string;
+      unit?: string;
+      updated_at?: string;
+    };
+    'backend_internal_domain_models.UnifiedCategoryAttribute': {
+      /** @description Связанные объекты */
+      attribute?: components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+      attribute_id?: number;
+      category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+      category_id?: number;
+      category_specific_options?: number[];
+      created_at?: string;
+      id?: number;
+      is_enabled?: boolean;
+      is_filter?: boolean;
+      is_required?: boolean;
+      sort_order?: number;
+      updated_at?: string;
+    };
     'backend_internal_domain_models.UnifiedSuggestion': {
       /** @description ID категории для type="category" */
       category_id?: number;
@@ -34374,6 +35521,28 @@ export interface components {
       issues?: components['schemas']['backend_internal_domain_models.ValidationIssue'][];
       key?: string;
       module?: string;
+    };
+    'backend_internal_domain_models.VariantAttributeMapping': {
+      /** @description Связанные объекты */
+      attribute?: components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+      category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+      category_id?: number;
+      created_at?: string;
+      id?: number;
+      is_required?: boolean;
+      sort_order?: number;
+      updated_at?: string;
+      variant_attribute_id?: number;
+    };
+    'backend_internal_domain_models.VariantAttributeMappingCreateRequest': {
+      category_id: number;
+      is_required?: boolean;
+      sort_order?: number;
+      variant_attribute_id: number;
+    };
+    'backend_internal_domain_models.VariantAttributeMappingUpdateRequest': {
+      is_required?: boolean;
+      sort_order?: number;
     };
     'backend_internal_domain_models.VariantSettings': {
       /** @description continue selling when out of stock */
@@ -35751,6 +36920,13 @@ export interface components {
       is_verified?: boolean;
       name?: string;
       picture_url?: string;
+    };
+    'internal_proj_health.HealthStatus': {
+      checks?: {
+        [key: string]: string;
+      };
+      status?: string;
+      timestamp?: string;
     };
     'internal_proj_marketplace_handler.AddMessageRequest': {
       content: string;

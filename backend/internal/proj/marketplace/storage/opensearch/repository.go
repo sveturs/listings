@@ -111,7 +111,7 @@ func (r *Repository) getBoostWeight(weightName string, defaultValue float64) flo
 	case "PerWordRoomsText":
 		return r.boostWeights.PerWordRoomsText
 	case "AutomotiveAttributePriority":
-		return r.boostWeights.AutomotiveAttributePriority
+		return defaultValue // Automotive system removed
 	case "SynonymBoost":
 		return r.boostWeights.SynonymBoost
 	default:

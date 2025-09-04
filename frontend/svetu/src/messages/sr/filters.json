@@ -1,0 +1,39 @@
+{
+  "title": "Филтери",
+  "search_placeholder": "Пронађи филтер...",
+  "clear_all": "Обриши све",
+  "show_advanced": "Прикажи све",
+  "hide_advanced": "Сакриј",
+  "filters_applied": "Примењено филтера: {count}",
+  "no_results": "Нема резултата",
+  "results_count": "{count} резултата",
+  "groups": {
+    "popular": "Популарни",
+    "basic": "Основно",
+    "price": "Цена",
+    "technical": "Технички",
+    "condition": "Стање",
+    "location": "Локација",
+    "other": "Остало"
+  },
+  "smart_suggestions": {
+    "title": "Препоручени филтери",
+    "apply": "Примени",
+    "most_used": "Најчешће коришћен",
+    "recommended": "Препоручено за ову категорију",
+    "popular_choice": "Популаран избор"
+  },
+  "range": {
+    "from": "Од",
+    "to": "До",
+    "any": "Било која"
+  },
+  "attributes": {
+    "price": "Цена",
+    "year": "Година",
+    "brand": "Бренд",
+    "condition": "Стање",
+    "location": "Локација",
+    "type": "Тип"
+  }
+}

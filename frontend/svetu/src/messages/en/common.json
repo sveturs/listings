@@ -94,6 +94,26 @@
     },
     "search": {
       "placeholder": "Search products and services..."
+    },
+    "autocomplete": {
+      "exact_match": "Exact match",
+      "recently_used": "Recently used",
+      "navigate": "navigate",
+      "enter_value": "Enter value"
+    },
+    "colors": {
+      "popular_colors": "Popular colors",
+      "custom_color": "Custom color",
+      "clear_selection": "Clear selection"
+    },
+    "sizes": {
+      "selected_size": "Selected size",
+      "standard_sizes": "Standard sizes",
+      "custom_size": "Custom size",
+      "custom_placeholder": "Enter size...",
+      "custom_examples": "Examples: 42-44, L/M, 38.5",
+      "clothing_hint": "European sizing",
+      "shoe_hint": "European size chart"
     }
   },
   "map": {

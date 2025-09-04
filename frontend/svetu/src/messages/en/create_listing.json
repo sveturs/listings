@@ -362,5 +362,23 @@
 
   "cars": {
     "selectCar": "Select car"
+  },
+
+  "variants": {
+    "title": "Product Variants",
+    "description": "Create different variants of your product (size, color, etc.)",
+    "no_variant_attributes": "No variant attributes available for this category",
+    "select_attributes": "Select Variant Attributes",
+    "select_attributes_description": "Choose which attributes will vary between product versions",
+    "attribute_values": "Attribute Values",
+    "attribute_values_description": "Add possible values for each variant attribute",
+    "add_value": "Add value",
+    "generated_variants": "Generated Variants",
+    "apply_base_price": "Apply Base Price",
+    "price": "Price",
+    "stock": "Stock",
+    "variants": "variants",
+    "tip": "Pro Tip",
+    "tip_description": "You can edit SKU, price and stock for each variant individually"
   }
 }

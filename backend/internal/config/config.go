@@ -44,6 +44,7 @@ type Config struct {
 	SearchWeights         *SearchWeights    `yaml:"search_weights"`
 	Redis                 RedisConfig       `yaml:"redis"`
 	MigrationsOnAPI       string            `yaml:"migrations_on_api"` // off, schema, full
+	FeatureFlags          *FeatureFlags     `yaml:"feature_flags"`
 }
 
 type FileStorageConfig struct {
@@ -445,6 +446,7 @@ func NewConfig() (*Config, error) {
 		SearchWeights:         searchWeights,
 		Redis:                 redisConfig,
 		MigrationsOnAPI:       migrationsOnAPI,
+		FeatureFlags:          LoadFeatureFlags(),
 	}, nil
 }
 
