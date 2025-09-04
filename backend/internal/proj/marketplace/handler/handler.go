@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
+	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
@@ -45,7 +46,9 @@ type Handler struct {
 	Orders                 *OrderHandler
 	CategoryDetector       *CategoryDetectorHandler
 	VariantAttributes      *VariantAttributesHandler
+	VariantMappings        *VariantMappingsHandler
 	Cars                   *CarsHandler
+	UnifiedAttributes      *UnifiedAttributesHandler
 	service                globalService.ServicesInterface
 }
 
@@ -82,6 +85,12 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 		adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler, keywordRepo)
 		logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler")
+
+		// Создаем UnifiedAttributesHandler
+		// Получаем feature flags из конфигурации
+		featureFlags := config.LoadFeatureFlags()
+		unifiedAttrStorage := postgres.NewUnifiedAttributeStorage(postgresDB.GetPool(), featureFlags.UnifiedAttributesFallback)
+		unifiedAttributesHandler := NewUnifiedAttributesHandler(unifiedAttrStorage, featureFlags)
 
 		// Создаём CategoryDetector и CategoryDetectorHandler
 		var categoryDetectorHandler *CategoryDetectorHandler
@@ -135,7 +144,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			Orders:                 orderHandler,
 			CategoryDetector:       categoryDetectorHandler,
 			VariantAttributes:      NewVariantAttributesHandler(services),
+			VariantMappings:        NewVariantMappingsHandler(services, unifiedAttrStorage, featureFlags),
 			Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
+			UnifiedAttributes:      unifiedAttributesHandler,
 			service:                services,
 		}
 	}
@@ -144,6 +155,9 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 	// В fallback случае создаем nil keywordRepo - это временное решение
 	adminCategoriesHandler := NewAdminCategoriesHandler(categoriesHandler, nil)
 	logger.Info().Interface("adminCategoriesHandler", adminCategoriesHandler).Msg("Created AdminCategoriesHandler (fallback)")
+
+	// В fallback случае все равно создаем UnifiedAttributesHandler
+	// (используем nil для storage - будет работать только fallback)
 
 	return &Handler{
 		Listings:               NewListingsHandler(services),
@@ -163,6 +177,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		Orders:                 nil,
 		CategoryDetector:       nil,
 		Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
+		UnifiedAttributes:      nil, // В fallback случае не создаем
 		service:                services,
 	}
 }
@@ -180,6 +195,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/suggestions", h.Search.GetSuggestions)         // маршрут автодополнения
 	marketplace.Get("/search/autocomplete", h.Search.GetSuggestions) // алиас для совместимости с фронтендом
 	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
+	marketplace.Get("/enhanced-suggestions", h.Search.GetEnhancedSuggestions) // улучшенные предложения
 	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
@@ -241,6 +257,45 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Вариативные атрибуты
 	marketplace.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
 	marketplace.Get("/categories/:slug/variant-attributes", h.VariantAttributes.GetCategoryVariantAttributes)
+
+	// V2 API с унифицированными атрибутами (если включен feature flag)
+	if h.UnifiedAttributes != nil && h.service.Config().FeatureFlags != nil && h.service.Config().FeatureFlags.UseUnifiedAttributes {
+		logger.Info().Msg("Registering v2 unified attributes routes")
+
+		// Создаем middleware для проверки feature flags
+		featureFlagsMiddleware := middleware.NewFeatureFlagsMiddleware(h.service.Config().FeatureFlags)
+
+		// V2 API группа с проверкой feature flags
+		v2 := app.Group("/api/v2")
+		v2Marketplace := v2.Group("/marketplace", featureFlagsMiddleware.CheckUnifiedAttributes())
+
+		// Публичные эндпоинты v2
+		v2Marketplace.Get("/categories/:category_id/attributes", h.UnifiedAttributes.GetCategoryAttributes)
+		v2Marketplace.Get("/listings/:listing_id/attributes", h.UnifiedAttributes.GetListingAttributeValues)
+		v2Marketplace.Get("/categories/:category_id/attribute-ranges", h.UnifiedAttributes.GetAttributeRanges)
+
+		// Защищенные эндпоинты v2 (требуют авторизации)
+		v2Protected := v2.Group("/marketplace", mw.AuthRequiredJWT, featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Protected.Post("/listings/:listing_id/attributes", h.UnifiedAttributes.SaveListingAttributeValues)
+		v2Protected.Put("/listings/:listing_id/attributes", h.UnifiedAttributes.UpdateListingAttributeValues)
+
+		// Административные эндпоинты v2
+		v2Admin := app.Group("/api/v2/admin", mw.AuthRequiredJWT, mw.AdminRequired, featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Admin.Post("/attributes", h.UnifiedAttributes.CreateAttribute)
+		v2Admin.Put("/attributes/:attribute_id", h.UnifiedAttributes.UpdateAttribute)
+		v2Admin.Delete("/attributes/:attribute_id", h.UnifiedAttributes.DeleteAttribute)
+		v2Admin.Post("/categories/:category_id/attributes", h.UnifiedAttributes.AttachAttributeToCategory)
+		v2Admin.Delete("/categories/:category_id/attributes/:attribute_id", h.UnifiedAttributes.DetachAttributeFromCategory)
+		v2Admin.Put("/categories/:category_id/attributes/:attribute_id", h.UnifiedAttributes.UpdateCategoryAttribute)
+
+		// Миграция данных (только для админов)
+		v2Admin.Post("/attributes/migrate", h.UnifiedAttributes.MigrateFromLegacy)
+		v2Admin.Get("/attributes/migration-status", h.UnifiedAttributes.GetMigrationStatus)
+
+		logger.Info().Msg("V2 unified attributes routes registered successfully")
+	} else {
+		logger.Info().Msg("V2 unified attributes routes not registered (feature disabled or handler nil)")
+	}
 
 	// Обновлено: маршруты API переводов используют обработчик переводов
 	translation := app.Group("/api/v1/translation")
@@ -339,6 +394,16 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Маршруты для управления связями вариативных атрибутов
 	adminRoutes.Get("/variant-attributes/:id/mappings", h.AdminVariantAttributes.GetVariantAttributeMappings)
 	adminRoutes.Put("/variant-attributes/:id/mappings", h.AdminVariantAttributes.UpdateVariantAttributeMappings)
+
+	// Новые маршруты для управления вариативными атрибутами через единый интерфейс
+	if h.VariantMappings != nil {
+		adminRoutes.Get("/attributes/variant-compatible", h.VariantMappings.GetVariantCompatibleAttributes)
+		adminRoutes.Get("/variant-attributes/mappings", h.VariantMappings.GetCategoryVariantMappings)
+		adminRoutes.Post("/variant-attributes/mappings", h.VariantMappings.CreateVariantMapping)
+		adminRoutes.Patch("/variant-attributes/mappings/:id", h.VariantMappings.UpdateVariantMapping)
+		adminRoutes.Delete("/variant-attributes/mappings/:id", h.VariantMappings.DeleteVariantMapping)
+		adminRoutes.Put("/categories/variant-attributes", h.VariantMappings.UpdateCategoryVariantAttributes)
+	}
 
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)

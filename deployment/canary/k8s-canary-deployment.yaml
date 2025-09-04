@@ -1,0 +1,391 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    name: production
+    environment: production
+
+---
+# Blue Deployment (Current/Stable)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-blue
+  namespace: production
+  labels:
+    app: backend
+    version: blue
+    component: api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: backend
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: blue
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: backend
+        image: svetu.rs/backend:v1.0.0
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: USE_UNIFIED_ATTRIBUTES
+          value: "false"
+        - name: COLOR
+          value: "blue"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secrets
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secrets
+              key: jwt-secret
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+---
+# Green Deployment (New/Canary)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-green
+  namespace: production
+  labels:
+    app: backend
+    version: green
+    component: api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: backend
+      version: green
+  template:
+    metadata:
+      labels:
+        app: backend
+        version: green
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: backend
+        image: svetu.rs/backend:v2.0.0
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: USE_UNIFIED_ATTRIBUTES
+          value: "true"
+        - name: UNIFIED_ATTRIBUTES_FALLBACK
+          value: "true"
+        - name: DUAL_WRITE_ATTRIBUTES
+          value: "true"
+        - name: UNIFIED_ATTRIBUTES_PERCENT
+          value: "0"
+        - name: COLOR
+          value: "green"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secrets
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secrets
+              key: jwt-secret
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+---
+# Blue Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-blue
+  namespace: production
+  labels:
+    app: backend
+    version: blue
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+    version: blue
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+
+---
+# Green Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-green
+  namespace: production
+  labels:
+    app: backend
+    version: green
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+    version: green
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+
+---
+# Virtual Service for Traffic Management (Istio)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: backend-canary
+  namespace: production
+spec:
+  hosts:
+  - api.svetu.rs
+  http:
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: backend-green
+        port:
+          number: 3000
+      weight: 100
+  - route:
+    - destination:
+        host: backend-blue
+        port:
+          number: 3000
+      weight: 100  # Start with 100% blue
+    - destination:
+        host: backend-green
+        port:
+          number: 3000
+      weight: 0    # 0% green initially
+
+---
+# Destination Rule for Load Balancing
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: backend-destination
+  namespace: production
+spec:
+  host: backend
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 100
+        maxRequestsPerConnection: 1
+    loadBalancer:
+      simple: LEAST_REQUEST
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+  subsets:
+  - name: blue
+    labels:
+      version: blue
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+  - name: green
+    labels:
+      version: green
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+
+---
+# HorizontalPodAutoscaler for Blue
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-blue-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-blue
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# HorizontalPodAutoscaler for Green
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-green-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-green
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# PodDisruptionBudget for Blue
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-blue-pdb
+  namespace: production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: backend
+      version: blue
+
+---
+# PodDisruptionBudget for Green
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-green-pdb
+  namespace: production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: backend
+      version: green
+
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend-monitor
+  namespace: production
+  labels:
+    app: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s

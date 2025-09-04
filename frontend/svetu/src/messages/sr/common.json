@@ -94,6 +94,26 @@
     },
     "search": {
       "placeholder": "Pretražite proizvode i usluge..."
+    },
+    "autocomplete": {
+      "exact_match": "Тачно покривање",
+      "recently_used": "Недавно коришћено",
+      "navigate": "навигација",
+      "enter_value": "Унесите вредност"
+    },
+    "colors": {
+      "popular_colors": "Популарне боје",
+      "custom_color": "Прилагођена боја",
+      "clear_selection": "Обриши избор"
+    },
+    "sizes": {
+      "selected_size": "Одабрана величина",
+      "standard_sizes": "Стандардне величине",
+      "custom_size": "Прилагођена величина",
+      "custom_placeholder": "Унесите величину...",
+      "custom_examples": "Примери: 42-44, L/M, 38.5",
+      "clothing_hint": "Европске величине",
+      "shoe_hint": "Европска табела величина"
     }
   },
   "map": {

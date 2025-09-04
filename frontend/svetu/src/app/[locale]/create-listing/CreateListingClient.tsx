@@ -9,7 +9,10 @@ import CategorySelectionStep from '@/components/create-listing/steps/CategorySel
 import BasicInfoStep from '@/components/create-listing/steps/BasicInfoStep';
 import TrustSetupStep from '@/components/create-listing/steps/TrustSetupStep';
 import AttributesStep from '@/components/create-listing/steps/AttributesStep';
+import UnifiedAttributesStep from '@/components/create-listing/steps/UnifiedAttributesStep';
+import VariantsStep from '@/components/create-listing/steps/VariantsStep';
 import PhotosStep from '@/components/create-listing/steps/PhotosStep';
+import { isFeatureEnabled } from '@/config/featureFlags';
 import LocationStep from '@/components/create-listing/steps/LocationStep';
 import PaymentDeliveryStep from '@/components/create-listing/steps/PaymentDeliveryStep';
 import PreviewPublishStep from '@/components/create-listing/steps/PreviewPublishStep';
@@ -24,14 +27,18 @@ import { toast } from '@/utils/toast';
 import { PageTransition } from '@/components/ui/PageTransition';
 
 const steps = [
-  { id: 'category', label: 'create_listing.steps.category' },
-  { id: 'basic_info', label: 'create_listing.steps.basic_info' },
-  { id: 'trust_setup', label: 'create_listing.steps.trust_setup' }, // Система доверия
-  { id: 'attributes', label: 'create_listing.steps.attributes' },
-  { id: 'photos', label: 'create_listing.steps.photos' },
-  { id: 'location', label: 'create_listing.steps.location' },
-  { id: 'payment_delivery', label: 'create_listing.steps.payment_delivery' }, // Лична предаја + наложенный платеж
-  { id: 'preview', label: 'create_listing.steps.preview' },
+  { id: 'category', label: 'misc.create_listing.steps.category' },
+  { id: 'basic_info', label: 'misc.create_listing.steps.basic_info' },
+  { id: 'trust_setup', label: 'misc.create_listing.steps.trust_setup' }, // Система доверия
+  { id: 'attributes', label: 'misc.create_listing.steps.attributes' },
+  { id: 'variants', label: 'misc.create_listing.steps.variants' }, // Варианты товара
+  { id: 'photos', label: 'misc.create_listing.steps.photos' },
+  { id: 'location', label: 'misc.create_listing.steps.location' },
+  {
+    id: 'payment_delivery',
+    label: 'misc.create_listing.steps.payment_delivery',
+  }, // Лична предаја + наложенный платеж
+  { id: 'preview', label: 'misc.create_listing.steps.preview' },
 ];
 
 export default function CreateListingClient() {
@@ -102,37 +109,48 @@ export default function CreateListingClient() {
           />
         );
       case 3:
+        // Используем новую унифицированную систему атрибутов если feature flag включен
+        const AttributeComponent = isFeatureEnabled('useUnifiedAttributes')
+          ? UnifiedAttributesStep
+          : AttributesStep;
         return (
-          <AttributesStep
+          <AttributeComponent
             onNext={() => handleStepChange(4)}
             onBack={() => handleStepChange(2)}
           />
         );
       case 4:
         return (
-          <PhotosStep
+          <VariantsStep
             onNext={() => handleStepChange(5)}
             onBack={() => handleStepChange(3)}
           />
         );
       case 5:
         return (
-          <LocationStep
+          <PhotosStep
             onNext={() => handleStepChange(6)}
             onBack={() => handleStepChange(4)}
           />
         );
       case 6:
         return (
-          <PaymentDeliveryStep
+          <LocationStep
             onNext={() => handleStepChange(7)}
             onBack={() => handleStepChange(5)}
           />
         );
       case 7:
         return (
-          <PreviewPublishStep
+          <PaymentDeliveryStep
+            onNext={() => handleStepChange(8)}
             onBack={() => handleStepChange(6)}
+          />
+        );
+      case 8:
+        return (
+          <PreviewPublishStep
+            onBack={() => handleStepChange(7)}
             onComplete={handleComplete}
           />
         );

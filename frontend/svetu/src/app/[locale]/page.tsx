@@ -9,7 +9,7 @@ export default async function Home({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations('marketplace.home');
+  const t = await getTranslations('marketplace.homeSection');
 
   // Проверяем feature flags
   const _paymentsEnabled = configManager.isFeatureEnabled('enablePayments');

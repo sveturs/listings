@@ -416,6 +416,11 @@ func (db *Database) CountActiveUserTokens(ctx context.Context, userID int) (int,
 	return db.usersDB.CountActiveUserTokens(ctx, userID)
 }
 
+// GetSQLDB returns the raw sql.DB connection
+func (db *Database) GetSQLDB() *sql.DB {
+	return db.db
+}
+
 func (db *Database) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	query := `
         SELECT user_id
@@ -1720,4 +1725,119 @@ func (db *Database) QueryRowContext(ctx context.Context, query string, args ...i
 // ExecContext выполняет SQL запрос с контекстом без возврата результата
 func (db *Database) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	return db.db.ExecContext(ctx, query, args...)
+}
+
+// Marketplace listing variants methods
+func (db *Database) CreateListingVariants(ctx context.Context, listingID int, variants []models.MarketplaceListingVariant) error {
+	if len(variants) == 0 {
+		return nil
+	}
+
+	tx, err := db.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	for _, variant := range variants {
+		attributesJSON, err := json.Marshal(variant.Attributes)
+		if err != nil {
+			return fmt.Errorf("failed to marshal variant attributes: %w", err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO marketplace_listing_variants (listing_id, sku, price, stock, attributes, image_url, is_active)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`, listingID, variant.SKU, variant.Price, variant.Stock, attributesJSON, variant.ImageURL, variant.IsActive)
+		if err != nil {
+			return fmt.Errorf("failed to insert variant: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (db *Database) GetListingVariants(ctx context.Context, listingID int) ([]models.MarketplaceListingVariant, error) {
+	query := `
+		SELECT id, listing_id, sku, price, stock, attributes, image_url, is_active, 
+		       created_at::text, updated_at::text
+		FROM marketplace_listing_variants 
+		WHERE listing_id = $1 AND is_active = true
+		ORDER BY id
+	`
+
+	rows, err := db.pool.Query(ctx, query, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query variants: %w", err)
+	}
+	defer rows.Close()
+
+	var variants []models.MarketplaceListingVariant
+	for rows.Next() {
+		var variant models.MarketplaceListingVariant
+		var attributesJSON []byte
+
+		err := rows.Scan(
+			&variant.ID, &variant.ListingID, &variant.SKU, &variant.Price, &variant.Stock,
+			&attributesJSON, &variant.ImageURL, &variant.IsActive,
+			&variant.CreatedAt, &variant.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan variant: %w", err)
+		}
+
+		if len(attributesJSON) > 0 {
+			err = json.Unmarshal(attributesJSON, &variant.Attributes)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal variant attributes: %w", err)
+			}
+		}
+
+		variants = append(variants, variant)
+	}
+
+	return variants, rows.Err()
+}
+
+func (db *Database) UpdateListingVariant(ctx context.Context, variant *models.MarketplaceListingVariant) error {
+	attributesJSON, err := json.Marshal(variant.Attributes)
+	if err != nil {
+		return fmt.Errorf("failed to marshal variant attributes: %w", err)
+	}
+
+	query := `
+		UPDATE marketplace_listing_variants 
+		SET sku = $1, price = $2, stock = $3, attributes = $4, image_url = $5, is_active = $6
+		WHERE id = $7
+	`
+
+	result, err := db.pool.Exec(ctx, query,
+		variant.SKU, variant.Price, variant.Stock, attributesJSON,
+		variant.ImageURL, variant.IsActive, variant.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update variant: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("variant not found")
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) error {
+	// Soft delete - просто помечаем как неактивный
+	query := `UPDATE marketplace_listing_variants SET is_active = false WHERE id = $1`
+
+	result, err := db.pool.Exec(ctx, query, variantID)
+	if err != nil {
+		return fmt.Errorf("failed to delete variant: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("variant not found")
+	}
+
+	return nil
 }

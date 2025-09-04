@@ -84,6 +84,9 @@ type (
 		// Поля для товаров витрин
 		StockQuantity *int    `json:"stock_quantity,omitempty"`
 		StockStatus   *string `json:"stock_status,omitempty"`
+
+		// Варианты товара
+		Variants []MarketplaceListingVariant `json:"variants,omitempty" db:"-"`
 	}
 )
 

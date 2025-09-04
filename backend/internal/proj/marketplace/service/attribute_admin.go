@@ -707,38 +707,22 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 	// 2. Из групп атрибутов (через category_attribute_groups -> attribute_group_items)
 	query := `
 		WITH combined_attributes AS (
-			-- Атрибуты из прямого маппинга
+			-- Атрибуты из унифицированной системы
 			SELECT 
-				a.id, a.name, a.display_name, a.attribute_type, a.options, a.validation_rules,
-				a.is_searchable, a.is_filterable, cam.is_required, a.sort_order, a.created_at,
-				COALESCE(cam.custom_component, a.custom_component) as custom_component,
-				a.is_variant_compatible,
-				cam.sort_order as effective_sort_order,
-				'direct' as source
-			FROM category_attributes a
-			JOIN category_attribute_mapping cam ON a.id = cam.attribute_id
-			WHERE cam.category_id = $1 AND cam.is_enabled = true
-			
-			UNION
-			
-			-- Атрибуты из групп
-			SELECT 
-				a.id, a.name, 
-				COALESCE(agi.custom_display_name, a.display_name) as display_name,
-				a.attribute_type, a.options, a.validation_rules,
-				a.is_searchable, a.is_filterable, a.is_required, a.sort_order, a.created_at,
-				a.custom_component,
-				a.is_variant_compatible,
-				-- Сортировка для групп: сначала по группе, потом по атрибуту внутри группы
-				(cag.sort_order * 1000 + agi.sort_order) as effective_sort_order,
-				'group' as source
-			FROM category_attributes a
-			JOIN attribute_group_items agi ON a.id = agi.attribute_id
-			JOIN attribute_groups ag ON agi.group_id = ag.id
-			JOIN category_attribute_groups cag ON ag.id = cag.group_id
-			WHERE cag.category_id = $1 
-				AND cag.is_active = true 
-				AND ag.is_active = true
+				ua.id, ua.name, ua.display_name, ua.attribute_type, 
+				ua.options, ua.validation_rules,
+				ua.is_searchable, 
+				ua.is_filterable, 
+				COALESCE(uca.is_required, ua.is_required) as is_required, 
+				COALESCE(uca.sort_order, ua.sort_order) as sort_order, 
+				ua.created_at,
+				COALESCE(uca.category_specific_options->>'custom_component', ua.ui_settings->>'custom_component', '') as custom_component,
+				COALESCE(ua.ui_settings->>'is_variant_compatible', 'false')::boolean as is_variant_compatible,
+				COALESCE(uca.sort_order, ua.sort_order) as effective_sort_order,
+				'unified' as source
+			FROM unified_attributes ua
+			JOIN unified_category_attributes uca ON ua.id = uca.attribute_id
+			WHERE uca.category_id = $1 AND uca.is_enabled = true AND ua.is_active = true
 		)
 		SELECT DISTINCT id, name, display_name, attribute_type, options, validation_rules,
 			is_searchable, is_filterable, is_required, sort_order, created_at, 

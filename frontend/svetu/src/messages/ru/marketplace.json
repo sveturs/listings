@@ -1,5 +1,10 @@
 {
   "home": "Главная",
+  "homeSection": {
+    "title": "Главная",
+    "description": "Найдите лучшие предложения от частных лиц и магазинов",
+    "createListing": "Создать объявление"
+  },
   "allCategories": "Все категории",
   "condition": {
     "new": "Новый",

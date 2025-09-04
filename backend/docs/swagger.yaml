@@ -702,6 +702,20 @@ definitions:
     required:
     - group_id
     type: object
+  backend_internal_domain_models.AttributeEntityType:
+    enum:
+    - listing
+    - product
+    - product_variant
+    type: string
+    x-enum-comments:
+      AttributeEntityTypeListing: Объявление маркетплейса
+      AttributeEntityTypeProduct: Товар витрины
+      AttributeEntityTypeProductVariant: Вариант товара
+    x-enum-varnames:
+    - AttributeEntityTypeListing
+    - AttributeEntityTypeProduct
+    - AttributeEntityTypeProductVariant
   backend_internal_domain_models.AttributeGroup:
     properties:
       created_at:
@@ -748,6 +762,20 @@ definitions:
           type: integer
         type: array
     type: object
+  backend_internal_domain_models.AttributePurpose:
+    enum:
+    - regular
+    - variant
+    - both
+    type: string
+    x-enum-comments:
+      PurposeBoth: Может использоваться в обоих случаях
+      PurposeRegular: Обычный атрибут для фильтрации/поиска
+      PurposeVariant: Вариативный атрибут (влияет на SKU)
+    x-enum-varnames:
+    - PurposeRegular
+    - PurposeVariant
+    - PurposeBoth
   backend_internal_domain_models.AuditStatistics:
     properties:
       actions_by_type:
@@ -1279,6 +1307,17 @@ definitions:
       variant_attribute_name:
         type: string
     type: object
+  backend_internal_domain_models.CategoryVariantAttributeAssignment:
+    properties:
+      attribute_id:
+        type: integer
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
+    required:
+    - attribute_id
+    type: object
   backend_internal_domain_models.CategoryVariantAttributeUpdate:
     properties:
       is_required:
@@ -1294,6 +1333,18 @@ definitions:
         items:
           $ref: '#/definitions/backend_internal_domain_models.CategoryVariantAttributeUpdate'
         type: array
+    type: object
+  backend_internal_domain_models.CategoryVariantAttributesUpdateRequest:
+    properties:
+      attributes:
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.CategoryVariantAttributeAssignment'
+        type: array
+      category_id:
+        type: integer
+    required:
+    - attributes
+    - category_id
     type: object
   backend_internal_domain_models.ChatAttachment:
     properties:
@@ -2424,8 +2475,39 @@ definitions:
         $ref: '#/definitions/backend_internal_domain_models.User'
       user_id:
         type: integer
+      variants:
+        description: Варианты товара
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListingVariant'
+        type: array
       views_count:
         type: integer
+    type: object
+  backend_internal_domain_models.MarketplaceListingVariant:
+    properties:
+      attributes:
+        additionalProperties:
+          type: string
+        description: JSON поле для хранения атрибутов варианта
+        type: object
+      created_at:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      listing_id:
+        type: integer
+      price:
+        type: number
+      sku:
+        type: string
+      stock:
+        type: integer
+      updated_at:
+        type: string
     type: object
   backend_internal_domain_models.MarketplaceMessage:
     properties:
@@ -4291,6 +4373,131 @@ definitions:
       version:
         type: integer
     type: object
+  backend_internal_domain_models.UnifiedAttribute:
+    properties:
+      affects_price:
+        type: boolean
+      affects_stock:
+        type: boolean
+      attribute_type:
+        type: string
+      code:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_filterable:
+        type: boolean
+      is_required:
+        type: boolean
+      is_searchable:
+        type: boolean
+      is_variant_compatible:
+        type: boolean
+      name:
+        type: string
+      option_translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        type: object
+      options:
+        items:
+          type: integer
+        type: array
+      purpose:
+        $ref: '#/definitions/backend_internal_domain_models.AttributePurpose'
+      sort_order:
+        type: integer
+      translations:
+        additionalProperties:
+          type: string
+        description: Дополнительные поля для удобства работы
+        type: object
+      ui_settings:
+        items:
+          type: integer
+        type: array
+      updated_at:
+        type: string
+      validation_rules:
+        items:
+          type: integer
+        type: array
+    type: object
+  backend_internal_domain_models.UnifiedAttributeValue:
+    properties:
+      attribute:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+        description: Связанные объекты для удобства
+      attribute_id:
+        type: integer
+      boolean_value:
+        type: boolean
+      created_at:
+        type: string
+      date_value:
+        type: string
+      display_value:
+        description: Вспомогательные поля
+        type: string
+      entity_id:
+        type: integer
+      entity_type:
+        $ref: '#/definitions/backend_internal_domain_models.AttributeEntityType'
+      id:
+        type: integer
+      json_value:
+        items:
+          type: integer
+        type: array
+      numeric_value:
+        type: number
+      text_value:
+        type: string
+      unit:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  backend_internal_domain_models.UnifiedCategoryAttribute:
+    properties:
+      attribute:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+        description: Связанные объекты
+      attribute_id:
+        type: integer
+      category:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+      category_id:
+        type: integer
+      category_specific_options:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_enabled:
+        type: boolean
+      is_filter:
+        type: boolean
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   backend_internal_domain_models.UnifiedSuggestion:
     properties:
       category_id:
@@ -4847,6 +5054,50 @@ definitions:
         type: string
       module:
         type: string
+    type: object
+  backend_internal_domain_models.VariantAttributeMapping:
+    properties:
+      attribute:
+        allOf:
+        - $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+        description: Связанные объекты
+      category:
+        $ref: '#/definitions/backend_internal_domain_models.MarketplaceCategory'
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
+      updated_at:
+        type: string
+      variant_attribute_id:
+        type: integer
+    type: object
+  backend_internal_domain_models.VariantAttributeMappingCreateRequest:
+    properties:
+      category_id:
+        type: integer
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
+      variant_attribute_id:
+        type: integer
+    required:
+    - category_id
+    - variant_attribute_id
+    type: object
+  backend_internal_domain_models.VariantAttributeMappingUpdateRequest:
+    properties:
+      is_required:
+        type: boolean
+      sort_order:
+        type: integer
     type: object
   backend_internal_domain_models.VariantSettings:
     properties:
@@ -7506,6 +7757,17 @@ definitions:
       name:
         type: string
       picture_url:
+        type: string
+    type: object
+  internal_proj_health.HealthStatus:
+    properties:
+      checks:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+      timestamp:
         type: string
     type: object
   internal_proj_marketplace_handler.AddMessageRequest:
@@ -11142,6 +11404,32 @@ paths:
       summary: Check administrator status
       tags:
       - admin-management
+  /api/v1/admin/attributes/variant-compatible:
+    get:
+      consumes:
+      - application/json
+      description: Returns all attributes that can be used as product variants
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of variant compatible attributes
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get variant compatible attributes
+      tags:
+      - admin-variant-attributes
   /api/v1/admin/categories/{category_id}/keywords:
     get:
       consumes:
@@ -11437,6 +11725,36 @@ paths:
       summary: Update category keyword
       tags:
       - marketplace-admin-categories
+  /api/v1/admin/categories/variant-attributes:
+    put:
+      consumes:
+      - application/json
+      description: Updates all variant attributes for a category (replaces existing)
+      parameters:
+      - description: Update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.CategoryVariantAttributesUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attributes updated
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update category variant attributes
+      tags:
+      - admin-variant-attributes
   /api/v1/admin/logistics/analytics/couriers:
     get:
       consumes:
@@ -15589,6 +15907,147 @@ paths:
       summary: Update variant attribute mappings
       tags:
       - marketplace-admin-variant-attributes
+  /api/v1/admin/variant-attributes/mappings:
+    get:
+      consumes:
+      - application/json
+      description: Returns variant attribute mappings for a specific category
+      parameters:
+      - description: Category ID
+        in: query
+        name: category_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category variant mappings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.VariantAttributeMapping'
+                  type: array
+              type: object
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get category variant mappings
+      tags:
+      - admin-variant-attributes
+    post:
+      consumes:
+      - application/json
+      description: Creates a new mapping between variant attribute and category
+      parameters:
+      - description: Mapping data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.VariantAttributeMappingCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created mapping
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.VariantAttributeMapping'
+              type: object
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Create variant mapping
+      tags:
+      - admin-variant-attributes
+  /api/v1/admin/variant-attributes/mappings/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a variant attribute mapping
+      parameters:
+      - description: Mapping ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mapping deleted
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Mapping not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Delete variant mapping
+      tags:
+      - admin-variant-attributes
+    patch:
+      consumes:
+      - application/json
+      description: Updates an existing variant attribute mapping
+      parameters:
+      - description: Mapping ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.VariantAttributeMappingUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mapping updated
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Mapping not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update variant mapping
+      tags:
+      - admin-variant-attributes
   /api/v1/analytics/event:
     post:
       consumes:
@@ -19546,6 +20005,44 @@ paths:
       summary: Create image enhancement preview
       tags:
       - marketplace-images
+  /api/v1/marketplace/enhanced-suggestions:
+    get:
+      consumes:
+      - application/json
+      description: Returns enhanced suggestions with categories and products
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      - default: 10
+        description: Number of suggestions
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enhanced suggestions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: marketplace.queryRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get enhanced search suggestions
+      tags:
+      - marketplace-search
   /api/v1/marketplace/favorites:
     get:
       consumes:
@@ -28654,6 +29151,387 @@ paths:
       summary: Handle Order Payment Webhook
       tags:
       - order-payments
+  /api/v2/admin/attributes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new unified attribute (Admin only)
+      parameters:
+      - description: Attribute data
+        in: body
+        name: attribute
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created attribute ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Create a new attribute
+      tags:
+      - marketplace-attributes-v2-admin
+  /api/v2/admin/attributes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a unified attribute (Admin only)
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute deleted
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Attribute not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Delete an attribute
+      tags:
+      - marketplace-attributes-v2-admin
+    put:
+      consumes:
+      - application/json
+      description: Update an existing unified attribute (Admin only)
+      parameters:
+      - description: Attribute ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: updates
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Attribute not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Update an attribute
+      tags:
+      - marketplace-attributes-v2-admin
+  /api/v2/admin/attributes/feature-status:
+    get:
+      consumes:
+      - application/json
+      description: Get current status of feature flags for debugging
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Feature flags status
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      security:
+      - Bearer: []
+      summary: Get feature flags status for unified attributes
+      tags:
+      - marketplace-attributes-v2-admin
+  /api/v2/admin/categories/{category_id}/attributes/{attribute_id}:
+    post:
+      consumes:
+      - application/json
+      description: Attach an attribute to a category with specific settings (Admin
+        only)
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      - description: Attribute ID
+        in: path
+        name: attribute_id
+        required: true
+        type: integer
+      - description: Attachment settings
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.UnifiedCategoryAttribute'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attribute attached
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Attach attribute to category
+      tags:
+      - marketplace-attributes-v2-admin
+  /api/v2/marketplace/categories/{category_id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Get all attributes available for a specific category with unified
+        system support
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of category attributes
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.UnifiedAttribute'
+                  type: array
+              type: object
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get attributes for a category
+      tags:
+      - marketplace-attributes-v2
+  /api/v2/marketplace/categories/{category_id}/attributes/detailed:
+    get:
+      consumes:
+      - application/json
+      description: Get all attributes with their category-specific settings
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of category attributes with settings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.UnifiedCategoryAttribute'
+                  type: array
+              type: object
+        "400":
+          description: Invalid category ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get attributes with settings for a category
+      tags:
+      - marketplace-attributes-v2
+  /api/v2/marketplace/listings/{listing_id}/attributes:
+    get:
+      consumes:
+      - application/json
+      description: Get all attribute values for a specific listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: listing_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of attribute values
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.UnifiedAttributeValue'
+                  type: array
+              type: object
+        "400":
+          description: Invalid listing ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get attribute values for a listing
+      tags:
+      - marketplace-attributes-v2
+    post:
+      consumes:
+      - application/json
+      description: Save or update attribute values for a specific listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: listing_id
+        required: true
+        type: integer
+      - description: Attribute values map (attribute_id -> value)
+        in: body
+        name: values
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Values saved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Save attribute values for a listing
+      tags:
+      - marketplace-attributes-v2
   /auth/google:
     get:
       consumes:
@@ -28721,6 +29599,36 @@ paths:
       summary: Get current session
       tags:
       - auth
+  /health/live:
+    get:
+      description: Check if the service is alive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_health.HealthStatus'
+      summary: Liveness probe
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Check if the service is ready to handle requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_proj_health.HealthStatus'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_proj_health.HealthStatus'
+      summary: Readiness probe
+      tags:
+      - health
   /payments/{id}/capture:
     post:
       consumes:

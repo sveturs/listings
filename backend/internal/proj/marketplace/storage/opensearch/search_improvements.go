@@ -355,7 +355,7 @@ func (r *Repository) addSorting(query map[string]interface{}, params *search.Sea
 	}
 
 	// Пользовательская сортировка
-	if params.Sort != "" {
+	if params.Sort != "" && params.Sort != "relevance" {
 		sortField := params.Sort
 		sortOrder := "desc"
 		if params.SortDirection != "" {

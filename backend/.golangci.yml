@@ -3,10 +3,6 @@ version: "2"
 run:
   timeout: 5m
   go: "1.24"
-  skip-dirs:
-    - scripts
-  skip-files:
-    - "scripts/.*\\.go"
 
 linters:
   enable:
@@ -91,19 +87,15 @@ linters:
     lll:
       line-length: 120
 
-  exclusions:
-    # Exclude generated files from all linters
-    generated: strict
-
-    # Apply common exclusion presets to reduce false positives
-    presets:
-      - comments
-      - common-false-positives
-      - std-error-handling
-
-    paths:
-      - testing
-    rules:
+issues:
+  exclude-dirs:
+    - scripts
+    - vendor
+    - third_party
+  exclude-files:
+    - "scripts/.*\\.go"
+  
+  exclude-rules:
       # Exclude some linters from running on tests files
       - path: _test\\.go
         linters:

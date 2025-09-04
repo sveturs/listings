@@ -4,6 +4,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -31,6 +32,7 @@ import (
 	gisHandler "backend/internal/proj/gis/handler"
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
+	healthHandler "backend/internal/proj/health"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
@@ -79,6 +81,8 @@ type Server struct {
 	gis                *gisHandler.Handler
 	subscriptions      *subscriptions.Module
 	fileStorage        filestorage.FileStorageInterface
+	health             *healthHandler.Handler
+	redisClient        *redis.Client
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -180,6 +184,14 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
+
+	// Health handler
+	// Получаем sql.DB из Database структуры
+	var sqlDB *sql.DB
+	if db != nil {
+		sqlDB = db.GetSQLDB()
+	}
+	healthHandlerInstance := healthHandler.NewHandler(sqlDB, redisClient)
 	middleware := middleware.NewMiddleware(cfg, services)
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
@@ -251,6 +263,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		gis:                gisHandlerInstance,
 		subscriptions:      subscriptionsModule,
 		fileStorage:        fileStorage,
+		health:             healthHandlerInstance,
+		redisClient:        redisClient,
 	}
 
 	notificationsHandler.ConnectTelegramWebhook()
@@ -335,7 +349,17 @@ func (s *Server) setupMiddleware() {
 	// Middleware для определения языка из запроса
 	s.app.Use(s.middleware.LocaleMiddleware())
 
-	// TODO: Добавить middleware для метрик
+	// Prometheus metrics middleware
+	s.app.Use(middleware.PrometheusMiddleware())
+
+	// Инициализируем метрики feature flags
+	if s.cfg.FeatureFlags != nil {
+		middleware.InitializeFeatureFlagMetrics(map[string]bool{
+			"USE_UNIFIED_ATTRIBUTES":      s.cfg.FeatureFlags.UseUnifiedAttributes,
+			"UNIFIED_ATTRIBUTES_FALLBACK": s.cfg.FeatureFlags.UnifiedAttributesFallback,
+			"DUAL_WRITE_ATTRIBUTES":       s.cfg.FeatureFlags.DualWriteAttributes,
+		})
+	}
 
 	// Удалено глобальное применение AuthRequiredJWT
 }
@@ -345,9 +369,8 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		return c.SendString("Svetu API")
 	})
 
-	s.app.Get("/api/health", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
-	})
+	// Health checks и metrics
+	s.health.RegisterRoutes(s.app)
 
 	// Swagger документация
 	s.app.Get("/swagger/*", swagger.HandlerDefault)

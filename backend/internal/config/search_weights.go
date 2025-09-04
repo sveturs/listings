@@ -52,8 +52,7 @@ type OpenSearchBoostWeights struct {
 	PerWordRoomsText            float64 `yaml:"per_word_rooms_text"`
 
 	// Прочие
-	AutomotiveAttributePriority float64 `yaml:"automotive_attribute_priority"`
-	SynonymBoost                float64 `yaml:"synonym_boost"`
+	SynonymBoost float64 `yaml:"synonym_boost"`
 }
 
 // SimilarityScoringWeights содержит веса для расчета похожести
@@ -125,8 +124,7 @@ func GetDefaultSearchWeights() *SearchWeights {
 			PerWordRealEstateAttributes: 3.0,
 			PerWordRoomsText:            2.5,
 
-			AutomotiveAttributePriority: 2.0,
-			SynonymBoost:                0.5,
+			SynonymBoost: 0.5,
 		},
 
 		CategoryAttributeWeights: map[int]map[string]float64{

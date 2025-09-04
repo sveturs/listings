@@ -1,6 +1,7 @@
 {
+  "home": "Glavna",
   "allCategories": "Sve kategorije",
-  "home": {
+  "homeSection": {
     "title": "Glavna",
     "marketplace": "Oglasi",
     "errorLoadingData": "Greška pri učitavanju podataka. Molimo pokušajte kasnije.",

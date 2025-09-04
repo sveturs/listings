@@ -270,7 +270,68 @@ export class UnifiedSearchService {
     }
 
     const data = await response.json();
-    const rawSuggestions = data.data || [];
+
+    // Обрабатываем ответ от enhanced-suggestions endpoint
+    // который возвращает объект с полями: suggestions, categories, popular_items
+    if (
+      data.data &&
+      typeof data.data === 'object' &&
+      !Array.isArray(data.data)
+    ) {
+      const enhancedData = data.data;
+      const allSuggestions: SearchSuggestion[] = [];
+
+      // Добавляем текстовые предложения
+      if (enhancedData.suggestions && Array.isArray(enhancedData.suggestions)) {
+        enhancedData.suggestions.forEach((text: string) => {
+          allSuggestions.push({
+            text: text,
+            type: 'text' as const,
+          });
+        });
+      }
+
+      // Добавляем категории
+      if (enhancedData.categories && Array.isArray(enhancedData.categories)) {
+        enhancedData.categories.forEach((cat: any) => {
+          allSuggestions.push({
+            text: cat.name || '',
+            type: 'category' as const,
+            category: {
+              id: cat.id,
+              name: cat.name,
+              slug: cat.slug,
+              translations: cat.translations,
+            },
+          });
+        });
+      }
+
+      // Добавляем популярные товары
+      if (
+        enhancedData.popular_items &&
+        Array.isArray(enhancedData.popular_items)
+      ) {
+        enhancedData.popular_items.forEach((item: any) => {
+          allSuggestions.push({
+            text: item.title || '',
+            type: 'product' as const,
+            product_id: item.id,
+            metadata: {
+              price: item.price,
+              currency: item.currency,
+              image: item.image,
+              location: item.location,
+            },
+          });
+        });
+      }
+
+      return allSuggestions;
+    }
+
+    // Fallback для старого формата (если backend вернул массив)
+    const rawSuggestions = Array.isArray(data.data) ? data.data : [];
 
     // Преобразуем данные от backend в нужный формат для frontend
     return rawSuggestions.map((item: any): SearchSuggestion => {
