@@ -307,7 +307,7 @@ export default function ARProductViewer({
             ) : (
               <div className="relative h-full w-full">
                 {/* 3D Model viewer */}
-                {/* @ts-ignore - model-viewer is a web component */}
+                {/* @ts-expect-error - model-viewer is a web component */}
                 <model-viewer
                   ref={modelViewerRef}
                   ar
@@ -324,7 +324,7 @@ export default function ARProductViewer({
                   >
                     {t('viewInAR')}
                   </button>
-                  {/* @ts-ignore */}
+                  {/* @ts-expect-error - model-viewer is a web component */}
                 </model-viewer>
               </div>
             )}

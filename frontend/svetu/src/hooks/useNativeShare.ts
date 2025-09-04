@@ -189,7 +189,6 @@ export function useNativeShare(): UseNativeShareReturn {
         return false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 

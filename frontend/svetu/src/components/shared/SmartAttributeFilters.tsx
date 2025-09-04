@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useTranslations } from 'next-intl';
-import { UnifiedAttributeField } from './UnifiedAttributeField';
 import IntuitiveAttributeField from './IntuitiveAttributeField';
 import { unifiedAttributeService } from '@/services/unifiedAttributeService';
 import type { components } from '@/types/generated/api';
