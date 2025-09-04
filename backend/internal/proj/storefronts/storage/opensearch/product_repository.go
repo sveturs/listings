@@ -403,8 +403,16 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 		})
 	}
 
-	// Фильтр по категории
-	if params.CategoryID > 0 {
+	// Фильтр по категориям
+	if len(params.CategoryIDs) > 0 {
+		// Используем terms для множественных категорий
+		filter = append(filter, map[string]interface{}{
+			"terms": map[string]interface{}{
+				"category_id": params.CategoryIDs,
+			},
+		})
+	} else if params.CategoryID > 0 {
+		// Обратная совместимость - одиночная категория
 		filter = append(filter, map[string]interface{}{
 			"term": map[string]interface{}{
 				"category_id": params.CategoryID,

@@ -42,6 +42,7 @@ type ProductSearchParams struct {
 	Query           string                 // Текстовый поиск
 	StorefrontID    int                    // Фильтр по витрине
 	CategoryID      int                    // Фильтр по категории
+	CategoryIDs     []int                  // Фильтр по множественным категориям
 	CategoryPath    string                 // Фильтр по пути категории
 	Brand           string                 // Фильтр по бренду
 	PriceMin        float64                // Минимальная цена

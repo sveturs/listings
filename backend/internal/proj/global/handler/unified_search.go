@@ -598,22 +598,32 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 
 	// Конвертируем параметры в формат для поиска товаров витрин
 	categoryID := 0
-	// Используем первую категорию из массива, если массив задан
-	categoryStr := params.CategoryID
+	var categoryIDs []int
+	
+	// Преобразуем строковые категории в int
 	if len(params.CategoryIDs) > 0 {
-		categoryStr = params.CategoryIDs[0]
-	}
-	if categoryStr != "" {
-		// Попробуем конвертировать в int
-		if id, err := strconv.Atoi(categoryStr); err == nil {
+		for _, catStr := range params.CategoryIDs {
+			if id, err := strconv.Atoi(catStr); err == nil {
+				categoryIDs = append(categoryIDs, id)
+			}
+		}
+		// Для обратной совместимости, также установим первую категорию в CategoryID
+		if len(categoryIDs) > 0 {
+			categoryID = categoryIDs[0]
+		}
+	} else if params.CategoryID != "" {
+		// Если передана одна категория
+		if id, err := strconv.Atoi(params.CategoryID); err == nil {
 			categoryID = id
+			categoryIDs = []int{id}
 		}
 	}
 
 	searchParams := &storefrontOpenSearch.ProductSearchParams{
 		Query:        params.Query,
 		StorefrontID: params.StorefrontID,
-		CategoryID:   categoryID,
+		CategoryID:   categoryID,    // Для обратной совместимости
+		CategoryIDs:  categoryIDs,   // Новое поле для множественных категорий
 		PriceMin:     params.PriceMin,
 		PriceMax:     params.PriceMax,
 		City:         params.City,

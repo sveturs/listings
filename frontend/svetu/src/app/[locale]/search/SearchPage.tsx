@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { SearchBar } from '@/components/SearchBar';
@@ -8,10 +8,17 @@ import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
 import { adaptMarketplaceItem } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
 import { SearchResultCard } from '@/components/search';
-import CategoryFilter from '@/components/search/CategoryFilter';
+import { CategorySelector } from '@/components/search/CategorySelector';
+import { DynamicFilters } from '@/components/search/DynamicFilters';
+import { QuickFilterPresets } from '@/components/search/QuickFilterPresets';
+import { MobileFilterDrawer } from '@/components/search/MobileFilterDrawer';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useBehaviorTracking } from '@/hooks/useBehaviorTracking';
+import {
+  useFilterPersistence,
+  useSearchHistory,
+} from '@/hooks/useFilterPersistence';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import { ListingGridSkeleton } from '@/components/ui/skeletons';
 import {
@@ -103,7 +110,14 @@ export default function SearchPage() {
   const [allItems, setAllItems] = useState<any[]>([]);
   const [hasInitialSearchRun, setHasInitialSearchRun] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useViewPreference('grid');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<
+    number | undefined
+  >(
+    initialParams.category_id ? parseInt(initialParams.category_id) : undefined
+  );
+  const [dynamicFilters, setDynamicFilters] = useState<Record<string, any>>({});
   const [geoParams, setGeoParams] = useState({
     latitude: initialParams.lat,
     longitude: initialParams.lon,
@@ -119,6 +133,37 @@ export default function SearchPage() {
     trackSearchFilterApplied,
     trackSearchSortChanged,
   } = useBehaviorTracking();
+
+  // Filter persistence
+  const { loadFilters } = useFilterPersistence({
+    categoryId: selectedCategoryId,
+    filters: { ...filters, ...dynamicFilters },
+  });
+
+  // Search history
+  const { saveQuery } = useSearchHistory();
+
+  // Load saved filters on mount (only if URL doesn't have filters)
+  useEffect(() => {
+    if (!initialParams.category_id && Object.keys(initialParams).length <= 2) {
+      const saved = loadFilters();
+      if (saved) {
+        if (saved.categoryId) {
+          setSelectedCategoryId(saved.categoryId);
+          setFilters((prev) => ({
+            ...prev,
+            category_id: saved.categoryId?.toString(),
+          }));
+        }
+        if (saved.filters) {
+          const { category_id: _categoryId, ...otherFilters } = saved.filters;
+          setFilters((prev) => ({ ...prev, ...otherFilters }));
+          setDynamicFilters(otherFilters);
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLoadMore = () => {
     if (results && results.has_more) {
@@ -233,17 +278,38 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // Handle filter changes (skip first render)
+  // Track previous filters to detect real changes
+  const prevFiltersRef = useRef<SearchFilters>(filters);
+
+  // Create stable strings for array dependencies
+  const categoryIdsKey = filters.category_ids?.join(',') || '';
+  const productTypesKey = filters.product_types?.join(',') || '';
+
+  // Handle filter changes (skip first render and only update on real changes)
   useEffect(() => {
-    // Skip effect on mount
-    const isMount = allItems.length === 0 && !results;
-    if (!isMount) {
+    // Check if filters actually changed
+    const filtersChanged =
+      JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters);
+
+    if (filtersChanged && hasInitialSearchRun) {
+      prevFiltersRef.current = filters;
       setPage(1);
       setAllItems([]);
       performSearch(query, 1, filters, fuzzy);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [
+    filters.category_id,
+    categoryIdsKey,
+    filters.price_min,
+    filters.price_max,
+    productTypesKey,
+    filters.sort_by,
+    filters.sort_order,
+    filters.city,
+    filters.condition,
+    filters.distance,
+  ]);
 
   const performSearch = async (
     searchQuery: string,
@@ -257,6 +323,10 @@ export default function SearchPage() {
     // Запоминаем время начала поиска для трекинга
     if (currentPage === 1) {
       searchStartTimeRef.current = Date.now();
+      // Сохраняем запрос в историю если он не пустой
+      if (searchQuery.trim()) {
+        saveQuery(searchQuery);
+      }
     }
 
     setLoading(true);
@@ -399,6 +469,31 @@ export default function SearchPage() {
       ...filters,
     });
   };
+
+  const handleCategorySelect = (categoryId: number | undefined) => {
+    setSelectedCategoryId(categoryId);
+    setDynamicFilters({});
+    handleFilterChange({ category_id: categoryId?.toString() });
+  };
+
+  const handleDynamicFiltersChange = useCallback(
+    (newFilters: Record<string, any>) => {
+      setDynamicFilters((prevDynamicFilters) => {
+        // Only update if filters actually changed
+        const hasChanges = Object.keys(newFilters).some(
+          (key) => prevDynamicFilters[key] !== newFilters[key]
+        );
+
+        if (!hasChanges) return prevDynamicFilters;
+
+        // Update filters state as well
+        setFilters((prevFilters) => ({ ...prevFilters, ...newFilters }));
+
+        return newFilters;
+      });
+    },
+    []
+  );
 
   const handleFilterChange = async (newFilters: Partial<SearchFilters>) => {
     const prevFilters = filters;
@@ -771,6 +866,30 @@ export default function SearchPage() {
               className={`lg:w-80 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}
             >
               <div className="space-y-6">
+                {/* Карточка выбора категории */}
+                <div className="card bg-base-100 shadow-md">
+                  <div className="card-body">
+                    <CategorySelector
+                      selectedCategoryId={selectedCategoryId}
+                      onCategorySelect={handleCategorySelect}
+                    />
+                  </div>
+                </div>
+
+                {/* Карточка быстрых пресетов */}
+                <div className="card bg-base-100 shadow-md">
+                  <div className="card-body">
+                    <QuickFilterPresets
+                      onPresetSelect={(presetFilters, categoryId) => {
+                        if (categoryId) {
+                          handleCategorySelect(categoryId);
+                        }
+                        handleFilterChange({ ...filters, ...presetFilters });
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* Карточка фильтров */}
                 <div className="card bg-base-100 shadow-md">
                   <div className="card-body">
@@ -847,17 +966,12 @@ export default function SearchPage() {
                         </div>
                       )}
 
-                      {/* Категории */}
-                      <CategoryFilter
-                        selectedCategories={filters.category_ids || []}
-                        onCategoryChange={(categories) =>
-                          handleFilterChange({ category_ids: categories })
-                        }
+                      {/* Динамические фильтры */}
+                      <DynamicFilters
+                        categoryId={selectedCategoryId}
+                        onFiltersChange={handleDynamicFiltersChange}
+                        activeFilters={dynamicFilters}
                       />
-
-                      <div className="divider my-4"></div>
-
-                      {/* Тип товаров - карточки вместо чекбоксов */}
                       <div>
                         <label className="label">
                           <span className="label-text font-medium">
@@ -953,10 +1067,6 @@ export default function SearchPage() {
                           </div>
                         </div>
                       </div>
-
-                      <div className="divider my-4"></div>
-
-                      {/* Диапазон цен - улучшенный дизайн */}
                       <div>
                         <label className="label">
                           <span className="label-text font-medium flex items-center gap-2">
@@ -1383,6 +1493,51 @@ export default function SearchPage() {
             </main>
           </div>
         </div>
+
+        {/* Mobile Filter Drawer */}
+        <MobileFilterDrawer
+          isOpen={mobileFiltersOpen}
+          onClose={() => setMobileFiltersOpen(false)}
+          selectedCategoryId={selectedCategoryId}
+          onCategorySelect={handleCategorySelect}
+          filters={{ ...filters, ...dynamicFilters }}
+          onFiltersChange={(newFilters) => {
+            handleFilterChange(newFilters);
+            setDynamicFilters(newFilters);
+          }}
+          activeFiltersCount={activeFiltersCount()}
+        />
+
+        {/* Floating Filter Button for Mobile */}
+        <button
+          onClick={() => setMobileFiltersOpen(true)}
+          className={`
+            fixed bottom-6 right-6 z-30
+            btn btn-circle btn-primary btn-lg shadow-xl
+            lg:hidden
+            ${mobileFiltersOpen ? 'scale-0' : 'scale-100'}
+            transition-transform duration-200
+          `}
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
+          </svg>
+          {activeFiltersCount() > 0 && (
+            <span className="badge badge-secondary badge-sm absolute -top-2 -right-2">
+              {activeFiltersCount()}
+            </span>
+          )}
+        </button>
       </div>
     </PageTransition>
   );
