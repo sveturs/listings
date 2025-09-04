@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { CarFilters } from '@/components/marketplace/CarFilters';
 import { RealEstateFilters } from './RealEstateFilters';
@@ -48,34 +48,43 @@ export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
     prevCategoryIdRef.current = categoryId;
   }, [categoryId]);
 
-  const handleCategoryFiltersChange = (filters: Record<string, any>) => {
-    setCategoryFilters(filters);
-    // Immediately notify parent of filter changes
-    const combinedFilters = { ...baseFilters, ...filters };
-    onFiltersChange(combinedFilters);
-  };
+  const handleCategoryFiltersChange = useCallback(
+    (filters: Record<string, any>) => {
+      setCategoryFilters(filters);
+      // Immediately notify parent of filter changes
+      const combinedFilters = { ...baseFilters, ...filters };
+      onFiltersChange(combinedFilters);
+    },
+    [baseFilters, onFiltersChange]
+  );
 
-  const handleBaseFiltersChange = (filters: Record<string, any>) => {
-    setBaseFilters(filters);
-    // Immediately notify parent of filter changes
-    const combinedFilters = { ...filters, ...categoryFilters };
-    onFiltersChange(combinedFilters);
-  };
+  const handleBaseFiltersChange = useCallback(
+    (filters: Record<string, any>) => {
+      setBaseFilters(filters);
+      // Immediately notify parent of filter changes
+      const combinedFilters = { ...filters, ...categoryFilters };
+      onFiltersChange(combinedFilters);
+    },
+    [categoryFilters, onFiltersChange]
+  );
 
-  const handleRemoveFilter = (key: string) => {
-    const newBaseFilters = { ...baseFilters };
-    const newCategoryFilters = { ...categoryFilters };
+  const handleRemoveFilter = useCallback(
+    (key: string) => {
+      const newBaseFilters = { ...baseFilters };
+      const newCategoryFilters = { ...categoryFilters };
 
-    delete newBaseFilters[key];
-    delete newCategoryFilters[key];
+      delete newBaseFilters[key];
+      delete newCategoryFilters[key];
 
-    setBaseFilters(newBaseFilters);
-    setCategoryFilters(newCategoryFilters);
+      setBaseFilters(newBaseFilters);
+      setCategoryFilters(newCategoryFilters);
 
-    // Notify parent of the change
-    const combinedFilters = { ...newBaseFilters, ...newCategoryFilters };
-    onFiltersChange(combinedFilters);
-  };
+      // Notify parent of the change
+      const combinedFilters = { ...newBaseFilters, ...newCategoryFilters };
+      onFiltersChange(combinedFilters);
+    },
+    [baseFilters, categoryFilters, onFiltersChange]
+  );
 
   const renderCategoryFilters = () => {
     if (!categoryId) return null;

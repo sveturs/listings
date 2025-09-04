@@ -48,7 +48,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
   const [selectedCategory] = useState<string | number>('all');
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [_lastScrollY, setLastScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Функция для извлечения ID витрины из пути
@@ -80,28 +80,31 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   // Обработка скролла для анимации скрытия хедера
   const handleScroll = useCallback(() => {
     const currentScrollY = window.scrollY;
-    const scrollDifference = Math.abs(currentScrollY - lastScrollY);
 
-    // Увеличиваем threshold для предотвращения дрожания
-    if (scrollDifference < 30) return;
+    setLastScrollY((prevScrollY) => {
+      const scrollDifference = Math.abs(currentScrollY - prevScrollY);
 
-    // Определяем направление скролла
-    const isScrollingDown = currentScrollY > lastScrollY + 30;
-    const isScrollingUp = currentScrollY < lastScrollY - 30;
+      // Увеличиваем threshold для предотвращения дрожания
+      if (scrollDifference < 30) return prevScrollY;
 
-    // Логика показа/скрытия хедера
-    if (isScrollingDown && currentScrollY > 150) {
-      // Скролл вниз и проскроллили больше 150px - скрываем хедер
-      setIsVisible(false);
-    } else if (isScrollingUp || currentScrollY <= 100) {
-      // Скролл вверх или в начале страницы - показываем хедер
-      setIsVisible(true);
-    }
+      // Определяем направление скролла
+      const isScrollingDown = currentScrollY > prevScrollY + 30;
+      const isScrollingUp = currentScrollY < prevScrollY - 30;
 
-    // Определяем, проскроллена ли страница (для тени)
-    setIsScrolled(currentScrollY > 50);
-    setLastScrollY(currentScrollY);
-  }, [lastScrollY]);
+      // Логика показа/скрытия хедера
+      if (isScrollingDown && currentScrollY > 150) {
+        // Скролл вниз и проскроллили больше 150px - скрываем хедер
+        setIsVisible(false);
+      } else if (isScrollingUp || currentScrollY <= 100) {
+        // Скролл вверх или в начале страницы - показываем хедер
+        setIsVisible(true);
+      }
+
+      // Определяем, проскроллена ли страница (для тени)
+      setIsScrolled(currentScrollY > 50);
+      return currentScrollY;
+    });
+  }, []);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
