@@ -31,7 +31,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
   const [selectedVariantAttributes, setSelectedVariantAttributes] = useState<
     string[]
   >([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [attributeValues, setAttributeValues] = useState<
     Record<string, string[]>
   >({});
@@ -52,7 +52,7 @@ export default function VariantsStep({ onNext, onBack }: VariantsStepProps) {
           display_name:
             value.display_value || `Attribute ${value.attribute_id}`,
           is_variant_compatible: true,
-          input_type: 'select',
+          attribute_type: 'select',
           is_required: false,
           is_active: true,
         };

@@ -2,6 +2,7 @@
 // День 25: Offline Caching Стратегии
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { useState, useEffect } from 'react';
 
 interface CacheDBSchema extends DBSchema {
   attributes: {
@@ -124,7 +125,7 @@ class OfflineCacheService {
       });
     }
 
-    await tx.complete;
+    await tx.done;
   }
 
   // Получение атрибутов из кеша
@@ -296,7 +297,7 @@ class OfflineCacheService {
         }
       }
 
-      await tx.complete;
+      await tx.done;
     } finally {
       this.syncInProgress = false;
     }
@@ -317,7 +318,7 @@ class OfflineCacheService {
     for (const key of expiredAttrs) {
       await attrTx.store.delete(key);
     }
-    await attrTx.complete;
+    await attrTx.done;
 
     // Очистка результатов поиска
     const searchTx = this.db.transaction('searchResults', 'readwrite');
@@ -328,7 +329,7 @@ class OfflineCacheService {
     for (const key of expiredSearches) {
       await searchTx.store.delete(key);
     }
-    await searchTx.complete;
+    await searchTx.done;
   }
 
   // Проверка размера кеша
@@ -352,7 +353,7 @@ class OfflineCacheService {
     ];
 
     for (const storeName of stores) {
-      await this.db.clear(storeName);
+      await this.db.clear(storeName as any);
     }
   }
 
@@ -379,7 +380,7 @@ class OfflineCacheService {
       for (const item of data.attributes) {
         await tx.store.put(item);
       }
-      await tx.complete;
+      await tx.done;
     }
 
     if (data.userPreferences) {
@@ -387,7 +388,7 @@ class OfflineCacheService {
       for (const item of data.userPreferences) {
         await tx.store.put(item);
       }
-      await tx.complete;
+      await tx.done;
     }
   }
 

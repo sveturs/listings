@@ -2475,8 +2475,39 @@ definitions:
         $ref: '#/definitions/backend_internal_domain_models.User'
       user_id:
         type: integer
+      variants:
+        description: Варианты товара
+        items:
+          $ref: '#/definitions/backend_internal_domain_models.MarketplaceListingVariant'
+        type: array
       views_count:
         type: integer
+    type: object
+  backend_internal_domain_models.MarketplaceListingVariant:
+    properties:
+      attributes:
+        additionalProperties:
+          type: string
+        description: JSON поле для хранения атрибутов варианта
+        type: object
+      created_at:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      listing_id:
+        type: integer
+      price:
+        type: number
+      sku:
+        type: string
+      stock:
+        type: integer
+      updated_at:
+        type: string
     type: object
   backend_internal_domain_models.MarketplaceMessage:
     properties:
@@ -19974,6 +20005,44 @@ paths:
       summary: Create image enhancement preview
       tags:
       - marketplace-images
+  /api/v1/marketplace/enhanced-suggestions:
+    get:
+      consumes:
+      - application/json
+      description: Returns enhanced suggestions with categories and products
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        required: true
+        type: string
+      - default: 10
+        description: Number of suggestions
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enhanced suggestions
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: marketplace.queryRequired
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - ApiKeyAuth: []
+      summary: Get enhanced search suggestions
+      tags:
+      - marketplace-search
   /api/v1/marketplace/favorites:
     get:
       consumes:

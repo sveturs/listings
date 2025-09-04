@@ -1165,6 +1165,23 @@ func (ts *testStorage) GetPopularCategories(ctx context.Context, limit int) ([]m
 	return nil, ErrNotImplemented
 }
 
+// Listing Variants methods
+func (ts *testStorage) CreateListingVariants(ctx context.Context, listingID int, variants []models.MarketplaceListingVariant) error {
+	return nil
+}
+
+func (ts *testStorage) GetListingVariants(ctx context.Context, listingID int) ([]models.MarketplaceListingVariant, error) {
+	return []models.MarketplaceListingVariant{}, nil
+}
+
+func (ts *testStorage) UpdateListingVariant(ctx context.Context, variant *models.MarketplaceListingVariant) error {
+	return nil
+}
+
+func (ts *testStorage) DeleteListingVariant(ctx context.Context, variantID int) error {
+	return nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

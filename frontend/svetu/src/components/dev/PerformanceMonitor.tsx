@@ -33,13 +33,13 @@ export function PerformanceMonitor({ enabled = false }: { enabled?: boolean }) {
   const calculateLocalStorageSize = useCallback(() => {
     try {
       let total = 0;
-      for (let key in localStorage) {
+      for (const key in localStorage) {
         if (localStorage.hasOwnProperty(key)) {
           total += localStorage[key].length + key.length;
         }
       }
       return total;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }, []);
@@ -53,7 +53,7 @@ export function PerformanceMonitor({ enabled = false }: { enabled?: boolean }) {
         return (stats.hits / (stats.hits + stats.misses)) * 100;
       }
       return 0;
-    } catch (error) {
+    } catch {
       return 0;
     }
   }, []);

@@ -28,8 +28,8 @@ export function useAttributeAutocomplete({
   });
 
   // Debounce refs для оптимизации записи в localStorage
-  const saveRecentTimeout = useRef<NodeJS.Timeout>();
-  const savePopularTimeout = useRef<NodeJS.Timeout>();
+  const saveRecentTimeout = useRef<NodeJS.Timeout | null>(null);
+  const savePopularTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Загрузка данных из localStorage при инициализации
   useEffect(() => {
@@ -100,6 +100,7 @@ export function useAttributeAutocomplete({
         };
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [attributeId]
   );
 

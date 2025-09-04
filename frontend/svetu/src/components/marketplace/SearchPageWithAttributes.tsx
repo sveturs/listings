@@ -26,7 +26,7 @@ const SmartAttributeFilters = lazy(
 type UnifiedAttribute =
   components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
 type Category =
-  components['schemas']['backend_internal_domain_models.Category'];
+  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
 
 interface SearchPageWithAttributesProps {
   initialData: {
@@ -45,7 +45,6 @@ export default function SearchPageWithAttributes({
   initialData,
   categories = [],
   locale,
-  error,
 }: SearchPageWithAttributesProps) {
   const t = useTranslations('marketplace');
   const searchParams = useSearchParams();
@@ -66,12 +65,11 @@ export default function SearchPageWithAttributes({
     updateFilter,
     updateAttributeFilter,
     clearAttributeFilters,
-    syncWithURL,
   } = useSearchWithAttributes(
     {
       query: searchParams.get('q') || '',
       categoryId: searchParams.get('category')
-        ? parseInt(searchParams.get('category'))
+        ? parseInt(searchParams.get('category') || '0')
         : undefined,
     },
     {
@@ -153,11 +151,6 @@ export default function SearchPageWithAttributes({
   useEffect(() => {
     performSearch();
   }, [filters, performSearch]);
-
-  // Handle attribute filter changes
-  const handleAttributeChange = (attributeId: string, values: string[]) => {
-    updateAttributeFilter(attributeId, values);
-  };
 
   // Clear all filters
   const handleClearAllFilters = () => {
@@ -249,7 +242,7 @@ export default function SearchPageWithAttributes({
                     <button
                       onClick={() => {
                         const newValues = values.filter((v) => v !== value);
-                        handleAttributeChange(attrId, newValues);
+                        updateAttributeFilter(attrId, newValues as any);
                       }}
                       className="btn btn-ghost btn-xs btn-circle"
                     >
@@ -330,10 +323,16 @@ export default function SearchPageWithAttributes({
                   }
                 >
                   <SmartAttributeFilters
-                    attributes={availableAttributes}
-                    selectedValues={attributeFilters}
-                    onChange={handleAttributeChange}
-                    locale={locale}
+                    categoryId={filters.categoryId}
+                    initialFilters={{}}
+                    onFiltersChange={(filters) => {
+                      Object.entries(filters).forEach(([key, value]) => {
+                        if (value && value.text_value) {
+                          updateAttributeFilter(key, [value.text_value]);
+                        }
+                      });
+                    }}
+                    className=""
                   />
                 </Suspense>
               )}
@@ -371,14 +370,7 @@ export default function SearchPageWithAttributes({
                 <span className="loading loading-spinner loading-lg"></span>
               </div>
             ) : searchResults && searchResults.items.length > 0 ? (
-              <MarketplaceList
-                initialItems={searchResults.items}
-                locale={locale}
-                onLoadMore={async (page) => {
-                  updateFilter('page', page);
-                  return { items: [], hasMore: false };
-                }}
-              />
+              <MarketplaceList initialData={searchResults} locale={locale} />
             ) : (
               <div className="text-center py-12">
                 <p className="text-base-content/70">{t('search.noResults')}</p>
@@ -447,10 +439,16 @@ export default function SearchPageWithAttributes({
                   fallback={<div className="loading loading-spinner" />}
                 >
                   <SmartAttributeFilters
-                    attributes={availableAttributes}
-                    selectedValues={attributeFilters}
-                    onChange={handleAttributeChange}
-                    locale={locale}
+                    categoryId={filters.categoryId}
+                    initialFilters={{}}
+                    onFiltersChange={(filters) => {
+                      Object.entries(filters).forEach(([key, value]) => {
+                        if (value && value.text_value) {
+                          updateAttributeFilter(key, [value.text_value]);
+                        }
+                      });
+                    }}
+                    className=""
                   />
                 </Suspense>
               )}

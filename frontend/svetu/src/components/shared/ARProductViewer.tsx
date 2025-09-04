@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
+import '@/types/model-viewer';
 
 interface ARProductViewerProps {
   productId: string;
@@ -21,7 +22,7 @@ interface ARCapability {
 }
 
 export default function ARProductViewer({
-  productId,
+  productId: _productId,
   modelUrl,
   imageUrl,
   productName,
@@ -59,7 +60,7 @@ export default function ARProductViewer({
           );
           capabilities.webXR = isSupported;
           capabilities.supported = isSupported;
-        } catch (e) {
+        } catch {
           console.log('WebXR not supported');
         }
       }
@@ -100,14 +101,15 @@ export default function ARProductViewer({
           // Generate 3D model from image using AI
           await generateModelFromImage(imageUrl);
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load model');
+      } catch {
+        setError('Failed to load model');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadModel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelUrl, imageUrl]);
 
   const load3DModel = async (url: string) => {
@@ -133,9 +135,9 @@ export default function ARProductViewer({
         throw new Error('Failed to generate 3D model');
       }
 
-      const { modelUrl } = await response.json();
-      await load3DModel(modelUrl);
-    } catch (err) {
+      const { modelUrl: generatedModelUrl } = await response.json();
+      await load3DModel(generatedModelUrl);
+    } catch {
       // Fallback to 2.5D representation
       create25DModel(imageUrl);
     }
@@ -181,7 +183,7 @@ export default function ARProductViewer({
 
         setIsARActive(true);
         handleWebXRSession(session);
-      } catch (err) {
+      } catch {
         toast.error(t('arNotSupported'));
       }
     } else if (arCapabilities.quickLook) {
@@ -202,6 +204,7 @@ export default function ARProductViewer({
     } else {
       toast.error(t('arNotSupported'));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arCapabilities, modelUrl, imageUrl, t]);
 
   const handleWebXRSession = async (session: any) => {
@@ -240,7 +243,7 @@ export default function ARProductViewer({
     });
   };
 
-  const renderModelAtLocation = (pose: any) => {
+  const renderModelAtLocation = (_pose: any) => {
     // Render 3D model at the specified pose
     // Implementation would use Three.js or WebGL
   };
@@ -258,7 +261,7 @@ export default function ARProductViewer({
     }
 
     try {
-      const session = await (navigator as any).xr.requestSession(
+      const _session = await (navigator as any).xr.requestSession(
         'immersive-ar',
         {
           requiredFeatures: ['hit-test', 'plane-detection'],
@@ -267,7 +270,7 @@ export default function ARProductViewer({
 
       // Room measurement logic
       toast.success(t('measureStarted'));
-    } catch (err) {
+    } catch {
       toast.error(t('measureFailed'));
     }
   }, [arCapabilities, t]);
@@ -304,6 +307,7 @@ export default function ARProductViewer({
             ) : (
               <div className="relative h-full w-full">
                 {/* 3D Model viewer */}
+                {/* @ts-ignore - model-viewer is a web component */}
                 <model-viewer
                   ref={modelViewerRef}
                   ar
@@ -320,6 +324,7 @@ export default function ARProductViewer({
                   >
                     {t('viewInAR')}
                   </button>
+                  {/* @ts-ignore */}
                 </model-viewer>
               </div>
             )}

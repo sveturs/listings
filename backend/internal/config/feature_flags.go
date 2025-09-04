@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+
 // FeatureFlags управляет флагами для постепенного перехода на новую систему
 type FeatureFlags struct {
 	// Флаги для унифицированной системы атрибутов
@@ -34,15 +35,15 @@ func LoadFeatureFlags() *FeatureFlags {
 
 	// Загрузка из переменных окружения
 	if val := os.Getenv("USE_UNIFIED_ATTRIBUTES"); val != "" {
-		flags.UseUnifiedAttributes = val == "true"
+		flags.UseUnifiedAttributes = val == envValueTrue
 	}
 
 	if val := os.Getenv("UNIFIED_ATTRIBUTES_FALLBACK"); val != "" {
-		flags.UnifiedAttributesFallback = val == "true"
+		flags.UnifiedAttributesFallback = val == envValueTrue
 	}
 
 	if val := os.Getenv("DUAL_WRITE_ATTRIBUTES"); val != "" {
-		flags.DualWriteAttributes = val == "true"
+		flags.DualWriteAttributes = val == envValueTrue
 	}
 
 	if val := os.Getenv("UNIFIED_ATTRIBUTES_PERCENT"); val != "" {
@@ -54,11 +55,11 @@ func LoadFeatureFlags() *FeatureFlags {
 	}
 
 	if val := os.Getenv("LOG_ATTRIBUTE_SYSTEM_CALLS"); val != "" {
-		flags.LogAttributeSystemCalls = val == "true"
+		flags.LogAttributeSystemCalls = val == envValueTrue
 	}
 
 	if val := os.Getenv("ATTRIBUTE_CACHE_ENABLED"); val != "" {
-		flags.AttributeCacheEnabled = val == "true"
+		flags.AttributeCacheEnabled = val == envValueTrue
 	}
 
 	if val := os.Getenv("ATTRIBUTE_CACHE_TTL_MINUTES"); val != "" {

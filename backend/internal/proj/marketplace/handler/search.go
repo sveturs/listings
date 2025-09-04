@@ -460,12 +460,12 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 
 	// Получаем язык из контекста
 	language := c.Query("lang", "ru")
-	
+
 	// Структура для расширенных предложений
 	enhancedSuggestions := map[string]interface{}{
-		"query": query,
-		"suggestions": []string{},
-		"categories": []map[string]interface{}{},
+		"query":         query,
+		"suggestions":   []string{},
+		"categories":    []map[string]interface{}{},
 		"popular_items": []map[string]interface{}{},
 	}
 
@@ -493,7 +493,7 @@ func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 // searchCategories ищет подходящие категории для запроса
 func (h *SearchHandler) searchCategories(ctx context.Context, query, language string, limit int) ([]map[string]interface{}, error) {
 	categories := []map[string]interface{}{}
-	
+
 	// Получаем все категории через сервис маркетплейса
 	allCategories, err := h.marketplaceService.GetCategories(ctx)
 	if err != nil {
@@ -501,33 +501,33 @@ func (h *SearchHandler) searchCategories(ctx context.Context, query, language st
 	}
 
 	queryLower := strings.ToLower(query)
-	
+
 	// Фильтруем категории по совпадению с запросом
 	for _, cat := range allCategories {
 		// Проверяем имя категории
 		name := strings.ToLower(cat.Name)
 		if strings.Contains(name, queryLower) {
 			categories = append(categories, map[string]interface{}{
-				"id": cat.ID,
-				"name": cat.Name,
-				"slug": cat.Slug,
-				"icon": cat.Icon,
+				"id":         cat.ID,
+				"name":       cat.Name,
+				"slug":       cat.Slug,
+				"icon":       cat.Icon,
 				"item_count": cat.ListingCount, // Используем ListingCount вместо ItemCount
 			})
-			
+
 			if len(categories) >= limit {
 				break
 			}
 		}
 	}
-	
+
 	return categories, nil
 }
 
 // searchPopularItems ищет популярные товары по запросу
 func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language string, limit int) ([]map[string]interface{}, error) {
 	items := []map[string]interface{}{}
-	
+
 	// Используем поиск для получения популярных товаров
 	searchParams := &search.ServiceParams{
 		Query:         query,
@@ -537,18 +537,18 @@ func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language 
 		SortDirection: "desc",
 		Language:      language,
 	}
-	
+
 	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, searchParams)
 	if err != nil {
 		return items, err
 	}
-	
+
 	// Форматируем результаты для ответа
 	for _, listing := range results.Items {
 		items = append(items, map[string]interface{}{
-			"id": listing.ID,
-			"title": listing.Title,
-			"price": listing.Price,
+			"id":       listing.ID,
+			"title":    listing.Title,
+			"price":    listing.Price,
 			"currency": "RSD", // Используем фиксированную валюту, так как поля Currency нет в модели
 			"image": func() string {
 				if len(listing.Images) > 0 {
@@ -559,7 +559,7 @@ func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language 
 			"location": listing.City,
 		})
 	}
-	
+
 	return items, nil
 }
 

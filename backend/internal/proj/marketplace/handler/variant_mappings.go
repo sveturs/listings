@@ -31,7 +31,7 @@ func NewVariantMappingsHandler(
 		featureFlags.UnifiedAttributesFallback,
 		featureFlags.DualWriteAttributes,
 	)
-	
+
 	return &VariantMappingsHandler{
 		services:         services,
 		attributeService: attributeService,

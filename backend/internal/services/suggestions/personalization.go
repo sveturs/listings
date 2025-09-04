@@ -300,7 +300,7 @@ func (ps *PersonalizationService) updatePreferences(profile *UserProfile) {
 	// Calculate from click history
 	for _, click := range profile.ClickHistory {
 		// Weight based on recency and engagement
-		weight := ps.calculateWeight(click)
+		_ = ps.calculateWeight(click)
 
 		// Update category preference (would need actual category from item)
 		// profile.Categories[categoryID] += weight

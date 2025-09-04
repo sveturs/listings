@@ -42,11 +42,10 @@ export function AutocompleteAttributeField({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Используем хук для управления автокомплитом
-  const { popularValues, recentValues, saveValue, getFilteredSuggestions } =
-    useAttributeAutocomplete({
-      attributeId: attribute.id!,
-      attributeName: attribute.name || 'unknown',
-    });
+  const { saveValue, getFilteredSuggestions } = useAttributeAutocomplete({
+    attributeId: attribute.id!,
+    attributeName: attribute.name || 'unknown',
+  });
 
   // Получение умных предложений на основе типа атрибута и популярных значений
   const generateSmartSuggestions = useMemo(() => {
@@ -267,7 +266,7 @@ export function AutocompleteAttributeField({
             }, 150);
           }}
           onKeyDown={handleKeyDown}
-          placeholder={attribute.description || t('autocomplete.enter_value')}
+          placeholder={attribute.display_name || t('autocomplete.enter_value')}
           className={`input input-bordered w-full pr-10 ${className.includes('has-error') ? 'input-error' : ''}`}
         />
 
@@ -326,15 +325,6 @@ export function AutocompleteAttributeField({
           </div>
         )}
       </div>
-
-      {/* Описание атрибута */}
-      {attribute.description && (
-        <label className="label">
-          <span className="label-text-alt opacity-70">
-            {attribute.description}
-          </span>
-        </label>
-      )}
     </div>
   );
 }

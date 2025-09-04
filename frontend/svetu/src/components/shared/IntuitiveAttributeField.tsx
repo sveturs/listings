@@ -99,8 +99,7 @@ function IntuitiverAttributeFieldComponent(
       const nameMatches = rule.name_patterns.some(
         (pattern) =>
           pattern.test(attributeName) ||
-          pattern.test(attribute.display_name?.toLowerCase() || '') ||
-          pattern.test(attribute.description?.toLowerCase() || '')
+          pattern.test(attribute.display_name?.toLowerCase() || '')
       );
 
       return nameMatches;
@@ -143,15 +142,6 @@ function IntuitiverAttributeFieldComponent(
               className={props.className}
             />
 
-            {/* Описание атрибута */}
-            {attribute.description && (
-              <label className="label">
-                <span className="label-text-alt opacity-70">
-                  {attribute.description}
-                </span>
-              </label>
-            )}
-
             {/* Ошибка */}
             {props.error && (
               <label className="label">
@@ -182,15 +172,6 @@ function IntuitiverAttributeFieldComponent(
               sizeType={intuitiveComponent.props?.sizeType}
             />
 
-            {/* Описание атрибута */}
-            {attribute.description && (
-              <label className="label">
-                <span className="label-text-alt opacity-70">
-                  {attribute.description}
-                </span>
-              </label>
-            )}
-
             {/* Ошибка */}
             {props.error && (
               <label className="label">
@@ -217,7 +198,7 @@ function IntuitiverAttributeFieldComponent(
 }
 
 // Мемоизированный экспорт для оптимизации производительности
-export const IntuitiverAttributeField = memo(
+export default memo(
   IntuitiverAttributeFieldComponent,
   (prevProps, nextProps) => {
     // Глубокое сравнение для атрибута и значения
@@ -277,8 +258,7 @@ export function getIntuitiveComponentUsage(attributes: UnifiedAttribute[]) {
       const nameMatches = rule.name_patterns.some(
         (pattern) =>
           pattern.test(attributeName) ||
-          pattern.test(attr.display_name?.toLowerCase() || '') ||
-          pattern.test(attr.description?.toLowerCase() || '')
+          pattern.test(attr.display_name?.toLowerCase() || '')
       );
 
       return nameMatches;

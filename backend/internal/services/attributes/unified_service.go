@@ -346,7 +346,7 @@ func (s *UnifiedAttributeService) ValidateAttributeValue(ctx context.Context, at
 			if strVal, ok := value.(string); ok {
 				_, err := time.Parse("2006-01-02", strVal)
 				if err != nil {
-					return fmt.Errorf("invalid date format for attribute %s: %v", attr.Name, err)
+					return fmt.Errorf("invalid date format for attribute %s: %w", attr.Name, err)
 				}
 			} else {
 				return fmt.Errorf("value must be a date for attribute %s", attr.Name)

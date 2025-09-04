@@ -16521,6 +16521,63 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/enhanced-suggestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get enhanced search suggestions
+     * @description Returns enhanced suggestions with categories and products
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Search query */
+          query: string;
+          /** @description Number of suggestions */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Enhanced suggestions */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description marketplace.queryRequired */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/favorites': {
     parameters: {
       query?: never;
@@ -34191,7 +34248,24 @@ export interface components {
       updated_at?: string;
       user?: components['schemas']['backend_internal_domain_models.User'];
       user_id?: number;
+      /** @description Варианты товара */
+      variants?: components['schemas']['backend_internal_domain_models.MarketplaceListingVariant'][];
       views_count?: number;
+    };
+    'backend_internal_domain_models.MarketplaceListingVariant': {
+      /** @description JSON поле для хранения атрибутов варианта */
+      attributes?: {
+        [key: string]: string;
+      };
+      created_at?: string;
+      id?: number;
+      image_url?: string;
+      is_active?: boolean;
+      listing_id?: number;
+      price?: number;
+      sku?: string;
+      stock?: number;
+      updated_at?: string;
     };
     'backend_internal_domain_models.MarketplaceMessage': {
       attachments?: components['schemas']['backend_internal_domain_models.ChatAttachment'][];

@@ -10,6 +10,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const statusHealthy = "healthy"
+
 type Handler struct {
 	db    *sql.DB
 	redis *redis.Client
@@ -78,7 +80,7 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 			if stats.OpenConnections > 90 { // Warning threshold
 				checks["database"] = "degraded: high connection count"
 			} else {
-				checks["database"] = "healthy"
+				checks["database"] = statusHealthy
 			}
 		}
 	} else {
@@ -93,14 +95,14 @@ func (h *Handler) ReadyCheck(c *fiber.Ctx) error {
 			checks["redis"] = "unhealthy: " + err.Error()
 			isReady = false
 		} else {
-			checks["redis"] = "healthy"
+			checks["redis"] = statusHealthy
 		}
 	} else {
 		checks["redis"] = "not configured"
 	}
 
 	// Check disk space (basic check)
-	checks["disk"] = "healthy" // TODO: Implement actual disk space check
+	checks["disk"] = statusHealthy // TODO: Implement actual disk space check
 
 	// Determine overall status
 	statusText := "ok"

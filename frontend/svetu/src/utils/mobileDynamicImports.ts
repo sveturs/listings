@@ -101,8 +101,11 @@ export function dynamicImport<T extends ComponentType<any>>(
         const importPromise = importFunc();
 
         // Race between import and timeout
-        const module = await Promise.race([importPromise, timeoutPromise]);
-        return module;
+        const moduleResult = await Promise.race([
+          importPromise,
+          timeoutPromise,
+        ]);
+        return moduleResult;
       } catch (error) {
         lastError = error as Error;
 
@@ -175,19 +178,7 @@ export const MobileComponents = {
       { prefetch: !detectDevice().isMobile, chunkName: 'mobile-attrs' }
     ),
 
-  // Light components - preload
-  TouchGestures: () =>
-    dynamicImport(
-      () =>
-        import(/* webpackChunkName: "gestures" */ '../hooks/useTouchGestures'),
-      { preload: true, chunkName: 'gestures' }
-    ),
-
-  VoiceSearch: () =>
-    dynamicImport(
-      () => import(/* webpackChunkName: "voice" */ '../hooks/useVoiceSearch'),
-      { prefetch: true, chunkName: 'voice' }
-    ),
+  // Note: Hooks cannot be lazy loaded - they must be imported directly where used
 };
 
 /**

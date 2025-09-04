@@ -3,6 +3,7 @@ package attributes
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -77,7 +78,7 @@ func (sc *SearchCache) Get(ctx context.Context, params SearchParams) (*SearchRes
 
 	data, err := sc.redis.Get(ctx, key).Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			// Cache miss
 			return nil, nil
 		}
@@ -251,7 +252,7 @@ func (sc *SearchCache) BatchGetSearchResults(ctx context.Context, paramsList []S
 	}
 
 	_, err := pipe.Exec(ctx)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		sc.logger.Error("Failed to execute pipeline", zap.Error(err))
 		return nil, err
 	}
@@ -261,7 +262,7 @@ func (sc *SearchCache) BatchGetSearchResults(ctx context.Context, paramsList []S
 	for i, cmd := range cmds {
 		data, err := cmd.Bytes()
 		if err != nil {
-			if err == redis.Nil {
+			if errors.Is(err, redis.Nil) {
 				// Cache miss for this key
 				results[i] = nil
 				continue

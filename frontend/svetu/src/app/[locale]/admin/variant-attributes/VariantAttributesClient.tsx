@@ -32,14 +32,14 @@ interface VariantMapping {
 }
 
 export default function VariantAttributesClient() {
-  const t = useTranslations('admin');
+  const _t = useTranslations('admin');
   const [attributes, setAttributes] = useState<VariantAttribute[]>([]);
   const [mappings, setMappings] = useState<VariantMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
-  const [showMappingModal, setShowMappingModal] = useState(false);
-  const [selectedAttribute, setSelectedAttribute] =
+  const [_showMappingModal, _setShowMappingModal] = useState(false);
+  const [_selectedAttribute, setSelectedAttribute] =
     useState<VariantAttribute | null>(null);
 
   useEffect(() => {

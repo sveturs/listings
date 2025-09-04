@@ -82,6 +82,7 @@ export function useNativeShare(): UseNativeShareReturn {
         setIsSharing(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [canShare, canShareFiles]
   );
 
@@ -120,6 +121,7 @@ export function useNativeShare(): UseNativeShareReturn {
 
       return await share({ title, text, url });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [share, canShareFiles]
   );
 
@@ -147,7 +149,7 @@ export function useNativeShare(): UseNativeShareReturn {
             url: imageUrl,
           });
         }
-      } catch (error) {
+      } catch {
         return {
           success: false,
           error: 'Failed to share image',
@@ -187,6 +189,7 @@ export function useNativeShare(): UseNativeShareReturn {
         return false;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -259,7 +262,7 @@ export function useNativeShare(): UseNativeShareReturn {
       showShareDialog(shareOptions);
 
       return { success: true, method: 'fallback' };
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: 'Share failed',

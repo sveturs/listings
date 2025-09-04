@@ -97,7 +97,7 @@ class PerformanceOptimizationService {
         this.batteryManager.addEventListener('chargingchange', () =>
           this.updateBatteryInfo()
         );
-      } catch (error) {
+      } catch {
         console.debug('Battery API not available');
       }
     }
@@ -161,7 +161,7 @@ class PerformanceOptimizationService {
         this.performanceObserver.observe({
           entryTypes: ['measure', 'navigation', 'resource'],
         });
-      } catch (e) {
+      } catch {
         // Some entry types might not be supported
       }
     }

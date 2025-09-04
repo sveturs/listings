@@ -181,9 +181,11 @@ export function SizePickerAttribute({
             >
               <div className="text-center">
                 <div className="font-bold">{size.value}</div>
-                {sizeType === 'clothing' && size.numeric && (
-                  <div className="text-xs opacity-70">{size.numeric}</div>
-                )}
+                {sizeType === 'clothing' &&
+                  'numeric' in size &&
+                  size.numeric && (
+                    <div className="text-xs opacity-70">{size.numeric}</div>
+                  )}
               </div>
             </button>
           ))}

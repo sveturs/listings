@@ -71,7 +71,7 @@ func (s *CachedAttributeService) GetCategoryAttributes(ctx context.Context, cate
 	}
 
 	// Сохраняем в кэш (асинхронно, чтобы не замедлять ответ)
-	go s.cacheAttributesList(cacheKey, attributes)
+	go s.cacheAttributesList(context.Background(), cacheKey, attributes)
 
 	s.logger.Debug("Cache miss for category attributes, loaded from DB",
 		zap.Int64("category_id", categoryID),
@@ -107,7 +107,7 @@ func (s *CachedAttributeService) GetAttributeById(ctx context.Context, attribute
 	}
 
 	// Сохраняем в кэш (асинхронно)
-	go s.cacheAttribute(cacheKey, *attribute)
+	go s.cacheAttribute(context.Background(), cacheKey, *attribute)
 
 	s.logger.Debug("Cache miss for attribute, loaded from DB",
 		zap.Int64("attribute_id", attributeID))
@@ -144,7 +144,7 @@ func (s *CachedAttributeService) GetPopularValues(ctx context.Context, attribute
 	}
 
 	// Сохраняем в кэш (асинхронно) с более коротким TTL для популярных значений
-	go s.cachePopularValues(cacheKey, values)
+	go s.cachePopularValues(context.Background(), cacheKey, values)
 
 	s.logger.Debug("Cache miss for popular values, loaded from DB",
 		zap.Int64("attribute_id", attributeID),
@@ -176,10 +176,10 @@ func (s *CachedAttributeService) InvalidateAttribute(attributeID int64) error {
 	}
 
 	// Добавляем ключ атрибута к списку для удаления
-	allKeys := append(keys, attrKey)
+	keys = append(keys, attrKey)
 
-	if len(allKeys) > 0 {
-		return s.redis.Del(ctx, allKeys...).Err()
+	if len(keys) > 0 {
+		return s.redis.Del(ctx, keys...).Err()
 	}
 
 	return nil
@@ -217,8 +217,7 @@ func (s *CachedAttributeService) CacheStats() map[string]interface{} {
 
 // Вспомогательные методы для асинхронного кэширования
 
-func (s *CachedAttributeService) cacheAttributesList(key string, attributes []models.UnifiedAttribute) {
-	ctx := context.Background()
+func (s *CachedAttributeService) cacheAttributesList(ctx context.Context, key string, attributes []models.UnifiedAttribute) {
 	data, err := json.Marshal(attributes)
 	if err != nil {
 		s.logger.Error("Failed to serialize attributes for cache", zap.Error(err))
@@ -231,8 +230,7 @@ func (s *CachedAttributeService) cacheAttributesList(key string, attributes []mo
 	}
 }
 
-func (s *CachedAttributeService) cacheAttribute(key string, attribute models.UnifiedAttribute) {
-	ctx := context.Background()
+func (s *CachedAttributeService) cacheAttribute(ctx context.Context, key string, attribute models.UnifiedAttribute) {
 	data, err := json.Marshal(attribute)
 	if err != nil {
 		s.logger.Error("Failed to serialize attribute for cache", zap.Error(err))
@@ -245,8 +243,7 @@ func (s *CachedAttributeService) cacheAttribute(key string, attribute models.Uni
 	}
 }
 
-func (s *CachedAttributeService) cachePopularValues(key string, values []string) {
-	ctx := context.Background()
+func (s *CachedAttributeService) cachePopularValues(ctx context.Context, key string, values []string) {
 	data, err := json.Marshal(values)
 	if err != nil {
 		s.logger.Error("Failed to serialize popular values for cache", zap.Error(err))

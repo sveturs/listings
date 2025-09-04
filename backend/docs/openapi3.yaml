@@ -11327,6 +11327,46 @@ paths:
       summary: Create image enhancement preview
       tags:
         - marketplace-images
+  /api/v1/marketplace/enhanced-suggestions:
+    get:
+      description: Returns enhanced suggestions with categories and products
+      parameters:
+        - description: Search query
+          in: query
+          name: query
+          required: true
+          schema:
+            type: string
+        - description: Number of suggestions
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Enhanced suggestions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties: true
+                        type: object
+                    type: object
+        "400":
+          description: marketplace.queryRequired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - ApiKeyAuth: []
+      summary: Get enhanced search suggestions
+      tags:
+        - marketplace-search
   /api/v1/marketplace/favorites:
     get:
       description: Returns all listings marked as favorites by the user
@@ -24877,8 +24917,40 @@ components:
           $ref: "#/components/schemas/backend_internal_domain_models.User"
         user_id:
           type: integer
+        variants:
+          description: Варианты товара
+          items:
+            $ref: "#/components/schemas/backend_internal_domain_models.MarketplaceListingVa\
+              riant"
+          type: array
         views_count:
           type: integer
+      type: object
+    backend_internal_domain_models.MarketplaceListingVariant:
+      properties:
+        attributes:
+          additionalProperties:
+            type: string
+          description: JSON поле для хранения атрибутов варианта
+          type: object
+        created_at:
+          type: string
+        id:
+          type: integer
+        image_url:
+          type: string
+        is_active:
+          type: boolean
+        listing_id:
+          type: integer
+        price:
+          type: number
+        sku:
+          type: string
+        stock:
+          type: integer
+        updated_at:
+          type: string
       type: object
     backend_internal_domain_models.MarketplaceMessage:
       properties:

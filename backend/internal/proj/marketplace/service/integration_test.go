@@ -569,6 +569,22 @@ func (m *MockStorage) GetCarMakeBySlug(ctx context.Context, slug string) (*model
 	return nil, errors.New("not implemented")
 }
 
+func (m *MockStorage) CreateListingVariants(ctx context.Context, listingID int, variants []models.MarketplaceListingVariant) error {
+	return nil
+}
+
+func (m *MockStorage) GetListingVariants(ctx context.Context, listingID int) ([]models.MarketplaceListingVariant, error) {
+	return []models.MarketplaceListingVariant{}, nil
+}
+
+func (m *MockStorage) UpdateListingVariant(ctx context.Context, variant *models.MarketplaceListingVariant) error {
+	return nil
+}
+
+func (m *MockStorage) DeleteListingVariant(ctx context.Context, variantID int) error {
+	return nil
+}
+
 // Создание тестового сервиса
 func createTestService() *MarketplaceService {
 	mockStorage := &MockStorage{}

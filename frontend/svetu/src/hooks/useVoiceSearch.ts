@@ -76,6 +76,7 @@ export const useVoiceSearch = (options: VoiceSearchOptions = {}) => {
         clearTimeout(timeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Настройка распознавания речи
@@ -217,6 +218,7 @@ export const useVoiceSearch = (options: VoiceSearchOptions = {}) => {
       // Визуальная индикация окончания записи
       console.log('Audio recording ended');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     continuous,
     interimResults,

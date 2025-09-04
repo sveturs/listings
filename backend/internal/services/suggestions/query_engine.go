@@ -164,7 +164,7 @@ func (qe *QueryEngine) getPrefixSuggestions(ctx context.Context, prefix string, 
 
 	// Get from Redis sorted set
 	results, err := qe.redis.ZRevRangeByLex(ctx, "query_frequencies",
-		redis.ZRangeBy{
+		&redis.ZRangeBy{
 			Min: "[" + prefix,
 			Max: "[" + prefix + "\xff",
 		}).Result()

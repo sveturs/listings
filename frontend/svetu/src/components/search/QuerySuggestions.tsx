@@ -12,7 +12,6 @@ import { debounce } from 'lodash';
 import {
   MagnifyingGlassIcon,
   ClockIcon,
-  TrendingUpIcon,
   SparklesIcon,
   ArrowTrendingUpIcon,
   UserIcon,
@@ -203,7 +202,7 @@ export default function QuerySuggestions({
       case 'recent':
         return <ClockIcon className="w-4 h-4 text-base-content/50" />;
       case 'trending':
-        return <TrendingUpIcon className="w-4 h-4 text-success" />;
+        return <ArrowTrendingUpIcon className="w-4 h-4 text-success" />;
       case 'personalized':
         return <UserIcon className="w-4 h-4 text-primary" />;
       case 'popular':

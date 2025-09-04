@@ -122,6 +122,46 @@ func (m *MockUnifiedAttributeStorage) InvalidateCache(categoryID int) {
 	m.Called(categoryID)
 }
 
+// VariantMapping methods
+func (m *MockUnifiedAttributeStorage) CreateVariantMapping(ctx context.Context, mapping *models.VariantAttributeMappingCreateRequest) (*models.VariantAttributeMapping, error) {
+	args := m.Called(ctx, mapping)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.VariantAttributeMapping), args.Error(1)
+}
+
+func (m *MockUnifiedAttributeStorage) UpdateVariantMapping(ctx context.Context, id int, update *models.VariantAttributeMappingUpdateRequest) error {
+	args := m.Called(ctx, id, update)
+	return args.Error(0)
+}
+
+func (m *MockUnifiedAttributeStorage) DeleteVariantMapping(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockUnifiedAttributeStorage) GetCategoryVariantMappings(ctx context.Context, categoryID int) ([]*models.VariantAttributeMapping, error) {
+	args := m.Called(ctx, categoryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.VariantAttributeMapping), args.Error(1)
+}
+
+func (m *MockUnifiedAttributeStorage) DeleteCategoryVariantMappings(ctx context.Context, categoryID int) error {
+	args := m.Called(ctx, categoryID)
+	return args.Error(0)
+}
+
+func (m *MockUnifiedAttributeStorage) GetVariantCompatibleAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.UnifiedAttribute), args.Error(1)
+}
+
 // Тесты для UnifiedAttributeService
 
 func TestNewUnifiedAttributeService(t *testing.T) {

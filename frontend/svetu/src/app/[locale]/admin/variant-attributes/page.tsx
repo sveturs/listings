@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function VariantAttributesPage() {
-  const t = await getTranslations('admin');
+  const _t = await getTranslations('admin');
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -352,7 +352,9 @@ class BiometricAuthService {
       body: JSON.stringify({
         userId,
         credentialId: this.arrayBufferToBase64(credential.rawId),
-        publicKey: this.arrayBufferToBase64(response.publicKey!),
+        publicKey: response.getPublicKey
+          ? this.arrayBufferToBase64(response.getPublicKey()!)
+          : '',
         attestation: this.arrayBufferToBase64(response.attestationObject),
       }),
     });
@@ -383,7 +385,8 @@ class BiometricAuthService {
 
   private stringToArrayBuffer(str: string): ArrayBuffer {
     const encoder = new TextEncoder();
-    return encoder.encode(str).buffer;
+    const encoded = encoder.encode(str);
+    return encoded.buffer as ArrayBuffer;
   }
 
   private arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -413,7 +416,7 @@ class BiometricAuthService {
     const db = await this.openSecureDB();
     const tx = db.transaction('secure', 'readonly');
     const result = await tx.objectStore('secure').get(key);
-    return result?.value || null;
+    return (result as any)?.value || null;
   }
 
   private async clearSecureStorage(): Promise<void> {

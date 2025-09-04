@@ -3,9 +3,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { debounce } from 'lodash';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
+type _UnifiedAttribute =
   components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
-type AttributeValue =
+type _AttributeValue =
   components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
 
 interface SearchFilters {

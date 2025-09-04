@@ -19225,6 +19225,75 @@
                 }
             }
         },
+        "/api/v1/marketplace/enhanced-suggestions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns enhanced suggestions with categories and products",
+                "tags": [
+                    "marketplace-search"
+                ],
+                "summary": "Get enhanced search suggestions",
+                "parameters": [
+                    {
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Number of suggestions",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enhanced suggestions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "marketplace.queryRequired",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/favorites": {
             "get": {
                 "security": [
@@ -41342,8 +41411,54 @@
                     "user_id": {
                         "type": "integer"
                     },
+                    "variants": {
+                        "description": "Варианты товара",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/backend_internal_domain_models.MarketplaceListingVariant"
+                        }
+                    },
                     "views_count": {
                         "type": "integer"
+                    }
+                }
+            },
+            "backend_internal_domain_models.MarketplaceListingVariant": {
+                "type": "object",
+                "properties": {
+                    "attributes": {
+                        "description": "JSON поле для хранения атрибутов варианта",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "image_url": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "listing_id": {
+                        "type": "integer"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "sku": {
+                        "type": "string"
+                    },
+                    "stock": {
+                        "type": "integer"
+                    },
+                    "updated_at": {
+                        "type": "string"
                     }
                 }
             },

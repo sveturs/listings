@@ -194,7 +194,7 @@ export default function OptimizedImage({
       }));
 
       onLoad?.();
-    } catch (error) {
+    } catch {
       handleImageError();
     }
   };
@@ -202,7 +202,11 @@ export default function OptimizedImage({
   // Load image promise
   const loadImage = (imageSrc: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const img = new Image();
+      if (typeof window === 'undefined') {
+        resolve();
+        return;
+      }
+      const img = new window.Image();
       img.onload = () => resolve();
       img.onerror = reject;
       img.src = imageSrc;
@@ -252,6 +256,7 @@ export default function OptimizedImage({
     if (state.isInView && !state.hasError) {
       loadProgressiveImage();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.isInView]);
 
   // Generate blur placeholder
@@ -391,7 +396,7 @@ export const ImageOptimizer = {
       const reader = new FileReader();
 
       reader.onload = (e) => {
-        const img = new Image();
+        const img = new window.Image();
 
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -440,7 +445,7 @@ export const ImageOptimizer = {
       const reader = new FileReader();
 
       reader.onload = (e) => {
-        const img = new Image();
+        const img = new window.Image();
 
         img.onload = () => {
           let { width, height } = img;
@@ -498,7 +503,7 @@ export const ImageOptimizer = {
     size: number = 40
   ): Promise<string> {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
 
       img.onload = () => {
         const canvas = document.createElement('canvas');

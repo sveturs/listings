@@ -181,6 +181,7 @@ func (s *UnifiedAttributesTestSuite) TestGetCategoryAttributes() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var result utils.SuccessResponseSwag
@@ -208,6 +209,7 @@ func (s *UnifiedAttributesTestSuite) TestSaveListingAttributeValues() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем, что значения сохранились
@@ -231,6 +233,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationRequired() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -254,6 +257,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationSelectOptions() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -277,6 +281,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationNumberRange() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -444,6 +449,7 @@ func (s *UnifiedAttributesTestSuite) TestGetAttributeRanges() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var result utils.SuccessResponseSwag

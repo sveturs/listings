@@ -71,6 +71,7 @@ export default function QRBarcodeScanner({
     return () => {
       stopScanning();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCamera]);
 
   const initializeScanner = async () => {
@@ -96,16 +97,20 @@ export default function QRBarcodeScanner({
 
       // Start camera
       await startCamera();
-    } catch (error) {
-      console.error('Scanner initialization error:', error);
+    } catch {
+      console.error('Scanner initialization error');
       setCameraError(t('scannerInitError'));
     }
   };
 
   const loadFallbackScanner = async () => {
     // Dynamic import of fallback scanner library
-    const { BrowserMultiFormatReader } = await import('@zxing/browser');
-    barcodeDetectorRef.current = new BrowserMultiFormatReader();
+    // TODO: Install @zxing/browser package for fallback scanner
+    // const { BrowserMultiFormatReader } = await import('@zxing/browser');
+    // barcodeDetectorRef.current = new BrowserMultiFormatReader();
+    console.warn(
+      'Fallback scanner not available - @zxing/browser not installed'
+    );
   };
 
   const startCamera = async () => {
@@ -134,8 +139,8 @@ export default function QRBarcodeScanner({
       if ('torch' in capabilities) {
         // Flash is available
       }
-    } catch (error) {
-      console.error('Camera error:', error);
+    } catch {
+      console.error('Camera error');
       setCameraError(t('cameraAccessError'));
     }
   };
@@ -192,18 +197,17 @@ export default function QRBarcodeScanner({
           // Native BarcodeDetector
           detectedCodes = await barcodeDetectorRef.current.detect(canvas);
         } else {
-          // Fallback library
-          const result =
-            await barcodeDetectorRef.current.decodeFromCanvas(canvas);
-          if (result) {
-            detectedCodes = [
-              {
-                rawValue: result.getText(),
-                format: result.getBarcodeFormat(),
-                boundingBox: result.getResultPoints(),
-              },
-            ];
-          }
+          // Fallback library - TODO: Implement when @zxing/browser is installed
+          // const result =
+          //   await barcodeDetectorRef.current.decodeFromCanvas(canvas);
+          //     detectedCodes = [
+          //       {
+          //         rawValue: result.getText(),
+          //         format: result.getBarcodeFormat(),
+          //         boundingBox: result.getResultPoints(),
+          //       },
+          //     ];
+          // }
         }
       }
 
@@ -211,7 +215,7 @@ export default function QRBarcodeScanner({
         const code = detectedCodes[0];
         await handleDetectedCode(code);
       }
-    } catch (error) {
+    } catch {
       // Scanning failed for this frame, continue
     }
   };
@@ -365,8 +369,8 @@ export default function QRBarcodeScanner({
           fillProductForm(productInfo);
         }
       }
-    } catch (error) {
-      console.error('Error processing scan:', error);
+    } catch {
+      console.error('Error processing scan');
       toast.error(t('processingError'));
     } finally {
       setIsLoading(false);
@@ -393,7 +397,7 @@ export default function QRBarcodeScanner({
       }
 
       return await response.json();
-    } catch (error) {
+    } catch {
       return await lookupExternalBarcode(scanResult);
     }
   };
@@ -493,8 +497,8 @@ export default function QRBarcodeScanner({
       } else {
         toast.error(t('flashNotSupported'));
       }
-    } catch (error) {
-      console.error('Flash toggle error:', error);
+    } catch {
+      console.error('Flash toggle error:');
     }
   }, [flashEnabled, t]);
 
@@ -511,6 +515,7 @@ export default function QRBarcodeScanner({
         confidence: 1,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
   return (

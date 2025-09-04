@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { UnifiedAttributeField } from './UnifiedAttributeField';
-import { IntuitiverAttributeField } from './IntuitiveAttributeField';
+import IntuitiveAttributeField from './IntuitiveAttributeField';
 import { unifiedAttributeService } from '@/services/unifiedAttributeService';
 import type { components } from '@/types/generated/api';
 
@@ -176,8 +176,7 @@ function SmartAttributeFiltersComponent({
     return attributes.filter(
       (attr) =>
         attr.name?.toLowerCase().includes(query) ||
-        attr.display_name?.toLowerCase().includes(query) ||
-        attr.description?.toLowerCase().includes(query)
+        attr.display_name?.toLowerCase().includes(query)
     );
   }, [attributes, searchQuery]);
 
@@ -267,7 +266,7 @@ function SmartAttributeFiltersComponent({
           name: groupInfo.name,
           icon: groupInfo.icon,
           priority: groupInfo.priority,
-          isPopular: groupInfo.isPopular,
+          isPopular: 'isPopular' in groupInfo ? groupInfo.isPopular : false,
           attributes: [],
         });
       }
@@ -507,7 +506,7 @@ function SmartAttributeFiltersComponent({
                       if (!attr.id) return null;
 
                       return (
-                        <IntuitiverAttributeField
+                        <IntuitiveAttributeField
                           key={attr.id}
                           attribute={attr}
                           value={filters[attr.id]}
@@ -553,3 +552,5 @@ export const SmartAttributeFilters = memo(
     );
   }
 );
+
+export default SmartAttributeFilters;

@@ -270,23 +270,27 @@ export class UnifiedSearchService {
     }
 
     const data = await response.json();
-    
+
     // Обрабатываем ответ от enhanced-suggestions endpoint
     // который возвращает объект с полями: suggestions, categories, popular_items
-    if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+    if (
+      data.data &&
+      typeof data.data === 'object' &&
+      !Array.isArray(data.data)
+    ) {
       const enhancedData = data.data;
       const allSuggestions: SearchSuggestion[] = [];
-      
+
       // Добавляем текстовые предложения
       if (enhancedData.suggestions && Array.isArray(enhancedData.suggestions)) {
         enhancedData.suggestions.forEach((text: string) => {
           allSuggestions.push({
             text: text,
-            type: 'query' as const,
+            type: 'text' as const,
           });
         });
       }
-      
+
       // Добавляем категории
       if (enhancedData.categories && Array.isArray(enhancedData.categories)) {
         enhancedData.categories.forEach((cat: any) => {
@@ -302,9 +306,12 @@ export class UnifiedSearchService {
           });
         });
       }
-      
+
       // Добавляем популярные товары
-      if (enhancedData.popular_items && Array.isArray(enhancedData.popular_items)) {
+      if (
+        enhancedData.popular_items &&
+        Array.isArray(enhancedData.popular_items)
+      ) {
         enhancedData.popular_items.forEach((item: any) => {
           allSuggestions.push({
             text: item.title || '',
@@ -319,10 +326,10 @@ export class UnifiedSearchService {
           });
         });
       }
-      
+
       return allSuggestions;
     }
-    
+
     // Fallback для старого формата (если backend вернул массив)
     const rawSuggestions = Array.isArray(data.data) ? data.data : [];
 
