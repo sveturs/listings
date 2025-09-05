@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -44,14 +44,7 @@ const shippingAddressSchema = z.object({
   city: z.string().min(2, 'City is required'),
   postalCode: z.string().min(5, 'Postal code is required'),
   country: z.string().min(2, 'Country is required'),
-  shippingMethod: z.enum([
-    'standard',
-    'express',
-    'pickup',
-    'bex_courier',
-    'bex_pickup_point',
-    'bex_warehouse_pickup',
-  ]),
+  shippingMethod: z.string().min(1, 'Shipping method is required'), // Changed to accept any string since methods are dynamic
 });
 
 const paymentSchema = z.object({
@@ -85,37 +78,110 @@ export default function CheckoutPage() {
   const apiItemsCount = useSelector(selectApiCartItemsCount);
 
   // Используем данные в зависимости от авторизации
-  const items = isAuthenticated
-    ? (backendCart?.items || []).map((item) => ({
-        productId: item.product_id || 0,
-        variantId: item.variant_id,
-        quantity: item.quantity || 0,
-        name: item.product?.name || 'Product',
-        variantName: item.variant?.name,
-        price:
-          typeof item.price_per_unit === 'string'
-            ? parseFloat(item.price_per_unit)
-            : item.price_per_unit || 0,
-        currency: 'RSD',
-        image: item.product?.images?.[0]?.image_url,
-        storefrontId: backendCart?.storefront_id || 0,
-        storefrontName: backendCart?.storefront?.name || 'Store',
-        storefrontSlug:
-          backendCart?.storefront?.slug ||
-          String(backendCart?.storefront_id || 0),
-      }))
-    : localItems;
+  const items = useMemo(() => {
+    return isAuthenticated
+      ? (backendCart?.items || []).map((item) => ({
+          productId: item.product_id || 0,
+          variantId: item.variant_id,
+          quantity: item.quantity || 0,
+          name: item.product?.name || 'Product',
+          variantName: item.variant?.name,
+          price:
+            typeof item.price_per_unit === 'string'
+              ? parseFloat(item.price_per_unit)
+              : item.price_per_unit || 0,
+          currency: 'RSD',
+          image: item.product?.images?.[0]?.image_url,
+          storefrontId: backendCart?.storefront_id || 0,
+          storefrontName: backendCart?.storefront?.name || 'Store',
+          storefrontSlug:
+            backendCart?.storefront?.slug ||
+            String(backendCart?.storefront_id || 0),
+        }))
+      : localItems;
+  }, [isAuthenticated, backendCart, localItems]);
 
   const total = isAuthenticated ? apiTotal : localTotal;
   const itemsCount = isAuthenticated ? apiItemsCount : localItemsCount;
 
   const [currentStep, setCurrentStep] = useState<Step>('customer');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [storefrontDeliveryProviders, setStorefrontDeliveryProviders] =
+    useState<any[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(true);
   const [formData, setFormData] = useState<{
     customer?: CustomerInfo;
     shipping?: ShippingAddress;
     payment?: PaymentInfo;
   }>({});
+
+  // Memoize storefront slugs to prevent unnecessary API calls
+  const storefrontSlugsString = useMemo(() => {
+    const slugs = [...new Set(items.map((item) => item.storefrontSlug))].filter(
+      (slug) => slug
+    );
+    return slugs.sort().join(',');
+  }, [items]);
+
+  // Load delivery providers from storefronts
+  useEffect(() => {
+    const loadDeliveryProviders = async () => {
+      try {
+        setLoadingProviders(true);
+        const storefrontSlugs = storefrontSlugsString
+          .split(',')
+          .filter((slug) => slug);
+
+        if (storefrontSlugs.length === 0) {
+          setStorefrontDeliveryProviders([]);
+          setLoadingProviders(false);
+          return;
+        }
+
+        // Load storefront data to get delivery settings
+        const providers = [];
+
+        for (const slug of storefrontSlugs) {
+          const response = await apiClient.get(
+            `/api/v1/storefronts/slug/${slug}`
+          );
+          if (response.data?.settings?.delivery_providers) {
+            const enabledProviders =
+              response.data.settings.delivery_providers.filter(
+                (p: any) => p.enabled
+              );
+            providers.push(...enabledProviders);
+          }
+        }
+
+        // Deduplicate providers by ID
+        const uniqueProviders = providers.reduce((acc, provider) => {
+          if (!acc.find((p: any) => p.id === provider.id)) {
+            acc.push(provider);
+          }
+          return acc;
+        }, []);
+
+        setStorefrontDeliveryProviders(uniqueProviders);
+      } catch (error) {
+        console.error('Failed to load delivery providers:', error);
+        // Fallback to default providers
+        setStorefrontDeliveryProviders([
+          { id: 'standard', name: 'Standard Delivery', enabled: true },
+          { id: 'express', name: 'Express Delivery', enabled: true },
+          { id: 'pickup', name: 'Self Pickup', enabled: true },
+        ]);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    if (storefrontSlugsString) {
+      loadDeliveryProviders();
+    } else {
+      setLoadingProviders(false);
+    }
+  }, [storefrontSlugsString]);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -213,13 +279,85 @@ export default function CheckoutPage() {
     }
   };
 
-  const calculateShipping = () => {
+  const calculateShipping = (): number => {
     const method = formData.shipping?.shippingMethod;
 
-    // Старые методы доставки
+    // Find provider settings from storefront
+    const provider = storefrontDeliveryProviders.find((p) => p.id === method);
+
+    // Старые методы доставки (fallback)
     if (method === 'pickup') return 0;
     if (method === 'express') return 500;
     if (method === 'standard') return total >= 5000 ? 0 : 300;
+
+    // Post Express методы
+    if (method === 'post_express') {
+      if (provider?.settings) {
+        const settings = provider.settings;
+        // Check free shipping threshold
+        if (
+          settings.free_shipping_threshold &&
+          total >= settings.free_shipping_threshold
+        ) {
+          return 0;
+        }
+        // Calculate based on weight tiers
+        const totalWeight = items.reduce(
+          (weight, item) => weight + item.quantity * 1,
+          0
+        ); // Предполагаем 1кг на товар
+
+        if (settings.weight_tiers) {
+          if (totalWeight <= 2) return settings.weight_tiers['0-2kg'] || 340;
+          if (totalWeight <= 5) return settings.weight_tiers['2-5kg'] || 450;
+          if (totalWeight <= 10) return settings.weight_tiers['5-10kg'] || 580;
+          if (totalWeight <= 20) return settings.weight_tiers['10-20kg'] || 790;
+          return 790 + Math.ceil((totalWeight - 20) / 10) * 200;
+        }
+        return 340; // Default Post Express price
+      }
+      return 340;
+    }
+
+    if (method === 'post_express_office') {
+      const provider = storefrontDeliveryProviders.find((p) => p.id === method);
+      const basePrice = 340;
+      const discount = provider?.settings?.discount_percent || 10;
+      return Math.round(basePrice * (1 - discount / 100));
+    }
+
+    if (method === 'post_express_express') {
+      const provider = storefrontDeliveryProviders.find((p) => p.id === method);
+      const basePrice = 340;
+      const surcharge = provider?.settings?.express_surcharge || 200;
+      return basePrice + surcharge;
+    }
+
+    if (method === 'post_express_warehouse') {
+      const provider = storefrontDeliveryProviders.find((p) => p.id === method);
+      if (
+        provider?.settings?.free_shipping_threshold &&
+        total >= provider.settings.free_shipping_threshold
+      ) {
+        return 0;
+      }
+      return 0; // Free by default, or small fee if under threshold
+    }
+
+    // Local delivery
+    if (method === 'local_delivery') {
+      if (provider?.settings) {
+        const settings = provider.settings;
+        if (
+          settings.free_shipping_threshold &&
+          total >= settings.free_shipping_threshold
+        ) {
+          return 0;
+        }
+        return settings.base_rate || 500;
+      }
+      return 500;
+    }
 
     // BEX Express методы
     if (method === 'bex_warehouse_pickup') return 0;
@@ -578,136 +716,313 @@ export default function CheckoutPage() {
                               </span>
                             </label>
                             <div className="space-y-2">
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-primary"
-                                  value="standard"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <span className="label-text">
-                                    {t('shipping.standard')}
-                                  </span>
-                                  <p className="text-sm text-base-content/60">
-                                    {t('shipping.standardDesc')}
-                                  </p>
+                              {loadingProviders ? (
+                                <div className="flex justify-center py-8">
+                                  <span className="loading loading-spinner loading-lg"></span>
                                 </div>
-                                <span className="font-semibold">
-                                  {total >= 5000 ? t('free') : '300 RSD'}
-                                </span>
-                              </label>
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-primary"
-                                  value="express"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <span className="label-text">
-                                    {t('shipping.express')}
-                                  </span>
-                                  <p className="text-sm text-base-content/60">
-                                    {t('shipping.expressDesc')}
-                                  </p>
-                                </div>
-                                <span className="font-semibold">500 RSD</span>
-                              </label>
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-primary"
-                                  value="pickup"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <span className="label-text">
-                                    {t('shipping.pickup')}
-                                  </span>
-                                  <p className="text-sm text-base-content/60">
-                                    {t('shipping.pickupDesc')}
-                                  </p>
-                                </div>
-                                <span className="font-semibold">
-                                  {t('free')}
-                                </span>
-                              </label>
+                              ) : storefrontDeliveryProviders.length > 0 ? (
+                                <>
+                                  {/* Dynamic providers from storefront */}
+                                  {storefrontDeliveryProviders.map(
+                                    (provider) => {
+                                      const getProviderPrice = () => {
+                                        // Free methods
+                                        if (
+                                          provider.id === 'pickup' ||
+                                          provider.id ===
+                                            'bex_warehouse_pickup' ||
+                                          provider.id ===
+                                            'post_express_warehouse'
+                                        ) {
+                                          // Check warehouse pickup threshold
+                                          if (
+                                            provider.id ===
+                                              'post_express_warehouse' &&
+                                            provider.settings
+                                              ?.free_shipping_threshold
+                                          ) {
+                                            return total >=
+                                              provider.settings
+                                                .free_shipping_threshold
+                                              ? t('free')
+                                              : '200 RSD';
+                                          }
+                                          return t('free');
+                                        }
 
-                              {/* BEX Express Options */}
-                              <div className="divider">BEX Express</div>
+                                        // Post Express courier delivery
+                                        if (provider.id === 'post_express') {
+                                          const settings = provider.settings;
+                                          if (
+                                            settings?.free_shipping_threshold &&
+                                            total >=
+                                              settings.free_shipping_threshold
+                                          ) {
+                                            return t('free');
+                                          }
+                                          if (settings?.weight_tiers) {
+                                            return `${settings.weight_tiers['0-2kg'] || 340} RSD`;
+                                          }
+                                          return '340 RSD';
+                                        }
 
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-secondary"
-                                  value="bex_courier"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="label-text">
-                                      BEX Курьерская доставка
-                                    </span>
-                                    <span className="badge badge-secondary badge-xs">
-                                      Новое
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-base-content/60">
-                                    Доставка до двери, отслеживание в реальном
-                                    времени
-                                  </p>
-                                </div>
-                                <span className="font-semibold">
-                                  от 350 RSD
-                                </span>
-                              </label>
+                                        // Post Express office pickup
+                                        if (
+                                          provider.id === 'post_express_office'
+                                        ) {
+                                          const basePrice = 340;
+                                          const discount =
+                                            provider.settings
+                                              ?.discount_percent || 10;
+                                          return `${Math.round(basePrice * (1 - discount / 100))} RSD`;
+                                        }
 
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-secondary"
-                                  value="bex_pickup_point"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="label-text">
-                                      BEX Пункт выдачи
-                                    </span>
-                                    <span className="badge badge-success badge-xs">
-                                      -20%
-                                    </span>
-                                  </div>
-                                  <p className="text-sm text-base-content/60">
-                                    Более 200 пунктов по всей Сербии, удобное
-                                    время получения
-                                  </p>
-                                </div>
-                                <span className="font-semibold">
-                                  от 280 RSD
-                                </span>
-                              </label>
+                                        // Post Express express delivery
+                                        if (
+                                          provider.id === 'post_express_express'
+                                        ) {
+                                          const basePrice = 340;
+                                          const surcharge =
+                                            provider.settings
+                                              ?.express_surcharge || 200;
+                                          return `${basePrice + surcharge} RSD`;
+                                        }
 
-                              <label className="label cursor-pointer justify-start gap-4">
-                                <input
-                                  type="radio"
-                                  className="radio radio-accent"
-                                  value="bex_warehouse_pickup"
-                                  {...shippingForm.register('shippingMethod')}
-                                />
-                                <div className="flex-1">
-                                  <span className="label-text">
-                                    BEX Самовывоз со склада
-                                  </span>
-                                  <p className="text-sm text-base-content/60">
-                                    Бесплатно, г. Нови Сад, Мике Манојловића 53
-                                  </p>
-                                </div>
-                                <span className="font-semibold text-success">
-                                  {t('free')}
-                                </span>
-                              </label>
+                                        // Local delivery
+                                        if (provider.id === 'local_delivery') {
+                                          const settings = provider.settings;
+                                          if (
+                                            settings?.free_shipping_threshold &&
+                                            total >=
+                                              settings.free_shipping_threshold
+                                          ) {
+                                            return t('free');
+                                          }
+                                          return `${settings?.base_rate || 0} RSD`;
+                                        }
+
+                                        // Standard delivery
+                                        if (provider.id === 'standard') {
+                                          return total >= 5000
+                                            ? t('free')
+                                            : '300 RSD';
+                                        }
+
+                                        // Express delivery
+                                        if (provider.id === 'express')
+                                          return '500 RSD';
+
+                                        // BEX methods
+                                        if (provider.id === 'bex_courier')
+                                          return 'от 350 RSD';
+                                        if (
+                                          provider.id === 'bex_pickup_point'
+                                        ) {
+                                          const basePrice = 350;
+                                          const discount =
+                                            provider.settings
+                                              ?.discount_percent || 20;
+                                          return `от ${Math.round(basePrice * (1 - discount / 100))} RSD`;
+                                        }
+
+                                        return provider.settings?.base_rate
+                                          ? `${provider.settings.base_rate} RSD`
+                                          : '300 RSD';
+                                      };
+
+                                      const getProviderColor = () => {
+                                        if (
+                                          provider.id.includes('post_express')
+                                        )
+                                          return 'radio-error';
+                                        if (provider.id.includes('bex'))
+                                          return 'radio-secondary';
+                                        if (
+                                          provider.id === 'pickup' ||
+                                          provider.id === 'local_delivery'
+                                        )
+                                          return 'radio-accent';
+                                        return 'radio-primary';
+                                      };
+
+                                      return (
+                                        <label
+                                          key={provider.id}
+                                          className="label cursor-pointer justify-start gap-4"
+                                        >
+                                          <input
+                                            type="radio"
+                                            className={`radio ${getProviderColor()}`}
+                                            value={provider.id}
+                                            {...shippingForm.register(
+                                              'shippingMethod'
+                                            )}
+                                          />
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-lg mr-2">
+                                                {provider.icon}
+                                              </span>
+                                              <span className="label-text">
+                                                {provider.name}
+                                              </span>
+                                              {provider.id ===
+                                                'post_express' && (
+                                                <span className="badge badge-error badge-xs">
+                                                  WSP API
+                                                </span>
+                                              )}
+                                              {provider.id ===
+                                                'post_express_office' && (
+                                                <span className="badge badge-success badge-xs">
+                                                  -10%
+                                                </span>
+                                              )}
+                                              {provider.id ===
+                                                'post_express_express' && (
+                                                <span className="badge badge-warning badge-xs">
+                                                  ⚡ 24h
+                                                </span>
+                                              )}
+                                              {provider.id ===
+                                                'post_express_warehouse' && (
+                                                <span className="badge badge-info badge-xs">
+                                                  QR-код
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="text-sm text-base-content/60">
+                                              {provider.description}
+                                            </p>
+                                            {/* Additional info based on provider type */}
+                                            {provider.id === 'post_express' &&
+                                              provider.settings
+                                                ?.estimated_days && (
+                                                <p className="text-xs text-base-content/50 mt-1">
+                                                  Срок доставки:{' '}
+                                                  {
+                                                    provider.settings
+                                                      .estimated_days
+                                                  }{' '}
+                                                  {provider.settings
+                                                    .estimated_days === 1
+                                                    ? 'день'
+                                                    : 'дня'}
+                                                </p>
+                                              )}
+                                            {provider.id ===
+                                              'post_express_office' &&
+                                              provider.settings
+                                                ?.office_network && (
+                                                <p className="text-xs text-base-content/50 mt-1">
+                                                  {
+                                                    provider.settings
+                                                      .office_network
+                                                  }
+                                                </p>
+                                              )}
+                                            {provider.id ===
+                                              'post_express_express' &&
+                                              provider.settings
+                                                ?.cutoff_time && (
+                                                <p className="text-xs text-base-content/50 mt-1">
+                                                  Заказ до{' '}
+                                                  {
+                                                    provider.settings
+                                                      .cutoff_time
+                                                  }{' '}
+                                                  - доставка завтра
+                                                </p>
+                                              )}
+                                            {provider.id ===
+                                              'post_express_warehouse' &&
+                                              provider.settings
+                                                ?.working_hours && (
+                                                <p className="text-xs text-base-content/50 mt-1">
+                                                  Работаем:{' '}
+                                                  {
+                                                    provider.settings
+                                                      .working_hours
+                                                  }
+                                                </p>
+                                              )}
+                                          </div>
+                                          <span className="font-semibold">
+                                            {getProviderPrice()}
+                                          </span>
+                                        </label>
+                                      );
+                                    }
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {/* Fallback to default providers */}
+                                  <label className="label cursor-pointer justify-start gap-4">
+                                    <input
+                                      type="radio"
+                                      className="radio radio-primary"
+                                      value="standard"
+                                      {...shippingForm.register(
+                                        'shippingMethod'
+                                      )}
+                                    />
+                                    <div className="flex-1">
+                                      <span className="label-text">
+                                        {t('shipping.standard')}
+                                      </span>
+                                      <p className="text-sm text-base-content/60">
+                                        {t('shipping.standardDesc')}
+                                      </p>
+                                    </div>
+                                    <span className="font-semibold">
+                                      {total >= 5000 ? t('free') : '300 RSD'}
+                                    </span>
+                                  </label>
+                                  <label className="label cursor-pointer justify-start gap-4">
+                                    <input
+                                      type="radio"
+                                      className="radio radio-primary"
+                                      value="express"
+                                      {...shippingForm.register(
+                                        'shippingMethod'
+                                      )}
+                                    />
+                                    <div className="flex-1">
+                                      <span className="label-text">
+                                        {t('shipping.express')}
+                                      </span>
+                                      <p className="text-sm text-base-content/60">
+                                        {t('shipping.expressDesc')}
+                                      </p>
+                                    </div>
+                                    <span className="font-semibold">
+                                      500 RSD
+                                    </span>
+                                  </label>
+                                  <label className="label cursor-pointer justify-start gap-4">
+                                    <input
+                                      type="radio"
+                                      className="radio radio-primary"
+                                      value="pickup"
+                                      {...shippingForm.register(
+                                        'shippingMethod'
+                                      )}
+                                    />
+                                    <div className="flex-1">
+                                      <span className="label-text">
+                                        {t('shipping.pickup')}
+                                      </span>
+                                      <p className="text-sm text-base-content/60">
+                                        {t('shipping.pickupDesc')}
+                                      </p>
+                                    </div>
+                                    <span className="font-semibold">
+                                      {t('free')}
+                                    </span>
+                                  </label>
+                                </>
+                              )}
                             </div>
                           </div>
                         </form>

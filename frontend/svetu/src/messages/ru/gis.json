@@ -1,0 +1,16 @@
+{
+  "radius_search": {
+    "title": "Поиск по радиусу",
+    "radius_search_tab": "По радиусу",
+    "district_search_tab": "По району",
+    "radius": "Радиус",
+    "address": "Адрес",
+    "address_placeholder": "Введите адрес",
+    "use_my_location": "Использовать мое местоположение",
+    "show_search_area": "Показать область поиска",
+    "searching": "Поиск...",
+    "results_found": "Найдено {count} результатов",
+    "district_results_found": "Найдено {count} результатов в районе",
+    "clear_results": "Очистить результаты"
+  }
+}

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
+import React, { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Car,
   Home,
@@ -12,6 +12,8 @@ import {
   Sofa,
   MoreHorizontal,
 } from 'lucide-react';
+import { CategoryTreeModal } from './CategoryTreeModal';
+import { MarketplaceService } from '@/services/marketplace';
 
 interface CategorySelectorProps {
   selectedCategoryId?: number;
@@ -22,10 +24,10 @@ interface CategorySelectorProps {
 const popularCategories = [
   { id: 1003, icon: Car, labelKey: 'automotive' },
   { id: 1004, icon: Home, labelKey: 'realEstate' },
-  { id: 1002, icon: Monitor, labelKey: 'electronics' },
-  { id: 1001, icon: Shirt, labelKey: 'clothing' },
+  { id: 1001, icon: Monitor, labelKey: 'electronics' },
+  { id: 1002, icon: Shirt, labelKey: 'clothing' },
   { id: 1005, icon: Sofa, labelKey: 'furniture' },
-  { id: 1006, icon: Wrench, labelKey: 'tools' },
+  { id: 1007, icon: Wrench, labelKey: 'tools' },
 ];
 
 export const CategorySelector: React.FC<CategorySelectorProps> = ({
@@ -34,6 +36,46 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   className = '',
 }) => {
   const t = useTranslations('search');
+  const locale = useLocale();
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
+
+  // Load category name when selectedCategoryId changes
+  useEffect(() => {
+    const loadCategoryName = async () => {
+      if (!selectedCategoryId) {
+        setSelectedCategoryName('');
+        return;
+      }
+
+      // Check if it's a popular category first
+      const popularCategory = popularCategories.find(
+        (c) => c.id === selectedCategoryId
+      );
+      if (popularCategory) {
+        setSelectedCategoryName(t(`categories.${popularCategory.labelKey}`));
+        return;
+      }
+
+      // If not popular, load from API
+      try {
+        const response = await MarketplaceService.getCategories(locale);
+        const category = response.data.find(
+          (cat) => cat.id === selectedCategoryId
+        );
+        if (category) {
+          setSelectedCategoryName(category.name);
+        } else {
+          setSelectedCategoryName(t('categories.other'));
+        }
+      } catch (error) {
+        console.error('Failed to load category:', error);
+        setSelectedCategoryName(t('categories.other'));
+      }
+    };
+
+    loadCategoryName();
+  }, [selectedCategoryId, locale, t]);
 
   const handleCategoryClick = (categoryId: number) => {
     if (selectedCategoryId === categoryId) {
@@ -78,12 +120,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         <div className="flex items-center justify-between p-2 bg-primary/10 rounded-lg animate-fadeIn">
           <span className="text-sm font-medium">
             {t('categorySelected', {
-              category: t(
-                `categories.${
-                  popularCategories.find((c) => c.id === selectedCategoryId)
-                    ?.labelKey
-                }`
-              ),
+              category: selectedCategoryName || t('categories.other'),
             })}
           </span>
           <button
@@ -95,10 +132,20 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         </div>
       )}
 
-      <button className="btn btn-ghost btn-sm w-full mt-3">
+      <button
+        className="btn btn-ghost btn-sm w-full mt-3"
+        onClick={() => setShowCategoryModal(true)}
+      >
         <MoreHorizontal className="w-4 h-4" />
         {t('allCategories')}
       </button>
+
+      <CategoryTreeModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        selectedCategoryId={selectedCategoryId}
+        onCategorySelect={onCategorySelect}
+      />
     </div>
   );
 };

@@ -184,7 +184,10 @@
     "back": "Back",
     "continue": "Continue",
     "privacy": {
-      "street": "Street"
+      "exact": "Exact Address",
+      "street": "Street",
+      "district": "District",
+      "city": "City"
     },
     "addProductDescription": "Add products to your storefront",
     "filters": "Filters",
@@ -527,5 +530,7 @@
     "stock": "Stock",
     "analytics": "Analytics"
   },
-  "progress": "Progress"
+  "progress": "Progress",
+  "updateSuccess": "Storefront settings successfully updated",
+  "updateError": "Error updating storefront settings"
 }

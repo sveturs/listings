@@ -185,7 +185,10 @@
     "back": "Назад",
     "continue": "Продолжить",
     "privacy": {
-      "street": "Улица"
+      "exact": "Точный адрес",
+      "street": "Улица",
+      "district": "Район",
+      "city": "Город"
     },
     "addProductDescription": "Добавьте товары в свою витрину",
     "filters": "Фильтры",
@@ -431,7 +434,6 @@
   "variants": {
     "outOfStock": "Нет в наличии",
     "lowStock": "[RU] Low Stock",
-    "inStock": "[RU] In Stock",
     "Failed to update stock": "[RU] Failed to update stock",
     "csvImportSuccess": "[RU] Csv Import Success",
     "Failed to import CSV": "[RU] Failed to import  C S V",
@@ -527,5 +529,7 @@
     "stock": "[RU] Stock",
     "analytics": "[RU] Analytics"
   },
-  "progress": "Прогресс"
+  "progress": "Прогресс",
+  "updateSuccess": "Настройки витрины успешно обновлены",
+  "updateError": "Ошибка при обновлении настроек"
 }

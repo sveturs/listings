@@ -1,0 +1,29 @@
+{
+  "selectMethod": "Izaberite način plaćanja",
+  "additionalFee": "Dodatna naknada",
+  "securePaymentInfo": "Sigurno plaćanje",
+  "methods": {
+    "card": "Kreditna kartica",
+    "cardDescription": "Plaćanje kreditnom karticom preko sigurne veze",
+    "cashOnDelivery": "Plaćanje pouzeću",
+    "cashOnDeliveryDescription": "Plaćanje prilikom preuzimanja stavke",
+    "bankTransfer": "Bankovni transfer",
+    "bankTransferDescription": "Direktni bankovni transfer"
+  },
+  "held": "Zadržano",
+  "released": "Otpušteno",
+  "refunded": "Vraćeno",
+  "pending": "Na čekanju",
+  "releasedDescription": "Sredstva otpuštena prodavcu",
+  "refundedDescription": "Sredstva vraćena kupcu",
+  "pendingDescription": "Obrada plaćanja na čekanju",
+  "releaseDate": "Datum otpuštanja",
+  "buyerProtection": "Zaštita kupca",
+  "confirmReceipt": "Potvrdite prijem stavke",
+  "disputeOption": "Opcija spora dostupna",
+  "sellerTier": "Nivo prodavca",
+  "escrow": {
+    "heldDescription": "Sredstva zadržana u depositu do potvrde isporuke",
+    "autoRelease": "Automatsko otpuštanje za {days} dana"
+  }
+}

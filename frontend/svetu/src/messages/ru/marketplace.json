@@ -1,5 +1,16 @@
 {
-  "home": "Главная",
+  "home": {
+    "searchPlaceholder": "Поиск товаров и услуг...",
+    "paymentsNowAvailable": "Платежи теперь доступны",
+    "errorLoadingData": "Ошибка загрузки данных",
+    "privateListingsOnly": "Только частные объявления",
+    "privateListingsOnlyDescription": "Показывать только объявления от частных лиц",
+    "latestListings": "Последние объявления",
+    "mapView": "Карта",
+    "listView": "Список",
+    "switchToListView": "Переключиться на вид списка",
+    "switchToMapView": "Переключиться на вид карты"
+  },
   "homeSection": {
     "title": "Главная",
     "description": "Найдите лучшие предложения от частных лиц и магазинов",

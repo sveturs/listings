@@ -184,7 +184,10 @@
     "back": "Nazad",
     "continue": "Nastavi",
     "privacy": {
-      "street": "Ulica"
+      "exact": "Tačna adresa",
+      "street": "Ulica",
+      "district": "Opština",
+      "city": "Grad"
     },
     "addProductDescription": "Dodajte proizvode u svoju prodavnicu",
     "filters": "Filteri",
@@ -527,5 +530,7 @@
     "stock": "Zalihe",
     "analytics": "Analitika"
   },
-  "progress": "Napredak"
+  "progress": "Napredak",
+  "updateSuccess": "Postavke prodavnice su uspešno ažurirane",
+  "updateError": "Greška pri ažuriranju postavki prodavnice"
 }

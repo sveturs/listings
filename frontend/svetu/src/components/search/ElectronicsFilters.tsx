@@ -35,7 +35,7 @@ export const ElectronicsFilters: React.FC<ElectronicsFiltersProps> = ({
   onFiltersChange,
   className = '',
 }) => {
-  const t = useTranslations('electronics');
+  const t = useTranslations('search');
 
   const [deviceType, setDeviceType] = useState<string>('');
   const [brand, setBrand] = useState<string>('');

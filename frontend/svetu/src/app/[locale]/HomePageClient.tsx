@@ -14,6 +14,10 @@ import api from '@/services/api';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
 import configManager from '@/config';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '@/store/slices/cartSlice';
+import type { AppDispatch } from '@/store';
+import { toast } from 'react-hot-toast';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -80,6 +84,7 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
   const t = useTranslations('marketplace.home');
   // const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
@@ -125,6 +130,76 @@ export default function HomePageClient({
       const url = `/${locale}/marketplace/${cleanId}`;
       console.log('Fallback URL:', url);
       return url;
+    }
+  };
+
+  // Функция для добавления в корзину
+  const handleAddToCart = async (deal: any) => {
+    console.log('handleAddToCart called with full deal object:', deal);
+
+    try {
+      // Если это не витрина, выходим
+      if (!deal.isStorefront) {
+        toast.error('Этот товар нельзя добавить в корзину');
+        return;
+      }
+
+      // Пытаемся получить product_id
+      const productId =
+        deal.product_id ||
+        (deal.id && typeof deal.id === 'string'
+          ? parseInt(deal.id.replace('sp_', ''))
+          : null);
+
+      if (!productId) {
+        toast.error('Не удалось определить товар');
+        console.error('Cannot determine product_id from deal:', deal);
+        return;
+      }
+
+      // Если нет storefront_id, пытаемся получить его через API
+      let storefrontId = deal.storefront_id;
+
+      if (!storefrontId) {
+        console.log(
+          'No storefront_id in deal, fetching product details from API...'
+        );
+        try {
+          const response = await api.get(
+            `/api/v1/storefronts/products/${productId}`
+          );
+          if (response.data && response.data.storefront_id) {
+            storefrontId = response.data.storefront_id;
+            console.log('Got storefront_id from API:', storefrontId);
+          }
+        } catch (apiError) {
+          console.error('Failed to fetch product details:', apiError);
+        }
+      }
+
+      if (!storefrontId) {
+        toast.error('Не удалось определить магазин');
+        console.error('Cannot determine storefront_id for product:', productId);
+        return;
+      }
+
+      console.log('Adding to cart:', { storefrontId, productId });
+
+      // Добавляем товар в корзину
+      await dispatch(
+        addToCart({
+          storefrontId: storefrontId,
+          item: {
+            product_id: productId,
+            quantity: 1,
+          },
+        })
+      ).unwrap();
+
+      toast.success('Товар добавлен в корзину');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Ошибка при добавлении в корзину');
     }
   };
 
@@ -560,6 +635,17 @@ export default function HomePageClient({
               discount = `-${discountPercent}%`;
               oldPrice = `${listing.originalPrice} РСД`;
             }
+
+            // Добавляем подробное логирование для отладки
+            console.log('Mapping listing with storefront data:', {
+              listing_id: listing.id,
+              product_id: listing.product_id,
+              product_type: listing.product_type,
+              storefront_from_api: listing.storefront,
+              storefront_id_direct: listing.storefront_id,
+              user_from_api: listing.user,
+              user_id_direct: listing.user_id,
+            });
 
             const mappedListing = {
               id:
@@ -1019,10 +1105,7 @@ export default function HomePageClient({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              console.log(
-                                'Add to cart:',
-                                deal.product_id || deal.id
-                              );
+                              handleAddToCart(deal);
                             }}
                           >
                             {t('addToCart')}

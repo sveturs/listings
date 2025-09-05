@@ -20,7 +20,7 @@ export const RealEstateFilters: React.FC<RealEstateFiltersProps> = ({
   onFiltersChange,
   className = '',
 }) => {
-  const t = useTranslations('realEstate');
+  const t = useTranslations('search');
 
   const [propertyType, setPropertyType] = useState<string>('');
   const [rooms, setRooms] = useState<string>('');

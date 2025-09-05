@@ -236,8 +236,34 @@ func (r *Repository) buildImprovedSearchQuery(ctx context.Context, params *searc
 func (r *Repository) addFilters(query map[string]interface{}, params *search.SearchParams) {
 	filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 
-	// Категория
-	if params.CategoryID != nil && *params.CategoryID > 0 {
+	// Обработка категорий - поддержка как единичной категории, так и массива
+	if len(params.CategoryIDs) > 0 {
+		logger.Info().Ints("category_ids", params.CategoryIDs).Msg("Applying category filter")
+		// Если есть массив категорий, создаем фильтр для всех категорий
+		shouldClauses := make([]map[string]interface{}, 0)
+		for _, catID := range params.CategoryIDs {
+			shouldClauses = append(shouldClauses, map[string]interface{}{
+				"term": map[string]interface{}{
+					"category_id": catID,
+				},
+			})
+			shouldClauses = append(shouldClauses, map[string]interface{}{
+				"term": map[string]interface{}{
+					"category_path_ids": catID,
+				},
+			})
+		}
+
+		categoryFilter := map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should":               shouldClauses,
+				"minimum_should_match": 1,
+			},
+		}
+
+		filter = append(filter, categoryFilter)
+	} else if params.CategoryID != nil && *params.CategoryID > 0 {
+		// Если нет массива, используем единичную категорию (для обратной совместимости)
 		filter = append(filter, map[string]interface{}{
 			"bool": map[string]interface{}{
 				"should": []map[string]interface{}{

@@ -1,0 +1,14 @@
+{
+  "arNotSupported": "AR not supported",
+  "measureNotSupported": "Measurements not supported",
+  "measureStarted": "Measurement started",
+  "measureFailed": "Measurement failed",
+  "loadingModel": "Loading 3D model...",
+  "use25D": "Use 2.5D view",
+  "viewInAR": "View in AR",
+  "tapToPlace": "Tap to place object",
+  "screenshotSaved": "Screenshot saved",
+  "tryInAR": "Try in AR",
+  "arNotAvailable": "AR not available",
+  "close": "Close"
+}

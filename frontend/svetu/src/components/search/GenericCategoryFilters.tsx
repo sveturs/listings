@@ -43,7 +43,9 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
   const loadCategoryAttributes = async () => {
     setLoading(true);
     try {
-      const response = await api.get(`/categories/${categoryId}/attributes`);
+      const response = await api.get(
+        `/api/v1/marketplace/categories/${categoryId}/attributes`
+      );
       if (response.data?.data) {
         const filterableAttributes = response.data.data.filter(
           (attr: CategoryAttribute) => attr.is_filterable
@@ -73,6 +75,15 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
   const renderAttributeFilter = (attribute: CategoryAttribute) => {
     const { id, name, display_name, attribute_type, options } = attribute;
 
+    // Debug logging to understand the options structure
+    if (options && !Array.isArray(options.values)) {
+      console.error('GenericCategoryFilters: options.values is not an array:', {
+        attribute: name,
+        options,
+        valuesType: typeof options.values,
+      });
+    }
+
     switch (attribute_type) {
       case 'select':
         return (
@@ -86,11 +97,12 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
               className="select select-bordered select-sm w-full"
             >
               <option value="">{t('all')}</option>
-              {options?.values?.map((opt: string) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
+              {Array.isArray(options?.values) &&
+                options.values.map((opt: string) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
             </select>
           </div>
         );
@@ -102,30 +114,31 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
               {display_name || name}
             </label>
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {options?.values?.map((opt: string) => (
-                <label
-                  key={opt}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filterValues[name]?.includes(opt) || false}
-                    onChange={(e) => {
-                      const currentValues = filterValues[name] || [];
-                      if (e.target.checked) {
-                        handleFilterChange(name, [...currentValues, opt]);
-                      } else {
-                        handleFilterChange(
-                          name,
-                          currentValues.filter((v: string) => v !== opt)
-                        );
-                      }
-                    }}
-                    className="checkbox checkbox-sm checkbox-primary"
-                  />
-                  <span className="text-sm">{opt}</span>
-                </label>
-              ))}
+              {Array.isArray(options?.values) &&
+                options.values.map((opt: string) => (
+                  <label
+                    key={opt}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filterValues[name]?.includes(opt) || false}
+                      onChange={(e) => {
+                        const currentValues = filterValues[name] || [];
+                        if (e.target.checked) {
+                          handleFilterChange(name, [...currentValues, opt]);
+                        } else {
+                          handleFilterChange(
+                            name,
+                            currentValues.filter((v: string) => v !== opt)
+                          );
+                        }
+                      }}
+                      className="checkbox checkbox-sm checkbox-primary"
+                    />
+                    <span className="text-sm">{opt}</span>
+                  </label>
+                ))}
             </div>
           </div>
         );

@@ -15,6 +15,7 @@ import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomN
 import { CartSyncProvider } from '@/components/CartSyncProvider';
 import { themeInitScript } from '@/scripts/theme-init';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
+import { Toaster } from 'react-hot-toast';
 import '../globals.css';
 
 const geistSans = Geist({
@@ -130,6 +131,7 @@ export default async function RootLayout({
                     <AuthStateManager />
                     <WebSocketManager />
                     <HeaderWrapper />
+                    <Toaster position="top-right" />
                     <main className="min-h-screen pt-16 pb-16 md:pb-0">
                       {children}
                     </main>

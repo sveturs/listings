@@ -1,5 +1,16 @@
 {
-  "home": "Glavna",
+  "home": {
+    "searchPlaceholder": "Pretražite proizvode i usluge...",
+    "paymentsNowAvailable": "Plaćanja su sada dostupna",
+    "errorLoadingData": "Greška pri učitavanju podataka",
+    "privateListingsOnly": "Samo privatni oglasi",
+    "privateListingsOnlyDescription": "Prikaži samo oglase od privatnih lica",
+    "latestListings": "Najnoviji oglasi",
+    "mapView": "Mapa",
+    "listView": "Lista",
+    "switchToListView": "Prebaci na prikaz liste",
+    "switchToMapView": "Prebaci na prikaz mape"
+  },
   "allCategories": "Sve kategorije",
   "homeSection": {
     "title": "Glavna",
