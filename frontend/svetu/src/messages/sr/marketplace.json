@@ -64,10 +64,11 @@
     "lightningDeals": "⚡ Munja ponude",
     "lightningDealsSubtitle": "Požurite da kupite sa popustom do 90%"
   },
-  "homeSection": {
-    "title": "Glavna",
-    "marketplace": "Oglasi",
-    "errorLoadingData": "Greška pri učitavanju podataka. Molimo pokušajte kasnije.",
+  "iconPicker": {
+    "placeholder": "Izaberite ikonu",
+    "close": "Zatvori"
+  },
+  "condition": {
     "noItems": "Oglasi nisu pronađeni",
     "loadMore": "Učitaj još",
     "loading": "Učitavanje...",
@@ -671,5 +672,49 @@
     "signInToContact": "Prijavite se da kontaktirate prodavca",
     "signIn": "Prijavite se",
     "sendMessage": "Pošalji poruku"
+  },
+  "homeSection": {
+    "title": "Početna",
+    "description": "Pronađi najbolje ponude od pojedinaca i prodavnica",
+    "createListing": "Kreiraj oglas"
+  },
+  "home": {
+    "title": "Početna",
+    "marketplace": "Trgovina",
+    "errorLoadingData": "Greška pri učitavanju podataka. Molimo pokušajte ponovo kasnije.",
+    "noItems": "Nema pronađenih stavki",
+    "loadMore": "Učitaj još",
+    "loading": "Učitava...",
+    "createListing": "Kreiraj oglas",
+    "latestListings": "Najnoviji oglasi",
+    "mapView": "Mapa",
+    "listView": "Lista",
+    "filters": "Filteri",
+    "view": "Prikaz",
+    "activeFilters": "Aktivni filteri",
+    "clearAll": "Ukloni sve",
+    "map": "Mapa",
+    "switchToMapView": "Prebaci na prikaz mape",
+    "switchToListView": "Prebaci na prikaz liste",
+    "paymentsNowAvailable": "Plaćanja su sada dostupna!",
+    "description": "Pronađi najbolje ponude od pojedinaca i prodavnica",
+    "privateListingsOnly": "Samo privatni oglasi",
+    "privateListingsOnlyDescription": "Prikaži samo proizvode od privatnih prodavaca",
+    "selectOtherCity": "Izaberi drugi grad",
+    "forBusiness": "Za preduzeća",
+    "help": "Pomoć",
+    "app": "📱 Aplikacija",
+    "allCategories": "Sve kategorije",
+    "searchPlaceholder": "Pretražite među 2 miliona proizvoda...",
+    "search": "Pretraga",
+    "favorites": "Omiljeno",
+    "cart": "Korpa za kupovinu",
+    "popularCategories": "Popularne kategorije",
+    "hotDeals": "Vrele ponude",
+    "allDeals": "Sve ponude →",
+    "nearbyProducts": "Proizvodi u vašoj blizini",
+    "storefront": "Prodavnica",
+    "addToCart": "Dodaj u korpu",
+    "writeToSeller": "Poruči prodavcu"
   }
 }

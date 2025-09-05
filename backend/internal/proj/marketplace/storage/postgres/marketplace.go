@@ -3448,7 +3448,7 @@ func (s *Storage) CreateListingVariants(ctx context.Context, listingID int, vari
 	}
 	defer func() {
 		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			s.logger.Error("Failed to rollback transaction", zap.Error(rollbackErr))
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
 		}
 	}()
 

@@ -22,6 +22,7 @@ export type TranslationModule =
   | 'home'
   | 'map'
   | 'marketplace'
+  | 'marketplace.home'
   | 'misc'
   | 'notifications'
   | 'orders'
@@ -52,6 +53,7 @@ export const moduleLoaders = {
   home: () => import('./home.json'),
   map: () => import('./map.json'),
   marketplace: () => import('./marketplace.json'),
+  'marketplace.home': () => import('./marketplace.home.json'),
   misc: () => import('./misc.json'),
   notifications: () => import('./notifications.json'),
   orders: () => import('./orders.json'),

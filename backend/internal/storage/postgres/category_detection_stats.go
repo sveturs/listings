@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
