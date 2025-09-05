@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/pkg/errors"
@@ -246,7 +247,11 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get Post Express shipments")
 	}
-	defer rows2.Close()
+	defer func() {
+		if closeErr := rows2.Close(); closeErr != nil {
+			log.Printf("Failed to close rows: %v", closeErr)
+		}
+	}()
 
 	for rows2.Next() {
 		var s PostExpressShipment
@@ -447,7 +452,11 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 		if err != nil {
 			return nil, 0, errors.Wrap(err, "failed to get Post Express shipments")
 		}
-		defer rows2.Close()
+		defer func() {
+			if closeErr := rows2.Close(); closeErr != nil {
+				log.Printf("Failed to close rows: %v", closeErr)
+			}
+		}()
 
 		for rows2.Next() {
 			var s struct {
@@ -842,7 +851,11 @@ func (r *ShipmentsRepository) GetProblemShipments() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get Post Express problems")
 	}
-	defer rows2.Close()
+	defer func() {
+		if closeErr := rows2.Close(); closeErr != nil {
+			log.Printf("Failed to close rows: %v", closeErr)
+		}
+	}()
 
 	for rows2.Next() {
 		var p struct {

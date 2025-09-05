@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -16,9 +19,9 @@ type Klijent struct {
 }
 
 type TransakcijaIn struct {
-	TransakcijaId      int       `json:"TransakcijaId"`
-	DatumVremePosiljke string    `json:"DatumVremePosiljke"`
-	Klijent            Klijent   `json:"Klijent"`
+	TransakcijaId      int        `json:"TransakcijaId"`
+	DatumVremePosiljke string     `json:"DatumVremePosiljke"`
+	Klijent            Klijent    `json:"Klijent"`
 	NaseljeIn          *NaseljeIn `json:"NaseljeIn,omitempty"`
 }
 
@@ -28,11 +31,11 @@ type NaseljeIn struct {
 }
 
 type TransakcijaOut struct {
-	OK                 bool        `json:"OK"`
-	Poruka             string      `json:"Poruka"`
-	TransakcijaId      int         `json:"TransakcijaId"`
-	DatumVremePrijema  string      `json:"DatumVremePrijema"`
-	NaseljeOut         *NaseljeOut `json:"NaseljeOut,omitempty"`
+	OK                bool        `json:"OK"`
+	Poruka            string      `json:"Poruka"`
+	TransakcijaId     int         `json:"TransakcijaId"`
+	DatumVremePrijema string      `json:"DatumVremePrijema"`
+	NaseljeOut        *NaseljeOut `json:"NaseljeOut,omitempty"`
 }
 
 type NaseljeOut struct {
@@ -125,12 +128,12 @@ func testWSPAPI(username, password string) {
 		fmt.Println("✅ API Connection Successful!")
 		fmt.Printf("Transaction ID: %d\n", response.TransakcijaId)
 		fmt.Printf("Server Time: %s\n", response.DatumVremePrijema)
-		
+
 		if response.NaseljeOut != nil && response.NaseljeOut.OK {
 			fmt.Printf("\n📍 Found %d locations for 'Београд':\n", len(response.NaseljeOut.Naselja))
 			for i, naselje := range response.NaseljeOut.Naselja {
 				if i < 5 { // Показываем первые 5
-					fmt.Printf("   %d. %s (PTT: %s, Municipality: %s)\n", 
+					fmt.Printf("   %d. %s (PTT: %s, Municipality: %s)\n",
 						naselje.Sifra, naselje.Naziv, naselje.Ptt, naselje.Opstina)
 				}
 			}
@@ -147,7 +150,7 @@ func testWSPAPI(username, password string) {
 func main() {
 	fmt.Println("🚀 WSP API Test Tool")
 	fmt.Println("=========================================")
-	
+
 	// Пробуем разные варианты учетных данных
 	testCases := []struct {
 		name     string

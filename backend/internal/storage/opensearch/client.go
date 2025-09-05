@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go/v2"
@@ -398,7 +399,11 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 	if err != nil {
 		return nil, fmt.Errorf("failed to perform request: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	// Читаем ответ
 	responseBody, err := io.ReadAll(res.Body)

@@ -599,7 +599,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 	// Конвертируем параметры в формат для поиска товаров витрин
 	categoryID := 0
 	var categoryIDs []int
-	
+
 	// Преобразуем строковые категории в int
 	if len(params.CategoryIDs) > 0 {
 		for _, catStr := range params.CategoryIDs {
@@ -622,8 +622,8 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 	searchParams := &storefrontOpenSearch.ProductSearchParams{
 		Query:        params.Query,
 		StorefrontID: params.StorefrontID,
-		CategoryID:   categoryID,    // Для обратной совместимости
-		CategoryIDs:  categoryIDs,   // Новое поле для множественных категорий
+		CategoryID:   categoryID,  // Для обратной совместимости
+		CategoryIDs:  categoryIDs, // Новое поле для множественных категорий
 		PriceMin:     params.PriceMin,
 		PriceMax:     params.PriceMax,
 		City:         params.City,

@@ -94,6 +94,7 @@ issues:
     - third_party
   exclude-files:
     - "scripts/.*\\.go"
+    - "scripts/postexpress/.*\\.go"
   
   exclude-rules:
       # Exclude some linters from running on tests files

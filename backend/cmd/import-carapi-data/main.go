@@ -48,7 +48,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if closeErr := db.Close(); closeErr != nil {
+			log.Printf("Failed to close database connection: %v", closeErr)
+		}
+	}()
 
 	// Путь к данным
 	dataDir := "/data/hostel-booking-system/backend/data/carapi-final-20250802-205650"

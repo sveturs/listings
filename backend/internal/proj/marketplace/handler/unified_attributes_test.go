@@ -307,6 +307,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var createResp utils.SuccessResponseSwag
@@ -328,6 +329,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// 3. Удаляем атрибут
@@ -335,6 +337,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer resp.Body.Close()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем, что атрибут удален

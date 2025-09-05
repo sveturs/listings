@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -531,7 +532,11 @@ func (h *VariantHandler) ImportVariants(c *fiber.Ctx) error {
 			"error": "Failed to open file",
 		})
 	}
-	defer src.Close()
+	defer func() {
+		if closeErr := src.Close(); closeErr != nil {
+			log.Printf("Failed to close file: %v", closeErr)
+		}
+	}()
 
 	// Read file content
 	fileData := make([]byte, file.Size)

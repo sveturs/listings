@@ -155,7 +155,11 @@ func (c *WSPClientImpl) executeRequest(ctx context.Context, transReq *models.Tra
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer func() {
+		if closeErr := httpResp.Body.Close(); closeErr != nil {
+			c.logger.Error("Failed to close HTTP response body: %v", closeErr)
+		}
+	}()
 
 	executionTime := time.Since(startTime)
 
@@ -464,7 +468,11 @@ func (c *WSPClientImpl) getServerIP() string {
 	if err != nil {
 		return "127.0.0.1"
 	}
-	defer conn.Close()
+	defer func() {
+		if closeErr := conn.Close(); closeErr != nil {
+			c.logger.Error("Failed to close connection: %v", closeErr)
+		}
+	}()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	return localAddr.IP.String()

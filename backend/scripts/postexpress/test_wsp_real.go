@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -7,7 +10,7 @@ import (
 	"io"
 	"net/http"
 	"time"
-	
+
 	"github.com/google/uuid"
 )
 
@@ -42,9 +45,9 @@ type NaseljeIn struct {
 
 // Структура для отслеживания посылки
 type KretanjeIn struct {
-	VrstaUsluge   string `json:"VrstaUsluge"`
-	EksterniBroj  string `json:"EksterniBroj"`
-	PrijemniBroj  string `json:"PrijemniBroj"`
+	VrstaUsluge  string `json:"VrstaUsluge"`
+	EksterniBroj string `json:"EksterniBroj"`
+	PrijemniBroj string `json:"PrijemniBroj"`
 }
 
 func testGetNaselje() {
@@ -77,9 +80,9 @@ func testGetNaselje() {
 	// Формирование запроса
 	request := TransakcijaIn{
 		StrKlijent:         string(klijentJSON),
-		Servis:             3,  // Всегда 3 для нашего сервиса
-		IdVrstaTranskacije: 3,  // 3 = GetNaselje
-		TipSerijalizacije:  1,  // 1 = JSON
+		Servis:             3, // Всегда 3 для нашего сервиса
+		IdVrstaTranskacije: 3, // 3 = GetNaselje
+		TipSerijalizacije:  1, // 1 = JSON
 		IdTransakcija:      uuid.New().String(),
 		StrIn:              string(naseljeJSON),
 	}
@@ -136,7 +139,7 @@ func sendRequest(request TransakcijaIn, operation string) {
 	}
 
 	fmt.Printf("📤 Request for %s:\n", operation)
-	
+
 	// Красиво выводим структуру запроса
 	var prettyRequest map[string]interface{}
 	json.Unmarshal(jsonData, &prettyRequest)
@@ -190,7 +193,7 @@ func sendRequest(request TransakcijaIn, operation string) {
 		// Красиво выводим JSON
 		prettyResponse, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Printf("📥 Response:\n%s\n", string(prettyResponse))
-		
+
 		// Анализируем результат
 		if ok, exists := result["OK"]; exists {
 			if okBool, isBool := ok.(bool); isBool && okBool {
@@ -210,15 +213,15 @@ func main() {
 	fmt.Println("==========================================")
 	fmt.Println("Using TEST credentials from documentation")
 	fmt.Println("URL: https://wsp.postexpress.rs/api/Transakcija")
-	
+
 	// Тест 1: Поиск населенного пункта
 	testGetNaselje()
-	
+
 	time.Sleep(2 * time.Second)
-	
+
 	// Тест 2: Отслеживание посылки
 	testTrackShipment()
-	
+
 	fmt.Println("\n==========================================")
 	fmt.Println("✨ Testing completed!")
 	fmt.Println("\nNotes:")

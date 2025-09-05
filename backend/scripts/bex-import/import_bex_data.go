@@ -25,7 +25,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка подключения к БД:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if closeErr := db.Close(); closeErr != nil {
+			log.Printf("Failed to close database connection: %v", closeErr)
+		}
+	}()
 
 	// Импортируем муниципалитеты
 	if err := importMunicipalities(db); err != nil {
@@ -151,7 +155,11 @@ func importStreets(db *sql.DB) error {
 		// Попробуем Excel если CSV не существует
 		return importStreetsFromExcel(db)
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil {
+			log.Printf("Failed to close file: %v", closeErr)
+		}
+	}()
 
 	reader := csv.NewReader(file)
 
