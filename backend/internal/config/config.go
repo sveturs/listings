@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -44,6 +45,7 @@ type Config struct {
 	SearchWeights         *SearchWeights    `yaml:"search_weights"`
 	Redis                 RedisConfig       `yaml:"redis"`
 	MigrationsOnAPI       string            `yaml:"migrations_on_api"` // off, schema, full
+	ReindexOnAPI          string            `yaml:"reindex_on_api"`    // on
 	FeatureFlags          *FeatureFlags     `yaml:"feature_flags"`
 }
 
@@ -418,6 +420,9 @@ func NewConfig() (*Config, error) {
 		migrationsOnAPI = "off" // По умолчанию выключено
 	}
 
+	// Получаем настройку reindex при старте API
+	reindexOnAPI := strings.TrimSpace(os.Getenv("REINDEX_ON_API"))
+
 	return &Config{
 		Port:                  port,
 		DatabaseURL:           dbURL,
@@ -446,6 +451,7 @@ func NewConfig() (*Config, error) {
 		SearchWeights:         searchWeights,
 		Redis:                 redisConfig,
 		MigrationsOnAPI:       migrationsOnAPI,
+		ReindexOnAPI:          reindexOnAPI,
 		FeatureFlags:          LoadFeatureFlags(),
 	}, nil
 }

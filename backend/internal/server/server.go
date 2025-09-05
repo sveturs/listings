@@ -3,6 +3,10 @@
 package server
 
 import (
+	globalService "backend/internal/proj/global/service"
+	postexpressService "backend/internal/proj/postexpress/service"
+	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
+	pkglogger "backend/pkg/logger"
 	"context"
 	"database/sql"
 	"errors"
@@ -31,7 +35,6 @@ import (
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	gisHandler "backend/internal/proj/gis/handler"
 	globalHandler "backend/internal/proj/global/handler"
-	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
@@ -39,8 +42,6 @@ import (
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	postexpressHandler "backend/internal/proj/postexpress/handler"
-	postexpressService "backend/internal/proj/postexpress/service"
-	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
@@ -51,7 +52,6 @@ import (
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
-	pkglogger "backend/pkg/logger"
 )
 
 type Server struct {
@@ -113,6 +113,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
+	}
+	if cfg.ReindexOnAPI != "" {
+		if err = db.ReindexAllListings(ctx); err != nil {
+			logger.Error().Err(err).Msg("reindexAllListings() failded")
+		}
 	}
 
 	translationService, err := initializeTranslationService(cfg, db)
