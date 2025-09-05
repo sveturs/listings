@@ -169,13 +169,6 @@ CREATE SEQUENCE public.attribute_group_items_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.attribute_groups_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.attribute_option_translations_id_seq
     AS integer
     START WITH 1
@@ -219,13 +212,6 @@ CREATE SEQUENCE public.car_models_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.category_attribute_groups_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.category_attributes_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -347,13 +333,6 @@ CREATE SEQUENCE public.item_performance_metrics_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.listing_attribute_values_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.listing_views_id_seq
     AS integer
     START WITH 1
@@ -389,6 +368,13 @@ CREATE SEQUENCE public.marketplace_chats_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.marketplace_images_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.marketplace_listing_variants_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -464,6 +450,13 @@ CREATE SEQUENCE public.product_variant_attribute_values_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.product_variant_attributes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.query_cache_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -746,7 +739,15 @@ CREATE SEQUENCE public.transliteration_rules_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.unified_geo_id_seq
+CREATE SEQUENCE public.unified_attribute_stats_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.unified_attribute_values_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
