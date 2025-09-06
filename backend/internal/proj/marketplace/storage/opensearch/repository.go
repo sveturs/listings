@@ -707,7 +707,7 @@ func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения запроса переводов: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var translations []DBTranslation
 	for rows.Next() {

@@ -193,7 +193,7 @@ func (r *WebhookRepository) GetFailedWebhookStats(ctx context.Context) (map[stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to get status stats: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	statusCounts := make(map[string]int)
 	for rows.Next() {
@@ -221,7 +221,7 @@ func (r *WebhookRepository) GetFailedWebhookStats(ctx context.Context) (map[stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to get type stats: %w", err)
 	}
-	defer rows2.Close()
+	defer func() { _ = rows2.Close() }()
 
 	typeCounts := make(map[string]int)
 	for rows2.Next() {

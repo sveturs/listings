@@ -89,7 +89,7 @@ func (r *Repository) GetTranslations(ctx context.Context, filters map[string]int
 	if err != nil {
 		return nil, fmt.Errorf("failed to query translations: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var translations []models.Translation
 	for rows.Next() {
@@ -219,7 +219,7 @@ func (r *Repository) GetTranslationVersions(ctx context.Context, translationID i
 	if err != nil {
 		return nil, fmt.Errorf("failed to query versions: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var versions []models.TranslationVersion
 	for rows.Next() {
@@ -278,7 +278,7 @@ func (r *Repository) GetVersionsByEntity(ctx context.Context, entityType string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to query versions by entity: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var versions []models.TranslationVersion
 	for rows.Next() {
@@ -337,7 +337,7 @@ func (r *Repository) GetVersionDiff(ctx context.Context, versionID1, versionID2 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query versions for diff: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var versions []models.TranslationVersion
 	for rows.Next() {
@@ -480,7 +480,7 @@ func (r *Repository) GetUnresolvedConflicts(ctx context.Context) ([]models.Trans
 	if err != nil {
 		return nil, fmt.Errorf("failed to query conflicts: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var conflicts []models.TranslationSyncConflict
 	for rows.Next() {
@@ -537,7 +537,7 @@ func (r *Repository) GetProviders(ctx context.Context) ([]models.TranslationProv
 	if err != nil {
 		return nil, fmt.Errorf("failed to query providers: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var providers []models.TranslationProvider
 	for rows.Next() {
@@ -781,7 +781,7 @@ func (r *Repository) GetRecentLogs(ctx context.Context, limit int) ([]models.Tra
 	if err != nil {
 		return nil, fmt.Errorf("failed to query audit logs: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var logs []models.TranslationAuditLog
 	for rows.Next() {

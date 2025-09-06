@@ -442,6 +442,7 @@ func (s *UnifiedAttributeService) UpdateCategoryAttribute(ctx context.Context, c
 	// Если включен dual-write, обновляем и в старой системе
 	if s.useLegacyFallback && s.dualWrite {
 		// TODO: Обновить в старой системе через соответствующий сервис
+		log.Println("Debug: Dual-write to legacy system is not yet implemented")
 	}
 
 	return nil

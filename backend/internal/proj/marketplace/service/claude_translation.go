@@ -105,7 +105,7 @@ Text to translate:
 	if err != nil {
 		return "", fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Читаем ответ
 	body, err := io.ReadAll(resp.Body)
@@ -192,7 +192,7 @@ Text to translate:
 	if err != nil {
 		return "", fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -340,7 +340,7 @@ Text in %s:
 	if err != nil {
 		return text, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,6 +28,24 @@ const (
 // Helper functions
 func strPtr(s string) *string {
 	return &s
+}
+
+// isValidLanguage проверяет валидность языка
+func isValidLanguage(lang string) bool {
+	validLangs := []string{"ru", "en", "sr"}
+	for _, validLang := range validLangs {
+		if lang == validLang {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidModule проверяет валидность названия модуля
+func isValidModule(module string) bool {
+	// Разрешены только буквы, цифры, дефисы и подчеркивания
+	matched, _ := regexp.MatchString(`^[a-zA-Z0-9_-]+$`, module)
+	return matched && len(module) > 0 && len(module) < 100
 }
 
 // Service handles translation admin operations
@@ -534,9 +553,21 @@ func (s *Service) isValidModule(name string) bool {
 }
 
 func (s *Service) loadModuleFile(module, lang string) (map[string]interface{}, error) {
-	filePath := filepath.Join(s.frontendPath, "src", "messages", lang, module+".json")
+	// Валидация параметров для предотвращения path traversal
+	if !isValidLanguage(lang) || !isValidModule(module) {
+		return nil, fmt.Errorf("invalid language or module parameter")
+	}
 
-	data, err := os.ReadFile(filePath)
+	filePath := filepath.Join(s.frontendPath, "src", "messages", lang, module+".json")
+	// Проверяем, что путь находится в разрешённой директории
+	cleanPath := filepath.Clean(filePath)
+	messagesDir := filepath.Join(s.frontendPath, "src", "messages")
+	if !strings.HasPrefix(cleanPath, filepath.Clean(messagesDir)) {
+		return nil, fmt.Errorf("access denied: path outside allowed directory")
+	}
+
+	// #nosec G304 - путь провалидирован выше
+	data, err := os.ReadFile(cleanPath)
 	if err != nil {
 		return nil, err
 	}
@@ -569,17 +600,36 @@ func (s *Service) saveModuleFile(module, lang string, data map[string]interface{
 }
 
 func (s *Service) createBackup(src, dst string) error {
-	source, err := os.Open(src)
-	if err != nil {
-		return err
+	// Проверяем пути на безопасность
+	cleanSrc := filepath.Clean(src)
+	cleanDst := filepath.Clean(dst)
+	messagesDir := filepath.Join(s.frontendPath, "src", "messages")
+	if !strings.HasPrefix(cleanSrc, filepath.Clean(messagesDir)) ||
+		!strings.HasPrefix(cleanDst, filepath.Clean(messagesDir)) {
+		return fmt.Errorf("access denied: path outside allowed directory")
 	}
-	defer source.Close()
 
-	destination, err := os.Create(dst)
+	// #nosec G304 - путь провалидирован выше
+	source, err := os.Open(cleanSrc)
 	if err != nil {
 		return err
 	}
-	defer destination.Close()
+	defer func() {
+		if closeErr := source.Close(); closeErr != nil {
+			log.Printf("Failed to close source file: %v", closeErr)
+		}
+	}()
+
+	// #nosec G304 - путь провалидирован выше
+	destination, err := os.Create(cleanDst)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if closeErr := destination.Close(); closeErr != nil {
+			log.Printf("Failed to close destination file: %v", closeErr)
+		}
+	}()
 
 	_, err = destination.ReadFrom(source)
 	return err
@@ -1998,7 +2048,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 	if err != nil {
 		return fmt.Errorf("failed to query categories: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type CategoryData struct {
 		ID             int

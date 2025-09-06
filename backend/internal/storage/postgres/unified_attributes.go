@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -215,7 +216,6 @@ func (s *unifiedAttributeStorage) ListAttributes(ctx context.Context, filter *mo
 		if filter.IsFilterable != nil {
 			whereConditions = append(whereConditions, fmt.Sprintf("ua.is_filterable = $%d", argCount+1))
 			args = append(args, *filter.IsFilterable)
-			argCount++
 		}
 	}
 
@@ -393,6 +393,9 @@ func (s *unifiedAttributeStorage) UpdateCategoryAttribute(ctx context.Context, c
 		// setClause = append(setClause, fmt.Sprintf("group_id = $%d", argNum))
 		// args = append(args, *groupID)
 		// argNum++
+
+		// Временно логируем, что группа не поддерживается
+		log.Printf("Group ID support is not yet implemented: %v", *groupID)
 	}
 
 	if len(setClause) == 0 {
@@ -629,7 +632,11 @@ func (s *unifiedAttributeStorage) SaveAttributeValue(ctx context.Context, value 
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
+		}
+	}()
 
 	// Сохраняем в новую систему
 	query := `

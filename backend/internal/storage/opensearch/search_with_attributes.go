@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go/v2"
@@ -74,7 +75,11 @@ func (s *AttributeSearchService) Search(ctx context.Context, req SearchRequest) 
 	if err != nil {
 		return nil, fmt.Errorf("search request failed: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if res.IsError() {
 		return nil, fmt.Errorf("search error: %s", res.String())
@@ -395,7 +400,11 @@ func (s *AttributeSearchService) BulkIndexAttributes(ctx context.Context, docume
 	if err != nil {
 		return fmt.Errorf("bulk index failed: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if res.IsError() {
 		return fmt.Errorf("bulk index error: %s", res.String())
@@ -482,7 +491,11 @@ func (s *AttributeSearchService) UpdateMapping(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to update mapping: %w", err)
 	}
-	defer res.Body.Close()
+	defer func() {
+		if closeErr := res.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if res.IsError() {
 		return fmt.Errorf("mapping update error: %s", res.String())

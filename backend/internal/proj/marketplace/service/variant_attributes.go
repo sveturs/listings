@@ -54,7 +54,7 @@ func (s *MarketplaceService) GetProductVariantAttributes(ctx context.Context) ([
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product variant attributes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var attributes []*models.ProductVariantAttribute
 	for rows.Next() {
@@ -99,7 +99,7 @@ func (s *MarketplaceService) GetCategoryVariantAttributes(ctx context.Context, c
 	if err != nil {
 		return nil, fmt.Errorf("failed to get category variant attributes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var attributes []*models.ProductVariantAttribute
 	for rows.Next() {

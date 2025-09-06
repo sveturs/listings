@@ -1737,7 +1737,11 @@ func (db *Database) CreateListingVariants(ctx context.Context, listingID int, va
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
+		}
+	}()
 
 	for _, variant := range variants {
 		attributesJSON, err := json.Marshal(variant.Attributes)

@@ -264,13 +264,19 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         listings: ['+', ['case', ['==', ['get', 'type'], 'listing'], 1, 0]],
         users: ['+', ['case', ['==', ['get', 'type'], 'user'], 1, 0]],
         pois: ['+', ['case', ['==', ['get', 'type'], 'poi'], 1, 0]],
-        // Агрегация цен в кластере
+        // Агрегация цен в кластере с корректной обработкой типов
         minPrice: [
           'min',
           [
             'case',
-            ['==', ['get', 'type'], 'listing'],
-            ['get', 'price', ['get', 'metadata']],
+            [
+              'all',
+              ['==', ['get', 'type'], 'listing'],
+              ['has', 'metadata'],
+              ['has', 'price', ['get', 'metadata']],
+              ['!=', ['get', 'price', ['get', 'metadata']], null],
+            ],
+            ['number', ['get', 'price', ['get', 'metadata']]],
             999999,
           ],
         ],
@@ -278,8 +284,14 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
           'max',
           [
             'case',
-            ['==', ['get', 'type'], 'listing'],
-            ['get', 'price', ['get', 'metadata']],
+            [
+              'all',
+              ['==', ['get', 'type'], 'listing'],
+              ['has', 'metadata'],
+              ['has', 'price', ['get', 'metadata']],
+              ['!=', ['get', 'price', ['get', 'metadata']], null],
+            ],
+            ['number', ['get', 'price', ['get', 'metadata']]],
             0,
           ],
         ],
@@ -360,6 +372,8 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         'all',
         ['has', 'point_count'],
         ['>', ['get', 'totalListings'], 0],
+        ['<', ['get', 'minPrice'], 999999], // Показываем только если есть реальные цены
+        ['>', ['get', 'maxPrice'], 0], // Показываем только если есть реальные цены
       ],
       layout: {
         'text-field': [
@@ -417,13 +431,16 @@ const MapboxClusterLayer: React.FC<MapboxClusterLayerProps> = ({
         'all',
         ['!', ['has', 'point_count']],
         ['==', ['get', 'type'], 'listing'],
+        ['has', 'metadata'],
+        ['has', 'price', ['get', 'metadata']],
+        ['!=', ['get', 'price', ['get', 'metadata']], null],
       ],
       layout: {
         'text-field': [
           'concat',
           [
             'number-format',
-            ['get', 'price', ['get', 'metadata']],
+            ['number', ['get', 'price', ['get', 'metadata']]],
             { 'min-fraction-digits': 0, 'max-fraction-digits': 0 },
           ],
           ' RSD',

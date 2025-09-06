@@ -11,6 +11,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// ErrCacheMiss indicates that the requested key was not found in cache
+var ErrCacheMiss = errors.New("cache miss")
+
 // SearchCache provides caching for search results with attributes
 type SearchCache struct {
 	redis  *redis.Client
@@ -79,8 +82,8 @@ func (sc *SearchCache) Get(ctx context.Context, params SearchParams) (*SearchRes
 	data, err := sc.redis.Get(ctx, key).Bytes()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			// Cache miss
-			return nil, nil
+			// Cache miss - возвращаем sentinel error
+			return nil, ErrCacheMiss
 		}
 		sc.logger.Error("Failed to get from cache", zap.Error(err), zap.String("key", key))
 		return nil, err

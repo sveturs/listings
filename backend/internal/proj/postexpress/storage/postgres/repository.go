@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -259,7 +260,11 @@ func (r *Repository) BulkUpsertLocations(ctx context.Context, locations []*model
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if closeErr := stmt.Close(); closeErr != nil {
+			log.Printf("Failed to close statement: %v", closeErr)
+		}
+	}()
 
 	for _, location := range locations {
 		_, err = stmt.ExecContext(ctx,
@@ -427,7 +432,11 @@ func (r *Repository) BulkUpsertOffices(ctx context.Context, offices []*models.Po
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if closeErr := stmt.Close(); closeErr != nil {
+			log.Printf("Failed to close statement: %v", closeErr)
+		}
+	}()
 
 	for _, office := range offices {
 		_, err = stmt.ExecContext(ctx,
@@ -865,7 +874,11 @@ func (r *Repository) BulkCreateTrackingEvents(ctx context.Context, events []*mod
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if closeErr := stmt.Close(); closeErr != nil {
+			log.Printf("Failed to close statement: %v", closeErr)
+		}
+	}()
 
 	for _, event := range events {
 		_, err = stmt.ExecContext(ctx,
@@ -1251,7 +1264,7 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get status statistics: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	stats.ByStatus = make(map[string]int)
 	for rows.Next() {
@@ -1279,7 +1292,7 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get city statistics: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	stats.ByCity = make(map[string]int)
 	for rows.Next() {

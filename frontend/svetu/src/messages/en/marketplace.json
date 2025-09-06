@@ -1,5 +1,16 @@
 {
-  "home": "Home",
+  "home": {
+    "searchPlaceholder": "Search for products and services...",
+    "paymentsNowAvailable": "Payments are now available",
+    "errorLoadingData": "Error loading data",
+    "privateListingsOnly": "Private listings only",
+    "privateListingsOnlyDescription": "Show only listings from private individuals",
+    "latestListings": "Latest listings",
+    "mapView": "Map",
+    "listView": "List",
+    "switchToListView": "Switch to list view",
+    "switchToMapView": "Switch to map view"
+  },
   "homeSection": {
     "title": "Home",
     "description": "Find the best deals from individuals and stores",

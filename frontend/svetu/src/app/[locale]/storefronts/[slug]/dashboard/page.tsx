@@ -301,7 +301,7 @@ export default function StorefrontDashboardPage() {
                   </Link>
                 </div>
 
-                {recentOrders.length === 0 ? (
+                {!recentOrders || recentOrders.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-base-content/60">
                       {t('noRecentOrders')}
@@ -321,53 +321,54 @@ export default function StorefrontDashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {recentOrders.map((order) => (
-                          <tr key={order.id}>
-                            <td>{order.order_id}</td>
-                            <td>{order.customer}</td>
-                            <td>
-                              {t('itemsCount', {
-                                count: order.items_count,
-                              })}
-                            </td>
-                            <td>
-                              {order.currency} {order.total.toFixed(2)}
-                            </td>
-                            <td>
-                              {order.status === 'pending' && (
-                                <span className="badge badge-warning badge-sm">
-                                  <ClockIcon className="w-3 h-3 mr-1" />
-                                  {t('pending')}
-                                </span>
-                              )}
-                              {order.status === 'shipping' && (
-                                <span className="badge badge-info badge-sm">
-                                  <TruckIcon className="w-3 h-3 mr-1" />
-                                  {t('shipping')}
-                                </span>
-                              )}
-                              {order.status === 'completed' && (
-                                <span className="badge badge-success badge-sm">
-                                  <CheckCircleIcon className="w-3 h-3 mr-1" />
-                                  {t('completed')}
-                                </span>
-                              )}
-                              {order.status === 'cancelled' && (
-                                <span className="badge badge-error badge-sm">
-                                  {t('cancelled')}
-                                </span>
-                              )}
-                            </td>
-                            <td>
-                              <Link
-                                href={`/${locale}/storefronts/${currentStorefront.slug}/orders/${order.id}`}
-                                className="btn btn-ghost btn-xs"
-                              >
-                                {tCommon('view')}
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
+                        {recentOrders &&
+                          recentOrders.map((order) => (
+                            <tr key={order.id}>
+                              <td>{order.order_id}</td>
+                              <td>{order.customer}</td>
+                              <td>
+                                {t('itemsCount', {
+                                  count: order.items_count,
+                                })}
+                              </td>
+                              <td>
+                                {order.currency} {order.total.toFixed(2)}
+                              </td>
+                              <td>
+                                {order.status === 'pending' && (
+                                  <span className="badge badge-warning badge-sm">
+                                    <ClockIcon className="w-3 h-3 mr-1" />
+                                    {t('pending')}
+                                  </span>
+                                )}
+                                {order.status === 'shipping' && (
+                                  <span className="badge badge-info badge-sm">
+                                    <TruckIcon className="w-3 h-3 mr-1" />
+                                    {t('shipping')}
+                                  </span>
+                                )}
+                                {order.status === 'completed' && (
+                                  <span className="badge badge-success badge-sm">
+                                    <CheckCircleIcon className="w-3 h-3 mr-1" />
+                                    {t('completed')}
+                                  </span>
+                                )}
+                                {order.status === 'cancelled' && (
+                                  <span className="badge badge-error badge-sm">
+                                    {t('cancelled')}
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <Link
+                                  href={`/${locale}/storefronts/${currentStorefront.slug}/orders/${order.id}`}
+                                  className="btn btn-ghost btn-xs"
+                                >
+                                  {tCommon('view')}
+                                </Link>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -383,7 +384,7 @@ export default function StorefrontDashboardPage() {
                   <h2 className="card-title text-lg">{t('lowStockAlert')}</h2>
                 </div>
 
-                {lowStockProducts.length === 0 ? (
+                {!lowStockProducts || lowStockProducts.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-base-content/60">
                       {t('allProductsInStock')}
@@ -391,27 +392,28 @@ export default function StorefrontDashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {lowStockProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex justify-between items-center p-2 bg-base-100 rounded"
-                      >
-                        <span className="truncate flex-1 mr-2">
-                          {product.name}
-                        </span>
-                        {product.stock_quantity === 0 ? (
-                          <span className="badge badge-error">
-                            {t('outOfStock')}
+                    {lowStockProducts &&
+                      lowStockProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          className="flex justify-between items-center p-2 bg-base-100 rounded"
+                        >
+                          <span className="truncate flex-1 mr-2">
+                            {product.name}
                           </span>
-                        ) : (
-                          <span className="badge badge-warning">
-                            {t('stockLeft', {
-                              count: product.stock_quantity,
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                          {product.stock_quantity === 0 ? (
+                            <span className="badge badge-error">
+                              {t('outOfStock')}
+                            </span>
+                          ) : (
+                            <span className="badge badge-warning">
+                              {t('stockLeft', {
+                                count: product.stock_quantity,
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 )}
 
@@ -435,15 +437,16 @@ export default function StorefrontDashboardPage() {
                     <BellIcon className="w-5 h-5" />
                     {t('notifications')}
                   </h2>
-                  {notifications.filter((n) => !n.is_read).length > 0 && (
-                    <span className="badge badge-primary">
-                      {notifications.filter((n) => !n.is_read).length}{' '}
-                      {tCommon('new')}
-                    </span>
-                  )}
+                  {notifications &&
+                    notifications.filter((n) => !n.is_read).length > 0 && (
+                      <span className="badge badge-primary">
+                        {notifications.filter((n) => !n.is_read).length}{' '}
+                        {tCommon('new')}
+                      </span>
+                    )}
                 </div>
 
-                {notifications.length === 0 ? (
+                {!notifications || notifications.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-base-content/60">
                       {t('noNotifications')}
@@ -451,85 +454,90 @@ export default function StorefrontDashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {notifications.slice(0, 5).map((notification) => {
-                      const getNotificationIcon = () => {
-                        switch (notification.type) {
-                          case 'order':
-                            return (
-                              <ShoppingBagIcon className="w-4 h-4 text-primary" />
-                            );
-                          case 'message':
-                            return (
-                              <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
-                            );
-                          case 'stock':
-                            return (
-                              <ExclamationTriangleIcon className="w-4 h-4 text-warning" />
-                            );
-                          default:
-                            return (
-                              <BellIcon className="w-4 h-4 text-base-content" />
-                            );
-                        }
-                      };
+                    {notifications &&
+                      notifications.slice(0, 5).map((notification) => {
+                        const getNotificationIcon = () => {
+                          switch (notification.type) {
+                            case 'order':
+                              return (
+                                <ShoppingBagIcon className="w-4 h-4 text-primary" />
+                              );
+                            case 'message':
+                              return (
+                                <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
+                              );
+                            case 'stock':
+                              return (
+                                <ExclamationTriangleIcon className="w-4 h-4 text-warning" />
+                              );
+                            default:
+                              return (
+                                <BellIcon className="w-4 h-4 text-base-content" />
+                              );
+                          }
+                        };
 
-                      const getIconBgColor = () => {
-                        switch (notification.type) {
-                          case 'order':
-                            return 'bg-primary/10';
-                          case 'message':
-                            return 'bg-accent/10';
-                          case 'stock':
-                            return 'bg-warning/10';
-                          default:
-                            return 'bg-base-300';
-                        }
-                      };
+                        const getIconBgColor = () => {
+                          switch (notification.type) {
+                            case 'order':
+                              return 'bg-primary/10';
+                            case 'message':
+                              return 'bg-accent/10';
+                            case 'stock':
+                              return 'bg-warning/10';
+                            default:
+                              return 'bg-base-300';
+                          }
+                        };
 
-                      return (
-                        <div
-                          key={notification.id}
-                          className={`p-3 bg-base-200 rounded-lg ${!notification.is_read ? 'border-l-4 border-primary' : ''}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`p-1 ${getIconBgColor()} rounded`}>
-                              {getNotificationIcon()}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">
-                                {notification.title.startsWith('notifications.')
-                                  ? tNotifications(
-                                      notification.title.replace(
-                                        'notifications.',
-                                        ''
-                                      )
-                                    )
-                                  : notification.title}
-                              </p>
-                              {notification.message && (
-                                <p className="text-xs text-base-content/70 mt-1">
-                                  {notification.message.startsWith(
+                        return (
+                          <div
+                            key={notification.id}
+                            className={`p-3 bg-base-200 rounded-lg ${!notification.is_read ? 'border-l-4 border-primary' : ''}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`p-1 ${getIconBgColor()} rounded`}
+                              >
+                                {getNotificationIcon()}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">
+                                  {notification.title.startsWith(
                                     'notifications.'
                                   )
                                     ? tNotifications(
-                                        notification.message.replace(
+                                        notification.title.replace(
                                           'notifications.',
                                           ''
                                         )
                                       )
-                                    : notification.message}
+                                    : notification.title}
                                 </p>
-                              )}
-                              <p className="text-xs text-base-content/60 mt-1">
-                                {new Date(
-                                  notification.created_at
-                                ).toLocaleString(locale)}
-                              </p>
+                                {notification.message && (
+                                  <p className="text-xs text-base-content/70 mt-1">
+                                    {notification.message.startsWith(
+                                      'notifications.'
+                                    )
+                                      ? tNotifications(
+                                          notification.message.replace(
+                                            'notifications.',
+                                            ''
+                                          )
+                                        )
+                                      : notification.message}
+                                  </p>
+                                )}
+                                <p className="text-xs text-base-content/60 mt-1">
+                                  {new Date(
+                                    notification.created_at
+                                  ).toLocaleString(locale)}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 )}
 

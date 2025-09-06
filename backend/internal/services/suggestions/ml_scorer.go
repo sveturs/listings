@@ -444,10 +444,11 @@ func averageTokenLength(tokens []string) float64 {
 
 func containsSpecialChars(text string) bool {
 	for _, char := range text {
-		if !((char >= 'a' && char <= 'z') ||
-			(char >= 'A' && char <= 'Z') ||
-			(char >= '0' && char <= '9') ||
-			char == ' ') {
+		// Применяем закон Де Моргана для упрощения условия
+		if (char < 'a' || char > 'z') &&
+			(char < 'A' || char > 'Z') &&
+			(char < '0' || char > '9') &&
+			char != ' ' {
 			return true
 		}
 	}

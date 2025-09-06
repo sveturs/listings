@@ -479,7 +479,7 @@ func (s *Service) SearchAddress(ctx context.Context, req *models.SearchAddressRe
 	if err != nil {
 		return nil, fmt.Errorf("failed to search address: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var suggestions []models.AddressSuggestion
 	for rows.Next() {
@@ -618,7 +618,7 @@ func (s *Service) GetParcelShops(ctx context.Context, city string) ([]models.BEX
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var shops []models.BEXParcelShop
 	for rows.Next() {

@@ -1061,7 +1061,7 @@ func (h *AdminCategoriesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) erro
 		logger.Error().Err(err).Msg("Failed to get category variant attributes")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoryVariantAttributesError")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var attributes []models.CategoryVariantAttribute
 	for rows.Next() {

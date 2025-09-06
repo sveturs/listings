@@ -1,0 +1,12 @@
+{
+  "scannerInitError": "Greška pri inicijalizaciji skenera",
+  "cameraAccessError": "Greška pri pristupu kameri",
+  "processingError": "Greška obrade",
+  "autoFilled": "Podaci automatski popunjeni",
+  "flashNotSupported": "Blesc nije podržan",
+  "enterBarcodeManually": "Unesite bar-kod ručno",
+  "pointCameraAtCode": "Usmerite kameru na kod",
+  "scanned": "Skenirano",
+  "viewProduct": "Pogledaj proizvod",
+  "retry": "Pokušaj ponovo"
+}

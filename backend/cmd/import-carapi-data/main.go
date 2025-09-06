@@ -48,7 +48,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-	defer db.Close()
+	defer func() {
+		if closeErr := db.Close(); closeErr != nil {
+			log.Printf("Failed to close database connection: %v", closeErr)
+		}
+	}()
 
 	// Путь к данным
 	dataDir := "/data/hostel-booking-system/backend/data/carapi-final-20250802-205650"
@@ -77,7 +81,7 @@ func main() {
 
 func importMakes(db *sqlx.DB, dataDir string) error {
 	// Читаем файл с марками
-	data, err := os.ReadFile(filepath.Join(dataDir, "makes", "all_makes.json"))
+	data, err := os.ReadFile(filepath.Clean(filepath.Join(dataDir, "makes", "all_makes.json")))
 	if err != nil {
 		return fmt.Errorf("read makes file: %w", err)
 	}
@@ -177,7 +181,7 @@ func importModels(db *sqlx.DB, dataDir string) error {
 	if err != nil {
 		return fmt.Errorf("get makes: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var id int
@@ -215,7 +219,7 @@ func importModels(db *sqlx.DB, dataDir string) error {
 		}
 
 		// Читаем файл
-		data, err := os.ReadFile(filepath.Join(modelsDir, file.Name()))
+		data, err := os.ReadFile(filepath.Clean(filepath.Join(modelsDir, file.Name())))
 		if err != nil {
 			log.Printf("Failed to read %s: %v", file.Name(), err)
 			continue
@@ -388,7 +392,7 @@ func showStatistics(db *sqlx.DB) {
 		ORDER BY model_count DESC
 		LIMIT 10
 	`)
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var name string

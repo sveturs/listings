@@ -82,7 +82,7 @@ func (s *DeepLTranslationService) Translate(ctx context.Context, text string, so
 	if err != nil {
 		return "", fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Читаем ответ
 	body, err := io.ReadAll(resp.Body)
@@ -160,7 +160,7 @@ func (s *DeepLTranslationService) TranslateWithContext(ctx context.Context, text
 	if err != nil {
 		return "", fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -301,7 +301,7 @@ func (s *DeepLTranslationService) translateBatch(ctx context.Context, texts []st
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -380,7 +380,7 @@ func (s *DeepLTranslationService) GetUsage(ctx context.Context) (map[string]inte
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

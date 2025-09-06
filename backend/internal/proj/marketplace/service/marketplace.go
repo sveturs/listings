@@ -2035,7 +2035,7 @@ func (s *MarketplaceService) getQuerySuggestions(ctx context.Context, query stri
 		log.Printf("Ошибка получения популярных запросов: %v", err)
 		return []models.UnifiedSuggestion{}
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var suggestions []models.UnifiedSuggestion
 	for rows.Next() {
@@ -2108,7 +2108,7 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 		log.Printf("Ошибка получения категорий: %v", err)
 		return []models.UnifiedSuggestion{}
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var suggestions []models.UnifiedSuggestion
 	for rows.Next() {
@@ -2157,7 +2157,7 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 		log.Printf("Ошибка получения товаров: %v", err)
 		return []models.UnifiedSuggestion{}
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var suggestions []models.UnifiedSuggestion
 	for rows.Next() {

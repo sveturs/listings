@@ -1,0 +1,29 @@
+{
+  "selectMethod": "Select payment method",
+  "additionalFee": "Additional fee",
+  "securePaymentInfo": "Secure payment",
+  "methods": {
+    "card": "Credit Card",
+    "cardDescription": "Pay with credit card through secure connection",
+    "cashOnDelivery": "Cash on Delivery",
+    "cashOnDeliveryDescription": "Pay when you receive the item",
+    "bankTransfer": "Bank Transfer",
+    "bankTransferDescription": "Direct bank transfer"
+  },
+  "held": "Held",
+  "released": "Released",
+  "refunded": "Refunded",
+  "pending": "Pending",
+  "releasedDescription": "Funds released to seller",
+  "refundedDescription": "Funds refunded to buyer",
+  "pendingDescription": "Payment processing pending",
+  "releaseDate": "Release date",
+  "buyerProtection": "Buyer protection",
+  "confirmReceipt": "Confirm item receipt",
+  "disputeOption": "Dispute option available",
+  "sellerTier": "Seller tier",
+  "escrow": {
+    "heldDescription": "Funds held in escrow until delivery confirmation",
+    "autoRelease": "Auto-release in {days} days"
+  }
+}

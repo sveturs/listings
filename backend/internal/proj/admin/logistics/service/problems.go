@@ -123,7 +123,7 @@ func (s *ProblemService) GetProblems(ctx context.Context, filter ProblemsFilter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get problems: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var problems []logistics.ProblemShipment
 	for rows.Next() {
@@ -515,7 +515,7 @@ func (s *ProblemService) GetProblemComments(ctx context.Context, problemID int) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get problem comments: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var comments []logistics.ProblemComment
 	for rows.Next() {
@@ -630,7 +630,7 @@ func (s *ProblemService) GetProblemHistory(ctx context.Context, problemID int) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to get problem history: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var history []logistics.ProblemStatusHistory
 	for rows.Next() {

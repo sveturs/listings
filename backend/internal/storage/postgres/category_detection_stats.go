@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -92,7 +93,11 @@ func (r *CategoryDetectionStatsRepository) GetRecentStats(ctx context.Context, d
 	if err != nil {
 		return nil, errors.Wrap(err, "ошибка выполнения запроса")
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Printf("Failed to close rows: %v", closeErr)
+		}
+	}()
 
 	var stats []*models.CategoryDetectionStats
 	for rows.Next() {
@@ -273,7 +278,11 @@ func (r *CategoryDetectionStatsRepository) GetCategoryStats(ctx context.Context,
 	if err != nil {
 		return nil, errors.Wrap(err, "ошибка получения топ ключевых слов")
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Printf("Failed to close rows: %v", closeErr)
+		}
+	}()
 
 	stats.TopKeywords = make([]string, 0)
 	for rows.Next() {
@@ -306,7 +315,11 @@ func (r *CategoryDetectionStatsRepository) GetCategoryStats(ctx context.Context,
 	if err != nil {
 		return nil, errors.Wrap(err, "ошибка получения частых ошибок")
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Printf("Failed to close rows: %v", closeErr)
+		}
+	}()
 
 	stats.CommonMistakes = make(map[int32]int32)
 	for rows.Next() {

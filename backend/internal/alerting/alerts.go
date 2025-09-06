@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/smtp"
 	"strings"
@@ -269,7 +270,11 @@ func (s *SlackChannel) Send(alert Alert) error {
 	if err != nil {
 		return fmt.Errorf("failed to send slack message: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("slack webhook returned status %d", resp.StatusCode)
@@ -335,7 +340,11 @@ func (t *TelegramChannel) Send(alert Alert) error {
 	if err != nil {
 		return fmt.Errorf("failed to send telegram message: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("telegram API returned status %d", resp.StatusCode)

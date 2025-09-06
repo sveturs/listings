@@ -181,7 +181,7 @@ func (s *UnifiedAttributesTestSuite) TestGetCategoryAttributes() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var result utils.SuccessResponseSwag
@@ -209,7 +209,7 @@ func (s *UnifiedAttributesTestSuite) TestSaveListingAttributeValues() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем, что значения сохранились
@@ -233,7 +233,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationRequired() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -257,7 +257,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationSelectOptions() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -281,7 +281,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationNumberRange() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
 	var errorResp utils.ErrorResponseSwag
@@ -307,6 +307,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var createResp utils.SuccessResponseSwag
@@ -328,6 +329,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// 3. Удаляем атрибут
@@ -335,6 +337,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем, что атрибут удален
@@ -372,6 +375,7 @@ func (s *UnifiedAttributesTestSuite) TestAttachDetachCategoryAttribute() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем привязку
@@ -391,6 +395,7 @@ func (s *UnifiedAttributesTestSuite) TestAttachDetachCategoryAttribute() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем отвязку
@@ -449,7 +454,7 @@ func (s *UnifiedAttributesTestSuite) TestGetAttributeRanges() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var result utils.SuccessResponseSwag
@@ -467,6 +472,7 @@ func (s *UnifiedAttributesTestSuite) TestMigrationEndpoints() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// 2. Проверяем статус миграции
@@ -474,6 +480,7 @@ func (s *UnifiedAttributesTestSuite) TestMigrationEndpoints() {
 
 	resp, err = s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	var statusResp utils.SuccessResponseSwag
@@ -502,6 +509,7 @@ func (s *UnifiedAttributesTestSuite) TestFeatureFlagFallback() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 
 	// Должен работать через fallback (если настроен) или вернуть ошибку
 	if s.cfg.FeatureFlags.UnifiedAttributesFallback {
@@ -525,6 +533,9 @@ func (s *UnifiedAttributesTestSuite) TestConcurrentAccess() {
 
 			resp, err := s.app.Test(req, -1)
 			assert.NoError(s.T(), err)
+			if resp != nil {
+				defer func() { _ = resp.Body.Close() }()
+			}
 			assert.Equal(s.T(), http.StatusOK, resp.StatusCode)
 		}(i)
 	}
@@ -558,6 +569,7 @@ func (s *UnifiedAttributesTestSuite) TestDualWriteConsistency() {
 
 	resp, err := s.app.Test(req, -1)
 	s.Require().NoError(err)
+	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
 	// Проверяем, что данные записались в новую систему
@@ -580,7 +592,7 @@ func (s *UnifiedAttributesTestSuite) TestPerformance() {
 		resp, err := s.app.Test(req, -1)
 		s.Require().NoError(err)
 		s.Equal(http.StatusOK, resp.StatusCode)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	elapsed := time.Since(start)

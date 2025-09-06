@@ -505,7 +505,11 @@ func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
 		logger.Error().Err(err).Str("filePath", attachment.FilePath).Msg("Error getting attachment file")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.fileNotFound")
 	}
-	defer fileReader.Close()
+	defer func() {
+		if closeErr := fileReader.Close(); closeErr != nil {
+			logger.Error().Err(closeErr).Msg("Failed to close file reader")
+		}
+	}()
 
 	// Устанавливаем заголовки для файла
 	c.Set("Content-Type", attachment.ContentType)

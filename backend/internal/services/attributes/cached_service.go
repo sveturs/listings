@@ -71,7 +71,9 @@ func (s *CachedAttributeService) GetCategoryAttributes(ctx context.Context, cate
 	}
 
 	// Сохраняем в кэш (асинхронно, чтобы не замедлять ответ)
-	go s.cacheAttributesList(context.Background(), cacheKey, attributes)
+	// Используем detached context для асинхронной операции кэширования
+	cacheCtx := context.WithoutCancel(ctx)
+	go s.cacheAttributesList(cacheCtx, cacheKey, attributes)
 
 	s.logger.Debug("Cache miss for category attributes, loaded from DB",
 		zap.Int64("category_id", categoryID),
@@ -107,7 +109,9 @@ func (s *CachedAttributeService) GetAttributeById(ctx context.Context, attribute
 	}
 
 	// Сохраняем в кэш (асинхронно)
-	go s.cacheAttribute(context.Background(), cacheKey, *attribute)
+	// Используем detached context для асинхронной операции кэширования
+	cacheCtx := context.WithoutCancel(ctx)
+	go s.cacheAttribute(cacheCtx, cacheKey, *attribute)
 
 	s.logger.Debug("Cache miss for attribute, loaded from DB",
 		zap.Int64("attribute_id", attributeID))
@@ -144,7 +148,9 @@ func (s *CachedAttributeService) GetPopularValues(ctx context.Context, attribute
 	}
 
 	// Сохраняем в кэш (асинхронно) с более коротким TTL для популярных значений
-	go s.cachePopularValues(context.Background(), cacheKey, values)
+	// Используем detached context для асинхронной операции кэширования
+	cacheCtx := context.WithoutCancel(ctx)
+	go s.cachePopularValues(cacheCtx, cacheKey, values)
 
 	s.logger.Debug("Cache miss for popular values, loaded from DB",
 		zap.Int64("attribute_id", attributeID),
