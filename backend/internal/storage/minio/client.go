@@ -153,9 +153,15 @@ func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader 
 	}
 
 	// Return public URL for the file
-	// Если baseURL уже содержит путь к прокси (например, http://localhost:3000),
-	// то просто добавляем путь к файлу
-	publicURL := fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	// Формируем полный URL с базовым адресом и именем бакета
+	var publicURL string
+	if m.baseURL != "" {
+		// Если есть базовый URL, используем его
+		publicURL = fmt.Sprintf("%s/%s/%s", m.baseURL, m.bucketName, objectName)
+	} else {
+		// Иначе возвращаем относительный путь (для обратной совместимости)
+		publicURL = fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	}
 	return publicURL, nil
 }
 

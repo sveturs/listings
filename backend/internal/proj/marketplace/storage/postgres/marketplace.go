@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,6 +63,50 @@ func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServic
 	return &Storage{
 		pool:               pool,
 		translationService: translationService,
+	}
+}
+
+// buildFullImageURL преобразует относительный URL в полный URL с базовым адресом
+func buildFullImageURL(relativeURL string) string {
+	if relativeURL == "" {
+		return ""
+	}
+	
+	// Если URL уже полный (начинается с http:// или https://), возвращаем как есть
+	if strings.HasPrefix(relativeURL, "http://") || strings.HasPrefix(relativeURL, "https://") {
+		return relativeURL
+	}
+	
+	// Получаем базовый URL из переменной окружения
+	baseURL := os.Getenv("FILE_STORAGE_PUBLIC_URL")
+	if baseURL == "" {
+		// Если не задан, используем относительный URL как есть
+		return relativeURL
+	}
+	
+	// Убираем trailing slash из baseURL если есть
+	baseURL = strings.TrimRight(baseURL, "/")
+	
+	// Обрабатываем URL в зависимости от формата
+	if strings.HasPrefix(relativeURL, "/listings/") {
+		// URL вида /listings/294/... -> нужно заменить на правильный bucket
+		bucketName := os.Getenv("MINIO_BUCKET_NAME")
+		if bucketName == "" {
+			bucketName = "development-listings"
+		}
+		// Убираем /listings/ и добавляем правильный bucket
+		path := strings.TrimPrefix(relativeURL, "/listings/")
+		return fmt.Sprintf("%s/%s/%s", baseURL, bucketName, path)
+	} else if strings.HasPrefix(relativeURL, "/") {
+		// URL начинается с /, убираем его чтобы не было двойного слэша
+		return baseURL + relativeURL
+	} else {
+		// URL без начального слэша
+		bucketName := os.Getenv("MINIO_BUCKET_NAME")
+		if bucketName == "" {
+			bucketName = "development-listings"
+		}
+		return fmt.Sprintf("%s/%s/%s", baseURL, bucketName, relativeURL)
 	}
 }
 
@@ -318,7 +363,11 @@ func (s *Storage) GetListingImages(ctx context.Context, listingID string) ([]mod
 			image.StorageBucket = storageBucket.String
 		}
 		if publicURL.Valid {
-			image.PublicURL = publicURL.String
+			// Преобразуем относительный URL в полный
+			fullURL := buildFullImageURL(publicURL.String)
+			image.PublicURL = fullURL
+			// Заполняем ImageURL из PublicURL для API
+			image.ImageURL = fullURL
 		}
 
 		images = append(images, image)
@@ -687,6 +736,11 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			if err := json.Unmarshal(imagesJSON, &images); err != nil {
 				log.Printf("Error unmarshaling images for listing %d: %v", listing.ID, err)
 			} else {
+				// Преобразуем относительные URL в полные
+				for i := range images {
+					images[i].PublicURL = buildFullImageURL(images[i].PublicURL)
+					images[i].ImageURL = buildFullImageURL(images[i].ImageURL)
+				}
 				listing.Images = images
 			}
 		}
@@ -1075,6 +1129,11 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 		if err := json.Unmarshal(imagesJSON, &images); err != nil {
 			log.Printf("Error unmarshalling images for listing %d: %v", listing.ID, err)
 			images = []models.MarketplaceImage{}
+		}
+		// Преобразуем относительные URL в полные
+		for i := range images {
+			images[i].PublicURL = buildFullImageURL(images[i].PublicURL)
+			images[i].ImageURL = buildFullImageURL(images[i].ImageURL)
 		}
 		listing.Images = images
 
@@ -3425,6 +3484,7 @@ func (s *Storage) GetStorefrontProductImages(ctx context.Context, productID int)
 			ID:          img.ID,
 			ListingID:   img.StorefrontProductID,
 			PublicURL:   img.ImageURL,
+			ImageURL:    img.ImageURL, // Заполняем ImageURL для API
 			IsMain:      img.IsDefault,
 			StorageType: "minio",
 			CreatedAt:   img.CreatedAt,
