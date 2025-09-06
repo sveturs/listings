@@ -389,7 +389,7 @@ func (s *MonitoringService) getShipmentProblems(ctx context.Context, shipmentID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var problems []logistics.ProblemShipment
 	for rows.Next() {

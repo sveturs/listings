@@ -92,7 +92,7 @@ func (s *AnalyticsService) GetPerformanceMetrics(ctx context.Context, fromDate, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get performance metrics: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var metrics []map[string]interface{}
 	var totalShipments, totalDelivered, totalProblems int
@@ -296,7 +296,7 @@ func (s *AnalyticsService) GetFinancialReport(ctx context.Context, fromDate, toD
 	if err != nil {
 		return report, nil // Возвращаем частичный отчет
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var monthly []map[string]interface{}
 	for rows.Next() {
@@ -370,7 +370,7 @@ func (s *AnalyticsService) getShipmentsReportData(ctx context.Context, fromDate,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var data []map[string]interface{}
 	for rows.Next() {
@@ -426,7 +426,7 @@ func (s *AnalyticsService) getProblemsReportData(ctx context.Context, fromDate, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var data []map[string]interface{}
 	for rows.Next() {

@@ -979,7 +979,7 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 
 	rows, err := r.db.QueryContext(ctx, lowStockQuery, productID)
 	if err == nil {
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		if err := rows.Err(); err != nil {
 			return nil, fmt.Errorf("error iterating rows: %w", err)
 		}

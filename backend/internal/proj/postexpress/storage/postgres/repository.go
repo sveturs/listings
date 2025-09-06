@@ -1264,7 +1264,7 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get status statistics: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	stats.ByStatus = make(map[string]int)
 	for rows.Next() {
@@ -1292,7 +1292,7 @@ func (r *Repository) GetShipmentStatistics(ctx context.Context, filters storage.
 	if err != nil {
 		return nil, fmt.Errorf("failed to get city statistics: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	stats.ByCity = make(map[string]int)
 	for rows.Next() {

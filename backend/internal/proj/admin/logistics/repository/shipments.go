@@ -207,7 +207,7 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get BEX shipments")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var s BEXShipment
@@ -345,7 +345,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to get BEX shipments")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var s struct {
@@ -791,7 +791,7 @@ func (r *ShipmentsRepository) GetProblemShipments() ([]interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get BEX problems")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var p struct {

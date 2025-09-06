@@ -180,7 +180,7 @@ func importStreets(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	count := 0
 	for {
@@ -242,7 +242,7 @@ func importStreetsFromExcel(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	count := 0
 	// Начинаем со второй строки (пропускаем заголовок)

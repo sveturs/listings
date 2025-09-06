@@ -357,7 +357,7 @@ func (h *AdminVariantAttributesHandler) GetVariantAttributeMappings(c *fiber.Ctx
 		logger.Error().Err(err).Msg("Failed to get variant attribute mappings")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMappingsError")
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var mappings []models.CategoryAttribute
 	for rows.Next() {

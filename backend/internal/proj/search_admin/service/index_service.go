@@ -573,7 +573,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get active listings: %w", err)
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 
 		// Подсчитываем количество для логирования
 		listingCount := 0
@@ -687,7 +687,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get active products: %w", err)
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 
 		productCount := 0
 		var batch []map[string]interface{}

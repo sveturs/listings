@@ -393,7 +393,7 @@ func (s *unifiedAttributeStorage) UpdateCategoryAttribute(ctx context.Context, c
 		// setClause = append(setClause, fmt.Sprintf("group_id = $%d", argNum))
 		// args = append(args, *groupID)
 		// argNum++
-		
+
 		// Временно логируем, что группа не поддерживается
 		log.Printf("Group ID support is not yet implemented: %v", *groupID)
 	}

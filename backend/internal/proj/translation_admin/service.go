@@ -557,9 +557,8 @@ func (s *Service) loadModuleFile(module, lang string) (map[string]interface{}, e
 	if !isValidLanguage(lang) || !isValidModule(module) {
 		return nil, fmt.Errorf("invalid language or module parameter")
 	}
-	
+
 	filePath := filepath.Join(s.frontendPath, "src", "messages", lang, module+".json")
-	
 	// Проверяем, что путь находится в разрешённой директории
 	cleanPath := filepath.Clean(filePath)
 	messagesDir := filepath.Join(s.frontendPath, "src", "messages")
@@ -609,7 +608,7 @@ func (s *Service) createBackup(src, dst string) error {
 		!strings.HasPrefix(cleanDst, filepath.Clean(messagesDir)) {
 		return fmt.Errorf("access denied: path outside allowed directory")
 	}
-	
+
 	// #nosec G304 - путь провалидирован выше
 	source, err := os.Open(cleanSrc)
 	if err != nil {
@@ -2049,7 +2048,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 	if err != nil {
 		return fmt.Errorf("failed to query categories: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	type CategoryData struct {
 		ID             int
