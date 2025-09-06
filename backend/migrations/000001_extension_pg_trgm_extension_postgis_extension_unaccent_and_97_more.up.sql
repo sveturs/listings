@@ -435,6 +435,48 @@ CREATE SEQUENCE public.permissions_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.post_express_locations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.post_express_offices_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.post_express_rates_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.post_express_settings_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.post_express_shipments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.post_express_tracking_events_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.price_history_id_seq
     AS integer
     START WITH 1
@@ -705,48 +747,6 @@ CREATE SEQUENCE public.translation_providers_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.translation_quality_metrics_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_sync_conflicts_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_tasks_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translations_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.transliteration_rules_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.unified_attribute_stats_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.unified_attribute_values_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
