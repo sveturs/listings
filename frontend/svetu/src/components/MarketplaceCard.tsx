@@ -81,7 +81,8 @@ export default function MarketplaceCard({
 
   const getImageUrl = (image?: MarketplaceImage) => {
     if (!image) return null;
-    // Используем config.buildImageUrl для правильного формирования URL
+    // Backend теперь возвращает полные URL в public_url
+    // buildImageUrl обрабатывает это корректно (возвращает как есть если URL полный)
     return configManager.buildImageUrl(image.public_url);
   };
 

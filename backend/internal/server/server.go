@@ -3,15 +3,16 @@
 package server
 
 import (
-	globalService "backend/internal/proj/global/service"
-	postexpressService "backend/internal/proj/postexpress/service"
-	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
-	pkglogger "backend/pkg/logger"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"time"
+
+	globalService "backend/internal/proj/global/service"
+	postexpressService "backend/internal/proj/postexpress/service"
+	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
+	pkglogger "backend/pkg/logger"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -30,6 +31,7 @@ import (
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
 	"backend/internal/proj/bexexpress"
+	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -57,6 +59,7 @@ import (
 type Server struct {
 	app                *fiber.App
 	cfg                *config.Config
+	configModule       *configHandler.Module
 	users              *userHandler.Handler
 	middleware         *middleware.Middleware
 	review             *reviewHandler.Handler
@@ -127,6 +130,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	services := globalService.NewService(ctx, db, cfg, translationService)
 
+	configModule := configHandler.NewModule(cfg)
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
@@ -244,6 +248,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	server := &Server{
 		app:                app,
 		cfg:                cfg,
+		configModule:       configModule,
 		users:              usersHandler,
 		middleware:         middleware,
 		review:             reviewHandler,
@@ -409,6 +414,9 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 
+	// Config роуты - публичные, регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
+	s.app.Get("/api/v1/config/storage", s.configModule.Handler.GetStorageConfig)
+
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
 
@@ -426,6 +434,7 @@ func (s *Server) registerProjectRoutes() {
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
+	// config регистрируется отдельно до этого метода для публичных роутов
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
 	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)

@@ -14,13 +14,16 @@ import (
 
 // MinioConfig содержит настройки подключения к MinIO
 type MinioConfig struct {
-	Endpoint        string
-	AccessKeyID     string
-	SecretAccessKey string
-	UseSSL          bool
-	BucketName      string
-	Location        string
-	PublicURL       string // URL для публичного доступа к файлам
+	Endpoint           string
+	AccessKeyID        string
+	SecretAccessKey    string
+	UseSSL             bool
+	BucketName         string // Основной bucket для объявлений
+	ChatBucket         string // Bucket для файлов чата
+	StorefrontBucket   string // Bucket для товаров витрин
+	ReviewPhotosBucket string // Bucket для фотографий отзывов
+	Location           string
+	PublicURL          string // URL для публичного доступа к файлам
 }
 
 // MinioClient представляет клиент MinIO для работы с файлами
@@ -67,51 +70,79 @@ func NewMinioClient(ctx context.Context, config MinioConfig) (*MinioClient, erro
 	}
 
 	// Также создаем bucket для файлов чата если он не существует
-	chatBucket := "chat-files"
-	chatExists, err := client.BucketExists(ctx, chatBucket)
-	if err != nil {
-		log.Printf("Ошибка проверки существования бакета chat-files: %v", err)
-	} else if !chatExists {
-		err = client.MakeBucket(ctx, chatBucket, minio.MakeBucketOptions{
-			Region: config.Location,
-		})
+	if config.ChatBucket != "" {
+		chatExists, err := client.BucketExists(ctx, config.ChatBucket)
 		if err != nil {
-			log.Printf("Ошибка создания бакета chat-files: %v", err)
-		} else {
-			log.Printf("Успешно создан бакет: %s", chatBucket)
-
-			// Устанавливаем политику доступа для публичного чтения
-			chatPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + chatBucket + `/*"]}]}`
-			err = client.SetBucketPolicy(ctx, chatBucket, chatPolicy)
+			log.Printf("Ошибка проверки существования бакета %s: %v", config.ChatBucket, err)
+		} else if !chatExists {
+			err = client.MakeBucket(ctx, config.ChatBucket, minio.MakeBucketOptions{
+				Region: config.Location,
+			})
 			if err != nil {
-				log.Printf("Ошибка установки политики бакета chat-files: %v", err)
+				log.Printf("Ошибка создания бакета %s: %v", config.ChatBucket, err)
 			} else {
-				log.Printf("Успешно установлена политика для бакета: %s", chatBucket)
+				log.Printf("Успешно создан бакет: %s", config.ChatBucket)
+
+				// Устанавливаем политику доступа для публичного чтения
+				chatPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + config.ChatBucket + `/*"]}]}`
+				err = client.SetBucketPolicy(ctx, config.ChatBucket, chatPolicy)
+				if err != nil {
+					log.Printf("Ошибка установки политики бакета %s: %v", config.ChatBucket, err)
+				} else {
+					log.Printf("Успешно установлена политика для бакета: %s", config.ChatBucket)
+				}
 			}
 		}
 	}
 
 	// Создаем bucket для фотографий отзывов если он не существует
-	reviewPhotosBucket := "review-photos"
-	reviewExists, err := client.BucketExists(ctx, reviewPhotosBucket)
-	if err != nil {
-		log.Printf("Ошибка проверки существования бакета review-photos: %v", err)
-	} else if !reviewExists {
-		err = client.MakeBucket(ctx, reviewPhotosBucket, minio.MakeBucketOptions{
-			Region: config.Location,
-		})
+	if config.ReviewPhotosBucket != "" {
+		reviewExists, err := client.BucketExists(ctx, config.ReviewPhotosBucket)
 		if err != nil {
-			log.Printf("Ошибка создания бакета review-photos: %v", err)
-		} else {
-			log.Printf("Успешно создан бакет: %s", reviewPhotosBucket)
-
-			// Устанавливаем политику доступа для публичного чтения
-			reviewPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + reviewPhotosBucket + `/*"]}]}`
-			err = client.SetBucketPolicy(ctx, reviewPhotosBucket, reviewPolicy)
+			log.Printf("Ошибка проверки существования бакета %s: %v", config.ReviewPhotosBucket, err)
+		} else if !reviewExists {
+			err = client.MakeBucket(ctx, config.ReviewPhotosBucket, minio.MakeBucketOptions{
+				Region: config.Location,
+			})
 			if err != nil {
-				log.Printf("Ошибка установки политики бакета review-photos: %v", err)
+				log.Printf("Ошибка создания бакета %s: %v", config.ReviewPhotosBucket, err)
 			} else {
-				log.Printf("Успешно установлена политика для бакета: %s", reviewPhotosBucket)
+				log.Printf("Успешно создан бакет: %s", config.ReviewPhotosBucket)
+
+				// Устанавливаем политику доступа для публичного чтения
+				reviewPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + config.ReviewPhotosBucket + `/*"]}]}`
+				err = client.SetBucketPolicy(ctx, config.ReviewPhotosBucket, reviewPolicy)
+				if err != nil {
+					log.Printf("Ошибка установки политики бакета %s: %v", config.ReviewPhotosBucket, err)
+				} else {
+					log.Printf("Успешно установлена политика для бакета: %s", config.ReviewPhotosBucket)
+				}
+			}
+		}
+	}
+
+	// Создаем bucket для товаров витрин если он не существует
+	if config.StorefrontBucket != "" {
+		storefrontExists, err := client.BucketExists(ctx, config.StorefrontBucket)
+		if err != nil {
+			log.Printf("Ошибка проверки существования бакета %s: %v", config.StorefrontBucket, err)
+		} else if !storefrontExists {
+			err = client.MakeBucket(ctx, config.StorefrontBucket, minio.MakeBucketOptions{
+				Region: config.Location,
+			})
+			if err != nil {
+				log.Printf("Ошибка создания бакета %s: %v", config.StorefrontBucket, err)
+			} else {
+				log.Printf("Успешно создан бакет: %s", config.StorefrontBucket)
+
+				// Устанавливаем политику доступа для публичного чтения
+				storefrontPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + config.StorefrontBucket + `/*"]}]}`
+				err = client.SetBucketPolicy(ctx, config.StorefrontBucket, storefrontPolicy)
+				if err != nil {
+					log.Printf("Ошибка установки политики бакета %s: %v", config.StorefrontBucket, err)
+				} else {
+					log.Printf("Успешно установлена политика для бакета: %s", config.StorefrontBucket)
+				}
 			}
 		}
 	}
@@ -153,9 +184,15 @@ func (m *MinioClient) UploadFile(ctx context.Context, objectName string, reader 
 	}
 
 	// Return public URL for the file
-	// Если baseURL уже содержит путь к прокси (например, http://localhost:3000),
-	// то просто добавляем путь к файлу
-	publicURL := fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	// Формируем полный URL с базовым адресом и именем бакета
+	var publicURL string
+	if m.baseURL != "" {
+		// Если есть базовый URL, используем его
+		publicURL = fmt.Sprintf("%s/%s/%s", m.baseURL, m.bucketName, objectName)
+	} else {
+		// Иначе возвращаем относительный путь (для обратной совместимости)
+		publicURL = fmt.Sprintf("/%s/%s", m.bucketName, objectName)
+	}
 	return publicURL, nil
 }
 

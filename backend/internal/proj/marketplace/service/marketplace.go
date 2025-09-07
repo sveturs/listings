@@ -1132,6 +1132,7 @@ func (s *MarketplaceService) UploadImage(ctx context.Context, file *multipart.Fi
 		StorageType:   "minio", // Явно указываем тип хранилища!
 		StorageBucket: "listings",
 		PublicURL:     publicURL,
+		ImageURL:      publicURL, // Заполняем ImageURL для API
 	}
 	log.Printf("UploadImage: Сохраняем информацию об изображении: ListingID=%d, FilePath=%s, StorageType=%s, PublicURL=%s",
 		image.ListingID, image.FilePath, image.StorageType, image.PublicURL)

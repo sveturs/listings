@@ -35,6 +35,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
+	// Пропускаем публичные config маршруты
+	if strings.HasPrefix(path, "/api/v1/config/") {
+		logger.Info().Str("path", path).Msg("Skipping auth for public config routes")
+		return c.Next()
+	}
+
 	// Пропускаем публичные маршруты marketplace для автодополнения и поиска
 	if strings.HasPrefix(path, "/api/v1/marketplace/") && c.Method() == httpMethodGet {
 		logger.Info().Str("path", path).Str("method", c.Method()).Msg("Checking marketplace route")

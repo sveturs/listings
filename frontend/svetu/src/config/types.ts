@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const publicEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().min(1),
   NEXT_PUBLIC_MINIO_URL: z.string().url().min(1),
+  NEXT_PUBLIC_MINIO_BUCKET: z.string().optional(),
   NEXT_PUBLIC_IMAGE_HOSTS: z.string().optional(),
   NEXT_PUBLIC_IMAGE_PATH_PATTERN: z.string().optional(),
   NEXT_PUBLIC_WEBSOCKET_URL: z.string().url().optional().or(z.literal('')),
@@ -40,6 +41,7 @@ export interface Config {
   // MinIO/Storage Configuration
   storage: {
     minioUrl: string;
+    minioBucket: string;
     imageHosts: ImageHost[];
     imagePathPattern: string;
   };
@@ -71,6 +73,7 @@ export interface ConfigValidationError {
 export interface EnvVariables {
   NEXT_PUBLIC_API_URL?: string;
   NEXT_PUBLIC_MINIO_URL?: string;
+  NEXT_PUBLIC_MINIO_BUCKET?: string;
   NEXT_PUBLIC_IMAGE_HOSTS?: string;
   NEXT_PUBLIC_IMAGE_PATH_PATTERN?: string;
   NODE_ENV?: string;

@@ -118,8 +118,12 @@ func (s *Server) ProxyChatFiles(c *fiber.Ctx) error {
 		})
 	}
 
-	// Формируем URL для MinIO
-	minioURL := fmt.Sprintf("http://%s/chat-files/%s", s.cfg.FileStorage.MinioEndpoint, path)
+	// Формируем URL для MinIO используя конфигурируемое имя bucket'а
+	bucketName := s.cfg.FileStorage.MinioChatBucket
+	if bucketName == "" {
+		bucketName = "chat-files" // Fallback на дефолтное значение
+	}
+	minioURL := fmt.Sprintf("http://%s/%s/%s", s.cfg.FileStorage.MinioEndpoint, bucketName, path)
 
 	log.Debug().
 		Str("path", path).
@@ -176,8 +180,12 @@ func (s *Server) ProxyStorefrontProducts(c *fiber.Ctx) error {
 		})
 	}
 
-	// Формируем URL для MinIO
-	minioURL := fmt.Sprintf("http://%s/storefront-products/%s", s.cfg.FileStorage.MinioEndpoint, path)
+	// Формируем URL для MinIO используя конфигурируемое имя bucket'а
+	bucketName := s.cfg.FileStorage.MinioStorefrontBucket
+	if bucketName == "" {
+		bucketName = "storefront-products" // Fallback на дефолтное значение
+	}
+	minioURL := fmt.Sprintf("http://%s/%s/%s", s.cfg.FileStorage.MinioEndpoint, bucketName, path)
 
 	log.Debug().
 		Str("path", path).

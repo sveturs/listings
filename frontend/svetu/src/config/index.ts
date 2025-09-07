@@ -73,6 +73,10 @@ class ConfigManager {
         'NEXT_PUBLIC_MINIO_URL',
         'http://localhost:9000'
       ),
+      NEXT_PUBLIC_MINIO_BUCKET: this.getEnvValue(
+        'NEXT_PUBLIC_MINIO_BUCKET',
+        'listings'
+      ),
       NEXT_PUBLIC_IMAGE_HOSTS: this.getEnvValue('NEXT_PUBLIC_IMAGE_HOSTS'),
       NEXT_PUBLIC_IMAGE_PATH_PATTERN: this.getEnvValue(
         'NEXT_PUBLIC_IMAGE_PATH_PATTERN'
@@ -112,6 +116,7 @@ class ConfigManager {
       },
       storage: {
         minioUrl: publicEnv.NEXT_PUBLIC_MINIO_URL,
+        minioBucket: publicEnv.NEXT_PUBLIC_MINIO_BUCKET || 'listings',
         imageHosts: this.parseImageHosts(publicEnv.NEXT_PUBLIC_IMAGE_HOSTS),
         imagePathPattern:
           publicEnv.NEXT_PUBLIC_IMAGE_PATH_PATTERN || '/listings/**',
@@ -238,29 +243,31 @@ class ConfigManager {
   }
 
   public buildImageUrl(path: string): string {
+    // Backend теперь возвращает полные URL в поле image_url/public_url
+    // Этот метод остается только для обратной совместимости
+    
+    // Если путь уже является полным URL, возвращаем его как есть
     if (path.startsWith('http')) {
       return path;
     }
 
+    // Логируем предупреждение для отладки - не должно происходить с новым backend
+    console.warn('buildImageUrl получил относительный путь:', path, 
+                 'Backend должен возвращать полные URL');
+
+    // Обратная совместимость для старых данных
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-    // Используем переменную окружения для MinIO URL
-    const minioUrl =
-      this.getConfig().storage.minioUrl || 'http://localhost:9000';
-
-    // Для путей типа "268/1756382511472715941.jpg", "268/image1.jpg" и "products/215/main.jpg"
-    if (normalizedPath.match(/^\/(\d+\/.*\.jpg|products\/\d+\/.*\.jpg)$/)) {
-      return `${minioUrl}/listings${normalizedPath}`;
+    const config = this.getConfig();
+    const minioUrl = config.storage.minioUrl;
+    const bucketName = config.storage.minioBucket;
+    
+    // Простое построение URL для обратной совместимости
+    if (normalizedPath.match(/^\/(\d+\/.*|products\/\d+\/.*|chat-files\/.*)$/)) {
+      return `${minioUrl}/${bucketName}${normalizedPath}`;
     }
 
-    if (
-      normalizedPath.startsWith('/listings/') ||
-      normalizedPath.startsWith('/chat-files/')
-    ) {
-      return `${minioUrl}${normalizedPath}`;
-    }
-
-    return `${this.getConfig().api.url}${normalizedPath}`;
+    // Для остальных путей - предполагаем что это API пути
+    return `${config.api.url}${normalizedPath}`;
   }
 }
 

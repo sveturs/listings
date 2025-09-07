@@ -29,7 +29,10 @@ const nextConfig: NextConfig = {
         .split(',')
         .flatMap((host) => {
           const [protocol, hostname, port] = host.split(':');
-          const pathnames = ['/listings/**', '/chat-files/**', '/uploads/**'];
+          // Разрешаем все пути для s3.svetu.rs
+          const pathnames = hostname === 's3.svetu.rs' 
+            ? ['/**'] // Все пути разрешены для нашего S3
+            : ['/listings/**', '/development-listings/**', '/chat-files/**', '/uploads/**'];
 
           return pathnames.map((path) => {
             const config: any = {
@@ -49,6 +52,12 @@ const nextConfig: NextConfig = {
             return config;
           });
         }),
+      // Наш S3 домен - разрешаем все пути
+      {
+        protocol: 'https',
+        hostname: 's3.svetu.rs',
+        pathname: '/**',
+      },
       // Google domains для аватарок
       {
         protocol: 'https',

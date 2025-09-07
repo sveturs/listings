@@ -70,49 +70,6 @@ services:
       - opensearch
     restart: unless-stopped
 
-  minio:
-    image: minio/minio:RELEASE.2023-09-30T07-02-29Z
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BROWSER_REDIRECT_URL: http://localhost:${MINIO_CONSOLE_PORT}
-      MINIO_SERVER_URL: http://localhost:${MINIO_PORT}
-    volumes:
-      - minio_data_dev:/data
-    ports:
-      - "${MINIO_PORT}:9000"
-      - "${MINIO_CONSOLE_PORT}:9001"
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - svetu_network_dev
-    restart: unless-stopped
-
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc config host add myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb --ignore-existing myminio/listings;
-      /usr/bin/mc policy set public myminio/listings;
-      /usr/bin/mc mb --ignore-existing myminio/chat-files;
-      /usr/bin/mc anonymous set public myminio/chat-files;
-      exit 0;
-      "
-    networks:
-      - svetu_network_dev
-    restart: "no"
-
   backend:
     build:
       context: ./backend
@@ -125,8 +82,6 @@ services:
       opensearch:
         condition: service_started
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
@@ -150,11 +105,15 @@ services:
       OPENSEARCH_URL: http://opensearch:9200
       OPENSEARCH_MARKETPLACE_INDEX: ${OPENSEARCH_MARKETPLACE_INDEX}
       FILE_STORAGE_PROVIDER: ${FILE_STORAGE_PROVIDER}
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      # MinIO/S3 configuration
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_USE_SSL: ${MINIO_USE_SSL}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+      MINIO_CHAT_BUCKET: ${MINIO_CHAT_BUCKET}
+      MINIO_STOREFRONT_BUCKET: ${MINIO_STOREFRONT_BUCKET}
+      MINIO_REVIEW_PHOTOS_BUCKET: ${MINIO_REVIEW_PHOTOS_BUCKET}
       MINIO_LOCATION: ${MINIO_LOCATION}
       FILE_STORAGE_PUBLIC_URL: ${FILE_STORAGE_PUBLIC_URL}
       REDIS_HOST: redis
@@ -165,6 +124,7 @@ services:
       MIGRATIONS_FIXTURES_PATH: ${MIGRATIONS_FIXTURES_PATH}
       MIGRATIONS_FIXTURES_TABLE: ${MIGRATIONS_FIXTURES_TABLE}
       MIGRATIONS_ON_API: ${MIGRATIONS_ON_API}
+      REINDEX_ON_API: ${REINDEX_ON_API}
       MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN}
       MAPBOX_SECRET_TOKEN: ${MAPBOX_SECRET_TOKEN}
       GEOCODING_CACHE_TTL_HOURS: ${GEOCODING_CACHE_TTL_HOURS}
@@ -214,12 +174,6 @@ volumes:
   postgres_data_dev:
   opensearch-data_dev:
   redis_data_dev:
-  minio_data_dev:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/minio_dev
 
 networks:
   svetu_network_dev:

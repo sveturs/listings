@@ -23,13 +23,16 @@ func NewFileStorage(ctx context.Context, cfg config.FileStorageConfig) (FileStor
 			Msgf("Настройка MinIO")
 
 		minioClient, err := minio.NewMinioClient(ctx, minio.MinioConfig{
-			Endpoint:        cfg.MinioEndpoint,
-			AccessKeyID:     cfg.MinioAccessKey,
-			SecretAccessKey: cfg.MinioSecretKey,
-			UseSSL:          cfg.MinioUseSSL,
-			BucketName:      cfg.MinioBucketName,
-			Location:        cfg.MinioLocation,
-			PublicURL:       cfg.PublicBaseURL,
+			Endpoint:           cfg.MinioEndpoint,
+			AccessKeyID:        cfg.MinioAccessKey,
+			SecretAccessKey:    cfg.MinioSecretKey,
+			UseSSL:             cfg.MinioUseSSL,
+			BucketName:         cfg.MinioBucketName,
+			ChatBucket:         cfg.MinioChatBucket,
+			StorefrontBucket:   cfg.MinioStorefrontBucket,
+			ReviewPhotosBucket: cfg.MinioReviewPhotosBucket,
+			Location:           cfg.MinioLocation,
+			PublicURL:          cfg.PublicBaseURL,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("ОШИБКА при создании клиента MinIO")
@@ -104,17 +107,11 @@ func (s *MinioStorage) GetURL(ctx context.Context, objectName string) (string, e
 	var fileURL string
 	if s.publicBaseURL != "" {
 		// Формируем URL для доступа через бэкенд
-		if s.minioBucketName == "chat-files" {
-			fileURL = fmt.Sprintf("%s/chat-files/%s", s.publicBaseURL, objectName)
-		} else {
-			fileURL = fmt.Sprintf("%s/listings/%s", s.publicBaseURL, objectName)
-		}
+		// Используем имя bucket из конфигурации
+		fileURL = fmt.Sprintf("%s/%s/%s", s.publicBaseURL, s.minioBucketName, objectName)
 	} else {
-		if s.minioBucketName == "chat-files" {
-			fileURL = fmt.Sprintf("/chat-files/%s", objectName)
-		} else {
-			fileURL = fmt.Sprintf("/listings/%s", objectName)
-		}
+		// Используем имя bucket из конфигурации
+		fileURL = fmt.Sprintf("/%s/%s", s.minioBucketName, objectName)
 	}
 
 	logger.Info().Str("fileURL", fileURL).Msg("Сформирован URL для файла")
