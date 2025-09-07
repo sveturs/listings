@@ -23,13 +23,16 @@ func NewFileStorage(ctx context.Context, cfg config.FileStorageConfig) (FileStor
 			Msgf("Настройка MinIO")
 
 		minioClient, err := minio.NewMinioClient(ctx, minio.MinioConfig{
-			Endpoint:        cfg.MinioEndpoint,
-			AccessKeyID:     cfg.MinioAccessKey,
-			SecretAccessKey: cfg.MinioSecretKey,
-			UseSSL:          cfg.MinioUseSSL,
-			BucketName:      cfg.MinioBucketName,
-			Location:        cfg.MinioLocation,
-			PublicURL:       cfg.PublicBaseURL,
+			Endpoint:           cfg.MinioEndpoint,
+			AccessKeyID:        cfg.MinioAccessKey,
+			SecretAccessKey:    cfg.MinioSecretKey,
+			UseSSL:             cfg.MinioUseSSL,
+			BucketName:         cfg.MinioBucketName,
+			ChatBucket:         cfg.MinioChatBucket,
+			StorefrontBucket:   cfg.MinioStorefrontBucket,
+			ReviewPhotosBucket: cfg.MinioReviewPhotosBucket,
+			Location:           cfg.MinioLocation,
+			PublicURL:          cfg.PublicBaseURL,
 		})
 		if err != nil {
 			logger.Error().Err(err).Msg("ОШИБКА при создании клиента MinIO")

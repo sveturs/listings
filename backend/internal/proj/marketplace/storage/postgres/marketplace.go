@@ -71,24 +71,25 @@ func buildFullImageURL(relativeURL string) string {
 	if relativeURL == "" {
 		return ""
 	}
-	
+
 	// Если URL уже полный (начинается с http:// или https://), возвращаем как есть
 	if strings.HasPrefix(relativeURL, "http://") || strings.HasPrefix(relativeURL, "https://") {
 		return relativeURL
 	}
-	
+
 	// Получаем базовый URL из переменной окружения
 	baseURL := os.Getenv("FILE_STORAGE_PUBLIC_URL")
 	if baseURL == "" {
 		// Если не задан, используем относительный URL как есть
 		return relativeURL
 	}
-	
+
 	// Убираем trailing slash из baseURL если есть
 	baseURL = strings.TrimRight(baseURL, "/")
-	
+
 	// Обрабатываем URL в зависимости от формата
-	if strings.HasPrefix(relativeURL, "/listings/") {
+	switch {
+	case strings.HasPrefix(relativeURL, "/listings/"):
 		// URL вида /listings/294/... -> нужно заменить на правильный bucket
 		bucketName := os.Getenv("MINIO_BUCKET_NAME")
 		if bucketName == "" {
@@ -97,10 +98,10 @@ func buildFullImageURL(relativeURL string) string {
 		// Убираем /listings/ и добавляем правильный bucket
 		path := strings.TrimPrefix(relativeURL, "/listings/")
 		return fmt.Sprintf("%s/%s/%s", baseURL, bucketName, path)
-	} else if strings.HasPrefix(relativeURL, "/") {
+	case strings.HasPrefix(relativeURL, "/"):
 		// URL начинается с /, убираем его чтобы не было двойного слэша
 		return baseURL + relativeURL
-	} else {
+	default:
 		// URL без начального слэша
 		bucketName := os.Getenv("MINIO_BUCKET_NAME")
 		if bucketName == "" {

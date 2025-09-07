@@ -50,15 +50,18 @@ type Config struct {
 }
 
 type FileStorageConfig struct {
-	Provider        string `yaml:"provider"` // "local" или "minio"
-	LocalBasePath   string `yaml:"local_base_path"`
-	PublicBaseURL   string `yaml:"public_base_url"`
-	MinioEndpoint   string `yaml:"minio_endpoint"`
-	MinioAccessKey  string `yaml:"minio_access_key"`
-	MinioSecretKey  string `yaml:"minio_secret_key"`
-	MinioUseSSL     bool   `yaml:"minio_use_ssl"`
-	MinioBucketName string `yaml:"minio_bucket_name"`
-	MinioLocation   string `yaml:"minio_location"`
+	Provider                string `yaml:"provider"` // "local" или "minio"
+	LocalBasePath           string `yaml:"local_base_path"`
+	PublicBaseURL           string `yaml:"public_base_url"`
+	MinioEndpoint           string `yaml:"minio_endpoint"`
+	MinioAccessKey          string `yaml:"minio_access_key"`
+	MinioSecretKey          string `yaml:"minio_secret_key"`
+	MinioUseSSL             bool   `yaml:"minio_use_ssl"`
+	MinioBucketName         string `yaml:"minio_bucket_name"`          // Основной bucket для объявлений
+	MinioChatBucket         string `yaml:"minio_chat_bucket"`          // Bucket для файлов чата
+	MinioStorefrontBucket   string `yaml:"minio_storefront_bucket"`    // Bucket для товаров витрин
+	MinioReviewPhotosBucket string `yaml:"minio_review_photos_bucket"` // Bucket для фотографий отзывов
+	MinioLocation           string `yaml:"minio_location"`
 }
 
 type AllSecureConfig struct {
@@ -250,6 +253,19 @@ func NewConfig() (*Config, error) {
 		}
 		if config.FileStorage.MinioBucketName == "" {
 			config.FileStorage.MinioBucketName = "listings" // По умолчанию
+		}
+		// Загружаем названия дополнительных bucket'ов
+		config.FileStorage.MinioChatBucket = os.Getenv("MINIO_CHAT_BUCKET")
+		if config.FileStorage.MinioChatBucket == "" {
+			config.FileStorage.MinioChatBucket = "chat-files" // По умолчанию
+		}
+		config.FileStorage.MinioStorefrontBucket = os.Getenv("MINIO_STOREFRONT_BUCKET")
+		if config.FileStorage.MinioStorefrontBucket == "" {
+			config.FileStorage.MinioStorefrontBucket = "storefront-products" // По умолчанию
+		}
+		config.FileStorage.MinioReviewPhotosBucket = os.Getenv("MINIO_REVIEW_PHOTOS_BUCKET")
+		if config.FileStorage.MinioReviewPhotosBucket == "" {
+			config.FileStorage.MinioReviewPhotosBucket = "review-photos" // По умолчанию
 		}
 	}
 
