@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 // import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
@@ -83,7 +83,8 @@ export default function HomePageClient({
   locale,
 }: HomePageClientProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, refreshSession } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const t = useTranslations('marketplace.home');
   // const tCommon = useTranslations('common');
@@ -255,7 +256,28 @@ export default function HomePageClient({
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Check for OAuth token in URL
+    const token = searchParams.get('token');
+    if (token) {
+      // Import tokenManager and save token properly
+      import('@/utils/tokenManager').then(({ tokenManager }) => {
+        // Save token using TokenManager
+        tokenManager.setAccessToken(token);
+        
+        // Refresh session to get user data
+        refreshSession();
+        
+        // Remove token from URL to clean it up
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('token');
+        window.history.replaceState({}, '', newUrl.toString());
+        
+        // Show success message
+        toast.success(t('loginSuccessful') || 'Successfully logged in!');
+      });
+    }
+  }, [searchParams, refreshSession, t]);
 
   // Баннеры для hero секции
   const banners = [
@@ -286,6 +308,17 @@ export default function HomePageClient({
       image: '🔒',
     },
   ];
+
+  // OAuth токен обрабатывается в AuthContext.tsx
+  // После успешной OAuth авторизации показываем уведомление
+  useEffect(() => {
+    // Проверяем, если пользователь только что вошел через OAuth
+    // AuthContext обрабатывает токен из URL и устанавливает пользователя
+    if (user && searchParams?.get('auth_token')) {
+      // Токен уже обработан в AuthContext, просто показываем уведомление
+      toast.success(t('loginSuccessful') || 'Successfully logged in!');
+    }
+  }, [user, searchParams, t]);
 
   // Автоматическая смена баннеров
   useEffect(() => {

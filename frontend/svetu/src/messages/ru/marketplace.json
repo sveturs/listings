@@ -1,5 +1,6 @@
 {
   "home": {
+    "loginSuccessful": "Вы успешно вошли в систему!",
     "searchPlaceholder": "Поиск товаров и услуг...",
     "paymentsNowAvailable": "Платежи теперь доступны",
     "errorLoadingData": "Ошибка загрузки данных",

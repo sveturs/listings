@@ -24,8 +24,10 @@ export default function middleware(request: NextRequest) {
   // Определяем подходящую локаль
   const detectedLocale = detectLocale(request);
 
-  // Создаем новый URL с локалью
+  // Создаем новый URL с локалью, сохраняя query parameters
   const newUrl = new URL(`/${detectedLocale}${pathname}`, request.url);
+  // Копируем все query parameters из оригинального запроса
+  newUrl.search = request.nextUrl.search;
 
   // Создаем response с редиректом
   const response = NextResponse.redirect(newUrl);
@@ -48,6 +50,6 @@ export const config = {
   // - Статические файлы (_next/static, _next/image, favicon.ico)
   // - Изображения и другие ресурсы
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|pdf)).*)',
+    '/((?!api|oauth-callback|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|pdf)).*)',
   ],
 };

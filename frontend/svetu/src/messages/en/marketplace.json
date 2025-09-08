@@ -1,5 +1,6 @@
 {
   "home": {
+    "loginSuccessful": "Successfully logged in!",
     "searchPlaceholder": "Search for products and services...",
     "paymentsNowAvailable": "Payments are now available",
     "errorLoadingData": "Error loading data",

@@ -282,29 +282,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [updateUser, REFRESH_COOLDOWN, isRefreshingSession]
   );
 
+  // Обработка OAuth токена из URL
+  useEffect(() => {
+    const handleOAuthToken = async () => {
+      console.log('[AuthContext] Checking for OAuth token in URL...');
+      
+      // Проверяем наличие токена в URL (для OAuth callback)
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        console.log('[AuthContext] Current URL search:', window.location.search);
+        
+        // Backend отправляет токен как auth_token
+        const authToken = urlParams.get('auth_token') || urlParams.get('token');
+        
+        if (authToken) {
+          console.log(
+            '[AuthContext] Found OAuth token in URL:',
+            authToken.substring(0, 30) + '...'
+          );
+          console.log('[AuthContext] Token length:', authToken.length);
+          
+          // Сохраняем токен
+          tokenManager.setAccessToken(authToken);
+          console.log('[AuthContext] Token saved to tokenManager');
+          
+          // Проверяем что токен действительно сохранен
+          const savedToken = tokenManager.getAccessToken();
+          console.log('[AuthContext] Verification - token retrieved:', savedToken ? 'Success' : 'Failed');
+          
+          // Удаляем токен из URL для безопасности
+          urlParams.delete('auth_token');
+          urlParams.delete('token');
+          const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+          window.history.replaceState({}, document.title, newUrl);
+          console.log('[AuthContext] Token removed from URL for security');
+          
+          // Сразу обновляем сессию после получения токена
+          console.log('[AuthContext] Starting session refresh with new token...');
+          await refreshSession(1, false);
+        } else {
+          console.log('[AuthContext] No OAuth token found in URL');
+        }
+      }
+    };
+    
+    handleOAuthToken();
+  }, []); // Выполняется только при монтировании
+
   useEffect(() => {
     // Инициализируем TokenManager
     AuthService.initializeTokenManager();
-
-    // Проверяем наличие токена в URL (для OAuth callback)
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const authToken = urlParams.get('auth_token');
-      if (authToken) {
-        console.log(
-          '[AuthContext] Found auth_token in URL, saving...',
-          authToken.substring(0, 20) + '...'
-        );
-        tokenManager.setAccessToken(authToken);
-        // Удаляем токен из URL для безопасности
-        urlParams.delete('auth_token');
-        const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
-        window.history.replaceState({}, document.title, newUrl);
-        // console.log('[AuthContext] Token saved, URL cleaned');
-      } else {
-        // console.log('[AuthContext] No auth_token in URL');
-      }
-    }
 
     // Проверяем флаг logout
     const logoutFlag = sessionStorage.getItem('svetu_logout_flag');

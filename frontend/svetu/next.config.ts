@@ -94,8 +94,9 @@ const nextConfig: NextConfig = {
           destination: `${apiUrl}/api/:path*`,
         },
         // Проксируем auth запросы (не API) с учетом локали
+        // Исключаем OAuth callback который обрабатывается на frontend
         {
-          source: '/:locale/auth/:path*',
+          source: '/:locale/auth/:path((?!oauth/google/callback).*)',
           destination: `${apiUrl}/auth/:path*`,
         },
         // Проксируем auth запросы (не API) без локали

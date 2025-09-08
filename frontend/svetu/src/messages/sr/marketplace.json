@@ -1,5 +1,6 @@
 {
   "home": {
+    "loginSuccessful": "Uspešno ste se prijavili!",
     "searchPlaceholder": "Pretražite proizvode i usluge...",
     "paymentsNowAvailable": "Plaćanja su sada dostupna",
     "errorLoadingData": "Greška pri učitavanju podataka",

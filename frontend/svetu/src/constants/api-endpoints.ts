@@ -4,14 +4,16 @@
  */
 
 export const API_ENDPOINTS = {
-  // Auth endpoints
+  // Auth endpoints - обновлено для Auth Service микросервиса
   auth: {
-    login: '/api/v1/users/login',
-    register: '/api/v1/users/register',
-    logout: '/api/v1/users/logout',
-    session: '/auth/session',
-    google: '/auth/google',
-    googleCallback: '/auth/google/callback',
+    login: '/api/v1/auth/login',
+    register: '/api/v1/auth/register',
+    logout: '/api/v1/auth/logout',
+    refresh: '/api/v1/auth/refresh',
+    validate: '/api/v1/auth/validate',
+    session: '/api/v1/auth/session',
+    google: '/api/v1/auth/google',
+    googleCallback: '/api/v1/auth/google/callback',
   },
 
   // User endpoints
