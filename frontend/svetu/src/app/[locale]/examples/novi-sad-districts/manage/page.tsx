@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import configManager from '@/config';
 
 const DistrictManager = () => {
   const [districts, setDistricts] = useState<any[]>([]);
@@ -30,9 +31,10 @@ const DistrictManager = () => {
   }, []);
 
   const loadDistricts = async () => {
+    const apiUrl = configManager.get('api.url');
     try {
       // Пробуем загрузить через API
-      const response = await fetch('/api/districts');
+      const response = await fetch(`${apiUrl}/api/districts`);
       if (response.ok) {
         const data = await response.json();
         if (data.districts && data.districts.length > 0) {
@@ -173,7 +175,8 @@ const DistrictManager = () => {
       const districtsToDelete = Array.from(selectedDistricts);
 
       // Реальный вызов API для удаления
-      const response = await fetch('/api/districts', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/districts`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -687,7 +690,8 @@ const DistrictManager = () => {
       const name = osmResult.display_name.split(',')[0];
 
       // Реальный вызов API для добавления района
-      const response = await fetch('/api/districts', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/districts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

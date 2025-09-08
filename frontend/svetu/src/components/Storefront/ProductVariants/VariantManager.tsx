@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
+import configManager from '@/config';
 
 // Use generated types from API
 type ProductVariant =
@@ -78,8 +79,9 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/storefronts/storefront/products/${productId}/variants`,
+        `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -98,7 +100,8 @@ export default function VariantManager({
   const loadAttributes = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/v1/public/variants/attributes', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/public/variants/attributes`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : '',
         },
@@ -122,8 +125,9 @@ export default function VariantManager({
   const loadAttributeValues = async (attributeId: number) => {
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/public/variants/attributes/${attributeId}/values`,
+        `${apiUrl}/api/v1/public/variants/attributes/${attributeId}/values`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : '',
@@ -149,8 +153,9 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/storefronts/storefront/products/${productId}/variant-matrix`,
+        `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variant-matrix`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -170,8 +175,9 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/storefronts/storefront/products/${productId}/variants/analytics`,
+        `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants/analytics`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -228,8 +234,9 @@ export default function VariantManager({
       };
 
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        '/api/v1/storefronts/storefront/variants/generate',
+        `${apiUrl}/api/v1/storefronts/storefront/variants/generate`,
         {
           method: 'POST',
           headers: {
@@ -269,8 +276,9 @@ export default function VariantManager({
       };
 
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
+        `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         {
           method: 'POST',
           headers: {
@@ -711,8 +719,9 @@ function VariantRow({
 
   const saveChanges = async () => {
     try {
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/storefront/variants/${variant.id}`,
+        `${apiUrl}/api/v1/storefront/variants/${variant.id}`,
         {
           method: 'PUT',
           headers: {

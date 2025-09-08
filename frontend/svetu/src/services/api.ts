@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
+
+// Получаем базовый URL из конфигурации
+const apiUrl = configManager.get('api.url');
 
 const api = axios.create({
-  baseURL: '', // Use relative paths - nginx will proxy /api to backend
+  baseURL: apiUrl, // Используем URL из NEXT_PUBLIC_API_URL (https://devapi.svetu.rs)
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

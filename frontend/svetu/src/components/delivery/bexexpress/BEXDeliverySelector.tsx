@@ -13,6 +13,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import { configManager } from '@/config';
 
 interface DeliveryOption {
   id: string;
@@ -149,7 +150,8 @@ export default function BEXDeliverySelector({
 
       setLoading(true);
       try {
-        const response = await fetch('/api/v1/bex/calculate-rate', {
+        const apiUrl = configManager.get('api.url');
+        const response = await fetch(`${apiUrl}/api/v1/bex/calculate-rate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

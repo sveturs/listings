@@ -46,6 +46,7 @@ import { toast } from '@/utils/toast';
 import { useTranslations, useLocale } from 'next-intl';
 import { claudeAI } from '@/services/ai/claude.service';
 import { categoryDetector } from '@/services/categoryDetector';
+import { configManager } from '@/config';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
 import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 import { extractLocationFromImages } from '@/utils/exifUtils';
@@ -172,10 +173,11 @@ export default function AIPoweredListingCreationPage() {
           return;
         }
 
-        // Используем относительный путь благодаря Next.js rewrites
-        console.log('Making profile request to: /api/v1/users/profile');
+        // Используем абсолютный API URL
+        const apiUrl = configManager.get('api.url');
+        console.log('Making profile request to:', `${apiUrl}/api/v1/users/profile`);
 
-        const response = await fetch('/api/v1/users/profile', {
+        const response = await fetch(`${apiUrl}/api/v1/users/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -216,7 +218,8 @@ export default function AIPoweredListingCreationPage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch('/api/v1/marketplace/categories');
+        const apiUrl = configManager.get('api.url');
+        const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
         if (response.ok) {
           const data = await response.json();
           if (data.data) {
@@ -234,8 +237,9 @@ export default function AIPoweredListingCreationPage() {
   // Загружаем атрибуты при изменении категории
   const loadCategoryAttributes = async (categoryId: number) => {
     try {
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/marketplace/categories/${categoryId}/attributes`
+        `${apiUrl}/api/v1/marketplace/categories/${categoryId}/attributes`
       );
       if (response.ok) {
         const data = await response.json();

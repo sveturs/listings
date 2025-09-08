@@ -12,6 +12,7 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 // import { useTranslations } from 'next-intl';
+import { configManager } from '@/config';
 
 interface PostOffice {
   id: number;
@@ -77,7 +78,8 @@ export default function PostExpressOfficeSelector({
         sort: sortBy,
       });
 
-      const response = await fetch(`/api/v1/postexpress/offices?${params}`);
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/postexpress/offices?${params}`);
       const data = await response.json();
 
       if (data.success) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
 
 interface AIProvider {
   id: string;
@@ -124,7 +125,8 @@ export default function AITranslations({
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch('/api/v1/admin/translations/ai/providers', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/providers`, {
         headers: {
           Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },
@@ -147,8 +149,9 @@ export default function AITranslations({
 
   const fetchModules = async () => {
     try {
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        '/api/v1/admin/translations/frontend/modules',
+        `${apiUrl}/api/v1/admin/translations/frontend/modules`,
         {
           headers: {
             Authorization: `Bearer ${tokenManager.getAccessToken()}`,
@@ -169,8 +172,9 @@ export default function AITranslations({
 
   const handleProviderUpdate = async (provider: AIProvider) => {
     try {
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/admin/translations/ai/providers/${provider.id}`,
+        `${apiUrl}/api/v1/admin/translations/ai/providers/${provider.id}`,
         {
           method: 'PUT',
           headers: {
@@ -218,7 +222,8 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const response = await fetch('/api/v1/admin/translations/ai/translate', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/translate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -263,7 +268,8 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const response = await fetch('/api/v1/admin/translations/ai/batch', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/batch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -310,7 +316,8 @@ export default function AITranslations({
         }))
       );
 
-      const response = await fetch('/api/v1/admin/translations/ai/apply', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

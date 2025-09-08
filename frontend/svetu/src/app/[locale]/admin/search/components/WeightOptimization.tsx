@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
+import { configManager } from '@/config';
 
 interface OptimizationParams {
   field_names?: string[];
@@ -75,8 +76,9 @@ export default function WeightOptimization() {
     if (currentSession && currentSession.status === 'running') {
       interval = setInterval(async () => {
         try {
+          const apiUrl = configManager.get('api.url');
           const response = await fetch(
-            `/api/v1/admin/search/optimization-status/${currentSession.id}`,
+            `${apiUrl}/api/v1/admin/search/optimization-status/${currentSession.id}`,
             {
               headers: {
                 Authorization: `Bearer ${tokenManager.getAccessToken()}`,
@@ -109,7 +111,8 @@ export default function WeightOptimization() {
   const startOptimization = async () => {
     try {
       setIsOptimizing(true);
-      const response = await fetch('/api/v1/admin/search/optimize-weights', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/search/optimize-weights`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +129,7 @@ export default function WeightOptimization() {
 
       // Получаем статус сессии
       const sessionResponse = await fetch(
-        `/api/v1/admin/search/optimization-status/${data.data.session_id}`,
+        `${apiUrl}/api/v1/admin/search/optimization-status/${data.data.session_id}`,
         {
           headers: {
             Authorization: `Bearer ${tokenManager.getAccessToken()}`,
@@ -148,8 +151,9 @@ export default function WeightOptimization() {
     if (!currentSession) return;
 
     try {
+      const apiUrl = configManager.get('api.url');
       await fetch(
-        `/api/v1/admin/search/optimization-cancel/${currentSession.id}`,
+        `${apiUrl}/api/v1/admin/search/optimization-cancel/${currentSession.id}`,
         {
           method: 'POST',
           headers: {
@@ -169,7 +173,8 @@ export default function WeightOptimization() {
     if (!currentSession || selectedResults.length === 0) return;
 
     try {
-      const response = await fetch('/api/v1/admin/search/apply-weights', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/search/apply-weights`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +204,8 @@ export default function WeightOptimization() {
       const fromDate = new Date();
       fromDate.setDate(fromDate.getDate() - params.analysis_period_days);
 
-      const response = await fetch('/api/v1/admin/search/analyze-weights', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/search/analyze-weights`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

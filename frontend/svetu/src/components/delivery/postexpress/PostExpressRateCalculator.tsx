@@ -15,6 +15,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 // import { useTranslations } from 'next-intl';
+import { configManager } from '@/config';
 
 interface RateCalculation {
   base_price: number;
@@ -115,7 +116,8 @@ export default function PostExpressRateCalculator({
         recipient_postal_code: params.recipient_postal_code || '11000', // default Belgrade
       };
 
-      const response = await fetch('/api/v1/postexpress/calculate-rate', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/postexpress/calculate-rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),

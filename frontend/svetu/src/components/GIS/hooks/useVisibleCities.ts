@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { MapBounds } from '../types/gis';
+import configManager from '@/config';
 
 // Глобальный кэш для предотвращения множественных экземпляров
 let globalVisibleCitiesData: {
@@ -183,7 +184,8 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           },
         };
 
-        const response = await fetch('/api/v1/gis/cities/visible', {
+        const apiUrl = configManager.get('api.url');
+        const response = await fetch(`${apiUrl}/api/v1/gis/cities/visible`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -242,8 +244,9 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
       setLoadingCityDistricts((prev) => new Set(prev).add(cityId));
 
       try {
+        const apiUrl = configManager.get('api.url');
         const response = await fetch(
-          `/api/v1/gis/districts?city_id=${encodeURIComponent(cityId)}`
+          `${apiUrl}/api/v1/gis/districts?city_id=${encodeURIComponent(cityId)}`
         );
 
         if (!response.ok) {
@@ -299,8 +302,9 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           params.append('city_ids[]', cityId);
         });
 
+        const apiUrl = configManager.get('api.url');
         const response = await fetch(
-          `/api/v1/gis/districts?${params.toString()}`
+          `${apiUrl}/api/v1/gis/districts?${params.toString()}`
         );
 
         if (!response.ok) {

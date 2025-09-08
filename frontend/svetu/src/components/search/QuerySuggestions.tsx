@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { debounce } from 'lodash';
+import configManager from '@/config';
 import {
   MagnifyingGlassIcon,
   ClockIcon,
@@ -91,7 +92,8 @@ export default function QuerySuggestions({
           params.set('user_id', userId.toString());
         }
 
-        const response = await fetch(`/api/v1/suggestions?${params}`);
+        const apiUrl = configManager.get('api.url');
+        const response = await fetch(`${apiUrl}/api/v1/suggestions?${params}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -179,7 +181,8 @@ export default function QuerySuggestions({
   // Track suggestion click
   const trackSuggestionClick = async (suggestion: QuerySuggestion) => {
     try {
-      await fetch('/api/v1/suggestions/track', {
+      const apiUrl = configManager.get('api.url');
+      await fetch(`${apiUrl}/api/v1/suggestions/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

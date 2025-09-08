@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import WeightOptimization from './WeightOptimization';
 import { tokenManager } from '@/utils/tokenManager';
+import { configManager } from '@/config';
 
 interface SearchWeight {
   id: number;
@@ -34,8 +35,9 @@ export default function SearchWeights() {
   const loadWeights = useCallback(async () => {
     try {
       setLoading(true);
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `/api/v1/admin/search/weights?item_type=${selectedItemType}`,
+        `${apiUrl}/api/v1/admin/search/weights?item_type=${selectedItemType}`,
         {
           headers: {
             Authorization: `Bearer ${tokenManager.getAccessToken()}`,
@@ -62,7 +64,8 @@ export default function SearchWeights() {
 
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
-      const response = await fetch(`/api/v1/admin/search/weights/${weightId}`, {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/search/weights/${weightId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +90,8 @@ export default function SearchWeights() {
 
   const createBackup = async () => {
     try {
-      const response = await fetch('/api/v1/admin/search/backup-weights', {
+      const apiUrl = configManager.get('api.url');
+      const response = await fetch(`${apiUrl}/api/v1/admin/search/backup-weights`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

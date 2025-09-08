@@ -6,7 +6,7 @@ import { toast } from '@/utils/toast';
 import Link from 'next/link';
 import { tokenManager } from '@/utils/tokenManager';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { configManager } from '@/config';
 
 interface VariantAttribute {
   id: number;
@@ -59,8 +59,9 @@ export default function VariantAttributesClient() {
   const fetchVariantAttributes = async () => {
     try {
       const token = tokenManager.getAccessToken();
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/attributes/variant-compatible`,
+        `${apiUrl}/api/v1/admin/attributes/variant-compatible`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : '',
@@ -82,8 +83,9 @@ export default function VariantAttributesClient() {
   const fetchCategories = async () => {
     try {
       const token = tokenManager.getAccessToken();
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/marketplace/category-tree`,
+        `${apiUrl}/api/v1/marketplace/category-tree`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : '',
@@ -102,8 +104,9 @@ export default function VariantAttributesClient() {
   const fetchCategoryMappings = async (categoryId: number) => {
     try {
       const token = tokenManager.getAccessToken();
+      const apiUrl = configManager.get('api.url');
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
+        `${apiUrl}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : '',
@@ -127,8 +130,9 @@ export default function VariantAttributesClient() {
     try {
       if (isEnabled) {
         const token = tokenManager.getAccessToken();
+        const apiUrl = configManager.get('api.url');
         const response = await fetch(
-          `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings`,
+          `${apiUrl}/api/v1/admin/variant-attributes/mappings`,
           {
             method: 'POST',
             headers: {
@@ -155,8 +159,9 @@ export default function VariantAttributesClient() {
             m.category_id === categoryId
         );
         if (mapping) {
+          const apiUrl = configManager.get('api.url');
           const response = await fetch(
-            `/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
+            `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
             {
               method: 'DELETE',
             }
@@ -328,8 +333,9 @@ export default function VariantAttributesClient() {
                                     try {
                                       const token =
                                         tokenManager.getAccessToken();
+                                      const apiUrl = configManager.get('api.url');
                                       const response = await fetch(
-                                        `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
+                                        `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
                                         {
                                           method: 'PATCH',
                                           headers: {
