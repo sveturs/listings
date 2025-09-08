@@ -31803,7 +31803,7 @@ const docTemplate = `{
         },
         "/auth/google": {
             "get": {
-                "description": "Redirects user to Google OAuth2 authorization page",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -31834,7 +31834,7 @@ const docTemplate = `{
         },
         "/auth/google/callback": {
             "get": {
-                "description": "Processes the OAuth2 callback from Google and creates user session",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -45844,6 +45844,309 @@ const docTemplate = `{
             }
         },
         "internal_proj_users_handler.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "picture_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AdminAdminsResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "is_admin": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AdminCheckResponse": {
+            "type": "object",
+            "properties": {
+                "is_admin": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AdminMessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "admin.users.success.profile_updated"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AdminStatusUpdateRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "blocked",
+                        "pending"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AdminUserListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_domain_models.UserProfile"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "pages": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_proj_users_handler_backup_20250907_194625.UserResponse"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "users.login.success.authenticated"
+                },
+                "user": {
+                    "$ref": "#/definitions/backend_internal_domain_models.User"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Операция выполнена успешно"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.PublicUserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Иван Иванов"
+                },
+                "picture_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Пользователь успешно зарегистрирован"
+                },
+                "user": {
+                    "$ref": "#/definitions/backend_internal_domain_models.User"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.SessionResponse": {
+            "type": "object",
+            "properties": {
+                "authenticated": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_proj_users_handler_backup_20250907_194625.SessionUserResponse"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.SessionUserResponse": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Moscow"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Russia"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_admin": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "picture_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "expires_in": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "token_type": {
+                    "type": "string",
+                    "example": "Bearer"
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 2
+                }
+            }
+        },
+        "internal_proj_users_handler_backup_20250907_194625.UserResponse": {
             "type": "object",
             "properties": {
                 "email": {

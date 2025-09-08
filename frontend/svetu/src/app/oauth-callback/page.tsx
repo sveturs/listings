@@ -9,7 +9,7 @@ function OAuthCallbackContent() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
-  
+
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
@@ -18,11 +18,19 @@ function OAuthCallbackContent() {
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
-        console.log('[OAuth Callback] Processing:', { code: !!code, state: !!state, error });
+        console.log('[OAuth Callback] Processing:', {
+          code: !!code,
+          state: !!state,
+          error,
+        });
 
         // Handle OAuth errors
         if (error) {
-          console.error('[OAuth Callback] Error from provider:', error, errorDescription);
+          console.error(
+            '[OAuth Callback] Error from provider:',
+            error,
+            errorDescription
+          );
           setError(errorDescription || error);
           setIsProcessing(false);
           return;
@@ -37,25 +45,30 @@ function OAuthCallbackContent() {
         }
 
         // Exchange code for token with Auth Service through backend proxy
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/oauth/callback`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            state,
-            provider: 'google',
-          }),
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/oauth/callback`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              code,
+              state,
+              provider: 'google',
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Failed to exchange code for token');
+          throw new Error(
+            errorData.message || 'Failed to exchange code for token'
+          );
         }
 
         const data = await response.json();
-        
+
         if (!data.access_token) {
           throw new Error('No access token received from server');
         }
@@ -71,7 +84,9 @@ function OAuthCallbackContent() {
         router.push(`/ru?auth_token=${encodeURIComponent(data.access_token)}`);
       } catch (err) {
         console.error('[OAuth Callback] Error processing callback:', err);
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        setError(
+          err instanceof Error ? err.message : 'An unexpected error occurred'
+        );
         setIsProcessing(false);
       }
     };
@@ -85,7 +100,9 @@ function OAuthCallbackContent() {
         <div className="text-center">
           <div className="loading loading-spinner loading-lg"></div>
           <h2 className="mt-4 text-xl font-semibold">Processing login...</h2>
-          <p className="mt-2 text-gray-600">Please wait while we complete your authentication</p>
+          <p className="mt-2 text-gray-600">
+            Please wait while we complete your authentication
+          </p>
         </div>
       </div>
     );
@@ -95,7 +112,9 @@ function OAuthCallbackContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">Authentication Failed</h2>
+          <h2 className="text-xl font-semibold text-red-800 mb-2">
+            Authentication Failed
+          </h2>
           <p className="text-red-600 mb-4">{error}</p>
           <div className="flex gap-4">
             <button
@@ -115,11 +134,13 @@ function OAuthCallbackContent() {
 
 export default function OAuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
+      }
+    >
       <OAuthCallbackContent />
     </Suspense>
   );

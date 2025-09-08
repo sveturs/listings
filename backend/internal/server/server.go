@@ -268,8 +268,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	notificationsHandler.ConnectTelegramWebhook()
-	server.setupMiddleware()
-	server.setupRoutes() //nolint:contextcheck
+	server.setupMiddleware() //nolint:contextcheck
+	server.setupRoutes()     //nolint:contextcheck
 
 	return server, nil
 }
@@ -343,11 +343,11 @@ func (s *Server) setupMiddleware() {
 	// Общие middleware для observability
 	// Security headers должны быть первыми
 	s.app.Use(s.middleware.SecurityHeaders())
-	
+
 	// Auth Proxy middleware - должен быть рано для перехвата /api/v1/auth/* запросов
 	authProxy := middleware.NewAuthProxyMiddleware()
 	s.app.Use(authProxy.ProxyToAuthService())
-	
+
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
 

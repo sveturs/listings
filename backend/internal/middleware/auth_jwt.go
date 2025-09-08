@@ -133,7 +133,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 						Str("email", authClaims.Email).
 						Str("provider", authClaims.Provider).
 						Msg("Auth service token validated")
-					
+
 					// Проверяем что пользователь существует
 					user, err := m.services.User().GetUserByID(c.Context(), authClaims.UserID)
 					if err != nil || user == nil {
@@ -142,13 +142,13 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 							Msg("User not found for auth service token")
 						return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.user_not_found")
 					}
-					
+
 					// Устанавливаем данные пользователя в контекст
 					c.Locals("user_id", authClaims.UserID)
 					c.Locals("user_email", authClaims.Email)
 					c.Locals("auth_method", "jwt_auth_service")
 					c.Locals("jwt_token", tokenString)
-					
+
 					// Проверяем роли
 					isAdmin := false
 					for _, role := range authClaims.Roles {
@@ -162,13 +162,13 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 						isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
 					}
 					c.Locals("is_admin", isAdmin)
-					
+
 					// Обновляем последнее посещение асинхронно
 					go func() {
 						ctx := context.Background()
 						_ = m.services.User().UpdateLastSeen(ctx, authClaims.UserID)
 					}()
-					
+
 					return c.Next()
 				}
 			}
@@ -239,7 +239,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				c.Locals("user_email", authClaims.Email)
 				c.Locals("auth_method", "jwt_query_auth_service")
 				c.Locals("jwt_token", tokenFromQuery)
-				
+
 				// Проверяем роли
 				isAdmin := false
 				for _, role := range authClaims.Roles {
@@ -252,12 +252,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 					isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
 				}
 				c.Locals("is_admin", isAdmin)
-				
+
 				go func() {
 					ctx := context.Background()
 					_ = m.services.User().UpdateLastSeen(ctx, authClaims.UserID)
 				}()
-				
+
 				return c.Next()
 			}
 		}

@@ -32455,7 +32455,7 @@ export interface paths {
     };
     /**
      * Initiate Google OAuth authentication
-     * @description Redirects user to Google OAuth2 authorization page
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     get: {
       parameters: {
@@ -32497,7 +32497,7 @@ export interface paths {
     };
     /**
      * Handle Google OAuth callback
-     * @description Processes the OAuth2 callback from Google and creates user session
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     get: {
       parameters: {
@@ -37834,6 +37834,136 @@ export interface components {
       role_id: number;
     };
     'internal_proj_users_handler.UserResponse': {
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example John Doe */
+      name?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AdminAdminsResponse': {
+      /** @example admin@example.com */
+      email?: string;
+      /** @example true */
+      is_admin?: boolean;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AdminCheckResponse': {
+      /** @example false */
+      is_admin?: boolean;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AdminMessageResponse': {
+      /** @example admin.users.success.profile_updated */
+      message?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AdminStatusUpdateRequest': {
+      /**
+       * @example active
+       * @enum {string}
+       */
+      status: 'active' | 'blocked' | 'pending';
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AdminUserListResponse': {
+      data?: components['schemas']['backend_internal_domain_models.UserProfile'][];
+      /** @example 10 */
+      limit?: number;
+      /** @example 1 */
+      page?: number;
+      /** @example 10 */
+      pages?: number;
+      /** @example 100 */
+      total?: number;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.AuthResponse': {
+      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
+      access_token?: string;
+      /** @example 3600 */
+      expires_in?: number;
+      /** @example Bearer */
+      token_type?: string;
+      user?: components['schemas']['internal_proj_users_handler_backup_20250907_194625.UserResponse'];
+    };
+    'internal_proj_users_handler_backup_20250907_194625.LoginRequest': {
+      /** @example user@example.com */
+      email: string;
+      /** @example password123 */
+      password: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.LoginResponse': {
+      /** @example users.login.success.authenticated */
+      message?: string;
+      user?: components['schemas']['backend_internal_domain_models.User'];
+    };
+    'internal_proj_users_handler_backup_20250907_194625.MessageResponse': {
+      /** @example Операция выполнена успешно */
+      message?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.PublicUserResponse': {
+      /** @example 2023-01-01T12:00:00Z */
+      created_at?: string;
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example Иван Иванов */
+      name?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.RegisterRequest': {
+      /** @example user@example.com */
+      email: string;
+      /** @example John Doe */
+      name: string;
+      /** @example password123 */
+      password: string;
+      /** @example +1234567890 */
+      phone?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.RegisterResponse': {
+      /** @example Пользователь успешно зарегистрирован */
+      message?: string;
+      user?: components['schemas']['backend_internal_domain_models.User'];
+    };
+    'internal_proj_users_handler_backup_20250907_194625.SessionResponse': {
+      /** @example true */
+      authenticated?: boolean;
+      user?: components['schemas']['internal_proj_users_handler_backup_20250907_194625.SessionUserResponse'];
+    };
+    'internal_proj_users_handler_backup_20250907_194625.SessionUserResponse': {
+      /** @example Moscow */
+      city?: string;
+      /** @example Russia */
+      country?: string;
+      /** @example user@example.com */
+      email?: string;
+      /** @example 1 */
+      id?: number;
+      /** @example false */
+      is_admin?: boolean;
+      /** @example John Doe */
+      name?: string;
+      /** @example +1234567890 */
+      phone?: string;
+      /** @example https://example.com/avatar.jpg */
+      picture_url?: string;
+      /** @example password */
+      provider?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.TokenResponse': {
+      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
+      access_token?: string;
+      /** @example 3600 */
+      expires_in?: number;
+      /** @example Bearer */
+      token_type?: string;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.UpdateUserRoleRequest': {
+      /** @example 2 */
+      role_id: number;
+    };
+    'internal_proj_users_handler_backup_20250907_194625.UserResponse': {
       /** @example user@example.com */
       email?: string;
       /** @example 1 */

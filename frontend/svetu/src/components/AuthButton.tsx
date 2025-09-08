@@ -171,7 +171,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
                     ) : (
                       <div className="bg-primary text-primary-content w-full h-full flex items-center justify-center">
                         <span className="text-xl font-bold">
-                          {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                          {(user.name || user.email || 'U')
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                     )}

@@ -160,7 +160,9 @@ func (c *Client) ProxyRequest(w http.ResponseWriter, r *http.Request, path strin
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	for key, values := range resp.Header {
 		for _, value := range values {
@@ -204,7 +206,9 @@ func (c *Client) doRequestWithAuth(ctx context.Context, method, path string, bod
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

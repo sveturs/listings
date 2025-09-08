@@ -30,7 +30,7 @@ interface HeaderProps {
 
 export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const t = useTranslations('common');
-  const tMarketplace = useTranslations('marketplace.home');
+  const tMarketplace = useTranslations('marketplace.homeContent');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

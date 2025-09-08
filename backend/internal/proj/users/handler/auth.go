@@ -39,7 +39,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 	// This handler should never be called if Auth Service proxy is configured correctly
 	logger.Error().Msg("GoogleAuth handler called in monolith - should be proxied to Auth Service")
 	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error": "OAuth authentication should be handled by Auth Service",
+		"error":   "OAuth authentication should be handled by Auth Service",
 		"message": "Please ensure USE_AUTH_SERVICE=true and Auth Service is running",
 	})
 }
@@ -58,7 +58,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	// This handler should never be called if Auth Service proxy is configured correctly
 	logger.Error().Msg("GoogleCallback handler called in monolith - should be proxied to Auth Service")
 	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error": "OAuth callback should be handled by Auth Service",
+		"error":   "OAuth callback should be handled by Auth Service",
 		"message": "Please ensure USE_AUTH_SERVICE=true and Auth Service is running",
 	})
 }

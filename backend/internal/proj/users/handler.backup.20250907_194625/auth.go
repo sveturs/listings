@@ -194,7 +194,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	}
 	// Определяем базовый URL для редиректа
 	baseURL := h.services.Config().FrontendURL // значение по умолчанию
-	
+
 	// State - это токен безопасности, а не URL
 	// Используем FrontendURL для редиректа
 	returnTo := baseURL

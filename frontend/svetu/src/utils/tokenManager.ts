@@ -64,7 +64,9 @@ class TokenManager {
     if (process.env.NODE_ENV === 'development') {
       console.log(
         '[TokenManager] Access token set:',
-        token ? `token received (length: ${token.length}, first 30 chars: ${token.substring(0, 30)}...)` : 'token cleared'
+        token
+          ? `token received (length: ${token.length}, first 30 chars: ${token.substring(0, 30)}...)`
+          : 'token cleared'
       );
     }
 
@@ -83,7 +85,9 @@ class TokenManager {
     if (process.env.NODE_ENV === 'development') {
       console.log(
         '[TokenManager] getAccessToken called, token:',
-        this.accessToken ? `exists (length: ${this.accessToken.length})` : 'null'
+        this.accessToken
+          ? `exists (length: ${this.accessToken.length})`
+          : 'null'
       );
     }
     return this.accessToken;

@@ -86,7 +86,7 @@ export default function HomePageClient({
   const searchParams = useSearchParams();
   const { user, refreshSession } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const t = useTranslations('marketplace.home');
+  const t = useTranslations('marketplace.homeContent');
   // const tCommon = useTranslations('common');
   const tFooter = useTranslations('common.footer');
   const [_mounted, setMounted] = useState(false);
@@ -256,7 +256,7 @@ export default function HomePageClient({
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
     setMounted(true);
-    
+
     // Check for OAuth token in URL
     const token = searchParams.get('token');
     if (token) {
@@ -264,15 +264,15 @@ export default function HomePageClient({
       import('@/utils/tokenManager').then(({ tokenManager }) => {
         // Save token using TokenManager
         tokenManager.setAccessToken(token);
-        
+
         // Refresh session to get user data
         refreshSession();
-        
+
         // Remove token from URL to clean it up
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('token');
         window.history.replaceState({}, '', newUrl.toString());
-        
+
         // Show success message
         toast.success(t('loginSuccessful') || 'Successfully logged in!');
       });

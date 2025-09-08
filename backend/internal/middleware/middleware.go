@@ -19,10 +19,10 @@ import (
 )
 
 type Middleware struct {
-	config             *config.Config
-	services           globalService.ServicesInterface
-	metrics            *monitoring.MetricsCollector
-	authServicePubKey  *rsa.PublicKey
+	config            *config.Config
+	services          globalService.ServicesInterface
+	metrics           *monitoring.MetricsCollector
+	authServicePubKey *rsa.PublicKey
 }
 
 func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface) *Middleware {
@@ -31,12 +31,12 @@ func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface)
 		services: services,
 		metrics:  monitoring.NewMetricsCollector(pkglogger.GetLogger()),
 	}
-	
+
 	// Загружаем публичный ключ auth service
 	if err := m.loadAuthServicePublicKey(); err != nil {
 		logger.Error().Err(err).Msg("Failed to load auth service public key, RS256 tokens will not be validated")
 	}
-	
+
 	return m
 }
 
@@ -47,22 +47,22 @@ func (m *Middleware) loadAuthServicePublicKey() error {
 	if err != nil {
 		return err
 	}
-	
+
 	block, _ := pem.Decode(pubKeyData)
 	if block == nil {
 		return errors.New("failed to parse PEM block")
 	}
-	
+
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return err
 	}
-	
+
 	rsaPub, ok := pub.(*rsa.PublicKey)
 	if !ok {
 		return errors.New("not an RSA public key")
 	}
-	
+
 	m.authServicePubKey = rsaPub
 	logger.Info().Msg("Auth service public key loaded successfully")
 	return nil

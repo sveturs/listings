@@ -19,7 +19,7 @@ export default function BuyPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
   const t = useTranslations('marketplace');
-  const tHome = useTranslations('marketplace.home');
+  const tHome = useTranslations('marketplace.homeContent');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();

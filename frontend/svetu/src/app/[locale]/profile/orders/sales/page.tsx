@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast';
 export default function MySalesPage() {
   const locale = useLocale();
   const t = useTranslations('orders');
-  const tHome = useTranslations('marketplace.home');
+  const tHome = useTranslations('marketplace.homeContent');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();

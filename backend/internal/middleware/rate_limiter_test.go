@@ -39,6 +39,9 @@ func TestPaymentAPIRateLimitExceed(t *testing.T) {
 		req := httptest.NewRequest("POST", "/payment/create", nil)
 		resp, err := app.Test(req, -1)
 		require.NoError(t, err)
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
 		switch resp.StatusCode {
 		case 200:
@@ -111,6 +114,9 @@ func TestPaymentAPIRateLimit(t *testing.T) {
 
 				resp, err := app.Test(req, -1)
 				require.NoError(t, err)
+				defer func() {
+					_ = resp.Body.Close()
+				}()
 
 				if resp.StatusCode == fiber.StatusTooManyRequests {
 					blockedCount++
@@ -145,6 +151,9 @@ func TestStrictPaymentRateLimit(t *testing.T) {
 		req := httptest.NewRequest("POST", "/payment/capture", nil)
 		resp, err := app.Test(req, -1)
 		require.NoError(t, err)
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
 		if resp.StatusCode == fiber.StatusTooManyRequests {
 			blockedCount++
@@ -173,6 +182,9 @@ func TestWebhookRateLimit(t *testing.T) {
 		req := httptest.NewRequest("POST", "/webhook/allsecure", nil)
 		resp, err := app.Test(req, -1)
 		require.NoError(t, err)
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
 		if resp.StatusCode == 200 {
 			successCount++
@@ -245,6 +257,9 @@ func TestConcurrentRateLimiting(t *testing.T) {
 			if err != nil {
 				return
 			}
+			defer func() {
+				_ = resp.Body.Close()
+			}()
 
 			mu.Lock()
 			switch resp.StatusCode {
@@ -319,6 +334,9 @@ func TestRateLimiterDifferentEndpoints(t *testing.T) {
 	for i := 0; i < 6; i++ {
 		req := httptest.NewRequest("POST", "/auth/login", nil)
 		resp, _ := app.Test(req, -1)
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 		if resp.StatusCode == fiber.StatusTooManyRequests {
 			loginBlocked = true
 			break
@@ -331,6 +349,9 @@ func TestRateLimiterDifferentEndpoints(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		req := httptest.NewRequest("POST", "/auth/register", nil)
 		resp, _ := app.Test(req, -1)
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 		if resp.StatusCode == 200 {
 			registerSuccess++
 		}

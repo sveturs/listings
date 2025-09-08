@@ -9,16 +9,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/logger"
 	"backend/internal/service/authclient"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type AuthProxyMiddleware struct {
-	authClient  *authclient.Client
-	httpClient  *http.Client
-	enabled     bool
-	baseURL     string
+	authClient *authclient.Client
+	httpClient *http.Client
+	enabled    bool
+	baseURL    string
 }
 
 func NewAuthProxyMiddleware() *AuthProxyMiddleware {
@@ -51,13 +52,13 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		}
 
 		path := c.Path()
-		
+
 		// Проверяем, относится ли запрос к Auth Service
 		// Проксируем ВСЕ auth запросы включая OAuth
 		if !strings.HasPrefix(path, "/api/v1/auth/") && !strings.HasPrefix(path, "/auth/") {
 			return c.Next()
 		}
-		
+
 		// Логируем все проксируемые запросы для отладки
 		logger.Info().
 			Str("path", path).
@@ -66,15 +67,15 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 
 		// Создаем новый HTTP запрос к Auth Service
 		targetURL := m.baseURL + path
-		
+
 		// Добавляем query parameters
 		if c.Request().URI().QueryString() != nil {
 			targetURL += "?" + string(c.Request().URI().QueryString())
 		}
-		
+
 		// Получаем тело запроса
 		body := c.Body()
-		
+
 		// Создаем HTTP запрос
 		req, err := http.NewRequestWithContext(c.Context(), c.Method(), targetURL, bytes.NewReader(body))
 		if err != nil {
@@ -87,7 +88,7 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		c.Request().Header.VisitAll(func(key, value []byte) {
 			req.Header.Set(string(key), string(value))
 		})
-		
+
 		// Копируем cookies из заголовка Cookie если он есть
 		if cookieHeader := c.Get("Cookie"); cookieHeader != "" {
 			req.Header.Set("Cookie", cookieHeader)
@@ -105,7 +106,9 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 				"error": fmt.Sprintf("auth service request failed: %v", err),
 			})
 		}
-		defer resp.Body.Close()
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
 		// Читаем ответ
 		respBody, err := io.ReadAll(resp.Body)
@@ -121,7 +124,7 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 				c.Set(key, value)
 			}
 		}
-		
+
 		// Для OAuth редиректов - возвращаем Location напрямую
 		if resp.StatusCode == 302 || resp.StatusCode == 301 || resp.StatusCode == 303 || resp.StatusCode == 307 || resp.StatusCode == 308 {
 			if location := resp.Header.Get("Location"); location != "" {
