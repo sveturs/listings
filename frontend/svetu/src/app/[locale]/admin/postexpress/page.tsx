@@ -16,7 +16,7 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import { PageTransition } from '@/components/ui/PageTransition';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface Shipment {
   id: number;

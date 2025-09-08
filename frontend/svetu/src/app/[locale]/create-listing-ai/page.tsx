@@ -46,7 +46,7 @@ import { toast } from '@/utils/toast';
 import { useTranslations, useLocale } from 'next-intl';
 import { claudeAI } from '@/services/ai/claude.service';
 import { categoryDetector } from '@/services/categoryDetector';
-import { configManager } from '@/config';
+import configManager from '@/config';
 import type { CreateListingState } from '@/contexts/CreateListingContext';
 import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 import { extractLocationFromImages } from '@/utils/exifUtils';

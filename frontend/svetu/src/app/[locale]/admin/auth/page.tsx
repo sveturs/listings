@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { tokenManager } from '@/utils/tokenManager';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 export default function AdminAuthPage() {
   const router = useRouter();

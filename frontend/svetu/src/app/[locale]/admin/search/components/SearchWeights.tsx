@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import WeightOptimization from './WeightOptimization';
 import { tokenManager } from '@/utils/tokenManager';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface SearchWeight {
   id: number;

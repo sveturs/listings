@@ -1,6 +1,6 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 // Базовый URL для backend API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';

@@ -1,4 +1,4 @@
-import { config, configManager } from '@/config';
+import configManager from '@/config';
 
 interface ProductAnalysis {
   title: string;

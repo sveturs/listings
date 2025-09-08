@@ -12,7 +12,7 @@ import {
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 // import { useTranslations } from 'next-intl';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface PostOffice {
   id: number;

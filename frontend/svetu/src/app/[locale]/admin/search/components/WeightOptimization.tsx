@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface OptimizationParams {
   field_names?: string[];

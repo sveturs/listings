@@ -16,7 +16,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
 import type { components } from '@/types/generated/api';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 type DocFile = components['schemas']['internal_proj_docserver_handler.DocFile'];
 type DocFilesResponse =

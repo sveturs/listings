@@ -15,7 +15,7 @@ import {
   ChatBubbleBottomCenterTextIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 // Схема валидации адреса
 const addressSchema = z.object({

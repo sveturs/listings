@@ -15,7 +15,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 // Схема валидации для BEX доставки
 const bexDeliverySchema = z

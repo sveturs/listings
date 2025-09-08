@@ -13,7 +13,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface DeliveryOption {
   id: string;

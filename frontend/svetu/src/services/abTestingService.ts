@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface Experiment {
   id: string;
