@@ -64,7 +64,7 @@ export default function VariantGenerator({
   const loadProductAttributes = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/attributes`,
         {
@@ -179,7 +179,7 @@ export default function VariantGenerator({
         default_attributes: defaultAttributes,
       };
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/storefront/variants/generate`, {
         method: 'POST',
         headers: {

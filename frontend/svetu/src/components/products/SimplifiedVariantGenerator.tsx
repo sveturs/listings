@@ -51,7 +51,7 @@ export default function SimplifiedVariantGenerator({
         try {
           console.log('Fetching category info for ID:', categoryId);
           // Сначала попробуем получить список категорий
-          const apiUrl = configManager.get('api.url');
+          const apiUrl = configManager.getApiUrl();
           const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
           if (response.ok) {
             const data = await response.json();

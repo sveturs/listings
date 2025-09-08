@@ -184,7 +184,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           },
         };
 
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/gis/cities/visible`, {
           method: 'POST',
           headers: {
@@ -244,7 +244,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
       setLoadingCityDistricts((prev) => new Set(prev).add(cityId));
 
       try {
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(
           `${apiUrl}/api/v1/gis/districts?city_id=${encodeURIComponent(cityId)}`
         );
@@ -302,7 +302,7 @@ export const useVisibleCities = (): UseVisibleCitiesResult => {
           params.append('city_ids[]', cityId);
         });
 
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(
           `${apiUrl}/api/v1/gis/districts?${params.toString()}`
         );

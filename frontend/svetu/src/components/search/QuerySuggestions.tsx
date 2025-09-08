@@ -92,7 +92,7 @@ export default function QuerySuggestions({
           params.set('user_id', userId.toString());
         }
 
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/suggestions?${params}`);
 
         if (response.ok) {
@@ -181,7 +181,7 @@ export default function QuerySuggestions({
   // Track suggestion click
   const trackSuggestionClick = async (suggestion: QuerySuggestion) => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       await fetch(`${apiUrl}/api/v1/suggestions/track`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

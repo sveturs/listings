@@ -116,7 +116,7 @@ export default function PostExpressRateCalculator({
         recipient_postal_code: params.recipient_postal_code || '11000', // default Belgrade
       };
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/postexpress/calculate-rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

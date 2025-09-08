@@ -131,7 +131,7 @@ export default function CreateListingSmartPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/marketplace/categories?lang=${locale}`
       );
@@ -272,7 +272,7 @@ export default function CreateListingSmartPage() {
           language: locale,
         });
 
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/search?${searchParams}`);
         if (response.ok) {
           const data = await response.json();
@@ -380,7 +380,7 @@ export default function CreateListingSmartPage() {
           .split(' ')
           .filter((word) => word.length > 2);
 
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/marketplace/categories/detect`, {
           method: 'POST',
           headers: {

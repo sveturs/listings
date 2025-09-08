@@ -222,7 +222,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 class TranslationAdminApi {
   private getBaseUrl(): string {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     return `${apiUrl}/api/v1/admin/translations`;
   }
 

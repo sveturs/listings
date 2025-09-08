@@ -73,7 +73,7 @@ export default function DocsPage() {
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/docs/files`, {
         headers,
         credentials: 'include',
@@ -102,7 +102,7 @@ export default function DocsPage() {
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/docs/content?path=${encodeURIComponent(path)}`,
         {

@@ -126,7 +126,7 @@ export default function ARProductViewer({
     // In production, this would call an AI service
     try {
       // Simulate API call to generate 3D model from image
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/ar/generate-model`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

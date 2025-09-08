@@ -382,7 +382,7 @@ export default function QRBarcodeScanner({
     scanResult: ScanResult
   ): Promise<ProductInfo | null> => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/products/barcode-lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

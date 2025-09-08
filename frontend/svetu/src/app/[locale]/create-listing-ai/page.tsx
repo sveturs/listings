@@ -174,7 +174,7 @@ export default function AIPoweredListingCreationPage() {
         }
 
         // Используем абсолютный API URL
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         console.log('Making profile request to:', `${apiUrl}/api/v1/users/profile`);
 
         const response = await fetch(`${apiUrl}/api/v1/users/profile`, {
@@ -218,7 +218,7 @@ export default function AIPoweredListingCreationPage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
         if (response.ok) {
           const data = await response.json();
@@ -237,7 +237,7 @@ export default function AIPoweredListingCreationPage() {
   // Загружаем атрибуты при изменении категории
   const loadCategoryAttributes = async (categoryId: number) => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/marketplace/categories/${categoryId}/attributes`
       );

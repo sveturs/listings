@@ -59,7 +59,7 @@ export default function VariantAttributesClient() {
   const fetchVariantAttributes = async () => {
     try {
       const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/admin/attributes/variant-compatible`,
         {
@@ -83,7 +83,7 @@ export default function VariantAttributesClient() {
   const fetchCategories = async () => {
     try {
       const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/marketplace/category-tree`,
         {
@@ -104,7 +104,7 @@ export default function VariantAttributesClient() {
   const fetchCategoryMappings = async (categoryId: number) => {
     try {
       const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
         {
@@ -130,7 +130,7 @@ export default function VariantAttributesClient() {
     try {
       if (isEnabled) {
         const token = tokenManager.getAccessToken();
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(
           `${apiUrl}/api/v1/admin/variant-attributes/mappings`,
           {
@@ -159,7 +159,7 @@ export default function VariantAttributesClient() {
             m.category_id === categoryId
         );
         if (mapping) {
-          const apiUrl = configManager.get('api.url');
+          const apiUrl = configManager.getApiUrl();
           const response = await fetch(
             `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
             {
@@ -333,7 +333,7 @@ export default function VariantAttributesClient() {
                                     try {
                                       const token =
                                         tokenManager.getAccessToken();
-                                      const apiUrl = configManager.get('api.url');
+                                      const apiUrl = configManager.getApiUrl();
                                       const response = await fetch(
                                         `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
                                         {

@@ -66,7 +66,7 @@ export const useAnalytics = () => {
     }
 
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/analytics/event`, {
         method: 'POST',
         headers: {

@@ -125,7 +125,7 @@ export default function AITranslations({
 
   const fetchProviders = async () => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/providers`, {
         headers: {
           Authorization: `Bearer ${tokenManager.getAccessToken()}`,
@@ -149,7 +149,7 @@ export default function AITranslations({
 
   const fetchModules = async () => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/admin/translations/frontend/modules`,
         {
@@ -172,7 +172,7 @@ export default function AITranslations({
 
   const handleProviderUpdate = async (provider: AIProvider) => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/admin/translations/ai/providers/${provider.id}`,
         {
@@ -222,7 +222,7 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/translate`, {
         method: 'POST',
         headers: {
@@ -268,7 +268,7 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/batch`, {
         method: 'POST',
         headers: {
@@ -316,7 +316,7 @@ export default function AITranslations({
         }))
       );
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/apply`, {
         method: 'POST',
         headers: {

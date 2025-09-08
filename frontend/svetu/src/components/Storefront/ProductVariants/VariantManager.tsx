@@ -79,7 +79,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants`,
         {
@@ -100,7 +100,7 @@ export default function VariantManager({
   const loadAttributes = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/public/variants/attributes`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : '',
@@ -125,7 +125,7 @@ export default function VariantManager({
   const loadAttributeValues = async (attributeId: number) => {
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/public/variants/attributes/${attributeId}/values`,
         {
@@ -153,7 +153,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variant-matrix`,
         {
@@ -175,7 +175,7 @@ export default function VariantManager({
     if (productId <= 0) return; // Skip for new products
     try {
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants/analytics`,
         {
@@ -234,7 +234,7 @@ export default function VariantManager({
       };
 
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/variants/generate`,
         {
@@ -276,7 +276,7 @@ export default function VariantManager({
       };
 
       const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/variants/bulk-update-stock`,
         {
@@ -719,7 +719,7 @@ function VariantRow({
 
   const saveChanges = async () => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/storefront/variants/${variant.id}`,
         {

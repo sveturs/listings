@@ -91,7 +91,7 @@ export default function PostExpressAdminPage() {
   };
 
   const loadStats = async () => {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments/stats`);
     const data = await response.json();
     if (data.success) {
@@ -107,7 +107,7 @@ export default function PostExpressAdminPage() {
     if (filters.search) params.append('search', filters.search);
     params.append('limit', '50');
 
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments?${params}`);
     const data = await response.json();
     if (data.success) {
@@ -120,7 +120,7 @@ export default function PostExpressAdminPage() {
 
     setLoading(true);
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       let endpoint = '';
       let method = 'POST';
       const body: any = { shipment_ids: selectedShipments };

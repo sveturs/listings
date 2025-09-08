@@ -110,7 +110,7 @@ export default function BEXAddressForm({
 
       setIsSearching(true);
       try {
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/bex/search-address`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

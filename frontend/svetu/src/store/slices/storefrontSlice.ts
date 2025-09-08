@@ -239,7 +239,7 @@ export const fetchStorefrontById = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchStorefrontById', async (id, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'GET',
       headers: {
@@ -281,7 +281,7 @@ export const fetchStorefrontBySlug = createAsyncThunk<
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/storefronts/slug/${slug}`, {
       method: 'GET',
       headers,
@@ -322,7 +322,7 @@ export const fetchMyStorefronts = createAsyncThunk<
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/storefronts/my`, {
       method: 'GET',
       headers,
@@ -365,7 +365,7 @@ export const createStorefront = createAsyncThunk<
   'storefronts/createStorefront',
   async (storefrontData, { rejectWithValue }) => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/storefronts`, {
         method: 'POST',
         headers: {
@@ -400,7 +400,7 @@ export const updateStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/updateStorefront', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'PUT',
       headers: {
@@ -434,7 +434,7 @@ export const deleteStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/deleteStorefront', async (id, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'DELETE',
       headers: {

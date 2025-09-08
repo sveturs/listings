@@ -47,7 +47,7 @@ export default function EnhancedVariantGenerator({
         const attributeNames = getVariantAttributesForCategory(categorySlug);
 
         // Загружаем информацию о вариативных атрибутах
-        const apiUrl = configManager.get('api.url');
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(`${apiUrl}/api/v1/product-variant-attributes`);
         if (response.ok) {
           const data = await response.json();

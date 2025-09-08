@@ -31,7 +31,7 @@ const DistrictManager = () => {
   }, []);
 
   const loadDistricts = async () => {
-    const apiUrl = configManager.get('api.url');
+    const apiUrl = configManager.getApiUrl();
     try {
       // Пробуем загрузить через API
       const response = await fetch(`${apiUrl}/api/districts`);
@@ -175,7 +175,7 @@ const DistrictManager = () => {
       const districtsToDelete = Array.from(selectedDistricts);
 
       // Реальный вызов API для удаления
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/districts`, {
         method: 'DELETE',
         headers: {
@@ -690,7 +690,7 @@ const DistrictManager = () => {
       const name = osmResult.display_name.split(',')[0];
 
       // Реальный вызов API для добавления района
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/districts`, {
         method: 'POST',
         headers: {

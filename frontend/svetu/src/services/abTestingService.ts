@@ -139,7 +139,7 @@ class ABTestingService {
    */
   private async loadRemoteExperiments() {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}${this.config.apiEndpoint}/active`);
       const experiments = await response.json();
 
@@ -576,7 +576,7 @@ class ABTestingService {
     if (!this.config.enableRemoteConfig) return;
 
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       await fetch(`${apiUrl}${this.config.apiEndpoint}/${experiment.id}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -646,7 +646,7 @@ class ABTestingService {
     this.analyticsQueue = [];
 
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       await fetch(`${apiUrl}/api/v1/analytics/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

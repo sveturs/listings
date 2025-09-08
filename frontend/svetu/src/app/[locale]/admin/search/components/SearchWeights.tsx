@@ -35,7 +35,7 @@ export default function SearchWeights() {
   const loadWeights = useCallback(async () => {
     try {
       setLoading(true);
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/v1/admin/search/weights?item_type=${selectedItemType}`,
         {
@@ -64,7 +64,7 @@ export default function SearchWeights() {
 
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/search/weights/${weightId}`, {
         method: 'PUT',
         headers: {
@@ -90,7 +90,7 @@ export default function SearchWeights() {
 
   const createBackup = async () => {
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/search/backup-weights`, {
         method: 'POST',
         headers: {

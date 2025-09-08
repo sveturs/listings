@@ -76,7 +76,7 @@ export default function WeightOptimization() {
     if (currentSession && currentSession.status === 'running') {
       interval = setInterval(async () => {
         try {
-          const apiUrl = configManager.get('api.url');
+          const apiUrl = configManager.getApiUrl();
           const response = await fetch(
             `${apiUrl}/api/v1/admin/search/optimization-status/${currentSession.id}`,
             {
@@ -111,7 +111,7 @@ export default function WeightOptimization() {
   const startOptimization = async () => {
     try {
       setIsOptimizing(true);
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/search/optimize-weights`, {
         method: 'POST',
         headers: {
@@ -151,7 +151,7 @@ export default function WeightOptimization() {
     if (!currentSession) return;
 
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       await fetch(
         `${apiUrl}/api/v1/admin/search/optimization-cancel/${currentSession.id}`,
         {
@@ -173,7 +173,7 @@ export default function WeightOptimization() {
     if (!currentSession || selectedResults.length === 0) return;
 
     try {
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/search/apply-weights`, {
         method: 'POST',
         headers: {
@@ -204,7 +204,7 @@ export default function WeightOptimization() {
       const fromDate = new Date();
       fromDate.setDate(fromDate.getDate() - params.analysis_period_days);
 
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/search/analyze-weights`, {
         method: 'POST',
         headers: {

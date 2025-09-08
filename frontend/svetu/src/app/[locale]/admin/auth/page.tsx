@@ -14,7 +14,7 @@ export default function AdminAuthPage() {
 
     try {
       // Получаем демо токен от сервера
-      const apiUrl = configManager.get('api.url');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(`${apiUrl}/api/v1/admin/demo-token`, {
         method: 'POST',
       });
