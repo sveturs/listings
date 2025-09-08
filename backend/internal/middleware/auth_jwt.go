@@ -129,7 +129,57 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		if len(parts) == 2 && parts[0] == bearerScheme {
 			tokenString := parts[1]
 
-			// Валидируем JWT токен
+			// Сначала пробуем валидировать как токен от auth service (RS256)
+			if m.authServicePubKey != nil {
+				authClaims, err := jwt.ValidateAuthServiceToken(tokenString, m.authServicePubKey)
+				if err == nil {
+					// Токен от auth service валиден
+					logger.Info().
+						Int("user_id", authClaims.UserID).
+						Str("email", authClaims.Email).
+						Str("provider", authClaims.Provider).
+						Msg("Auth service token validated")
+
+					// Проверяем что пользователь существует
+					user, err := m.services.User().GetUserByID(c.Context(), authClaims.UserID)
+					if err != nil || user == nil {
+						logger.Info().
+							Int("user_id", authClaims.UserID).
+							Msg("User not found for auth service token")
+						return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.user_not_found")
+					}
+
+					// Устанавливаем данные пользователя в контекст
+					c.Locals("user_id", authClaims.UserID)
+					c.Locals("user_email", authClaims.Email)
+					c.Locals("auth_method", "jwt_auth_service")
+					c.Locals("jwt_token", tokenString)
+
+					// Проверяем роли
+					isAdmin := false
+					for _, role := range authClaims.Roles {
+						if role == "admin" {
+							isAdmin = true
+							break
+						}
+					}
+					// Дополнительная проверка по email
+					if !isAdmin {
+						isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
+					}
+					c.Locals("is_admin", isAdmin)
+
+					// Обновляем последнее посещение асинхронно
+					go func() {
+						ctx := context.Background()
+						_ = m.services.User().UpdateLastSeen(ctx, authClaims.UserID)
+					}()
+
+					return c.Next()
+				}
+			}
+
+			// Если RS256 не сработал, пробуем HS256 (старый формат)
 			claims, err := jwt.ValidateToken(tokenString, m.config.JWTSecret)
 			if err != nil {
 				logger.Error().
@@ -186,7 +236,39 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 	// Приоритет 2: Проверяем JWT в query параметре (для WebSocket)
 	tokenFromQuery := c.Query("token")
 	if tokenFromQuery != "" {
+		// Сначала пробуем валидировать как токен от auth service (RS256)
+		if m.authServicePubKey != nil {
+			authClaims, err := jwt.ValidateAuthServiceToken(tokenFromQuery, m.authServicePubKey)
+			if err == nil {
+				// Токен от auth service валиден
+				c.Locals("user_id", authClaims.UserID)
+				c.Locals("user_email", authClaims.Email)
+				c.Locals("auth_method", "jwt_query_auth_service")
+				c.Locals("jwt_token", tokenFromQuery)
 
+				// Проверяем роли
+				isAdmin := false
+				for _, role := range authClaims.Roles {
+					if role == "admin" {
+						isAdmin = true
+						break
+					}
+				}
+				if !isAdmin {
+					isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
+				}
+				c.Locals("is_admin", isAdmin)
+
+				go func() {
+					ctx := context.Background()
+					_ = m.services.User().UpdateLastSeen(ctx, authClaims.UserID)
+				}()
+
+				return c.Next()
+			}
+		}
+
+		// Если RS256 не сработал, пробуем HS256
 		claims, err := jwt.ValidateToken(tokenFromQuery, m.config.JWTSecret)
 		if err != nil {
 			logger.Error().

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
 import configManager from '@/config';
 import HomePageClient from './HomePageClient';
 import { getHomePageData } from './actions';
@@ -28,12 +29,20 @@ export default async function Home({
   }
 
   return (
-    <HomePageClient
-      title={t('title')}
-      description={t('description')}
-      createListingText={t('createListing')}
-      homePageData={homePageData}
-      locale={locale}
-    />
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="loading loading-spinner loading-lg"></div>
+        </div>
+      }
+    >
+      <HomePageClient
+        title={t('title')}
+        description={t('description')}
+        createListingText={t('createListing')}
+        homePageData={homePageData}
+        locale={locale}
+      />
+    </Suspense>
   );
 }

@@ -3,8 +3,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -28,9 +26,9 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 	}
 }
 
-// GoogleAuth redirects to Google OAuth2 authorization page
+// GoogleAuth - DEPRECATED: This endpoint should be handled by Auth Service
 // @Summary Initiate Google OAuth authentication
-// @Description Redirects user to Google OAuth2 authorization page
+// @Description This endpoint is deprecated and should be proxied to Auth Service
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -38,76 +36,17 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 // @Success 302 {string} string "Redirect to Google OAuth"
 // @Router /auth/google [get]
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
-	// Получаем origin из заголовков
-	origin := c.Get("Origin")
-	if origin == "" {
-		origin = c.Get("Referer")
-	}
-
-	// Определяем реальный хост откуда пришел запрос
-	host := c.Get("Host")
-	const httpsProtocol = "https"
-	protocol := "http"
-	if c.Protocol() == httpsProtocol || c.Get("X-Forwarded-Proto") == httpsProtocol {
-		protocol = httpsProtocol
-	}
-
-	// Если запрос пришел не с localhost, сохраняем информацию о реальном хосте
-	if host != "" && !strings.HasPrefix(host, "localhost") {
-		// Сохраняем реальный хост в cookie для использования после OAuth callback
-		realBackendURL := fmt.Sprintf("%s://%s", protocol, host)
-		if !strings.Contains(host, ":") {
-			realBackendURL = fmt.Sprintf("%s://%s", protocol, host)
-		}
-
-		// Сохраняем как реальный backend URL, так и origin frontend
-		c.Cookie(&fiber.Cookie{
-			Name:     "oauth_real_host",
-			Value:    realBackendURL,
-			Path:     "/",
-			MaxAge:   300,   // 5 минут
-			Secure:   false, // Важно: false для работы через HTTP
-			HTTPOnly: true,
-			SameSite: "Lax",
-		})
-
-		logger.Info().
-			Str("real_backend_url", realBackendURL).
-			Str("origin", origin).
-			Msg("GoogleAuth: Saving real host for non-localhost access")
-	}
-
-	logger.Info().
-		Str("origin_header", c.Get("Origin")).
-		Str("referer_header", c.Get("Referer")).
-		Str("host_header", host).
-		Str("protocol", protocol).
-		Str("final_origin", origin).
-		Msg("GoogleAuth: processing OAuth request")
-
-	// Получаем returnTo из query параметров
-	returnTo := c.Query("returnTo")
-	if returnTo != "" {
-		// Сохраняем в cookie
-		c.Cookie(&fiber.Cookie{
-			Name:     "returnTo",
-			Value:    returnTo,
-			Path:     "/",
-			MaxAge:   300,   // 5 минут
-			Secure:   false, // Важно: false для работы через HTTP
-			HTTPOnly: true,
-			SameSite: "Lax",
-		})
-	}
-
-	// Всегда используем стандартный GetGoogleAuthURL (с localhost callback)
-	url := h.services.Auth().GetGoogleAuthURL(origin)
-	return c.Redirect(url)
+	// This handler should never be called if Auth Service proxy is configured correctly
+	logger.Error().Msg("GoogleAuth handler called in monolith - should be proxied to Auth Service")
+	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+		"error":   "OAuth authentication should be handled by Auth Service",
+		"message": "Please ensure USE_AUTH_SERVICE=true and Auth Service is running",
+	})
 }
 
-// GoogleCallback handles Google OAuth2 callback
+// GoogleCallback - DEPRECATED: This endpoint should be handled by Auth Service
 // @Summary Handle Google OAuth callback
-// @Description Processes the OAuth2 callback from Google and creates user session
+// @Description This endpoint is deprecated and should be proxied to Auth Service
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -116,115 +55,12 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "auth.google_callback.error.authentication_failed"
 // @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
-	code := c.Query("code")
-	state := c.Query("state") // Получаем origin из state параметра
-
-	logger.Info().
-		Str("state", state).
-		Str("code_prefix", code[:10]+"...").
-		Msg("GoogleCallback: received OAuth callback")
-
-	// Проверяем, есть ли сохраненный реальный хост (для VPN/LAN доступа)
-	realHost := c.Cookies("oauth_real_host")
-	if realHost != "" {
-		logger.Info().
-			Str("real_host", realHost).
-			Msg("GoogleCallback: Found saved real host, will redirect there")
-
-		// Формируем URL для редиректа на реальный хост с кодом
-		redirectURL := fmt.Sprintf("%s/auth/google/callback?code=%s&state=%s", realHost, code, state)
-
-		// Удаляем cookie с реальным хостом
-		c.Cookie(&fiber.Cookie{
-			Name:   "oauth_real_host",
-			Value:  "",
-			Path:   "/",
-			MaxAge: -1,
-		})
-
-		// Перенаправляем на реальный хост для завершения OAuth процесса
-		return c.Redirect(redirectURL)
-	}
-
-	sessionData, err := h.services.Auth().HandleGoogleCallback(c.Context(), code)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Str("code", code[:10]+"...").
-			Msg("GoogleCallback: HandleGoogleCallback failed")
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "auth.google_callback.error.authentication_failed")
-	}
-
-	// Генерация токена сессии
-	sessionToken := utils.GenerateSessionToken()
-	h.services.Auth().SaveSession(sessionToken, sessionData)
-
-	// Генерация JWT и Refresh токенов
-	accessToken, refreshToken, err := h.services.Auth().GenerateTokensForOAuth(c.Context(), sessionData.UserID, sessionData.Email, c.IP(), c.Get("User-Agent"))
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to generate tokens")
-		// Продолжаем с session token как fallback
-	}
-
-	// Установка session cookie для обратной совместимости
-	c.Cookie(&fiber.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Path:     "/",
-		Domain:   h.services.Config().GetCookieDomain(),
-		MaxAge:   3600 * 24,
-		Secure:   h.services.Config().GetCookieSecure(),
-		HTTPOnly: true,
-		SameSite: h.services.Config().GetCookieSameSite(),
+	// This handler should never be called if Auth Service proxy is configured correctly
+	logger.Error().Msg("GoogleCallback handler called in monolith - should be proxied to Auth Service")
+	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
+		"error":   "OAuth callback should be handled by Auth Service",
+		"message": "Please ensure USE_AUTH_SERVICE=true and Auth Service is running",
 	})
-
-	// Установка refresh token в httpOnly cookie
-	if refreshToken != "" {
-		c.Cookie(&fiber.Cookie{
-			Name:     "refresh_token",
-			Value:    refreshToken,
-			Path:     "/",
-			Domain:   h.services.Config().GetCookieDomain(),
-			MaxAge:   30 * 24 * 3600, // 30 дней
-			Secure:   h.services.Config().GetCookieSecure(),
-			HTTPOnly: true,
-			SameSite: h.services.Config().GetCookieSameSite(),
-		})
-		logger.Info().Str("email", sessionData.Email).Bool("access_token_generated", accessToken != "").Msg("OAuth: Set refresh_token cookie for user")
-	}
-	// Определяем базовый URL для редиректа
-	baseURL := h.services.Config().FrontendURL // значение по умолчанию
-
-	// Если есть origin в state, используем его как базовый URL
-	if state != "" && state != "default" {
-		baseURL = state
-	}
-
-	returnTo := baseURL
-	if saved := c.Cookies("returnTo"); saved != "" {
-		returnTo = baseURL + saved
-		// Удаляем cookie
-		c.Cookie(&fiber.Cookie{
-			Name:   "returnTo",
-			Value:  "",
-			Path:   "/",
-			MaxAge: -1,
-		})
-	}
-
-	// Добавляем access_token в URL для передачи на фронтенд
-	if accessToken != "" {
-		separator := "?"
-		if strings.Contains(returnTo, "?") {
-			separator = "&"
-		}
-		returnTo = fmt.Sprintf("%s%sauth_token=%s", returnTo, separator, accessToken)
-		logger.Info().Str("redirect_url", returnTo[:50]+"...").Msg("OAuth: Redirecting with access token in URL")
-	} else {
-		logger.Error().Msg("OAuth: No access token to add to redirect URL")
-	}
-
-	return c.Redirect(returnTo)
 }
 
 // GetSession returns current user session information

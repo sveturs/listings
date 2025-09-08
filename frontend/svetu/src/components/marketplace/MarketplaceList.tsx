@@ -112,7 +112,7 @@ export default function MarketplaceList({
   //   initialData: !!initialData,
   //   locale,
   // });
-  const t = useTranslations('marketplace.home');
+  const t = useTranslations('marketplace.homeContent');
   const [items, setItems] = useState<UnifiedSearchItem[]>(
     initialData?.items || []
   );

@@ -66,6 +66,12 @@ export class AuthService {
     const token = tokenManager.getAccessToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+      console.log(
+        '[AuthService] Adding token to headers:',
+        token.substring(0, 30) + '...'
+      );
+    } else {
+      console.log('[AuthService] No token available for headers');
     }
 
     return headers;
@@ -258,16 +264,19 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     try {
-      // Сначала очищаем токены локально, чтобы предотвратить автоматическое обновление
-      tokenManager.clearTokens();
-
+      // ВАЖНО: Сначала отправляем запрос с токеном для его отзыва на сервере
       await fetch(`${API_BASE}/api/v1/auth/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: this.getAuthHeaders(),
+        headers: this.getAuthHeaders(), // Токен еще есть и будет отправлен
       });
+
+      // Только после успешного logout на сервере очищаем токены локально
+      tokenManager.clearTokens();
     } catch (error) {
       console.error('Logout error:', error);
+      // В любом случае очищаем токены локально
+      tokenManager.clearTokens();
     }
   }
 
@@ -275,8 +284,26 @@ export class AuthService {
     returnTo?: string,
     redirect = true
   ): Promise<string> {
-    const params = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
-    const url = `${API_BASE}/auth/google${params}`;
+    // Get current locale from URL
+    const locale =
+      typeof window !== 'undefined'
+        ? window.location.pathname.split('/')[1] || 'en'
+        : 'en';
+
+    // Build redirect URI with locale
+    const redirectUri = `${window.location.origin}/${locale}/auth/oauth/google/callback`;
+
+    // Save return URL for after OAuth
+    if (returnTo && typeof window !== 'undefined') {
+      sessionStorage.setItem('oauth_return_to', returnTo);
+    }
+
+    // Build OAuth URL with redirect_uri parameter
+    const params = new URLSearchParams({
+      redirect_uri: redirectUri,
+    });
+
+    const url = `${API_BASE}/api/v1/auth/google?${params.toString()}`;
 
     if (redirect && typeof window !== 'undefined') {
       window.location.href = url;

@@ -144,7 +144,7 @@ class ApiClient {
 
     // Добавляем токен авторизации если нужно
     if (includeAuth && typeof window !== 'undefined') {
-      let token = await tokenManager.getAccessToken();
+      let token = tokenManager.getAccessToken();
 
       // Если токен истек, пытаемся обновить его
       if (token && tokenManager.isTokenExpired(token)) {
@@ -159,6 +159,9 @@ class ApiClient {
 
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+        console.log('[ApiClient] Added auth header for', endpoint);
+      } else {
+        console.log('[ApiClient] No token available for', endpoint);
       }
     }
 

@@ -2,7 +2,11 @@
 package middleware
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -15,17 +19,53 @@ import (
 )
 
 type Middleware struct {
-	config   *config.Config
-	services globalService.ServicesInterface
-	metrics  *monitoring.MetricsCollector
+	config            *config.Config
+	services          globalService.ServicesInterface
+	metrics           *monitoring.MetricsCollector
+	authServicePubKey *rsa.PublicKey
 }
 
 func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface) *Middleware {
-	return &Middleware{
+	m := &Middleware{
 		config:   cfg,
 		services: services,
 		metrics:  monitoring.NewMetricsCollector(pkglogger.GetLogger()),
 	}
+
+	// Загружаем публичный ключ auth service
+	if err := m.loadAuthServicePublicKey(); err != nil {
+		logger.Error().Err(err).Msg("Failed to load auth service public key, RS256 tokens will not be validated")
+	}
+
+	return m
+}
+
+func (m *Middleware) loadAuthServicePublicKey() error {
+	// Пробуем загрузить из файла
+	pubKeyPath := "keys/auth_service_public.pem"
+	pubKeyData, err := os.ReadFile(pubKeyPath)
+	if err != nil {
+		return err
+	}
+
+	block, _ := pem.Decode(pubKeyData)
+	if block == nil {
+		return errors.New("failed to parse PEM block")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return err
+	}
+
+	rsaPub, ok := pub.(*rsa.PublicKey)
+	if !ok {
+		return errors.New("not an RSA public key")
+	}
+
+	m.authServicePubKey = rsaPub
+	logger.Info().Msg("Auth service public key loaded successfully")
+	return nil
 }
 
 func (m *Middleware) Setup(app *fiber.App) {

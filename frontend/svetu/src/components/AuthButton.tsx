@@ -144,7 +144,7 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
               ) : (
                 <div className="bg-neutral text-neutral-content w-full h-full flex items-center justify-center rounded-full">
                   <span className="text-lg font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
+                    {(user.name || user.email || 'U').charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
@@ -171,7 +171,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
                     ) : (
                       <div className="bg-primary text-primary-content w-full h-full flex items-center justify-center">
                         <span className="text-xl font-bold">
-                          {user.name.charAt(0).toUpperCase()}
+                          {(user.name || user.email || 'U')
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                     )}
