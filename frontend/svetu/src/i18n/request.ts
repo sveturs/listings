@@ -1,6 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
 import { routing } from './routing';
-import { loadMessages } from '@/lib/i18n/loadMessages';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   // This typically corresponds to the `[locale]` segment
@@ -11,8 +10,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = routing.defaultLocale;
   }
 
-  // Загружаем базовые модули для серверного рендеринга
-  const messages = await loadMessages(locale as any, [
+  // Для серверного рендеринга загружаем переводы напрямую
+  // Это более надёжно работает при SSG
+  const messages: Record<string, any> = {};
+
+  // Загружаем базовые модули
+  const modules = [
     'common',
     'marketplace',
     'auth',
@@ -20,10 +23,30 @@ export default getRequestConfig(async ({ requestLocale }) => {
     'cart',
     'map',
     'storefronts',
-    'admin', // Добавляем admin так как он используется в storefronts странице
-    'cars', // Добавляем cars для car-selector
-    'reviews', // Добавляем reviews для ImageGallery компонента
-  ]);
+    'admin',
+    'cars',
+    'reviews',
+  ];
+
+  for (const mod of modules) {
+    try {
+      const moduleData = await import(`@/messages/${locale}/${mod}.json`);
+      // JSON импорты могут иметь default в некоторых случаях
+      const data = moduleData.default || moduleData;
+
+      // Добавляем модуль как namespace
+      messages[mod] = data;
+
+      // Также добавляем все ключи на верхний уровень для обратной совместимости
+      Object.keys(data).forEach((key) => {
+        if (!messages[key]) {
+          messages[key] = data[key];
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to load ${mod} for ${locale}:`, error);
+    }
+  }
 
   return {
     locale,

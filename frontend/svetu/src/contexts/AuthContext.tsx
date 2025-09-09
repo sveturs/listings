@@ -425,7 +425,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (customEvent.detail.action === 'set') {
         // New token was set, refresh session to get user data
         logger.auth.debug('New token detected, refreshing session...');
-        
+
         // Проверяем, есть ли уже пользователь в sessionStorage (например, после OAuth)
         const cachedUser = storageUtils.getItem('svetu_user');
         if (cachedUser) {
@@ -440,7 +440,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             logger.auth.error('Failed to parse cached user:', e);
           }
         }
-        
+
         // Также обновляем через API для получения актуальных данных
         await refreshSession(3, false); // Don't skip loading state
       } else if (customEvent.detail.action === 'cleared') {
@@ -461,7 +461,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.removeEventListener('tokenChanged', handleTokenChange);
       }
     };
-  }, [refreshSession, updateUser]);
+  }, [refreshSession, updateUser, storageUtils]);
 
   // Redirect to login page (matches the interface)
   const login = useCallback(

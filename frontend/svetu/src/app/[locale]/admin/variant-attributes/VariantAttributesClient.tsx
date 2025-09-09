@@ -63,7 +63,7 @@ export default function VariantAttributesClient() {
         `${API_BASE_URL}/api/v1/admin/attributes/variant-compatible`,
         {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
+            Authorization: token ? `Bearer ${token}` : '',
           },
         }
       );
@@ -82,11 +82,14 @@ export default function VariantAttributesClient() {
   const fetchCategories = async () => {
     try {
       const token = tokenManager.getAccessToken();
-      const response = await fetch(`${API_BASE_URL}/api/v1/marketplace/category-tree`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/marketplace/category-tree`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setCategories(data.data || []);
@@ -103,7 +106,7 @@ export default function VariantAttributesClient() {
         `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
         {
           headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
+            Authorization: token ? `Bearer ${token}` : '',
           },
         }
       );
@@ -130,7 +133,7 @@ export default function VariantAttributesClient() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': token ? `Bearer ${token}` : '',
+              Authorization: token ? `Bearer ${token}` : '',
             },
             body: JSON.stringify({
               variant_attribute_id: attribute.id,
@@ -323,14 +326,17 @@ export default function VariantAttributesClient() {
                                   checked={mapping.is_required}
                                   onChange={async (e) => {
                                     try {
-                                      const token = tokenManager.getAccessToken();
+                                      const token =
+                                        tokenManager.getAccessToken();
                                       const response = await fetch(
                                         `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
                                         {
                                           method: 'PATCH',
                                           headers: {
                                             'Content-Type': 'application/json',
-                                            'Authorization': token ? `Bearer ${token}` : '',
+                                            Authorization: token
+                                              ? `Bearer ${token}`
+                                              : '',
                                           },
                                           body: JSON.stringify({
                                             is_required: e.target.checked,

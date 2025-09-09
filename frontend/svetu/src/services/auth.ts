@@ -270,11 +270,11 @@ export class AuthService {
 
       // Извлекаем данные из обертки
       const sessionData = result.data || (result as SessionResponse);
-      
+
       // Логирование для отладки
       console.log('[AuthService] Session response:', sessionData);
       console.log('[AuthService] User is_admin:', sessionData?.user?.is_admin);
-      
+
       return sessionData;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {

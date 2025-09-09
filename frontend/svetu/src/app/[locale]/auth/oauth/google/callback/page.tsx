@@ -141,7 +141,7 @@ export default function GoogleCallbackPage() {
               }
 
               setStatus('Login successful! Redirecting...');
-              
+
               // Немедленный редирект с параметром для показа уведомления
               router.replace('/?login=success');
               return;
