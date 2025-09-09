@@ -24816,10 +24816,6 @@ components:
       type: object
     backend_internal_domain_models.MarketplaceListing:
       properties:
-        address_city:
-          type: string
-        address_country:
-          type: string
         attributes:
           items:
             $ref: "#/components/schemas/backend_internal_domain_models.ListingAttributeValu\
@@ -24847,7 +24843,11 @@ components:
           items:
             type: string
           type: array
+        city:
+          type: string
         condition:
+          type: string
+        country:
           type: string
         created_at:
           type: string
@@ -31635,222 +31635,6 @@ components:
         - role_id
       type: object
     internal_proj_users_handler.UserResponse:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        id:
-          example: 1
-          type: integer
-        name:
-          example: John Doe
-          type: string
-        picture_url:
-          example: https://example.com/avatar.jpg
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AdminAdminsResponse:
-      properties:
-        email:
-          example: admin@example.com
-          type: string
-        is_admin:
-          example: true
-          type: boolean
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AdminCheckResponse:
-      properties:
-        is_admin:
-          example: false
-          type: boolean
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AdminMessageResponse:
-      properties:
-        message:
-          example: admin.users.success.profile_updated
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AdminStatusUpdateRequest:
-      properties:
-        status:
-          enum:
-            - active
-            - blocked
-            - pending
-          example: active
-          type: string
-      required:
-        - status
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AdminUserListResponse:
-      properties:
-        data:
-          items:
-            $ref: "#/components/schemas/backend_internal_domain_models.UserProfile"
-          type: array
-        limit:
-          example: 10
-          type: integer
-        page:
-          example: 1
-          type: integer
-        pages:
-          example: 10
-          type: integer
-        total:
-          example: 100
-          type: integer
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.AuthResponse:
-      properties:
-        access_token:
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          type: string
-        expires_in:
-          example: 3600
-          type: integer
-        token_type:
-          example: Bearer
-          type: string
-        user:
-          $ref: "#/components/schemas/internal_proj_users_handler_backup_20250907_194625.\
-            UserResponse"
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.LoginRequest:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        password:
-          example: password123
-          minLength: 6
-          type: string
-      required:
-        - email
-        - password
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.LoginResponse:
-      properties:
-        message:
-          example: users.login.success.authenticated
-          type: string
-        user:
-          $ref: "#/components/schemas/backend_internal_domain_models.User"
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.MessageResponse:
-      properties:
-        message:
-          example: Операция выполнена успешно
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.PublicUserResponse:
-      properties:
-        created_at:
-          example: 2023-01-01T12:00:00Z
-          type: string
-        email:
-          example: user@example.com
-          type: string
-        id:
-          example: 1
-          type: integer
-        name:
-          example: Иван Иванов
-          type: string
-        picture_url:
-          example: https://example.com/avatar.jpg
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.RegisterRequest:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        name:
-          example: John Doe
-          minLength: 2
-          type: string
-        password:
-          example: password123
-          minLength: 6
-          type: string
-        phone:
-          example: "+1234567890"
-          type: string
-      required:
-        - email
-        - name
-        - password
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.RegisterResponse:
-      properties:
-        message:
-          example: Пользователь успешно зарегистрирован
-          type: string
-        user:
-          $ref: "#/components/schemas/backend_internal_domain_models.User"
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.SessionResponse:
-      properties:
-        authenticated:
-          example: true
-          type: boolean
-        user:
-          $ref: "#/components/schemas/internal_proj_users_handler_backup_20250907_194625.\
-            SessionUserResponse"
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.SessionUserResponse:
-      properties:
-        city:
-          example: Moscow
-          type: string
-        country:
-          example: Russia
-          type: string
-        email:
-          example: user@example.com
-          type: string
-        id:
-          example: 1
-          type: integer
-        is_admin:
-          example: false
-          type: boolean
-        name:
-          example: John Doe
-          type: string
-        phone:
-          example: "+1234567890"
-          type: string
-        picture_url:
-          example: https://example.com/avatar.jpg
-          type: string
-        provider:
-          example: password
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.TokenResponse:
-      properties:
-        access_token:
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          type: string
-        expires_in:
-          example: 3600
-          type: integer
-        token_type:
-          example: Bearer
-          type: string
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.UpdateUserRoleRequest:
-      properties:
-        role_id:
-          example: 2
-          minimum: 1
-          type: integer
-      required:
-        - role_id
-      type: object
-    internal_proj_users_handler_backup_20250907_194625.UserResponse:
       properties:
         email:
           example: user@example.com

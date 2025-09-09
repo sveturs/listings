@@ -97,15 +97,20 @@ export class AuthService {
           if (session && session.authenticated) {
             return session;
           }
-        } catch (sessionError) {
-          console.log('[AuthService] Session failed with existing token, will try refresh');
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_sessionError) {
+          console.log(
+            '[AuthService] Session failed with existing token, will try refresh'
+          );
         }
       }
 
       // Проверяем есть ли refresh токен
       const refreshToken = tokenManager.getRefreshToken();
       if (!refreshToken) {
-        console.log('[AuthService] No refresh token available, cannot restore session');
+        console.log(
+          '[AuthService] No refresh token available, cannot restore session'
+        );
         return null;
       }
 

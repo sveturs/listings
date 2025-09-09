@@ -215,7 +215,10 @@ class ConfigManager {
 
   public getAuthServiceUrl(): string {
     // Auth Service URL - по умолчанию на порту 28080
-    const authServiceUrl = this.getEnvValue('NEXT_PUBLIC_AUTH_SERVICE_URL', 'http://localhost:28080');
+    const authServiceUrl = this.getEnvValue(
+      'NEXT_PUBLIC_AUTH_SERVICE_URL',
+      'http://localhost:28080'
+    );
     return authServiceUrl;
   }
 

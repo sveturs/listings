@@ -48,8 +48,8 @@ func (m *Middleware) loadAuthServicePublicKey() error {
 		pubKeyPath = "keys/auth_service_public.pem"
 	}
 	logger.Info().Str("path", pubKeyPath).Msg("Loading auth service public key from path")
-	
-	pubKeyData, err := os.ReadFile(pubKeyPath)
+
+	pubKeyData, err := os.ReadFile(pubKeyPath) // #nosec G304 - path is from config or hardcoded default
 	if err != nil {
 		return err
 	}

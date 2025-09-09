@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -84,7 +87,7 @@ func main() {
 
 		// Create token
 		token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-		
+
 		// Sign with private key
 		tokenString, err := token.SignedString(privateKey)
 		if err != nil {
@@ -104,7 +107,7 @@ func main() {
 		}
 
 		req.Header.Set("Authorization", "Bearer "+tokenString)
-		
+
 		client := &http.Client{Timeout: 5 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -114,7 +117,7 @@ func main() {
 		defer resp.Body.Close()
 
 		body, _ := ioutil.ReadAll(resp.Body)
-		
+
 		if resp.StatusCode == 200 {
 			fmt.Printf("✅ Token validated successfully!\n")
 			fmt.Printf("Response: %s\n", string(body))
@@ -122,7 +125,7 @@ func main() {
 			fmt.Printf("❌ Token validation failed: %s\n", resp.Status)
 			fmt.Printf("Response: %s\n", string(body))
 		}
-		
+
 		fmt.Println("----------------------------------------")
 	}
 

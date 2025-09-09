@@ -1,4 +1,5 @@
 {
+  "admin": "Administracija",
   "navigation": {
     "home": "Početna",
     "marketplace": "Tržište",
@@ -640,6 +641,14 @@
   "expand": "Proširi",
   "collapse": "Smanji",
   "required": "Obavezno",
+  "navigation": {
+    "home": "Početna",
+    "search": "Pretraga",
+    "create": "Dodaj",
+    "chats": "Poruke",
+    "profile": "Profil",
+    "close": "Zatvori"
+  },
   "common": {
     "minutes": "Minuti",
     "km": "km",

@@ -101,7 +101,7 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 			// JWT валидация теперь происходит в middleware через RS256
 			logger.Info().
 				Msg("JWT validation moved to middleware with RS256")
-			
+
 			// Код получения данных по JWT временно отключен
 			// TODO: использовать данные из middleware после валидации RS256 токена
 		} else {

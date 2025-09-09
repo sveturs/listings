@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -11,7 +14,7 @@ import (
 
 func main() {
 	endpoint := "http://212.62.32.201/WspWebApi/transakcija"
-	
+
 	fmt.Println("=====================================")
 	fmt.Println("Post Express Case Sensitivity Test")
 	fmt.Println("=====================================")
@@ -31,18 +34,18 @@ func main() {
 		"IPAdresa":          "127.0.0.1",
 		"IdPartnera":        10109,
 	}
-	
+
 	clientJSON, _ := json.Marshal(clientData)
-	
+
 	// Простой поисковый запрос
 	searchData := map[string]interface{}{
 		"Naziv":           "Novi Sad",
 		"BrojSlogova":     10,
 		"NacinSortiranja": 0,
 	}
-	
+
 	searchJSON, _ := json.Marshal(searchData)
-	
+
 	// Тест 1: camelCase (все с маленькой буквы)
 	fmt.Println("Test 1: camelCase...")
 	transaction1 := map[string]interface{}{
@@ -54,7 +57,7 @@ func main() {
 		"strIn":              string(searchJSON),
 	}
 	testRequest(endpoint, transaction1)
-	
+
 	// Тест 2: PascalCase (все с большой буквы)
 	fmt.Println("\nTest 2: PascalCase...")
 	transaction2 := map[string]interface{}{
@@ -66,7 +69,7 @@ func main() {
 		"StrIn":              string(searchJSON),
 	}
 	testRequest(endpoint, transaction2)
-	
+
 	// Тест 3: lowercase (все маленькими)
 	fmt.Println("\nTest 3: lowercase...")
 	transaction3 := map[string]interface{}{
@@ -78,7 +81,7 @@ func main() {
 		"strin":              string(searchJSON),
 	}
 	testRequest(endpoint, transaction3)
-	
+
 	// Тест 4: UPPERCASE (все большими)
 	fmt.Println("\nTest 4: UPPERCASE...")
 	transaction4 := map[string]interface{}{
@@ -90,7 +93,7 @@ func main() {
 		"STRIN":              string(searchJSON),
 	}
 	testRequest(endpoint, transaction4)
-	
+
 	// Тест 5: Смешанный вариант (как в документации из отчета)
 	fmt.Println("\nTest 5: Mixed case from documentation...")
 	transaction5 := map[string]interface{}{
@@ -102,7 +105,7 @@ func main() {
 		"strIn":              string(searchJSON),
 	}
 	testRequest(endpoint, transaction5)
-	
+
 	fmt.Println("\n=====================================")
 	fmt.Println("Case sensitivity test completed!")
 	fmt.Println("=====================================")
@@ -110,29 +113,29 @@ func main() {
 
 func testRequest(endpoint string, transaction map[string]interface{}) {
 	jsonData, _ := json.Marshal(transaction)
-	
+
 	// Показываем только ключи для краткости
 	fmt.Printf("Keys used: ")
 	for key := range transaction {
 		fmt.Printf("%s ", key)
 	}
 	fmt.Println()
-	
+
 	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Printf("❌ HTTP Error: %v\n", err)
 		return
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Response: %s\n", string(body))
 		return
 	}
-	
+
 	// Анализируем результат
 	if rezultat, ok := result["Rezultat"]; ok {
 		if rezultat == float64(3) {

@@ -7,19 +7,20 @@ const LOG_CONFIG = {
   enabled: isDev,
   // Module-specific settings (enable/disable per module)
   modules: {
-    auth: false,       // Very verbose, disabled by default
-    api: false,        // Very verbose, disabled by default  
-    search: false,     // Very verbose, disabled by default
-    cart: false,       // Disabled by default
-    chat: false,       // Disabled by default
-    general: false,    // General debug logs, disabled by default
-  }
+    auth: false, // Very verbose, disabled by default
+    api: false, // Very verbose, disabled by default
+    search: false, // Very verbose, disabled by default
+    cart: false, // Disabled by default
+    chat: false, // Disabled by default
+    general: false, // General debug logs, disabled by default
+  },
 };
 
 export const logger = {
   // General logging
   debug: (...args: unknown[]) => {
-    if (LOG_CONFIG.enabled && LOG_CONFIG.modules.general) console.log('[DEBUG]', ...args);
+    if (LOG_CONFIG.enabled && LOG_CONFIG.modules.general)
+      console.log('[DEBUG]', ...args);
   },
   info: (...args: unknown[]) => {
     if (LOG_CONFIG.enabled) console.info('[INFO]', ...args);
@@ -30,14 +31,16 @@ export const logger = {
   error: (...args: unknown[]) => {
     console.error('[ERROR]', ...args);
   },
-  
+
   // Module-specific loggers
   auth: {
     debug: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.auth) console.log('[AUTH]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.auth)
+        console.log('[AUTH]', ...args);
     },
     info: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.auth) console.info('[AUTH]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.auth)
+        console.info('[AUTH]', ...args);
     },
     warn: (...args: unknown[]) => {
       if (LOG_CONFIG.enabled) console.warn('[AUTH]', ...args);
@@ -46,13 +49,15 @@ export const logger = {
       console.error('[AUTH]', ...args);
     },
   },
-  
+
   api: {
     debug: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.api) console.log('[API]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.api)
+        console.log('[API]', ...args);
     },
     info: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.api) console.info('[API]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.api)
+        console.info('[API]', ...args);
     },
     warn: (...args: unknown[]) => {
       if (LOG_CONFIG.enabled) console.warn('[API]', ...args);
@@ -64,10 +69,12 @@ export const logger = {
 
   search: {
     debug: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.search) console.log('[SEARCH]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.search)
+        console.log('[SEARCH]', ...args);
     },
     info: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.search) console.info('[SEARCH]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.search)
+        console.info('[SEARCH]', ...args);
     },
     warn: (...args: unknown[]) => {
       if (LOG_CONFIG.enabled) console.warn('[SEARCH]', ...args);
@@ -79,10 +86,12 @@ export const logger = {
 
   cart: {
     debug: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.cart) console.log('[CART]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.cart)
+        console.log('[CART]', ...args);
     },
     info: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.cart) console.info('[CART]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.cart)
+        console.info('[CART]', ...args);
     },
     warn: (...args: unknown[]) => {
       if (LOG_CONFIG.enabled) console.warn('[CART]', ...args);
@@ -94,10 +103,12 @@ export const logger = {
 
   chat: {
     debug: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.chat) console.log('[CHAT]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.chat)
+        console.log('[CHAT]', ...args);
     },
     info: (...args: unknown[]) => {
-      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.chat) console.info('[CHAT]', ...args);
+      if (LOG_CONFIG.enabled && LOG_CONFIG.modules.chat)
+        console.info('[CHAT]', ...args);
     },
     warn: (...args: unknown[]) => {
       if (LOG_CONFIG.enabled) console.warn('[CHAT]', ...args);

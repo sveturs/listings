@@ -19,7 +19,11 @@ export default function GoogleCallbackPage() {
         const state = urlParams.get('state');
         const oauthError = urlParams.get('error');
 
-        console.log('[OAuth Callback] Params from URL:', { code, state, oauthError });
+        console.log('[OAuth Callback] Params from URL:', {
+          code,
+          state,
+          oauthError,
+        });
         console.log('[OAuth Callback] Full URL:', window.location.href);
 
         // Handle OAuth error
@@ -32,7 +36,7 @@ export default function GoogleCallbackPage() {
         // If no code, try searchParams as fallback
         let finalCode = code;
         let finalState = state;
-        
+
         if (!code) {
           console.log('[OAuth Callback] No code in URL, trying searchParams');
           finalCode = searchParams.get('code');
@@ -40,7 +44,10 @@ export default function GoogleCallbackPage() {
           const spError = searchParams.get('error');
 
           if (spError) {
-            console.error('[OAuth Callback] OAuth error from searchParams:', spError);
+            console.error(
+              '[OAuth Callback] OAuth error from searchParams:',
+              spError
+            );
             setError('Authorization failed. Please try again.');
             return;
           }
@@ -68,20 +75,29 @@ export default function GoogleCallbackPage() {
           credentials: 'include', // Important for cookies
           redirect: 'manual', // Не следовать за редиректами автоматически
           headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
           },
         });
 
-        console.log('[OAuth Callback] Backend response status:', response.status);
+        console.log(
+          '[OAuth Callback] Backend response status:',
+          response.status
+        );
 
         // Обработка редиректа от Auth Service (302/307)
-        if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 307) {
-          console.log('[OAuth Callback] Got redirect response from Auth Service');
-          
+        if (
+          response.type === 'opaqueredirect' ||
+          response.status === 302 ||
+          response.status === 307
+        ) {
+          console.log(
+            '[OAuth Callback] Got redirect response from Auth Service'
+          );
+
           // При редиректе Auth Service должен установить cookies
           // Даём небольшую задержку и пробуем refresh
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
           // Пробуем получить токен через refresh
           const refreshResponse = await fetch('/api/v1/auth/refresh', {
             method: 'POST',
@@ -93,29 +109,37 @@ export default function GoogleCallbackPage() {
 
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
-            console.log('[OAuth Callback] Got tokens via refresh after redirect:', refreshData);
-            
+            console.log(
+              '[OAuth Callback] Got tokens via refresh after redirect:',
+              refreshData
+            );
+
             if (refreshData.access_token) {
               tokenManager.setAccessToken(refreshData.access_token);
               if (refreshData.refresh_token) {
                 tokenManager.setRefreshToken(refreshData.refresh_token);
               }
-              
+
               // Сохраняем пользователя в sessionStorage
               if (refreshData.user) {
-                sessionStorage.setItem('svetu_user', JSON.stringify(refreshData.user));
+                sessionStorage.setItem(
+                  'svetu_user',
+                  JSON.stringify(refreshData.user)
+                );
               }
-              
+
               // Триггерим событие для немедленного обновления AuthContext
               if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('tokenChanged', {
-                  detail: {
-                    token: refreshData.access_token,
-                    action: 'set'
-                  }
-                }));
+                window.dispatchEvent(
+                  new CustomEvent('tokenChanged', {
+                    detail: {
+                      token: refreshData.access_token,
+                      action: 'set',
+                    },
+                  })
+                );
               }
-              
+
               setStatus('Login successful! Redirecting...');
               setTimeout(() => {
                 router.replace('/');
@@ -123,7 +147,7 @@ export default function GoogleCallbackPage() {
               return;
             }
           }
-          
+
           // Если refresh не сработал, пробуем извлечь токен из Location заголовка
           const location = response.headers.get('Location');
           if (location) {
@@ -141,7 +165,11 @@ export default function GoogleCallbackPage() {
           }
         }
 
-        if (!response.ok && response.status !== 302 && response.status !== 307) {
+        if (
+          !response.ok &&
+          response.status !== 302 &&
+          response.status !== 307
+        ) {
           const errorText = await response.text();
           console.error('[OAuth Callback] Backend error:', errorText);
           setError('Authentication failed. Please try again.');
@@ -149,13 +177,19 @@ export default function GoogleCallbackPage() {
         }
 
         // Handle Auth Service response
-        console.log('[OAuth Callback] Backend response status:', response.status);
-        console.log('[OAuth Callback] Response headers:', Object.fromEntries(response.headers.entries()));
+        console.log(
+          '[OAuth Callback] Backend response status:',
+          response.status
+        );
+        console.log(
+          '[OAuth Callback] Response headers:',
+          Object.fromEntries(response.headers.entries())
+        );
 
         // Auth Service может возвращать либо JSON с токенами, либо HTML redirect
         const contentType = response.headers.get('content-type') || '';
         console.log('[OAuth Callback] Response content-type:', contentType);
-        
+
         if (contentType.includes('application/json')) {
           // JSON response - попытка получить токены напрямую
           try {
@@ -172,26 +206,35 @@ export default function GoogleCallbackPage() {
             }
 
             if (accessToken) {
-              console.log('[OAuth Callback] Got access token from JSON response, saving to TokenManager');
+              console.log(
+                '[OAuth Callback] Got access token from JSON response, saving to TokenManager'
+              );
               tokenManager.setAccessToken(accessToken);
-              
+
               // Также сохраняем refresh токен если есть
-              const refreshToken = data.refresh_token || (data.data && data.data.refresh_token);
+              const refreshToken =
+                data.refresh_token || (data.data && data.data.refresh_token);
               if (refreshToken) {
                 tokenManager.setRefreshToken(refreshToken);
               }
-              
+
               setStatus('Login successful! Redirecting...');
               setTimeout(() => {
                 router.replace('/');
               }, 1000);
               return;
             } else {
-              console.warn('[OAuth Callback] JSON response without access token:', data);
+              console.warn(
+                '[OAuth Callback] JSON response without access token:',
+                data
+              );
               // Fallback to refresh flow
             }
           } catch (jsonError) {
-            console.error('[OAuth Callback] Failed to parse JSON response:', jsonError);
+            console.error(
+              '[OAuth Callback] Failed to parse JSON response:',
+              jsonError
+            );
             // Fallback to refresh flow
           }
         }
@@ -200,10 +243,10 @@ export default function GoogleCallbackPage() {
         // Auth Service должен был установить httpOnly refresh_token cookie
         console.log('[OAuth Callback] Trying refresh flow for access token...');
         setStatus('Completing authentication...');
-        
+
         // Небольшая задержка для обеспечения что cookie установлены
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         try {
           const refreshResponse = await fetch('/api/v1/auth/refresh', {
             method: 'POST',
@@ -213,7 +256,10 @@ export default function GoogleCallbackPage() {
             },
           });
 
-          console.log('[OAuth Callback] Refresh response status:', refreshResponse.status);
+          console.log(
+            '[OAuth Callback] Refresh response status:',
+            refreshResponse.status
+          );
 
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
@@ -226,38 +272,53 @@ export default function GoogleCallbackPage() {
             }
 
             if (accessToken) {
-              console.log('[OAuth Callback] Got access token from refresh, saving to TokenManager');
+              console.log(
+                '[OAuth Callback] Got access token from refresh, saving to TokenManager'
+              );
               tokenManager.setAccessToken(accessToken);
-              
+
               // Также сохраняем refresh токен если есть
-              const refreshToken = refreshData.refresh_token || (refreshData.data && refreshData.data.refresh_token);
+              const refreshToken =
+                refreshData.refresh_token ||
+                (refreshData.data && refreshData.data.refresh_token);
               if (refreshToken) {
                 tokenManager.setRefreshToken(refreshToken);
               }
-              
+
               setStatus('Login successful! Redirecting...');
               setTimeout(() => {
                 router.replace('/');
               }, 1000);
               return;
             } else {
-              console.error('[OAuth Callback] No access token in refresh response:', refreshData);
+              console.error(
+                '[OAuth Callback] No access token in refresh response:',
+                refreshData
+              );
             }
           } else {
             const errorText = await refreshResponse.text();
-            console.error('[OAuth Callback] Refresh failed:', refreshResponse.status, errorText);
-            
+            console.error(
+              '[OAuth Callback] Refresh failed:',
+              refreshResponse.status,
+              errorText
+            );
+
             // Специальная обработка 401 - возможно cookie не установлены
             if (refreshResponse.status === 401) {
-              console.error('[OAuth Callback] 401 on refresh - likely no refresh token cookie set by Auth Service');
-              setError('Authentication setup incomplete. Please contact support.');
+              console.error(
+                '[OAuth Callback] 401 on refresh - likely no refresh token cookie set by Auth Service'
+              );
+              setError(
+                'Authentication setup incomplete. Please contact support.'
+              );
               return;
             }
           }
         } catch (refreshError) {
           console.error('[OAuth Callback] Error during refresh:', refreshError);
         }
-        
+
         // Если дошли до сюда - что-то пошло не так
         console.error('[OAuth Callback] All token acquisition methods failed');
         setError('Authentication failed. Please try again.');
@@ -281,9 +342,9 @@ export default function GoogleCallbackPage() {
               <div className="text-error text-4xl mb-4">⚠️</div>
               <h2 className="card-title mt-4 text-error">Login Failed</h2>
               <p className="text-base-content/70 mb-4">{error}</p>
-              <button 
+              <button
                 className="btn btn-primary"
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
               >
                 Return to Home
               </button>

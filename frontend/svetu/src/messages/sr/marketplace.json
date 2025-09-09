@@ -1,6 +1,7 @@
 {
   "home": "Glavna",
-  "homeContent": {
+  "homeContent": "Dobrodošli na marketplace",
+  "homeContentObj": {
     "loginSuccessful": "Uspešno ste se prijavili!",
     "searchPlaceholder": "Pretražite proizvode i usluge...",
     "paymentsNowAvailable": "Plaćanja su sada dostupna",

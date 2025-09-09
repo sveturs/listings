@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -11,7 +14,7 @@ import (
 
 func main() {
 	endpoint := "http://212.62.32.201/WspWebApi/transakcija"
-	
+
 	fmt.Println("=====================================")
 	fmt.Println("Post Express RAW API Test")
 	fmt.Println("=====================================")
@@ -20,7 +23,7 @@ func main() {
 
 	// Тест 1: Простой запрос с корректными данными
 	fmt.Println("Test 1: Basic transaction with correct structure...")
-	
+
 	// Подготовка данных клиента
 	clientData := map[string]interface{}{
 		"Username":          "b2b@svetu.rs",
@@ -34,18 +37,18 @@ func main() {
 		"IPAdresa":          "127.0.0.1",
 		"IdPartnera":        10109, // Partner ID
 	}
-	
+
 	clientJSON, _ := json.Marshal(clientData)
-	
+
 	// Запрос для поиска населенных пунктов
 	searchData := map[string]interface{}{
 		"Naziv":           "Novi Sad",
 		"BrojSlogova":     10,
 		"NacinSortiranja": 0,
 	}
-	
+
 	searchJSON, _ := json.Marshal(searchData)
-	
+
 	// Формирование транзакции
 	transaction := map[string]interface{}{
 		"StrKlijent":         string(clientJSON),
@@ -55,7 +58,7 @@ func main() {
 		"IdTransakcija":      fmt.Sprintf("TEST-%d", time.Now().Unix()),
 		"StrIn":              string(searchJSON),
 	}
-	
+
 	// Отправка запроса
 	response, err := sendRequest(endpoint, transaction)
 	if err != nil {
@@ -64,12 +67,12 @@ func main() {
 		fmt.Printf("✅ Response received:\n")
 		prettyPrint(response)
 	}
-	
+
 	fmt.Println("\n=====================================")
-	
+
 	// Тест 2: Создание манифеста (транзакция 73)
 	fmt.Println("Test 2: Create manifest (transaction 73)...")
-	
+
 	// Данные манифеста
 	manifest := map[string]interface{}{
 		"Posiljalac": map[string]interface{}{
@@ -108,9 +111,9 @@ func main() {
 		"IdPartnera":     10109,
 		"NazivManifesta": fmt.Sprintf("SVETU-%s", time.Now().Format("20060102-150405")),
 	}
-	
+
 	manifestJSON, _ := json.Marshal(manifest)
-	
+
 	// Транзакция для манифеста
 	manifestTx := map[string]interface{}{
 		"StrKlijent":         string(clientJSON),
@@ -120,7 +123,7 @@ func main() {
 		"IdTransakcija":      fmt.Sprintf("MAN-%d", time.Now().Unix()),
 		"StrIn":              string(manifestJSON),
 	}
-	
+
 	response, err = sendRequest(endpoint, manifestTx)
 	if err != nil {
 		fmt.Printf("❌ Error: %v\n", err)
@@ -128,18 +131,18 @@ func main() {
 		fmt.Printf("✅ Response received:\n")
 		prettyPrint(response)
 	}
-	
+
 	fmt.Println("\n=====================================")
-	
+
 	// Тест 3: Отслеживание (транзакция 15)
 	fmt.Println("Test 3: Track shipment (transaction 15)...")
-	
+
 	trackData := map[string]interface{}{
 		"BrojPosiljke": "TEST123456",
 	}
-	
+
 	trackJSON, _ := json.Marshal(trackData)
-	
+
 	trackTx := map[string]interface{}{
 		"StrKlijent":         string(clientJSON),
 		"Servis":             101, // 101 для B2B!
@@ -148,7 +151,7 @@ func main() {
 		"IdTransakcija":      fmt.Sprintf("TRK-%d", time.Now().Unix()),
 		"StrIn":              string(trackJSON),
 	}
-	
+
 	response, err = sendRequest(endpoint, trackTx)
 	if err != nil {
 		fmt.Printf("❌ Error: %v\n", err)
@@ -156,7 +159,7 @@ func main() {
 		fmt.Printf("✅ Response received:\n")
 		prettyPrint(response)
 	}
-	
+
 	fmt.Println("\n=====================================")
 	fmt.Println("Raw API test completed!")
 	fmt.Println("=====================================")
@@ -167,24 +170,24 @@ func sendRequest(endpoint string, data interface{}) (map[string]interface{}, err
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %v", err)
 	}
-	
+
 	fmt.Printf("Request:\n")
 	prettyPrint(data)
 	fmt.Println()
-	
+
 	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %v", err)
 	}
 	defer resp.Body.Close()
-	
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %v", err)
 	}
-	
+
 	fmt.Printf("Raw response: %s\n", string(body))
-	
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err != nil {
 		// Если не удается распарсить как JSON, возвращаем как строку
@@ -192,7 +195,7 @@ func sendRequest(endpoint string, data interface{}) (map[string]interface{}, err
 			"raw": string(body),
 		}, nil
 	}
-	
+
 	return result, nil
 }
 

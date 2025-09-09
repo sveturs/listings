@@ -1,7 +1,11 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -9,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"crypto/rand"
 )
 
 // TransakcijaIn - структура запроса согласно документации
@@ -38,16 +41,16 @@ type Klijent struct {
 
 // TTKretanjeIn - структура для отслеживания посылки
 type TTKretanjeIn struct {
-	VrstaUsluge   int    `json:"VrstaUsluge"`
-	EksterniBroj  string `json:"EksterniBroj"`
-	PrijemniBroj  string `json:"PrijemniBroj"`
+	VrstaUsluge  int    `json:"VrstaUsluge"`
+	EksterniBroj string `json:"EksterniBroj"`
+	PrijemniBroj string `json:"PrijemniBroj"`
 }
 
 // ManifestIn - структура для создания манифеста
 type ManifestIn struct {
-	ExtIdManifest string         `json:"ExtIdManifest"`
-	IdTipPosiljke int            `json:"IdTipPosiljke"`
-	Porudzbine    []Porudzbina   `json:"Porudzbine"`
+	ExtIdManifest string       `json:"ExtIdManifest"`
+	IdTipPosiljke int          `json:"IdTipPosiljke"`
+	Porudzbine    []Porudzbina `json:"Porudzbine"`
 }
 
 // Porudzbina - структура заказа
@@ -59,23 +62,23 @@ type Porudzbina struct {
 
 // Posiljka - структура посылки
 type Posiljka struct {
-	Rbr                int      `json:"Rbr"`
-	PrijemniBroj       string   `json:"PrijemniBroj,omitempty"`
-	ImaPrijemniBrojDN  string   `json:"ImaPrijemniBrojDN"`
-	ExtBrend           string   `json:"ExtBrend"`
-	ExtMagacin         string   `json:"ExtMagacin"`
-	ExtReferenca       string   `json:"ExtReferenca"`
-	NacinPrijema       string   `json:"NacinPrijema"`
-	IdRukovanje        int      `json:"IdRukovanje"`
-	NacinPlacanja      string   `json:"NacinPlacanja"`
-	Posiljalac         Korisnik `json:"Posiljalac"`
-	Primalac           Korisnik `json:"Primalac"`
-	Masa               int      `json:"Masa"`
-	Vrednost           int64    `json:"Vrednost"`
-	VrednostDTS        int64    `json:"VrednostDTS"`
-	Otkupnina          int64    `json:"Otkupnina"`
-	Sadrzaj            string   `json:"Sadrzaj"`
-	PosebneUsluge      string   `json:"PosebneUsluge,omitempty"`
+	Rbr               int      `json:"Rbr"`
+	PrijemniBroj      string   `json:"PrijemniBroj,omitempty"`
+	ImaPrijemniBrojDN string   `json:"ImaPrijemniBrojDN"`
+	ExtBrend          string   `json:"ExtBrend"`
+	ExtMagacin        string   `json:"ExtMagacin"`
+	ExtReferenca      string   `json:"ExtReferenca"`
+	NacinPrijema      string   `json:"NacinPrijema"`
+	IdRukovanje       int      `json:"IdRukovanje"`
+	NacinPlacanja     string   `json:"NacinPlacanja"`
+	Posiljalac        Korisnik `json:"Posiljalac"`
+	Primalac          Korisnik `json:"Primalac"`
+	Masa              int      `json:"Masa"`
+	Vrednost          int64    `json:"Vrednost"`
+	VrednostDTS       int64    `json:"VrednostDTS"`
+	Otkupnina         int64    `json:"Otkupnina"`
+	Sadrzaj           string   `json:"Sadrzaj"`
+	PosebneUsluge     string   `json:"PosebneUsluge,omitempty"`
 }
 
 // Korisnik - структура пользователя
@@ -110,7 +113,7 @@ func main() {
 	username := os.Getenv("POST_EXPRESS_WSP_USERNAME")
 	password := os.Getenv("POST_EXPRESS_WSP_PASSWORD")
 	endpoint := os.Getenv("POST_EXPRESS_WSP_ENDPOINT")
-	
+
 	if username == "" {
 		username = "b2b@svetu.rs"
 	}
@@ -334,7 +337,7 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 	fmt.Printf("  IdVrstaTransakcije: %d\n", req.IdVrstaTransakcije)
 	fmt.Printf("  TipSerijalizacije: %d\n", req.TipSerijalizacije)
 	fmt.Printf("  IdTransakcija: %s\n", req.IdTransakcija)
-	
+
 	// Парсим клиента для показа
 	var klijent Klijent
 	json.Unmarshal([]byte(req.StrKlijent), &klijent)
@@ -367,14 +370,14 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 	}
 
 	fmt.Printf("\n📥 Статус ответа: %s\n", resp.Status)
-	
+
 	// Пытаемся распарсить как JSON для красивого вывода
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err == nil {
 		prettyJSON, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Println("📄 Тело ответа:")
 		fmt.Println(string(prettyJSON))
-		
+
 		// Анализ результата
 		if rezultat, ok := result["Rezultat"].(float64); ok {
 			switch int(rezultat) {

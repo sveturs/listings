@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -50,7 +53,7 @@ func main() {
 	// voroshilovdo@gmail.com has id=2 in main DB
 	now := time.Now()
 	claims := Claims{
-		UserID: 2, // Correct ID from main DB 
+		UserID: 2, // Correct ID from main DB
 		Email:  "voroshilovdo@gmail.com",
 		Name:   "Dmitry Voroshilov",
 		Roles:  []string{"admin"},
@@ -66,7 +69,7 @@ func main() {
 
 	// Create token
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	
+
 	// Sign with private key
 	tokenString, err := token.SignedString(privateKey)
 	if err != nil {

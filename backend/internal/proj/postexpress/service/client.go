@@ -42,7 +42,7 @@ type WSPConfig struct {
 	DeviceName      string
 	ApplicationName string
 	Version         string
-	PartnerID       int    // Добавлено: ID партнера (10109 для svetu.rs)
+	PartnerID       int // Добавлено: ID партнера (10109 для svetu.rs)
 }
 
 // NewWSPClient создает новый экземпляр WSP клиента
@@ -95,12 +95,12 @@ func (c *WSPClientImpl) Transaction(ctx context.Context, req *models.Transaction
 
 	// Подготовка основного запроса
 	transReq := &models.TransakcijaIn{
-		StrKlijent:          string(clientJSON),
-		Servis:              101, // ИСПРАВЛЕНО: 101 для B2B партнеров (не 3!)
-		IdVrstaTransakcije:  req.TransactionType, // ИСПРАВЛЕНО: IdVrstaTransakcije (не IdVrstaTranskacije!)
-		TipSerijalizacije:   2, // JSON (2 для JSON согласно документации)
-		IdTransakcija:       models.GenerateGUID(),
-		StrIn:               req.InputData,
+		StrKlijent:         string(clientJSON),
+		Servis:             101,                 // ИСПРАВЛЕНО: 101 для B2B партнеров (не 3!)
+		IdVrstaTransakcije: req.TransactionType, // ИСПРАВЛЕНО: IdVrstaTransakcije (не IdVrstaTranskacije!)
+		TipSerijalizacije:  2,                   // JSON (2 для JSON согласно документации)
+		IdTransakcija:      models.GenerateGUID(),
+		StrIn:              req.InputData,
 	}
 
 	// Логирование запроса (без пароля)
@@ -315,7 +315,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 	if err != nil {
 		return nil, fmt.Errorf("failed to create shipment via manifest: %w", err)
 	}
-	
+
 	// Преобразуем ответ манифеста в формат WSPShipmentResponse
 	if !manifestResp.Success {
 		return &WSPShipmentResponse{
@@ -323,7 +323,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 			ErrorMessage: manifestResp.ErrorMessage,
 		}, nil
 	}
-	
+
 	// Проверяем результат создания посылки
 	if len(manifestResp.Posiljke) == 0 {
 		return &WSPShipmentResponse{
@@ -331,7 +331,7 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 			ErrorMessage: "no shipment result in manifest response",
 		}, nil
 	}
-	
+
 	posiljkaResult := manifestResp.Posiljke[0]
 	if posiljkaResult.Status != "OK" {
 		return &WSPShipmentResponse{
@@ -339,12 +339,12 @@ func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmen
 			ErrorMessage: posiljkaResult.Greska,
 		}, nil
 	}
-	
+
 	// Возвращаем успешный результат
 	return &WSPShipmentResponse{
-		Success:        true,
-		TrackingNumber: posiljkaResult.PostExpressBroj,
-		Barcode:        posiljkaResult.Barkod,
+		Success:         true,
+		TrackingNumber:  posiljkaResult.PostExpressBroj,
+		Barcode:         posiljkaResult.Barkod,
 		ReferenceNumber: posiljkaResult.BrojPosiljke,
 	}, nil
 }

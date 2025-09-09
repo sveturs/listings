@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
 import config from '@/config';
@@ -31,31 +31,19 @@ interface RoleManagerProps {
   onRoleUpdate?: () => void;
 }
 
-export default function RoleManager({ 
-  userId, 
-  userEmail, 
+export default function RoleManager({
+  userId,
+  userEmail: _userEmail,
   currentRoles = [],
-  onRoleUpdate 
+  onRoleUpdate,
 }: RoleManagerProps) {
   const t = useTranslations('admin');
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>(currentRoles);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [_selectedRole, setSelectedRole] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Fetch available roles from Auth Service
-  useEffect(() => {
-    fetchAvailableRoles();
-  }, []);
-
-  // Fetch user roles from Auth Service
-  useEffect(() => {
-    if (userId) {
-      fetchUserRoles();
-    }
-  }, [userId]);
 
   const fetchAvailableRoles = async () => {
     try {
@@ -66,7 +54,7 @@ export default function RoleManager({
         `${config.getAuthServiceUrl()}/api/v1/roles`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -80,7 +68,7 @@ export default function RoleManager({
     }
   };
 
-  const fetchUserRoles = async () => {
+  const fetchUserRoles = useCallback(async () => {
     try {
       const token = tokenManager.getAccessToken();
       if (!token) return;
@@ -89,7 +77,7 @@ export default function RoleManager({
         `${config.getAuthServiceUrl()}/api/v1/users/${userId}/roles`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -101,7 +89,19 @@ export default function RoleManager({
     } catch (err) {
       console.error('Failed to fetch user roles:', err);
     }
-  };
+  }, [userId]);
+
+  // Fetch available roles from Auth Service
+  useEffect(() => {
+    fetchAvailableRoles();
+  }, []);
+
+  // Fetch user roles from Auth Service
+  useEffect(() => {
+    if (userId) {
+      fetchUserRoles();
+    }
+  }, [userId, fetchUserRoles]);
 
   const assignRole = async (roleName: string) => {
     try {
@@ -118,7 +118,7 @@ export default function RoleManager({
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -168,7 +168,7 @@ export default function RoleManager({
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -215,7 +215,9 @@ export default function RoleManager({
     <div className="space-y-4">
       {/* Current Roles */}
       <div>
-        <h4 className="text-sm font-semibold mb-2">{t('users.currentRoles')}</h4>
+        <h4 className="text-sm font-semibold mb-2">
+          {t('users.currentRoles')}
+        </h4>
         <div className="flex flex-wrap gap-2">
           {userRoles.length === 0 ? (
             <span className="text-gray-500 text-sm">{t('users.noRoles')}</span>
@@ -259,7 +261,9 @@ export default function RoleManager({
           <div className="absolute z-10 mt-2 w-64 rounded-md shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5">
             <div className="py-1">
               {availableRoles
-                .filter(role => !userRoles.some(ur => ur.role_name === role.name))
+                .filter(
+                  (role) => !userRoles.some((ur) => ur.role_name === role.name)
+                )
                 .map((role) => (
                   <button
                     key={role.name}
@@ -268,7 +272,9 @@ export default function RoleManager({
                   >
                     <div className="font-medium">{role.display_name}</div>
                     {role.description && (
-                      <div className="text-xs text-gray-500">{role.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {role.description}
+                      </div>
                     )}
                   </button>
                 ))}

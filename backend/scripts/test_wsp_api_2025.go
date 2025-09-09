@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -61,30 +64,30 @@ type Porudzbina struct {
 
 // Posiljka - структура посылки
 type Posiljka struct {
-	Rbr                int       `json:"Rbr"`
-	PrijemniBroj       string    `json:"PrijemniBroj,omitempty"`
-	ImaPrijemniBrojDN  string    `json:"ImaPrijemniBrojDN"`
-	ExtBrend           string    `json:"ExtBrend"`
-	ExtMagacin         string    `json:"ExtMagacin"`
-	ExtReferenca       string    `json:"ExtReferenca"`
-	NacinPrijema       string    `json:"NacinPrijema"`
-	MestoPreuzimanja   *Korisnik `json:"MestoPreuzimanja,omitempty"` // Место преузимanja как объект Korisnik
-	IdRukovanje        int       `json:"IdRukovanje"`
-	NacinPlacanja      string    `json:"NacinPlacanja"`
-	Posiljalac         Korisnik  `json:"Posiljalac"`
-	Primalac           Korisnik  `json:"Primalac"`
-	Masa               int       `json:"Masa"`
-	Vrednost           int64     `json:"Vrednost"`
-	VrednostDTS        int64     `json:"VrednostDTS"`
-	Otkupnina          int64     `json:"Otkupnina"`
-	Sadrzaj            string    `json:"Sadrzaj"`
-	PosebneUsluge      string    `json:"PosebneUsluge,omitempty"`
+	Rbr               int       `json:"Rbr"`
+	PrijemniBroj      string    `json:"PrijemniBroj,omitempty"`
+	ImaPrijemniBrojDN string    `json:"ImaPrijemniBrojDN"`
+	ExtBrend          string    `json:"ExtBrend"`
+	ExtMagacin        string    `json:"ExtMagacin"`
+	ExtReferenca      string    `json:"ExtReferenca"`
+	NacinPrijema      string    `json:"NacinPrijema"`
+	MestoPreuzimanja  *Korisnik `json:"MestoPreuzimanja,omitempty"` // Место преузимanja как объект Korisnik
+	IdRukovanje       int       `json:"IdRukovanje"`
+	NacinPlacanja     string    `json:"NacinPlacanja"`
+	Posiljalac        Korisnik  `json:"Posiljalac"`
+	Primalac          Korisnik  `json:"Primalac"`
+	Masa              int       `json:"Masa"`
+	Vrednost          int64     `json:"Vrednost"`
+	VrednostDTS       int64     `json:"VrednostDTS"`
+	Otkupnina         int64     `json:"Otkupnina"`
+	Sadrzaj           string    `json:"Sadrzaj"`
+	PosebneUsluge     string    `json:"PosebneUsluge,omitempty"`
 }
 
 // Korisnik - структура пользователя
 type Korisnik struct {
 	Vrsta          string `json:"Vrsta"`
-	Naziv          string `json:"Naziv,omitempty"`     // Обязательно для физлиц
+	Naziv          string `json:"Naziv,omitempty"` // Обязательно для физлиц
 	Prezime        string `json:"Prezime,omitempty"`
 	Ime            string `json:"Ime,omitempty"`
 	KontaktTelefon string `json:"KontaktTelefon"`
@@ -275,15 +278,15 @@ func testManifest() {
 							KontaktTelefon: "+381111234567",
 							Adresa: Adresa{
 								OznakaZemlje: "RS", // Добавлено: код страны
-								IdNaselje: &beogradId,
-								Naselje:   "Beograd",
-								Ulica:     "Knez Mihailova",
-								Broj:      "10",
-								PostBroj:  "11000",
+								IdNaselje:    &beogradId,
+								Naselje:      "Beograd",
+								Ulica:        "Knez Mihailova",
+								Broj:         "10",
+								PostBroj:     "11000",
 							},
 						},
-						IdRukovanje:       1,
-						NacinPlacanja:     "U", // U - услуга уговорная (для B2B)
+						IdRukovanje:   1,
+						NacinPlacanja: "U", // U - услуга уговорная (для B2B)
 						Posiljalac: Korisnik{
 							Vrsta:          "P", // Юридическое лицо
 							Naziv:          "SVETU PLATFORMA DOO",
@@ -292,15 +295,15 @@ func testManifest() {
 							EMail:          "test@svetu.rs",
 							Adresa: Adresa{
 								OznakaZemlje: "RS", // Добавлено: код страны
-								IdNaselje: &beogradId,
-								Naselje:   "Beograd",
-								Ulica:     "Knez Mihailova",
-								Broj:      "10",
-								PostBroj:  "11000",
+								IdNaselje:    &beogradId,
+								Naselje:      "Beograd",
+								Ulica:        "Knez Mihailova",
+								Broj:         "10",
+								PostBroj:     "11000",
 							},
 						},
 						Primalac: Korisnik{
-							Vrsta:          "F", // Физическое лицо
+							Vrsta:          "F",              // Физическое лицо
 							Naziv:          "Petar Petrović", // Обязательно для физлиц
 							Prezime:        "Petrović",
 							Ime:            "Petar",
@@ -308,13 +311,13 @@ func testManifest() {
 							EMail:          "petar@example.com",
 							Adresa: Adresa{
 								OznakaZemlje: "RS", // Добавлено: код страны
-								IdNaselje: &beogradId,
-								Naselje:   "Beograd",
-								Ulica:     "Bulevar kralja Aleksandra",
-								Broj:      "50",
-								PostBroj:  "11000",
-								Sprat:     "3",
-								Stan:      "12",
+								IdNaselje:    &beogradId,
+								Naselje:      "Beograd",
+								Ulica:        "Bulevar kralja Aleksandra",
+								Broj:         "50",
+								PostBroj:     "11000",
+								Sprat:        "3",
+								Stan:         "12",
 							},
 						},
 						Masa:          1000, // 1 кг

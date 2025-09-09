@@ -1,6 +1,7 @@
 {
   "home": "Главная",
-  "homeContent": {
+  "homeContent": "Добро пожаловать на маркетплейс",
+  "homeContentObj": {
     "loginSuccessful": "Вы успешно вошли в систему!",
     "searchPlaceholder": "Поиск товаров и услуг...",
     "paymentsNowAvailable": "Платежи теперь доступны",

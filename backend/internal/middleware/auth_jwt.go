@@ -219,9 +219,10 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				c.Locals("jwt_token", tokenFromQuery)
 
 				// Проверяем роли
+				const adminRole = "admin"
 				isAdmin := false
 				for _, role := range authClaims.Roles {
-					if role == "admin" {
+					if role == adminRole {
 						isAdmin = true
 						break
 					}
@@ -324,9 +325,10 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 				c.Locals("auth_method", "jwt_auth_service")
 
 				// Проверяем роли
+				const adminRole = "admin"
 				isAdmin := false
 				for _, role := range authClaims.Roles {
-					if role == "admin" {
+					if role == adminRole {
 						isAdmin = true
 						break
 					}
@@ -350,9 +352,10 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 				c.Locals("auth_method", "jwt_cookie_auth_service")
 
 				// Проверяем роли
+				const adminRole = "admin"
 				isAdmin := false
 				for _, role := range authClaims.Roles {
-					if role == "admin" {
+					if role == adminRole {
 						isAdmin = true
 						break
 					}

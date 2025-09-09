@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -36,10 +39,10 @@ type ClientData struct {
 
 // ManifestRequest - запрос для создания манифеста
 type ManifestRequest struct {
-	Naziv       string `json:"naziv"`
-	Napomena    string `json:"napomena"`
-	IdMagacin   int    `json:"idMagacin"`
-	IdTipPosiljke int  `json:"idTipPosiljke"`
+	Naziv         string `json:"naziv"`
+	Napomena      string `json:"napomena"`
+	IdMagacin     int    `json:"idMagacin"`
+	IdTipPosiljke int    `json:"idTipPosiljke"`
 }
 
 // TrackingRequest - запрос для отслеживания
@@ -52,7 +55,7 @@ func main() {
 	username := os.Getenv("POST_EXPRESS_WSP_USERNAME")
 	password := os.Getenv("POST_EXPRESS_WSP_PASSWORD")
 	endpoint := os.Getenv("POST_EXPRESS_WSP_ENDPOINT")
-	
+
 	if username == "" {
 		username = "b2b@svetu.rs"
 	}
@@ -122,7 +125,7 @@ func testGetStores(client *http.Client, endpoint, username, password string) {
 		StrKlijent:         string(clientJSON),
 		Servis:             3,
 		IdVrstaTransakcije: 61, // GetMagacini
-		TipSerijalizacije:  2,   // JSON
+		TipSerijalizacije:  2,  // JSON
 		IdTransakcija:      generateGUID(),
 	}
 
@@ -161,7 +164,7 @@ func testCreateManifest(client *http.Client, endpoint, username, password string
 		StrKlijent:         string(clientJSON),
 		Servis:             3,
 		IdVrstaTransakcije: 73, // Manifest
-		TipSerijalizacije:  2,   // JSON
+		TipSerijalizacije:  2,  // JSON
 		IdTransakcija:      generateGUID(),
 		StrIn:              string(manifestJSON),
 	}
@@ -198,7 +201,7 @@ func testTracking(client *http.Client, endpoint, username, password string) {
 		StrKlijent:         string(clientJSON),
 		Servis:             3,
 		IdVrstaTransakcije: 63, // Tracking
-		TipSerijalizacije:  2,   // JSON
+		TipSerijalizacije:  2,  // JSON
 		IdTransakcija:      generateGUID(),
 		StrIn:              string(trackingJSON),
 	}
@@ -228,7 +231,7 @@ func testGetShipmentTypes(client *http.Client, endpoint, username, password stri
 		StrKlijent:         string(clientJSON),
 		Servis:             3,
 		IdVrstaTransakcije: 58, // GetTipoviPosiljki
-		TipSerijalizacije:  2,   // JSON
+		TipSerijalizacije:  2,  // JSON
 		IdTransakcija:      generateGUID(),
 	}
 
@@ -273,7 +276,7 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 	}
 
 	fmt.Printf("\n📥 Статус ответа: %s\n", resp.Status)
-	
+
 	// Пытаемся распарсить как JSON для красивого вывода
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err == nil {
@@ -323,8 +326,8 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 
 func generateGUID() string {
 	// Простая генерация GUID для тестов
-	return fmt.Sprintf("%d-%d-%d-%d", 
-		time.Now().Unix(), 
+	return fmt.Sprintf("%d-%d-%d-%d",
+		time.Now().Unix(),
 		time.Now().Nanosecond(),
 		os.Getpid(),
 		time.Now().UnixNano()%1000)

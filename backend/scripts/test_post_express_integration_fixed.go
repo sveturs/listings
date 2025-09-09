@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -39,7 +42,7 @@ func main() {
 		Username:        username,
 		Password:        password,
 		Language:        "sr",
-		DeviceType:      "2",                        // ИСПРАВЛЕНО: строка "2" для веб-приложения
+		DeviceType:      "2", // ИСПРАВЛЕНО: строка "2" для веб-приложения
 		Timeout:         30 * time.Second,
 		MaxRetries:      2,
 		RetryDelay:      1 * time.Second,
@@ -79,7 +82,7 @@ func main() {
 
 	// Тест 2: Создание посылки через манифест (транзакция 73)
 	fmt.Println("Test 2: Creating shipment via manifest (transaction 73)...")
-	
+
 	shipmentRequest := &service.WSPShipmentRequest{
 		SenderName:          "Sve Tu Platform",
 		SenderAddress:       "Улица Микија Манојловића 53",
@@ -131,7 +134,7 @@ func main() {
 	if manifestResp != nil && len(manifestResp.Posiljke) > 0 && manifestResp.Posiljke[0].PostExpressBroj != "" {
 		trackingNumber := manifestResp.Posiljke[0].PostExpressBroj
 		fmt.Printf("Test 3: Tracking shipment %s...\n", trackingNumber)
-		
+
 		tracking, err := client.GetShipmentStatus(ctx, trackingNumber)
 		if err != nil {
 			log.Printf("❌ Failed to track shipment: %v", err)
@@ -148,19 +151,19 @@ func main() {
 
 	// Тест 4: Тестирование транзакции напрямую
 	fmt.Println("Test 4: Testing direct transaction with correct parameters...")
-	
+
 	// Подготовка тестового запроса
 	testInput := map[string]interface{}{
 		"TestField": "TestValue",
 	}
-	
+
 	inputJSON, _ := json.Marshal(testInput)
-	
+
 	req := &models.TransactionRequest{
 		TransactionType: 1, // Тестовая транзакция
 		InputData:       string(inputJSON),
 	}
-	
+
 	resp, err := client.Transaction(ctx, req)
 	if err != nil {
 		log.Printf("❌ Transaction failed: %v", err)

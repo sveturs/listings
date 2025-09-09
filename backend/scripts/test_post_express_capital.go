@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package main
 
 import (
@@ -73,7 +76,7 @@ func main() {
 	for _, test := range tests {
 		fmt.Printf("\n📋 Тест: %s\n", test.name)
 		fmt.Println(strings.Repeat("-", 50))
-		
+
 		// Подготовка клиентских данных
 		clientData := ClientData{
 			Username:          username,
@@ -136,7 +139,7 @@ func testAlternativeFormat(client *http.Client, endpoint, username, password str
 	body, _ := io.ReadAll(resp.Body)
 	fmt.Printf("\n📥 Статус ответа: %s\n", resp.Status)
 	fmt.Println("📄 Тело ответа:")
-	
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err == nil {
 		prettyJSON, _ := json.MarshalIndent(result, "", "  ")
@@ -164,13 +167,13 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 
 	body, _ := io.ReadAll(resp.Body)
 	fmt.Printf("\n📥 Статус ответа: %s\n", resp.Status)
-	
+
 	var result map[string]interface{}
 	if err := json.Unmarshal(body, &result); err == nil {
 		prettyJSON, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Println("📄 Тело ответа:")
 		fmt.Println(string(prettyJSON))
-		
+
 		// Анализ результата
 		if rezultat, ok := result["Rezultat"].(float64); ok {
 			switch int(rezultat) {
@@ -200,8 +203,8 @@ func sendRequest(client *http.Client, endpoint string, req TransakcijaIn) {
 }
 
 func generateGUID() string {
-	return fmt.Sprintf("%d-%d-%d", 
-		time.Now().Unix(), 
+	return fmt.Sprintf("%d-%d-%d",
+		time.Now().Unix(),
 		time.Now().Nanosecond(),
 		os.Getpid())
 }

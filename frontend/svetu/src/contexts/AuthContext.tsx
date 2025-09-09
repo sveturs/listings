@@ -334,11 +334,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     //   updateUser(null);
     //   tokenManager.clearTokens();
     // }
-    
+
     // Проверяем и мигрируем старые токены
     const migrated = TokenMigration.runMigration();
     if (migrated) {
-      logger.auth.debug('Token migration performed, user needs to re-authenticate');
+      logger.auth.debug(
+        'Token migration performed, user needs to re-authenticate'
+      );
       updateUser(null);
       setIsLoading(false);
       return;
@@ -370,12 +372,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           typeof parsedUser === 'object' &&
           parsedUser.id &&
           parsedUser.email;
-        
+
         if (hasValidCache) {
           cachedUser = parsedUser;
           // Немедленно устанавливаем пользователя из кеша
           updateUser(cachedUser);
-          logger.auth.debug('[AuthContext] Restored user from cache immediately');
+          logger.auth.debug(
+            '[AuthContext] Restored user from cache immediately'
+          );
         }
       } catch {
         // Поврежденный кеш, очищаем его
@@ -385,18 +389,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Проверяем наличие access token (может быть после OAuth)
     const currentToken = tokenManager.getAccessToken();
-    
+
     if (currentToken && !tokenManager.isTokenExpired(currentToken)) {
-      logger.auth.debug('[AuthContext] Valid access token found, refreshing session');
+      logger.auth.debug(
+        '[AuthContext] Valid access token found, refreshing session'
+      );
       // Есть валидный токен, обновляем сессию чтобы получить полные данные пользователя
       refreshSession();
     } else if (hasValidCache) {
       // Есть кешированный пользователь, но нужно проверить/обновить токен
-      logger.auth.debug('[AuthContext] User cache found, checking token validity');
+      logger.auth.debug(
+        '[AuthContext] User cache found, checking token validity'
+      );
       setTimeout(() => refreshSession(3, true), 100);
     } else {
       // Нет ни токена, ни кеша - пытаемся восстановить через refresh token
-      logger.auth.debug('[AuthContext] No cache or token, attempting full session restore');
+      logger.auth.debug(
+        '[AuthContext] No cache or token, attempting full session restore'
+      );
       refreshSession();
     }
 
@@ -404,18 +414,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       AuthService.cleanup();
     };
-  }, [refreshSession, storageUtils]);
+  }, [refreshSession, storageUtils, updateUser]);
 
   // Listen for token changes from TokenManager
   useEffect(() => {
-    const handleTokenChange = async (event: CustomEvent) => {
-      logger.auth.debug('Token changed event:', event.detail);
-      
-      if (event.detail.action === 'set') {
+    const handleTokenChange = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      logger.auth.debug('Token changed event:', customEvent.detail);
+
+      if (customEvent.detail.action === 'set') {
         // New token was set, refresh session to get user data
         logger.auth.debug('New token detected, refreshing session...');
         await refreshSession(3, false); // Don't skip loading state
-      } else if (event.detail.action === 'cleared') {
+      } else if (customEvent.detail.action === 'cleared') {
         // Token was cleared, clear user state
         logger.auth.debug('Token cleared, clearing user state...');
         updateUser(null);
@@ -424,13 +435,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Add event listener
     if (typeof window !== 'undefined') {
-      window.addEventListener('tokenChanged', handleTokenChange as EventListener);
+      window.addEventListener('tokenChanged', handleTokenChange);
     }
 
     // Cleanup
     return () => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('tokenChanged', handleTokenChange as EventListener);
+        window.removeEventListener('tokenChanged', handleTokenChange);
       }
     };
   }, [refreshSession, updateUser]);

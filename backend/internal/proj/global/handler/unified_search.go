@@ -170,9 +170,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 
 	// Сначала пытаемся получить из JSON body
 	if c.Get("Content-Type") == "application/json" {
-		if err := c.BodyParser(&params); err != nil {
-			// Try query params if JSON parsing fails
-		}
+		_ = c.BodyParser(&params) // Игнорируем ошибку, так как дальше попробуем query params
 	}
 
 	// Получаем параметры из query string (перезаписывают JSON если есть)
@@ -399,10 +397,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		case productTypeStorefront:
 			storefrontCount++
 		}
-		// Детальное логирование первых 5 элементов
-		if marketplaceCount+storefrontCount <= 5 {
-// Debug log removed
-		}
+		// Debug логирование удалено
 	}
 	logger.Info().
 		Int("marketplace_items", marketplaceCount).
@@ -492,7 +487,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		// Проверяем дублирование по ID
 		itemID := "ml_" + strconv.Itoa(listing.ID)
 		if seenIDs[itemID] {
-// Debug log removed
+			// Debug log removed
 			continue
 		}
 		seenIDs[itemID] = true
@@ -552,9 +547,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		}
 
 		// Логируем для отладки
-		if len(items) < 3 {
-			// Adding marketplace item
-		}
+		// Debug code removed
 
 		items = append(items, item)
 	}
@@ -624,7 +617,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Products))
-	for i, product := range results.Products {
+	for _, product := range results.Products {
 		if product == nil {
 			continue
 		}
@@ -658,13 +651,10 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 			CreatedAt: product.CreatedAt,
 		}
 
-		// Логируем для отладки создание storefront товара
-		if i < 3 {
-// Debug log removed
-		}
+		// Debug code removed
 
 		// Добавляем информацию об остатках
-// Debug log removed
+		// Debug log removed
 
 		if product.AvailableQuantity > 0 {
 			stockQty := product.AvailableQuantity
@@ -761,7 +751,7 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 			storefrontIn++
 		}
 	}
-// Debug log removed
+	// Debug log removed
 
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
@@ -1090,7 +1080,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 
 	// Отправляем событие в behavior tracking сервис (если доступен)
 	behaviorSvc := h.services.BehaviorTracking()
-// Debug log removed
+	// Debug log removed
 
 	if behaviorSvc != nil {
 		if err := behaviorSvc.TrackEvent(ctx, userID, trackingReq); err != nil {
@@ -1098,8 +1088,6 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 				Str("session_id", sessionID).
 				Str("query", params.Query).
 				Msg("Failed to track search event")
-		} else {
-// Debug log removed
 		}
 	} else {
 		logger.Warn().Msg("Behavior tracking service is not available")

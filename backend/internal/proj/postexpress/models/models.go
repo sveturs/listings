@@ -300,12 +300,12 @@ type ClientData struct {
 
 // TransakcijaIn представляет входящий запрос к WSP API
 type TransakcijaIn struct {
-	StrKlijent          string `json:"StrKlijent"`
-	Servis              int    `json:"Servis"`
-	IdVrstaTransakcije  int    `json:"IdVrstaTranskacije"` // ВАЖНО: в API опечатка - используется Transkacije вместо Transakcije!
-	TipSerijalizacije   int    `json:"TipSerijalizacije"`
-	IdTransakcija       string `json:"IdTransakcija"`
-	StrIn               string `json:"StrIn"`
+	StrKlijent         string `json:"StrKlijent"`
+	Servis             int    `json:"Servis"`
+	IdVrstaTransakcije int    `json:"IdVrstaTranskacije"` // ВАЖНО: в API опечатка - используется Transkacije вместо Transakcije!
+	TipSerijalizacije  int    `json:"TipSerijalizacije"`
+	IdTransakcija      string `json:"IdTransakcija"`
+	StrIn              string `json:"StrIn"`
 }
 
 // GenerateGUID генерирует новый GUID для транзакции

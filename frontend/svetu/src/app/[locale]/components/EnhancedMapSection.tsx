@@ -299,7 +299,10 @@ export const EnhancedMapSection: React.FC<EnhancedMapSectionProps> = ({
           },
           properties: {
             id: listing.id,
-            price: typeof listing.price === 'string' ? parseFloat(listing.price) : (listing.price || 0),
+            price:
+              typeof listing.price === 'string'
+                ? parseFloat(listing.price)
+                : listing.price || 0,
             title: listing.title,
             category: listing.category,
             isStorefront: listing.isStorefront || false,

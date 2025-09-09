@@ -30,9 +30,9 @@ type Config struct {
 	DeepLUseFreeAPI       bool `yaml:"deepl_use_free_api"`
 	StripeAPIKey          string
 	StripeWebhookSecret   string
-	JWTSecret             string // Deprecated - используется только для обратной совместимости
-	JWTExpirationHours    int    `yaml:"jwt_expiration_hours"`
-	AuthServicePubKeyPath string `yaml:"auth_service_public_key_path"` // Путь к публичному ключу Auth Service
+	JWTSecret             string            // Deprecated - используется только для обратной совместимости
+	JWTExpirationHours    int               `yaml:"jwt_expiration_hours"`
+	AuthServicePubKeyPath string            `yaml:"auth_service_public_key_path"` // Путь к публичному ключу Auth Service
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
@@ -166,7 +166,7 @@ func NewConfig() (*Config, error) {
 
 	// Получаем JWT секретный ключ (deprecated - оставлено для обратной совместимости)
 	config.JWTSecret = os.Getenv("JWT_SECRET")
-	
+
 	// Получаем путь к публичному ключу Auth Service
 	config.AuthServicePubKeyPath = os.Getenv("AUTH_SERVICE_PUBLIC_KEY_PATH")
 	log.Printf("AUTH_SERVICE_PUBLIC_KEY_PATH from env: %s", config.AuthServicePubKeyPath)

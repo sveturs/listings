@@ -320,7 +320,10 @@ export const BentoGridMapEnhanced: React.FC<BentoGridMapEnhancedProps> = ({
         },
         properties: {
           id: listing.id,
-          price: typeof listing.price === 'string' ? parseFloat(listing.price) : (listing.price || 0),
+          price:
+            typeof listing.price === 'string'
+              ? parseFloat(listing.price)
+              : listing.price || 0,
           isStorefront: listing.isStorefront || false,
           storeName: listing.storeName,
           imageUrl: listing.imageUrl,
