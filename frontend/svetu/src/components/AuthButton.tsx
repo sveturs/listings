@@ -44,7 +44,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
   // Временное логирование для отладки
   useEffect(() => {
     console.log('[AuthButton] Unread count:', unreadCount);
-  }, [unreadCount]);
+    console.log('[AuthButton] User data:', user);
+    console.log('[AuthButton] Is admin?:', user?.is_admin);
+  }, [unreadCount, user]);
 
   // Ensure component is mounted before rendering dynamic content
   useEffect(() => {

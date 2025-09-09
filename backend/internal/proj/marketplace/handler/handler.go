@@ -372,13 +372,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Put("/categories/:id/variant-attributes", h.AdminCategories.UpdateCategoryVariantAttributes)
 
 	// Регистрируем маршруты администрирования атрибутов
+	// ВАЖНО: сначала регистрируем более специфичные маршруты, потом параметризованные
+	adminRoutes.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
+	// Регистрируем variant-compatible до :id маршрута
+	if h.VariantMappings != nil {
+		adminRoutes.Get("/attributes/variant-compatible", h.VariantMappings.GetVariantCompatibleAttributes)
+	}
 	adminRoutes.Post("/attributes", h.AdminAttributes.CreateAttribute)
 	adminRoutes.Get("/attributes", h.AdminAttributes.GetAttributes)
 	adminRoutes.Get("/attributes/:id", h.AdminAttributes.GetAttributeByID)
 	adminRoutes.Put("/attributes/:id", h.AdminAttributes.UpdateAttribute)
 	adminRoutes.Delete("/attributes/:id", h.AdminAttributes.DeleteAttribute)
 	adminRoutes.Post("/attributes/:id/translate", h.AdminAttributes.TranslateAttribute)
-	adminRoutes.Post("/attributes/bulk-update", h.AdminAttributes.BulkUpdateAttributes)
 
 	// Маршруты для экспорта/импорта настроек атрибутов
 	adminRoutes.Get("/categories/:categoryId/attributes/export", h.AdminAttributes.ExportCategoryAttributes)
@@ -397,7 +402,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// Новые маршруты для управления вариативными атрибутами через единый интерфейс
 	if h.VariantMappings != nil {
-		adminRoutes.Get("/attributes/variant-compatible", h.VariantMappings.GetVariantCompatibleAttributes)
+		// variant-compatible уже зарегистрирован выше, до :id маршрутов
 		adminRoutes.Get("/variant-attributes/mappings", h.VariantMappings.GetCategoryVariantMappings)
 		adminRoutes.Post("/variant-attributes/mappings", h.VariantMappings.CreateVariantMapping)
 		adminRoutes.Patch("/variant-attributes/mappings/:id", h.VariantMappings.UpdateVariantMapping)

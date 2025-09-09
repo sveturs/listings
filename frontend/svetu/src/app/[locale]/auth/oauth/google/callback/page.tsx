@@ -141,9 +141,9 @@ export default function GoogleCallbackPage() {
               }
 
               setStatus('Login successful! Redirecting...');
-              setTimeout(() => {
-                router.replace('/');
-              }, 1000);
+              
+              // Немедленный редирект с параметром для показа уведомления
+              router.replace('/?login=success');
               return;
             }
           }

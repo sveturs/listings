@@ -110,7 +110,17 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
 	}
 
-	// Сначала проверяем ID пользователя (для обратной совместимости)
+	// ПЕРВЫМ ДЕЛОМ проверяем флаг is_admin из JWT токена (установлен в AuthRequiredJWT)
+	if isAdmin, ok := c.Locals("is_admin").(bool); ok && isAdmin {
+		logger.Info().
+			Int("user_id", userID).
+			Str("source", "jwt_token").
+			Msg("AdminRequired: Access granted - user has admin role in JWT")
+		c.Locals("admin_id", userID)
+		return c.Next()
+	}
+
+	// Затем проверяем ID пользователя (для обратной совместимости)
 	if userID == 1 || userID == 2 || userID == 3 {
 		logger.Info().
 			Int("user_id", userID).
