@@ -14,6 +14,9 @@ import { AuthService } from '@/services/auth';
 import { AuthErrorBoundaryWrapper } from '@/components/AuthErrorBoundaryWrapper';
 import type { User, UpdateProfileRequest } from '@/types/auth';
 import { tokenManager } from '@/utils/tokenManager';
+import { TokenMigration } from '@/utils/tokenMigration';
+// import { forceTokenCleanup } from '@/utils/forceTokenCleanup'; // Отключено - удалял валидные OAuth токены
+import { logger } from '@/utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -54,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.warn(
+        logger.auth.warn(
           'Failed to parse cached user data, clearing cache:',
           error
         );
@@ -202,16 +205,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (retries = 3, skipLoadingState = false) => {
       // Если уже идет обновление сессии, не запускаем новое
       if (isRefreshingSession) {
-        console.log(
-          '[AuthContext] Session refresh already in progress, skipping'
-        );
+        logger.auth.debug('Session refresh already in progress, skipping');
         return;
       }
 
       const now = Date.now();
       if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('RefreshSession skipped due to cooldown');
+          logger.auth.debug('RefreshSession skipped due to cooldown');
         }
         return;
       }
@@ -229,30 +230,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         for (let i = 0; i < retries; i++) {
           try {
             // Сначала пытаемся восстановить сессию через JWT
-            console.log(
+            logger.auth.debug(
               '[AuthContext] Attempting to restore session via JWT...'
             );
             const session = await AuthService.restoreSession();
             if (session && session.authenticated && session.user) {
-              console.log('[AuthContext] JWT session restored successfully');
+              logger.auth.debug('JWT session restored successfully');
               updateUser(session.user);
               setError(null);
             } else {
-              // Если восстановление не удалось, пытаемся получить сессию обычным способом
-              console.log(
-                '[AuthContext] JWT restore failed, trying fallback session...'
-              );
-              const fallbackSession = await AuthService.getSession();
-              if (fallbackSession.authenticated && fallbackSession.user) {
-                console.log(
-                  '[AuthContext] Fallback session restored successfully'
-                );
-                updateUser(fallbackSession.user);
-                setError(null);
-              } else {
-                console.log('[AuthContext] No valid session found');
-                updateUser(null);
-              }
+              // Если восстановление не удалось, значит нет валидной сессии
+              logger.auth.debug('[AuthContext] No valid session to restore');
+              updateUser(null);
             }
             setIsLoading(false);
             return;
@@ -285,12 +274,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Обработка OAuth токена из URL
   useEffect(() => {
     const handleOAuthToken = async () => {
-      console.log('[AuthContext] Checking for OAuth token in URL...');
+      logger.auth.debug('Checking for OAuth token in URL...');
 
       // Проверяем наличие токена в URL (для OAuth callback)
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search);
-        console.log(
+        logger.auth.debug(
           '[AuthContext] Current URL search:',
           window.location.search
         );
@@ -299,19 +288,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const authToken = urlParams.get('auth_token') || urlParams.get('token');
 
         if (authToken) {
-          console.log(
+          logger.auth.debug(
             '[AuthContext] Found OAuth token in URL:',
             authToken.substring(0, 30) + '...'
           );
-          console.log('[AuthContext] Token length:', authToken.length);
+          logger.auth.debug('Token length:', authToken.length);
 
           // Сохраняем токен
           tokenManager.setAccessToken(authToken);
-          console.log('[AuthContext] Token saved to tokenManager');
+          logger.auth.debug('Token saved to tokenManager');
 
           // Проверяем что токен действительно сохранен
           const savedToken = tokenManager.getAccessToken();
-          console.log(
+          logger.auth.debug(
             '[AuthContext] Verification - token retrieved:',
             savedToken ? 'Success' : 'Failed'
           );
@@ -321,15 +310,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           urlParams.delete('token');
           const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
           window.history.replaceState({}, document.title, newUrl);
-          console.log('[AuthContext] Token removed from URL for security');
+          logger.auth.debug('Token removed from URL for security');
 
           // Сразу обновляем сессию после получения токена
-          console.log(
+          logger.auth.debug(
             '[AuthContext] Starting session refresh with new token...'
           );
           await refreshSession(1, false);
         } else {
-          console.log('[AuthContext] No OAuth token found in URL');
+          logger.auth.debug('No OAuth token found in URL');
         }
       }
     };
@@ -338,6 +327,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshSession]); // Выполняется только при монтировании
 
   useEffect(() => {
+    // ОТКЛЮЧЕНО: forceTokenCleanup удалял валидные токены после OAuth
+    // const forceCleaned = forceTokenCleanup();
+    // if (forceCleaned) {
+    //   logger.auth.debug('Forced token cleanup performed');
+    //   updateUser(null);
+    //   tokenManager.clearTokens();
+    // }
+    
+    // Проверяем и мигрируем старые токены
+    const migrated = TokenMigration.runMigration();
+    if (migrated) {
+      logger.auth.debug('Token migration performed, user needs to re-authenticate');
+      updateUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     // Инициализируем TokenManager
     AuthService.initializeTokenManager();
 
@@ -354,6 +360,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Проверяем наличие валидного кешированного пользователя при первой загрузке
     const cachedData = storageUtils.getItem('svetu_user');
     let hasValidCache = false;
+    let cachedUser = null;
 
     if (cachedData) {
       try {
@@ -363,41 +370,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           typeof parsedUser === 'object' &&
           parsedUser.id &&
           parsedUser.email;
+        
+        if (hasValidCache) {
+          cachedUser = parsedUser;
+          // Немедленно устанавливаем пользователя из кеша
+          updateUser(cachedUser);
+          logger.auth.debug('[AuthContext] Restored user from cache immediately');
+        }
       } catch {
         // Поврежденный кеш, очищаем его
         storageUtils.removeItem('svetu_user');
       }
     }
 
-    // Проверяем, есть ли refresh token cookie (возможно после Google OAuth)
-    // const hasRefreshToken = document.cookie.includes('refresh_token=');
-
-    if (hasValidCache) {
-      // Проверяем токен в кеше
-      const cachedUserJson = storageUtils.getItem('svetu_user');
-      if (cachedUserJson) {
-        try {
-          const cachedUser = JSON.parse(cachedUserJson);
-          if (cachedUser && cachedUser.accessToken) {
-            // Проверяем токен
-            if (tokenManager.isTokenExpired(cachedUser.accessToken)) {
-              // Токен истек, обновляем в фоне
-              setTimeout(() => refreshSession(3, true), 100);
-            } else {
-              console.log(
-                '[AuthContext] Cached token is still valid, skipping refresh'
-              );
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to parse cached user:', error);
-        }
-      }
+    // Проверяем наличие access token (может быть после OAuth)
+    const currentToken = tokenManager.getAccessToken();
+    
+    if (currentToken && !tokenManager.isTokenExpired(currentToken)) {
+      logger.auth.debug('[AuthContext] Valid access token found, refreshing session');
+      // Есть валидный токен, обновляем сессию чтобы получить полные данные пользователя
+      refreshSession();
+    } else if (hasValidCache) {
+      // Есть кешированный пользователь, но нужно проверить/обновить токен
+      logger.auth.debug('[AuthContext] User cache found, checking token validity');
+      setTimeout(() => refreshSession(3, true), 100);
     } else {
-      // Если нет валидного кеша, делаем полную проверку
-      // Это покрывает случаи:
-      // - есть refresh token (после Google OAuth)
-      // - нет ни кеша, ни refresh token
+      // Нет ни токена, ни кеша - пытаемся восстановить через refresh token
+      logger.auth.debug('[AuthContext] No cache or token, attempting full session restore');
       refreshSession();
     }
 
@@ -406,6 +405,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       AuthService.cleanup();
     };
   }, [refreshSession, storageUtils]);
+
+  // Listen for token changes from TokenManager
+  useEffect(() => {
+    const handleTokenChange = async (event: CustomEvent) => {
+      logger.auth.debug('Token changed event:', event.detail);
+      
+      if (event.detail.action === 'set') {
+        // New token was set, refresh session to get user data
+        logger.auth.debug('New token detected, refreshing session...');
+        await refreshSession(3, false); // Don't skip loading state
+      } else if (event.detail.action === 'cleared') {
+        // Token was cleared, clear user state
+        logger.auth.debug('Token cleared, clearing user state...');
+        updateUser(null);
+      }
+    };
+
+    // Add event listener
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tokenChanged', handleTokenChange as EventListener);
+    }
+
+    // Cleanup
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('tokenChanged', handleTokenChange as EventListener);
+      }
+    };
+  }, [refreshSession, updateUser]);
 
   // Redirect to login page (matches the interface)
   const login = useCallback(
@@ -467,11 +495,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const updatedProfile = await AuthService.updateProfile(data);
         if (updatedProfile) {
-          console.log('Profile update response:', updatedProfile);
+          logger.auth.debug('Profile update response:', updatedProfile);
 
           // Обновляем пользователя с новыми данными от сервера
           const updatedUser = user ? { ...user, ...updatedProfile } : null;
-          console.log('Updated user data:', updatedUser);
+          logger.auth.debug('Updated user data:', updatedUser);
           updateUser(updatedUser);
 
           // Принудительно получаем свежие данные пользователя с сервера
@@ -479,7 +507,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           lastRefreshAttempt.current = 0;
           try {
             const session = await AuthService.getSession();
-            console.log('Fresh session data:', session);
+            logger.auth.debug('Fresh session data:', session);
             if (session.authenticated && session.user) {
               updateUser(session.user);
             }

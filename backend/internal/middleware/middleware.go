@@ -41,8 +41,14 @@ func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface)
 }
 
 func (m *Middleware) loadAuthServicePublicKey() error {
-	// Пробуем загрузить из файла
-	pubKeyPath := "keys/auth_service_public.pem"
+	// Загружаем из пути, указанного в конфигурации
+	pubKeyPath := m.config.AuthServicePubKeyPath
+	if pubKeyPath == "" {
+		// Используем дефолтный путь если не указан в конфиге
+		pubKeyPath = "keys/auth_service_public.pem"
+	}
+	logger.Info().Str("path", pubKeyPath).Msg("Loading auth service public key from path")
+	
 	pubKeyData, err := os.ReadFile(pubKeyPath)
 	if err != nil {
 		return err

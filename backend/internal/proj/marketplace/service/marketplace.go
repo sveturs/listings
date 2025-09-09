@@ -243,16 +243,17 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 		return s.getSimilarStorefrontProducts(ctx, listingID, limit)
 	}
 
-	log.Printf("Объявление %d является обычным объявлением маркетплейса - используем стандартный поиск", listingID)
+	// log.Printf("Объявление %d является обычным объявлением маркетплейса - используем стандартный поиск", listingID)
 
-	if len(listing.Attributes) > 0 {
-		log.Printf("Атрибуты объявления %d:", listing.ID)
-		for _, attr := range listing.Attributes {
-			log.Printf("  - %s: %s", attr.AttributeName, attr.DisplayValue)
-		}
-	} else {
-		log.Printf("У объявления %d нет атрибутов", listing.ID)
-	}
+	// Закомментировано для снижения шума в логах
+	// if len(listing.Attributes) > 0 {
+	// 	log.Printf("Атрибуты объявления %d:", listing.ID)
+	// 	for _, attr := range listing.Attributes {
+	// 		log.Printf("  - %s: %s", attr.AttributeName, attr.DisplayValue)
+	// 	}
+	// } else {
+	// 	log.Printf("У объявления %d нет атрибутов", listing.ID)
+	// }
 
 	// Создаем калькулятор похожести
 	calculator := NewSimilarityCalculator(s.searchWeights)

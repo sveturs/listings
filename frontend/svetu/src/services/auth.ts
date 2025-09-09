@@ -92,12 +92,26 @@ export class AuthService {
       // Если токен есть и он еще не истек, используем его
       if (accessToken && !tokenManager.isTokenExpired(accessToken)) {
         console.log('[AuthService] Using existing valid access token');
-        return await this.getSession();
+        try {
+          const session = await this.getSession();
+          if (session && session.authenticated) {
+            return session;
+          }
+        } catch (sessionError) {
+          console.log('[AuthService] Session failed with existing token, will try refresh');
+        }
+      }
+
+      // Проверяем есть ли refresh токен
+      const refreshToken = tokenManager.getRefreshToken();
+      if (!refreshToken) {
+        console.log('[AuthService] No refresh token available, cannot restore session');
+        return null;
       }
 
       // Только если токен отсутствует или истек, пытаемся обновить
       console.log(
-        '[AuthService] Access token expired or missing, attempting refresh...'
+        '[AuthService] Access token expired or invalid, attempting refresh...'
       );
       accessToken = await tokenManager.refreshAccessToken();
 
@@ -106,7 +120,7 @@ export class AuthService {
         // Если удалось получить access token, получаем сессию
         return await this.getSession();
       } else {
-        console.log('[AuthService] No access token obtained');
+        console.log('[AuthService] No access token obtained from refresh');
       }
     } catch (error: any) {
       // Обрабатываем специфичные ошибки
@@ -452,12 +466,14 @@ export class AuthService {
           console.error('[AuthService] No access_token in login response');
         }
 
-        // TODO: Handle refresh_token when it's added to the response type
-        // if (loginData.refresh_token) {
-        //   tokenManager.setRefreshToken(loginData.refresh_token);
-        //   // Также сохраняем в localStorage для translationAdminApi
-        //   localStorage.setItem('refresh_token', loginData.refresh_token);
-        // }
+        // Сохраняем refresh_token если есть
+        // Auth Service возвращает refresh_token в ответе
+        if ((loginData as any).refresh_token) {
+          tokenManager.setRefreshToken((loginData as any).refresh_token);
+          console.log('[AuthService] Refresh token saved from login response');
+        } else {
+          console.warn('[AuthService] No refresh_token in login response');
+        }
       }
 
       this.abortControllers.delete('login');

@@ -1,5 +1,6 @@
 import configManager from '@/config';
 import { tokenManager } from '@/utils/tokenManager';
+import { logger } from '@/utils/logger';
 
 // Типы для унифицированного поиска
 export interface UnifiedSearchParams {
@@ -162,7 +163,7 @@ export class UnifiedSearchService {
     const url = new URL(fullUrl, baseUrl || window.location.origin);
 
     // Debug logging
-    console.log('UnifiedSearchService - params received:', params);
+    logger.search.debug('UnifiedSearchService - params received:', params);
 
     // Добавляем параметры в URL
     Object.entries(params).forEach(([key, value]) => {
@@ -176,7 +177,7 @@ export class UnifiedSearchService {
         if (Array.isArray(value)) {
           // Для массивов используем запятую в качестве разделителя
           if (key === 'product_types' || key === 'category_ids') {
-            console.log(
+            logger.search.debug(
               `UnifiedSearchService - adding array param ${key}:`,
               value
             );
@@ -190,7 +191,7 @@ export class UnifiedSearchService {
       }
     });
 
-    console.log('UnifiedSearchService - final URL:', url.toString());
+    logger.search.debug('UnifiedSearchService - final URL:', url.toString());
 
     // Получаем токен авторизации
     const token = await tokenManager.getAccessToken();

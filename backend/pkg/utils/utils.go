@@ -6,10 +6,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"strconv"
-	"time"
 
 	"backend/internal/logger"
-	"backend/pkg/jwt"
 
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
@@ -107,17 +105,4 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-// GenerateJWTToken генерирует JWT токен для пользователя с дефолтным временем жизни
-func GenerateJWTToken(userID int, email string, secret string) (string, error) {
-	return jwt.GenerateToken(userID, email, secret)
-}
-
-// GenerateJWTTokenWithDuration генерирует JWT токен для пользователя с заданным временем жизни
-func GenerateJWTTokenWithDuration(userID int, email string, secret string, duration time.Duration) (string, error) {
-	return jwt.GenerateTokenWithDuration(userID, email, secret, duration)
-}
-
-// ValidateJWTToken валидирует JWT токен
-func ValidateJWTToken(tokenString string, secret string) (*jwt.Claims, error) {
-	return jwt.ValidateToken(tokenString, secret)
-}
+// JWT функции удалены - используйте Auth Service для генерации и валидации токенов

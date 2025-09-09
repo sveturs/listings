@@ -148,12 +148,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		TestMode:        cfg.PostExpress.TestMode,
 		Timeout:         30 * time.Second,
 		Language:        "sr",
-		DeviceType:      2, // 2 для API интеграции согласно документации Post Express
+		DeviceType:      "2", // ИСПРАВЛЕНО: должна быть строка "2" для веб-приложения
 		MaxRetries:      3,
 		RetryDelay:      1 * time.Second,
 		DeviceName:      "SveTu-Server",
 		ApplicationName: "SveTu-Platform",
 		Version:         "1.0.0",
+		PartnerID:       10109, // ДОБАВЛЕНО: Partner ID для b2b@svetu.rs
 	}, *pkglogger.New())
 	postexpressServiceInstance := postexpressService.NewService(
 		postexpressRepo,

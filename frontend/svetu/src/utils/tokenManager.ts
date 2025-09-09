@@ -22,34 +22,96 @@ class TokenManager {
     // Восстанавливаем токен из sessionStorage при инициализации
     if (typeof window !== 'undefined') {
       const savedToken = sessionStorage.getItem('svetu_access_token');
-      // console.log(
-      //   '[TokenManager] Constructor - saved token from sessionStorage:',
-      //   savedToken ? 'exists' : 'null'
-      // );
+      
       if (savedToken) {
+        // Check if it's an HS256 token and reject it
+        try {
+          const headerB64 = savedToken.split('.')[0];
+          if (headerB64) {
+            const headerJson = atob(headerB64.replace(/-/g, '+').replace(/_/g, '/'));
+            const header = JSON.parse(headerJson);
+            
+            if (header.alg === 'HS256') {
+              console.error('[TokenManager] Constructor - found old HS256 token, removing');
+              sessionStorage.removeItem('svetu_access_token');
+              // Also clear any other auth-related storage
+              localStorage.removeItem('access_token');
+              localStorage.removeItem('refresh_token');
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('[TokenManager] Constructor - could not parse token, removing', e);
+          sessionStorage.removeItem('svetu_access_token');
+          return;
+        }
+        
         this.accessToken = savedToken;
         // Проверяем, не истек ли токен
         if (!this.isTokenExpired()) {
-          // console.log(
-          //   '[TokenManager] Constructor - token is valid, scheduling refresh'
-          // );
+          console.log('[TokenManager] Constructor - RS256 token is valid, scheduling refresh');
           this.scheduleTokenRefresh();
         } else {
-          // Если токен истек, удаляем его
-          // console.log(
-          //   '[TokenManager] Constructor - token is expired, removing'
-          // );
+          console.log('[TokenManager] Constructor - RS256 token is expired, removing');
           sessionStorage.removeItem('svetu_access_token');
           this.accessToken = null;
         }
       }
+      
+      // Также загружаем refresh токен если есть
+      const savedRefreshToken = sessionStorage.getItem('svetu_refresh_token');
+      if (savedRefreshToken) {
+        console.log('[TokenManager] Constructor - loaded refresh token');
+      }
     }
+  }
+
+  /**
+   * Сохраняет refresh token в sessionStorage  
+   */
+  setRefreshToken(token: string | null) {
+    if (typeof window !== 'undefined') {
+      if (token) {
+        sessionStorage.setItem('svetu_refresh_token', token);
+        console.log('[TokenManager] Refresh token saved');
+      } else {
+        sessionStorage.removeItem('svetu_refresh_token');
+        console.log('[TokenManager] Refresh token cleared');
+      }
+    }
+  }
+
+  /**
+   * Получает refresh token из sessionStorage
+   */
+  getRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('svetu_refresh_token');
+    }
+    return null;
   }
 
   /**
    * Сохраняет access token в памяти и sessionStorage
    */
   setAccessToken(token: string | null) {
+    // Check if token is HS256 and reject it
+    if (token) {
+      try {
+        const headerB64 = token.split('.')[0];
+        const headerJson = atob(headerB64.replace(/-/g, '+').replace(/_/g, '/'));
+        const header = JSON.parse(headerJson);
+        
+        if (header.alg === 'HS256') {
+          console.error('[TokenManager] Rejecting HS256 token - only RS256 tokens are supported');
+          this.clearTokens();
+          return;
+        }
+      } catch (e) {
+        console.error('[TokenManager] Failed to parse token header:', e);
+      }
+    }
+    
     this.accessToken = token;
 
     // Сохраняем в sessionStorage для сохранения между перезагрузками
@@ -76,6 +138,16 @@ class TokenManager {
     } else {
       this.clearRefreshTimer();
     }
+
+    // Генерируем событие для уведомления других компонентов об изменении токена
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tokenChanged', {
+        detail: { 
+          token: token,
+          action: token ? 'set' : 'cleared'
+        }
+      }));
+    }
   }
 
   /**
@@ -94,12 +166,13 @@ class TokenManager {
   }
 
   /**
-   * Очищает access token и останавливает таймер обновления
+   * Очищает access и refresh токены и останавливает таймер обновления
    */
   clearTokens() {
     this.accessToken = null;
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('svetu_access_token');
+      sessionStorage.removeItem('svetu_refresh_token');
     }
     this.clearRefreshTimer();
     this.refreshAttempts = 0;
@@ -172,21 +245,35 @@ class TokenManager {
   private async performRefresh(): Promise<string> {
     try {
       console.log('[TokenManager] Attempting to refresh token...');
+      
+      // Получаем refresh токен
+      const refreshToken = this.getRefreshToken();
+      if (!refreshToken) {
+        console.log('[TokenManager] No refresh token available');
+        this.clearTokens();
+        return '';
+      }
+
       const response = await fetch(
         `${configManager.getApiUrl()}/api/v1/auth/refresh`,
         {
           method: 'POST',
-          credentials: 'include', // Важно для отправки httpOnly cookie
+          credentials: 'include', // Важно для cookies если используются
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${refreshToken}`, // Отправляем refresh токен в заголовке
           },
+          body: JSON.stringify({
+            refresh_token: refreshToken // Также отправляем в теле запроса для совместимости
+          }),
         }
       );
 
       if (!response.ok) {
-        // Если 401, значит refresh token невалидный или отозван
-        if (response.status === 401) {
-          console.log('[TokenManager] Refresh token is invalid or revoked');
+        // Если 401 или 400, значит refresh token невалидный или отозван
+        // Auth Service может вернуть 400 если токен отсутствует или некорректный
+        if (response.status === 401 || response.status === 400) {
+          console.log('[TokenManager] Refresh token is invalid, missing or revoked');
           this.clearTokens();
           return '';
         }
@@ -227,10 +314,12 @@ class TokenManager {
 
       // Обрабатываем оба формата ответа
       let accessToken = data.access_token;
+      let newRefreshToken = data.refresh_token;
 
       // Если ответ обернут в { data: {...}, success: true }
       if (!accessToken && data.data && data.data.access_token) {
         accessToken = data.data.access_token;
+        newRefreshToken = data.data.refresh_token;
       }
 
       if (!accessToken) {
@@ -241,7 +330,11 @@ class TokenManager {
         throw new Error('No access token in refresh response');
       }
 
+      // Сохраняем новые токены
       this.setAccessToken(accessToken);
+      if (newRefreshToken) {
+        this.setRefreshToken(newRefreshToken);
+      }
 
       // Вызываем callback если он задан
       if (this.config.onTokenRefreshed) {

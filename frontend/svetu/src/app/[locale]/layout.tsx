@@ -16,6 +16,7 @@ import { CartSyncProvider } from '@/components/CartSyncProvider';
 import { themeInitScript } from '@/scripts/theme-init';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
+import '@/utils/forceTokenCleanup'; // Автоматическая очистка старых HS256 токенов
 import '../globals.css';
 
 const geistSans = Geist({

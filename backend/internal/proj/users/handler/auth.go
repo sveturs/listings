@@ -10,7 +10,6 @@ import (
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
 	"backend/internal/types"
-	"backend/pkg/jwt"
 	"backend/pkg/utils"
 )
 
@@ -98,42 +97,13 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 					Msg("GetSession: Extracted JWT token")
 			}
 
-			// Проверяем JWT токен
-			claims, validateErr := utils.ValidateJWTToken(jwtToken, h.services.Config().JWTSecret)
-			if validateErr != nil {
-				logger.Info().
-					Err(validateErr).
-					Str("ip", c.IP()).
-					Str("user_agent", c.Get("User-Agent")).
-					Msg("JWT token validation failed")
-			} else if claims != nil {
-				logger.Info().
-					Int("user_id", claims.UserID).
-					Str("email", claims.Email).
-					Msg("JWT claims validated")
-
-				// Получаем данные пользователя из базы
-				user, err := h.services.User().GetUserByEmail(c.Context(), claims.Email)
-				if err == nil && user != nil {
-					// Создаем временную sessionData для JWT пользователя
-					sessionData = &types.SessionData{
-						UserID:     claims.UserID,
-						Email:      claims.Email,
-						Name:       user.Name,
-						Provider:   "password", // Предполагаем что JWT = password login
-						PictureURL: user.PictureURL,
-					}
-					logger.Info().
-						Str("email", claims.Email).
-						Int("user_id", claims.UserID).
-						Msg("JWT session restored for user")
-				} else {
-					logger.Error().
-						Err(err).
-						Str("email", claims.Email).
-						Msg("Failed to get user data for JWT claims")
-				}
-			}
+			// Проверка JWT токена отключена - используйте Auth Service
+			// JWT валидация теперь происходит в middleware через RS256
+			logger.Info().
+				Msg("JWT validation moved to middleware with RS256")
+			
+			// Код получения данных по JWT временно отключен
+			// TODO: использовать данные из middleware после валидации RS256 токена
 		} else {
 			logger.Info().Msg("GetSession: No valid Authorization header found")
 		}
@@ -194,10 +164,10 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	// Получаем userID из контекста (может быть из JWT или session)
 	userID := 0
 
-	// Пробуем получить из JWT
-	if user, ok := c.Locals("user").(*jwt.Claims); ok && user != nil {
-		userID = user.UserID
-		logger.Info().Int("user_id", userID).Msg("Logout: Got userID from JWT")
+	// Пробуем получить userID из middleware (после валидации RS256 токена)
+	if uid, ok := c.Locals("user_id").(int); ok {
+		userID = uid
+		logger.Info().Int("user_id", userID).Msg("Logout: Got userID from middleware")
 	}
 
 	// Если не получили из JWT, пробуем из session

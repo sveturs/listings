@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login Flow</title>
+</head>
+<body>
+    <h1>Test Auth Service Login Flow</h1>
+    <button id="loginBtn">Login with test@example.com</button>
+    <button id="checkTokensBtn">Check Tokens</button>
+    <button id="refreshBtn">Test Refresh</button>
+    <button id="clearBtn">Clear All Tokens</button>
+    
+    <div id="output" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; min-height: 200px; white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.textContent += message + '\n';
+            console.log(message);
+        }
+        
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            log('=== Starting Login Test ===');
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Login successful!');
+                    log('Access token: ' + (data.access_token ? data.access_token.substring(0, 50) + '...' : 'NOT FOUND'));
+                    log('Refresh token: ' + (data.refresh_token ? data.refresh_token.substring(0, 50) + '...' : 'NOT FOUND'));
+                    
+                    // Save tokens to sessionStorage like the frontend does
+                    if (data.access_token) {
+                        sessionStorage.setItem('svetu_access_token', data.access_token);
+                        log('✅ Access token saved to sessionStorage');
+                    }
+                    
+                    if (data.refresh_token) {
+                        sessionStorage.setItem('svetu_refresh_token', data.refresh_token);
+                        log('✅ Refresh token saved to sessionStorage');
+                    }
+                } else {
+                    log('❌ Login failed: ' + JSON.stringify(data));
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        });
+        
+        document.getElementById('checkTokensBtn').addEventListener('click', () => {
+            log('\n=== Checking Tokens ===');
+            log('SessionStorage keys: ' + Object.keys(sessionStorage).join(', '));
+            log('svetu_access_token: ' + (sessionStorage.getItem('svetu_access_token')?.substring(0, 50) || 'NULL') + '...');
+            log('svetu_refresh_token: ' + (sessionStorage.getItem('svetu_refresh_token')?.substring(0, 50) || 'NULL') + '...');
+            
+            // Check for any cleanup flags
+            log('force_token_cleanup_done: ' + sessionStorage.getItem('force_token_cleanup_done'));
+            log('token_migration_v2_done: ' + sessionStorage.getItem('token_migration_v2_done'));
+        });
+        
+        document.getElementById('refreshBtn').addEventListener('click', async () => {
+            log('\n=== Testing Refresh ===');
+            
+            const refreshToken = sessionStorage.getItem('svetu_refresh_token');
+            if (!refreshToken) {
+                log('❌ No refresh token in sessionStorage');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + refreshToken
+                    },
+                    body: JSON.stringify({
+                        refresh_token: refreshToken
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Refresh successful!');
+                    log('New access token: ' + (data.access_token ? data.access_token.substring(0, 50) + '...' : 'NOT FOUND'));
+                    log('New refresh token: ' + (data.refresh_token ? data.refresh_token.substring(0, 50) + '...' : 'NOT FOUND'));
+                    
+                    // Update tokens
+                    if (data.access_token) {
+                        sessionStorage.setItem('svetu_access_token', data.access_token);
+                        log('✅ New access token saved');
+                    }
+                    
+                    if (data.refresh_token) {
+                        sessionStorage.setItem('svetu_refresh_token', data.refresh_token);
+                        log('✅ New refresh token saved');
+                    }
+                } else {
+                    log('❌ Refresh failed: ' + JSON.stringify(data));
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        });
+        
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            log('\n=== Clearing All Tokens ===');
+            sessionStorage.clear();
+            localStorage.clear();
+            log('✅ All storage cleared');
+        });
+        
+        // Initial check
+        log('Page loaded. Current storage state:');
+        log('SessionStorage keys: ' + Object.keys(sessionStorage).join(', '));
+    </script>
+</body>
+</html>

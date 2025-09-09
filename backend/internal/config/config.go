@@ -4,6 +4,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -29,8 +30,9 @@ type Config struct {
 	DeepLUseFreeAPI       bool `yaml:"deepl_use_free_api"`
 	StripeAPIKey          string
 	StripeWebhookSecret   string
-	JWTSecret             string
-	JWTExpirationHours    int               `yaml:"jwt_expiration_hours"`
+	JWTSecret             string // Deprecated - используется только для обратной совместимости
+	JWTExpirationHours    int    `yaml:"jwt_expiration_hours"`
+	AuthServicePubKeyPath string `yaml:"auth_service_public_key_path"` // Путь к публичному ключу Auth Service
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
@@ -162,12 +164,17 @@ func NewConfig() (*Config, error) {
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
 
-	// Получаем JWT секретный ключ
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "default-jwt-secret-change-in-production" // #nosec G101 -- default development secret
+	// Получаем JWT секретный ключ (deprecated - оставлено для обратной совместимости)
+	config.JWTSecret = os.Getenv("JWT_SECRET")
+	
+	// Получаем путь к публичному ключу Auth Service
+	config.AuthServicePubKeyPath = os.Getenv("AUTH_SERVICE_PUBLIC_KEY_PATH")
+	log.Printf("AUTH_SERVICE_PUBLIC_KEY_PATH from env: %s", config.AuthServicePubKeyPath)
+	if config.AuthServicePubKeyPath == "" {
+		config.AuthServicePubKeyPath = "/data/hostel-booking-system/backend/keys/auth_service_public.pem"
+		log.Printf("Using default AUTH_SERVICE_PUBLIC_KEY_PATH: %s", config.AuthServicePubKeyPath)
 	}
-	config.JWTSecret = jwtSecret
+	log.Printf("Final AUTH_SERVICE_PUBLIC_KEY_PATH in config: %s", config.AuthServicePubKeyPath)
 
 	// Получаем время жизни JWT токена (в часах)
 	jwtExpirationStr := os.Getenv("JWT_EXPIRATION_HOURS")
@@ -436,6 +443,7 @@ func NewConfig() (*Config, error) {
 		StripeWebhookSecret:   config.StripeWebhookSecret,
 		JWTSecret:             config.JWTSecret,
 		JWTExpirationHours:    config.JWTExpirationHours,
+		AuthServicePubKeyPath: config.AuthServicePubKeyPath,
 		MinIOPublicURL:        config.MinIOPublicURL,
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,

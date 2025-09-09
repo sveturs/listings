@@ -171,7 +171,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	// Сначала пытаемся получить из JSON body
 	if c.Get("Content-Type") == "application/json" {
 		if err := c.BodyParser(&params); err != nil {
-			logger.Debug().Err(err).Msg("Failed to parse JSON body, trying query params")
+			// Try query params if JSON parsing fails
 		}
 	}
 
@@ -299,12 +299,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	}
 
 	// Логируем параметры поиска
-	logger.Debug().
-		Str("query", params.Query).
-		Strs("product_types", params.ProductTypes).
-		Int("limit", params.Limit).
-		Int("page", params.Page).
-		Msg("UnifiedSearch params after processing")
+	// Log params in debug mode only
 
 	// Выполняем поиск
 	result, err := h.performUnifiedSearch(ctx, &params)
@@ -364,10 +359,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 	}
 
 	// Поиск в marketplace (если включен)
-	logger.Debug().
-		Strs("product_types", params.ProductTypes).
-		Bool("contains_marketplace", h.containsProductType(params.ProductTypes, productTypeMarketplace)).
-		Msg("Checking for marketplace search")
+	// Check for marketplace search
 
 	if h.containsProductType(params.ProductTypes, productTypeMarketplace) {
 		marketplaceItems, count, took, err := h.searchMarketplaceWithLimit(ctx, params, searchLimit)
@@ -382,12 +374,12 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 	// Поиск в storefront (если включен)
 	if h.containsProductType(params.ProductTypes, productTypeStorefront) {
-		logger.Debug().Str("query", params.Query).Int("limit", searchLimit).Msg("Starting storefront search")
+		// Starting storefront search
 		storefrontItems, count, took, err := h.searchStorefrontWithLimit(ctx, params, searchLimit)
 		if err != nil {
 			logger.Error().Err(err).Msg("Storefront search failed")
 		} else {
-			logger.Debug().Int("count", len(storefrontItems)).Int("total", count).Msg("Storefront search completed")
+			// Storefront search completed
 			allItems = append(allItems, storefrontItems...)
 			totalCount += count
 			tookMs += took
@@ -409,11 +401,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 		}
 		// Детальное логирование первых 5 элементов
 		if marketplaceCount+storefrontCount <= 5 {
-			logger.Debug().
-				Str("id", item.ID).
-				Str("product_type", item.ProductType).
-				Str("name", item.Name).
-				Msg("Ranked item details")
+// Debug log removed
 		}
 	}
 	logger.Info().
@@ -455,7 +443,7 @@ func (h *UnifiedSearchHandler) performUnifiedSearch(ctx context.Context, params 
 
 // searchMarketplaceWithLimit поиск в marketplace с указанным лимитом
 func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, params *UnifiedSearchParams, limit int) ([]UnifiedSearchItem, int, int64, error) {
-	logger.Debug().Str("query", params.Query).Int("limit", limit).Msg("Starting marketplace search")
+	// Starting marketplace search
 
 	// Конвертируем параметры в формат для marketplace поиска
 	// Передаем массив категорий, если он задан
@@ -490,7 +478,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		return nil, 0, 0, err
 	}
 
-	logger.Debug().Int("count", len(results.Items)).Int("total", results.Total).Msg("Marketplace search completed")
+	// Marketplace search completed
 
 	// Конвертируем результаты в унифицированный формат
 	items := make([]UnifiedSearchItem, 0, len(results.Items))
@@ -504,9 +492,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		// Проверяем дублирование по ID
 		itemID := "ml_" + strconv.Itoa(listing.ID)
 		if seenIDs[itemID] {
-			logger.Debug().
-				Str("listing_id", itemID).
-				Msg("Skipping duplicate marketplace item")
+// Debug log removed
 			continue
 		}
 		seenIDs[itemID] = true
@@ -567,11 +553,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 
 		// Логируем для отладки
 		if len(items) < 3 {
-			logger.Debug().
-				Str("listing_id", item.ID).
-				Str("product_type", item.ProductType).
-				Str("name", item.Name).
-				Msg("Adding marketplace item")
+			// Adding marketplace item
 		}
 
 		items = append(items, item)
@@ -588,7 +570,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 		logger.Warn().Msg("Storefront product search repository not configured")
 		return []UnifiedSearchItem{}, 0, 0, nil
 	}
-	logger.Debug().Msg("Storefront product search repository found")
+	// Using storefront product search repository
 
 	productSearchRepo, ok := searchRepo.(storefrontOpenSearch.ProductSearchRepository)
 	if !ok {
@@ -678,20 +660,11 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 
 		// Логируем для отладки создание storefront товара
 		if i < 3 {
-			logger.Debug().
-				Str("id", item.ID).
-				Str("product_type", item.ProductType).
-				Int("product_id", item.ProductID).
-				Str("name", item.Name).
-				Msg("Created storefront item")
+// Debug log removed
 		}
 
 		// Добавляем информацию об остатках
-		logger.Debug().
-			Int("product_id", product.ProductID).
-			Int("available_quantity", product.AvailableQuantity).
-			Bool("in_stock", product.InStock).
-			Msg("Processing storefront product stock info")
+// Debug log removed
 
 		if product.AvailableQuantity > 0 {
 			stockQty := product.AvailableQuantity
@@ -788,11 +761,7 @@ func (h *UnifiedSearchHandler) mergeAndRankResults(items []UnifiedSearchItem, pa
 			storefrontIn++
 		}
 	}
-	logger.Debug().
-		Int("marketplace_in", marketplaceIn).
-		Int("storefront_in", storefrontIn).
-		Int("total_in", len(items)).
-		Msg("mergeAndRankResults input")
+// Debug log removed
 
 	// Если нет поискового запроса, просто сортируем по указанному критерию
 	if params.Query == "" {
@@ -1121,10 +1090,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 
 	// Отправляем событие в behavior tracking сервис (если доступен)
 	behaviorSvc := h.services.BehaviorTracking()
-	logger.Debug().
-		Bool("behavior_svc_nil", behaviorSvc == nil).
-		Str("query", params.Query).
-		Msg("Checking behavior tracking service")
+// Debug log removed
 
 	if behaviorSvc != nil {
 		if err := behaviorSvc.TrackEvent(ctx, userID, trackingReq); err != nil {
@@ -1133,10 +1099,7 @@ func (h *UnifiedSearchHandler) trackSearchEvent(trackCtx *trackingContext, param
 				Str("query", params.Query).
 				Msg("Failed to track search event")
 		} else {
-			logger.Debug().
-				Str("session_id", sessionID).
-				Str("query", params.Query).
-				Msg("Successfully sent event to behavior tracking")
+// Debug log removed
 		}
 	} else {
 		logger.Warn().Msg("Behavior tracking service is not available")

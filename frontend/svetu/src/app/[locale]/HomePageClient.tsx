@@ -6,6 +6,7 @@ import Link from 'next/link';
 // import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { logger } from '@/utils/logger';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
@@ -105,7 +106,7 @@ export default function HomePageClient({
 
   // Функция для получения URL объявления
   const getListingUrl = (deal: any) => {
-    console.log('getListingUrl called with deal:', {
+    logger.debug('getListingUrl called with deal:', {
       id: deal.id,
       product_id: deal.product_id,
       listing_id: deal.listing_id,
@@ -115,12 +116,12 @@ export default function HomePageClient({
     if (deal.isStorefront && deal.product_id) {
       // Для товаров витрин - используем product_id без префикса
       const url = `/${locale}/marketplace/${deal.product_id}`;
-      console.log('Storefront URL:', url);
+      logger.debug('Storefront URL:', url);
       return url;
     } else if (deal.listing_id) {
       // Для обычных объявлений - используем listing_id
       const url = `/${locale}/marketplace/${deal.listing_id}`;
-      console.log('Listing URL:', url);
+      logger.debug('Listing URL:', url);
       return url;
     } else {
       // Fallback - извлекаем чистый ID из deal.id убрав префиксы
@@ -129,14 +130,14 @@ export default function HomePageClient({
           ? deal.id.replace(/^(ml_|sp_)/, '')
           : deal.id;
       const url = `/${locale}/marketplace/${cleanId}`;
-      console.log('Fallback URL:', url);
+      logger.debug('Fallback URL:', url);
       return url;
     }
   };
 
   // Функция для добавления в корзину
   const handleAddToCart = async (deal: any) => {
-    console.log('handleAddToCart called with full deal object:', deal);
+    logger.debug('handleAddToCart called with full deal object:', deal);
 
     try {
       // Если это не витрина, выходим
@@ -162,7 +163,7 @@ export default function HomePageClient({
       let storefrontId = deal.storefront_id;
 
       if (!storefrontId) {
-        console.log(
+        logger.debug(
           'No storefront_id in deal, fetching product details from API...'
         );
         try {
@@ -171,7 +172,7 @@ export default function HomePageClient({
           );
           if (response.data && response.data.storefront_id) {
             storefrontId = response.data.storefront_id;
-            console.log('Got storefront_id from API:', storefrontId);
+            logger.debug('Got storefront_id from API:', storefrontId);
           }
         } catch (apiError) {
           console.error('Failed to fetch product details:', apiError);
@@ -184,7 +185,7 @@ export default function HomePageClient({
         return;
       }
 
-      console.log('Adding to cart:', { storefrontId, productId });
+      logger.debug('Adding to cart:', { storefrontId, productId });
 
       // Добавляем товар в корзину
       await dispatch(
@@ -206,7 +207,7 @@ export default function HomePageClient({
 
   // Функция для открытия чата
   const handleStartChat = (deal: any) => {
-    console.log('handleStartChat called with deal:', deal);
+    logger.debug('handleStartChat called with deal:', deal);
 
     if (!user) {
       // Если пользователь не авторизован, перенаправляем на страницу входа
@@ -217,7 +218,7 @@ export default function HomePageClient({
     // Определяем URL для чата в зависимости от типа объявления
     if (deal.isStorefront && deal.storefront_id) {
       // B2C - чат с витриной, передаем storefront_product_id и seller_id (владелец витрины)
-      console.log(
+      logger.debug(
         'Opening B2C chat with storefront_id:',
         deal.storefront_id,
         'product_id:',
@@ -239,7 +240,7 @@ export default function HomePageClient({
     } else if (deal.user_id) {
       // C2C - чат с продавцом обычного объявления
       const listingId = deal.listing_id || deal.id;
-      console.log(
+      logger.debug(
         'Opening C2C chat with user_id:',
         deal.user_id,
         'listing_id:',
@@ -400,7 +401,7 @@ export default function HomePageClient({
           );
 
           setPopularCategories(categoriesWithIcons);
-          console.log('Popular categories loaded:', categoriesWithIcons);
+          logger.debug('Popular categories loaded:', categoriesWithIcons);
         }
       } catch (error) {
         console.error('Failed to load categories:', error);
@@ -476,7 +477,7 @@ export default function HomePageClient({
           );
 
           setOfficialStores(formattedStores);
-          console.log('Loaded storefronts:', formattedStores);
+          logger.debug('Loaded storefronts:', formattedStores);
         } else {
           // Если нет реальных витрин, используем заглушки
           setOfficialStores([
@@ -545,14 +546,14 @@ export default function HomePageClient({
         searchParams.append('product_types[]', 'marketplace');
         searchParams.append('product_types[]', 'storefront');
 
-        console.log(
+        logger.debug(
           'Request URL:',
           `/api/v1/search?${searchParams.toString()}`
         );
         const response = await api.get(
           `/api/v1/search?${searchParams.toString()}`
         );
-        console.log('API Response:', response.data);
+        logger.debug('API Response:', response.data);
 
         if (
           response.data &&
@@ -561,7 +562,7 @@ export default function HomePageClient({
         ) {
           // Разделяем объявления на C2C и B2C для смешанного показа
           const allListings = response.data.items;
-          console.log(
+          logger.debug(
             'All listings product types:',
             JSON.stringify(
               allListings.map((l: any) => ({
@@ -625,13 +626,13 @@ export default function HomePageClient({
             selectedListings = allListings.slice(0, maxItems);
           }
 
-          console.log(
+          logger.debug(
             `Mixed selection: ${selectedListings.filter((l: any) => !l.storefrontId).length} C2C + ${selectedListings.filter((l: any) => l.storefrontId).length} B2C`
           );
 
           const apiListings = selectedListings.map((listing: any) => {
             // Логируем структуру данных для отладки
-            console.log('Processing listing:', {
+            logger.debug('Processing listing:', {
               id: listing.id,
               name: listing.name,
               images: listing.images,
@@ -670,7 +671,7 @@ export default function HomePageClient({
             }
 
             // Добавляем подробное логирование для отладки
-            console.log('Mapping listing with storefront data:', {
+            logger.debug('Mapping listing with storefront data:', {
               listing_id: listing.id,
               product_id: listing.product_id,
               product_type: listing.product_type,
@@ -714,7 +715,7 @@ export default function HomePageClient({
                   }
 
                   // Логируем для отладки
-                  console.log(
+                  logger.debug(
                     'Building image URL for listing',
                     listing.id,
                     ':',
@@ -734,7 +735,7 @@ export default function HomePageClient({
                 }
 
                 // Fallback изображение только если действительно нет изображений
-                console.log(
+                logger.debug(
                   'No images for listing',
                   listing.id,
                   ', using fallback'
@@ -777,7 +778,7 @@ export default function HomePageClient({
           });
 
           setListings(apiListings);
-          console.log(
+          logger.debug(
             'Loaded hot deals from API:',
             apiListings.length,
             'items'
@@ -1091,7 +1092,7 @@ export default function HomePageClient({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Add to favorites:', deal.id);
+                          logger.debug('Add to favorites:', deal.id);
                         }}
                       >
                         <FiHeart
@@ -1173,7 +1174,7 @@ export default function HomePageClient({
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              console.log('Add to favorites:', deal.id);
+                              logger.debug('Add to favorites:', deal.id);
                             }}
                           >
                             <FiHeart className="w-4 h-4" />
