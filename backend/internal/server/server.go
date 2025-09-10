@@ -233,6 +233,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			})
 		},
 		BodyLimit:               50 * 1024 * 1024,
+		ReadBufferSize:          16384, // Увеличиваем размер буфера чтения для больших заголовков
 		EnableTrustedProxyCheck: true,
 		TrustedProxies:          []string{"127.0.0.1", "::1"},
 	})

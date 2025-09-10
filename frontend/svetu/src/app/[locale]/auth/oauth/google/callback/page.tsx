@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { tokenManager } from '@/utils/tokenManager';
+import { clearLargeHeaders } from '@/utils/clearLargeHeaders';
 
 function GoogleCallbackContent() {
   const searchParams = useSearchParams();
@@ -14,6 +15,9 @@ function GoogleCallbackContent() {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
+        // Clear any large headers that might cause issues
+        clearLargeHeaders();
+        
         // Get parameters from the current URL
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -35,9 +39,9 @@ function GoogleCallbackContent() {
             description: errorDescription,
           });
           setError(`Authentication failed: ${errorDescription || oauthError}`);
-          setStatus('Redirecting to login...');
+          setStatus('Redirecting to home...');
           setTimeout(() => {
-            router.push('/auth/login?error=oauth_failed');
+            router.push('/?error=oauth_failed');
           }, 2000);
           return;
         }
@@ -46,9 +50,9 @@ function GoogleCallbackContent() {
         if (!code) {
           console.error('[OAuth Callback] No code parameter found');
           setError('No authorization code received');
-          setStatus('Redirecting to login...');
+          setStatus('Redirecting to home...');
           setTimeout(() => {
-            router.push('/auth/login?error=no_code');
+            router.push('/?error=no_code');
           }, 2000);
           return;
         }
@@ -80,7 +84,7 @@ function GoogleCallbackContent() {
           setError(`Authentication failed: ${response.statusText}`);
           setStatus('Redirecting to login...');
           setTimeout(() => {
-            router.push('/auth/login?error=exchange_failed');
+            router.push('/?error=exchange_failed');
           }, 2000);
           return;
         }
@@ -108,7 +112,7 @@ function GoogleCallbackContent() {
           setError('No authentication token received');
           setStatus('Redirecting to login...');
           setTimeout(() => {
-            router.push('/auth/login?error=no_token');
+            router.push('/?error=no_token');
           }, 2000);
         }
       } catch (err) {
@@ -116,7 +120,7 @@ function GoogleCallbackContent() {
         setError(err instanceof Error ? err.message : 'Authentication failed');
         setStatus('Redirecting to login...');
         setTimeout(() => {
-          router.push('/auth/login?error=callback_error');
+          router.push('/?error=callback_error');
         }, 2000);
       }
     };
