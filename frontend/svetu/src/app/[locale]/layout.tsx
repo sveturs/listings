@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
-import { loadMessages } from '@/lib/i18n/loadMessages';
+import { getMessages } from '@/i18n/messages';
 import HeaderWrapper from '@/components/HeaderWrapper';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
@@ -46,7 +46,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'metadata' });
+  const t = await getTranslations({ locale, namespace: 'misc' });
 
   // Определяем альтернативные языковые версии для SEO
   const languages = {
@@ -56,8 +56,8 @@ export async function generateMetadata({
   };
 
   return {
-    title: t('title'),
-    description: t('description'),
+    title: t('metadata.title'),
+    description: t('metadata.description'),
     alternates: {
       languages: Object.fromEntries(
         routing.locales
@@ -89,29 +89,8 @@ export default async function RootLayout({
     notFound();
   }
 
-  // Загружаем базовые модули для layout
-  const messages = await loadMessages(
-    locale as any,
-    [
-      'common',
-      'auth',
-      'auth-shared', // Добавляем для AdminGuard и других компонентов защиты
-      'balance', // Добавляем для BalanceWidget
-      'misc',
-      'cart',
-      'chat', // Добавляем chat модуль для страницы чата
-      'map', // Добавляем map модуль для компонентов GIS
-      'marketplace', // И marketplace, так как многие компоненты его используют
-      'admin', // Добавляем admin для страниц админки
-      'profile', // Добавляем profile для страниц профиля
-      'cars', // Добавляем cars для car-selector
-      'search', // Добавляем search для SearchBar
-      'checkout', // Добавляем checkout для страницы оформления заказа
-      'orders', // Добавляем orders для страницы успешного заказа
-      'storefronts', // Добавляем storefronts для страниц витрин
-      'subscription', // Добавляем subscription для страниц подписки
-    ] as any
-  );
+  // Используем статические импорты для поддержки SSG
+  const messages = getMessages(locale as 'en' | 'ru' | 'sr');
 
   return (
     <html lang={locale} suppressHydrationWarning>
