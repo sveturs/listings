@@ -19,20 +19,19 @@ interface JWTPayload {
 export function decodeUserFromToken(token: string): User | null {
   try {
     const decoded = jwtDecode<JWTPayload>(token);
-    
+
     // Проверяем, не истёк ли токен
     const now = Date.now() / 1000;
     if (decoded.exp < now) {
       console.log('[jwtDecode] Token has expired');
       return null;
     }
-    
+
     // Преобразуем payload в User объект
     return {
       id: decoded.user_id,
       email: decoded.email,
       name: decoded.name || decoded.email,
-      roles: decoded.roles || [],
       is_admin: decoded.roles?.includes('admin') || false,
       provider: decoded.provider,
     };

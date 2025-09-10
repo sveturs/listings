@@ -13,19 +13,23 @@ export function clearLargeHeaders() {
     'legacy_tokens',
   ];
 
-  keysToCheck.forEach(key => {
+  keysToCheck.forEach((key) => {
     const value = localStorage.getItem(key);
     if (value && value.length > 4096) {
-      console.warn(`[Header Size] Removing large item from localStorage: ${key} (${value.length} bytes)`);
+      console.warn(
+        `[Header Size] Removing large item from localStorage: ${key} (${value.length} bytes)`
+      );
       localStorage.removeItem(key);
     }
   });
 
   // Also check sessionStorage
-  keysToCheck.forEach(key => {
+  keysToCheck.forEach((key) => {
     const value = sessionStorage.getItem(key);
     if (value && value.length > 4096) {
-      console.warn(`[Header Size] Removing large item from sessionStorage: ${key} (${value.length} bytes)`);
+      console.warn(
+        `[Header Size] Removing large item from sessionStorage: ${key} (${value.length} bytes)`
+      );
       sessionStorage.removeItem(key);
     }
   });

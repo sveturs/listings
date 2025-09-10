@@ -138,7 +138,7 @@ export function getMessages(locale: 'en' | 'ru' | 'sr') {
   Object.entries(localeMessages).forEach(([module, data]) => {
     // Добавляем модуль как namespace
     result[module] = data;
-    
+
     // Также добавляем ключи верхнего уровня для обратной совместимости
     // Это позволяет обращаться напрямую к ключам без указания модуля
     Object.entries(data).forEach(([key, value]) => {

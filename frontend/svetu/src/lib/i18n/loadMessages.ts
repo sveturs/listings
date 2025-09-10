@@ -152,7 +152,7 @@ export async function loadMessages(
 
       // Добавляем модуль как namespace
       messages[mod] = data;
-      
+
       // Для обратной совместимости также добавляем все ключи верхнего уровня модуля в корень
       // Это позволяет обращаться как t('key') вместо t('module.key')
       Object.keys(data).forEach((key) => {

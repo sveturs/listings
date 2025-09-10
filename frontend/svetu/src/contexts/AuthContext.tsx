@@ -395,17 +395,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.auth.debug(
         '[AuthContext] Valid access token found, checking for user data'
       );
-      
+
       // Если нет кешированного пользователя, пытаемся декодировать токен
       if (!hasValidCache) {
         const decodedUser = decodeUserFromToken(currentToken);
         if (decodedUser) {
-          logger.auth.debug('[AuthContext] Decoded user from existing token:', decodedUser);
+          logger.auth.debug(
+            '[AuthContext] Decoded user from existing token:',
+            decodedUser
+          );
           updateUser(decodedUser);
           setIsLoading(false);
         }
       }
-      
+
       // В любом случае обновляем сессию чтобы получить полные данные пользователя
       refreshSession();
     } else if (hasValidCache) {
@@ -445,7 +448,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const parsedUser = JSON.parse(cachedUser);
             if (parsedUser && parsedUser.id) {
               // Немедленно обновляем пользователя
-              logger.auth.debug('[AuthContext] Found cached user data:', parsedUser);
+              logger.auth.debug(
+                '[AuthContext] Found cached user data:',
+                parsedUser
+              );
               updateUser(parsedUser);
               setIsLoading(false);
               // Если есть кешированные данные, не нужно сразу делать запрос
@@ -459,13 +465,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Если нет кешированных данных, пытаемся декодировать токен
-        logger.auth.debug('[AuthContext] No cached user, trying to decode token...');
-        
+        logger.auth.debug(
+          '[AuthContext] No cached user, trying to decode token...'
+        );
+
         const token = tokenManager.getAccessToken();
         if (token) {
           const decodedUser = decodeUserFromToken(token);
           if (decodedUser) {
-            logger.auth.debug('[AuthContext] Decoded user from token:', decodedUser);
+            logger.auth.debug(
+              '[AuthContext] Decoded user from token:',
+              decodedUser
+            );
             // Сохраняем в кеш и обновляем состояние
             updateUser(decodedUser);
             setIsLoading(false);
@@ -474,9 +485,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         }
-        
+
         // Если не удалось декодировать, запрашиваем сессию
-        logger.auth.debug('[AuthContext] Could not decode token, fetching session...');
+        logger.auth.debug(
+          '[AuthContext] Could not decode token, fetching session...'
+        );
         await refreshSession(3, false); // Don't skip loading state
       } else if (customEvent.detail.action === 'cleared') {
         // Token was cleared, clear user state
