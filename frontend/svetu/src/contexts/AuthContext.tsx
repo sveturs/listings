@@ -17,6 +17,7 @@ import { tokenManager } from '@/utils/tokenManager';
 import { TokenMigration } from '@/utils/tokenMigration';
 // import { forceTokenCleanup } from '@/utils/forceTokenCleanup'; // Отключено - удалял валидные OAuth токены
 import { logger } from '@/utils/logger';
+import { decodeUserFromToken } from '@/utils/jwtDecode';
 
 interface AuthContextType {
   user: User | null;
@@ -392,9 +393,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (currentToken && !tokenManager.isTokenExpired(currentToken)) {
       logger.auth.debug(
-        '[AuthContext] Valid access token found, refreshing session'
+        '[AuthContext] Valid access token found, checking for user data'
       );
-      // Есть валидный токен, обновляем сессию чтобы получить полные данные пользователя
+      
+      // Если нет кешированного пользователя, пытаемся декодировать токен
+      if (!hasValidCache) {
+        const decodedUser = decodeUserFromToken(currentToken);
+        if (decodedUser) {
+          logger.auth.debug('[AuthContext] Decoded user from existing token:', decodedUser);
+          updateUser(decodedUser);
+          setIsLoading(false);
+        }
+      }
+      
+      // В любом случае обновляем сессию чтобы получить полные данные пользователя
       refreshSession();
     } else if (hasValidCache) {
       // Есть кешированный пользователь, но нужно проверить/обновить токен
@@ -433,15 +445,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const parsedUser = JSON.parse(cachedUser);
             if (parsedUser && parsedUser.id) {
               // Немедленно обновляем пользователя
+              logger.auth.debug('[AuthContext] Found cached user data:', parsedUser);
               updateUser(parsedUser);
               setIsLoading(false);
+              // Если есть кешированные данные, не нужно сразу делать запрос
+              // Делаем его с задержкой для обновления данных
+              setTimeout(() => refreshSession(3, true), 1000);
+              return;
             }
           } catch (e) {
             logger.auth.error('Failed to parse cached user:', e);
           }
         }
 
-        // Также обновляем через API для получения актуальных данных
+        // Если нет кешированных данных, пытаемся декодировать токен
+        logger.auth.debug('[AuthContext] No cached user, trying to decode token...');
+        
+        const token = tokenManager.getAccessToken();
+        if (token) {
+          const decodedUser = decodeUserFromToken(token);
+          if (decodedUser) {
+            logger.auth.debug('[AuthContext] Decoded user from token:', decodedUser);
+            // Сохраняем в кеш и обновляем состояние
+            updateUser(decodedUser);
+            setIsLoading(false);
+            // Запрашиваем полные данные с сервера с задержкой
+            setTimeout(() => refreshSession(3, true), 500);
+            return;
+          }
+        }
+        
+        // Если не удалось декодировать, запрашиваем сессию
+        logger.auth.debug('[AuthContext] Could not decode token, fetching session...');
         await refreshSession(3, false); // Don't skip loading state
       } else if (customEvent.detail.action === 'cleared') {
         // Token was cleared, clear user state

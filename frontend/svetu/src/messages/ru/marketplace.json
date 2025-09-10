@@ -1,6 +1,7 @@
 {
   "home": "Главная",
   "homeContent": {
+    "loginSuccessful": "Успешный вход в систему!",
     "startNowTitle": "Начните покупать и продавать прямо сейчас!",
     "startNowSubtitle": "Присоединяйтесь к 2 миллионам пользователей",
     "createAccount": "Создать аккаунт",

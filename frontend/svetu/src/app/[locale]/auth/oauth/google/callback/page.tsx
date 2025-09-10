@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { tokenManager } from '@/utils/tokenManager';
 import { clearLargeHeaders } from '@/utils/clearLargeHeaders';
+import { decodeUserFromToken } from '@/utils/jwtDecode';
 
 function GoogleCallbackContent() {
   const searchParams = useSearchParams();
@@ -20,11 +21,13 @@ function GoogleCallbackContent() {
         
         // Get parameters from the current URL
         const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         const oauthError = urlParams.get('error');
 
         console.log('[OAuth Callback] Params from URL:', {
+          token: token ? 'present' : 'absent',
           code,
           state,
           oauthError,
@@ -46,75 +49,64 @@ function GoogleCallbackContent() {
           return;
         }
 
-        // Check if we have a code
-        if (!code) {
-          console.error('[OAuth Callback] No code parameter found');
-          setError('No authorization code received');
-          setStatus('Redirecting to home...');
-          setTimeout(() => {
-            router.push('/?error=no_code');
-          }, 2000);
-          return;
-        }
-
-        // Exchange code for token via backend
-        setStatus('Exchanging authorization code...');
-        console.log('[OAuth Callback] Exchanging code for token...');
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google/callback?code=${code}&state=${state || ''}`,
-          {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              Accept: 'application/json',
-            },
-          }
-        );
-
-        console.log('[OAuth Callback] Exchange response status:', response.status);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[OAuth Callback] Exchange failed:', {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText,
-          });
-          setError(`Authentication failed: ${response.statusText}`);
-          setStatus('Redirecting to login...');
-          setTimeout(() => {
-            router.push('/?error=exchange_failed');
-          }, 2000);
-          return;
-        }
-
-        const data = await response.json();
-        console.log('[OAuth Callback] Exchange successful:', data);
-
-        if (data.data?.access_token) {
-          // Store the token
-          tokenManager.setAccessToken(data.data.access_token);
+        // Check if we have a token directly from Auth Service
+        if (token) {
+          console.log('[OAuth Callback] Token received directly from Auth Service');
+          
+          // Store the token - this will trigger tokenChanged event
+          tokenManager.setAccessToken(token);
           console.log('[OAuth Callback] Token stored successfully');
-
+          
+          setStatus('Loading user data...');
+          
+          // Decode user data from token
+          const userData = decodeUserFromToken(token);
+          if (userData) {
+            console.log('[OAuth Callback] User data decoded from token:', userData);
+            // Cache user data in sessionStorage for immediate use
+            try {
+              sessionStorage.setItem('svetu_user', JSON.stringify(userData));
+              console.log('[OAuth Callback] User data cached in sessionStorage');
+            } catch (e) {
+              console.error('[OAuth Callback] Failed to cache user data:', e);
+            }
+          }
+          
           setStatus('Login successful! Redirecting...');
-
-          // Redirect to the originally requested page or home
+          
+          // Redirect to home or previously requested page
           const redirectTo = state || '/';
           console.log('[OAuth Callback] Redirecting to:', redirectTo);
-
-          // Small delay for user feedback
+          
+          // Use router.push for client-side navigation
+          // The AuthContext will pick up the token and user from storage
           setTimeout(() => {
             router.push(redirectTo);
           }, 1000);
-        } else {
-          console.error('[OAuth Callback] No token in response:', data);
-          setError('No authentication token received');
-          setStatus('Redirecting to login...');
-          setTimeout(() => {
-            router.push('/?error=no_token');
-          }, 2000);
+          return;
         }
+
+        // If we have a code but no token, Auth Service hasn't processed it yet
+        // This means we're at the first redirect from Google to frontend
+        if (code && !token) {
+          console.log('[OAuth Callback] Code received, redirecting to backend for processing...');
+          
+          // Redirect to backend to process the OAuth callback
+          const backendCallbackUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google/callback?code=${code}&state=${state || ''}`;
+          console.log('[OAuth Callback] Redirecting to:', backendCallbackUrl);
+          
+          // Use window.location for redirect to backend
+          window.location.href = backendCallbackUrl;
+          return;
+        }
+
+        // No token and no code - error case
+        console.error('[OAuth Callback] No token or code parameter found');
+        setError('No authorization data received');
+        setStatus('Redirecting to home...');
+        setTimeout(() => {
+          router.push('/?error=no_auth_data');
+        }, 2000);
       } catch (err) {
         console.error('[OAuth Callback] Error during callback handling:', err);
         setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -126,7 +118,7 @@ function GoogleCallbackContent() {
     };
 
     handleOAuthCallback();
-  }, [router, searchParams]);
+  }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-base-200">

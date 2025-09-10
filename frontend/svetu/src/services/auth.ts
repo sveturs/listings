@@ -100,17 +100,21 @@ export class AuthService {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_sessionError) {
           console.log(
-            '[AuthService] Session failed with existing token, will try refresh'
+            '[AuthService] Session failed with existing token, will try refresh if possible'
           );
+          // Очищаем невалидный токен
+          tokenManager.clearTokens();
         }
       }
 
-      // Проверяем есть ли refresh токен
+      // Проверяем есть ли refresh токен (для старой системы авторизации)
       const refreshToken = tokenManager.getRefreshToken();
       if (!refreshToken) {
         console.log(
-          '[AuthService] No refresh token available, cannot restore session'
+          '[AuthService] No refresh token available, session cannot be restored via refresh'
         );
+        // Если нет refresh токена, но был access token - это OAuth авторизация
+        // В этом случае мы уже попытались получить сессию выше
         return null;
       }
 
