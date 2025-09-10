@@ -524,20 +524,20 @@ export default function CheckoutPage() {
                 >
                   {/* Customer Information */}
                   {currentStep === 'customer' && (
-                    <div className="card bg-base-200">
-                      <div className="card-body">
-                        <h2 className="card-title">{t('customer.title')}</h2>
-                        <form className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="card bg-base-200 shadow-lg">
+                      <div className="card-body p-8">
+                        <h2 className="card-title text-2xl mb-6">{t('customer.title')}</h2>
+                        <form className="space-y-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">
+                              <label className="label mb-2">
+                                <span className="label-text font-medium text-base">
                                   {t('customer.firstName')}
                                 </span>
                               </label>
                               <input
                                 type="text"
-                                className="input input-bordered"
+                                className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 {...customerForm.register('firstName')}
                               />
                               {customerForm.formState.errors.firstName && (
@@ -552,14 +552,14 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">
+                              <label className="label mb-2">
+                                <span className="label-text font-medium text-base">
                                   {t('customer.lastName')}
                                 </span>
                               </label>
                               <input
                                 type="text"
-                                className="input input-bordered"
+                                className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 {...customerForm.register('lastName')}
                               />
                               {customerForm.formState.errors.lastName && (
@@ -575,14 +575,14 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('customer.email')}
                               </span>
                             </label>
                             <input
                               type="email"
-                              className="input input-bordered"
+                              className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                               {...customerForm.register('email')}
                             />
                             {customerForm.formState.errors.email && (
@@ -594,14 +594,14 @@ export default function CheckoutPage() {
                             )}
                           </div>
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('customer.phone')}
                               </span>
                             </label>
                             <input
                               type="tel"
-                              className="input input-bordered"
+                              className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                               {...customerForm.register('phone')}
                             />
                             {customerForm.formState.errors.phone && (
@@ -619,19 +619,19 @@ export default function CheckoutPage() {
 
                   {/* Shipping Information */}
                   {currentStep === 'shipping' && (
-                    <div className="card bg-base-200">
-                      <div className="card-body">
-                        <h2 className="card-title">{t('shipping.title')}</h2>
-                        <form className="space-y-4">
+                    <div className="card bg-base-200 shadow-lg">
+                      <div className="card-body p-8">
+                        <h2 className="card-title text-2xl mb-6">{t('shipping.title')}</h2>
+                        <form className="space-y-6">
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('shipping.street')}
                               </span>
                             </label>
                             <input
                               type="text"
-                              className="input input-bordered"
+                              className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                               {...shippingForm.register('street')}
                             />
                             {shippingForm.formState.errors.street && (
@@ -642,16 +642,16 @@ export default function CheckoutPage() {
                               </label>
                             )}
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">
+                              <label className="label mb-2">
+                                <span className="label-text font-medium text-base">
                                   {t('shipping.city')}
                                 </span>
                               </label>
                               <input
                                 type="text"
-                                className="input input-bordered"
+                                className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 {...shippingForm.register('city')}
                               />
                               {shippingForm.formState.errors.city && (
@@ -663,14 +663,14 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">
+                              <label className="label mb-2">
+                                <span className="label-text font-medium text-base">
                                   {t('shipping.postalCode')}
                                 </span>
                               </label>
                               <input
                                 type="text"
-                                className="input input-bordered"
+                                className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                                 {...shippingForm.register('postalCode')}
                               />
                               {shippingForm.formState.errors.postalCode && (
@@ -686,14 +686,14 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('shipping.country')}
                               </span>
                             </label>
                             <input
                               type="text"
-                              className="input input-bordered"
+                              className="input input-bordered h-12 text-base focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                               {...shippingForm.register('country')}
                             />
                             {shippingForm.formState.errors.country && (
@@ -710,12 +710,12 @@ export default function CheckoutPage() {
 
                           {/* Shipping Method */}
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('shipping.method')}
                               </span>
                             </label>
-                            <div className="space-y-2">
+                            <div className="space-y-3 bg-base-100 p-4 rounded-lg border">
                               {loadingProviders ? (
                                 <div className="flex justify-center py-8">
                                   <span className="loading loading-spinner loading-lg"></span>
@@ -848,7 +848,7 @@ export default function CheckoutPage() {
                                       return (
                                         <label
                                           key={provider.id}
-                                          className="label cursor-pointer justify-start gap-4"
+                                          className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30"
                                         >
                                           <input
                                             type="radio"
@@ -863,7 +863,7 @@ export default function CheckoutPage() {
                                               <span className="text-lg mr-2">
                                                 {provider.icon}
                                               </span>
-                                              <span className="label-text">
+                                              <span className="label-text font-medium">
                                                 {provider.name}
                                               </span>
                                               {provider.id ===
@@ -958,7 +958,7 @@ export default function CheckoutPage() {
                               ) : (
                                 <>
                                   {/* Fallback to default providers */}
-                                  <label className="label cursor-pointer justify-start gap-4">
+                                  <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30">
                                     <input
                                       type="radio"
                                       className="radio radio-primary"
@@ -968,7 +968,7 @@ export default function CheckoutPage() {
                                       )}
                                     />
                                     <div className="flex-1">
-                                      <span className="label-text">
+                                      <span className="label-text font-medium">
                                         {t('shipping.standard')}
                                       </span>
                                       <p className="text-sm text-base-content/60">
@@ -979,7 +979,7 @@ export default function CheckoutPage() {
                                       {total >= 5000 ? t('free') : '300 RSD'}
                                     </span>
                                   </label>
-                                  <label className="label cursor-pointer justify-start gap-4">
+                                  <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30">
                                     <input
                                       type="radio"
                                       className="radio radio-primary"
@@ -989,7 +989,7 @@ export default function CheckoutPage() {
                                       )}
                                     />
                                     <div className="flex-1">
-                                      <span className="label-text">
+                                      <span className="label-text font-medium">
                                         {t('shipping.express')}
                                       </span>
                                       <p className="text-sm text-base-content/60">
@@ -1000,7 +1000,7 @@ export default function CheckoutPage() {
                                       500 RSD
                                     </span>
                                   </label>
-                                  <label className="label cursor-pointer justify-start gap-4">
+                                  <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30">
                                     <input
                                       type="radio"
                                       className="radio radio-primary"
@@ -1010,7 +1010,7 @@ export default function CheckoutPage() {
                                       )}
                                     />
                                     <div className="flex-1">
-                                      <span className="label-text">
+                                      <span className="label-text font-medium">
                                         {t('shipping.pickup')}
                                       </span>
                                       <p className="text-sm text-base-content/60">
@@ -1032,18 +1032,18 @@ export default function CheckoutPage() {
 
                   {/* Payment Information */}
                   {currentStep === 'payment' && (
-                    <div className="card bg-base-200">
-                      <div className="card-body">
-                        <h2 className="card-title">{t('payment.title')}</h2>
-                        <form className="space-y-4">
+                    <div className="card bg-base-200 shadow-lg">
+                      <div className="card-body p-8">
+                        <h2 className="card-title text-2xl mb-6">{t('payment.title')}</h2>
+                        <form className="space-y-6">
                           <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">
+                            <label className="label mb-2">
+                              <span className="label-text font-medium text-base">
                                 {t('payment.method')}
                               </span>
                             </label>
-                            <div className="space-y-2">
-                              <label className="label cursor-pointer justify-start gap-4">
+                            <div className="space-y-3 bg-base-100 p-4 rounded-lg border">
+                              <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30">
                                 <input
                                   type="radio"
                                   className="radio radio-primary"
@@ -1051,7 +1051,7 @@ export default function CheckoutPage() {
                                   {...paymentForm.register('paymentMethod')}
                                 />
                                 <div className="flex-1">
-                                  <span className="label-text">
+                                  <span className="label-text font-medium">
                                     {t('payment.cod')}
                                   </span>
                                   <p className="text-sm text-base-content/60">
@@ -1059,7 +1059,7 @@ export default function CheckoutPage() {
                                   </p>
                                 </div>
                               </label>
-                              <label className="label cursor-pointer justify-start gap-4">
+                              <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg hover:bg-base-50 transition-colors border hover:border-primary/30">
                                 <input
                                   type="radio"
                                   className="radio radio-primary"
@@ -1067,7 +1067,7 @@ export default function CheckoutPage() {
                                   {...paymentForm.register('paymentMethod')}
                                 />
                                 <div className="flex-1">
-                                  <span className="label-text">
+                                  <span className="label-text font-medium">
                                     {t('payment.bankTransfer')}
                                   </span>
                                   <p className="text-sm text-base-content/60">
@@ -1075,7 +1075,7 @@ export default function CheckoutPage() {
                                   </p>
                                 </div>
                               </label>
-                              <label className="label cursor-pointer justify-start gap-4 opacity-50">
+                              <label className="label cursor-pointer justify-start gap-4 p-3 rounded-lg border opacity-50">
                                 <input
                                   type="radio"
                                   className="radio radio-primary"
@@ -1084,7 +1084,7 @@ export default function CheckoutPage() {
                                   {...paymentForm.register('paymentMethod')}
                                 />
                                 <div className="flex-1">
-                                  <span className="label-text">
+                                  <span className="label-text font-medium">
                                     {t('payment.card')}
                                   </span>
                                   <p className="text-sm text-base-content/60">
@@ -1095,14 +1095,14 @@ export default function CheckoutPage() {
                             </div>
                           </div>
 
-                          <div className="form-control">
-                            <label className="label cursor-pointer justify-start gap-4">
+                          <div className="form-control mt-6">
+                            <label className="label cursor-pointer justify-start gap-4 p-4 bg-base-100 rounded-lg border">
                               <input
                                 type="checkbox"
                                 className="checkbox checkbox-primary"
                                 {...paymentForm.register('acceptTerms')}
                               />
-                              <span className="label-text">
+                              <span className="label-text text-base">
                                 {t('payment.acceptTerms')}{' '}
                                 <Link
                                   href="/terms"
@@ -1297,9 +1297,9 @@ export default function CheckoutPage() {
 
             {/* Order Summary Sidebar */}
             <div className="lg:col-span-1">
-              <div className="card bg-base-200 sticky top-24">
-                <div className="card-body">
-                  <h2 className="card-title mb-4">{t('summary.title')}</h2>
+              <div className="card bg-base-200 shadow-lg sticky top-24">
+                <div className="card-body p-6">
+                  <h2 className="card-title text-xl mb-6">{t('summary.title')}</h2>
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
