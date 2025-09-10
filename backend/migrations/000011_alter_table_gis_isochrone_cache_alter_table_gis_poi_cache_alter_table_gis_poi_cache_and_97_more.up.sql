@@ -1,3 +1,37 @@
+ALTER TABLE ONLY public.gis_isochrone_cache
+    ADD CONSTRAINT gis_isochrone_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.gis_poi_cache
+    ADD CONSTRAINT gis_poi_cache_external_id_key UNIQUE (external_id);
+ALTER TABLE ONLY public.gis_poi_cache
+    ADD CONSTRAINT gis_poi_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.import_history
+    ADD CONSTRAINT import_history_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.import_sources
+    ADD CONSTRAINT import_sources_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.imported_categories
+    ADD CONSTRAINT imported_categories_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.imported_categories
+    ADD CONSTRAINT imported_categories_source_id_source_category_key UNIQUE (source_id, source_category);
+ALTER TABLE ONLY public.inventory_reservations
+    ADD CONSTRAINT inventory_reservations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.item_performance_metrics
+    ADD CONSTRAINT item_performance_metrics_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_listing_id_attribute_id_key UNIQUE (listing_id, attribute_id);
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listing_views
+    ADD CONSTRAINT listing_view_uniqueness UNIQUE (listing_id, user_id);
+ALTER TABLE ONLY public.listing_views
+    ADD CONSTRAINT listing_views_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listings_geo
+    ADD CONSTRAINT listings_geo_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.map_items_cache
+    ADD CONSTRAINT map_items_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.marketplace_categories
+    ADD CONSTRAINT marketplace_categories_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.marketplace_categories
+    ADD CONSTRAINT marketplace_categories_slug_key UNIQUE (slug);
 ALTER TABLE ONLY public.marketplace_chats
     ADD CONSTRAINT marketplace_chats_listing_id_buyer_id_seller_id_key UNIQUE (listing_id, buyer_id, seller_id);
 ALTER TABLE ONLY public.marketplace_chats
@@ -164,37 +198,3 @@ ALTER TABLE ONLY public.subscription_plans
     ADD CONSTRAINT subscription_plans_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.subscription_usage
     ADD CONSTRAINT subscription_usage_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_audit_log
-    ADD CONSTRAINT translation_audit_log_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_providers
-    ADD CONSTRAINT translation_providers_name_key UNIQUE (name);
-ALTER TABLE ONLY public.translation_providers
-    ADD CONSTRAINT translation_providers_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_quality_metrics
-    ADD CONSTRAINT translation_quality_metrics_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_sync_conflicts
-    ADD CONSTRAINT translation_sync_conflicts_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_tasks
-    ADD CONSTRAINT translation_tasks_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translations
-    ADD CONSTRAINT translations_entity_type_entity_id_language_field_name_key UNIQUE (entity_type, entity_id, language, field_name);
-ALTER TABLE ONLY public.translations
-    ADD CONSTRAINT translations_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.transliteration_rules
-    ADD CONSTRAINT transliteration_rules_language_source_char_key UNIQUE (language, source_char);
-ALTER TABLE ONLY public.transliteration_rules
-    ADD CONSTRAINT transliteration_rules_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.geocoding_cache
-    ADD CONSTRAINT uk_geocoding_cache_normalized UNIQUE (normalized_address, language, country_code);
-ALTER TABLE ONLY public.listings_geo
-    ADD CONSTRAINT uk_listings_geo_listing_id UNIQUE (listing_id);
-ALTER TABLE ONLY public.marketplace_listing_variants
-    ADD CONSTRAINT uk_marketplace_listing_variants_sku_per_listing UNIQUE (listing_id, sku);
-ALTER TABLE ONLY public.unified_geo
-    ADD CONSTRAINT uk_unified_geo_source UNIQUE (source_type, source_id);
-ALTER TABLE ONLY public.unified_attribute_stats
-    ADD CONSTRAINT unified_attribute_stats_attribute_id_category_id_key UNIQUE (attribute_id, category_id);
-ALTER TABLE ONLY public.unified_attribute_stats
-    ADD CONSTRAINT unified_attribute_stats_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.unified_attribute_values
-    ADD CONSTRAINT unified_attribute_values_entity_type_entity_id_attribute_id_key UNIQUE (entity_type, entity_id, attribute_id);

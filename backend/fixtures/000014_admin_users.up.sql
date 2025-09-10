@@ -16,5 +16,5 @@ INSERT INTO public.admin_users (id, email, created_at, created_by, notes) VALUES
 
 
 --
--- Data for Name: attribute_option_translations; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: attribute_groups; Type: TABLE DATA; Schema: public; Owner: -
 --

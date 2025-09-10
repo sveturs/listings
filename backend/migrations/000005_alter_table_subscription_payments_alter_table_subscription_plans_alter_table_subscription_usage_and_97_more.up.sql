@@ -1,3 +1,9 @@
+ALTER TABLE ONLY public.subscription_payments ALTER COLUMN id SET DEFAULT nextval('public.subscription_payments_id_seq'::regclass);
+ALTER TABLE ONLY public.subscription_plans ALTER COLUMN id SET DEFAULT nextval('public.subscription_plans_id_seq'::regclass);
+ALTER TABLE ONLY public.subscription_usage ALTER COLUMN id SET DEFAULT nextval('public.subscription_usage_id_seq'::regclass);
+ALTER TABLE ONLY public.translation_audit_log ALTER COLUMN id SET DEFAULT nextval('public.translation_audit_log_id_seq'::regclass);
+ALTER TABLE ONLY public.translation_providers ALTER COLUMN id SET DEFAULT nextval('public.translation_providers_id_seq'::regclass);
+ALTER TABLE ONLY public.translation_quality_metrics ALTER COLUMN id SET DEFAULT nextval('public.translation_quality_metrics_id_seq'::regclass);
 ALTER TABLE ONLY public.translation_sync_conflicts ALTER COLUMN id SET DEFAULT nextval('public.translation_sync_conflicts_id_seq'::regclass);
 ALTER TABLE ONLY public.translation_tasks ALTER COLUMN id SET DEFAULT nextval('public.translation_tasks_id_seq'::regclass);
 ALTER TABLE ONLY public.translations ALTER COLUMN id SET DEFAULT nextval('public.translations_id_seq'::regclass);
@@ -88,6 +94,34 @@ CREATE MATERIALIZED VIEW public.gis_listing_density_grid AS
      LEFT JOIN public.marketplace_listings l ON (((l.id = lg.listing_id) AND ((l.status)::text = 'active'::text))))
   GROUP BY g.grid_x, g.grid_y, g.cell
   WITH NO DATA;
+CREATE VIEW public.map_items_view AS
+ SELECT ml.id,
+    ml.title,
+    ml.description,
+    ml.price,
+    ml.condition,
+    ml.location,
+    ml.latitude,
+    ml.longitude,
+    ml.address_city AS city,
+    ml.address_country AS country,
+    ml.status,
+    ml.created_at,
+    ml.updated_at,
+    ml.user_id,
+    ml.category_id,
+    mc.name AS category_name,
+    mc.slug AS category_slug,
+    ( SELECT mi.public_url
+           FROM public.marketplace_images mi
+          WHERE ((mi.listing_id = ml.id) AND (mi.is_main = true))
+         LIMIT 1) AS main_image_url,
+    u.name AS user_name,
+    ml.show_on_map
+   FROM ((public.marketplace_listings ml
+     LEFT JOIN public.marketplace_categories mc ON ((ml.category_id = mc.id)))
+     LEFT JOIN public.users u ON ((ml.user_id = u.id)))
+  WHERE (((ml.status)::text = 'active'::text) AND (ml.show_on_map = true) AND (ml.latitude IS NOT NULL) AND (ml.longitude IS NOT NULL));
 CREATE MATERIALIZED VIEW public.mv_category_statistics AS
  SELECT c.id AS category_id,
     c.name,
@@ -351,10 +385,3 @@ CREATE INDEX idx_cities_has_districts ON public.cities USING btree (has_district
 CREATE INDEX idx_cities_name ON public.cities USING btree (name);
 CREATE INDEX idx_cities_priority ON public.cities USING btree (priority);
 CREATE INDEX idx_cities_slug ON public.cities USING btree (slug);
-CREATE INDEX idx_component_templates_cat ON public.component_templates USING btree (category_id);
-CREATE INDEX idx_component_templates_comp ON public.component_templates USING btree (component_id);
-CREATE INDEX idx_custom_ui_components_active ON public.custom_ui_components USING btree (is_active);
-CREATE INDEX idx_custom_ui_components_name ON public.custom_ui_components USING btree (name);
-CREATE INDEX idx_custom_ui_components_type ON public.custom_ui_components USING btree (component_type);
-CREATE INDEX idx_custom_ui_templates_name ON public.custom_ui_templates USING btree (name);
-CREATE INDEX idx_delivery_is_active ON public.storefront_delivery_options USING btree (is_active);

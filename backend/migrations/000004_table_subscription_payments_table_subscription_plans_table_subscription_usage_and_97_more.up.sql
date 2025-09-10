@@ -1,3 +1,105 @@
+CREATE TABLE public.subscription_payments (
+    id integer NOT NULL,
+    subscription_id integer NOT NULL,
+    user_id integer NOT NULL,
+    payment_id integer,
+    amount numeric(10,2) NOT NULL,
+    currency character varying(3) DEFAULT 'EUR'::character varying,
+    period_start date NOT NULL,
+    period_end date NOT NULL,
+    status character varying(50) DEFAULT 'pending'::character varying,
+    payment_method character varying(50),
+    transaction_data jsonb DEFAULT '{}'::jsonb,
+    paid_at timestamp without time zone,
+    failed_at timestamp without time zone,
+    refunded_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.subscription_plans (
+    id integer NOT NULL,
+    code character varying(50) NOT NULL,
+    name character varying(100) NOT NULL,
+    price_monthly numeric(10,2) DEFAULT 0,
+    price_yearly numeric(10,2) DEFAULT 0,
+    max_storefronts integer DEFAULT 1,
+    max_products_per_storefront integer DEFAULT 50,
+    max_staff_per_storefront integer DEFAULT 1,
+    max_images_total integer DEFAULT 100,
+    has_ai_assistant boolean DEFAULT false,
+    has_live_shopping boolean DEFAULT false,
+    has_export_data boolean DEFAULT false,
+    has_custom_domain boolean DEFAULT false,
+    has_analytics boolean DEFAULT true,
+    has_priority_support boolean DEFAULT false,
+    commission_rate numeric(5,2) DEFAULT 10.00,
+    free_trial_days integer DEFAULT 0,
+    sort_order integer DEFAULT 1,
+    is_active boolean DEFAULT true,
+    is_recommended boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.subscription_usage (
+    id integer NOT NULL,
+    subscription_id integer NOT NULL,
+    storefront_id integer,
+    resource_type character varying(50) NOT NULL,
+    resource_id integer,
+    resource_count integer DEFAULT 1,
+    action character varying(50) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.translation_audit_log (
+    id integer NOT NULL,
+    user_id integer,
+    action character varying(100) NOT NULL,
+    entity_type character varying(50),
+    entity_id integer,
+    old_value text,
+    new_value text,
+    ip_address inet,
+    user_agent text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.translation_providers (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    provider_type character varying(50) NOT NULL,
+    api_key text,
+    settings jsonb DEFAULT '{}'::jsonb,
+    usage_limit integer,
+    usage_current integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    priority integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.translation_quality_metrics (
+    id integer NOT NULL,
+    translation_id integer,
+    quality_score numeric(3,2),
+    character_count integer,
+    word_count integer,
+    has_placeholders boolean DEFAULT false,
+    has_html_tags boolean DEFAULT false,
+    checked_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    checked_by character varying(50),
+    issues jsonb DEFAULT '[]'::jsonb
+);
+CREATE TABLE public.translation_sync_conflicts (
+    id integer NOT NULL,
+    source_type character varying(50) NOT NULL,
+    target_type character varying(50) NOT NULL,
+    entity_identifier text NOT NULL,
+    source_value text,
+    target_value text,
+    conflict_type character varying(50),
+    resolved boolean DEFAULT false,
+    resolved_by integer,
+    resolved_at timestamp without time zone,
+    resolution_type character varying(50),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE public.translation_tasks (
     id integer NOT NULL,
     task_type character varying(50) NOT NULL,
@@ -26,7 +128,8 @@ CREATE TABLE public.translations (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     metadata jsonb DEFAULT '{}'::jsonb,
-    version integer DEFAULT 1
+    version integer DEFAULT 1,
+    last_modified_by integer
 );
 CREATE TABLE public.transliteration_rules (
     id integer NOT NULL,
@@ -86,42 +189,6 @@ CREATE TABLE public.user_contacts (
     CONSTRAINT user_contacts_check CHECK ((user_id <> contact_user_id)),
     CONSTRAINT user_contacts_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('blocked'::character varying)::text])))
 );
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    email character varying(150) NOT NULL,
-    google_id character varying(255),
-    picture_url text,
-    phone character varying(20),
-    bio text,
-    notification_email boolean DEFAULT true,
-    timezone character varying(50) DEFAULT 'UTC'::character varying,
-    last_seen timestamp without time zone,
-    account_status character varying(20) DEFAULT 'active'::character varying,
-    settings jsonb DEFAULT '{}'::jsonb,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    city character varying(100),
-    country character varying(100),
-    password character varying(255),
-    provider character varying(50) DEFAULT 'email'::character varying,
-    preferred_language character varying(10) DEFAULT 'ru'::character varying,
-    role_id integer,
-    CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
-    CONSTRAINT users_preferred_language_check CHECK (((preferred_language)::text = ANY ((ARRAY['ru'::character varying, 'sr'::character varying, 'en'::character varying])::text[])))
-);
-CREATE TABLE public.user_roles (
-    user_id integer NOT NULL,
-    role_id integer NOT NULL,
-    assigned_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    assigned_by integer
-);
-CREATE TABLE public.user_telegram_connections (
-    user_id integer NOT NULL,
-    telegram_chat_id character varying(100) NOT NULL,
-    telegram_username character varying(100),
-    connected_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
 CREATE TABLE public.user_subscriptions (
     id integer NOT NULL,
     user_id integer NOT NULL,
@@ -157,6 +224,7 @@ CREATE TABLE public.variant_attribute_mappings (
 ALTER TABLE ONLY public.address_change_log ALTER COLUMN id SET DEFAULT nextval('public.address_change_log_id_seq'::regclass);
 ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.admin_users_id_seq'::regclass);
 ALTER TABLE ONLY public.attribute_group_items ALTER COLUMN id SET DEFAULT nextval('public.attribute_group_items_id_seq'::regclass);
+ALTER TABLE ONLY public.attribute_groups ALTER COLUMN id SET DEFAULT nextval('public.attribute_groups_id_seq'::regclass);
 ALTER TABLE ONLY public.attribute_option_translations ALTER COLUMN id SET DEFAULT nextval('public.attribute_option_translations_id_seq'::regclass);
 ALTER TABLE ONLY public.balance_transactions ALTER COLUMN id SET DEFAULT nextval('public.balance_transactions_id_seq'::regclass);
 ALTER TABLE ONLY public.car_generations ALTER COLUMN id SET DEFAULT nextval('public.car_generations_id_seq'::regclass);
@@ -181,6 +249,7 @@ ALTER TABLE ONLY public.import_sources ALTER COLUMN id SET DEFAULT nextval('publ
 ALTER TABLE ONLY public.imported_categories ALTER COLUMN id SET DEFAULT nextval('public.imported_categories_id_seq'::regclass);
 ALTER TABLE ONLY public.inventory_reservations ALTER COLUMN id SET DEFAULT nextval('public.inventory_reservations_id_seq'::regclass);
 ALTER TABLE ONLY public.item_performance_metrics ALTER COLUMN id SET DEFAULT nextval('public.item_performance_metrics_id_seq'::regclass);
+ALTER TABLE ONLY public.listing_attribute_values ALTER COLUMN id SET DEFAULT nextval('public.listing_attribute_values_id_seq'::regclass);
 ALTER TABLE ONLY public.listing_views ALTER COLUMN id SET DEFAULT nextval('public.listing_views_id_seq'::regclass);
 ALTER TABLE ONLY public.listings_geo ALTER COLUMN id SET DEFAULT nextval('public.listings_geo_id_seq'::regclass);
 ALTER TABLE ONLY public.marketplace_categories ALTER COLUMN id SET DEFAULT nextval('public.marketplace_categories_id_seq'::regclass);
@@ -236,9 +305,3 @@ ALTER TABLE ONLY public.storefront_product_variants ALTER COLUMN id SET DEFAULT 
 ALTER TABLE ONLY public.storefront_staff ALTER COLUMN id SET DEFAULT nextval('public.storefront_staff_id_seq'::regclass);
 ALTER TABLE ONLY public.storefronts ALTER COLUMN id SET DEFAULT nextval('public.storefronts_id_seq'::regclass);
 ALTER TABLE ONLY public.subscription_history ALTER COLUMN id SET DEFAULT nextval('public.subscription_history_id_seq'::regclass);
-ALTER TABLE ONLY public.subscription_payments ALTER COLUMN id SET DEFAULT nextval('public.subscription_payments_id_seq'::regclass);
-ALTER TABLE ONLY public.subscription_plans ALTER COLUMN id SET DEFAULT nextval('public.subscription_plans_id_seq'::regclass);
-ALTER TABLE ONLY public.subscription_usage ALTER COLUMN id SET DEFAULT nextval('public.subscription_usage_id_seq'::regclass);
-ALTER TABLE ONLY public.translation_audit_log ALTER COLUMN id SET DEFAULT nextval('public.translation_audit_log_id_seq'::regclass);
-ALTER TABLE ONLY public.translation_providers ALTER COLUMN id SET DEFAULT nextval('public.translation_providers_id_seq'::regclass);
-ALTER TABLE ONLY public.translation_quality_metrics ALTER COLUMN id SET DEFAULT nextval('public.translation_quality_metrics_id_seq'::regclass);

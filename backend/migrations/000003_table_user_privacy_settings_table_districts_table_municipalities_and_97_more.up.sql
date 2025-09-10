@@ -1,3 +1,23 @@
+CREATE TABLE public.user_privacy_settings (
+    user_id integer NOT NULL,
+    allow_contact_requests boolean DEFAULT true,
+    allow_messages_from_contacts_only boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.districts (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name character varying(255) NOT NULL,
+    city_id uuid,
+    country_code character varying(2) DEFAULT 'RS'::character varying NOT NULL,
+    boundary public.geometry(Polygon,4326),
+    center_point public.geometry(Point,4326),
+    population integer,
+    area_km2 numeric(10,2),
+    postal_codes text[],
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
 CREATE TABLE public.municipalities (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name character varying(255) NOT NULL,
@@ -42,6 +62,19 @@ CREATE TABLE public.attribute_group_items (
     custom_display_name character varying(255),
     visibility_condition jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.attribute_groups (
+    id integer NOT NULL,
+    code character varying(50) NOT NULL,
+    name character varying(100) NOT NULL,
+    description text,
+    sort_order integer DEFAULT 0,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    display_name character varying(255),
+    icon character varying(100),
+    is_system boolean DEFAULT false
 );
 CREATE TABLE public.attribute_option_translations (
     id integer NOT NULL,
@@ -498,6 +531,18 @@ CREATE TABLE public.item_performance_metrics (
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT item_performance_metrics_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text])))
 );
+CREATE TABLE public.listing_attribute_values (
+    id integer NOT NULL,
+    listing_id integer NOT NULL,
+    attribute_id integer NOT NULL,
+    text_value text,
+    numeric_value numeric(15,2),
+    boolean_value boolean,
+    date_value date,
+    json_value jsonb,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE public.listing_views (
     id integer NOT NULL,
     listing_id integer NOT NULL,
@@ -505,23 +550,6 @@ CREATE TABLE public.listing_views (
     ip_hash character varying(255),
     view_time timestamp without time zone DEFAULT now(),
     CONSTRAINT at_least_one_identifier CHECK (((user_id IS NOT NULL) OR (ip_hash IS NOT NULL)))
-);
-CREATE TABLE public.marketplace_chats (
-    id integer NOT NULL,
-    listing_id integer,
-    buyer_id integer,
-    seller_id integer,
-    last_message_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    is_archived boolean DEFAULT false,
-    storefront_product_id integer,
-    CONSTRAINT check_chat_target CHECK ((NOT ((listing_id IS NOT NULL) AND (storefront_product_id IS NOT NULL))))
-);
-CREATE TABLE public.marketplace_favorites (
-    user_id integer NOT NULL,
-    listing_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE public.marketplace_images (
     id integer NOT NULL,
@@ -535,6 +563,61 @@ CREATE TABLE public.marketplace_images (
     storage_type character varying(20) DEFAULT 'local'::character varying,
     storage_bucket character varying(100),
     public_url text
+);
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    email character varying(150) NOT NULL,
+    google_id character varying(255),
+    picture_url text,
+    phone character varying(20),
+    bio text,
+    notification_email boolean DEFAULT true,
+    timezone character varying(50) DEFAULT 'UTC'::character varying,
+    last_seen timestamp without time zone,
+    account_status character varying(20) DEFAULT 'active'::character varying,
+    settings jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    city character varying(100),
+    country character varying(100),
+    password character varying(255),
+    provider character varying(50) DEFAULT 'email'::character varying,
+    preferred_language character varying(10) DEFAULT 'ru'::character varying,
+    role_id integer,
+    CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
+    CONSTRAINT users_preferred_language_check CHECK (((preferred_language)::text = ANY ((ARRAY['ru'::character varying, 'sr'::character varying, 'en'::character varying])::text[])))
+);
+CREATE TABLE public.marketplace_favorites (
+    user_id integer NOT NULL,
+    listing_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.notification_settings (
+    user_id integer NOT NULL,
+    notification_type character varying(50) NOT NULL,
+    telegram_enabled boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    email_enabled boolean DEFAULT false
+);
+CREATE TABLE public.user_telegram_connections (
+    user_id integer NOT NULL,
+    telegram_chat_id character varying(100) NOT NULL,
+    telegram_username character varying(100),
+    connected_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE public.marketplace_chats (
+    id integer NOT NULL,
+    listing_id integer,
+    buyer_id integer,
+    seller_id integer,
+    last_message_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    is_archived boolean DEFAULT false,
+    storefront_product_id integer,
+    CONSTRAINT check_chat_target CHECK ((NOT ((listing_id IS NOT NULL) AND (storefront_product_id IS NOT NULL))))
 );
 CREATE TABLE public.marketplace_listing_variants (
     id integer NOT NULL,
@@ -629,14 +712,6 @@ CREATE TABLE public.unified_attribute_values (
     CONSTRAINT unified_attribute_values_entity_type_check CHECK (((entity_type)::text = ANY ((ARRAY['listing'::character varying, 'product'::character varying, 'product_variant'::character varying])::text[])))
 )
 WITH (autovacuum_vacuum_scale_factor='0.1', autovacuum_analyze_scale_factor='0.05', autovacuum_vacuum_cost_delay='10');
-CREATE TABLE public.notification_settings (
-    user_id integer NOT NULL,
-    notification_type character varying(50) NOT NULL,
-    telegram_enabled boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    email_enabled boolean DEFAULT false
-);
 CREATE TABLE public.notifications (
     id integer NOT NULL,
     user_id integer NOT NULL,
@@ -1013,6 +1088,12 @@ CREATE TABLE public.roles (
     is_system boolean DEFAULT false,
     is_assignable boolean DEFAULT true,
     priority integer DEFAULT 100
+);
+CREATE TABLE public.user_roles (
+    user_id integer NOT NULL,
+    role_id integer NOT NULL,
+    assigned_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    assigned_by integer
 );
 CREATE TABLE public.search_behavior_metrics (
     id bigint NOT NULL,
@@ -1422,106 +1503,4 @@ CREATE TABLE public.subscription_history (
     metadata jsonb DEFAULT '{}'::jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     created_by integer
-);
-CREATE TABLE public.subscription_payments (
-    id integer NOT NULL,
-    subscription_id integer NOT NULL,
-    user_id integer NOT NULL,
-    payment_id integer,
-    amount numeric(10,2) NOT NULL,
-    currency character varying(3) DEFAULT 'EUR'::character varying,
-    period_start date NOT NULL,
-    period_end date NOT NULL,
-    status character varying(50) DEFAULT 'pending'::character varying,
-    payment_method character varying(50),
-    transaction_data jsonb DEFAULT '{}'::jsonb,
-    paid_at timestamp without time zone,
-    failed_at timestamp without time zone,
-    refunded_at timestamp without time zone,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.subscription_plans (
-    id integer NOT NULL,
-    code character varying(50) NOT NULL,
-    name character varying(100) NOT NULL,
-    price_monthly numeric(10,2) DEFAULT 0,
-    price_yearly numeric(10,2) DEFAULT 0,
-    max_storefronts integer DEFAULT 1,
-    max_products_per_storefront integer DEFAULT 50,
-    max_staff_per_storefront integer DEFAULT 1,
-    max_images_total integer DEFAULT 100,
-    has_ai_assistant boolean DEFAULT false,
-    has_live_shopping boolean DEFAULT false,
-    has_export_data boolean DEFAULT false,
-    has_custom_domain boolean DEFAULT false,
-    has_analytics boolean DEFAULT true,
-    has_priority_support boolean DEFAULT false,
-    commission_rate numeric(5,2) DEFAULT 10.00,
-    free_trial_days integer DEFAULT 0,
-    sort_order integer DEFAULT 1,
-    is_active boolean DEFAULT true,
-    is_recommended boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.subscription_usage (
-    id integer NOT NULL,
-    subscription_id integer NOT NULL,
-    storefront_id integer,
-    resource_type character varying(50) NOT NULL,
-    resource_id integer,
-    resource_count integer DEFAULT 1,
-    action character varying(50) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.translation_audit_log (
-    id integer NOT NULL,
-    user_id integer,
-    action character varying(100) NOT NULL,
-    entity_type character varying(50),
-    entity_id integer,
-    old_value text,
-    new_value text,
-    ip_address inet,
-    user_agent text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.translation_providers (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    provider_type character varying(50) NOT NULL,
-    api_key text,
-    settings jsonb DEFAULT '{}'::jsonb,
-    usage_limit integer,
-    usage_current integer DEFAULT 0,
-    is_active boolean DEFAULT true,
-    priority integer DEFAULT 0,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.translation_quality_metrics (
-    id integer NOT NULL,
-    translation_id integer,
-    quality_score numeric(3,2),
-    character_count integer,
-    word_count integer,
-    has_placeholders boolean DEFAULT false,
-    has_html_tags boolean DEFAULT false,
-    checked_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    checked_by character varying(50),
-    issues jsonb DEFAULT '[]'::jsonb
-);
-CREATE TABLE public.translation_sync_conflicts (
-    id integer NOT NULL,
-    source_type character varying(50) NOT NULL,
-    target_type character varying(50) NOT NULL,
-    entity_identifier text NOT NULL,
-    source_value text,
-    target_value text,
-    conflict_type character varying(50),
-    resolved boolean DEFAULT false,
-    resolved_by integer,
-    resolved_at timestamp without time zone,
-    resolution_type character varying(50),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );

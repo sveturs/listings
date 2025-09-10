@@ -169,6 +169,13 @@ CREATE SEQUENCE public.attribute_group_items_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.attribute_groups_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.attribute_option_translations_id_seq
     AS integer
     START WITH 1
@@ -328,6 +335,13 @@ CREATE SEQUENCE public.inventory_reservations_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.item_performance_metrics_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.listing_attribute_values_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -733,20 +747,6 @@ CREATE SEQUENCE public.subscription_usage_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.translation_audit_log_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_providers_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_quality_metrics_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1

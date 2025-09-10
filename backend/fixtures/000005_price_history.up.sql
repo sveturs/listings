@@ -128,6 +128,7 @@ INSERT INTO public.price_history (id, listing_id, price, effective_from, effecti
 INSERT INTO public.price_history (id, listing_id, price, effective_from, effective_to, change_source, change_percentage, created_at) VALUES (146, 268, 50.00, '2025-08-28 17:03:04.994222', '2025-09-01 22:30:12.382056', 'update', -98.89, '2025-08-28 17:03:04.994222');
 INSERT INTO public.price_history (id, listing_id, price, effective_from, effective_to, change_source, change_percentage, created_at) VALUES (165, 268, 30.00, '2025-09-01 22:30:12.382055', NULL, 'manual', 0.00, '2025-09-01 20:30:12.384648');
 INSERT INTO public.price_history (id, listing_id, price, effective_from, effective_to, change_source, change_percentage, created_at) VALUES (166, 294, 3123.00, '2025-09-03 22:38:02.575888', NULL, 'create', NULL, '2025-09-03 22:38:02.575888');
+INSERT INTO public.price_history (id, listing_id, price, effective_from, effective_to, change_source, change_percentage, created_at) VALUES (167, 296, 2990000.00, '2025-09-08 12:52:08.148719', NULL, 'create', NULL, '2025-09-08 12:52:08.148719');
 
 
 --

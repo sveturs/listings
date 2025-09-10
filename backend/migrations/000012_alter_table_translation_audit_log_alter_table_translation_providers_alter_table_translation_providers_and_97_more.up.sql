@@ -1,3 +1,37 @@
+ALTER TABLE ONLY public.translation_audit_log
+    ADD CONSTRAINT translation_audit_log_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_providers
+    ADD CONSTRAINT translation_providers_name_key UNIQUE (name);
+ALTER TABLE ONLY public.translation_providers
+    ADD CONSTRAINT translation_providers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_quality_metrics
+    ADD CONSTRAINT translation_quality_metrics_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_sync_conflicts
+    ADD CONSTRAINT translation_sync_conflicts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_tasks
+    ADD CONSTRAINT translation_tasks_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_entity_type_entity_id_language_field_name_key UNIQUE (entity_type, entity_id, language, field_name);
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.transliteration_rules
+    ADD CONSTRAINT transliteration_rules_language_source_char_key UNIQUE (language, source_char);
+ALTER TABLE ONLY public.transliteration_rules
+    ADD CONSTRAINT transliteration_rules_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.geocoding_cache
+    ADD CONSTRAINT uk_geocoding_cache_normalized UNIQUE (normalized_address, language, country_code);
+ALTER TABLE ONLY public.listings_geo
+    ADD CONSTRAINT uk_listings_geo_listing_id UNIQUE (listing_id);
+ALTER TABLE ONLY public.marketplace_listing_variants
+    ADD CONSTRAINT uk_marketplace_listing_variants_sku_per_listing UNIQUE (listing_id, sku);
+ALTER TABLE ONLY public.unified_geo
+    ADD CONSTRAINT uk_unified_geo_source UNIQUE (source_type, source_id);
+ALTER TABLE ONLY public.unified_attribute_stats
+    ADD CONSTRAINT unified_attribute_stats_attribute_id_category_id_key UNIQUE (attribute_id, category_id);
+ALTER TABLE ONLY public.unified_attribute_stats
+    ADD CONSTRAINT unified_attribute_stats_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.unified_attribute_values
+    ADD CONSTRAINT unified_attribute_values_entity_type_entity_id_attribute_id_key UNIQUE (entity_type, entity_id, attribute_id);
 ALTER TABLE ONLY public.unified_attribute_values
     ADD CONSTRAINT unified_attribute_values_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.unified_attributes
@@ -110,20 +144,3 @@ CREATE TRIGGER update_marketplace_chats_timestamp BEFORE UPDATE ON public.market
 CREATE TRIGGER update_marketplace_messages_timestamp BEFORE UPDATE ON public.marketplace_messages FOR EACH ROW EXECUTE FUNCTION public.update_marketplace_chats_updated_at();
 CREATE TRIGGER update_notification_settings_timestamp BEFORE UPDATE ON public.notification_settings FOR EACH ROW EXECUTE FUNCTION public.update_notification_settings_updated_at();
 CREATE TRIGGER update_ratings_after_review_change AFTER INSERT OR DELETE OR UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.refresh_rating_views();
-CREATE TRIGGER update_review_responses_updated_at BEFORE UPDATE ON public.review_responses FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_search_queries_updated_at_trigger BEFORE UPDATE ON public.search_queries FOR EACH ROW EXECUTE FUNCTION public.update_search_queries_updated_at();
-CREATE TRIGGER update_stock_status_trigger BEFORE INSERT OR UPDATE OF stock_quantity ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.update_product_stock_status();
-CREATE TRIGGER update_storefront_order_items_updated_at BEFORE UPDATE ON public.storefront_order_items FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE TRIGGER update_storefront_usage AFTER INSERT OR DELETE ON public.storefronts FOR EACH ROW EXECUTE FUNCTION public.update_subscription_usage();
-CREATE TRIGGER update_translation_providers_timestamp BEFORE UPDATE ON public.translation_providers FOR EACH ROW EXECUTE FUNCTION public.update_translation_providers_updated_at();
-CREATE TRIGGER update_translations_timestamp BEFORE UPDATE ON public.translations FOR EACH ROW EXECUTE FUNCTION public.update_translations_updated_at();
-CREATE TRIGGER update_unified_attribute_values_updated_at BEFORE UPDATE ON public.unified_attribute_values FOR EACH ROW EXECUTE FUNCTION public.update_unified_attributes_updated_at();
-CREATE TRIGGER update_unified_attributes_updated_at BEFORE UPDATE ON public.unified_attributes FOR EACH ROW EXECUTE FUNCTION public.update_unified_attributes_updated_at();
-CREATE TRIGGER update_unified_category_attributes_updated_at BEFORE UPDATE ON public.unified_category_attributes FOR EACH ROW EXECUTE FUNCTION public.update_unified_attributes_updated_at();
-CREATE TRIGGER update_user_contacts_updated_at BEFORE UPDATE ON public.user_contacts FOR EACH ROW EXECUTE FUNCTION public.update_user_contacts_updated_at();
-CREATE TRIGGER update_user_privacy_settings_updated_at BEFORE UPDATE ON public.user_privacy_settings FOR EACH ROW EXECUTE FUNCTION public.update_user_privacy_settings_updated_at();
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_user_updated_at();
-ALTER SEQUENCE public.address_change_log_id_seq OWNED BY public.address_change_log.id;
-ALTER SEQUENCE public.admin_users_id_seq OWNED BY public.admin_users.id;
-ALTER SEQUENCE public.attribute_group_items_id_seq OWNED BY public.attribute_group_items.id;

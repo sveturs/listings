@@ -1,3 +1,10 @@
+CREATE INDEX idx_component_templates_cat ON public.component_templates USING btree (category_id);
+CREATE INDEX idx_component_templates_comp ON public.component_templates USING btree (component_id);
+CREATE INDEX idx_custom_ui_components_active ON public.custom_ui_components USING btree (is_active);
+CREATE INDEX idx_custom_ui_components_name ON public.custom_ui_components USING btree (name);
+CREATE INDEX idx_custom_ui_components_type ON public.custom_ui_components USING btree (component_type);
+CREATE INDEX idx_custom_ui_templates_name ON public.custom_ui_templates USING btree (name);
+CREATE INDEX idx_delivery_is_active ON public.storefront_delivery_options USING btree (is_active);
 CREATE INDEX idx_delivery_storefront_id ON public.storefront_delivery_options USING btree (storefront_id);
 CREATE INDEX idx_density_grid_cell ON public.gis_listing_density_grid USING gist (cell);
 CREATE INDEX idx_density_grid_density ON public.gis_listing_density_grid USING btree (density);
@@ -44,6 +51,10 @@ CREATE UNIQUE INDEX idx_item_performance_metrics_unique ON public.item_performan
 CREATE INDEX idx_keyword_lower ON public.category_keywords USING btree (lower((keyword)::text));
 CREATE INDEX idx_keyword_type ON public.category_keywords USING btree (keyword_type);
 CREATE INDEX idx_language ON public.category_keywords USING btree (language);
+CREATE INDEX idx_listing_attribute_values_attribute ON public.listing_attribute_values USING btree (attribute_id);
+CREATE INDEX idx_listing_attribute_values_listing ON public.listing_attribute_values USING btree (listing_id);
+CREATE INDEX idx_listing_attribute_values_numeric ON public.listing_attribute_values USING btree (numeric_value) WHERE (numeric_value IS NOT NULL);
+CREATE INDEX idx_listing_attribute_values_text ON public.listing_attribute_values USING btree (text_value) WHERE (text_value IS NOT NULL);
 CREATE INDEX idx_listing_views_listing_ip ON public.listing_views USING btree (listing_id, ip_hash);
 CREATE INDEX idx_listing_views_listing_user ON public.listing_views USING btree (listing_id, user_id);
 CREATE INDEX idx_listing_views_time ON public.listing_views USING btree (view_time);
@@ -87,14 +98,3 @@ CREATE INDEX idx_marketplace_listings_city ON public.marketplace_listings USING 
 CREATE INDEX idx_marketplace_listings_created_at_desc ON public.marketplace_listings USING btree (created_at DESC) WHERE ((status)::text = 'active'::text);
 CREATE INDEX idx_marketplace_listings_description_trgm ON public.marketplace_listings USING gin (description public.gin_trgm_ops);
 CREATE INDEX idx_marketplace_listings_external_id ON public.marketplace_listings USING btree (external_id);
-CREATE INDEX idx_marketplace_listings_external_id_storefront_id ON public.marketplace_listings USING btree (external_id, storefront_id);
-CREATE INDEX idx_marketplace_listings_price ON public.marketplace_listings USING btree (price) WHERE ((price IS NOT NULL) AND ((status)::text = 'active'::text));
-CREATE INDEX idx_marketplace_listings_status ON public.marketplace_listings USING btree (status);
-CREATE INDEX idx_marketplace_listings_status_category ON public.marketplace_listings USING btree (status, category_id) WHERE ((status)::text = 'active'::text);
-CREATE INDEX idx_marketplace_listings_status_created ON public.marketplace_listings USING btree (status, created_at DESC) WHERE ((status)::text = 'active'::text);
-CREATE INDEX idx_marketplace_listings_storefront ON public.marketplace_listings USING btree (storefront_id);
-CREATE INDEX idx_marketplace_listings_title_gin ON public.marketplace_listings USING gin (to_tsvector('simple'::regconfig, (title)::text));
-CREATE INDEX idx_marketplace_listings_title_trgm ON public.marketplace_listings USING gin (title public.gin_trgm_ops);
-CREATE INDEX idx_marketplace_listings_user_status ON public.marketplace_listings USING btree (user_id, status, created_at DESC);
-CREATE INDEX idx_marketplace_messages_chat ON public.marketplace_messages USING btree (chat_id);
-CREATE INDEX idx_marketplace_messages_chat_last ON public.marketplace_messages USING btree (chat_id, id DESC);

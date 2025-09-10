@@ -1,3 +1,17 @@
+CREATE SEQUENCE public.translation_providers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_quality_metrics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.translation_sync_conflicts_id_seq
     AS integer
     START WITH 1
@@ -162,7 +176,9 @@ CREATE FUNCTION public.refresh_map_items_cache() RETURNS void
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY map_items_cache;
+    -- Функция-заглушка для совместимости
+    -- В будущем здесь можно добавить логику обновления кеша
+    RETURN;
 END;
 $$;
 CREATE FUNCTION public.refresh_rating_distributions() RETURNS trigger
@@ -1641,24 +1657,4 @@ CREATE TABLE public.user_balances (
     frozen_balance numeric(12,2) DEFAULT 0 NOT NULL,
     currency character varying(3) DEFAULT 'RSD'::character varying NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.user_privacy_settings (
-    user_id integer NOT NULL,
-    allow_contact_requests boolean DEFAULT true,
-    allow_messages_from_contacts_only boolean DEFAULT false,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.districts (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name character varying(255) NOT NULL,
-    city_id uuid,
-    country_code character varying(2) DEFAULT 'RS'::character varying NOT NULL,
-    boundary public.geometry(Polygon,4326),
-    center_point public.geometry(Point,4326),
-    population integer,
-    area_km2 numeric(10,2),
-    postal_codes text[],
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );

@@ -31,6 +31,34 @@ INSERT INTO public.marketplace_listings (id, user_id, category_id, title, descri
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (263, 2, 1701, 'Britanska kratkodlaka mačića', 'Britanska kratkodlaka mačića, plava boja. Naučeni na WC, vakcinisani. 3 meseca stari.', 300.00, NULL, 'active', 'Beograd', 44.81250000, 20.46120000, 'Beograd', 'RS', 0, true, 'sr', '2025-08-14 17:03:04.994222', '2025-09-02 21:54:07.626023', NULL, NULL, '{"discount": {"effective_from": "2025-08-27T23:30:06.828234", "previous_price": 400.00, "discount_percent": 25, "has_price_history": true}}', false);
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (294, 10, 1001, 'фцувцфвцфв', '1231231ываыва231231ываыва23123123  12312ываывавыаыва3123123', 3123.00, 'used', 'active', '', 0.00000000, 0.00000000, '', '', 0, false, 'ru', '2025-09-03 22:38:02.575888', '2025-09-03 22:38:02.575888', NULL, '', NULL, false);
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (254, 2, 1301, 'Mercedes-Benz E220d 2022', 'Mercedes E klasa, AMG line, automatik. Navigacija, kožna sedišta, panorama krov.', 65000.00, '', 'active', 'Novi Sad', 45.26710000, 19.83350000, 'Novi Sad', 'RS', 0, true, '', '2025-08-23 17:01:39.211575', '2025-08-29 19:47:22.962688', NULL, NULL, '{"seo": {"slug": "", "keywords": ""}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (296, 5, 1402, 'Автономный дом POD-01 • Премиум-кемпер для путешествий', '🏕️ ИННОВАЦИОННЫЙ МОБИЛЬНЫЙ ДОМ POD-01!
+
+✨ ПРЕИМУЩЕСТВА:
+- Компактный размер при максимальной функциональности
+- Аэродинамический дизайн будущего
+- Полная автономность
+- Всесезонное использование
+
+🛠️ КОМПЛЕКТАЦИЯ:
+- Солнечные панели
+- Система вентиляции
+- Термоизоляция премиум-класса
+- Панорамные окна
+- Автономная электросистема
+
+🌟 ОСОБЕННОСТИ:
+- Легкий вес и мобильность
+- Быстрая установка за 15 минут
+- Вместимость: 2-3 человека
+- Защита от любой погоды
+
+💎 ВЫ ПОЛУЧАЕТЕ:
+- Готовое решение для путешествий
+- Полностью укомплектованный мобильный дом
+- Гарантию 2 года
+- Техподдержку 24/7
+
+🚀 Станьте владельцем дома будущего уже сегодня! Количество ограничено.', 2990000.00, 'new', 'active', 'Нови Београд', 44.79287000, 20.52801700, '', '', 0, true, 'ru', '2025-09-08 12:52:08.148719', '2025-09-08 12:52:08.148719', NULL, '', NULL, false);
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (266, 2, 1001, 'Chicco kolica 3u1 - kao nova', 'Chicco sistem 3u1: kolica, nosiljka, auto sedište. Korišćeno 6 meseci. Svi dodaci.', 400.00, '', 'active', 'Beograd', 44.81760000, 20.46330000, 'Beograd', 'RS', 0, true, '', '2025-08-11 17:03:04.994222', '2025-09-02 16:11:13.788847', NULL, NULL, '{"seo": {"slug": "", "keywords": ""}}', false);
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (256, 2, 1301, 'Yamaha MT-07 2022 - perfektno stanje', 'Yamaha MT-07, ABS, nova guma, servisiran. Bez oštećenja, garažiran. 8500km.', 7500.00, NULL, 'active', 'Novi Sad', 45.25510000, 19.84510000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-21 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
 INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (257, 2, 1901, 'Izrada web sajtova - WordPress, React', 'Profesionalna izrada web sajtova. WordPress, React, Node.js. SEO optimizacija uključena.', 500.00, NULL, 'active', 'Beograd', 44.81250000, 20.46120000, 'Beograd', 'RS', 0, true, 'sr', '2025-08-20 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
