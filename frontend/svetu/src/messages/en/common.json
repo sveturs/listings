@@ -1,4 +1,5 @@
 {
+  "admin": "Administration",
   "countries": {
     "RS": "Serbia",
     "BA": "Bosnia and Herzegovina",
@@ -645,6 +646,14 @@
   "sortOrder": "Sort order",
   "isActive": "Active",
   "translating": "Translating...",
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "create": "Create",
+    "chats": "Chats",
+    "profile": "Profile",
+    "close": "Close"
+  },
   "common": {
     "minutes": "Minutes",
     "km": "Km",

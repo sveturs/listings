@@ -1,5 +1,6 @@
 import configManager from '@/config';
 import { tokenManager } from '@/utils/tokenManager';
+import { logger } from '@/utils/logger';
 
 export interface ApiClientOptions extends RequestInit {
   // Использовать внутренний URL для серверных запросов
@@ -148,7 +149,7 @@ class ApiClient {
 
       // Если токен истек, пытаемся обновить его
       if (token && tokenManager.isTokenExpired(token)) {
-        console.log('[ApiClient] Token expired, attempting to refresh...');
+        logger.api.debug(' Token expired, attempting to refresh...');
         try {
           token = await tokenManager.refreshAccessToken();
         } catch (error) {
@@ -159,9 +160,9 @@ class ApiClient {
 
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
-        console.log('[ApiClient] Added auth header for', endpoint);
+        logger.api.debug(' Added auth header for', endpoint);
       } else {
-        console.log('[ApiClient] No token available for', endpoint);
+        logger.api.debug(' No token available for', endpoint);
       }
     }
 
@@ -222,7 +223,7 @@ class ApiClient {
           typeof window !== 'undefined' &&
           !isRetryAfter401
         ) {
-          console.log(
+          logger.api.debug(
             '[ApiClient] Got 401, attempting to refresh token and retry...'
           );
 
@@ -231,7 +232,7 @@ class ApiClient {
             const newToken = await tokenManager.refreshAccessToken();
 
             if (newToken) {
-              console.log(
+              logger.api.debug(
                 '[ApiClient] Token refreshed successfully, retrying request...'
               );
               // Повторяем запрос с новым токеном
@@ -299,7 +300,7 @@ class ApiClient {
         localStorage.getItem('blockRadiusSearch') === 'true' ||
         (window as any).__BLOCK_RADIUS_SEARCH__)
     ) {
-      console.log(
+      logger.api.debug(
         'ℹ️ API CLIENT: Radius search request detected but allowing (backend will block)'
       );
     }

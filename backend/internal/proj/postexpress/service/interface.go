@@ -68,6 +68,8 @@ type WSPClient interface {
 	GetLocations(ctx context.Context, search string) ([]WSPLocation, error)
 	GetOffices(ctx context.Context, locationID int) ([]WSPOffice, error)
 	CreateShipment(ctx context.Context, shipment *WSPShipmentRequest) (*WSPShipmentResponse, error)
+	CreateShipmentViaManifest(ctx context.Context, shipment *WSPShipmentRequest) (*WSPManifestResponse, error)
+	CreateManifest(ctx context.Context, manifest *WSPManifestRequest) (*WSPManifestResponse, error)
 	GetShipmentStatus(ctx context.Context, trackingNumber string) (*WSPTrackingResponse, error)
 	PrintLabel(ctx context.Context, shipmentID string) ([]byte, error)
 	CancelShipment(ctx context.Context, shipmentID string) error
@@ -114,11 +116,12 @@ type WSPShipmentRequest struct {
 
 // WSPShipmentResponse представляет ответ на создание отправления
 type WSPShipmentResponse struct {
-	Success        bool   `json:"Uspesno"`
-	TrackingNumber string `json:"BrojPosiljke"`
-	Barcode        string `json:"Barkod"`
-	LabelURL       string `json:"URLNalepnice"`
-	ErrorMessage   string `json:"Greska"`
+	Success         bool   `json:"Uspesno"`
+	TrackingNumber  string `json:"BrojPosiljke"`
+	Barcode         string `json:"Barkod"`
+	LabelURL        string `json:"URLNalepnice"`
+	ErrorMessage    string `json:"Greska"`
+	ReferenceNumber string `json:"ReferencniBroj"` // Наш внутренний номер посылки
 }
 
 // WSPTrackingResponse представляет ответ отслеживания

@@ -41,9 +41,15 @@ func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface)
 }
 
 func (m *Middleware) loadAuthServicePublicKey() error {
-	// Пробуем загрузить из файла
-	pubKeyPath := "keys/auth_service_public.pem"
-	pubKeyData, err := os.ReadFile(pubKeyPath)
+	// Загружаем из пути, указанного в конфигурации
+	pubKeyPath := m.config.AuthServicePubKeyPath
+	if pubKeyPath == "" {
+		// Используем дефолтный путь если не указан в конфиге
+		pubKeyPath = "keys/auth_service_public.pem"
+	}
+	logger.Info().Str("path", pubKeyPath).Msg("Loading auth service public key from path")
+
+	pubKeyData, err := os.ReadFile(pubKeyPath) // #nosec G304 - path is from config or hardcoded default
 	if err != nil {
 		return err
 	}
@@ -104,7 +110,17 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
 	}
 
-	// Сначала проверяем ID пользователя (для обратной совместимости)
+	// ПЕРВЫМ ДЕЛОМ проверяем флаг is_admin из JWT токена (установлен в AuthRequiredJWT)
+	if isAdmin, ok := c.Locals("is_admin").(bool); ok && isAdmin {
+		logger.Info().
+			Int("user_id", userID).
+			Str("source", "jwt_token").
+			Msg("AdminRequired: Access granted - user has admin role in JWT")
+		c.Locals("admin_id", userID)
+		return c.Next()
+	}
+
+	// Затем проверяем ID пользователя (для обратной совместимости)
 	if userID == 1 || userID == 2 || userID == 3 {
 		logger.Info().
 			Int("user_id", userID).

@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import Link from 'next/link';
+import { tokenManager } from '@/utils/tokenManager';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface VariantAttribute {
   id: number;
@@ -55,8 +58,14 @@ export default function VariantAttributesClient() {
 
   const fetchVariantAttributes = async () => {
     try {
+      const token = tokenManager.getAccessToken();
       const response = await fetch(
-        '/api/v1/admin/attributes/variant-compatible'
+        `${API_BASE_URL}/api/v1/admin/attributes/variant-compatible`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -72,7 +81,15 @@ export default function VariantAttributesClient() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/v1/categories/tree');
+      const token = tokenManager.getAccessToken();
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/marketplace/category-tree`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setCategories(data.data || []);
@@ -84,8 +101,14 @@ export default function VariantAttributesClient() {
 
   const fetchCategoryMappings = async (categoryId: number) => {
     try {
+      const token = tokenManager.getAccessToken();
       const response = await fetch(
-        `/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`
+        `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -103,12 +126,14 @@ export default function VariantAttributesClient() {
   ) => {
     try {
       if (isEnabled) {
+        const token = tokenManager.getAccessToken();
         const response = await fetch(
-          '/api/v1/admin/variant-attributes/mappings',
+          `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: token ? `Bearer ${token}` : '',
             },
             body: JSON.stringify({
               variant_attribute_id: attribute.id,
@@ -301,12 +326,17 @@ export default function VariantAttributesClient() {
                                   checked={mapping.is_required}
                                   onChange={async (e) => {
                                     try {
+                                      const token =
+                                        tokenManager.getAccessToken();
                                       const response = await fetch(
-                                        `/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
+                                        `${API_BASE_URL}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
                                         {
                                           method: 'PATCH',
                                           headers: {
                                             'Content-Type': 'application/json',
+                                            Authorization: token
+                                              ? `Bearer ${token}`
+                                              : '',
                                           },
                                           body: JSON.stringify({
                                             is_required: e.target.checked,

@@ -118,10 +118,19 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 			})
 		}
 
-		// Копируем заголовки ответа, включая Set-Cookie
+		// Копируем заголовки ответа
 		for key, values := range resp.Header {
-			for _, value := range values {
-				c.Set(key, value)
+			// Специальная обработка для Set-Cookie
+			if strings.ToLower(key) == "set-cookie" {
+				// Set-Cookie заголовки должны обрабатываться отдельно для каждого cookie
+				for _, cookie := range values {
+					c.Response().Header.Add("Set-Cookie", cookie)
+				}
+			} else {
+				// Для остальных заголовков
+				for _, value := range values {
+					c.Set(key, value)
+				}
 			}
 		}
 

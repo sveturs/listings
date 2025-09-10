@@ -214,11 +214,15 @@ interface ApiResponse<T> {
 }
 
 // Translation Admin API Client
+import { tokenManager } from '@/utils/tokenManager';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 class TranslationAdminApi {
-  private baseUrl = '/api/v1/admin/translations';
+  private baseUrl = `${API_BASE_URL}/api/v1/admin/translations`;
 
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('access_token');
+    const token = tokenManager.getAccessToken();
     return {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -275,33 +279,14 @@ class TranslationAdminApi {
   }
 
   private async refreshToken(): Promise<boolean> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return false;
-
     try {
-      const response = await fetch('/api/v1/auth/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.access_token) {
-          localStorage.setItem('access_token', data.access_token);
-          if (data.refresh_token) {
-            localStorage.setItem('refresh_token', data.refresh_token);
-          }
-          return true;
-        }
-      }
+      // Use tokenManager's refresh functionality
+      const newToken = await tokenManager.refreshAccessToken();
+      return !!newToken;
     } catch (error) {
       console.error('Token refresh failed:', error);
+      return false;
     }
-
-    return false;
   }
 
   // Statistics

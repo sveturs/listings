@@ -4,7 +4,6 @@ package middleware
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -102,11 +101,14 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			return c.Next()
 		}
 
-		if method == "GET" && (strings.Contains(path, "/slug/") || strings.HasSuffix(path, "/storefronts") ||
-			strings.Contains(path, "/search") || strings.Contains(path, "/nearby") ||
-			strings.Contains(path, "/map") || strings.Contains(path, "/building") ||
-			strings.Contains(path, "/staff") || strings.Contains(path, "/products/")) {
-			logger.Info().Str("path", path).Msg("Public storefront route detected")
+		// Получаем путь без query параметров для корректной проверки
+		basePath := strings.Split(path, "?")[0]
+
+		if method == "GET" && (strings.Contains(basePath, "/slug/") || strings.HasSuffix(basePath, "/storefronts") ||
+			strings.Contains(basePath, "/search") || strings.Contains(basePath, "/nearby") ||
+			strings.Contains(basePath, "/map") || strings.Contains(basePath, "/building") ||
+			strings.Contains(basePath, "/staff") || strings.Contains(basePath, "/products/")) {
+			logger.Info().Str("path", path).Str("basePath", basePath).Msg("Public storefront route detected")
 			isPublicRoute = true
 		}
 		if method == "POST" && strings.Contains(path, "/view") {
@@ -119,6 +121,26 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			logger.Info().Str("path", path).Msg("Public storefront by ID route")
 			isPublicRoute = true
 		}
+	}
+
+	// ВАЖНО: Сначала проверяем, является ли маршрут публичным
+	// Если да - пропускаем без проверки токенов
+	if isPublicRoute {
+		logger.Info().Str("path", path).Msg("Allowing unauthenticated access to public route")
+		// Опционально: если токен есть и валидный, можем установить user_id для публичных маршрутов
+		// но не блокируем доступ если токена нет или он невалидный
+		authHeader := c.Get("Authorization")
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == bearerScheme && m.authServicePubKey != nil {
+				if authClaims, err := jwt.ValidateAuthServiceToken(parts[1], m.authServicePubKey); err == nil {
+					c.Locals("user_id", authClaims.UserID)
+					c.Locals("user_email", authClaims.Email)
+					c.Locals("auth_method", "jwt_auth_service_optional")
+				}
+			}
+		}
+		return c.Next()
 	}
 
 	// Приоритет 1: Проверяем JWT токен в заголовке Authorization
@@ -134,11 +156,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				authClaims, err := jwt.ValidateAuthServiceToken(tokenString, m.authServicePubKey)
 				if err == nil {
 					// Токен от auth service валиден
-					logger.Info().
-						Int("user_id", authClaims.UserID).
-						Str("email", authClaims.Email).
-						Str("provider", authClaims.Provider).
-						Msg("Auth service token validated")
+					// Закомментировано для снижения шума в логах
+					// logger.Info().
+					// 	Int("user_id", authClaims.UserID).
+					// 	Str("email", authClaims.Email).
+					// 	Str("provider", authClaims.Provider).
+					// 	Msg("Auth service token validated")
 
 					// Проверяем что пользователь существует
 					user, err := m.services.User().GetUserByID(c.Context(), authClaims.UserID)
@@ -179,57 +202,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				}
 			}
 
-			// Если RS256 не сработал, пробуем HS256 (старый формат)
-			claims, err := jwt.ValidateToken(tokenString, m.config.JWTSecret)
-			if err != nil {
-				logger.Error().
-					Err(err).
-					Str("auth_type", "bearer").
-					Msg("JWT validation failed")
-				return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_token")
-			}
-
-			// Проверяем что пользователь существует
-			user, err := m.services.User().GetUserByID(c.Context(), claims.UserID)
-			if err != nil || user == nil {
-				logger.Info().
-					Int("user_id", claims.UserID).
-					Msg("User not found for JWT")
-				return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.user_not_found")
-			}
-
-			// Устанавливаем данные пользователя в контекст
-			c.Locals("user_id", claims.UserID)
-			c.Locals("user_email", claims.Email)
-			c.Locals("auth_method", "jwt")
-			c.Locals("jwt_token", tokenString)
-
-			// Проверяем, является ли пользователь администратором
-			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
-			if err != nil {
-				logger.Warn().
-					Err(err).
-					Str("email", claims.Email).
-					Msg("Failed to check admin status")
-				// В случае ошибки считаем, что пользователь не админ
-				isAdmin = false
-			}
-			c.Locals("is_admin", isAdmin)
-
-			if isAdmin {
-				logger.Info().
-					Int("user_id", claims.UserID).
-					Str("email", claims.Email).
-					Msg("Admin user authenticated")
-			}
-
-			// Обновляем последнее посещение асинхронно
-			go func() {
-				ctx := context.Background()
-				_ = m.services.User().UpdateLastSeen(ctx, claims.UserID)
-			}()
-
-			return c.Next()
+			// Если RS256 не сработал, токен невалиден
+			// Используем Debug вместо Error для снижения шума
+			logger.Debug().
+				Str("auth_type", "bearer").
+				Msg("JWT validation failed - only RS256 tokens supported")
+			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_token")
 		}
 	}
 
@@ -247,9 +225,10 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				c.Locals("jwt_token", tokenFromQuery)
 
 				// Проверяем роли
+				const adminRole = "admin"
 				isAdmin := false
 				for _, role := range authClaims.Roles {
-					if role == "admin" {
+					if role == adminRole {
 						isAdmin = true
 						break
 					}
@@ -268,50 +247,43 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 			}
 		}
 
-		// Если RS256 не сработал, пробуем HS256
-		claims, err := jwt.ValidateToken(tokenFromQuery, m.config.JWTSecret)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Str("auth_type", "query").
-				Msg("JWT validation failed")
-		} else {
-			// JWT из query валиден
-			c.Locals("user_id", claims.UserID)
-			c.Locals("user_email", claims.Email)
-			c.Locals("auth_method", "jwt_query")
-			c.Locals("jwt_token", tokenFromQuery)
+		// Если RS256 не сработал, токен невалиден
+		logger.Error().
+			Str("auth_type", "query").
+			Msg("JWT validation failed - only RS256 tokens supported")
+	}
 
-			// Проверяем, является ли пользователь администратором
-			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
-			if err != nil {
-				logger.Warn().
-					Err(err).
-					Str("email", claims.Email).
-					Msg("Failed to check admin status")
-				isAdmin = false
+	// Приоритет 3: Проверяем JWT в cookie (для web клиентов) - только RS256
+	jwtCookie := c.Cookies("jwt_token")
+	if jwtCookie != "" && m.authServicePubKey != nil {
+		authClaims, err := jwt.ValidateAuthServiceToken(jwtCookie, m.authServicePubKey)
+		if err == nil {
+			// Токен от auth service валиден
+			c.Locals("user_id", authClaims.UserID)
+			c.Locals("user_email", authClaims.Email)
+			c.Locals("auth_method", "jwt_cookie_auth_service")
+			c.Locals("jwt_token", jwtCookie)
+
+			// Проверяем роли
+			isAdmin := false
+			for _, role := range authClaims.Roles {
+				if role == "admin" {
+					isAdmin = true
+					break
+				}
+			}
+			if !isAdmin {
+				isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
 			}
 			c.Locals("is_admin", isAdmin)
 
 			go func() {
 				ctx := context.Background()
-				_ = m.services.User().UpdateLastSeen(ctx, claims.UserID)
+				_ = m.services.User().UpdateLastSeen(ctx, authClaims.UserID)
 			}()
 
 			return c.Next()
-		}
-	}
-
-	// Приоритет 3: Проверяем JWT в cookie (для web клиентов)
-	jwtCookie := c.Cookies("jwt_token")
-	if jwtCookie != "" {
-
-		claims, err := jwt.ValidateToken(jwtCookie, m.config.JWTSecret)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Str("auth_type", "cookie").
-				Msg("JWT validation failed")
+		} else {
 			// Очищаем невалидную cookie
 			c.Cookie(&fiber.Cookie{
 				Name:     "jwt_token",
@@ -323,111 +295,12 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 				HTTPOnly: true,
 				SameSite: m.config.GetCookieSameSite(),
 			})
-		} else {
-			// JWT из cookie валиден
-			c.Locals("user_id", claims.UserID)
-			c.Locals("user_email", claims.Email)
-			c.Locals("auth_method", "jwt_cookie")
-			c.Locals("jwt_token", jwtCookie)
-
-			// Проверяем, является ли пользователь администратором
-			isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
-			if err != nil {
-				logger.Warn().
-					Err(err).
-					Str("email", claims.Email).
-					Msg("Failed to check admin status")
-				isAdmin = false
-			}
-			c.Locals("is_admin", isAdmin)
-
-			go func() {
-				ctx := context.Background()
-				_ = m.services.User().UpdateLastSeen(ctx, claims.UserID)
-			}()
-
-			return c.Next()
 		}
 	}
 
-	// Приоритет 4: Fallback на session cookie для обратной совместимости
-	sessionToken := c.Cookies("session_token")
-	if sessionToken != "" {
-		logger.Info().Msg("Falling back to session authentication")
+	// Session cookie больше не поддерживается - только RS256 токены
 
-		session, err := m.services.Auth().GetSession(c.Context(), sessionToken)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Str("auth_type", "session").
-				Msg("Session validation failed")
-			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_session")
-		}
-
-		if session == nil || session.UserID == 0 {
-			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_session")
-		}
-
-		// Генерируем JWT токен для этой сессии
-		newJWT, err := jwt.GenerateTokenWithDuration(
-			session.UserID,
-			session.Email,
-			m.config.JWTSecret,
-			time.Duration(m.config.JWTExpirationHours)*time.Hour,
-		)
-		if err != nil {
-			logger.Error().
-				Err(err).
-				Msg("Failed to generate JWT from session")
-		} else {
-			// Устанавливаем JWT cookie для будущих запросов
-			c.Cookie(&fiber.Cookie{
-				Name:     "jwt_token",
-				Value:    newJWT,
-				Path:     "/",
-				Domain:   m.config.GetCookieDomain(),
-				MaxAge:   m.config.JWTExpirationHours * 3600,
-				Secure:   m.config.GetCookieSecure(),
-				HTTPOnly: true,
-				SameSite: m.config.GetCookieSameSite(),
-			})
-
-			// Добавляем JWT в заголовок ответа для API клиентов
-			c.Set("X-Auth-Token", newJWT)
-		}
-
-		c.Locals("user_id", session.UserID)
-		c.Locals("user_email", session.Email)
-		c.Locals("session_token", sessionToken)
-		c.Locals("auth_method", "session_fallback")
-		c.Locals("auth_provider", session.Provider)
-
-		// Проверяем, является ли пользователь администратором
-		isAdmin, err := m.services.User().IsUserAdmin(c.Context(), session.Email)
-		if err != nil {
-			logger.Warn().
-				Err(err).
-				Str("email", session.Email).
-				Msg("Failed to check admin status")
-			isAdmin = false
-		}
-		c.Locals("is_admin", isAdmin)
-
-		go func() {
-			ctx := context.Background()
-			_ = m.services.User().UpdateLastSeen(ctx, session.UserID)
-		}()
-
-		return c.Next()
-	}
-
-	// Если ни один метод аутентификации не сработал
-	// Проверяем, является ли это публичным маршрутом
-	if isPublicRoute {
-		// Для публичных маршрутов разрешаем доступ без аутентификации
-		logger.Info().Str("path", path).Msg("Allowing unauthenticated access to public route")
-		return c.Next()
-	}
+	// Если ни один метод аутентификации не сработал, возвращаем ошибку
 
 	if c.Get("Upgrade") == "websocket" {
 		logger.Info().
@@ -442,21 +315,32 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 
 // OptionalAuthJWT - опциональная аутентификация, не требует токена но извлекает данные если есть
 func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
+	if m.authServicePubKey == nil {
+		return c.Next()
+	}
+
 	// Пробуем извлечь JWT из заголовка
 	authHeader := c.Get("Authorization")
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
 		if len(parts) == 2 && parts[0] == bearerScheme {
-			claims, err := jwt.ValidateToken(parts[1], m.config.JWTSecret)
+			authClaims, err := jwt.ValidateAuthServiceToken(parts[1], m.authServicePubKey)
 			if err == nil {
-				c.Locals("user_id", claims.UserID)
-				c.Locals("user_email", claims.Email)
-				c.Locals("auth_method", "jwt")
+				c.Locals("user_id", authClaims.UserID)
+				c.Locals("user_email", authClaims.Email)
+				c.Locals("auth_method", "jwt_auth_service")
 
-				// Проверяем админ статус
-				isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
-				if err != nil {
-					isAdmin = false
+				// Проверяем роли
+				const adminRole = "admin"
+				isAdmin := false
+				for _, role := range authClaims.Roles {
+					if role == adminRole {
+						isAdmin = true
+						break
+					}
+				}
+				if !isAdmin {
+					isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
 				}
 				c.Locals("is_admin", isAdmin)
 			}
@@ -467,16 +351,23 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 	if c.Locals("user_id") == nil {
 		jwtCookie := c.Cookies("jwt_token")
 		if jwtCookie != "" {
-			claims, err := jwt.ValidateToken(jwtCookie, m.config.JWTSecret)
+			authClaims, err := jwt.ValidateAuthServiceToken(jwtCookie, m.authServicePubKey)
 			if err == nil {
-				c.Locals("user_id", claims.UserID)
-				c.Locals("user_email", claims.Email)
-				c.Locals("auth_method", "jwt_cookie")
+				c.Locals("user_id", authClaims.UserID)
+				c.Locals("user_email", authClaims.Email)
+				c.Locals("auth_method", "jwt_cookie_auth_service")
 
-				// Проверяем админ статус
-				isAdmin, err := m.services.User().IsUserAdmin(c.Context(), claims.Email)
-				if err != nil {
-					isAdmin = false
+				// Проверяем роли
+				const adminRole = "admin"
+				isAdmin := false
+				for _, role := range authClaims.Roles {
+					if role == adminRole {
+						isAdmin = true
+						break
+					}
+				}
+				if !isAdmin {
+					isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
 				}
 				c.Locals("is_admin", isAdmin)
 			}
@@ -486,63 +377,7 @@ func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-// RefreshJWT - обновление JWT токена
+// RefreshJWT - обновление токенов должно производиться через Auth Service
 func (m *Middleware) RefreshJWT(c *fiber.Ctx) error {
-	// Получаем текущий токен
-	var currentToken string
-
-	// Проверяем заголовок
-	authHeader := c.Get("Authorization")
-	if authHeader != "" {
-		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && parts[0] == bearerScheme {
-			currentToken = parts[1]
-		}
-	}
-
-	// Или из cookie
-	if currentToken == "" {
-		currentToken = c.Cookies("jwt_token")
-	}
-
-	if currentToken == "" {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.token_required")
-	}
-
-	// Валидируем текущий токен
-	claims, err := jwt.ValidateToken(currentToken, m.config.JWTSecret)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "users.auth.error.invalid_token")
-	}
-
-	// Генерируем новый токен
-	newToken, err := jwt.GenerateTokenWithDuration(
-		claims.UserID,
-		claims.Email,
-		m.config.JWTSecret,
-		time.Duration(m.config.JWTExpirationHours)*time.Hour,
-	)
-	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.auth.error.token_generation_failed")
-	}
-
-	// Устанавливаем новый токен в cookie
-	c.Cookie(&fiber.Cookie{
-		Name:     "jwt_token",
-		Value:    newToken,
-		Path:     "/",
-		Domain:   m.config.GetCookieDomain(),
-		MaxAge:   m.config.JWTExpirationHours * 3600,
-		Secure:   m.config.GetCookieSecure(),
-		HTTPOnly: true,
-		SameSite: m.config.GetCookieSameSite(),
-	})
-
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"token":      newToken,
-			"expires_in": m.config.JWTExpirationHours * 3600,
-		},
-	})
+	return utils.ErrorResponse(c, fiber.StatusGone, "users.auth.error.refresh_through_auth_service")
 }

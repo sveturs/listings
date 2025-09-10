@@ -1,6 +1,7 @@
 {
   "home": "Home",
-  "homeContent": {
+  "homeContent": "Welcome to the marketplace",
+  "homeContentObj": {
     "loginSuccessful": "Successfully logged in!",
     "searchPlaceholder": "Search for products and services...",
     "paymentsNowAvailable": "Payments are now available",

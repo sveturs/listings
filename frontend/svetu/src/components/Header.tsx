@@ -30,7 +30,7 @@ interface HeaderProps {
 
 export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const t = useTranslations('common');
-  const tMarketplace = useTranslations('marketplace.homeContent');
+  const tMarketplace = useTranslations('marketplace');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -238,7 +238,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
               {/* Поисковая строка - скрываем на мобильных */}
               <div className="flex-1 max-w-3xl hidden lg:block">
                 <SearchAutocomplete
-                  placeholder={tMarketplace('searchPlaceholder')}
+                  placeholder={tMarketplace('homeContentObj.searchPlaceholder')}
                   selectedCategory={selectedCategory}
                   locale={locale as string}
                   className="w-full"
@@ -308,7 +308,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
             {!isHomePage && !isSearchPage && (
               <div className="mt-2 lg:hidden">
                 <SearchAutocomplete
-                  placeholder={tMarketplace('searchPlaceholder')}
+                  placeholder={tMarketplace('homeContentObj.searchPlaceholder')}
                   selectedCategory={selectedCategory}
                   locale={locale as string}
                   className="w-full"

@@ -34,7 +34,7 @@ type WSPConfig struct {
 	Username        string
 	Password        string
 	Language        string
-	DeviceType      int
+	DeviceType      string // ИСПРАВЛЕНО: должен быть string ("2"), не int
 	Timeout         time.Duration
 	MaxRetries      int
 	RetryDelay      time.Duration
@@ -42,6 +42,7 @@ type WSPConfig struct {
 	DeviceName      string
 	ApplicationName string
 	Version         string
+	PartnerID       int // Добавлено: ID партнера (10109 для svetu.rs)
 }
 
 // NewWSPClient создает новый экземпляр WSP клиента
@@ -77,13 +78,14 @@ func (c *WSPClientImpl) Transaction(ctx context.Context, req *models.Transaction
 		Username:          c.config.Username,
 		Password:          c.config.Password,
 		Jezik:             c.config.Language,
-		IdTipUredjaja:     c.config.DeviceType,
+		IdTipUredjaja:     "2", // ВАЖНО: должна быть строка "2" для веб-приложения
 		VerzijaOS:         "Linux",
 		NazivUredjaja:     c.config.DeviceName,
 		ModelUredjaja:     "API",
 		VerzijaAplikacije: c.config.Version,
 		IPAdresa:          c.getServerIP(),
 		Geolokacija:       nil,
+		IdPartnera:        c.config.PartnerID, // ДОБАВЛЕНО: ID партнера для B2B интеграции
 	}
 
 	clientJSON, err := json.Marshal(clientData)
@@ -94,9 +96,9 @@ func (c *WSPClientImpl) Transaction(ctx context.Context, req *models.Transaction
 	// Подготовка основного запроса
 	transReq := &models.TransakcijaIn{
 		StrKlijent:         string(clientJSON),
-		Servis:             3, // Всегда 3 для нашего сервиса
-		IdVrstaTranskacije: req.TransactionType,
-		TipSerijalizacije:  1, // JSON
+		Servis:             101,                 // ИСПРАВЛЕНО: 101 для B2B партнеров (не 3!)
+		IdVrstaTransakcije: req.TransactionType, // ИСПРАВЛЕНО: IdVrstaTransakcije (не IdVrstaTranskacije!)
+		TipSerijalizacije:  2,                   // JSON (2 для JSON согласно документации)
 		IdTransakcija:      models.GenerateGUID(),
 		StrIn:              req.InputData,
 	}
@@ -305,42 +307,46 @@ func (c *WSPClientImpl) GetOffices(ctx context.Context, locationID int) ([]WSPOf
 	return result.PostanskeJedinice, nil
 }
 
-// CreateShipment создает новое отправление
+// CreateShipment создает новое отправление через манифест (транзакция 73)
+// ВАЖНО: Транзакция 63 предназначена только для отслеживания, не для создания!
 func (c *WSPClientImpl) CreateShipment(ctx context.Context, shipment *WSPShipmentRequest) (*WSPShipmentResponse, error) {
-	inputData, err := json.Marshal(shipment)
+	// Используем новый метод создания через манифест (транзакция 73)
+	manifestResp, err := c.CreateShipmentViaManifest(ctx, shipment)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal shipment request: %w", err)
+		return nil, fmt.Errorf("failed to create shipment via manifest: %w", err)
 	}
 
-	// Выполнение запроса (тип транзакции 63 для создания отправления)
-	req := &models.TransactionRequest{
-		TransactionType: 63,
-		InputData:       string(inputData),
-	}
-
-	resp, err := c.Transaction(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("CreateShipment transaction failed: %w", err)
-	}
-
-	if !resp.Success {
-		errMsg := errMsgUnknown
-		if resp.ErrorMessage != nil {
-			errMsg = *resp.ErrorMessage
-		}
+	// Преобразуем ответ манифеста в формат WSPShipmentResponse
+	if !manifestResp.Success {
 		return &WSPShipmentResponse{
 			Success:      false,
-			ErrorMessage: errMsg,
+			ErrorMessage: manifestResp.ErrorMessage,
 		}, nil
 	}
 
-	// Парсинг результата
-	var result WSPShipmentResponse
-	if err := json.Unmarshal(resp.OutputData, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse shipment response: %w", err)
+	// Проверяем результат создания посылки
+	if len(manifestResp.Posiljke) == 0 {
+		return &WSPShipmentResponse{
+			Success:      false,
+			ErrorMessage: "no shipment result in manifest response",
+		}, nil
 	}
 
-	return &result, nil
+	posiljkaResult := manifestResp.Posiljke[0]
+	if posiljkaResult.Status != "OK" {
+		return &WSPShipmentResponse{
+			Success:      false,
+			ErrorMessage: posiljkaResult.Greska,
+		}, nil
+	}
+
+	// Возвращаем успешный результат
+	return &WSPShipmentResponse{
+		Success:         true,
+		TrackingNumber:  posiljkaResult.PostExpressBroj,
+		Barcode:         posiljkaResult.Barkod,
+		ReferenceNumber: posiljkaResult.BrojPosiljke,
+	}, nil
 }
 
 // GetShipmentStatus получает статус отправления

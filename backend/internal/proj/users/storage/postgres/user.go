@@ -132,7 +132,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id int) (*models.User, error)
 		user.PictureURL = pictureURL.String
 	}
 
-	s.logger.Info("GetUserByID successful for id=%d", id)
+	// s.logger.Debug("GetUserByID successful for id=%d", id)
 	return user, nil
 }
 

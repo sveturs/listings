@@ -236,10 +236,10 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		}
 	}
 
-	// Логируем финальный запрос для отладки
-	if logger.Info().Enabled() {
+	// Логируем финальный запрос для отладки (используем Debug для снижения шума)
+	if logger.Debug().Enabled() {
 		queryJSON, _ := json.MarshalIndent(query, "", "  ")
-		logger.Info().Msgf("Финальный запрос к OpenSearch:\n%s", string(queryJSON))
+		logger.Debug().Msgf("Финальный запрос к OpenSearch:\n%s", string(queryJSON))
 	}
 
 	response, err := r.client.Search(ctx, r.indexName, query)
@@ -252,7 +252,8 @@ func (r *Repository) SearchListings(ctx context.Context, params *search.SearchPa
 		return nil, fmt.Errorf("ошибка разбора ответа: %w", err)
 	}
 
-	logger.Info().Msgf("OpenSearch ответил успешно. Анализируем результаты...")
+	// Закомментировано для снижения шума в логах
+	// logger.Info().Msgf("OpenSearch ответил успешно. Анализируем результаты...")
 	return r.parseSearchResponse(searchResponse, params.Language)
 }
 
@@ -836,19 +837,19 @@ func processAttributesForIndex(ctx context.Context, doc map[string]interface{}, 
 				doc["make"] = makeValue
 				doc["make_lowercase"] = strings.ToLower(makeValue)
 				carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
-				logger.Info().Msgf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
+				// logger.Debug().Msgf("FIRST PASS: Добавлена марка '%s' в корень документа для объявления %d", makeValue, listingID)
 			case "model":
 				modelValue = textValue
 				doc["model"] = modelValue
 				doc["model_lowercase"] = strings.ToLower(modelValue)
 				carKeywords = append(carKeywords, textValue, strings.ToLower(textValue)) // Добавляем к ключевым словам
-				logger.Info().Msgf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
+				// logger.Debug().Msgf("FIRST PASS: Добавлена модель '%s' в корень документа для объявления %d", modelValue, listingID)
 			default:
 				if isImportantTextAttribute(attr.AttributeName) {
 					doc[attr.AttributeName] = textValue
 					doc[attr.AttributeName+"_lowercase"] = strings.ToLower(textValue)
-					logger.Info().Msgf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
-						attr.AttributeName, textValue, listingID)
+					// logger.Debug().Msgf("FIRST PASS: Добавлен важный атрибут %s = '%s' в корень документа для объявления %d",
+					//	attr.AttributeName, textValue, listingID)
 				}
 			}
 

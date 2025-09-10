@@ -150,17 +150,16 @@ export async function loadMessages(
       const data = moduleData.default || moduleData;
       moduleCache.set(cacheKey, data);
 
-      // Добавляем содержимое модуля под его именем для поддержки namespace
-      // Это позволит обращаться как common.photos или marketplace.title
+      // Добавляем модуль как namespace
       messages[mod] = data;
 
-      // ТАКЖЕ добавляем к общим переводам для обратной совместимости
-      // Используем более аккуратное слияние, чтобы не перезаписывать существующие ключи
-      for (const [key, value] of Object.entries(data)) {
+      // Для обратной совместимости также добавляем все ключи верхнего уровня модуля в корень
+      // Это позволяет обращаться как t('key') вместо t('module.key')
+      Object.keys(data).forEach((key) => {
         if (!messages[key]) {
-          messages[key] = value;
+          messages[key] = data[key];
         }
-      }
+      });
     } catch (error) {
       console.error(
         `Failed to load translation module ${mod} for locale ${locale}:`,

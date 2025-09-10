@@ -288,20 +288,21 @@ type ClientData struct {
 	Username          string  `json:"Username"`
 	Password          string  `json:"Password"`
 	Jezik             string  `json:"Jezik"`
-	IdTipUredjaja     int     `json:"IdTipUredjaja"`
+	IdTipUredjaja     string  `json:"IdTipUredjaja"` // ИСПРАВЛЕНО: должна быть строка "2" для веб-приложения
 	VerzijaOS         string  `json:"VerzijaOS"`
 	NazivUredjaja     string  `json:"NazivUredjaja"`
 	ModelUredjaja     string  `json:"ModelUredjaja"`
 	VerzijaAplikacije string  `json:"VerzijaAplikacije"`
 	IPAdresa          string  `json:"IPAdresa"`
 	Geolokacija       *string `json:"Geolokacija,omitempty"`
+	IdPartnera        int     `json:"IdPartnera,omitempty"` // ДОБАВЛЕНО: ID партнера для B2B (10109 для svetu.rs)
 }
 
 // TransakcijaIn представляет входящий запрос к WSP API
 type TransakcijaIn struct {
 	StrKlijent         string `json:"StrKlijent"`
 	Servis             int    `json:"Servis"`
-	IdVrstaTranskacije int    `json:"IdVrstaTranskacije"`
+	IdVrstaTransakcije int    `json:"IdVrstaTranskacije"` // ВАЖНО: в API опечатка - используется Transkacije вместо Transakcije!
 	TipSerijalizacije  int    `json:"TipSerijalizacije"`
 	IdTransakcija      string `json:"IdTransakcija"`
 	StrIn              string `json:"StrIn"`

@@ -4,6 +4,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"backend/internal/logger"
 	"backend/internal/storage"
 	"backend/internal/types"
-	"backend/pkg/jwt"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -140,18 +140,15 @@ func (s *AuthService) DeleteSession(token string) {
 }
 
 // GenerateJWT генерирует JWT токен для пользователя
+// Deprecated: Используйте Auth Service для генерации токенов
 func (s *AuthService) GenerateJWT(userID int, email string) (string, error) {
-	return jwt.GenerateTokenWithDuration(
-		userID,
-		email,
-		s.jwtSecret,
-		time.Duration(s.jwtExpHours)*time.Hour,
-	)
+	return "", fmt.Errorf("JWT generation disabled - use Auth Service")
 }
 
 // ValidateJWT проверяет JWT токен и возвращает claims
-func (s *AuthService) ValidateJWT(tokenString string) (*jwt.Claims, error) {
-	return jwt.ValidateToken(tokenString, s.jwtSecret)
+// Deprecated: Используйте Auth Service для валидации токенов
+func (s *AuthService) ValidateJWT(tokenString string) (interface{}, error) {
+	return nil, fmt.Errorf("JWT validation disabled - use Auth Service")
 }
 
 // LoginWithEmailPassword аутентификация по email и паролю с выдачей JWT
@@ -233,12 +230,12 @@ func (s *AuthService) LoginWithRefreshToken(ctx context.Context, email, password
 	}
 
 	// Генерация refresh токена
-	tokenID, err := jwt.GenerateSecureTokenID()
+	_, err = "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	refreshTokenValue, err := jwt.GenerateRefreshToken(user.ID, tokenID, s.jwtSecret)
+	refreshTokenValue, err := "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -295,12 +292,12 @@ func (s *AuthService) RegisterWithRefreshToken(ctx context.Context, name, email,
 	}
 
 	// Генерация refresh токена
-	tokenID, err := jwt.GenerateSecureTokenID()
+	_, err = "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", nil, err
 	}
 
-	refreshTokenValue, err := jwt.GenerateRefreshToken(savedUser.ID, tokenID, s.jwtSecret)
+	refreshTokenValue, err := "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -333,13 +330,13 @@ func (s *AuthService) GenerateTokensForOAuth(ctx context.Context, userID int, em
 	}
 
 	// Генерация уникального ID для токена
-	tokenID, err := jwt.GenerateSecureTokenID()
+	_, err = "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", err
 	}
 
 	// Генерация refresh токена
-	refreshToken, err = jwt.GenerateRefreshToken(userID, tokenID, s.jwtSecret)
+	refreshToken, err = "", fmt.Errorf("disabled")
 	if err != nil {
 		return "", "", err
 	}
@@ -364,74 +361,8 @@ func (s *AuthService) GenerateTokensForOAuth(ctx context.Context, userID int, em
 
 // RefreshTokens обновляет access и refresh токены
 func (s *AuthService) RefreshTokens(ctx context.Context, refreshToken, ip, userAgent string) (newAccessToken, newRefreshToken string, err error) {
-	// Валидация refresh токена
-	claims, err := jwt.ValidateRefreshToken(refreshToken, s.jwtSecret)
-	if err != nil {
-		log.Printf("RefreshTokens: JWT validation failed: %v", err)
-		return "", "", err
-	}
-
-	// Проверка токена в базе данных
-	storedToken, err := s.storage.GetRefreshToken(ctx, refreshToken)
-	if err != nil {
-		log.Printf("RefreshTokens: Failed to get token from DB: %v", err)
-		return "", "", types.ErrInvalidToken
-	}
-	if storedToken == nil {
-		log.Printf("RefreshTokens: Token not found in DB")
-		return "", "", types.ErrInvalidToken
-	}
-
-	// Проверка валидности токена
-	if !storedToken.IsValid() {
-		log.Printf("RefreshTokens: Token is not valid (isRevoked=%v, expired=%v)",
-			storedToken.IsRevoked, time.Now().After(storedToken.ExpiresAt))
-		return "", "", types.ErrInvalidToken
-	}
-
-	// Получение пользователя
-	user, err := s.storage.GetUserByID(ctx, claims.UserID)
-	if err != nil || user == nil {
-		return "", "", types.ErrUserNotFound
-	}
-
-	// Генерация нового access токена
-	newAccessToken, err = s.GenerateJWT(user.ID, user.Email)
-	if err != nil {
-		return "", "", err
-	}
-
-	// Ротация refresh токена - отзываем старый и создаем новый
-	if err = s.storage.RevokeRefreshTokenByValue(ctx, refreshToken); err != nil {
-		log.Printf("Failed to revoke old refresh token: %v", err)
-	}
-
-	// Генерация нового refresh токена
-	newTokenID, err := jwt.GenerateSecureTokenID()
-	if err != nil {
-		return "", "", err
-	}
-
-	newRefreshToken, err = jwt.GenerateRefreshToken(user.ID, newTokenID, s.jwtSecret)
-	if err != nil {
-		return "", "", err
-	}
-
-	// Сохранение нового refresh токена
-	newRefreshTokenModel := &models.RefreshToken{
-		UserID:    user.ID,
-		Token:     newRefreshToken,
-		ExpiresAt: time.Now().Add(30 * 24 * time.Hour), // 30 дней
-		CreatedAt: time.Now(),
-		UserAgent: userAgent,
-		IP:        ip,
-	}
-
-	if err = s.storage.CreateRefreshToken(ctx, newRefreshTokenModel); err != nil {
-		return "", "", err
-	}
-
-	return newAccessToken, newRefreshToken, nil
+	// Валидация refresh токена отключена - используйте Auth Service
+	return "", "", fmt.Errorf("refresh token validation disabled - use Auth Service")
 }
 
 // RevokeRefreshToken отзывает refresh токен

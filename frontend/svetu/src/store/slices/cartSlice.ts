@@ -203,12 +203,13 @@ const cartSlice = createSlice({
         const updatedCart = action.payload;
         state.cart = updatedCart;
 
-        // Обновляем корзину в allCarts если она там есть
-        if (updatedCart && state.allCarts.length > 0) {
+        // Обновляем корзину в allCarts
+        if (updatedCart) {
           const existingCartIndex = state.allCarts.findIndex(
             (cart) => cart.storefront_id === updatedCart.storefront_id
           );
           if (existingCartIndex >= 0) {
+            // Обновляем существующую корзину
             state.allCarts[existingCartIndex] = updatedCart;
           } else {
             // Добавляем новую корзину если её не было
@@ -240,6 +241,9 @@ const cartSlice = createSlice({
           );
           if (cartIndex !== -1) {
             state.allCarts[cartIndex] = action.payload;
+          } else {
+            // Добавляем корзину если её не было
+            state.allCarts.push(action.payload);
           }
         }
       })
@@ -265,6 +269,9 @@ const cartSlice = createSlice({
           );
           if (cartIndex !== -1) {
             state.allCarts[cartIndex] = action.payload;
+          } else {
+            // Добавляем корзину если её не было
+            state.allCarts.push(action.payload);
           }
         }
       })

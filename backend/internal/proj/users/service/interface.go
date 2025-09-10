@@ -6,7 +6,6 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/types"
-	"backend/pkg/jwt"
 )
 
 type AuthServiceInterface interface {
@@ -18,7 +17,7 @@ type AuthServiceInterface interface {
 
 	// JWT методы
 	GenerateJWT(userID int, email string) (string, error)
-	ValidateJWT(tokenString string) (*jwt.Claims, error)
+	ValidateJWT(tokenString string) (interface{}, error)
 
 	// Email/Password аутентификация
 	LoginWithEmailPassword(ctx context.Context, email, password string) (string, *models.User, error)

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Service Test - Complete Flow</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        button { margin: 5px; padding: 10px; }
+        #output { border: 1px solid #ccc; padding: 10px; margin-top: 20px; min-height: 300px; white-space: pre-wrap; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Auth Service Integration Test</h1>
+    
+    <div>
+        <button onclick="clearStorage()">1. Clear All Storage</button>
+        <button onclick="testLogin()">2. Test Login</button>
+        <button onclick="checkStorage()">3. Check Storage</button>
+        <button onclick="testSession()">4. Test Session</button>
+        <button onclick="testRefresh()">5. Test Refresh</button>
+        <button onclick="testFullFlow()">Run Complete Flow</button>
+    </div>
+    
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        const API_BASE = 'http://localhost:3000';
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            console.log(message);
+        }
+        
+        function clearStorage() {
+            log('Clearing all storage...', 'info');
+            sessionStorage.clear();
+            localStorage.clear();
+            
+            // Clear all cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            log('✓ All storage cleared', 'success');
+        }
+        
+        async function testLogin() {
+            log('\n=== Testing Login ===', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✓ Login successful', 'success');
+                    
+                    // Check tokens
+                    if (data.access_token) {
+                        log(`  Access token: ${data.access_token.substring(0, 50)}...`, 'info');
+                        sessionStorage.setItem('svetu_access_token', data.access_token);
+                        
+                        // Check algorithm
+                        const header = JSON.parse(atob(data.access_token.split('.')[0]));
+                        log(`  Token algorithm: ${header.alg}`, 'info');
+                    } else {
+                        log('  ✗ No access token in response!', 'error');
+                    }
+                    
+                    if (data.refresh_token) {
+                        log(`  Refresh token: ${data.refresh_token.substring(0, 50)}...`, 'info');
+                        sessionStorage.setItem('svetu_refresh_token', data.refresh_token);
+                    } else {
+                        log('  ✗ No refresh token in response!', 'error');
+                    }
+                    
+                    log('✓ Tokens saved to sessionStorage', 'success');
+                } else {
+                    log(`✗ Login failed: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkStorage() {
+            log('\n=== Checking Storage ===', 'info');
+            
+            // Check sessionStorage
+            log('SessionStorage:', 'info');
+            const ssKeys = Object.keys(sessionStorage);
+            ssKeys.forEach(key => {
+                const value = sessionStorage.getItem(key);
+                if (key.includes('token')) {
+                    log(`  ${key}: ${value?.substring(0, 50)}...`, 'info');
+                } else {
+                    log(`  ${key}: ${value}`, 'info');
+                }
+            });
+            
+            if (ssKeys.length === 0) {
+                log('  (empty)', 'info');
+            }
+            
+            // Check localStorage
+            log('\nLocalStorage:', 'info');
+            const lsKeys = Object.keys(localStorage);
+            lsKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (key.includes('token')) {
+                    log(`  ${key}: ${value?.substring(0, 50)}...`, 'info');
+                } else {
+                    log(`  ${key}: ${value}`, 'info');
+                }
+            });
+            
+            if (lsKeys.length === 0) {
+                log('  (empty)', 'info');
+            }
+            
+            // Check cookies
+            log('\nCookies:', 'info');
+            if (document.cookie) {
+                log(`  ${document.cookie}`, 'info');
+            } else {
+                log('  (no cookies)', 'info');
+            }
+        }
+        
+        async function testSession() {
+            log('\n=== Testing Session ===', 'info');
+            
+            const accessToken = sessionStorage.getItem('svetu_access_token');
+            if (!accessToken) {
+                log('✗ No access token in storage. Please login first.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/session`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.authenticated || data.data?.authenticated) {
+                        log('✓ Session valid', 'success');
+                        const user = data.user || data.data?.user;
+                        if (user) {
+                            log(`  User: ${user.email} (ID: ${user.id})`, 'info');
+                        }
+                    } else {
+                        log('✗ Session invalid (authenticated: false)', 'error');
+                    }
+                } else {
+                    log(`✗ Session request failed: ${response.status} ${response.statusText}`, 'error');
+                    log(`  Response: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testRefresh() {
+            log('\n=== Testing Refresh ===', 'info');
+            
+            const refreshToken = sessionStorage.getItem('svetu_refresh_token');
+            if (!refreshToken) {
+                log('✗ No refresh token in storage. Please login first.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${refreshToken}`
+                    },
+                    body: JSON.stringify({
+                        refresh_token: refreshToken
+                    }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✓ Refresh successful', 'success');
+                    
+                    if (data.access_token) {
+                        log(`  New access token: ${data.access_token.substring(0, 50)}...`, 'info');
+                        sessionStorage.setItem('svetu_access_token', data.access_token);
+                    }
+                    
+                    if (data.refresh_token) {
+                        log(`  New refresh token: ${data.refresh_token.substring(0, 50)}...`, 'info');
+                        sessionStorage.setItem('svetu_refresh_token', data.refresh_token);
+                    }
+                    
+                    log('✓ New tokens saved', 'success');
+                } else {
+                    log(`✗ Refresh failed: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFullFlow() {
+            output.innerHTML = '';
+            log('=== Running Complete Auth Flow Test ===\n', 'info');
+            
+            clearStorage();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testLogin();
+            await new Promise(r => setTimeout(r, 500));
+            
+            checkStorage();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testSession();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testRefresh();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testSession();
+            
+            log('\n=== Test Complete ===', 'success');
+        }
+    </script>
+</body>
+</html>
