@@ -30,9 +30,15 @@ const nextConfig: NextConfig = {
         .flatMap((host) => {
           const [protocol, hostname, port] = host.split(':');
           // Разрешаем все пути для s3.svetu.rs
-          const pathnames = hostname === 's3.svetu.rs' 
-            ? ['/**'] // Все пути разрешены для нашего S3
-            : ['/listings/**', '/development-listings/**', '/chat-files/**', '/uploads/**'];
+          const pathnames =
+            hostname === 's3.svetu.rs'
+              ? ['/**'] // Все пути разрешены для нашего S3
+              : [
+                  '/listings/**',
+                  '/development-listings/**',
+                  '/chat-files/**',
+                  '/uploads/**',
+                ];
 
           return pathnames.map((path) => {
             const config: any = {

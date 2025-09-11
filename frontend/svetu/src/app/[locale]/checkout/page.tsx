@@ -526,7 +526,9 @@ export default function CheckoutPage() {
                   {currentStep === 'customer' && (
                     <div className="card bg-base-200 shadow-lg">
                       <div className="card-body p-8">
-                        <h2 className="card-title text-2xl mb-6">{t('customer.title')}</h2>
+                        <h2 className="card-title text-2xl mb-6">
+                          {t('customer.title')}
+                        </h2>
                         <form className="space-y-6">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="form-control">
@@ -621,7 +623,9 @@ export default function CheckoutPage() {
                   {currentStep === 'shipping' && (
                     <div className="card bg-base-200 shadow-lg">
                       <div className="card-body p-8">
-                        <h2 className="card-title text-2xl mb-6">{t('shipping.title')}</h2>
+                        <h2 className="card-title text-2xl mb-6">
+                          {t('shipping.title')}
+                        </h2>
                         <form className="space-y-6">
                           <div className="form-control">
                             <label className="label mb-2">
@@ -1034,7 +1038,9 @@ export default function CheckoutPage() {
                   {currentStep === 'payment' && (
                     <div className="card bg-base-200 shadow-lg">
                       <div className="card-body p-8">
-                        <h2 className="card-title text-2xl mb-6">{t('payment.title')}</h2>
+                        <h2 className="card-title text-2xl mb-6">
+                          {t('payment.title')}
+                        </h2>
                         <form className="space-y-6">
                           <div className="form-control">
                             <label className="label mb-2">
@@ -1299,7 +1305,9 @@ export default function CheckoutPage() {
             <div className="lg:col-span-1">
               <div className="card bg-base-200 shadow-lg sticky top-24">
                 <div className="card-body p-6">
-                  <h2 className="card-title text-xl mb-6">{t('summary.title')}</h2>
+                  <h2 className="card-title text-xl mb-6">
+                    {t('summary.title')}
+                  </h2>
 
                   <div className="space-y-2">
                     <div className="flex justify-between">

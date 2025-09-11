@@ -245,33 +245,46 @@ class ConfigManager {
 
   public getImageBaseUrl(): string {
     const config = this.getConfig();
-    if (config.env.isProduction) {
-      return 'https://svetu.rs';
-    }
+    // Всегда используем MinIO URL для изображений
+    // В production это будет https://s3.svetu.rs
+    // В development это будет http://localhost:9000
     return config.storage.minioUrl;
   }
 
   public buildImageUrl(path: string): string {
     // Backend теперь возвращает полные URL в поле image_url/public_url
     // Этот метод остается только для обратной совместимости
-    
+
     // Если путь уже является полным URL, возвращаем его как есть
     if (path.startsWith('http')) {
       return path;
     }
 
     // Логируем предупреждение для отладки - не должно происходить с новым backend
-    console.warn('buildImageUrl получил относительный путь:', path, 
-                 'Backend должен возвращать полные URL');
+    console.warn(
+      'buildImageUrl получил относительный путь:',
+      path,
+      'Backend должен возвращать полные URL'
+    );
 
     // Обратная совместимость для старых данных
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const config = this.getConfig();
     const minioUrl = config.storage.minioUrl;
     const bucketName = config.storage.minioBucket;
-    
+
     // Простое построение URL для обратной совместимости
-    if (normalizedPath.match(/^\/(\d+\/.*|products\/\d+\/.*|chat-files\/.*)$/)) {
+    // Поддерживаем пути: /listings/..., /products/..., /chat-files/..., storefronts/...
+    if (
+      normalizedPath.match(
+        /^\/(listings\/.*|products\/\d+\/.*|chat-files\/.*)$/
+      )
+    ) {
+      // Проверяем, не начинается ли путь уже с имени bucket
+      // Если путь /listings/... и bucket тоже listings, не дублируем
+      if (normalizedPath.startsWith(`/${bucketName}/`)) {
+        return `${minioUrl}${normalizedPath}`;
+      }
       return `${minioUrl}/${bucketName}${normalizedPath}`;
     }
 
@@ -285,6 +298,9 @@ const configManager = new ConfigManager();
 
 // Экспортируем объект config для обратной совместимости
 export const config = configManager.getConfig();
+
+// Экспортируем функцию buildImageUrl для удобства
+export const buildImageUrl = (path: string) => configManager.buildImageUrl(path);
 
 // Экспортируем менеджер как default
 export default configManager;
