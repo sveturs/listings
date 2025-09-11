@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SveTu Platform - Interactive Roadmap 2025</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f7f7f7;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .tab:hover {
+            background: #ebebeb;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .quarter {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .quarter h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quarter-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+        
+        .month {
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .month h3 {
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .milestone {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f0f4ff;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .milestone:hover {
+            transform: translateX(10px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+        }
+        
+        .milestone-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .milestone-content {
+            flex: 1;
+        }
+        
+        .milestone-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .milestone-tasks {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .milestone-date {
+            color: #999;
+            font-size: 0.9em;
+            margin-left: auto;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .gantt-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SveTu Platform Roadmap 2025</h1>
+            <p>Полный план развития маркетплейса для Сербии</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('timeline')">📅 Timeline</div>
+            <div class="tab" onclick="showTab('gantt')">📊 Gantt Chart</div>
+            <div class="tab" onclick="showTab('metrics')">📈 KPIs & Metrics</div>
+            <div class="tab" onclick="showTab('budget')">💰 Budget</div>
+        </div>
+        
+        <div class="content">
+            <div id="timeline" class="tab-content">
+                <h2>🗓️ Детальный Timeline по кварталам</h2>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 8%">2025 Progress: 8%</div>
+                </div>
+                
+                <div class="timeline">
+                    <!-- Q1 2025 -->
+                    <div class="quarter">
+                        <h2>
+                            Q1 2025: Foundation & Launch
+                            <span class="quarter-badge">Январь - Март</span>
+                        </h2>
+                        
+                        <div class="month">
+                            <h3>
+                                Январь 2025
+                                <span class="milestone-date">MVP Production Launch</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🏗️</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Infrastructure Setup</div>
+                                    <div class="milestone-tasks">Production servers, Docker/K8s, SSL, CI/CD, Backups</div>
+                                </div>
+                                <div class="milestone-date">Week 1-2</div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-icon">🔐</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Security Audit</div>
+                                    <div class="milestone-tasks">OWASP Top 10, Penetration testing, DDoS protection</div>
+                                </div>
+                                <div class="milestone-date">Week 1-2</div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-icon">💳</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Stripe Integration</div>
+                                    <div class="milestone-tasks">Payment gateway, Webhooks, PCI compliance</div>
+                                </div>
+                                <div class="milestone-date">Week 3-4</div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-icon">📊</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Monitoring Setup</div>
+                                    <div class="milestone-tasks">Prometheus, Grafana, Alerts, Error tracking</div>
+                                </div>
+                                <div class="milestone-date">Week 3-4</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Февраль 2025
+                                <span class="milestone-date">Payments & Delivery</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">📦</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Post Express Production</div>
+                                    <div class="milestone-tasks">Credentials, Webhooks, Tracking, Label printing</div>
+                                </div>
+                                <div class="milestone-date">Week 1-2</div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-icon">💰</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">PaySpot & Stripe Connect</div>
+                                    <div class="milestone-tasks">Escrow payments, Seller payouts, C2C transactions</div>
+                                </div>
+                                <div class="milestone-date">Week 3-4</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Март 2025
+                                <span class="milestone-date">Storefronts Enhancement</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🏪</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Advanced Variants & Import</div>
+                                    <div class="milestone-tasks">Variant attributes, CSV import, Bulk operations</div>
+                                </div>
+                                <div class="milestone-date">Week 1-2</div>
+                            </div>
+                            <div class="milestone">
+                                <div class="milestone-icon">📈</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Analytics & Marketing</div>
+                                    <div class="milestone-tasks">Seller dashboard, Email campaigns, Loyalty program</div>
+                                </div>
+                                <div class="milestone-date">Week 3-4</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Q2 2025 -->
+                    <div class="quarter">
+                        <h2>
+                            Q2 2025: Growth & Optimization
+                            <span class="quarter-badge">Апрель - Июнь</span>
+                        </h2>
+                        
+                        <div class="month">
+                            <h3>
+                                Апрель 2025
+                                <span class="milestone-date">Mobile & UX</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">📱</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Mobile App Development</div>
+                                    <div class="milestone-tasks">React Native, iOS/Android, Push notifications</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Май 2025
+                                <span class="milestone-date">Automotive Marketplace</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🚗</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Car Section Launch</div>
+                                    <div class="milestone-tasks">VIN decoder, Special filters, Dealer partnerships</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Июнь 2025
+                                <span class="milestone-date">Internationalization</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🌍</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Regional Expansion</div>
+                                    <div class="milestone-tasks">Multi-language, Montenegro/Bosnia entry, CDN setup</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Q3 2025 -->
+                    <div class="quarter">
+                        <h2>
+                            Q3 2025: Scale & Innovate
+                            <span class="quarter-badge">Июль - Сентябрь</span>
+                        </h2>
+                        
+                        <div class="month">
+                            <h3>
+                                Июль 2025
+                                <span class="milestone-date">WMS System</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🏭</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Warehouse Management</div>
+                                    <div class="milestone-tasks">DDD architecture, Inventory, Multi-warehouse</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Август 2025
+                                <span class="milestone-date">AI & Automation</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🤖</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">AI Features</div>
+                                    <div class="milestone-tasks">Image recognition, Price AI, Fraud detection, Chatbot</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Сентябрь 2025
+                                <span class="milestone-date">Analytics & BI</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">📊</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Business Intelligence</div>
+                                    <div class="milestone-tasks">Data warehouse, ETL, Predictive analytics</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Q4 2025 -->
+                    <div class="quarter">
+                        <h2>
+                            Q4 2025: Consolidation & Expansion
+                            <span class="quarter-badge">Октябрь - Декабрь</span>
+                        </h2>
+                        
+                        <div class="month">
+                            <h3>
+                                Октябрь 2025
+                                <span class="milestone-date">Enterprise Features</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🏢</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">B2B Marketplace</div>
+                                    <div class="milestone-tasks">Bulk orders, Quotes, Corporate accounts, EDI</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Ноябрь 2025
+                                <span class="milestone-date">Social Commerce</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🎮</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Gamification & Social</div>
+                                    <div class="milestone-tasks">Reviews, Influencers, Live streaming, Group buying</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                        
+                        <div class="month">
+                            <h3>
+                                Декабрь 2025
+                                <span class="milestone-date">Platform 2.0</span>
+                            </h3>
+                            <div class="milestone">
+                                <div class="milestone-icon">🚀</div>
+                                <div class="milestone-content">
+                                    <div class="milestone-title">Innovation & Future</div>
+                                    <div class="milestone-tasks">Blockchain, Crypto, NFT, AR, Voice commerce</div>
+                                </div>
+                                <div class="milestone-date">Full month</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gantt" class="tab-content" style="display: none;">
+                <h2>📊 Gantt Chart - Project Timeline</h2>
+                <div class="gantt-container">
+                    <canvas id="ganttChart"></canvas>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FF6384;"></div>
+                        <span>Q1 - Foundation</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #36A2EB;"></div>
+                        <span>Q2 - Growth</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFCE56;"></div>
+                        <span>Q3 - Scale</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4BC0C0;"></div>
+                        <span>Q4 - Expansion</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="metrics" class="tab-content" style="display: none;">
+                <h2>📈 KPIs & Success Metrics</h2>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-value">100K</div>
+                        <div class="metric-label">Target Users by Dec 2025</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">€800K</div>
+                        <div class="metric-label">Monthly GMV Target</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">55K</div>
+                        <div class="metric-label">Active Listings</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">5%</div>
+                        <div class="metric-label">Target Conversion Rate</div>
+                    </div>
+                </div>
+                
+                <canvas id="growthChart" style="margin-top: 30px;"></canvas>
+            </div>
+            
+            <div id="budget" class="tab-content" style="display: none;">
+                <h2>💰 Budget Allocation</h2>
+                
+                <canvas id="budgetChart"></canvas>
+                
+                <div class="metrics" style="margin-top: 30px;">
+                    <div class="metric-card">
+                        <div class="metric-value">€60K</div>
+                        <div class="metric-label">Development (40%)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">€30K</div>
+                        <div class="metric-label">Infrastructure (20%)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">€37.5K</div>
+                        <div class="metric-label">Marketing (25%)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">€22.5K</div>
+                        <div class="metric-label">Operations (15%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).style.display = 'block';
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Initialize charts if needed
+            if (tabName === 'gantt' && !window.ganttInitialized) {
+                initGanttChart();
+                window.ganttInitialized = true;
+            }
+            if (tabName === 'metrics' && !window.metricsInitialized) {
+                initMetricsChart();
+                window.metricsInitialized = true;
+            }
+            if (tabName === 'budget' && !window.budgetInitialized) {
+                initBudgetChart();
+                window.budgetInitialized = true;
+            }
+        }
+        
+        function initGanttChart() {
+            const ctx = document.getElementById('ganttChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        'Infrastructure', 'Security', 'Stripe', 'Monitoring',
+                        'Post Express', 'PaySpot', 'Storefronts', 'Mobile App',
+                        'Auto Section', 'i18n', 'WMS', 'AI Features',
+                        'BI Platform', 'B2B', 'Social', 'Platform 2.0'
+                    ],
+                    datasets: [{
+                        label: 'Q1 2025',
+                        data: [
+                            {x: ['2025-01-01', '2025-01-14'], y: 0},
+                            {x: ['2025-01-01', '2025-01-14'], y: 1},
+                            {x: ['2025-01-15', '2025-01-31'], y: 2},
+                            {x: ['2025-01-15', '2025-01-31'], y: 3},
+                            {x: ['2025-02-01', '2025-02-14'], y: 4},
+                            {x: ['2025-02-15', '2025-02-28'], y: 5},
+                            {x: ['2025-03-01', '2025-03-31'], y: 6}
+                        ],
+                        backgroundColor: '#FF6384'
+                    }, {
+                        label: 'Q2 2025',
+                        data: [
+                            {x: ['2025-04-01', '2025-04-30'], y: 7},
+                            {x: ['2025-05-01', '2025-05-31'], y: 8},
+                            {x: ['2025-06-01', '2025-06-30'], y: 9}
+                        ],
+                        backgroundColor: '#36A2EB'
+                    }, {
+                        label: 'Q3 2025',
+                        data: [
+                            {x: ['2025-07-01', '2025-07-31'], y: 10},
+                            {x: ['2025-08-01', '2025-08-31'], y: 11},
+                            {x: ['2025-09-01', '2025-09-30'], y: 12}
+                        ],
+                        backgroundColor: '#FFCE56'
+                    }, {
+                        label: 'Q4 2025',
+                        data: [
+                            {x: ['2025-10-01', '2025-10-31'], y: 13},
+                            {x: ['2025-11-01', '2025-11-30'], y: 14},
+                            {x: ['2025-12-01', '2025-12-31'], y: 15}
+                        ],
+                        backgroundColor: '#4BC0C0'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: {
+                                    month: 'MMM yyyy'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initMetricsChart() {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'GMV (€K)',
+                        data: [10, 25, 50, 75, 100, 150, 200, 275, 350, 450, 600, 800],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Users (K)',
+                        data: [1, 2.5, 5, 8, 12, 18, 25, 35, 45, 60, 80, 100],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+        
+        function initBudgetChart() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Development', 'Infrastructure', 'Marketing', 'Operations'],
+                    datasets: [{
+                        data: [60000, 30000, 37500, 22500],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': €';
+                                    }
+                                    label += new Intl.NumberFormat('de-DE').format(context.parsed);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
