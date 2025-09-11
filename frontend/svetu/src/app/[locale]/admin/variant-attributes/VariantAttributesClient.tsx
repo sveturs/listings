@@ -6,7 +6,7 @@ import { toast } from '@/utils/toast';
 import Link from 'next/link';
 import { tokenManager } from '@/utils/tokenManager';
 
-import { configManager } from '@/config';
+import configManager from '@/config';
 
 interface VariantAttribute {
   id: number;
