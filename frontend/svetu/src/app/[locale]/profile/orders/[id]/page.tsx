@@ -21,7 +21,7 @@ export default function OrderDetailsPage({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
   const t = useTranslations('orders');
-  const tHome = useTranslations('marketplace.homeContent');
+  const tHome = useTranslations('marketplace');
   const tProfile = useTranslations('profile');
   const tCommon = useTranslations('common');
   const router = useRouter();

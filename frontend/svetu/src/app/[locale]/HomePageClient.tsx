@@ -87,9 +87,9 @@ export default function HomePageClient({
   const searchParams = useSearchParams();
   const { user, refreshSession } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const t = useTranslations('marketplace.homeContent');
-  // const tCommon = useTranslations('common');
-  const tFooter = useTranslations('common.footer');
+  const t = useTranslations('marketplace');
+  const tCommon = useTranslations('common');
+  const tFooter = useTranslations('common');
   const [_mounted, setMounted] = useState(false);
   const [selectedCategory] = useState<string | number>('all');
   const [currentBanner, setCurrentBanner] = useState(0);

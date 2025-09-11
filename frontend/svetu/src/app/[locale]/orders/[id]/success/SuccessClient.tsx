@@ -15,7 +15,7 @@ interface Props {
 export default function SuccessClient({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
-  const _t = useTranslations();
+  const t = useTranslations('orders');
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();

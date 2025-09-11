@@ -10,7 +10,7 @@ import { SveTuLogoRosePetals } from '@/components/logos/SveTuLogoRosePetals';
 import { SveTuLogoStatic } from '@/components/logos/SveTuLogoStatic';
 
 const LogosPage = () => {
-  const _t = useTranslations();
+  const t = useTranslations('examples');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-base-100 to-base-200 py-8">

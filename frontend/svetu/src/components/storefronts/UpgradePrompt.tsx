@@ -92,7 +92,7 @@ export default function UpgradePrompt({
   currentPlan = 'starter',
   onClose,
 }: UpgradePromptProps) {
-  const t = useTranslations('misc.storefronts.upgrade');
+  const t = useTranslations('misc');
   const tCommon = useTranslations('common');
   const router = useRouter();
 

@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function ExportImportManager() {
-  const _t = useTranslations('admin.translations');
+  const _t = useTranslations('admin');
 
   // Export state
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'xliff'>(

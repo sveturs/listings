@@ -18,7 +18,7 @@ export default function TranslationSearch({
   onResultSelect,
   className = '',
 }: TranslationSearchProps) {
-  const t = useTranslations('admin.translations.search');
+  const t = useTranslations('admin');
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Translation[]>([]);

@@ -8,7 +8,7 @@ import type { Translation } from '@/types/translation';
 import type { Translation as TranslationApiType } from '@/services/translationAdminApi';
 
 export default function TranslationEditorDemo() {
-  const t = useTranslations('admin.translations');
+  const t = useTranslations('admin');
   const [selectedTranslation, setSelectedTranslation] =
     useState<Translation | null>(null);
 

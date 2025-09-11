@@ -31,7 +31,7 @@ export default function InlineTranslationEditor({
   autoFocus = false,
   showAIButton = true,
 }: InlineTranslationEditorProps) {
-  const t = useTranslations('admin.translations.editor');
+  const t = useTranslations('admin');
 
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState('');

@@ -10,7 +10,7 @@ import TransliterationConfig from '../admin/search/components/TransliterationCon
 import SearchConfig from '../admin/search/components/SearchConfig';
 
 export default function AdminTestPage() {
-  const _t = useTranslations();
+  const t = useTranslations('admin');
   const [activeTab, setActiveTab] = useState<
     | 'dashboard'
     | 'weights'
