@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import configManager from '@/config';
 
 interface Experiment {
   id: string;
@@ -138,7 +139,8 @@ class ABTestingService {
    */
   private async loadRemoteExperiments() {
     try {
-      const response = await fetch(`${this.config.apiEndpoint}/active`);
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}${this.config.apiEndpoint}/active`);
       const experiments = await response.json();
 
       experiments.forEach((exp: Experiment) => {
@@ -574,7 +576,8 @@ class ABTestingService {
     if (!this.config.enableRemoteConfig) return;
 
     try {
-      await fetch(`${this.config.apiEndpoint}/${experiment.id}/complete`, {
+      const apiUrl = configManager.getApiUrl();
+      await fetch(`${apiUrl}${this.config.apiEndpoint}/${experiment.id}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -643,7 +646,8 @@ class ABTestingService {
     this.analyticsQueue = [];
 
     try {
-      await fetch('/api/v1/analytics/events', {
+      const apiUrl = configManager.getApiUrl();
+      await fetch(`${apiUrl}/api/v1/analytics/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events }),

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
 
 export default function AdminAuthPage() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export default function AdminAuthPage() {
 
     try {
       // Получаем демо токен от сервера
-      const response = await fetch('/api/v1/admin/demo-token', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/demo-token`, {
         method: 'POST',
       });
 

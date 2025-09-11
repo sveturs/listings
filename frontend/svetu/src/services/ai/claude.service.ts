@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import configManager from '@/config';
 
 interface ProductAnalysis {
   title: string;
@@ -39,7 +39,7 @@ export class ClaudeAIService {
   private apiUrl = 'https://api.anthropic.com/v1/messages';
 
   constructor() {
-    this.apiKey = config.claudeApiKey || '';
+    this.apiKey = configManager.getConfig().claudeApiKey || '';
     console.log(
       'Claude API:',
       this.apiKey
@@ -58,7 +58,8 @@ export class ClaudeAIService {
       console.log('User language:', userLanguage);
 
       // Use our API route instead of calling Claude directly
-      const response = await fetch('/api/ai/analyze', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/ai/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +93,8 @@ export class ClaudeAIService {
   ): Promise<string> {
     try {
       // Use our API route instead of calling Claude directly
-      const response = await fetch('/api/ai/description', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/ai/description`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +126,8 @@ export class ClaudeAIService {
   }> {
     try {
       // Use our API route instead of calling Claude directly
-      const response = await fetch('/api/ai/ab-test', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/ai/ab-test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +166,8 @@ export class ClaudeAIService {
       console.log('Translating content to languages:', targetLanguages);
 
       // Use our API route for translation
-      const response = await fetch('/api/ai/translate', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/ai/translate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

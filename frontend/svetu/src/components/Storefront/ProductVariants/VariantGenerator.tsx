@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
 interface AttributeValue {
   value: string;
@@ -63,8 +64,9 @@ export default function VariantGenerator({
   const loadProductAttributes = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/storefronts/storefront/products/${productId}/attributes`,
+        `${apiUrl}/api/v1/storefronts/storefront/products/${productId}/attributes`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -177,7 +179,8 @@ export default function VariantGenerator({
         default_attributes: defaultAttributes,
       };
 
-      const response = await fetch('/api/v1/storefront/variants/generate', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/storefront/variants/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

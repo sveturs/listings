@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import configManager from '@/config';
 
 interface QRBarcodeScannerProps {
   onScan?: (data: ScanResult) => void;
@@ -381,7 +382,8 @@ export default function QRBarcodeScanner({
     scanResult: ScanResult
   ): Promise<ProductInfo | null> => {
     try {
-      const response = await fetch('/api/v1/products/barcode-lookup', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/products/barcode-lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -15,6 +15,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
+import configManager from '@/config';
 
 // Схема валидации для BEX доставки
 const bexDeliverySchema = z
@@ -190,7 +191,8 @@ export default function BEXDeliveryStep({
 
     setCalculatingRate(true);
     try {
-      const response = await fetch('/api/v1/bex/calculate-rate', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/bex/calculate-rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -16,6 +16,7 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import { PageTransition } from '@/components/ui/PageTransition';
+import configManager from '@/config';
 
 interface Shipment {
   id: number;
@@ -90,7 +91,8 @@ export default function PostExpressAdminPage() {
   };
 
   const loadStats = async () => {
-    const response = await fetch('/api/v1/postexpress/shipments/stats');
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments/stats`);
     const data = await response.json();
     if (data.success) {
       setStats(data.data);
@@ -105,7 +107,8 @@ export default function PostExpressAdminPage() {
     if (filters.search) params.append('search', filters.search);
     params.append('limit', '50');
 
-    const response = await fetch(`/api/v1/postexpress/shipments?${params}`);
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments?${params}`);
     const data = await response.json();
     if (data.success) {
       setShipments(data.data || []);
@@ -117,19 +120,20 @@ export default function PostExpressAdminPage() {
 
     setLoading(true);
     try {
+      const apiUrl = configManager.getApiUrl();
       let endpoint = '';
       let method = 'POST';
       const body: any = { shipment_ids: selectedShipments };
 
       switch (action) {
         case 'sync':
-          endpoint = '/api/v1/postexpress/track/sync';
+          endpoint = `${apiUrl}/api/v1/postexpress/track/sync`;
           break;
         case 'cancel':
-          endpoint = '/api/v1/postexpress/shipments/bulk-cancel';
+          endpoint = `${apiUrl}/api/v1/postexpress/shipments/bulk-cancel`;
           break;
         case 'print':
-          endpoint = '/api/v1/postexpress/shipments/bulk-labels';
+          endpoint = `${apiUrl}/api/v1/postexpress/shipments/bulk-labels`;
           method = 'GET';
           break;
       }

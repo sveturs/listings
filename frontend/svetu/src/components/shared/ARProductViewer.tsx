@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
+import configManager from '@/config';
 import '@/types/model-viewer';
 
 interface ARProductViewerProps {
@@ -125,7 +126,8 @@ export default function ARProductViewer({
     // In production, this would call an AI service
     try {
       // Simulate API call to generate 3D model from image
-      const response = await fetch('/api/v1/ar/generate-model', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/ar/generate-model`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl, attributes }),

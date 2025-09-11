@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { adminApi } from '@/services/admin';
 import VariantStockManager from './VariantStockManager';
+import configManager from '@/config';
 
 interface SimplifiedVariantGeneratorProps {
   selectedAttributes: Record<number, any>;
@@ -50,7 +51,8 @@ export default function SimplifiedVariantGenerator({
         try {
           console.log('Fetching category info for ID:', categoryId);
           // Сначала попробуем получить список категорий
-          const response = await fetch('/api/v1/marketplace/categories');
+          const apiUrl = configManager.getApiUrl();
+          const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
           if (response.ok) {
             const data = await response.json();
             const categories = data.data || [];

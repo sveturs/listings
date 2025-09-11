@@ -7,6 +7,7 @@ import {
 import { RootState } from '../index';
 import { tokenManager } from '@/utils/tokenManager';
 import { apiClientAuth } from '@/lib/api-client-auth';
+import configManager from '@/config';
 import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/storefront';
 
@@ -238,7 +239,8 @@ export const fetchStorefrontById = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchStorefrontById', async (id, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/storefronts/${id}`, {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -279,7 +281,8 @@ export const fetchStorefrontBySlug = createAsyncThunk<
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    const response = await fetch(`/api/v1/storefronts/slug/${slug}`, {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/storefronts/slug/${slug}`, {
       method: 'GET',
       headers,
       credentials: 'include', // Include cookies
@@ -319,7 +322,8 @@ export const fetchMyStorefronts = createAsyncThunk<
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    const response = await fetch('/api/v1/storefronts/my', {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/storefronts/my`, {
       method: 'GET',
       headers,
       credentials: 'include', // Важно для отправки cookies
@@ -361,7 +365,8 @@ export const createStorefront = createAsyncThunk<
   'storefronts/createStorefront',
   async (storefrontData, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/v1/storefronts', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/storefronts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -395,7 +400,8 @@ export const updateStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/updateStorefront', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/storefronts/${id}`, {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -428,7 +434,8 @@ export const deleteStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/deleteStorefront', async (id, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/v1/storefronts/${id}`, {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

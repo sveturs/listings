@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
+import configManager from '@/config';
 
 interface UserContact {
   id: number;
@@ -53,7 +54,8 @@ export default function UserContactsPage() {
     async (status: string = '') => {
       try {
         setLoading(true);
-        let url = '/api/v1/contacts';
+        const apiUrl = configManager.getApiUrl();
+        let url = `${apiUrl}/api/v1/contacts`;
         if (status) {
           url += `?status=${encodeURIComponent(status)}`;
         }
@@ -108,7 +110,8 @@ export default function UserContactsPage() {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
-      const response = await fetch('/api/v1/contacts/privacy', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/contacts/privacy`, {
         credentials: 'include',
         headers,
       });
@@ -189,7 +192,8 @@ export default function UserContactsPage() {
         console.warn('Failed to get CSRF token:', error);
       }
 
-      const response = await fetch(`/api/v1/contacts/${contactUserID}/status`, {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/contacts/${contactUserID}/status`, {
         method: 'PUT',
         credentials: 'include',
         headers,
@@ -233,7 +237,8 @@ export default function UserContactsPage() {
         console.warn('Failed to get CSRF token:', error);
       }
 
-      const response = await fetch(`/api/v1/contacts/${contactUserID}`, {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/contacts/${contactUserID}`, {
         method: 'DELETE',
         credentials: 'include',
         headers,
@@ -276,7 +281,8 @@ export default function UserContactsPage() {
         console.warn('Failed to get CSRF token:', error);
       }
 
-      const response = await fetch('/api/v1/contacts/privacy', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/contacts/privacy`, {
         method: 'PUT',
         credentials: 'include',
         headers,

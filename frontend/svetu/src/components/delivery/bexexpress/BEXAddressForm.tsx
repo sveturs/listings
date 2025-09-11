@@ -15,6 +15,7 @@ import {
   ChatBubbleBottomCenterTextIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import configManager from '@/config';
 
 // Схема валидации адреса
 const addressSchema = z.object({
@@ -109,7 +110,8 @@ export default function BEXAddressForm({
 
       setIsSearching(true);
       try {
-        const response = await fetch('/api/v1/bex/search-address', {
+        const apiUrl = configManager.getApiUrl();
+        const response = await fetch(`${apiUrl}/api/v1/bex/search-address`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query, city, limit: 10 }),

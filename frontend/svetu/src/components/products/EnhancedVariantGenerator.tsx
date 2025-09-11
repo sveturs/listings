@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import VariantStockManager from './VariantStockManager';
 import { getVariantAttributesForCategory } from '@/lib/variant-attributes-config';
+import configManager from '@/config';
 
 interface ProductVariantAttribute {
   id: number;
@@ -46,7 +47,8 @@ export default function EnhancedVariantGenerator({
         const attributeNames = getVariantAttributesForCategory(categorySlug);
 
         // Загружаем информацию о вариативных атрибутах
-        const response = await fetch('/api/v1/product-variant-attributes');
+        const apiUrl = configManager.getApiUrl();
+        const response = await fetch(`${apiUrl}/api/v1/product-variant-attributes`);
         if (response.ok) {
           const data = await response.json();
           const allAttributes: ProductVariantAttribute[] =

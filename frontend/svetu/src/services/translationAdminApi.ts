@@ -1,3 +1,5 @@
+import configManager from '@/config';
+
 // Types для новой системы переводов
 export interface Translation {
   id: number;
@@ -219,7 +221,10 @@ import { tokenManager } from '@/utils/tokenManager';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 class TranslationAdminApi {
-  private baseUrl = `${API_BASE_URL}/api/v1/admin/translations`;
+  private getBaseUrl(): string {
+    const apiUrl = configManager.getApiUrl();
+    return `${apiUrl}/api/v1/admin/translations`;
+  }
 
   private getAuthHeaders(): HeadersInit {
     const token = tokenManager.getAccessToken();
@@ -234,7 +239,8 @@ class TranslationAdminApi {
     options?: RequestInit
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
+      const baseUrl = this.getBaseUrl();
+      const response = await fetch(`${baseUrl}${path}`, {
         ...options,
         headers: {
           ...this.getAuthHeaders(),
@@ -248,7 +254,8 @@ class TranslationAdminApi {
         const refreshed = await this.refreshToken();
         if (refreshed) {
           // Retry request with new token
-          const retryResponse = await fetch(`${this.baseUrl}${path}`, {
+          const baseUrl = this.getBaseUrl();
+          const retryResponse = await fetch(`${baseUrl}${path}`, {
             ...options,
             headers: {
               ...this.getAuthHeaders(),

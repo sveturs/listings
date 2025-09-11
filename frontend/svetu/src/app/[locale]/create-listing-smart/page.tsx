@@ -44,6 +44,7 @@ import type { components } from '@/types/generated/api';
 import CategorySelector from '@/components/listing/CategorySelector';
 import CategoryAttributes from '@/components/listing/CategoryAttributes';
 import { CarSelectorCompact } from '@/components/cars';
+import configManager from '@/config';
 
 type MarketplaceCategory =
   components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -130,8 +131,9 @@ export default function CreateListingSmartPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/marketplace/categories?lang=${locale}`
+        `${apiUrl}/api/v1/marketplace/categories?lang=${locale}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -270,7 +272,8 @@ export default function CreateListingSmartPage() {
           language: locale,
         });
 
-        const response = await fetch(`/api/v1/search?${searchParams}`);
+        const apiUrl = configManager.getApiUrl();
+        const response = await fetch(`${apiUrl}/api/v1/search?${searchParams}`);
         if (response.ok) {
           const data = await response.json();
           console.log('Search API response:', data); // Для отладки
@@ -377,7 +380,8 @@ export default function CreateListingSmartPage() {
           .split(' ')
           .filter((word) => word.length > 2);
 
-        const response = await fetch('/api/v1/marketplace/categories/detect', {
+        const apiUrl = configManager.getApiUrl();
+        const response = await fetch(`${apiUrl}/api/v1/marketplace/categories/detect`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -12,6 +12,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 // import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 
 interface DeliveryMethod {
   id: string;
@@ -113,7 +114,8 @@ export default function PostExpressDeliverySelector({
   const calculateDeliveryRates = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/postexpress/calculate-rate', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/postexpress/calculate-rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

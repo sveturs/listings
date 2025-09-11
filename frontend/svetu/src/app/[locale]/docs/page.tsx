@@ -16,6 +16,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
 import type { components } from '@/types/generated/api';
+import configManager from '@/config';
 
 type DocFile = components['schemas']['internal_proj_docserver_handler.DocFile'];
 type DocFilesResponse =
@@ -72,7 +73,8 @@ export default function DocsPage() {
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
 
-      const response = await fetch('/api/v1/docs/files', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/docs/files`, {
         headers,
         credentials: 'include',
       });
@@ -100,8 +102,9 @@ export default function DocsPage() {
       const { AuthService } = await import('@/services/auth');
       const headers = await AuthService.getAuthHeaders();
 
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/docs/content?path=${encodeURIComponent(path)}`,
+        `${apiUrl}/api/v1/docs/content?path=${encodeURIComponent(path)}`,
         {
           headers,
           credentials: 'include',

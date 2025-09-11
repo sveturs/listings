@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import configManager from '@/config';
 
 // Типы событий
 export type AnalyticsEventType =
@@ -65,7 +66,8 @@ export const useAnalytics = () => {
     }
 
     try {
-      const response = await fetch('/api/v1/analytics/event', {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/analytics/event`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

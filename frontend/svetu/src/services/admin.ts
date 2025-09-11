@@ -1,5 +1,6 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
+import configManager from '@/config';
 
 // Базовый URL для backend API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -178,8 +179,9 @@ export const adminApi = {
         // Получаем текущий язык
         const currentLocale = getCurrentLocale();
 
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(
-          `${API_BASE_URL}/api/v1/admin/categories/all?lang=${currentLocale}`,
+          `${apiUrl}/api/v1/admin/categories/all?lang=${currentLocale}`,
           {
             method: 'GET',
             headers,
@@ -232,14 +234,12 @@ export const adminApi = {
         }
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/categories/${id}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/categories/${id}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -255,7 +255,8 @@ export const adminApi = {
     ): Promise<{ id: number; message: string }> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/admin/categories`, {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/categories`, {
         method: 'POST',
         headers,
         body: JSON.stringify(category),
@@ -272,15 +273,13 @@ export const adminApi = {
     async update(id: number, category: Partial<Category>): Promise<any> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/categories/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(category),
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/categories/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(category),
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -293,14 +292,12 @@ export const adminApi = {
     async delete(id: number): Promise<any> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/categories/${id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -368,8 +365,9 @@ export const adminApi = {
       }
 
       const currentLocale = getCurrentLocale();
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/marketplace/categories/${categoryId}/attributes?lang=${currentLocale}`,
+        `${apiUrl}/api/v1/marketplace/categories/${categoryId}/attributes?lang=${currentLocale}`,
         {
           method: 'GET',
           headers,
@@ -440,8 +438,9 @@ export const adminApi = {
         }
       }
 
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/categories/${categoryId}/groups`,
+        `${apiUrl}/api/v1/admin/categories/${categoryId}/groups`,
         {
           method: 'GET',
           headers,
@@ -524,8 +523,9 @@ export const adminApi = {
           params.append('type', filterType);
         }
 
+        const apiUrl = configManager.getApiUrl();
         const response = await fetch(
-          `${API_BASE_URL}/api/v1/admin/attributes?${params.toString()}`,
+          `${apiUrl}/api/v1/admin/attributes?${params.toString()}`,
           {
             method: 'GET',
             headers,
@@ -617,14 +617,12 @@ export const adminApi = {
         }
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/attributes/${id}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/attributes/${id}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -640,7 +638,8 @@ export const adminApi = {
     ): Promise<{ id: number; message: string }> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/admin/attributes`, {
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/attributes`, {
         method: 'POST',
         headers,
         body: JSON.stringify(attribute),
@@ -663,15 +662,13 @@ export const adminApi = {
       );
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/attributes/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(attribute),
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/attributes/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(attribute),
+        credentials: 'include',
+      });
 
       console.log(
         '[adminApi.attributes.update] Response status:',
@@ -695,14 +692,12 @@ export const adminApi = {
     async delete(id: number): Promise<any> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/attributes/${id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/attributes/${id}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -979,8 +974,9 @@ export const adminApi = {
       if (search) params.append('search', search);
       if (type) params.append('type', type);
 
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/admin/variant-attributes?${params.toString()}`,
+        `${apiUrl}/api/v1/admin/variant-attributes?${params.toString()}`,
         {
           method: 'GET',
           headers,
@@ -998,14 +994,12 @@ export const adminApi = {
     async getById(id: number): Promise<VariantAttribute> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/variant-attributes/${id}`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1020,15 +1014,13 @@ export const adminApi = {
     ): Promise<{ id: number; message: string }> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/variant-attributes`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(attribute),
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(attribute),
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1044,15 +1036,13 @@ export const adminApi = {
     ): Promise<any> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/variant-attributes/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(attribute),
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(attribute),
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1065,14 +1055,12 @@ export const adminApi = {
     async delete(id: number): Promise<{ message: string }> {
       const headers = await getAuthHeaders();
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/admin/variant-attributes/${id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
-      );
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1087,8 +1075,9 @@ export const adminApi = {
       variantAttributeId: number
     ): Promise<any[]> {
       const headers = await getAuthHeaders();
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
+        `${apiUrl}/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
         {
           method: 'GET',
           headers,
@@ -1109,8 +1098,9 @@ export const adminApi = {
       categoryAttributeIds: number[]
     ): Promise<any> {
       const headers = await getAuthHeaders();
+      const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
+        `${apiUrl}/api/v1/admin/variant-attributes/${variantAttributeId}/mappings`,
         {
           method: 'PUT',
           headers,

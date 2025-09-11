@@ -1,3 +1,5 @@
+import configManager from '@/config';
+
 interface BiometricAuthResult {
   success: boolean;
   method?: 'fingerprint' | 'face' | 'pin' | 'pattern';
@@ -268,7 +270,8 @@ class BiometricAuthService {
   async removeAuthentication(userId: string): Promise<boolean> {
     try {
       // Remove from server
-      await fetch('/api/v1/auth/biometric/remove', {
+      const apiUrl = configManager.getApiUrl();
+      await fetch(`${apiUrl}/api/v1/auth/biometric/remove`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -291,7 +294,8 @@ class BiometricAuthService {
    */
   async isEnrolled(userId: string): Promise<boolean> {
     try {
-      const response = await fetch(`/api/v1/auth/biometric/enrolled/${userId}`);
+      const apiUrl = configManager.getApiUrl();
+      const response = await fetch(`${apiUrl}/api/v1/auth/biometric/enrolled/${userId}`);
       const { enrolled } = await response.json();
       return enrolled;
     } catch {
@@ -319,7 +323,8 @@ class BiometricAuthService {
   }
 
   private async getRegistrationChallenge(userId: string): Promise<string> {
-    const response = await fetch('/api/v1/auth/biometric/challenge', {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/auth/biometric/challenge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, type: 'register' }),
@@ -332,7 +337,8 @@ class BiometricAuthService {
     challenge: string;
     credentialIds: string[];
   }> {
-    const response = await fetch('/api/v1/auth/biometric/challenge', {
+    const apiUrl = configManager.getApiUrl();
+    const response = await fetch(`${apiUrl}/api/v1/auth/biometric/challenge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, type: 'authenticate' }),
@@ -346,7 +352,8 @@ class BiometricAuthService {
   ): Promise<void> {
     const response = credential.response as AuthenticatorAttestationResponse;
 
-    await fetch('/api/v1/auth/biometric/register', {
+    const apiUrl = configManager.getApiUrl();
+    await fetch(`${apiUrl}/api/v1/auth/biometric/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -365,7 +372,8 @@ class BiometricAuthService {
   ): Promise<boolean> {
     const response = credential.response as AuthenticatorAssertionResponse;
 
-    const verifyResponse = await fetch('/api/v1/auth/biometric/verify', {
+    const apiUrl = configManager.getApiUrl();
+    const verifyResponse = await fetch(`${apiUrl}/api/v1/auth/biometric/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
