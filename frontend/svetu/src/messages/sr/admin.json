@@ -55,7 +55,7 @@
   "negative": "Negativan",
   "noKeywords": "Nema ključnih reči",
   "attributesTitle": "Atributi",
-  "attributeGroupsTitle": "Grupe atributa"
+  "attributeGroupsTitle": "Grupe atributa",
   "attributes": {
     "required": "Obavezno",
     "noAttributesFound": "Nisu pronađeni atributi",
@@ -70,7 +70,7 @@
     "makeRequired": "Učini obaveznim",
     "makeOptional": "Učini opcionim",
     "title": "Naslov",
-    "addAttribute": "Dodaj atribut"
+    "addAttribute": "Dodaj atribut",
     "allTypes": "Svi tipovi",
     "types": {
       "text": "Tekst",
@@ -101,7 +101,7 @@
     "showInList": "Prikaži u listi",
     "isVariantCompatible": "Kompatibilan sa varijantama",
     "affectsStock": "Utiče na zalihe",
-    "translating": "Prevođenje"
+    "translating": "Prevođenje",
     "translations": "Prevodi",
     "displayNameTranslations": "Prevodi naziva za prikaz",
     "optionTranslations": "Prevodi opcija"
@@ -124,7 +124,7 @@
     "sortOrderHint": "Redosled prikaza u interfejsu",
     "isRequiredHint": "Da li je vrednost obavezna pri kreiranju varijante",
     "affectsStockHint": "Da li različite vrednosti utiču na praćenje zaliha",
-    "validationError": "Molimo popunite obavezna polja"
+    "validationError": "Molimo popunite obavezna polja",
     "allTypes": "Svi tipovi",
     "types": {
       "text": "Tekst",
@@ -164,7 +164,7 @@
     "loadMappingsError": "Greška pri učitavanju mapiranja",
     "saveMappingsSuccess": "Mapiranje uspešno sačuvano",
     "saveMappingsError": "Greška pri čuvanju mapiranja",
-    "dragDropTitle": "Prevuci i spusti atribute"
+    "dragDropTitle": "Prevuci i spusti atribute",
     "dragDropHint": "Prevucite atribute iz leve u desnu kolonu da biste kreirali veze. Koristite automatski pronalazak za brže pronalaženje sličnih atributa.",
     "availableAttributes": "Dostupni atributi",
     "linkedAttributes": "Povezani atributi",
@@ -213,7 +213,7 @@
     "translationFailed": "Prevođenje neuspešno",
     "unexpectedError": "Dogodila se neočekivana greška",
     "name": "Naziv",
-    "fetchError": "Neuspešno učitavanje prevoda"
+    "fetchError": "Neuspešno učitavanje prevoda",
     "saveError": "Neuspešno čuvanje prevoda",
     "saved": "Prevod uspešno sačuvan",
     "modules": "Moduli",
@@ -231,7 +231,7 @@
     "placeholder": "Okvir za tekst",
     "missing": "Nedostaje",
     "needsTranslation": "potreban prevod",
-    "notFound": "nije pronađeno"
+    "notFound": "nije pronađeno",
     "frontendModules": "Frontend moduli",
     "synchronization": "Sinhronizacija",
     "statistics": "Statistike",
@@ -251,7 +251,7 @@
     "moduleStatistics": "Statistike modula",
     "module": "Modul",
     "completion": "Završenost",
-    "recentChanges": "Poslednje izmene"
+    "recentChanges": "Poslednje izmene",
     "refreshStatistics": "Osveži statistike",
     "noStatistics": "Nema dostupnih statistika",
     "loadStatistics": "Učitaj statistike",
@@ -267,10 +267,10 @@
     "lastSync": "Poslednja sinhronizacija",
     "conflicts": "Konflikti",
     "never": "Nikada",
-    "syncInProgress": "Sinhronizacija u toku..."
-    "sourceValue": "Source value",
-    "targetValue": "Target value",
-    "useSource": "Use source",
+    "syncInProgress": "Sinhronizacija u toku...",
+    "sourceValue": "Izvorna vrednost",
+    "targetValue": "Ciljna vrednost",
+    "useSource": "Koristi izvor",
     "useTarget": "Use target",
     "skip": "Preskoči",
     "conflictResolved": "Conflict resolved",
@@ -302,7 +302,7 @@
     "exportImport": "Export/Import",
     "exportImportDescription": "Manage translations through files",
     "massTranslation": "Masovno prevođenje",
-    "entityType": "Tip entiteta"
+    "entityType": "Tip entiteta",
     "autoApprove": "Automatski odobri",
     "overwriteExisting": "Prebriši postojeće",
     "translationProvider": "Provajder prevoda",
@@ -313,7 +313,7 @@
     "processed": "Obrađeno",
     "errors": "Greške",
     "skipped": "Preskočeno",
-    "results": "Rezultati"
+    "results": "Rezultati",
     "rollbackToVersion": "Rollback to this version",
     "search": {
       "placeholder": "Search translations...",
@@ -344,7 +344,7 @@
       "demoTitle": "Demo prevod"
     },
     "compareVersions": "Poredi verzije",
-    "versionComparison": "Poređenje verzija"
+    "versionComparison": "Poređenje verzija",
     "textChanges": "Izmene teksta",
     "metadataChanges": "Izmene metapodataka",
     "noTextChanges": "No text changes",
@@ -355,7 +355,7 @@
     "deletion": "Brisanje",
     "auditFilters": "Filteri revizije",
     "userId": "User ID",
-    "action": "Akcija"
+    "action": "Akcija",
     "allActions": "Sve akcije",
     "allEntityTypes": "All Entity Types",
     "dateFrom": "Datum od",
@@ -364,7 +364,7 @@
     "operationsLog": "Log operacija",
     "totalOperations": "Ukupno operacija",
     "operationsByType": "By Operation Type",
-    "userActivity": "Aktivnost korisnika"
+    "userActivity": "Aktivnost korisnika",
     "recentOperations": "Poslednje operacije",
     "operationsCount": "operations",
     "exportFormat": "Format izvoza",
@@ -377,7 +377,7 @@
     "importOptions": "Opcije uvoza",
     "validateOnly": "Validate only (no saving)",
     "selectFileOrData": "Please select a file or enter data",
-    "importResults": "Rezultati uvoza"
+    "importResults": "Rezultati uvoza",
     "noRecordsFound": "No records found"
   },
   "common": {
@@ -402,7 +402,7 @@
     "noData": "Nema podataka",
     "delete": "Obriši",
     "showing": "Prikaz",
-    "of": "od"
+    "of": "od",
     "items": "Stavke",
     "cancel": "Otkaži",
     "save": "Sačuvaj",
@@ -469,7 +469,7 @@
     "categoryName": "Naziv kategorije",
     "slug": "Kratak naziv",
     "parentCategory": "Roditeljska kategorija",
-    "noParent": "Nema roditeljsku"
+    "noParent": "Nema roditeljsku",
     "icon": "Ikona",
     "description": "Opis",
     "isActive": "Aktivno",
@@ -489,7 +489,7 @@
     "bulkUpdateSuccess": "Uspešno grupno ažuriranje",
     "bulkMoveSuccess": "Uspešno grupno premeštanje",
     "addAttribute": "Dodaj atribut",
-    "selectAttribute": "Izaberi atribut"
+    "selectAttribute": "Izaberi atribut",
     "selectGroup": "Izaberi grupu",
     "moveToGroup": "Premesti u grupu",
     "addGroup": "Dodaj grupu",
@@ -668,7 +668,7 @@
     "view": "Prikaz",
     "userDetails": "Podaci korisnika",
     "selectRole": "Izaberi ulogu",
-    "pageInfo": "Strana {current} od {total}"
+    "pageInfo": "Strana {current} od {total}",
     "table": {
       "id": "ID",
       "name": "Ime",
@@ -740,7 +740,7 @@
       "compliance_officer": "Obezbeđuje regulatornu usaglašenost",
       "courier": "Dostavlja porudžbine kupcima",
       "data_analyst": "Pristup analitici i alatkama za izveštavanje",
-      "individual_seller": "Individualni prodavac sa osnovnim funkcijama"
+      "individual_seller": "Individualni prodavac sa osnovnim funkcijama",
       "legal_advisor": "Rukuje pravnim pitanjima i usaglašenošću",
       "marketing_manager": "Upravlja promocijama, popustima i marketinškim kampanjama",
       "moderator": "Može moderirati sadržaj i upravljati oglasima",
@@ -773,7 +773,7 @@
     "customAmount": "Prilagodi iznos",
     "paymentMethod": "Način plaćanja",
     "continueToPayment": "Nastavi na plaćanje",
-    "transactionHistory": "Istorija transakcija"
+    "transactionHistory": "Istorija transakcija",
     "transaction": {
       "deposit": "Depozit",
       "withdrawal": "Povlačenje",
@@ -961,7 +961,7 @@
     "title": "Stopa klika (CTR)"
   },
   "searches": "Pretrage",
-  "clicks": "Klikovi"
+  "clicks": "Klikovi",
   "filters": {
     "title": "Filteri",
     "period": "Period",
@@ -990,7 +990,7 @@
   "language": "Jezik",
   "synonymsList": "Lista sinonima",
   "total": "Ukupno",
-  "noSynonyms": "Nema sinonima"
+  "noSynonyms": "Nema sinonima",
   "contentType": "Tip sadržaja",
   "contentTypes": {
     "global": "Globalno",
@@ -1006,7 +1006,7 @@
   "autoApply": "Automatski primeni",
   "autoApplyWarning": "Upozorenje: izmene će biti automatski primenjene",
   "startOptimization": "Pokreni optimizaciju",
-  "quickAnalysis": "Brza analiza"
+  "quickAnalysis": "Brza analiza",
   "builtin": "Ugradeđeno",
   "builtinNotEditable": "Ugradeđene konfiguracije se ne mogu menjati",
   "edit": "Izmeni",
@@ -1025,7 +1025,7 @@
   "synonym": "Sinonim",
   "synonymPlaceholder": "npr. iphone",
   "created": "Kreirano",
-  "create": "Kreiraj"
+  "create": "Kreiraj",
   "logistics": {
     "title": "Upravljanje logistikom",
     "dashboard": "Kontrolna tabla",
