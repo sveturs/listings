@@ -12,68 +12,68 @@
   "form": {
     "cancel": "Otkaži",
     "error": "Greška",
-    "submit": "[SR] Submit",
+    "submit": "Pošalji",
     "success": "Uspešno"
   },
   "gallery": {
     "close": "Zatvori",
-    "closeGallery": "[SR] Close Gallery",
-    "fullscreenMode": "[SR] Fullscreen Mode",
-    "nextImage": "[SR] Next Image",
-    "of": "[SR] Of",
-    "photo": "[SR] Photo",
-    "previousImage": "[SR] Previous Image",
-    "swipeToNavigate": "[SR] Swipe To Navigate"
+    "closeGallery": "Zatvori galeriju",
+    "fullscreenMode": "Ceo ekran",
+    "nextImage": "Sledeća slika",
+    "of": "od",
+    "photo": "Fotografija",
+    "previousImage": "Prethodna slika",
+    "swipeToNavigate": "Prevucite za navigaciju"
   },
   "list": {
     "all": "Sve",
-    "anonymous": "[SR] Anonymous",
-    "byDate": "[SR] By Date",
-    "byHelpfulness": "[SR] By Helpfulness",
-    "byRating": "[SR] By Rating",
+    "anonymous": "Anonimno",
+    "byDate": "Po datumu",
+    "byHelpfulness": "Po korisnosti",
+    "byRating": "Po oceni",
     "cancel": "Otkaži",
-    "confirm": "[SR] Confirm",
-    "cons": "[SR] Cons",
-    "dispute": "[SR] Dispute",
-    "disputePlaceholder": "[SR] Dispute Placeholder",
-    "disputeReason": "[SR] Dispute Reason",
-    "disputeReview": "[SR] Dispute Review",
-    "helpful": "[SR] Helpful",
-    "pros": "[SR] Pros",
-    "rating": "[SR] Rating",
-    "seller": "[SR] Seller",
-    "sellerConfirmed": "[SR] Seller Confirmed",
-    "sortBy": "[SR] Sort By",
-    "submit": "[SR] Submit",
-    "verified": "[SR] Verified",
-    "verifiedPurchase": "[SR] Verified Purchase",
-    "withPhotos": "[SR] With Photos"
+    "confirm": "Potvrdi",
+    "cons": "Mane",
+    "dispute": "Osporavaj",
+    "disputePlaceholder": "Opišite razlog osporavanja",
+    "disputeReason": "Razlog osporavanja",
+    "disputeReview": "Osporavaj recenziju",
+    "helpful": "Korisno",
+    "pros": "Prednosti",
+    "rating": "Ocena",
+    "seller": "Prodavac",
+    "sellerConfirmed": "Prodavac potvrđen",
+    "sortBy": "Sortiraj po",
+    "submit": "Pošalji",
+    "verified": "Verifikovano",
+    "verifiedPurchase": "Verifikovana kupovina",
+    "withPhotos": "Sa fotografijama"
   },
   "photos": {
-    "dragText": "[SR] Drag Text",
-    "fileTypes": "[SR] File Types",
+    "dragText": "Prevucite fotografije ovde",
+    "fileTypes": "Tipovi fajlova",
     "label": "Oznaka",
-    "limitReached": "[SR] Limit Reached",
-    "maxFiles": "[SR] Max Files"
+    "limitReached": "Dostignuto ograničenje",
+    "maxFiles": "Maksimalno fajlova"
   },
   "progress": {
-    "creating": "[SR] Creating",
-    "publishing": "[SR] Publishing",
-    "uploading": "[SR] Uploading"
+    "creating": "Kreiranje...",
+    "publishing": "Objavljivanje...",
+    "uploading": "Otpremanje..."
   },
   "pros": {
     "label": "Oznaka",
-    "placeholder": "[SR] Placeholder"
+    "placeholder": "Unesite prednosti proizvoda"
   },
   "rating": {
     "error": "Greška",
     "label": "Oznaka"
   },
   "section": {
-    "alreadyReviewed": "[SR] Already Reviewed",
+    "alreadyReviewed": "Već ste ostavili recenziju",
     "cantReview": "Ne možete ostaviti recenziju za ovaj proizvod",
     "noReviews": "Još nema recenzija",
-    "ownerCantReview": "[SR] Owner Cant Review",
+    "ownerCantReview": "Vlasnik ne može da ostavi recenziju",
     "title": "Recenzije",
     "writeReview": "Napišite recenziju",
     "yourReview": "Ваша рецензија"
@@ -81,7 +81,7 @@
   "stats": {
     "ratingDistribution": "Distribucija ocena",
     "reviews": "recenzija",
-    "verified": "[SR] Verified",
+    "verified": "Verifikovano",
     "withPhotos": "sa fotografijama"
   },
   "terrible": "Užasno",

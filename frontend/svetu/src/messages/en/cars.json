@@ -50,7 +50,7 @@
     }
   },
   "filters": {
-    "title": "Title",
+    "title": "Filters",
     "reset": "Reset",
     "make": "Make",
     "allMakes": "All Makes",

@@ -522,7 +522,7 @@
   "bulk": {
     "selectMode": "Režim izbora",
     "selectAll": "Izaberi sve",
-    "status": "[SR] Status"
+    "status": "Статус"
   },
   "tabs": {
     "attributes": "Atributi",

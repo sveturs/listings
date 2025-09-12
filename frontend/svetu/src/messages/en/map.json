@@ -228,14 +228,14 @@
   "common": {
     "close": "Close"
   },
-  "ru-RU": "Ru- R U",
+  "ru-RU": "Russian",
   "attributes": "Attributes",
   "category": "Category",
   "priceFrom": "Price From",
   "priceTo": "Price To",
   "radius": "Radius",
-  "lat": "Lat",
-  "lng": "Lng",
+  "lat": "Latitude",
+  "lng": "Longitude",
   "zoom": "Zoom",
-  "q": "Q"
+  "q": "Search"
 }

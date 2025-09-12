@@ -1,0 +1,8 @@
+{
+  "newOrder": "Nova porudžbina",
+  "newOrderMessage": "Imate novu porudžbinu! Proverite detalje i potvrdite.",
+  "lowStock": "Upozorenje o malim zalihama",
+  "lowStockMessage": "Neki proizvodi su na izmaku. Dopunite zalihe.",
+  "newMessage": "Nova poruka",
+  "newMessageFromCustomer": "Kupac vam je poslao poruku"
+}

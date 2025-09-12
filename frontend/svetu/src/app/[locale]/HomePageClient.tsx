@@ -88,7 +88,7 @@ export default function HomePageClient({
   const { user, refreshSession } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const t = useTranslations('marketplace');
-  const tCommon = useTranslations('common');
+  const _tCommon = useTranslations('common');
   const tFooter = useTranslations('common');
   const [_mounted, setMounted] = useState(false);
   const [selectedCategory] = useState<string | number>('all');
@@ -358,7 +358,10 @@ export default function HomePageClient({
         if (categoriesResponse.data.success && categoriesResponse.data.data) {
           setCategories(categoriesResponse.data.data);
         } else {
-          console.warn('Categories API returned no data:', categoriesResponse.data);
+          console.warn(
+            'Categories API returned no data:',
+            categoriesResponse.data
+          );
           setCategories([]);
         }
 

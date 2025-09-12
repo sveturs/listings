@@ -1,0 +1,87 @@
+{
+  "section": {
+    "title": "Recenzije",
+    "writeReview": "Napišite recenziju",
+    "noReviews": "Još nema recenzija",
+    "cantReview": "Ne možete ostaviti recenziju za ovaj proizvod",
+    "alreadyReviewed": "[SR] Already Reviewed",
+    "ownerCantReview": "[SR] Owner Cant Review",
+    "yourReview": "[SR] Your Review"
+  },
+  "stats": {
+    "reviews": "recenzija",
+    "ratingDistribution": "Distribucija ocena",
+    "withPhotos": "sa fotografijama",
+    "verified": "[SR] Verified"
+  },
+  "list": {
+    "sortBy": "[SR] Sort By",
+    "byDate": "[SR] By Date",
+    "byRating": "[SR] By Rating",
+    "byHelpfulness": "[SR] By Helpfulness",
+    "rating": "[SR] Rating",
+    "all": "Sve",
+    "withPhotos": "[SR] With Photos",
+    "verified": "[SR] Verified",
+    "anonymous": "[SR] Anonymous",
+    "verifiedPurchase": "[SR] Verified Purchase",
+    "sellerConfirmed": "[SR] Seller Confirmed",
+    "pros": "[SR] Pros",
+    "cons": "[SR] Cons",
+    "helpful": "[SR] Helpful",
+    "confirm": "[SR] Confirm",
+    "dispute": "[SR] Dispute",
+    "seller": "[SR] Seller",
+    "disputeReview": "[SR] Dispute Review",
+    "disputeReason": "[SR] Dispute Reason",
+    "disputePlaceholder": "[SR] Dispute Placeholder",
+    "cancel": "Otkaži",
+    "submit": "[SR] Submit"
+  },
+  "photos": {
+    "maxFiles": "[SR] Max Files",
+    "label": "Oznaka",
+    "limitReached": "[SR] Limit Reached",
+    "dragText": "[SR] Drag Text",
+    "fileTypes": "[SR] File Types"
+  },
+  "rating": {
+    "error": "Greška",
+    "label": "Oznaka"
+  },
+  "comment": {
+    "error": "Greška",
+    "tooShort": "[SR] Too Short",
+    "label": "Oznaka",
+    "placeholder": "[SR] Placeholder"
+  },
+  "form": {
+    "success": "Uspešno",
+    "error": "Greška",
+    "submit": "[SR] Submit",
+    "cancel": "Otkaži"
+  },
+  "progress": {
+    "creating": "[SR] Creating",
+    "uploading": "[SR] Uploading",
+    "publishing": "[SR] Publishing"
+  },
+  "pros": {
+    "label": "Oznaka",
+    "placeholder": "[SR] Placeholder"
+  },
+  "cons": {
+    "label": "Oznaka",
+    "placeholder": "[SR] Placeholder"
+  },
+  "gallery": {
+    "closeGallery": "[SR] Close Gallery",
+    "photo": "[SR] Photo",
+    "of": "[SR] Of",
+    "previousImage": "[SR] Previous Image",
+    "nextImage": "[SR] Next Image",
+    "fullscreenMode": "[SR] Fullscreen Mode",
+    "close": "Zatvori",
+    "swipeToNavigate": "[SR] Swipe To Navigate"
+  }
+}

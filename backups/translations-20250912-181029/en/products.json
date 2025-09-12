@@ -1,0 +1,60 @@
+{
+  "title": "Products",
+  "noProducts": "No products",
+  "inStock": "In stock",
+  "sold": "Sold",
+  "outOfStock": "Out of stock",
+  "lowStock": "Low stock",
+  "description": "Description",
+  "notFound": "Product not found",
+  "notFoundDescription": "Sorry, this product was not found or has been deleted",
+  "products": {
+    "title": "Products",
+    "noProducts": "No products",
+    "inStock": "In stock",
+    "sold": "Sold",
+    "outOfStock": "Out of stock",
+    "lowStock": "Low stock",
+    "status": {
+      "in_stock": "In stock",
+      "out_of_stock": "Out of stock",
+      "low_stock": "Low stock"
+    }
+  },
+  "attributeGroups": {
+    "basic": "Basic Characteristics",
+    "technical": "Technical Specifications",
+    "condition": "Condition",
+    "accessories": "Accessories",
+    "dimensions": "Dimensions & Weight",
+    "other": "Other Characteristics"
+  },
+  "categoryAttributes": "Category Attributes",
+  "categoryAttributesDescription": "Fill in the product characteristics for the selected category",
+  "noAttributesTitle": "No Additional Attributes",
+  "noAttributesMessage": "This category doesn't require additional characteristics",
+  "requiredFieldsInfo": "Fields marked as required must be filled",
+  "variantsStepDescription": "Configure product variants if you have different versions (sizes, colors, etc.)",
+  "enableVariants": "Enable product variants",
+  "enableVariantsDescription": "Create different versions of the product with various characteristics",
+  "variantMode": "Variant creation mode",
+  "simpleVariants": "Simple mode",
+  "simpleVariantsDescription": "Quick variant creation using basic attributes",
+  "advancedVariants": "Advanced mode",
+  "advancedVariantsDescription": "Full control over variants and their attributes",
+  "back": "Back",
+  "skipVariants": "Skip variants",
+  "continue": "Continue",
+  "noAttributesForCategory": "This category has no variant attributes",
+  "selectDifferentCategory": "Select a different category to use variants",
+  "generateVariants": "Generate variants",
+  "noVariantsConfigured": "No variants configured",
+  "setupAttributesFirst": "Set up attributes first to create variants",
+  "setupAttributes": "Set up attributes",
+  "privacy": {
+    "exact": "Exact address",
+    "street": "Street",
+    "district": "District",
+    "city": "City"
+  }
+}

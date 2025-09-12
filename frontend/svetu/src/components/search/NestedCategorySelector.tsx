@@ -103,7 +103,7 @@ export const NestedCategorySelector: React.FC<NestedCategorySelectorProps> = ({
       if (!cats || !Array.isArray(cats)) {
         return [];
       }
-      
+
       const categoryMap = new Map<string | number, Category>();
       const rootCategories: Category[] = [];
 

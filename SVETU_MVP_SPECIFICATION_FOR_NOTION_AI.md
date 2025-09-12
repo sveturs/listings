@@ -44,7 +44,7 @@
 
 ### Backend Stack (Go):
 
-```yaml
+```yaml[AUDIT_REPORT_FINAL.md](../tmp/hostel-audit/reports/AUDIT_REPORT_FINAL.md)
 Язык: Go 1.23
 Фреймворк: Fiber v2
 База данных: PostgreSQL 15 + PostGIS

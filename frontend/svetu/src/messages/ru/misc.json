@@ -58,9 +58,9 @@
     },
     "login": {
       "error": {
-        "invalid_request_body": "Invalid request format",
-        "email_password_required": "Email and password are required",
-        "failed": "Login failed. Please try again.",
+        "invalid_request_body": "Неверный формат запроса",
+        "email_password_required": "Email и пароль обязательны",
+        "failed": "Вход не выполнен. Пожалуйста, попробуйте еще раз.",
         "invalid_data": "Неверные данные запроса",
         "email_required": "Email обязателен",
         "password_required": "Пароль обязателен",

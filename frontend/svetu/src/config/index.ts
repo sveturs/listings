@@ -300,7 +300,8 @@ const configManager = new ConfigManager();
 export const config = configManager.getConfig();
 
 // Экспортируем функцию buildImageUrl для удобства
-export const buildImageUrl = (path: string) => configManager.buildImageUrl(path);
+export const buildImageUrl = (path: string) =>
+  configManager.buildImageUrl(path);
 
 // Экспортируем менеджер как default
 export default configManager;

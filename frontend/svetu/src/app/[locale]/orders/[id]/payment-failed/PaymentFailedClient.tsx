@@ -13,7 +13,7 @@ interface Props {
 export default function PaymentFailedClient({ params }: Props) {
   const { id } = use(params);
   const locale = useLocale();
-  const t = useTranslations('orders');
+  const _t = useTranslations('orders');
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();

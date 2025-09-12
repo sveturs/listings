@@ -1,0 +1,384 @@
+{
+  "auth_required": "Для создания объявления необходимо войти в систему",
+  "location_detected_from_photo": "Местоположение определено из фотографии",
+  "privacy_settings": "Настройки приватности",
+
+  "choice": {
+    "title": "Выберите способ создания объявления",
+    "subtitle": "Создайте объявление традиционным способом или с помощью ИИ",
+    "selected": "Выбрано",
+
+    "free_option": {
+      "badge": "Бесплатно",
+      "title": "Традиционное создание",
+      "subtitle": "Пошаговое создание объявления с подсказками",
+      "time_value": "5-10",
+      "time": "минут",
+      "conversion_value": "85%",
+      "conversion": "конверсия",
+      "cost_value": "0₽",
+      "cost": "стоимость",
+      "info": "Проверенный способ создания качественных объявлений",
+
+      "features": {
+        "templates": "Готовые шаблоны",
+        "drag_drop": "Удобная загрузка фото",
+        "price_compare": "Сравнение цен",
+        "optimal_time": "Оптимальное время публикации",
+        "social_import": "Импорт из соцсетей",
+        "error_check": "Проверка ошибок"
+      }
+    },
+
+    "ai_option": {
+      "badge": "ИИ-Помощник",
+      "title": "Создание с ИИ",
+      "subtitle": "Умный помощник создаст объявление за вас",
+      "time_value": "2-3",
+      "time": "минуты",
+      "conversion_value": "95%",
+      "conversion": "конверсия",
+      "cost_value": "Бесплатно",
+      "cost": "в бета-тесте",
+      "info": "Экспериментальная функция. Возможны неточности.",
+
+      "features": {
+        "photo_recognition": "Распознавание товара по фото",
+        "auto_description": "Автоматическое описание",
+        "price_analysis": "Анализ рыночных цен",
+        "ab_testing": "A/B тестирование заголовков",
+        "multilingual": "Автоперевод на 3 языка",
+        "forecast": "Прогноз продаж"
+      }
+    },
+
+    "comparison": {
+      "title": "Сравнение возможностей",
+      "feature": "Функция",
+      "free_column": "Традиционный",
+      "ai_column": "С ИИ",
+      "creation_time": "Время создания",
+      "creation_time_free": "5-10 мин",
+      "creation_time_ai": "2-3 мин",
+      "photo_recognition": "Распознавание по фото",
+      "auto_description": "Автоописание",
+      "auto_description_free": "Шаблоны",
+      "auto_description_ai": "ИИ генерация",
+      "price_analysis": "Анализ цен",
+      "price_analysis_free": "Ручной",
+      "price_analysis_ai": "Автоматический",
+      "ab_testing": "A/B тестирование",
+      "multilingual": "Мультиязычность",
+      "multilingual_ai": "Автоперевод",
+      "cost": "Стоимость",
+      "cost_free": "Бесплатно",
+      "cost_ai": "Бесплатно (бета)"
+    }
+  },
+
+  "ai": {
+    "title": "ИИ-Создание объявления",
+    "subtitle": "Загрузите фотографии - остальное сделаем мы",
+    "back_to_choice": "Назад к выбору",
+
+    "stats": {
+      "creation_time": "2 мин",
+      "creation_label": "создание",
+      "accuracy": "95%",
+      "accuracy_label": "точность",
+      "languages": "3",
+      "languages_label": "языка"
+    },
+
+    "upload": {
+      "title": "Загрузите фотографии товара",
+      "subtitle": "ИИ автоматически определит категорию, создаст описание и установит цену",
+      "ai_recognition": "ИИ распознавание",
+      "time": "2-3 мин",
+      "add_more": "Добавить еще",
+      "import_instagram": "Импорт из Instagram",
+      "import_facebook": "Импорт из Facebook",
+      "voice_input": "Голосовой ввод",
+      "stop_recording": "Остановить запись",
+      "create_with_ai": "Создать с помощью ИИ"
+    },
+
+    "processing": {
+      "title": "ИИ анализирует ваши фотографии...",
+      "recognizing": "Распознавание товара по фото",
+      "analyzing_market": "Анализ рыночных цен",
+      "generating_description": "Создание описания",
+      "seo_optimization": "SEO оптимизация",
+      "creating_translations": "Создание переводов"
+    },
+
+    "enhance": {
+      "success_title": "ИИ анализ завершен!",
+      "success_subtitle": "Проверьте и при необходимости отредактируйте данные",
+      "photos_title": "Фотографии",
+      "main_photo": "Главная",
+      "ai_recommends": "ИИ рекомендует добавить:",
+      "category_title": "Категория",
+      "category_auto_selected": "ИИ автоматически выбрал категорию: {category}",
+      "manual_category_selection": "Изменить категорию вручную:",
+      "select_category": "Выберите категорию",
+      "title_ab_testing": "A/B тестирование заголовков",
+      "change": "Изменить",
+      "ai_choice": "Выбор ИИ",
+      "ai_will_test": "ИИ автоматически протестирует все варианты и выберет лучший",
+      "description_title": "Описание",
+      "seo_optimized": "SEO оптимизировано",
+      "keywords": "Ключевые слова",
+      "location_condition_title": "Местоположение и состояние",
+      "city": "Город",
+      "condition": "Состояние",
+      "condition_new": "Новое",
+      "condition_used": "Б/у",
+      "condition_refurbished": "Восстановленное"
+    },
+
+    "location": {
+      "detected_from": "Местоположение определено",
+      "from_photo": "из фотографии",
+      "from_profile": "из профиля",
+      "manually": "вручную",
+      "coordinates": "Координаты:",
+      "not_detected": "Местоположение не определено",
+      "not_detected_hint": "Добавьте адрес вручную или выберите на карте",
+      "refine_on_map": "Уточнить на карте",
+      "select_on_map": "Выбрать на карте",
+      "ai_suggests": "ИИ предлагает:"
+    },
+
+    "price": {
+      "title": "Цена с ИИ анализом",
+      "currency": "РСД",
+      "min": "Мин:",
+      "max": "Макс:",
+      "ai_analyzed": "ИИ проанализировал рыночные цены"
+    },
+
+    "attributes": {
+      "title": "Характеристики",
+      "ai_detected": "(определены ИИ)",
+      "category_based": "(для категории)",
+      "choose": "Выберите"
+    },
+
+    "translations": {
+      "title": "Переводы",
+      "update": "Обновить",
+      "language_title": "Заголовок",
+      "language_description": "Описание",
+      "info": "ИИ автоматически переведет объявление на все языки"
+    },
+
+    "social": {
+      "title": "Посты для соцсетей"
+    },
+
+    "prediction": {
+      "title": "Прогноз эффективности",
+      "views": "просмотров в день",
+      "messages": "сообщений",
+      "days_to_sell": "дней до продажи",
+      "sell_probability": "вероятность продажи"
+    },
+
+    "actions": {
+      "continue_to_publish": "Перейти к публикации",
+      "save_draft": "Сохранить черновик",
+      "publishing": "Публикуем...",
+      "publish_now": "Опубликовать сейчас",
+      "back_to_edit": "Вернуться к редактированию"
+    },
+
+    "publish": {
+      "title": "Готово к публикации!",
+      "subtitle": "Ваше объявление создано и готово к размещению",
+      "specifications": "Характеристики",
+      "views_per_day": "просмотров в день",
+      "high_interest": "Высокий интерес",
+      "optimal_time": "Оптимальное время",
+      "optimal_time_desc": "Лучшее время для публикации: {time}",
+      "schedule": "Запланировать",
+      "social_auto": "Автопостинг",
+      "social_auto_desc": "Автоматически опубликовать в соцсетях",
+      "enable": "Включить",
+      "ai_insights_title": "Аналитика ИИ",
+      "demand": "Спрос",
+      "target_audience": "Целевая аудитория",
+      "recommendations": "Рекомендации",
+      "location_picker_title": "Выбор местоположения",
+      "social_proof": "Уже {count} пользователей создали объявления с ИИ"
+    },
+
+    "features": {
+      "voice_coming_soon": "Голосовой ввод скоро будет доступен",
+      "import_coming_soon": "Импорт из {platform} скоро будет доступен"
+    },
+
+    "errors": {
+      "ai_processing": "Ошибка при анализе ИИ. Попробуйте еще раз.",
+      "description_generation": "Ошибка при генерации описания",
+      "translation_update": "Ошибка при обновлении переводов",
+      "publish_error": "Ошибка при публикации объявления",
+      "attribute_error": "Ошибка в характеристиках товара",
+      "validation_error": "Ошибка валидации данных",
+      "network_error": "Ошибка сети. Проверьте подключение к интернету",
+      "missing_attributes": "Заполните обязательные поля: {attributes}"
+    },
+
+    "success_messages": {
+      "description_updated": "Описание обновлено",
+      "translations_updated": "Переводы обновлены",
+      "listing_created": "Объявление успешно создано!",
+      "location_updated": "Местоположение обновлено"
+    },
+
+    "category_detection": {
+      "low_confidence": "ИИ не уверен в категории. Проверьте выбор.",
+      "success": "ИИ определил категорию: {category}"
+    },
+
+    "description_section": {
+      "update": "Обновить"
+    }
+  },
+
+  "draft": {
+    "saving": "Сохраняем черновик...",
+    "unsavedChanges": "Несохраненные изменения",
+    "viewDrafts": "Просмотр черновиков",
+    "offlineMode": "Офлайн режим",
+    "myDrafts": "Мои черновики",
+    "noDrafts": "У вас пока нет черновиков",
+    "untitled": "Без названия",
+    "complete": "завершено",
+    "open": "Открыть",
+    "export": "Экспорт",
+    "delete": "Удалить",
+    "close": "Закрыть",
+    "deleted": "Черновик удален",
+    "deleteError": "Ошибка при удалении черновика",
+    "exported": "Черновик экспортирован"
+  },
+
+  "category": "Категория",
+  "trust": "Доверие",
+  "delivery": "Доставка",
+  "title": "Название объявления",
+  "description": "Описание объявления",
+  "selected": "Выбрано",
+  "tip_title": "Совет",
+  "tip_description": "Выберите наиболее точную категорию для лучшей видимости",
+
+  "basic_info": {
+    "title": "Основная информация",
+    "description": "Укажите название, описание и цену товара"
+  },
+
+  "script_mode": "Режим письма",
+  "characters": "символов",
+  "price": "Цена",
+  "currency": "Валюта",
+  "condition": "Состояние",
+
+  "regional_tips": {
+    "title": "Региональные советы",
+    "pricing": "Указывайте цены в динарах (РСД)",
+    "description": "Используйте понятные местные термины",
+    "honesty": "Будьте честны в описании состояния"
+  },
+
+  "uploading": "Загружаем фотографии...",
+  "upload_instruction": "Перетащите фотографии сюда или нажмите для выбора",
+  "supported_formats": "Поддерживаемые форматы: JPEG, PNG, WebP",
+  "max_size": "Макс. размер: 10 МБ",
+  "photos": "фото",
+  "gallery": "Галерея",
+  "set_main": "Сделать главной",
+  "remove": "Удалить",
+  "main": "Главная",
+
+  "photos": {
+    "tips": {
+      "title": "Советы по фотографиям",
+      "quality": "Делайте четкие, качественные снимки",
+      "lighting": "Используйте хорошее освещение",
+      "angles": "Снимайте с разных ракурсов",
+      "defects": "Покажите все дефекты честно"
+    },
+    "trust_tip": {
+      "title": "Совет по доверию",
+      "description": "Качественные фото увеличивают доверие покупателей на 40%"
+    }
+  },
+
+  "setup_title": "Настройка доверия",
+  "setup_description": "Настройте параметры для повышения доверия покупателей",
+  "phone_verification": "Подтверждение телефона",
+  "phone_verification_info": "Подтвердите номер телефона для повышения доверия",
+  "local_operators_only": "Работаем только с местными операторами",
+  "verifying": "Проверяем...",
+  "verify_phone": "Подтвердить телефон",
+  "phone_verified": "Телефон подтвержден",
+  "preferred_meeting": "Предпочтительная встреча",
+  "meeting_places": "Места встреч",
+  "meeting_places_hint": "Укажите удобные места для встреч с покупателями",
+  "available_hours": "Время доступности",
+  "available_hours_hint": "Когда вы доступны для встреч и звонков",
+
+  "methods_title": "Способы оплаты",
+  "cod_calculator": "Калькулятор наложенного платежа",
+  "cod_fee": "Комиссия за наложенный платеж",
+  "example": "Пример",
+  "negotiable_price": "Торг уместен",
+  "bundle_deals": "Скидки при покупке нескольких товаров",
+
+  "attributes": {
+    "title": "Характеристики товара",
+    "description": "Заполните характеристики для вашей категории",
+    "none_required": "Для этой категории нет обязательных характеристик",
+    "tip": "Подсказка",
+    "tip_description": "Заполнение характеристик поможет покупателям найти ваш товар",
+
+    "groups": {
+      "basic": "Основные",
+      "technical": "Технические",
+      "condition": "Состояние",
+      "accessories": "Комплектация",
+      "dimensions": "Размеры",
+      "other": "Прочее",
+      "car_selection": "Выбор автомобиля"
+    }
+  },
+
+  "variants": {
+    "title": "Варианты товара",
+    "description": "Создайте варианты товара с разными характеристиками (размер, цвет и т.д.)",
+    "no_variant_attributes": "Для этой категории нет атрибутов для создания вариантов",
+    "select_attributes": "Выберите характеристики для вариантов",
+    "select_attributes_description": "Выберите атрибуты, по которым будут отличаться варианты товара",
+    "attribute_values": "Значения характеристик",
+    "attribute_values_description": "Добавьте возможные значения для каждой характеристики",
+    "add_value": "Добавить значение",
+    "generated_variants": "Сгенерированные варианты",
+    "apply_base_price": "Применить базовую цену ко всем",
+    "price": "Цена",
+    "stock": "Остаток",
+    "variants": "вариантов",
+    "tip": "Подсказка по вариантам",
+    "tip_description": "Варианты помогают покупателям выбрать именно то, что им нужно. Вы можете установить разные цены и остатки для каждого варианта."
+  },
+
+  "errors": {
+    "image_upload_failed": "Ошибка загрузки изображений",
+    "publish_failed": "Ошибка при публикации объявления",
+    "draft_save_failed": "Ошибка при сохранении черновика"
+  },
+
+  "cars": {
+    "selectCar": "Выберите автомобиль"
+  }
+}
