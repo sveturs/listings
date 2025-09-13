@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function AuditLogViewer() {
-  const _t = useTranslations('admin.translations');
+  const _t = useTranslations('admin');
 
   const [logs, setLogs] = useState<TranslationAuditLog[]>([]);
   const [statistics, setStatistics] = useState<AuditStatistics | null>(null);

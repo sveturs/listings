@@ -1,0 +1,15 @@
+{
+  "setup_title": "Trust Setup",
+  "setup_description": "Build trust in your profile through verification and meeting preferences",
+  "phone_verification": "Phone Verification",
+  "phone_verification_info": "Verify your phone number to build trust",
+  "local_operators_only": "Only local operators supported",
+  "verifying": "Verifying...",
+  "verify_phone": "Verify Phone",
+  "phone_verified": "Phone Verified",
+  "preferred_meeting": "Preferred Meeting",
+  "meeting_places": "Meeting Places",
+  "meeting_places_hint": "Specify convenient places to meet with buyers",
+  "available_hours": "Available Hours",
+  "available_hours_hint": "Specify times when you're available for meetings"
+}

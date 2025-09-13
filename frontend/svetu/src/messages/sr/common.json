@@ -287,7 +287,7 @@
     "hours": "{count} h"
   },
   "products": {
-    "title": "Naslov",
+    "title": "Proizvodi",
     "noProducts": "Nema proizvoda",
     "outOfStock": "Nema na stanju",
     "inStock": "Na stanju",
@@ -297,7 +297,7 @@
   "loadMore": "Učitaj još",
   "storefronts": {
     "products": {
-      "title": "Naslov",
+      "title": "Proizvodi",
       "errorLoadingProducts": "Greška pri učitavanju proizvoda",
       "productDeleted": "Proizvod obrisan",
       "errorDeletingProduct": "Greška pri brisanju proizvoda",
@@ -335,8 +335,8 @@
     "in_stock": "Na stanju",
     "low_stock": "Malo na stanju"
   },
-  "storefront": "Prodavnica",
-  "units": "Jedinice",
+  "storefront": "prodavnica",
+  "units": "kom.",
   "from": "Od",
   "loading": "Učitavanje...",
   "translations": {
@@ -469,7 +469,7 @@
     "clothing": "Odeća",
     "services": "Usluge",
     "jobs": "Poslovi",
-    "title": "Naslov"
+    "title": "Kategorije"
   },
   "priceFrom": "Cena od",
   "priceTo": "Cena do",
@@ -512,9 +512,9 @@
   },
   "loadError": "Greška učitavanja",
   "ctr": {
-    "label": "Oznaka",
-    "chartTitle": "Naslov grafa",
-    "title": "Naslov"
+    "label": "CTR",
+    "chartTitle": "CTR grafik",
+    "title": "Klikovnost"
   },
   "searches": "Pretrage",
   "clicks": "Klikovi",
@@ -525,11 +525,11 @@
     "conversionRate": "Stopa konverzije"
   },
   "searchClicks": {
-    "title": "Naslov",
-    "chartTitle": "Naslov grafa"
+    "title": "Pretrage i klikovi",
+    "chartTitle": "Grafik pretraga i klikova"
   },
   "topQueries": {
-    "title": "Naslov",
+    "title": "Top upiti",
     "query": "Upit",
     "searches": "Pretrage",
     "ctr": "CTR",
@@ -539,7 +539,7 @@
   "noData": "Nema dostupnih podataka",
   "noAttributesForCategory": "Nema atributa za ovu kategoriju",
   "itemPerformance": {
-    "title": "Naslov",
+    "title": "Performanse proizvoda",
     "item": "Stavka",
     "impressions": "Prikazi",
     "clicks": "Klikovi",
@@ -663,6 +663,26 @@
     "confirmDelete": "Potvrdite brisanje",
     "deleteSuccess": "Uspešno obrisano"
   },
+  "company": "SveTu",
+  "companyDescription": "Najveća trgovinska platforma u Srbiji",
+  "appStore": "App Store",
+  "googlePlay": "Google Play",
+  "buyers": "Kupcima",
+  "howToBuy": "Kako kupiti",
+  "delivery": "Dostava",
+  "payment": "Plaćanje",
+  "return": "Povraćaj",
+  "warranty": "Garancija",
+  "sellers": "Prodavcima",
+  "howToSell": "Kako prodati",
+  "tariffs": "Tarife",
+  "promotion": "Promocija",
+  "stores": "Vitrine",
+  "api": "API za developere",
+  "help": "Pomoć",
+  "frequentQuestions": "Česta pitanja",
+  "support": "Podrška",
+  "rules": "Pravila",
   "location": {
     "latitude": "Geogr. širina",
     "longitude": "Geogr. dužina",
@@ -670,7 +690,7 @@
   },
   "footer": {
     "company": "SveTu",
-    "companyDescription": "Najveća platforma za kupovinu i prodaju robe u Srbiji. Bezbedne transakcije, brza dostava, najbolje cene.",
+    "companyDescription": "Najveća trgovinska platforma u Srbiji",
     "buyers": "Kupcima",
     "howToBuy": "Kako kupiti",
     "delivery": "Dostava",
@@ -681,18 +701,18 @@
     "howToSell": "Kako prodati",
     "tariffs": "Tarife",
     "promotion": "Promocija",
-    "stores": "Prodavnice",
-    "api": "API",
+    "stores": "Vitrine",
+    "api": "API za developere",
     "help": "Pomoć",
     "frequentQuestions": "Česta pitanja",
     "support": "Podrška",
     "rules": "Pravila",
     "blog": "Blog",
     "contacts": "Kontakti",
-    "copyright": "© 2025 SveTu. Sva prava zadržana.",
+    "copyright": "© 2024 SveTu. Sva prava zadržana.",
     "termsOfUse": "Uslovi korišćenja",
     "confidentiality": "Privatnost",
-    "cookie": "Kolačići",
+    "cookie": "Cookie",
     "appStore": "App Store",
     "googlePlay": "Google Play",
     "location_picker": {
@@ -706,14 +726,10 @@
       "min_chars_hint": "Unesite najmanje 2 karaktera za pretragu adresa"
     }
   },
-  "location_picker": {
-    "search_address": "Pretražite adresu",
-    "select_on_map": "Izaberite na mapi",
-    "min_chars_hint": "Unesite najmanje 3 karaktera za pretragu",
-    "click_on_map": "Kliknite na mapu da izaberete lokaciju",
-    "location_selected": "Lokacija izabrana",
-    "address": "Adresa",
-    "city": "Grad",
-    "coordinates": "Koordinate"
-  }
+  "blog": "Blog",
+  "contacts": "Kontakti",
+  "copyright": "© 2024 SveTu. Sva prava zadržana.",
+  "termsOfUse": "Uslovi korišćenja",
+  "confidentiality": "Privatnost",
+  "cookie": "Cookie"
 }

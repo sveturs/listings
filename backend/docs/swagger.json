@@ -10618,7 +10618,7 @@
         },
         "/api/v1/auth/login": {
             "post": {
-                "description": "Authenticates user and returns JWT access token",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -10687,7 +10687,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Logs out the user by revoking all refresh tokens and clearing cookies",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -10722,7 +10722,7 @@
         },
         "/api/v1/auth/refresh": {
             "post": {
-                "description": "Refreshes expired access token using valid refresh token from cookie",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -10763,7 +10763,7 @@
         },
         "/api/v1/auth/register": {
             "post": {
-                "description": "Creates a new user account and returns JWT access token",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -12065,6 +12065,44 @@
                         "description": "Category not found",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/config/storage": {
+            "get": {
+                "description": "Returns storage configuration including bucket names for frontend",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "Get storage configuration",
+                "responses": {
+                    "200": {
+                        "description": "Storage configuration",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_config.StorageConfig"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -30691,65 +30729,6 @@
                 }
             }
         },
-        "/api/v1/users/login": {
-            "post": {
-                "description": "Authenticates user by email and password, creates session and sets session cookie. DEPRECATED: Use /api/v1/auth/login instead",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Login user (deprecated)",
-                "deprecated": true,
-                "parameters": [
-                    {
-                        "description": "Login credentials (email and password required)",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Authentication successful",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.LoginResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "users.login.error.invalid_data or validation errors",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "401": {
-                        "description": "users.login.error.invalid_credentials",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
         "/api/v1/users/me": {
             "get": {
                 "security": [
@@ -30931,65 +30910,6 @@
                     },
                     "500": {
                         "description": "users.privacy.error.update",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/users/register": {
-            "post": {
-                "description": "Creates new user in the system. DEPRECATED: Use /api/v1/auth/register instead",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "users"
-                ],
-                "summary": "Register user (deprecated)",
-                "deprecated": true,
-                "parameters": [
-                    {
-                        "description": "Registration data (name, email, password required, phone optional)",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "User created successfully",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.RegisterResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "users.register.error.invalid_data or validation errors",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    },
-                    "500": {
-                        "description": "users.register.error.password_hash_failed or users.register.error.create_failed",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -31871,7 +31791,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns information about the currently authenticated user",
+                "description": "This endpoint is deprecated and should be proxied to Auth Service",
                 "consumes": [
                     "application/json"
                 ],
@@ -43405,6 +43325,29 @@
                 }
             }
         },
+        "internal_proj_config.StorageConfig": {
+            "type": "object",
+            "properties": {
+                "base_url": {
+                    "type": "string"
+                },
+                "chat_files_bucket": {
+                    "type": "string"
+                },
+                "listings_bucket": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "review_photos_bucket": {
+                    "type": "string"
+                },
+                "storefront_bucket": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_proj_contacts_handler.ContactRemoveResponse": {
             "description": "Ответ при удалении контакта из списка",
             "type": "object",
@@ -45668,18 +45611,6 @@
                 }
             }
         },
-        "internal_proj_users_handler.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "users.login.success.authenticated"
-                },
-                "user": {
-                    "$ref": "#/definitions/backend_internal_domain_models.User"
-                }
-            }
-        },
         "internal_proj_users_handler.MessageResponse": {
             "type": "object",
             "properties": {
@@ -45739,18 +45670,6 @@
                 "phone": {
                     "type": "string",
                     "example": "+1234567890"
-                }
-            }
-        },
-        "internal_proj_users_handler.RegisterResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Пользователь успешно зарегистрирован"
-                },
-                "user": {
-                    "$ref": "#/definitions/backend_internal_domain_models.User"
                 }
             }
         },

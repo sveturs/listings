@@ -1,0 +1,12 @@
+{
+  "scannerInitError": "Scanner initialization error",
+  "cameraAccessError": "Camera access error",
+  "processingError": "Processing error",
+  "autoFilled": "Data automatically filled",
+  "flashNotSupported": "Flash not supported",
+  "enterBarcodeManually": "Enter barcode manually",
+  "pointCameraAtCode": "Point camera at code",
+  "scanned": "Scanned",
+  "viewProduct": "View Product",
+  "retry": "Retry"
+}

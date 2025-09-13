@@ -65,7 +65,7 @@
       "locationPrivacy": "Privatnost lokacije",
       "locationPrivacyDesc": "Upravljajte kako se prikazuje vaša lokacija u oglasima",
       "locationExact": "Prikaži tačnu lokaciju",
-      "locationArea": "Prikaži opštu oblast (po default-u)",
+      "locationArea": "Prikaži opštu oblast (podrazumevano)",
       "locationCity": "Prikaži samo grad",
       "locationHidden": "Sakrij lokaciju",
       "locationNote": "Podešavanja privatnosti lokacije biće uskoro dostupna",

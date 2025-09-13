@@ -1,0 +1,63 @@
+{
+  "deviceType": "Device Type",
+  "allDevices": "All Devices",
+  "devices": {
+    "smartphone": "Smartphone",
+    "laptop": "Laptop",
+    "tablet": "Tablet",
+    "desktop": "Desktop",
+    "tv": "TV",
+    "smartwatch": "Smartwatch",
+    "headphones": "Headphones",
+    "camera": "Camera",
+    "gaming": "Gaming Console"
+  },
+  "brand": "Brand",
+  "allBrands": "All Brands",
+  "other": "Other",
+  "screenSize": "Screen Size",
+  "from": "From",
+  "to": "To",
+  "ram": "RAM",
+  "anyRam": "Any",
+  "ramOptions": {
+    "2gb": "2 GB",
+    "4gb": "4 GB",
+    "6gb": "6 GB",
+    "8gb": "8 GB",
+    "12gb": "12 GB",
+    "16gb": "16 GB",
+    "32gb": "32 GB",
+    "64gbPlus": "64 GB+"
+  },
+  "storage": "Storage",
+  "anyStorage": "Any",
+  "storageOptions": {
+    "32gb": "32 GB",
+    "64gb": "64 GB",
+    "128gb": "128 GB",
+    "256gb": "256 GB",
+    "512gb": "512 GB",
+    "1tb": "1 TB",
+    "2tbPlus": "2 TB+"
+  },
+  "batteryCapacity": "Battery Capacity",
+  "minBattery": "Minimum mAh",
+  "processor": "Processor",
+  "enterProcessor": "Enter processor",
+  "operatingSystem": "Operating System",
+  "anyOS": "Any OS",
+  "osOptions": {
+    "ios": "iOS",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux"
+  },
+  "features": "Features",
+  "featuresOptions": {
+    "warranty": "With Warranty",
+    "refurbished": "Refurbished",
+    "5g": "5G Support"
+  }
+}

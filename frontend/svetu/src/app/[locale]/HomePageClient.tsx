@@ -14,7 +14,7 @@ import api from '@/services/api';
 // import { AuthButton } from '@/components/AuthButton';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
-import configManager from '@/config';
+import configManager, { buildImageUrl } from '@/config';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '@/store/slices/cartSlice';
 import type { AppDispatch } from '@/store';
@@ -87,9 +87,9 @@ export default function HomePageClient({
   const searchParams = useSearchParams();
   const { user, refreshSession } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
-  const t = useTranslations('marketplace.homeContent');
-  // const tCommon = useTranslations('common');
-  const tFooter = useTranslations('common.footer');
+  const t = useTranslations('marketplace');
+  const _tCommon = useTranslations('common');
+  const tFooter = useTranslations('common');
   const [_mounted, setMounted] = useState(false);
   const [selectedCategory] = useState<string | number>('all');
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -355,8 +355,14 @@ export default function HomePageClient({
           ),
         ]);
 
-        if (categoriesResponse.data.success) {
+        if (categoriesResponse.data.success && categoriesResponse.data.data) {
           setCategories(categoriesResponse.data.data);
+        } else {
+          console.warn(
+            'Categories API returned no data:',
+            categoriesResponse.data
+          );
+          setCategories([]);
         }
 
         if (popularResponse.data.success && popularResponse.data.data) {
@@ -485,7 +491,7 @@ export default function HomePageClient({
               id: 1,
               name: 'Агентство недвижимости',
               category: 'Недвижимость',
-              logo: '/listings/storefronts/1/logo/10_2.jpeg',
+              logo: 'https://via.placeholder.com/100x100/3b82f6/ffffff?text=Logo',
               followers: '2K',
               products: 38,
               rating: 4.5,
@@ -1338,7 +1344,10 @@ export default function HomePageClient({
                     <div className="flex items-center gap-3">
                       <div className="avatar">
                         <div className="w-16 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2">
-                          <img src={store.logo} alt={store.name} />
+                          <img
+                            src={buildImageUrl(store.logo)}
+                            alt={store.name}
+                          />
                         </div>
                       </div>
                       <div className="mt-8">

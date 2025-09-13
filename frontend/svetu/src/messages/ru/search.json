@@ -115,8 +115,8 @@
   "byDate": "По дате",
   "searchHistory": "История поиска",
   "clearHistory": "Очистить историю",
-  "city": "[RU] City",
-  "enterCity": "[RU] Enter City",
+  "city": "Город",
+  "enterCity": "Введите название города",
   "category": "Категория",
   "product": "Товар",
   "allCategories": "Все категории",
@@ -126,8 +126,8 @@
   "noCategoriesFound": "Категории не найдены",
   "categoriesLoadError": "Ошибка загрузки категорий",
   "search": {
-    "searchHistory": "[RU] Search History",
-    "clearHistory": "[RU] Clear History"
+    "searchHistory": "История поиска",
+    "clearHistory": "Очистить историю"
   },
   "popularSearches": "Популярные запросы",
   "categoryResults": "Товары в категории",

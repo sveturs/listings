@@ -19,7 +19,7 @@ interface OrderStats {
 }
 
 export default function OrderStatistics() {
-  const t = useTranslations('orders.statistics');
+  const t = useTranslations('orders');
   const { isAuthenticated } = useAuthContext();
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);

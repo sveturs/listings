@@ -123,7 +123,7 @@ export default function DeliverySelector({
   weight = 1,
   onDeliveryChange,
 }: DeliverySelectorProps) {
-  // const t = useTranslations('cart.delivery');
+  // const t = useTranslations('cart');
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);

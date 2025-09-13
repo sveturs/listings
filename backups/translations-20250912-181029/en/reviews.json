@@ -1,0 +1,92 @@
+{
+  "comment": {
+    "error": "Error",
+    "label": "Label",
+    "placeholder": "Placeholder",
+    "tooShort": "Too Short"
+  },
+  "cons": {
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "form": {
+    "cancel": "Cancel",
+    "error": "Error",
+    "submit": "Submit",
+    "success": "Success"
+  },
+  "gallery": {
+    "close": "Close",
+    "closeGallery": "Close Gallery",
+    "fullscreenMode": "Fullscreen Mode",
+    "nextImage": "Next Image",
+    "of": "Of",
+    "photo": "Photo",
+    "previousImage": "Previous Image",
+    "swipeToNavigate": "Swipe To Navigate"
+  },
+  "list": {
+    "all": "All",
+    "anonymous": "Anonymous",
+    "byDate": "By Date",
+    "byHelpfulness": "By Helpfulness",
+    "byRating": "By Rating",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "cons": "Cons",
+    "dispute": "Dispute",
+    "disputePlaceholder": "Dispute Placeholder",
+    "disputeReason": "Dispute Reason",
+    "disputeReview": "Dispute Review",
+    "helpful": "Helpful",
+    "pros": "Pros",
+    "rating": "Rating",
+    "seller": "Seller",
+    "sellerConfirmed": "Seller Confirmed",
+    "sortBy": "Sort By",
+    "submit": "Submit",
+    "verified": "Verified",
+    "verifiedPurchase": "Verified Purchase",
+    "withPhotos": "With Photos"
+  },
+  "photos": {
+    "dragText": "Drag Text",
+    "fileTypes": "File Types",
+    "label": "Label",
+    "limitReached": "Limit Reached",
+    "maxFiles": "Max Files"
+  },
+  "progress": {
+    "creating": "Creating",
+    "publishing": "Publishing",
+    "uploading": "Uploading"
+  },
+  "pros": {
+    "label": "Label",
+    "placeholder": "Placeholder"
+  },
+  "rating": {
+    "error": "Error",
+    "label": "Label"
+  },
+  "section": {
+    "alreadyReviewed": "Already Reviewed",
+    "cantReview": "You cannot review this product",
+    "noReviews": "No reviews yet",
+    "ownerCantReview": "Owner Cant Review",
+    "title": "Reviews",
+    "writeReview": "Write Review",
+    "yourReview": "Your Review"
+  },
+  "stats": {
+    "ratingDistribution": "Rating Distribution",
+    "reviews": "reviews",
+    "verified": "Verified",
+    "withPhotos": "with photos"
+  },
+  "terrible": "Terrible",
+  "bad": "Bad",
+  "normal": "Normal",
+  "good": "Good",
+  "excellent": "Excellent"
+}

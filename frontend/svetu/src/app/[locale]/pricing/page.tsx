@@ -19,7 +19,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { subscriptionService } from '@/services/subscriptions';
 
 export default function PricingPage() {
-  const t = useTranslations('misc.storefronts.upgrade');
+  const t = useTranslations('misc');
   const tCommon = useTranslations('common');
   const router = useRouter();
 

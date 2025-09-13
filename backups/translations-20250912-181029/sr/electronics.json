@@ -1,0 +1,63 @@
+{
+  "deviceType": "Tip uređaja",
+  "allDevices": "Svi uređaji",
+  "devices": {
+    "smartphone": "Pametni telefon",
+    "laptop": "Laptop",
+    "tablet": "Tablet",
+    "desktop": "Desktop računar",
+    "tv": "Televizor",
+    "smartwatch": "Pametni sat",
+    "headphones": "Slušalice",
+    "camera": "Kamera",
+    "gaming": "Konzola za igre"
+  },
+  "brand": "Brend",
+  "allBrands": "Svi brendovi",
+  "other": "Drugo",
+  "screenSize": "Veličina ekrana",
+  "from": "Od",
+  "to": "Do",
+  "ram": "RAM memorija",
+  "anyRam": "Bilo koja",
+  "ramOptions": {
+    "2gb": "2 GB",
+    "4gb": "4 GB",
+    "6gb": "6 GB",
+    "8gb": "8 GB",
+    "12gb": "12 GB",
+    "16gb": "16 GB",
+    "32gb": "32 GB",
+    "64gbPlus": "64 GB+"
+  },
+  "storage": "Memorija",
+  "anyStorage": "Bilo koja",
+  "storageOptions": {
+    "32gb": "32 GB",
+    "64gb": "64 GB",
+    "128gb": "128 GB",
+    "256gb": "256 GB",
+    "512gb": "512 GB",
+    "1tb": "1 TB",
+    "2tbPlus": "2 TB+"
+  },
+  "batteryCapacity": "Kapacitet baterije",
+  "minBattery": "Minimum mAh",
+  "processor": "Procesor",
+  "enterProcessor": "Unesite procesor",
+  "operatingSystem": "Operativni sistem",
+  "anyOS": "Bilo koji OS",
+  "osOptions": {
+    "ios": "iOS",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux"
+  },
+  "features": "Karakteristike",
+  "featuresOptions": {
+    "warranty": "Sa garancijom",
+    "refurbished": "Obnovljen",
+    "5g": "5G podrška"
+  }
+}

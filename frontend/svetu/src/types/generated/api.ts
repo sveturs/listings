@@ -10479,7 +10479,7 @@ export interface paths {
     put?: never;
     /**
      * Login with email and password
-     * @description Authenticates user and returns JWT access token
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     post: {
       parameters: {
@@ -10552,7 +10552,7 @@ export interface paths {
     put?: never;
     /**
      * Logout user
-     * @description Logs out the user by revoking all refresh tokens and clearing cookies
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     post: {
       parameters: {
@@ -10593,7 +10593,7 @@ export interface paths {
     put?: never;
     /**
      * Refresh access token
-     * @description Refreshes expired access token using valid refresh token from cookie
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     post: {
       parameters: {
@@ -10643,7 +10643,7 @@ export interface paths {
     put?: never;
     /**
      * Register new user
-     * @description Creates a new user account and returns JWT access token
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     post: {
       parameters: {
@@ -11981,6 +11981,56 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/config/storage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storage configuration
+     * @description Returns storage configuration including bucket names for frontend
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storage configuration */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_config.StorageConfig'];
+            };
           };
         };
         /** @description Internal server error */
@@ -31438,71 +31488,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/users/login': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Login user (deprecated)
-     * @deprecated
-     * @description Authenticates user by email and password, creates session and sets session cookie. DEPRECATED: Use /api/v1/auth/login instead
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Login credentials (email and password required) */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['internal_proj_users_handler.LoginRequest'];
-        };
-      };
-      responses: {
-        /** @description Authentication successful */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.LoginResponse'];
-            };
-          };
-        };
-        /** @description users.login.error.invalid_data or validation errors */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description users.login.error.invalid_credentials */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/users/me': {
     parameters: {
       query?: never;
@@ -31686,71 +31671,6 @@ export interface paths {
       };
     };
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/users/register': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Register user (deprecated)
-     * @deprecated
-     * @description Creates new user in the system. DEPRECATED: Use /api/v1/auth/register instead
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Registration data (name, email, password required, phone optional) */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['internal_proj_users_handler.RegisterRequest'];
-        };
-      };
-      responses: {
-        /** @description User created successfully */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.RegisterResponse'];
-            };
-          };
-        };
-        /** @description users.register.error.invalid_data or validation errors */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description users.register.error.password_hash_failed or users.register.error.create_failed */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
     delete?: never;
     options?: never;
     head?: never;
@@ -32548,7 +32468,7 @@ export interface paths {
     };
     /**
      * Get current session
-     * @description Returns information about the currently authenticated user
+     * @description This endpoint is deprecated and should be proxied to Auth Service
      */
     get: {
       parameters: {
@@ -36831,6 +36751,14 @@ export interface components {
       /** @example http://localhost:3001/en/balance/deposit/success */
       return_url?: string;
     };
+    'internal_proj_config.StorageConfig': {
+      base_url?: string;
+      chat_files_bucket?: string;
+      listings_bucket?: string;
+      provider?: string;
+      review_photos_bucket?: string;
+      storefront_bucket?: string;
+    };
     /** @description Ответ при удалении контакта из списка */
     'internal_proj_contacts_handler.ContactRemoveResponse': {
       /**
@@ -37760,11 +37688,6 @@ export interface components {
       /** @example password123 */
       password: string;
     };
-    'internal_proj_users_handler.LoginResponse': {
-      /** @example users.login.success.authenticated */
-      message?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
-    };
     'internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
       message?: string;
@@ -37790,11 +37713,6 @@ export interface components {
       password: string;
       /** @example +1234567890 */
       phone?: string;
-    };
-    'internal_proj_users_handler.RegisterResponse': {
-      /** @example Пользователь успешно зарегистрирован */
-      message?: string;
-      user?: components['schemas']['backend_internal_domain_models.User'];
     };
     'internal_proj_users_handler.SessionResponse': {
       /** @example true */

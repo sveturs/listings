@@ -1,0 +1,16 @@
+{
+  "radius_search": {
+    "title": "Radius Search",
+    "radius_search_tab": "By Radius",
+    "district_search_tab": "By District",
+    "radius": "Radius",
+    "address": "Address",
+    "address_placeholder": "Enter address",
+    "use_my_location": "Use my location",
+    "show_search_area": "Show search area",
+    "searching": "Searching...",
+    "results_found": "Found {count} results",
+    "district_results_found": "Found {count} results in district",
+    "clear_results": "Clear results"
+  }
+}

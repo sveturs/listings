@@ -1,0 +1,29 @@
+{
+  "selectMethod": "Выберите способ оплаты",
+  "additionalFee": "Доп. комиссия",
+  "securePaymentInfo": "Безопасная оплата",
+  "methods": {
+    "card": "Банковская карта",
+    "cardDescription": "Оплата банковской картой через защищенное соединение",
+    "cashOnDelivery": "Наложенный платеж",
+    "cashOnDeliveryDescription": "Оплата при получении товара",
+    "bankTransfer": "Банковский перевод",
+    "bankTransferDescription": "Прямой банковский перевод"
+  },
+  "held": "Удерживается",
+  "released": "Выпущено",
+  "refunded": "Возвращено",
+  "pending": "В ожидании",
+  "releasedDescription": "Средства переданы продавцу",
+  "refundedDescription": "Средства возвращены покупателю",
+  "pendingDescription": "Ожидание обработки платежа",
+  "releaseDate": "Дата выпуска",
+  "buyerProtection": "Защита покупателя",
+  "confirmReceipt": "Подтвердите получение товара",
+  "disputeOption": "Возможность открытия спора",
+  "sellerTier": "Уровень продавца",
+  "escrow": {
+    "heldDescription": "Средства удерживаются на условном депонировании до подтверждения получения",
+    "autoRelease": "Автоматическое освобождение через {days} дней"
+  }
+}

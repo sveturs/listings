@@ -99,6 +99,11 @@ export const NestedCategorySelector: React.FC<NestedCategorySelectorProps> = ({
   // Построение иерархической структуры категорий
   useEffect(() => {
     const buildHierarchy = (cats: Category[]): Category[] => {
+      // Проверяем на null/undefined
+      if (!cats || !Array.isArray(cats)) {
+        return [];
+      }
+
       const categoryMap = new Map<string | number, Category>();
       const rootCategories: Category[] = [];
 

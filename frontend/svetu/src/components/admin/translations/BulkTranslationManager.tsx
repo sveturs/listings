@@ -36,7 +36,7 @@ interface EntityOption {
 }
 
 export default function BulkTranslationManager() {
-  const _t = useTranslations('admin.translations');
+  const _t = useTranslations('admin');
 
   // State management
   const [isLoading, setIsLoading] = useState(false);

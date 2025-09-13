@@ -7496,6 +7496,21 @@ definitions:
         example: http://localhost:3001/en/balance/deposit/success
         type: string
     type: object
+  internal_proj_config.StorageConfig:
+    properties:
+      base_url:
+        type: string
+      chat_files_bucket:
+        type: string
+      listings_bucket:
+        type: string
+      provider:
+        type: string
+      review_photos_bucket:
+        type: string
+      storefront_bucket:
+        type: string
+    type: object
   internal_proj_contacts_handler.ContactRemoveResponse:
     description: Ответ при удалении контакта из списка
     properties:
@@ -9045,14 +9060,6 @@ definitions:
     - email
     - password
     type: object
-  internal_proj_users_handler.LoginResponse:
-    properties:
-      message:
-        example: users.login.success.authenticated
-        type: string
-      user:
-        $ref: '#/definitions/backend_internal_domain_models.User'
-    type: object
   internal_proj_users_handler.MessageResponse:
     properties:
       message:
@@ -9097,14 +9104,6 @@ definitions:
     - email
     - name
     - password
-    type: object
-  internal_proj_users_handler.RegisterResponse:
-    properties:
-      message:
-        example: Пользователь успешно зарегистрирован
-        type: string
-      user:
-        $ref: '#/definitions/backend_internal_domain_models.User'
     type: object
   internal_proj_users_handler.SessionResponse:
     properties:
@@ -16352,7 +16351,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates user and returns JWT access token
+      description: This endpoint is deprecated and should be proxied to Auth Service
       parameters:
       - description: Login credentials
         in: body
@@ -16391,7 +16390,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Logs out the user by revoking all refresh tokens and clearing cookies
+      description: This endpoint is deprecated and should be proxied to Auth Service
       produces:
       - application/json
       responses:
@@ -16413,7 +16412,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Refreshes expired access token using valid refresh token from cookie
+      description: This endpoint is deprecated and should be proxied to Auth Service
       produces:
       - application/json
       responses:
@@ -16437,7 +16436,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new user account and returns JWT access token
+      description: This endpoint is deprecated and should be proxied to Auth Service
       parameters:
       - description: Registration data
         in: body
@@ -17228,6 +17227,28 @@ paths:
       summary: Get variant attributes for category
       tags:
       - marketplace-variant-attributes
+  /api/v1/config/storage:
+    get:
+      description: Returns storage configuration including bucket names for frontend
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storage configuration
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_config.StorageConfig'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get storage configuration
+      tags:
+      - config
   /api/v1/contacts:
     get:
       consumes:
@@ -28932,43 +28953,6 @@ paths:
       summary: Check admin status (simple)
       tags:
       - users
-  /api/v1/users/login:
-    post:
-      consumes:
-      - application/json
-      deprecated: true
-      description: 'Authenticates user by email and password, creates session and
-        sets session cookie. DEPRECATED: Use /api/v1/auth/login instead'
-      parameters:
-      - description: Login credentials (email and password required)
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/internal_proj_users_handler.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Authentication successful
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.LoginResponse'
-              type: object
-        "400":
-          description: users.login.error.invalid_data or validation errors
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "401":
-          description: users.login.error.invalid_credentials
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Login user (deprecated)
-      tags:
-      - users
   /api/v1/users/me:
     get:
       consumes:
@@ -29078,43 +29062,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update privacy settings
-      tags:
-      - users
-  /api/v1/users/register:
-    post:
-      consumes:
-      - application/json
-      deprecated: true
-      description: 'Creates new user in the system. DEPRECATED: Use /api/v1/auth/register
-        instead'
-      parameters:
-      - description: Registration data (name, email, password required, phone optional)
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/internal_proj_users_handler.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: User created successfully
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.RegisterResponse'
-              type: object
-        "400":
-          description: users.register.error.invalid_data or validation errors
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "500":
-          description: users.register.error.password_hash_failed or users.register.error.create_failed
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Register user (deprecated)
       tags:
       - users
   /api/v1/webhooks/orders/payment:
@@ -29581,7 +29528,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns information about the currently authenticated user
+      description: This endpoint is deprecated and should be proxied to Auth Service
       produces:
       - application/json
       responses:

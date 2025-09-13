@@ -27,7 +27,7 @@ export default function VersionHistoryViewer({
   entityId,
   onClose,
 }: VersionHistoryViewerProps) {
-  const _t = useTranslations('admin.translations');
+  const _t = useTranslations('admin');
 
   const [versions, setVersions] = useState<TranslationVersion[]>([]);
   const [isLoading, setIsLoading] = useState(false);

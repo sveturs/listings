@@ -2,12 +2,12 @@
   "comment": {
     "error": "Ошибка",
     "label": "Метка",
-    "placeholder": "[RU] Placeholder",
-    "tooShort": "[RU] Too Short"
+    "placeholder": "Оставьте отзыв...",
+    "tooShort": "Отзыв слишком короткий"
   },
   "cons": {
     "label": "Метка",
-    "placeholder": "[RU] Placeholder"
+    "placeholder": "Опишите недостатки..."
   },
   "form": {
     "cancel": "Отмена",
@@ -17,63 +17,63 @@
   },
   "gallery": {
     "close": "Закрыть",
-    "closeGallery": "[RU] Close Gallery",
-    "fullscreenMode": "[RU] Fullscreen Mode",
-    "nextImage": "[RU] Next Image",
-    "of": "[RU] Of",
-    "photo": "[RU] Photo",
-    "previousImage": "[RU] Previous Image",
-    "swipeToNavigate": "[RU] Swipe To Navigate"
+    "closeGallery": "Закрыть галерею",
+    "fullscreenMode": "Полноэкранный режим",
+    "nextImage": "Следующее изображение",
+    "of": "из",
+    "photo": "фото",
+    "previousImage": "Предыдущее изображение",
+    "swipeToNavigate": "Проведите для навигации"
   },
   "list": {
     "all": "Все",
-    "anonymous": "[RU] Anonymous",
-    "byDate": "[RU] By Date",
-    "byHelpfulness": "[RU] By Helpfulness",
-    "byRating": "[RU] By Rating",
+    "anonymous": "Анонимно",
+    "byDate": "По дате",
+    "byHelpfulness": "По полезности",
+    "byRating": "По рейтингу",
     "cancel": "Отмена",
     "confirm": "Подтвердить",
-    "cons": "[RU] Cons",
-    "dispute": "[RU] Dispute",
-    "disputePlaceholder": "[RU] Dispute Placeholder",
-    "disputeReason": "[RU] Dispute Reason",
-    "disputeReview": "[RU] Dispute Review",
-    "helpful": "[RU] Helpful",
-    "pros": "[RU] Pros",
-    "rating": "[RU] Rating",
-    "seller": "[RU] Seller",
-    "sellerConfirmed": "[RU] Seller Confirmed",
+    "cons": "Недостатки",
+    "dispute": "Оспорить",
+    "disputePlaceholder": "Опишите причину спора...",
+    "disputeReason": "Причина спора",
+    "disputeReview": "Оспорить отзыв",
+    "helpful": "Полезно",
+    "pros": "Достоинства",
+    "rating": "Оценка",
+    "seller": "Продавец",
+    "sellerConfirmed": "Подтверждено продавцом",
     "sortBy": "Сортировать по",
     "submit": "Отправить",
-    "verified": "[RU] Verified",
+    "verified": "Проверено",
     "verifiedPurchase": "Подтвержденная покупка",
-    "withPhotos": "[RU] With Photos"
+    "withPhotos": "С фотографиями"
   },
   "photos": {
-    "dragText": "[RU] Drag Text",
-    "fileTypes": "[RU] File Types",
+    "dragText": "Перетащите файлы сюда",
+    "fileTypes": "Типы файлов",
     "label": "Метка",
-    "limitReached": "[RU] Limit Reached",
-    "maxFiles": "[RU] Max Files"
+    "limitReached": "Достигнут лимит",
+    "maxFiles": "Максимум файлов"
   },
   "progress": {
-    "creating": "[RU] Creating",
-    "publishing": "[RU] Publishing",
-    "uploading": "[RU] Uploading"
+    "creating": "Создание...",
+    "publishing": "Публикация...",
+    "uploading": "Загрузка..."
   },
   "pros": {
     "label": "Метка",
-    "placeholder": "[RU] Placeholder"
+    "placeholder": "Опишите достоинства..."
   },
   "rating": {
     "error": "Ошибка",
     "label": "Метка"
   },
   "section": {
-    "alreadyReviewed": "[RU] Already Reviewed",
+    "alreadyReviewed": "Вы уже оставили отзыв",
     "cantReview": "Вы не можете оставить отзыв на этот товар",
     "noReviews": "Отзывов пока нет",
-    "ownerCantReview": "[RU] Owner Cant Review",
+    "ownerCantReview": "Владелец не может оставлять отзывы",
     "title": "Отзывы",
     "writeReview": "Написать отзыв",
     "yourReview": "Ваш отзыв"
@@ -81,7 +81,7 @@
   "stats": {
     "ratingDistribution": "Распределение оценок",
     "reviews": "отзывов",
-    "verified": "[RU] Verified",
+    "verified": "Проверено",
     "withPhotos": "с фотографиями"
   },
   "terrible": "Ужасно",

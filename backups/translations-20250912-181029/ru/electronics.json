@@ -1,0 +1,63 @@
+{
+  "deviceType": "Тип устройства",
+  "allDevices": "Все устройства",
+  "devices": {
+    "smartphone": "Смартфон",
+    "laptop": "Ноутбук",
+    "tablet": "Планшет",
+    "desktop": "Компьютер",
+    "tv": "Телевизор",
+    "smartwatch": "Умные часы",
+    "headphones": "Наушники",
+    "camera": "Камера",
+    "gaming": "Игровая консоль"
+  },
+  "brand": "Бренд",
+  "allBrands": "Все бренды",
+  "other": "Другой",
+  "screenSize": "Диагональ экрана",
+  "from": "От",
+  "to": "До",
+  "ram": "Оперативная память",
+  "anyRam": "Любая",
+  "ramOptions": {
+    "2gb": "2 ГБ",
+    "4gb": "4 ГБ",
+    "6gb": "6 ГБ",
+    "8gb": "8 ГБ",
+    "12gb": "12 ГБ",
+    "16gb": "16 ГБ",
+    "32gb": "32 ГБ",
+    "64gbPlus": "64 ГБ+"
+  },
+  "storage": "Память",
+  "anyStorage": "Любая",
+  "storageOptions": {
+    "32gb": "32 ГБ",
+    "64gb": "64 ГБ",
+    "128gb": "128 ГБ",
+    "256gb": "256 ГБ",
+    "512gb": "512 ГБ",
+    "1tb": "1 ТБ",
+    "2tbPlus": "2 ТБ+"
+  },
+  "batteryCapacity": "Емкость батареи",
+  "minBattery": "Минимум мАч",
+  "processor": "Процессор",
+  "enterProcessor": "Введите процессор",
+  "operatingSystem": "Операционная система",
+  "anyOS": "Любая ОС",
+  "osOptions": {
+    "ios": "iOS",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux"
+  },
+  "features": "Особенности",
+  "featuresOptions": {
+    "warranty": "С гарантией",
+    "refurbished": "Восстановленный",
+    "5g": "Поддержка 5G"
+  }
+}

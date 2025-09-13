@@ -208,14 +208,14 @@
       }
     }
   },
-  "remove": "[RU] Remove",
-  "empty": "[RU] Empty",
+  "remove": "Удалить",
+  "empty": "Пусто",
   "clear": "Очистить",
   "miniCart": {
-    "title": "[RU] Title",
-    "empty": "[RU] Empty",
-    "total": "[RU] Total",
-    "viewCart": "[RU] View Cart",
+    "title": "Корзина",
+    "empty": "Корзина пуста",
+    "total": "Итого",
+    "viewCart": "Перейти в корзину",
     "checkout": "Оформление заказа"
   }
 }
