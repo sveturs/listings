@@ -519,13 +519,6 @@ CREATE SEQUENCE public.query_cache_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.refresh_tokens_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.review_confirmations_id_seq
     AS integer
     START WITH 1
@@ -747,6 +740,13 @@ CREATE SEQUENCE public.subscription_usage_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.translation_audit_log_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.translation_providers_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1

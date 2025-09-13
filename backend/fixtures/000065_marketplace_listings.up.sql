@@ -1,0 +1,72 @@
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (250, 2, 1001, 'Stan 65m2 Liman 3 - novogradnja', 'Prelep stan u novogradnji na Limanu 3. Kompletno namešten, odmah useljiv. Terasa, parking mesto.', 95000.00, NULL, 'active', 'Novi Sad', 45.24850000, 19.83350000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-23 17:01:39.211575', '2025-08-28 17:01:39.211575', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (251, 2, 1001, 'Lux penthouse 120m2 Centar', 'Luksuzni penthouse u centru grada. Pogled na Dunav, 2 terase, jacuzzi. Kompletno opremljen.', 250000.00, NULL, 'active', 'Novi Sad', 45.25510000, 19.84510000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-24 17:01:39.211575', '2025-08-28 17:01:39.211575', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (252, 2, 1001, 'Kuća 200m2 sa bazenom Sremska Kamenica', 'Moderna kuća sa bazenom. 3 spavaće sobe, veliki dnevni boravak, garaža za 2 automobila.', 320000.00, NULL, 'active', 'Sremska Kamenica', 45.21450000, 19.84670000, 'Sremska Kamenica', 'RS', 0, true, 'sr', '2025-08-25 17:01:39.211575', '2025-08-28 17:01:39.211575', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (253, 2, 1301, 'BMW X5 3.0d 2021 - kao nov', 'BMW X5 xDrive30d, M paket, full oprema. Prvi vlasnik, servisna knjiga, garancija do 2025.', 85000.00, NULL, 'active', 'Beograd', 44.81250000, 20.46120000, 'Beograd', 'RS', 0, true, 'sr', '2025-08-22 17:01:39.211575', '2025-08-28 17:01:39.211575', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (268, 10, 1101, 'Оптический роутер Huawei HG8546M • 2.4/5GHz • Как новый', '🌐 МОЩНЫЙ ОПТИЧЕСКИЙ РОУТЕР ДЛЯ ВАШЕГО ДОМА!
+
+✨ ПРЕИМУЩЕСТВА:
+- Поддержка технологии GPON для оптического интернета
+- Двухдиапазонный WiFi (2.4GHz + 5GHz)
+- 4 порта Gigabit Ethernet
+- Высокая скорость до 300 Мбит/с
+
+📱 ХАРАКТЕРИСТИКИ:
+- 2 внешние антенны для стабильного сигнала
+- Поддержка IPTV
+- Простая настройка через веб-интерфейс
+- Родительский контроль
+
+🛡️ СОСТОЯНИЕ:
+- Полностью рабочий
+- Все порты в идеальном состоянии
+- Заводская прошивка
+
+📦 В КОМПЛЕКТЕ:
+- Роутер Huawei HG8546M
+- Блок питания
+- Сетевой кабель
+
+🔥 Успейте купить мощный роутер для высокоскоростного интернета! Звоните прямо сейчас! 📞', 30.00, 'used', 'active', 'Васе Стајића, Нови-Сад, Южно-Бачский округ', 45.25114903, 19.84371543, '', '', 0, true, '', '2025-08-28 12:01:51.357436', '2025-09-01 20:30:12.39372', NULL, '', '{"seo": {"slug": "", "keywords": ""}, "discount": {"previous_price": 50, "discount_percent": 40, "has_price_history": true}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (294, 10, 1001, 'фцувцфвцфв', '1231231ываыва231231ываыва23123123  12312ываывавыаыва3123123', 3123.00, 'used', 'active', '', 0.00000000, 0.00000000, '', '', 0, false, 'ru', '2025-09-03 22:38:02.575888', '2025-09-03 22:38:02.575888', NULL, '', NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (254, 2, 1301, 'Mercedes-Benz E220d 2022', 'Mercedes E klasa, AMG line, automatik. Navigacija, kožna sedišta, panorama krov.', 65000.00, '', 'active', 'Novi Sad', 45.26710000, 19.83350000, 'Novi Sad', 'RS', 0, true, '', '2025-08-23 17:01:39.211575', '2025-08-29 19:47:22.962688', NULL, NULL, '{"seo": {"slug": "", "keywords": ""}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (296, 5, 1402, 'Автономный дом POD-01 • Премиум-кемпер для путешествий', '🏕️ ИННОВАЦИОННЫЙ МОБИЛЬНЫЙ ДОМ POD-01!
+
+✨ ПРЕИМУЩЕСТВА:
+- Компактный размер при максимальной функциональности
+- Аэродинамический дизайн будущего
+- Полная автономность
+- Всесезонное использование
+
+🛠️ КОМПЛЕКТАЦИЯ:
+- Солнечные панели
+- Система вентиляции
+- Термоизоляция премиум-класса
+- Панорамные окна
+- Автономная электросистема
+
+🌟 ОСОБЕННОСТИ:
+- Легкий вес и мобильность
+- Быстрая установка за 15 минут
+- Вместимость: 2-3 человека
+- Защита от любой погоды
+
+💎 ВЫ ПОЛУЧАЕТЕ:
+- Готовое решение для путешествий
+- Полностью укомплектованный мобильный дом
+- Гарантию 2 года
+- Техподдержку 24/7
+
+🚀 Станьте владельцем дома будущего уже сегодня! Количество ограничено.', 2990000.00, 'new', 'active', 'Нови Београд', 44.79287000, 20.52801700, '', '', 0, true, 'ru', '2025-09-08 12:52:08.148719', '2025-09-08 12:52:08.148719', NULL, '', NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (266, 2, 1001, 'Chicco kolica 3u1 - kao nova', 'Chicco sistem 3u1: kolica, nosiljka, auto sedište. Korišćeno 6 meseci. Svi dodaci.', 400.00, '', 'active', 'Beograd', 44.81760000, 20.46330000, 'Beograd', 'RS', 0, true, '', '2025-08-11 17:03:04.994222', '2025-09-02 16:11:13.788847', NULL, NULL, '{"seo": {"slug": "", "keywords": ""}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (256, 2, 1301, 'Yamaha MT-07 2022 - perfektno stanje', 'Yamaha MT-07, ABS, nova guma, servisiran. Bez oštećenja, garažiran. 8500km.', 7500.00, NULL, 'active', 'Novi Sad', 45.25510000, 19.84510000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-21 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (260, 2, 1401, 'Tegovi i oprema za teretanu - komplet', 'Komplet opreme za kućnu teretanu. Tegovi 200kg, klupa, stalak, šipke. Sve kao novo.', 1200.00, NULL, 'active', 'Novi Sad', 45.24850000, 19.83350000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-17 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (261, 2, 1401, 'Trek električni bicikl 2023', 'Trek e-bike, Bosch motor, autonomija 100km. Hidraulične kočnice, 10 brzina. Garancija.', 2500.00, NULL, 'active', 'Beograd', 44.81760000, 20.46330000, 'Beograd', 'RS', 0, true, 'sr', '2025-08-16 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (267, 2, 1001, 'LEGO kolekcija - 15 kompleta', 'Velika LEGO kolekcija. Star Wars, Technic, City. Kompletni setovi sa uputstvima.', 800.00, NULL, 'active', 'Novi Sad', 45.25510000, 19.84510000, 'Novi Sad', 'RS', 0, true, 'sr', '2025-08-10 17:03:04.994222', '2025-08-28 17:03:04.994222', NULL, NULL, NULL, false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (255, 10, 1301, 'Volkswagen Golf 8 2.0 TDI 2023', 'Golf VIII generacija, 2.0 TDI 150ks, DSG automatik. Style oprema, virtual cockpit, LED farovi. Fabricka garancija do 2026.', 32000.00, '', 'active', 'Temerinska 50', 45.24670000, 19.85150000, 'Novi Sad', 'Srbija', 2876, true, '', '2025-08-23 23:30:06.828234', '2025-08-28 23:02:08.436259', NULL, NULL, '{"seo": {"slug": "volkswagen-golf-8-20-tdi-2023", "keywords": ""}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (183, 2, 1604, 'Domaci med bagrem 1kg', 'Cist bagremov med sa sopstvene pceline. 100% prirodno, bez dodataka. Kristalno cist, svetle boje.', 12.00, '', 'active', 'Васе Пелагића 3, Нови-Сад 21101, Южно-Бачский округ, Сербия', 45.25156522, 19.83999155, 'Нови-Сад', 'Сербия', 890, true, '', '2025-08-24 23:14:33.491398', '2025-08-29 19:42:04.618525', NULL, NULL, '{"seo": {"slug": "", "keywords": ""}}', false);
+INSERT INTO public.marketplace_listings (id, user_id, category_id, title, description, price, condition, status, location, latitude, longitude, address_city, address_country, views_count, show_on_map, original_language, created_at, updated_at, storefront_id, external_id, metadata, needs_reindex) VALUES (297, 1, NULL, 'Test Product', 'Test Description', 100.00, NULL, 'active', NULL, NULL, NULL, NULL, NULL, 0, true, 'sr', '2025-09-11 21:48:59.964689', '2025-09-11 21:48:59.964689', NULL, NULL, NULL, false);
+
+
+--
+-- Data for Name: marketplace_messages; Type: TABLE DATA; Schema: public; Owner: -
+--
