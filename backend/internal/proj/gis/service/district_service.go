@@ -6,6 +6,7 @@ import (
 	"errors"
 	"sort"
 
+	"backend/internal/proj/gis/constants"
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
 
@@ -86,10 +87,10 @@ func (s *DistrictService) SearchListingsByDistrict(ctx context.Context, district
 
 	// Set default limit if not provided
 	if params.Limit <= 0 {
-		params.Limit = 50
+		params.Limit = constants.DEFAULT_LIMIT
 	}
-	if params.Limit > 200 {
-		params.Limit = 200
+	if params.Limit > constants.MAX_LIMIT {
+		params.Limit = constants.MAX_LIMIT
 	}
 
 	results, err := s.repo.SearchListingsByDistrict(ctx, params)
@@ -115,10 +116,10 @@ func (s *DistrictService) SearchListingsByMunicipality(ctx context.Context, muni
 
 	// Set default limit if not provided
 	if params.Limit <= 0 {
-		params.Limit = 50
+		params.Limit = constants.DEFAULT_LIMIT
 	}
-	if params.Limit > 200 {
-		params.Limit = 200
+	if params.Limit > constants.MAX_LIMIT {
+		params.Limit = constants.MAX_LIMIT
 	}
 
 	results, err := s.repo.SearchListingsByMunicipality(ctx, params)

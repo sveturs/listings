@@ -13217,6 +13217,90 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/gis/clusters": {
+            "get": {
+                "description": "Возвращает кластеризованные точки для отображения на карте",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить кластеры объявлений",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Уровень зума карты (1-20)",
+                        "name": "zoom",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID категории для фильтрации",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Минимальная цена",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Максимальная цена",
+                        "name": "max_price",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Массив кластеров",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_proj_gis_handler.ClusterPoint"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/districts": {
             "get": {
                 "description": "Get all districts with optional filtering",
@@ -13777,6 +13861,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/gis/heatmap": {
+            "get": {
+                "description": "Возвращает точки с весами для построения тепловой карты",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить данные для тепловой карты",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "density",
+                        "description": "Метрика для веса (price, views, density)",
+                        "name": "metric",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Данные для тепловой карты",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/listings/{id}/address": {
             "put": {
                 "security": [
@@ -14169,7 +14320,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Количество результатов (по умолчанию 20)",
+                        "description": "Количество результатов (по умолчанию 200, максимум 5000)",
                         "name": "limit",
                         "in": "query"
                     }
@@ -14370,7 +14521,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -14465,7 +14616,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -14604,7 +14755,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Количество результатов (по умолчанию 50, максимум 1000)",
+                        "description": "Количество результатов (по умолчанию 1000, максимум 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -43449,6 +43600,26 @@ const docTemplate = `{
                 "rootPath": {
                     "type": "string",
                     "example": "./docs"
+                }
+            }
+        },
+        "internal_proj_gis_handler.ClusterPoint": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
                 }
             }
         },

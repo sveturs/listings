@@ -13163,6 +13163,76 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/gis/clusters': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить кластеры объявлений
+     * @description Возвращает кластеризованные точки для отображения на карте
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Уровень зума карты (1-20) */
+          zoom: number;
+          /** @description Границы видимой области (south,west,north,east) */
+          bounds: string;
+          /** @description ID категории для фильтрации */
+          category_id?: number;
+          /** @description Минимальная цена */
+          min_price?: number;
+          /** @description Максимальная цена */
+          max_price?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Массив кластеров */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_gis_handler.ClusterPoint'][];
+            };
+          };
+        };
+        /** @description Некорректные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/gis/districts': {
     parameters: {
       query?: never;
@@ -13739,6 +13809,72 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/gis/heatmap': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить данные для тепловой карты
+     * @description Возвращает точки с весами для построения тепловой карты
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Границы видимой области (south,west,north,east) */
+          bounds: string;
+          /** @description Метрика для веса (price, views, density) */
+          metric?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Данные для тепловой карты */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              }[];
+            };
+          };
+        };
+        /** @description Некорректные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/gis/listings/{id}/address': {
     parameters: {
       query?: never;
@@ -14121,7 +14257,7 @@ export interface paths {
           lng: number;
           /** @description Радиус поиска в километрах (по умолчанию 5) */
           radius_km?: number;
-          /** @description Количество результатов (по умолчанию 20) */
+          /** @description Количество результатов (по умолчанию 200, максимум 5000) */
           limit?: number;
         };
         header?: never;
@@ -14273,7 +14409,7 @@ export interface paths {
           min_price?: number;
           /** @description Maximum price */
           max_price?: number;
-          /** @description Limit results (default: 50, max: 200) */
+          /** @description Limit results (default: 1000, max: 5000) */
           limit?: number;
           /** @description Offset for pagination */
           offset?: number;
@@ -14355,7 +14491,7 @@ export interface paths {
           min_price?: number;
           /** @description Maximum price */
           max_price?: number;
-          /** @description Limit results (default: 50, max: 200) */
+          /** @description Limit results (default: 1000, max: 5000) */
           limit?: number;
           /** @description Offset for pagination */
           offset?: number;
@@ -14453,7 +14589,7 @@ export interface paths {
           sort_by?: string;
           /** @description Порядок сортировки (asc, desc) */
           sort_order?: string;
-          /** @description Количество результатов (по умолчанию 50, максимум 1000) */
+          /** @description Количество результатов (по умолчанию 1000, максимум 5000) */
           limit?: number;
           /** @description Смещение */
           offset?: number;
@@ -36817,6 +36953,12 @@ export interface components {
       files?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
       /** @example ./docs */
       rootPath?: string;
+    };
+    'internal_proj_gis_handler.ClusterPoint': {
+      count?: number;
+      ids?: number[];
+      lat?: number;
+      lng?: number;
     };
     'internal_proj_global_handler.UnifiedCategoryInfo': {
       id?: number;

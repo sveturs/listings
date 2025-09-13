@@ -115,18 +115,21 @@ export default function PostExpressDeliverySelector({
     setLoading(true);
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/postexpress/calculate-rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          weight_kg: weight,
-          declared_value: insuranceAmount,
-          cod_amount: hasCOD ? 100 : 0, // Примерная сумма
-          recipient_city: recipientCity,
-          sender_postal_code: '21000', // Склад в Нови Саде
-          recipient_postal_code: '11000', // Примерный код для расчета
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/postexpress/calculate-rate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weight_kg: weight,
+            declared_value: insuranceAmount,
+            cod_amount: hasCOD ? 100 : 0, // Примерная сумма
+            recipient_city: recipientCity,
+            sender_postal_code: '21000', // Склад в Нови Саде
+            recipient_postal_code: '11000', // Примерный код для расчета
+          }),
+        }
+      );
 
       const data = await response.json();
       if (data.success) {

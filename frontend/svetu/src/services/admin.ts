@@ -995,11 +995,14 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'GET',
-        headers,
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1015,12 +1018,15 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(attribute),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(attribute),
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1037,12 +1043,15 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(attribute),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(attribute),
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1056,11 +1065,14 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'DELETE',
-        headers,
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

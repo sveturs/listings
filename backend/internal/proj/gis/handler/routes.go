@@ -16,6 +16,7 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 
 	spatialHandler := NewSpatialHandler(spatialService)
 	geocodingHandler := NewGeocodingHandler(geocodingService)
+	clusterHandler := NewClusterHandler(db)
 
 	// Группа маршрутов для GIS
 	gis := app.Group("/api/v1/gis")
@@ -32,6 +33,10 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 	gis.Get("/search/radius", spatialHandler.RadiusSearch)
 	gis.Get("/nearby", spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", spatialHandler.GetListingLocation)
+
+	// ========== Маршруты кластеризации и визуализации ==========
+	gis.Get("/clusters", clusterHandler.GetClusters)
+	gis.Get("/heatmap", clusterHandler.GetHeatmap)
 
 	// ========== Защищенные маршруты (требуют авторизации) ==========
 	protected := gis.Group("/", authMiddleware.AuthRequiredJWT)

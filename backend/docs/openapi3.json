@@ -15185,6 +15185,106 @@
                 }
             }
         },
+        "/api/v1/gis/clusters": {
+            "get": {
+                "description": "Возвращает кластеризованные точки для отображения на карте",
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить кластеры объявлений",
+                "parameters": [
+                    {
+                        "description": "Уровень зума карты (1-20)",
+                        "name": "zoom",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "ID категории для фильтрации",
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Минимальная цена",
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Максимальная цена",
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Массив кластеров",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/internal_proj_gis_handler.ClusterPoint"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/districts": {
             "get": {
                 "description": "Get all districts with optional filtering",
@@ -15826,6 +15926,83 @@
                 }
             }
         },
+        "/api/v1/gis/heatmap": {
+            "get": {
+                "description": "Возвращает точки с весами для построения тепловой карты",
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить данные для тепловой карты",
+                "parameters": [
+                    {
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Метрика для веса (price, views, density)",
+                        "name": "metric",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "density"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Данные для тепловой карты",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "additionalProperties": true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/listings/{id}/address": {
             "put": {
                 "security": [
@@ -16289,7 +16466,7 @@
                         }
                     },
                     {
-                        "description": "Количество результатов (по умолчанию 20)",
+                        "description": "Количество результатов (по умолчанию 200, максимум 5000)",
                         "name": "limit",
                         "in": "query",
                         "schema": {
@@ -16539,7 +16716,7 @@
                         }
                     },
                     {
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query",
                         "schema": {
@@ -16656,7 +16833,7 @@
                         }
                     },
                     {
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query",
                         "schema": {
@@ -16837,7 +17014,7 @@
                         }
                     },
                     {
-                        "description": "Количество результатов (по умолчанию 50, максимум 1000)",
+                        "description": "Количество результатов (по умолчанию 1000, максимум 5000)",
                         "name": "limit",
                         "in": "query",
                         "schema": {
@@ -48910,6 +49087,26 @@
                     "rootPath": {
                         "type": "string",
                         "example": "./docs"
+                    }
+                }
+            },
+            "internal_proj_gis_handler.ClusterPoint": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "lat": {
+                        "type": "number"
+                    },
+                    "lng": {
+                        "type": "number"
                     }
                 }
             },

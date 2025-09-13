@@ -65,7 +65,11 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   };
 
   const handleViewDetails = () => {
-    if (parsedData?.id || marker.id) {
+    // Если это витрина, переходим на страницу витрины
+    if (marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') {
+      const storefrontId = marker.storefront_id || parsedMetadata?.storefront_id || marker.id;
+      router.push(`/storefronts/${storefrontId}`);
+    } else if (parsedData?.id || marker.id) {
       router.push(`/marketplace/${parsedData?.id || marker.id}`);
     }
   };
@@ -232,8 +236,44 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
               </div>
             )}
 
+            {/* Товары витрины (если это витрина) */}
+            {(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') && marker.products && marker.products.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900">Товары в витрине</h4>
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {marker.products.map((product: any, index: number) => (
+                    <div key={product.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3 flex-1">
+                        {product.image && (
+                          <img
+                            src={product.image}
+                            alt={product.title}
+                            className="w-12 h-12 rounded object-cover"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm text-gray-900 truncate">{product.title}</div>
+                          {product.category && (
+                            <div className="text-xs text-gray-500">{product.category}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm font-bold text-primary ml-2">
+                        {formatPrice(product.price)} ₽
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {parsedData?.products_count && parsedData.products_count > 5 && (
+                  <div className="text-xs text-gray-500 text-center">
+                    и еще {parsedData.products_count - 5} товаров...
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Атрибуты и характеристики */}
-            {(parsedData?.attributes || parsedMetadata || parsedData) && (
+            {!(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') && (parsedData?.attributes || parsedMetadata || parsedData) && (
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-900">
                   {t('characteristics')}
@@ -367,7 +407,9 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   onClick={handleViewDetails}
                   className="flex-1 btn btn-primary btn-sm"
                 >
-                  {t('viewDetails')}
+                  {(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront')
+                    ? '🏪 Открыть витрину'
+                    : t('viewDetails')}
                 </button>
                 {isStorefrontProduct && isAuthenticated && !isOwner ? (
                   <button
@@ -376,7 +418,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   >
                     🛒 {t('addToCart')}
                   </button>
-                ) : (
+                ) : !(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') ? (
                   <button
                     onClick={() => {
                       // TODO: Открыть чат с продавцом
@@ -386,7 +428,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   >
                     💬 {t('contactSeller')}
                   </button>
-                )}
+                ) : null}
               </div>
 
               {/* Дополнительные действия */}

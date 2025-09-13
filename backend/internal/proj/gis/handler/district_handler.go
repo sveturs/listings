@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"backend/internal/proj/gis/constants"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -200,7 +201,7 @@ func (h *DistrictHandler) GetMunicipalityByID(c *fiber.Ctx) error {
 // @Param category_id query string false "Category ID"
 // @Param min_price query number false "Minimum price"
 // @Param max_price query number false "Maximum price"
-// @Param limit query int false "Limit results (default: 50, max: 200)"
+// @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.GeoListing} "Search results"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
@@ -214,7 +215,7 @@ func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 	}
 
 	params := types.DistrictListingSearchParams{
-		Limit:  50,
+		Limit:  constants.DEFAULT_LIMIT,
 		Offset: 0,
 	}
 
@@ -271,7 +272,7 @@ func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 // @Param category_id query string false "Category ID"
 // @Param min_price query number false "Minimum price"
 // @Param max_price query number false "Maximum price"
-// @Param limit query int false "Limit results (default: 50, max: 200)"
+// @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.GeoListing} "Search results"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"

@@ -140,7 +140,9 @@ class ABTestingService {
   private async loadRemoteExperiments() {
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}${this.config.apiEndpoint}/active`);
+      const response = await fetch(
+        `${apiUrl}${this.config.apiEndpoint}/active`
+      );
       const experiments = await response.json();
 
       experiments.forEach((exp: Experiment) => {
@@ -577,18 +579,21 @@ class ABTestingService {
 
     try {
       const apiUrl = configManager.getApiUrl();
-      await fetch(`${apiUrl}${this.config.apiEndpoint}/${experiment.id}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          winnerVariant: experiment.winnerVariant,
-          significance: experiment.statisticalSignificance,
-          variants: experiment.variants.map((v) => ({
-            id: v.id,
-            metrics: v.metrics,
-          })),
-        }),
-      });
+      await fetch(
+        `${apiUrl}${this.config.apiEndpoint}/${experiment.id}/complete`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            winnerVariant: experiment.winnerVariant,
+            significance: experiment.statisticalSignificance,
+            variants: experiment.variants.map((v) => ({
+              id: v.id,
+              metrics: v.metrics,
+            })),
+          }),
+        }
+      );
     } catch (error) {
       console.error('Failed to save experiment results:', error);
     }

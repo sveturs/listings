@@ -117,11 +117,14 @@ export default function PostExpressRateCalculator({
       };
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/postexpress/calculate-rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/postexpress/calculate-rate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+        }
+      );
 
       const data = await response.json();
 

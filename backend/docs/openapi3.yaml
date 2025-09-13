@@ -8929,6 +8929,66 @@ paths:
       summary: Get visible cities
       tags:
         - gis
+  /api/v1/gis/clusters:
+    get:
+      description: Возвращает кластеризованные точки для отображения на карте
+      parameters:
+        - description: Уровень зума карты (1-20)
+          in: query
+          name: zoom
+          required: true
+          schema:
+            type: integer
+        - description: Границы видимой области (south,west,north,east)
+          in: query
+          name: bounds
+          required: true
+          schema:
+            type: string
+        - description: ID категории для фильтрации
+          in: query
+          name: category_id
+          schema:
+            type: integer
+        - description: Минимальная цена
+          in: query
+          name: min_price
+          schema:
+            type: number
+        - description: Максимальная цена
+          in: query
+          name: max_price
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Массив кластеров
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/internal_proj_gis_handler.ClusterPoint"
+                        type: array
+                    type: object
+        "400":
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Получить кластеры объявлений
+      tags:
+        - gis
   /api/v1/gis/districts:
     get:
       description: Get all districts with optional filtering
@@ -9313,6 +9373,52 @@ paths:
       summary: Валидация геокодирования адреса
       tags:
         - gis
+  /api/v1/gis/heatmap:
+    get:
+      description: Возвращает точки с весами для построения тепловой карты
+      parameters:
+        - description: Границы видимой области (south,west,north,east)
+          in: query
+          name: bounds
+          required: true
+          schema:
+            type: string
+        - description: Метрика для веса (price, views, density)
+          in: query
+          name: metric
+          schema:
+            type: string
+            default: density
+      responses:
+        "200":
+          description: Данные для тепловой карты
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          additionalProperties: true
+                          type: object
+                        type: array
+                    type: object
+        "400":
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Получить данные для тепловой карты
+      tags:
+        - gis
   "/api/v1/gis/listings/{id}/address":
     put:
       description: Обновляет геолокацию и адрес объявления с полной валидацией и
@@ -9586,7 +9692,7 @@ paths:
           name: radius_km
           schema:
             type: number
-        - description: Количество результатов (по умолчанию 20)
+        - description: Количество результатов (по умолчанию 200, максимум 5000)
           in: query
           name: limit
           schema:
@@ -9737,7 +9843,7 @@ paths:
           name: max_price
           schema:
             type: number
-        - description: "Limit results (default: 50, max: 200)"
+        - description: "Limit results (default: 1000, max: 5000)"
           in: query
           name: limit
           schema:
@@ -9807,7 +9913,7 @@ paths:
           name: max_price
           schema:
             type: number
-        - description: "Limit results (default: 50, max: 200)"
+        - description: "Limit results (default: 1000, max: 5000)"
           in: query
           name: limit
           schema:
@@ -9920,7 +10026,7 @@ paths:
           name: sort_order
           schema:
             type: string
-        - description: Количество результатов (по умолчанию 50, максимум 1000)
+        - description: Количество результатов (по умолчанию 1000, максимум 5000)
           in: query
           name: limit
           schema:
@@ -29991,6 +30097,19 @@ components:
         rootPath:
           example: ./docs
           type: string
+      type: object
+    internal_proj_gis_handler.ClusterPoint:
+      properties:
+        count:
+          type: integer
+        ids:
+          items:
+            type: integer
+          type: array
+        lat:
+          type: number
+        lng:
+          type: number
       type: object
     internal_proj_global_handler.UnifiedCategoryInfo:
       properties:

@@ -32,6 +32,16 @@ export interface MapMarkerData {
     category?: string;
     [key: string]: any;
   };
+  item_type?: string; // marketplace_listing, storefront_product, storefront
+  display_strategy?: string; // individual, storefront_grouped
+  storefront_id?: number;
+  products?: Array<{
+    id: number;
+    title: string;
+    price: number;
+    image?: string;
+    category?: string;
+  }>;
 }
 
 export interface MapPopupData {

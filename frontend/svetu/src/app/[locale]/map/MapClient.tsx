@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
@@ -164,7 +164,15 @@ const MapPage: React.FC = () => {
   });
 
   // Дебаунсированная позиция покупателя
-  const debouncedBuyerLocation = useDebounce(buyerLocation, 1000);
+  const debouncedBuyerLocation = useDebounce(buyerLocation, 300); // Быстрый отклик
+
+  // Состояние для серверных кластеров
+  const [serverClusters, setServerClusters] = useState<any[]>([]);
+
+  // Состояние для отслеживания переходов
+  const [isMapTransitioning, setIsMapTransitioning] = useState(false);
+  const previousZoomRef = useRef<number>(initialViewState.zoom);
+  const loadingRequestRef = useRef<AbortController | null>(null);
 
   // Данные и фильтры
   const [listings, setListings] = useState<ListingData[]>([]);
@@ -176,13 +184,13 @@ const MapPage: React.FC = () => {
   // Поиск
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') || '');
   const [isSearchFromUser, setIsSearchFromUser] = useState(false);
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Создаем debounced версию фильтров для оптимизации запросов
-  const debouncedFilters = useDebounce(filters, 800);
+  const debouncedFilters = useDebounce(filters, 400);
 
-  // Создаем debounced версию viewState для оптимизации обновления URL
-  const debouncedViewState = useDebounce(viewState, 500);
+  // Создаем debounced версию viewState для оптимизации обновления URL и запросов
+  const debouncedViewState = useDebounce(viewState, 200); // Минимальная задержка
 
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(false);
@@ -334,6 +342,7 @@ const MapPage: React.FC = () => {
       priceTo: debouncedFilters.priceTo,
       radius: debouncedFilters.radius,
       buyerLocation: debouncedBuyerLocation,
+      zoom: viewState.zoom,
     });
 
     setIsLoading(true);
@@ -344,6 +353,11 @@ const MapPage: React.FC = () => {
       const hasDistrictBoundary = districtBoundary !== null;
       const isCombinedSearch = hasRadiusSearch && hasDistrictBoundary;
 
+      // ВАЖНО: Используем серверную кластеризацию при малых зумах
+      // Изменен порог с 12 на 11, так как на zoom 11 кластеры часто возвращают 0 результатов
+      const useClusterAPI = viewState.zoom < 11 && hasRadiusSearch; // Только если есть координаты
+      const useRadiusSearchAPI = hasRadiusSearch && !useClusterAPI;
+
       console.log('🔍 Search type analysis:', {
         hasRadiusSearch,
         hasDistrictBoundary,
@@ -351,20 +365,56 @@ const MapPage: React.FC = () => {
         searchType,
         buyerLat: debouncedBuyerLocation.latitude,
         buyerLng: debouncedBuyerLocation.longitude,
-        endpoint: hasRadiusSearch
-          ? '/api/v1/gis/search/radius'
-          : '/api/v1/search',
+        zoom: viewState.zoom,
+        useClusterAPI,
+        useRadiusSearchAPI,
+        endpoint: useClusterAPI
+          ? '/api/v1/gis/clusters'
+          : useRadiusSearchAPI
+            ? '/api/v1/gis/search/radius'
+            : '/api/v1/search',
       });
 
-      // Используем специализированный радиусный поиск если есть координаты покупателя, иначе обычный search
-      const useRadiusSearch = hasRadiusSearch;
-      const endpoint = useRadiusSearch
-        ? '/api/v1/gis/search/radius'
-        : '/api/v1/search';
+      // Определяем какой API использовать
+      const endpoint = useClusterAPI
+        ? '/api/v1/gis/clusters'
+        : useRadiusSearchAPI
+          ? '/api/v1/gis/search/radius'
+          : '/api/v1/search';
 
       let response;
 
-      if (useRadiusSearch) {
+      if (useClusterAPI) {
+        // Для кластеризации используем GET с bounds и zoom
+        // Вычисляем bounds из viewport
+        const zoomFactor = Math.pow(2, 14 - viewState.zoom) * 0.01;
+        const bounds = {
+          north: viewState.latitude + zoomFactor,
+          south: viewState.latitude - zoomFactor,
+          east: viewState.longitude + zoomFactor,
+          west: viewState.longitude - zoomFactor,
+        };
+
+        const params = new URLSearchParams({
+          zoom: Math.floor(viewState.zoom).toString(),
+          bounds: `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`,
+          ...(debouncedFilters.categories &&
+            debouncedFilters.categories.length > 0 && {
+              categories: debouncedFilters.categories.join(','),
+            }),
+          ...(debouncedFilters.priceFrom > 0 && {
+            min_price: debouncedFilters.priceFrom.toString(),
+          }),
+          ...(debouncedFilters.priceTo > 0 && {
+            max_price: debouncedFilters.priceTo.toString(),
+          }),
+        });
+
+        const fullUrl = `${endpoint}?${params}`;
+        console.log('📡 Cluster API Request:', fullUrl);
+        response = await apiClient.get(fullUrl);
+
+      } else if (useRadiusSearchAPI) {
         // Для радиусного поиска используем GET с query параметрами
         const params = new URLSearchParams({
           latitude: debouncedBuyerLocation.latitude.toString(),
@@ -429,7 +479,63 @@ const MapPage: React.FC = () => {
       }
 
       // Обрабатываем ответ в зависимости от используемого API
-      if (useRadiusSearch && response.data?.data) {
+      if (useClusterAPI && response.data?.data) {
+        // Cluster API возвращает кластеры и отдельные точки
+        console.log('[Map] Cluster API response:', {
+          success: response.data.success,
+          clusters: response.data.data.clusters?.length || 0,
+          listings: response.data.data.listings?.length || 0,
+        });
+
+        // Кластеры не нужно преобразовывать в listings - они будут отображаться отдельно
+        // Сохраняем только отдельные точки (listings)
+        const apiListings = response.data.data.listings || [];
+        const transformedListings = apiListings
+          .filter((item: any) => item.location && item.location.lat && item.location.lng)
+          .map((item: any) => ({
+            id: item.id,
+            name: item.title,
+            price: item.price,
+            location: {
+              lat: item.location.lat,
+              lng: item.location.lng,
+              city: item.address || '',
+              country: 'Serbia',
+            },
+            category: {
+              id: 0,
+              name: item.category || 'Unknown',
+              slug: '',
+            },
+            images: item.images || [],
+            created_at: item.created_at,
+            views_count: item.views_count || 0,
+            rating: item.rating || 0,
+            individual_address: item.individual_address || item.address,
+            location_privacy: item.privacy_level || item.location_privacy,
+          }));
+
+        // Преобразуем кластеры в нужный формат и фильтруем по радиусу
+        const clusters = (response.data.data.clusters || [])
+          .filter((cluster: any) => {
+            // Проверяем, что кластер в пределах радиуса поиска
+            const distance = Math.sqrt(
+              Math.pow((cluster.lat - debouncedBuyerLocation.latitude) * 111000, 2) +
+              Math.pow((cluster.lng - debouncedBuyerLocation.longitude) * 111000 * Math.cos(cluster.lat * Math.PI / 180), 2)
+            );
+            return distance <= debouncedFilters.radius;
+          })
+          .map((cluster: any) => ({
+            center: {
+              lat: cluster.lat,
+              lng: cluster.lng,
+            },
+            point_count: cluster.count,
+          }));
+        setServerClusters(clusters);
+        setListings(transformedListings);
+
+      } else if (useRadiusSearchAPI && response.data?.data) {
         // GIS API возвращает data.listings (может быть null)
         console.log('[Map] GIS API response:', {
           success: response.data.success,
@@ -437,6 +543,10 @@ const MapPage: React.FC = () => {
           hasListings: !!response.data.data.listings,
           listingsCount: response.data.data.listings?.length || 0,
         });
+
+        // Очищаем кластеры при переходе на детальный режим
+        setServerClusters([]);
+
         const apiListings = response.data.data.listings || [];
         let filteredListings = apiListings.filter(
           (item: any) => item.location && item.location.lat && item.location.lng
@@ -494,6 +604,11 @@ const MapPage: React.FC = () => {
           rating: item.rating || 0,
           individual_address: item.individual_address || item.address,
           location_privacy: item.privacy_level || item.location_privacy,
+          // Добавляем поля для витрин
+          item_type: item.item_type,
+          display_strategy: item.display_strategy,
+          storefront_id: item.storefront_id,
+          products: item.products, // Добавляем товары витрины
         }));
 
         console.log(
@@ -509,8 +624,12 @@ const MapPage: React.FC = () => {
           }))
         );
         setListings(transformedListings);
+        // Очищаем кластеры так как используем radius search
+        setServerClusters([]);
       } else if (response.data?.items) {
         // Обычный search API возвращает items
+        // Очищаем кластеры для обычного API
+        setServerClusters([]);
         const transformedListings = response.data.items
           .filter(
             (item: any) =>
@@ -534,6 +653,10 @@ const MapPage: React.FC = () => {
             rating: item.rating || 0,
             individual_address: item.individual_address || item.address,
             location_privacy: item.privacy_level || item.location_privacy,
+            // Добавляем поля для витрин (обычно items API их не возвращает, но на всякий случай)
+            item_type: item.item_type,
+            display_strategy: item.display_strategy,
+            storefront_id: item.storefront_id,
           }));
         console.log(
           '🗺️ Search API results:',
@@ -553,10 +676,14 @@ const MapPage: React.FC = () => {
       } else {
         console.warn('[Map] Unknown API response format:', response.data);
         setListings([]);
+        setServerClusters([]);
       }
     } catch (error) {
       console.error('Error loading listings:', error);
       toast.error(commonT('common.error'));
+      // Очищаем данные при ошибке
+      setListings([]);
+      setServerClusters([]);
     } finally {
       setIsLoading(false);
     }
@@ -565,6 +692,7 @@ const MapPage: React.FC = () => {
     debouncedBuyerLocation,
     districtBoundary,
     searchType,
+    Math.floor(viewState.zoom), // Округляем zoom для меньшего количества запросов
     commonT,
   ]);
 
@@ -659,6 +787,7 @@ const MapPage: React.FC = () => {
           ],
           longitude: listing.location.lng,
           latitude: listing.location.lat,
+          name: listing.title || listing.name || 'Untitled', // Используем name для передачи в InteractiveMap
           title: listing.title || listing.name || 'Untitled',
           type: 'listing' as const,
           imageUrl: listing.images?.[0],
@@ -667,7 +796,14 @@ const MapPage: React.FC = () => {
             currency: 'RSD',
             category: listing.category?.name || 'Unknown',
             icon: getCategoryIcon(listing.category?.name),
+            item_type: (listing as any).item_type,
+            display_strategy: (listing as any).display_strategy,
+            storefront_id: (listing as any).storefront_id,
           },
+          item_type: (listing as any).item_type,
+          display_strategy: (listing as any).display_strategy,
+          storefront_id: (listing as any).storefront_id,
+          products: (listing as any).products,
           data: {
             title: listing.title || listing.name || 'Untitled',
             price: listing.price,
@@ -748,18 +884,41 @@ const MapPage: React.FC = () => {
   // Обработка изменений фильтров и позиции покупателя
   // Извлекаем сложное выражение в отдельную переменную
   const categoriesString = JSON.stringify(debouncedFilters.categories);
+  const attributesString = JSON.stringify(debouncedFilters.attributes);
+
+  // Создаем стабильный ключ для отслеживания изменений viewport
+  const viewportKey = useMemo(() => {
+    const zoom = Math.floor(debouncedViewState.zoom);
+    const lat = Math.floor(debouncedViewState.latitude * 10) / 10; // Меньше точность = меньше обновлений
+    const lng = Math.floor(debouncedViewState.longitude * 10) / 10;
+    return `${zoom}-${lat}-${lng}`;
+  }, [debouncedViewState]);
+
+  // Отслеживаем переход между режимами кластеров и маркеров
+  useEffect(() => {
+    const currentZoom = Math.floor(viewState.zoom);
+    const prevZoom = previousZoomRef.current;
+
+    // Проверяем переход через границу zoom = 12
+    if ((prevZoom < 12 && currentZoom >= 12) || (prevZoom >= 12 && currentZoom < 12)) {
+      setIsMapTransitioning(true);
+      setTimeout(() => setIsMapTransitioning(false), 300); // Время для анимации
+    }
+
+    previousZoomRef.current = currentZoom;
+  }, [viewState.zoom]);
 
   useEffect(() => {
     loadListings();
   }, [
-    loadListings,
     categoriesString,
     debouncedFilters.priceFrom,
     debouncedFilters.priceTo,
     debouncedFilters.radius,
-    debouncedFilters.attributes,
+    attributesString,
     debouncedBuyerLocation.latitude,
     debouncedBuyerLocation.longitude,
+    viewportKey, // Используем стабильный ключ вместо отдельных значений
   ]);
 
   // Создание маркеров при изменении объявлений с фильтрацией по изохрону
@@ -937,6 +1096,16 @@ const MapPage: React.FC = () => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   }, []);
 
+  // Мемоизированный обработчик для изменения категорий
+  const handleCategoryChange = useCallback((value: number | number[]) => {
+    const categories = Array.isArray(value)
+      ? value
+      : value
+        ? [value]
+        : [];
+    handleFiltersChange({ categories });
+  }, [handleFiltersChange]);
+
   // Обработчик для быстрых фильтров
   const handleQuickFilterSelect = useCallback(
     (quickFilters: Record<string, any>) => {
@@ -959,10 +1128,27 @@ const MapPage: React.FC = () => {
     [handleFiltersChange]
   );
 
+  // Используем useRef для хранения предыдущих значений
+  const prevFiltersRef = useRef(filters);
+  const prevViewStateRef = useRef(debouncedViewState);
+  const prevSearchQueryRef = useRef(searchQuery);
+
   // Обновление URL при изменении фильтров, viewState или searchQuery
   useEffect(() => {
     if (isInitialized) {
-      updateURL(filters, debouncedViewState, searchQuery);
+      // Проверяем, действительно ли изменились значения
+      const filtersChanged = JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters);
+      const viewStateChanged = JSON.stringify(prevViewStateRef.current) !== JSON.stringify(debouncedViewState);
+      const searchQueryChanged = prevSearchQueryRef.current !== searchQuery;
+
+      if (filtersChanged || viewStateChanged || searchQueryChanged) {
+        updateURL(filters, debouncedViewState, searchQuery);
+
+        // Обновляем предыдущие значения
+        prevFiltersRef.current = filters;
+        prevViewStateRef.current = debouncedViewState;
+        prevSearchQueryRef.current = searchQuery;
+      }
     }
   }, [filters, debouncedViewState, searchQuery, updateURL, isInitialized]);
 
@@ -1030,7 +1216,9 @@ const MapPage: React.FC = () => {
       <div className="absolute inset-0">
         <InteractiveMap
           initialViewState={viewState}
+          currentZoom={viewState.zoom}
           markers={markers}
+          serverClusters={serverClusters}
           onMarkerClick={handleMarkerClick}
           onViewStateChange={handleViewStateChange}
           className="w-full h-full"
@@ -1234,14 +1422,7 @@ const MapPage: React.FC = () => {
                 </label>
                 <CategoryTreeSelector
                   value={filters.categories}
-                  onChange={(value) => {
-                    const categories = Array.isArray(value)
-                      ? value
-                      : value
-                        ? [value]
-                        : [];
-                    handleFiltersChange({ categories });
-                  }}
+                  onChange={handleCategoryChange}
                   multiple={true}
                   placeholder={t('filters.allCategories')}
                   showPath={true}

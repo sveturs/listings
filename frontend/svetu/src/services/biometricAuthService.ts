@@ -295,7 +295,9 @@ class BiometricAuthService {
   async isEnrolled(userId: string): Promise<boolean> {
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/auth/biometric/enrolled/${userId}`);
+      const response = await fetch(
+        `${apiUrl}/api/v1/auth/biometric/enrolled/${userId}`
+      );
       const { enrolled } = await response.json();
       return enrolled;
     } catch {
@@ -373,19 +375,24 @@ class BiometricAuthService {
     const response = credential.response as AuthenticatorAssertionResponse;
 
     const apiUrl = configManager.getApiUrl();
-    const verifyResponse = await fetch(`${apiUrl}/api/v1/auth/biometric/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        credentialId: this.arrayBufferToBase64(credential.rawId),
-        authenticatorData: this.arrayBufferToBase64(response.authenticatorData),
-        signature: this.arrayBufferToBase64(response.signature),
-        userHandle: response.userHandle
-          ? this.arrayBufferToBase64(response.userHandle)
-          : null,
-        clientDataJSON: this.arrayBufferToBase64(response.clientDataJSON),
-      }),
-    });
+    const verifyResponse = await fetch(
+      `${apiUrl}/api/v1/auth/biometric/verify`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          credentialId: this.arrayBufferToBase64(credential.rawId),
+          authenticatorData: this.arrayBufferToBase64(
+            response.authenticatorData
+          ),
+          signature: this.arrayBufferToBase64(response.signature),
+          userHandle: response.userHandle
+            ? this.arrayBufferToBase64(response.userHandle)
+            : null,
+          clientDataJSON: this.arrayBufferToBase64(response.clientDataJSON),
+        }),
+      }
+    );
 
     const { verified } = await verifyResponse.json();
     return verified;

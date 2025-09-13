@@ -7584,6 +7584,19 @@ definitions:
         example: ./docs
         type: string
     type: object
+  internal_proj_gis_handler.ClusterPoint:
+    properties:
+      count:
+        type: integer
+      ids:
+        items:
+          type: integer
+        type: array
+      lat:
+        type: number
+      lng:
+        type: number
+    type: object
   internal_proj_global_handler.UnifiedCategoryInfo:
     properties:
       id:
@@ -17912,6 +17925,59 @@ paths:
       summary: Get visible cities
       tags:
       - gis
+  /api/v1/gis/clusters:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает кластеризованные точки для отображения на карте
+      parameters:
+      - description: Уровень зума карты (1-20)
+        in: query
+        name: zoom
+        required: true
+        type: integer
+      - description: Границы видимой области (south,west,north,east)
+        in: query
+        name: bounds
+        required: true
+        type: string
+      - description: ID категории для фильтрации
+        in: query
+        name: category_id
+        type: integer
+      - description: Минимальная цена
+        in: query
+        name: min_price
+        type: number
+      - description: Максимальная цена
+        in: query
+        name: max_price
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Массив кластеров
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_gis_handler.ClusterPoint'
+                  type: array
+              type: object
+        "400":
+          description: Некорректные параметры
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Получить кластеры объявлений
+      tags:
+      - gis
   /api/v1/gis/districts:
     get:
       consumes:
@@ -18259,6 +18325,48 @@ paths:
       summary: Валидация геокодирования адреса
       tags:
       - gis
+  /api/v1/gis/heatmap:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает точки с весами для построения тепловой карты
+      parameters:
+      - description: Границы видимой области (south,west,north,east)
+        in: query
+        name: bounds
+        required: true
+        type: string
+      - default: density
+        description: Метрика для веса (price, views, density)
+        in: query
+        name: metric
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные для тепловой карты
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "400":
+          description: Некорректные параметры
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Получить данные для тепловой карты
+      tags:
+      - gis
   /api/v1/gis/listings/{id}/address:
     put:
       consumes:
@@ -18497,7 +18605,7 @@ paths:
         in: query
         name: radius_km
         type: number
-      - description: Количество результатов (по умолчанию 20)
+      - description: Количество результатов (по умолчанию 200, максимум 5000)
         in: query
         name: limit
         type: integer
@@ -18624,7 +18732,7 @@ paths:
         in: query
         name: max_price
         type: number
-      - description: 'Limit results (default: 50, max: 200)'
+      - description: 'Limit results (default: 1000, max: 5000)'
         in: query
         name: limit
         type: integer
@@ -18684,7 +18792,7 @@ paths:
         in: query
         name: max_price
         type: number
-      - description: 'Limit results (default: 50, max: 200)'
+      - description: 'Limit results (default: 1000, max: 5000)'
         in: query
         name: limit
         type: integer
@@ -18774,7 +18882,7 @@ paths:
         in: query
         name: sort_order
         type: string
-      - description: Количество результатов (по умолчанию 50, максимум 1000)
+      - description: Количество результатов (по умолчанию 1000, максимум 5000)
         in: query
         name: limit
         type: integer

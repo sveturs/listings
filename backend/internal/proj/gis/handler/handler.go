@@ -15,6 +15,7 @@ type Handler struct {
 	geocodingHandler       *GeocodingHandler
 	districtHandler        *DistrictHandler
 	advancedFiltersHandler *AdvancedFiltersHandler
+	clusterHandler         *ClusterHandler
 }
 
 // NewHandler создает новый обработчик GIS модуля
@@ -35,12 +36,14 @@ func NewHandler(db *sqlx.DB) *Handler {
 	geocodingHandler := NewGeocodingHandler(geocodingService)
 	districtHandler := NewDistrictHandler(districtService)
 	advancedFiltersHandler := NewAdvancedFiltersHandler(isochroneService, poiService, densityService)
+	clusterHandler := NewClusterHandler(db)
 
 	return &Handler{
 		spatialHandler:         spatialHandler,
 		geocodingHandler:       geocodingHandler,
 		districtHandler:        districtHandler,
 		advancedFiltersHandler: advancedFiltersHandler,
+		clusterHandler:         clusterHandler,
 	}
 }
 
@@ -61,6 +64,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Midd
 	gis.Get("/search/radius", h.spatialHandler.RadiusSearch)
 	gis.Get("/nearby", h.spatialHandler.GetNearbyListings)
 	gis.Get("/listings/:id/location", h.spatialHandler.GetListingLocation)
+
+	// ========== Маршруты кластеризации и визуализации ==========
+	gis.Get("/clusters", h.clusterHandler.GetClusters)
+	gis.Get("/heatmap", h.clusterHandler.GetHeatmap)
 
 	// ========== Публичные маршруты районов и муниципалитетов (Phase 3) ==========
 	// DISTRICT FUNCTIONALITY TEMPORARILY DISABLED

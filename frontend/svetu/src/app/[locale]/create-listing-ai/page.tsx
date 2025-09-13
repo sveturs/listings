@@ -175,7 +175,10 @@ export default function AIPoweredListingCreationPage() {
 
         // Используем абсолютный API URL
         const apiUrl = configManager.getApiUrl();
-        console.log('Making profile request to:', `${apiUrl}/api/v1/users/profile`);
+        console.log(
+          'Making profile request to:',
+          `${apiUrl}/api/v1/users/profile`
+        );
 
         const response = await fetch(`${apiUrl}/api/v1/users/profile`, {
           headers: {

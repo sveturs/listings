@@ -79,7 +79,9 @@ export default function PostExpressOfficeSelector({
       });
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/postexpress/offices?${params}`);
+      const response = await fetch(
+        `${apiUrl}/api/v1/postexpress/offices?${params}`
+      );
       const data = await response.json();
 
       if (data.success) {

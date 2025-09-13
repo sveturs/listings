@@ -3,6 +3,7 @@
 import React from 'react';
 import { Popup } from 'react-map-gl';
 import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import type { MapMarkerData } from '../types/gis';
 // import { getCategoryIcon } from '../../../utils/categoryIcons';
 import SafeImage from '../../SafeImage';
@@ -30,6 +31,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
 }) => {
   const t = useTranslations('common');
   const locale = useLocale();
+  const router = useRouter();
 
   // Парсим JSON данные
   const parsedData = React.useMemo(() => {
@@ -53,6 +55,18 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
       return marker.data || {};
     }
   }, [marker.data]);
+
+  // Добавляем логирование для витрин
+  React.useEffect(() => {
+    if (marker.item_type === 'storefront') {
+      console.log('🛍️ Storefront popup data:', {
+        item_type: marker.item_type,
+        products: marker.products,
+        title: marker.title,
+        marker: marker
+      });
+    }
+  }, [marker]);
 
   const parsedMetadata = React.useMemo(() => {
     try {
@@ -113,6 +127,15 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
     return categoryMap[category || ''] || '📦';
   };
 
+  // Обработчик клика на витрину
+  const handleStorefrontClick = () => {
+    if (marker.item_type === 'storefront' && marker.storefront_id) {
+      router.push(`/${locale}/storefronts/${marker.storefront_id}`);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <Popup
       longitude={marker.longitude}
@@ -127,7 +150,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
     >
       <div
         className="relative overflow-hidden cursor-pointer"
-        onClick={onClick}
+        onClick={handleStorefrontClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -317,15 +340,80 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
               </div>
             </div>
 
+            {/* Товары витрины (если это витрина) */}
+            {(() => {
+              console.log('🛍️ Checking products display:', {
+                item_type: marker.item_type,
+                has_products: !!marker.products,
+                products_length: marker.products?.length,
+                should_show: marker.item_type === 'storefront' && marker.products && marker.products.length > 0
+              });
+              return null;
+            })()}
+            {marker.item_type === 'storefront' && marker.products && marker.products.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-gray-700">Товары в витрине:</div>
+                <div className="space-y-1">
+                  {marker.products.map((product: any, index: number) => {
+                    console.log('🛍️ Rendering product:', product);
+                    return (
+                      <div key={product.id || index} className="flex items-center justify-between py-1">
+                        <div className="flex items-center gap-2 flex-1">
+                          {product.image && (
+                            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0">
+                              <SafeImage
+                                src={normalizeImageUrl(product.image)}
+                                alt={product.title}
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                                sizes="32px"
+                              />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs text-gray-700 truncate">{product.title}</div>
+                            {product.category && (
+                              <div className="text-xs text-gray-500">{product.category}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs font-medium text-gray-900 ml-2">
+                          {formatPrice(product.price)} RSD
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Кнопка показать все товары если их больше 5 */}
+                {marker.products && marker.products.length >= 5 && (
+                  <div className="mt-2 text-center">
+                    <button
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStorefrontClick();
+                      }}
+                    >
+                      Показать все товары витрины →
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Разделитель */}
             <div className="border-t border-gray-100 pt-3">
               {/* CTA с анимацией */}
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-600 font-medium">
-                  Нажмите для подробностей
+                  {marker.item_type === 'storefront' ? '🏪 Открыть витрину' : 'Нажмите для подробностей'}
                 </p>
                 <div className="flex items-center gap-1 text-primary">
-                  <span className="text-sm font-medium">Открыть</span>
+                  <span className="text-sm font-medium">
+                    {marker.item_type === 'storefront' ? 'Все товары' : 'Открыть'}
+                  </span>
                   <svg
                     className="w-4 h-4 animate-pulse"
                     fill="none"
