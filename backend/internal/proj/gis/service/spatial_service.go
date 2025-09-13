@@ -111,7 +111,7 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 	}
 
 	// Группируем товары витрин
-	groupedListings := s.groupStorefrontProducts(listings, &params)
+	groupedListings := s.groupStorefrontProducts(ctx, listings, &params)
 
 	// Формируем ответ
 	response := &types.SearchResponse{
@@ -632,7 +632,7 @@ func (s *SpatialService) calculateGeohash(point types.Point) string {
 }
 
 // groupStorefrontProducts группирует товары витрин по витринам с учетом фильтров
-func (s *SpatialService) groupStorefrontProducts(listings []types.GeoListing, filters *types.SearchParams) []types.GeoListing {
+func (s *SpatialService) groupStorefrontProducts(ctx context.Context, listings []types.GeoListing, filters *types.SearchParams) []types.GeoListing {
 	// Создаем карту для группировки витрин
 	storefrontMap := make(map[int]*types.GeoListing)
 	// Список обычных объявлений (не товары витрин)
@@ -687,7 +687,7 @@ func (s *SpatialService) groupStorefrontProducts(listings []types.GeoListing, fi
 					LEFT JOIN unified_geo ug ON ug.source_type = 'storefront' AND ug.source_id = s.id
 					WHERE s.id = $1`
 
-				err := s.db.QueryRowContext(context.Background(), query, storefrontID).Scan(
+				err := s.db.QueryRowContext(ctx, query, storefrontID).Scan(
 					&storefrontListing.ID,
 					&storefrontListing.Title,
 					&storefrontListing.Description,

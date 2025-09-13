@@ -157,7 +157,9 @@ func (h *ClusterHandler) GetClusters(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.clusterQueryError")
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close() // Ignore error on Close
+	}()
 
 	// Собираем результаты
 	clusters := []ClusterPoint{}
@@ -171,8 +173,11 @@ func (h *ClusterHandler) GetClusters(c *fiber.Ctx) error {
 		}
 
 		// Парсим IDs если они есть (только на больших зумах)
-		if idsJSON != nil && len(idsJSON) > 0 {
-			json.Unmarshal(idsJSON, &cluster.IDs)
+		if len(idsJSON) > 0 {
+			if err := json.Unmarshal(idsJSON, &cluster.IDs); err != nil {
+				// Log error but continue processing
+				continue
+			}
 		}
 
 		clusters = append(clusters, cluster)
@@ -259,7 +264,9 @@ func (h *ClusterHandler) GetHeatmap(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "gis.heatmapQueryError")
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close() // Ignore error on Close
+	}()
 
 	// Собираем результаты
 	heatmapData := []map[string]interface{}{}
