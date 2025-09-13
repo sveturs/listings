@@ -22,6 +22,10 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
+import MobileBottomSheet from '@/components/GIS/Mobile/MobileBottomSheet';
+import FloatingActionButtons from '@/components/GIS/Mobile/FloatingActionButtons';
+import MobileSearch from '@/components/GIS/Mobile/MobileSearch';
+import useMobileOptimization from '@/hooks/useMobileOptimization';
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
 import { SmartFilters } from '@/components/marketplace/SmartFilters';
@@ -87,6 +91,8 @@ const MapPage: React.FC = () => {
   const _router = useRouter();
   const searchParams = useSearchParams();
   const { search: geoSearch } = useGeoSearch();
+  const { isMobile: mobileOptimized, settings: optimizationSettings } =
+    useMobileOptimization();
 
   // Получаем язык из URL безопасно для SSR
   const [currentLang, setCurrentLang] = useState('sr');
@@ -169,8 +175,11 @@ const MapPage: React.FC = () => {
     latitude: initialViewState.latitude,
   });
 
-  // Дебаунсированная позиция покупателя
-  const debouncedBuyerLocation = useDebounce(buyerLocation, 300); // Быстрый отклик
+  // Дебаунсированная позиция покупателя (оптимизированная для мобильных)
+  const debouncedBuyerLocation = useDebounce(
+    buyerLocation,
+    optimizationSettings.mapDebounceTime
+  );
 
   // Состояние для серверных кластеров
   const [serverClusters, setServerClusters] = useState<any[]>([]);
@@ -190,11 +199,17 @@ const MapPage: React.FC = () => {
   const [isSearchFromUser, setIsSearchFromUser] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Создаем debounced версию фильтров для оптимизации запросов
-  const debouncedFilters = useDebounce(filters, 400);
+  // Создаем debounced версию фильтров для оптимизации запросов (адаптивно для мобильных)
+  const debouncedFilters = useDebounce(
+    filters,
+    optimizationSettings.mapDebounceTime
+  );
 
   // Создаем debounced версию viewState для оптимизации обновления URL и запросов
-  const debouncedViewState = useDebounce(viewState, 200); // Минимальная задержка
+  const debouncedViewState = useDebounce(
+    viewState,
+    Math.max(200, optimizationSettings.mapDebounceTime / 2)
+  );
 
   // Состояние загрузки
   const [isLoading, setIsLoading] = useState(false);
@@ -208,10 +223,13 @@ const MapPage: React.FC = () => {
 
   // Состояние мобильных элементов
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileResultsOpen, setIsMobileResultsOpen] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState<MapMarkerData | null>(
     null
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Состояние для текущего изохрона
   const [currentIsochrone, setCurrentIsochrone] =
@@ -304,17 +322,10 @@ const MapPage: React.FC = () => {
     []
   );
 
-  // Определение мобильного устройства
+  // Синхронизируем с оптимизированным детектором мобильных устройств
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    setIsMobile(mobileOptimized);
+  }, [mobileOptimized]);
 
   // Отмечаем, что компонент инициализирован после небольшой задержки
   // чтобы избежать перезаписи URL параметров при первой загрузке
@@ -842,10 +853,53 @@ const MapPage: React.FC = () => {
     []
   );
 
+  // Функция геолокации (должна быть определена перед handleAddressSearch)
+  const handleGeolocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setViewState({
+            ...viewState,
+            latitude,
+            longitude,
+            zoom: 15,
+          });
+          setBuyerLocation({ latitude, longitude });
+          toast.success(t('geolocation.success', 'Местоположение найдено'));
+        },
+        () => {
+          toast.error(
+            t('geolocation.error', 'Не удалось получить местоположение')
+          );
+        }
+      );
+    } else {
+      toast.error(
+        t('geolocation.notSupported', 'Геолокация не поддерживается')
+      );
+    }
+  }, [viewState, t]);
+
+  // Функция для добавления в недавние поиски (должна быть определена перед handleAddressSearch)
+  const addToRecentSearches = useCallback((query: string) => {
+    if (!query.trim()) return;
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((q) => q !== query);
+      return [query, ...filtered].slice(0, 5); // Храним максимум 5 последних поисков
+    });
+  }, []);
+
   // Поиск по адресу
   const handleAddressSearch = useCallback(
     async (query: string) => {
       if (!query.trim()) return;
+
+      // Специальная обработка для геолокации
+      if (query === 'geolocation') {
+        handleGeolocation();
+        return;
+      }
 
       setIsSearching(true);
       setIsSearchFromUser(true);
@@ -874,6 +928,9 @@ const MapPage: React.FC = () => {
             latitude: parseFloat(result.lat),
           });
 
+          // Добавляем в недавние поиски
+          addToRecentSearches(query);
+
           toast.success(t('search.found'));
         } else {
           toast.error(t('search.notFound'));
@@ -886,7 +943,7 @@ const MapPage: React.FC = () => {
         setIsSearchFromUser(false);
       }
     },
-    [geoSearch, viewState, t]
+    [geoSearch, viewState, t, handleGeolocation, addToRecentSearches]
   );
 
   // Обработка поиска
@@ -962,10 +1019,73 @@ const MapPage: React.FC = () => {
   }, [listings, createMarkers, walkingMode, currentIsochrone]);
 
   // Обработка клика по маркеру
-  const handleMarkerClick = useCallback((marker: MapMarkerData) => {
-    // Показываем расширенный popup вместо мгновенного перехода
-    setSelectedMarker(marker);
+  const handleMarkerClick = useCallback(
+    (marker: MapMarkerData) => {
+      // Показываем расширенный popup вместо мгновенного перехода
+      setSelectedMarker(marker);
+      // На мобильных также можем закрыть bottom sheet если нужно
+      if (isMobile) {
+        setIsMobileResultsOpen(false);
+      }
+    },
+    [isMobile]
+  );
+
+  // Функции для работы с недавними поисками
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
   }, []);
+
+  // Обработчики для мобильных действий
+  const handleMobileSearchOpen = useCallback(() => {
+    setIsMobileSearchOpen(true);
+  }, []);
+
+  const handleMobileSearchClose = useCallback(() => {
+    setIsMobileSearchOpen(false);
+  }, []);
+
+  const handleMobileFiltersOpen = useCallback(() => {
+    setIsMobileFiltersOpen(true);
+  }, []);
+
+  const handleMobileResultsToggle = useCallback(() => {
+    setIsMobileResultsOpen(!isMobileResultsOpen);
+  }, [isMobileResultsOpen]);
+
+  const handleShowAllMarkers = useCallback(() => {
+    if (markers.length === 0) return;
+
+    // Вычисляем границы всех маркеров
+    const lats = markers.map((m) => m.latitude);
+    const lngs = markers.map((m) => m.longitude);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+
+    // Рассчитываем zoom чтобы показать все маркеры
+    const latDiff = maxLat - minLat;
+    const lngDiff = maxLng - minLng;
+    const maxDiff = Math.max(latDiff, lngDiff);
+
+    let zoom = 10;
+    if (maxDiff < 0.01) zoom = 15;
+    else if (maxDiff < 0.05) zoom = 13;
+    else if (maxDiff < 0.1) zoom = 12;
+    else if (maxDiff < 0.5) zoom = 10;
+    else zoom = 8;
+
+    setViewState({
+      ...viewState,
+      latitude: centerLat,
+      longitude: centerLng,
+      zoom,
+    });
+  }, [markers, viewState]);
 
   // Обработчик результатов поиска по районам
   const handleDistrictSearchResults = useCallback((results: any[]) => {
@@ -1653,98 +1773,47 @@ const MapPage: React.FC = () => {
         )}
       </div>
 
-      {/* Мобильная кнопка меню */}
+      {/* Мобильные плавающие кнопки */}
       {isMobile && (
-        <button
-          onClick={() => setIsMobileFiltersOpen(true)}
-          className="btn btn-circle btn-primary fixed top-4 left-4 shadow-xl z-30"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
+        <FloatingActionButtons
+          onSearchClick={handleMobileSearchOpen}
+          onFiltersClick={handleMobileFiltersOpen}
+          onGeolocationClick={handleGeolocation}
+          onShowAllClick={handleMobileResultsToggle}
+          markersCount={markers.length}
+          isLoading={isLoading}
+          hasFilters={
+            filters.categories.length > 0 ||
+            filters.priceFrom > 0 ||
+            filters.priceTo > 0
+          }
+        />
       )}
 
-      {/* Плавающие кнопки быстрых действий */}
-      <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10">
-        {/* Геолокация */}
-        <button
-          onClick={() => {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(
-                (position) => {
-                  const { latitude, longitude } = position.coords;
-                  setViewState({
-                    ...viewState,
-                    latitude,
-                    longitude,
-                    zoom: 15,
-                  });
-                  setBuyerLocation({ latitude, longitude });
-                },
-                () => {
-                  toast.error(t('geolocation.error'));
-                }
-              );
-            }
-          }}
-          className="btn btn-circle btn-lg bg-base-100 shadow-xl hover:shadow-2xl"
-          title={t('geolocation.findMe')}
-        >
-          📍
-        </button>
-
-        {/* Показать все маркеры */}
-        {markers.length > 0 && (
+      {/* Плавающие кнопки быстрых действий - только для десктопа */}
+      {!isMobile && (
+        <div className="absolute bottom-6 right-6 flex flex-col gap-3 z-10">
+          {/* Геолокация */}
           <button
-            onClick={() => {
-              // Вычисляем границы всех маркеров
-              const lats = markers.map((m) => m.latitude);
-              const lngs = markers.map((m) => m.longitude);
-              const minLat = Math.min(...lats);
-              const maxLat = Math.max(...lats);
-              const minLng = Math.min(...lngs);
-              const maxLng = Math.max(...lngs);
-
-              const centerLat = (minLat + maxLat) / 2;
-              const centerLng = (minLng + maxLng) / 2;
-
-              // Рассчитываем zoom чтобы показать все маркеры
-              const latDiff = maxLat - minLat;
-              const lngDiff = maxLng - minLng;
-              const maxDiff = Math.max(latDiff, lngDiff);
-
-              let zoom = 10;
-              if (maxDiff < 0.01) zoom = 15;
-              else if (maxDiff < 0.05) zoom = 13;
-              else if (maxDiff < 0.1) zoom = 12;
-              else if (maxDiff < 0.5) zoom = 10;
-              else zoom = 8;
-
-              setViewState({
-                ...viewState,
-                latitude: centerLat,
-                longitude: centerLng,
-                zoom,
-              });
-            }}
+            onClick={handleGeolocation}
             className="btn btn-circle btn-lg bg-base-100 shadow-xl hover:shadow-2xl"
-            title={t('showAll')}
+            title={t('geolocation.findMe')}
           >
-            🔍
+            📍
           </button>
-        )}
-      </div>
+
+          {/* Показать все маркеры */}
+          {markers.length > 0 && (
+            <button
+              onClick={handleShowAllMarkers}
+              className="btn btn-circle btn-lg bg-base-100 shadow-xl hover:shadow-2xl"
+              title={t('showAll')}
+            >
+              🔍
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Индикатор загрузки */}
       {isLoading && (
@@ -1755,6 +1824,22 @@ const MapPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Мобильный поиск */}
+      <MobileSearch
+        isOpen={isMobileSearchOpen}
+        onClose={handleMobileSearchClose}
+        onSearch={handleAddressSearch}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isSearching={isSearching}
+        recentSearches={recentSearches}
+        onRecentSearchClick={(query) => {
+          setSearchQuery(query);
+          handleAddressSearch(query);
+        }}
+        onClearRecentSearches={clearRecentSearches}
+      />
 
       {/* Мобильный drawer с фильтрами */}
       <MobileFiltersDrawer
@@ -1806,6 +1891,15 @@ const MapPage: React.FC = () => {
             reset: t('actions.reset'),
           },
         }}
+      />
+
+      {/* Мобильная панель результатов */}
+      <MobileBottomSheet
+        isOpen={isMobileResultsOpen}
+        onClose={() => setIsMobileResultsOpen(false)}
+        markers={markers}
+        isLoading={isLoading}
+        onMarkerClick={handleMarkerClick}
       />
     </div>
   );

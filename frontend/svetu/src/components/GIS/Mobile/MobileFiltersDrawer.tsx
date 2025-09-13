@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchBar } from '@/components/SearchBar';
 import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
 // import { DistrictMapSelector } from '@/components/search';
@@ -101,6 +101,12 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
   });
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
+  // Swipe gesture state
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
   // Синхронизация с внешними фильтрами
   useEffect(() => {
     setLocalFilters({
@@ -158,6 +164,54 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
     localFilters.priceFrom > 0 ||
     localFilters.priceTo > 0;
 
+  // Swipe gesture handlers
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (!isOpen) return;
+      setStartX(e.touches[0].clientX);
+      setCurrentX(e.touches[0].clientX);
+      setIsDragging(true);
+    },
+    [isOpen]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging) return;
+      setCurrentX(e.touches[0].clientX);
+    },
+    [isDragging]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    const deltaX = startX - currentX;
+    const threshold = 100; // Minimum distance for closing
+
+    // Swipe left to close
+    if (deltaX > threshold) {
+      onClose();
+    }
+  }, [isDragging, startX, currentX, onClose]);
+
+  // Add touch event listeners
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    drawer.addEventListener('touchstart', handleTouchStart, { passive: false });
+    drawer.addEventListener('touchmove', handleTouchMove, { passive: false });
+    drawer.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      drawer.removeEventListener('touchstart', handleTouchStart);
+      drawer.removeEventListener('touchmove', handleTouchMove);
+      drawer.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   return (
     <>
       {/* Backdrop */}
@@ -171,9 +225,17 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
         className={`fixed inset-y-0 left-0 z-[9999] w-full max-w-sm bg-white shadow-xl transform transition-transform duration-300 md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{
+          transform: isDragging
+            ? `translateX(${Math.min(0, currentX - startX)}px)`
+            : isOpen
+              ? 'translateX(0)'
+              : 'translateX(-100%)',
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Заголовок */}
