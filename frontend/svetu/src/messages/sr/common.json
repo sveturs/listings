@@ -726,14 +726,10 @@
       "min_chars_hint": "Unesite najmanje 2 karaktera za pretragu adresa"
     }
   },
-  "location_picker": {
-    "search_address": "Pretražite adresu",
-    "select_on_map": "Izaberite na mapi",
-    "min_chars_hint": "Unesite najmanje 3 karaktera za pretragu",
-    "click_on_map": "Kliknite na mapu da izaberete lokaciju",
-    "location_selected": "Lokacija izabrana",
-    "address": "Adresa",
-    "city": "Grad",
-    "coordinates": "Koordinate"
-  }
+  "blog": "Blog",
+  "contacts": "Kontakti",
+  "copyright": "© 2024 SveTu. Sva prava zadržana.",
+  "termsOfUse": "Uslovi korišćenja",
+  "confidentiality": "Privatnost",
+  "cookie": "Cookie"
 }

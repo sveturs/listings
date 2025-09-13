@@ -506,7 +506,7 @@
     "copyLink": "Copy Link",
     "report": "Report"
   },
-  "priceHistory": {
+  "priceHistoryObj": {
     "failedToLoad": "Failed To Load",
     "error": "Error",
     "currentPrice": "Current Price",

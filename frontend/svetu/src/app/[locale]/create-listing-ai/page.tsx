@@ -255,7 +255,7 @@ export default function AIPoweredListingCreationPage() {
   ): { id: number; name: string; slug: string } => {
     // Проверка на undefined или пустую строку
     if (!categoryName) {
-      return { id: 1, name: 'General', slug: 'general' };
+      return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
     }
 
     const normalizedName = categoryName.toLowerCase().trim();
@@ -363,7 +363,7 @@ export default function AIPoweredListingCreationPage() {
       return { id: 1003, name: 'Automobili', slug: 'automotive' };
     }
 
-    return { id: 1, name: 'General', slug: 'general' };
+    return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
   };
 
   // Проверка, является ли категория автомобильной

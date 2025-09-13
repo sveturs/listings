@@ -506,7 +506,7 @@
     "copyLink": "Kopiraj link",
     "report": "Prijavi"
   },
-  "priceHistory": {
+  "priceHistoryObj": {
     "failedToLoad": "Neuspešno učitavanje",
     "error": "Greška",
     "currentPrice": "Trenutna cena",
