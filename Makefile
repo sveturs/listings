@@ -18,3 +18,18 @@ docs-clean:
 # This allows passing arguments to the deploy target
 %:
 	@:
+
+restart-backend:
+	docker-compose ps
+	docker-compose stop backend
+	docker-compose rm -f backend
+	docker-compose up -d --build backend
+	@echo "Run docker-compose logs -f backend"
+
+restart-frontend:
+	docker-compose ps
+	docker-compose stop frontend
+	docker-compose rm -f frontend
+	docker-compose up -d --build frontend
+	@echo "Run docker-compose logs -f frontend"
+

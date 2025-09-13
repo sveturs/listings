@@ -79,9 +79,25 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 			})
 		}
 
-		// Копируем заголовки, включая cookies
+		// Копируем заголовки, включая cookies, но исключаем несовместимые с HTTP/2
+		// HTTP/2 не поддерживает следующие заголовки: Connection, Upgrade (кроме WebSocket),
+		// Keep-Alive, Proxy-Connection, Transfer-Encoding, TE
 		c.Request().Header.VisitAll(func(key, value []byte) {
-			req.Header.Set(string(key), string(value))
+			headerName := string(key)
+			headerNameLower := strings.ToLower(headerName)
+			
+			// Пропускаем заголовки, несовместимые с HTTP/2
+			if headerNameLower == "connection" ||
+				headerNameLower == "keep-alive" ||
+				headerNameLower == "proxy-connection" ||
+				headerNameLower == "transfer-encoding" ||
+				headerNameLower == "te" ||
+				// Upgrade пропускаем только если это не WebSocket запрос
+				(headerNameLower == "upgrade" && !strings.Contains(strings.ToLower(string(value)), "websocket")) {
+				return
+			}
+			
+			req.Header.Set(headerName, string(value))
 		})
 
 		// Копируем cookies из заголовка Cookie если он есть
