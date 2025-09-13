@@ -218,7 +218,7 @@ interface ApiResponse<T> {
 // Translation Admin API Client
 import { tokenManager } from '@/utils/tokenManager';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Удалена неиспользуемая константа API_BASE_URL (используется configManager.getApiUrl())
 
 class TranslationAdminApi {
   private getBaseUrl(): string {

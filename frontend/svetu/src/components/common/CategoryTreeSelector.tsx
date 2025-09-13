@@ -148,18 +148,21 @@ export function CategoryTreeSelector({
   // Initialize selected categories from value prop
   useEffect(() => {
     if (value !== undefined) {
-      setSelectedCategories(prevCategories => {
+      setSelectedCategories((prevCategories) => {
         const newSet = Array.isArray(value)
-          ? new Set(value)
+          ? new Set<number>(value)
           : value
-            ? new Set([value])
-            : new Set();
+            ? new Set<number>([value])
+            : new Set<number>();
 
         // Проверяем, изменилось ли значение
         const currentArray = Array.from(prevCategories);
         const newArray = Array.from(newSet);
 
-        if (JSON.stringify(currentArray.sort()) !== JSON.stringify(newArray.sort())) {
+        if (
+          JSON.stringify(currentArray.sort()) !==
+          JSON.stringify(newArray.sort())
+        ) {
           return newSet;
         }
         return prevCategories;

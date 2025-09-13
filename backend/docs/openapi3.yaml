@@ -28423,6 +28423,11 @@ components:
           type: number
         privacy_level:
           type: string
+        products:
+          description: Товары витрины
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_gis_types.ProductInfo"
+          type: array
         rating:
           type: number
         status:
@@ -28672,6 +28677,19 @@ components:
             type: array
           type: array
         type:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.ProductInfo:
+      properties:
+        category:
+          type: string
+        id:
+          type: integer
+        image:
+          type: string
+        price:
+          type: number
+        title:
           type: string
       type: object
     backend_internal_proj_gis_types.RadiusFilter:

@@ -39,7 +39,7 @@ import { useGeoSearch } from '../hooks/useGeoSearch';
 import { useGeolocation } from '../hooks/useGeolocation';
 import MapPopup from './MapPopup';
 import MapControls from './MapControls';
-import MapboxClusterLayer from './MapboxClusterLayer';
+// Удален неиспользуемый импорт MapboxClusterLayer
 import MarkerHoverPopup from './MarkerHoverPopup';
 import ClusterHoverPopup from './ClusterHoverPopup';
 import MarkerClickPopup from './MarkerClickPopup';
@@ -439,104 +439,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const [isLoadingIsochrone, setIsLoadingIsochrone] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // Обработчики для hover
-  const handleMarkerHover = useCallback((marker: MapMarkerData) => {
-    // Отменяем таймер скрытия если он есть
-    if (hidePopupTimer.current) {
-      clearTimeout(hidePopupTimer.current);
-      hidePopupTimer.current = null;
-    }
-    setHoveredMarker(marker);
-    setHoveredCluster(null); // Очищаем hover кластера
-  }, []);
-
-  const handleMarkerLeave = useCallback(() => {
-    // Добавляем задержку перед скрытием popup
-    hidePopupTimer.current = setTimeout(() => {
-      setHoveredMarker(null);
-    }, 300); // 300ms задержка
-  }, []);
-
-  // Обработчики для hover кластеров
-  const handleClusterHover = useCallback(
-    async (clusterId: number, coordinates: [number, number]) => {
-      // Отменяем таймер скрытия если он есть
-      if (hidePopupTimer.current) {
-        clearTimeout(hidePopupTimer.current);
-        hidePopupTimer.current = null;
-      }
-
-      // Закрываем попап выбранного маркера при наведении на кластер
-      setInternalSelectedMarker(null);
-
-      if (!mapRef.current) return;
-
-      const map = mapRef.current.getMap();
-      const source = map.getSource('markers') as mapboxgl.GeoJSONSource;
-
-      if (source) {
-        try {
-          // Получаем маркеры из кластера - запрашиваем больше, чтобы показать все
-          const features = await new Promise<any[]>((resolve) => {
-            source.getClusterLeaves(clusterId, 100, 0, (err, features) => {
-              if (err) {
-                console.error('Error getting cluster leaves:', err);
-                resolve([]);
-              } else {
-                resolve(features || []);
-              }
-            });
-          });
-
-          // Преобразуем features в формат для отображения
-          const listings = features
-            .filter((f) => f.properties?.type === 'listing')
-            .map((f) => ({
-              id: f.properties.id,
-              title: f.properties.title || 'Без названия',
-              price:
-                f.properties.metadata?.price || f.properties.data?.price || 0,
-              imageUrl: f.properties.imageUrl,
-              category: f.properties.metadata?.category,
-              address: f.properties.data?.address,
-              locationPrivacy: f.properties.data?.locationPrivacy,
-            }))
-            .sort((a, b) => b.price - a.price); // Сортируем по цене (убывание)
-
-          // Получаем общее количество объявлений в кластере
-          const pointCount = await new Promise<number>((resolve) => {
-            source.getClusterExpansionZoom(clusterId, (_err, _zoom) => {
-              // Используем point_count из первого feature кластера
-              const clusterFeatures = map.querySourceFeatures('markers', {
-                filter: ['==', 'cluster_id', clusterId],
-              });
-              const count =
-                clusterFeatures[0]?.properties?.point_count || listings.length;
-              resolve(count);
-            });
-          });
-
-          setHoveredCluster({
-            clusterId,
-            coordinates,
-            listings,
-            totalCount: pointCount,
-          });
-          setHoveredMarker(null); // Очищаем hover маркера
-        } catch (error) {
-          console.error('Error handling cluster hover:', error);
-        }
-      }
-    },
-    []
-  );
-
-  const handleClusterLeave = useCallback(() => {
-    // Добавляем задержку перед скрытием popup кластера
-    hidePopupTimer.current = setTimeout(() => {
-      setHoveredCluster(null);
-    }, 300);
-  }, []);
+  // Обработчики для hover убраны как неиспользуемые
 
   // Состояние для отслеживания перетаскивания
   const [isDragging, setIsDragging] = useState(false);
@@ -730,112 +633,124 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
             opacity: isMapLoaded ? 1 : 0,
           }}
         >
-        {(currentZoom !== undefined ? currentZoom : viewState.zoom) < 11 && serverClusters.length > 0 ? (
-          // Отображаем серверные кластеры при малых зумах (zoom < 11)
-          <>
-            {serverClusters.map((cluster, index) => (
-              <Marker
-                key={`server-cluster-${index}`}
-                longitude={cluster.center.lng}
-                latitude={cluster.center.lat}
-                anchor="center"
-              >
-                <div
-                  className="flex items-center justify-center w-14 h-14 bg-primary text-primary-content rounded-full shadow-xl cursor-pointer hover:scale-110 transition-all duration-300 ease-out border-4 border-white animate-fadeIn"
-                  style={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    boxShadow: '0 10px 20px rgba(102, 126, 234, 0.4)'
-                  }}
-                  onClick={() => {
-                    // Увеличиваем зум при клике на кластер
-                    setViewState({
-                      ...viewState,
-                      longitude: cluster.center.lng,
-                      latitude: cluster.center.lat,
-                      zoom: Math.min(viewState.zoom + 2, 14),
-                    });
-                  }}
-                  onMouseEnter={() => {
-                    setHoveredCluster({
-                      clusterId: Date.now(),
-                      coordinates: [cluster.center.lng, cluster.center.lat],
-                      listings: [],
-                      totalCount: cluster.point_count,
-                    });
-                  }}
-                  onMouseLeave={() => setHoveredCluster(null)}
+          {(currentZoom !== undefined ? currentZoom : viewState.zoom) < 11 &&
+          serverClusters.length > 0 ? (
+            // Отображаем серверные кластеры при малых зумах (zoom < 11)
+            <>
+              {serverClusters.map((cluster, index) => (
+                <Marker
+                  key={`server-cluster-${index}`}
+                  longitude={cluster.center.lng}
+                  latitude={cluster.center.lat}
+                  anchor="center"
                 >
-                  <span className="font-bold text-lg">{cluster.point_count}</span>
-                </div>
-              </Marker>
-            ))}
-          </>
-        ) : (currentZoom !== undefined ? currentZoom : viewState.zoom) >= 11 && markers.length > 0 ? (
-          // Отображаем отдельные маркеры при больших зумах
-          markers.map((marker) => {
-            // Проверяем, является ли это витриной
-            const isStorefront = marker.metadata?.item_type === 'storefront' ||
-                               marker.metadata?.display_strategy === 'storefront_grouped';
-
-            // Извлекаем количество товаров из названия (если есть)
-            const titleMatch = marker.name?.match(/\((\d+)\s+товаров\)/);
-            const productCount = titleMatch ? parseInt(titleMatch[1]) : undefined;
-            const cleanTitle = marker.name?.replace(/\s*\(\d+\s+товаров\)/, '') || marker.name;
-
-            return (
-              <Marker
-                key={marker.id}
-                longitude={marker.longitude}
-                latitude={marker.latitude}
-                anchor="center"
-              >
-                {isStorefront ? (
-                  <StorefrontMarker
-                    title={cleanTitle}
-                    productCount={productCount}
-                    avgPrice={marker.metadata?.price}
-                    onClick={() => handleMarkerClick(marker)}
-                    onMouseEnter={() => {
-                      // Отменяем предыдущий таймер скрытия, если он есть
-                      if (hidePopupTimer.current) {
-                        clearTimeout(hidePopupTimer.current);
-                        hidePopupTimer.current = null;
-                      }
-                      setHoveredMarker(marker);
-                    }}
-                    onMouseLeave={() => {
-                      // Скрываем popup с задержкой
-                      hidePopupTimer.current = setTimeout(() => {
-                        setHoveredMarker(null);
-                      }, 200);
-                    }}
-                  />
-                ) : (
                   <div
-                    className="w-10 h-10 cursor-pointer transform hover:scale-110 transition-all duration-300 ease-out animate-fadeIn"
-                    onClick={() => handleMarkerClick(marker)}
+                    className="flex items-center justify-center w-14 h-14 bg-primary text-primary-content rounded-full shadow-xl cursor-pointer hover:scale-110 transition-all duration-300 ease-out border-4 border-white animate-fadeIn"
+                    style={{
+                      background:
+                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      boxShadow: '0 10px 20px rgba(102, 126, 234, 0.4)',
+                    }}
+                    onClick={() => {
+                      // Увеличиваем зум при клике на кластер
+                      setViewState({
+                        ...viewState,
+                        longitude: cluster.center.lng,
+                        latitude: cluster.center.lat,
+                        zoom: Math.min(viewState.zoom + 2, 14),
+                      });
+                    }}
                     onMouseEnter={() => {
-                      // Отменяем предыдущий таймер скрытия, если он есть
-                      if (hidePopupTimer.current) {
-                        clearTimeout(hidePopupTimer.current);
-                        hidePopupTimer.current = null;
-                      }
-                      setHoveredMarker(marker);
+                      setHoveredCluster({
+                        clusterId: Date.now(),
+                        coordinates: [cluster.center.lng, cluster.center.lat],
+                        listings: [],
+                        totalCount: cluster.point_count,
+                      });
                     }}
-                    onMouseLeave={() => {
-                      // Скрываем popup с задержкой, чтобы дать возможность навести на него курсор
-                      hidePopupTimer.current = setTimeout(() => {
-                        setHoveredMarker(null);
-                      }, 200); // Задержка перед скрытием
-                    }}
+                    onMouseLeave={() => setHoveredCluster(null)}
                   >
-                    <span className="text-3xl drop-shadow-md">{marker.metadata?.icon || '📍'}</span>
+                    <span className="font-bold text-lg">
+                      {cluster.point_count}
+                    </span>
                   </div>
-                )}
-              </Marker>
-            );
-          })
-        ) : null}
+                </Marker>
+              ))}
+            </>
+          ) : (currentZoom !== undefined ? currentZoom : viewState.zoom) >=
+              11 && markers.length > 0 ? (
+            // Отображаем отдельные маркеры при больших зумах
+            markers.map((marker) => {
+              // Проверяем, является ли это витриной
+              const isStorefront =
+                marker.metadata?.item_type === 'storefront' ||
+                marker.metadata?.display_strategy === 'storefront_grouped';
+
+              // Извлекаем количество товаров из названия (если есть)
+              const titleMatch = marker.title?.match(/\((\d+)\s+товаров\)/);
+              const productCount = titleMatch
+                ? parseInt(titleMatch[1])
+                : undefined;
+              const cleanTitle =
+                marker.title?.replace(/\s*\(\d+\s+товаров\)/, '') ||
+                marker.title;
+
+              return (
+                <Marker
+                  key={marker.id}
+                  longitude={marker.longitude}
+                  latitude={marker.latitude}
+                  anchor="center"
+                >
+                  {isStorefront ? (
+                    <StorefrontMarker
+                      title={cleanTitle}
+                      productCount={productCount}
+                      avgPrice={marker.metadata?.price}
+                      onClick={() => handleMarkerClick(marker)}
+                      onMouseEnter={() => {
+                        // Отменяем предыдущий таймер скрытия, если он есть
+                        if (hidePopupTimer.current) {
+                          clearTimeout(hidePopupTimer.current);
+                          hidePopupTimer.current = null;
+                        }
+                        setHoveredMarker(marker);
+                      }}
+                      onMouseLeave={() => {
+                        // Скрываем popup с задержкой
+                        hidePopupTimer.current = setTimeout(() => {
+                          setHoveredMarker(null);
+                        }, 200);
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 cursor-pointer transform hover:scale-110 transition-all duration-300 ease-out animate-fadeIn"
+                      onClick={() => handleMarkerClick(marker)}
+                      onMouseEnter={() => {
+                        // Отменяем предыдущий таймер скрытия, если он есть
+                        if (hidePopupTimer.current) {
+                          clearTimeout(hidePopupTimer.current);
+                          hidePopupTimer.current = null;
+                        }
+                        setHoveredMarker(marker);
+                      }}
+                      onMouseLeave={() => {
+                        // Скрываем popup с задержкой, чтобы дать возможность навести на него курсор
+                        hidePopupTimer.current = setTimeout(() => {
+                          setHoveredMarker(null);
+                        }, 200); // Задержка перед скрытием
+                      }}
+                    >
+                      <span className="text-3xl drop-shadow-md">
+                        {marker.metadata?.icon || '📍'}
+                      </span>
+                    </div>
+                  )}
+                </Marker>
+              );
+            })
+          ) : null}
         </div>
 
         {/* Всплывающее окно */}

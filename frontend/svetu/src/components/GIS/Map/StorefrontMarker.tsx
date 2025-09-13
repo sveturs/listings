@@ -15,7 +15,7 @@ const StorefrontMarker: React.FC<StorefrontMarkerProps> = ({
   avgPrice,
   onClick,
   onMouseEnter,
-  onMouseLeave
+  onMouseLeave,
 }) => {
   return (
     <div
@@ -36,9 +36,7 @@ const StorefrontMarker: React.FC<StorefrontMarkerProps> = ({
 
       {/* Количество товаров */}
       {productCount && productCount > 0 && (
-        <div
-          className="absolute -top-1 -right-1 bg-primary text-primary-content text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-md"
-        >
+        <div className="absolute -top-1 -right-1 bg-primary text-primary-content text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-md">
           {productCount}
         </div>
       )}

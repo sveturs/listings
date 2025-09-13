@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import { useTranslations } from 'next-intl';
 import { InteractiveMap } from '@/components/GIS';
 import { useGeoSearch } from '@/components/GIS/hooks/useGeoSearch';
@@ -170,9 +176,7 @@ const MapPage: React.FC = () => {
   const [serverClusters, setServerClusters] = useState<any[]>([]);
 
   // Состояние для отслеживания переходов
-  const [isMapTransitioning, setIsMapTransitioning] = useState(false);
   const previousZoomRef = useRef<number>(initialViewState.zoom);
-  const loadingRequestRef = useRef<AbortController | null>(null);
 
   // Данные и фильтры
   const [listings, setListings] = useState<ListingData[]>([]);
@@ -413,7 +417,6 @@ const MapPage: React.FC = () => {
         const fullUrl = `${endpoint}?${params}`;
         console.log('📡 Cluster API Request:', fullUrl);
         response = await apiClient.get(fullUrl);
-
       } else if (useRadiusSearchAPI) {
         // Для радиусного поиска используем GET с query параметрами
         const params = new URLSearchParams({
@@ -491,7 +494,10 @@ const MapPage: React.FC = () => {
         // Сохраняем только отдельные точки (listings)
         const apiListings = response.data.data.listings || [];
         const transformedListings = apiListings
-          .filter((item: any) => item.location && item.location.lat && item.location.lng)
+          .filter(
+            (item: any) =>
+              item.location && item.location.lat && item.location.lng
+          )
           .map((item: any) => ({
             id: item.id,
             name: item.title,
@@ -520,8 +526,16 @@ const MapPage: React.FC = () => {
           .filter((cluster: any) => {
             // Проверяем, что кластер в пределах радиуса поиска
             const distance = Math.sqrt(
-              Math.pow((cluster.lat - debouncedBuyerLocation.latitude) * 111000, 2) +
-              Math.pow((cluster.lng - debouncedBuyerLocation.longitude) * 111000 * Math.cos(cluster.lat * Math.PI / 180), 2)
+              Math.pow(
+                (cluster.lat - debouncedBuyerLocation.latitude) * 111000,
+                2
+              ) +
+                Math.pow(
+                  (cluster.lng - debouncedBuyerLocation.longitude) *
+                    111000 *
+                    Math.cos((cluster.lat * Math.PI) / 180),
+                  2
+                )
             );
             return distance <= debouncedFilters.radius;
           })
@@ -534,7 +548,6 @@ const MapPage: React.FC = () => {
           }));
         setServerClusters(clusters);
         setListings(transformedListings);
-
       } else if (useRadiusSearchAPI && response.data?.data) {
         // GIS API возвращает data.listings (может быть null)
         console.log('[Map] GIS API response:', {
@@ -692,7 +705,9 @@ const MapPage: React.FC = () => {
     debouncedBuyerLocation,
     districtBoundary,
     searchType,
-    Math.floor(viewState.zoom), // Округляем zoom для меньшего количества запросов
+    viewState.zoom,
+    viewState.latitude,
+    viewState.longitude,
     commonT,
   ]);
 
@@ -894,18 +909,9 @@ const MapPage: React.FC = () => {
     return `${zoom}-${lat}-${lng}`;
   }, [debouncedViewState]);
 
-  // Отслеживаем переход между режимами кластеров и маркеров
+  // Обновляем previousZoomRef при изменении zoom
   useEffect(() => {
-    const currentZoom = Math.floor(viewState.zoom);
-    const prevZoom = previousZoomRef.current;
-
-    // Проверяем переход через границу zoom = 12
-    if ((prevZoom < 12 && currentZoom >= 12) || (prevZoom >= 12 && currentZoom < 12)) {
-      setIsMapTransitioning(true);
-      setTimeout(() => setIsMapTransitioning(false), 300); // Время для анимации
-    }
-
-    previousZoomRef.current = currentZoom;
+    previousZoomRef.current = Math.floor(viewState.zoom);
   }, [viewState.zoom]);
 
   useEffect(() => {
@@ -918,7 +924,8 @@ const MapPage: React.FC = () => {
     attributesString,
     debouncedBuyerLocation.latitude,
     debouncedBuyerLocation.longitude,
-    viewportKey, // Используем стабильный ключ вместо отдельных значений
+    viewportKey,
+    loadListings, // Добавляем зависимость для функции
   ]);
 
   // Создание маркеров при изменении объявлений с фильтрацией по изохрону
@@ -1097,14 +1104,13 @@ const MapPage: React.FC = () => {
   }, []);
 
   // Мемоизированный обработчик для изменения категорий
-  const handleCategoryChange = useCallback((value: number | number[]) => {
-    const categories = Array.isArray(value)
-      ? value
-      : value
-        ? [value]
-        : [];
-    handleFiltersChange({ categories });
-  }, [handleFiltersChange]);
+  const handleCategoryChange = useCallback(
+    (value: number | number[]) => {
+      const categories = Array.isArray(value) ? value : value ? [value] : [];
+      handleFiltersChange({ categories });
+    },
+    [handleFiltersChange]
+  );
 
   // Обработчик для быстрых фильтров
   const handleQuickFilterSelect = useCallback(
@@ -1137,8 +1143,11 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     if (isInitialized) {
       // Проверяем, действительно ли изменились значения
-      const filtersChanged = JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters);
-      const viewStateChanged = JSON.stringify(prevViewStateRef.current) !== JSON.stringify(debouncedViewState);
+      const filtersChanged =
+        JSON.stringify(prevFiltersRef.current) !== JSON.stringify(filters);
+      const viewStateChanged =
+        JSON.stringify(prevViewStateRef.current) !==
+        JSON.stringify(debouncedViewState);
       const searchQueryChanged = prevSearchQueryRef.current !== searchQuery;
 
       if (filtersChanged || viewStateChanged || searchQueryChanged) {

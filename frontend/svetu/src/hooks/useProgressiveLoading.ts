@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { apiClient } from '@/lib/api/apiClient';
+import { apiClient } from '@/services/api-client';
 
 export type LoadingStage = 'initial' | 'basic' | 'detailed' | 'complete';
 
@@ -56,13 +56,13 @@ export function useProgressiveLoading(options: ProgressiveLoadingOptions = {}) {
 
         if (zoom < 12) {
           // На малых зумах загружаем только кластеры
-          const clustersResponse = await apiClient.get('/api/v1/gis/clusters', {
-            params: {
-              bounds: `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`,
-              zoom,
-            },
-            signal: controller.signal,
+          const params = new URLSearchParams({
+            bounds: `${bounds.south},${bounds.west},${bounds.north},${bounds.east}`,
+            zoom: zoom.toString(),
           });
+          const clustersResponse = await apiClient.get(
+            `/api/v1/gis/clusters?${params}`
+          );
 
           if (!controller.signal.aborted) {
             options.onStageComplete?.('basic', {
@@ -75,18 +75,17 @@ export function useProgressiveLoading(options: ProgressiveLoadingOptions = {}) {
         // Этап 2: Загрузка основных данных в видимой области
         setLoadingStage('detailed');
 
+        const detailParams = new URLSearchParams({
+          latitude: ((bounds.north + bounds.south) / 2).toString(),
+          longitude: ((bounds.east + bounds.west) / 2).toString(),
+          radius: calculateRadiusFromBounds(bounds).toString(),
+          limit: (zoom > 15 ? 500 : 200).toString(),
+          ...Object.fromEntries(
+            Object.entries(filters).map(([k, v]) => [k, String(v)])
+          ),
+        });
         const mainDataResponse = await apiClient.get(
-          '/api/v1/gis/search/radius',
-          {
-            params: {
-              latitude: (bounds.north + bounds.south) / 2,
-              longitude: (bounds.east + bounds.west) / 2,
-              radius: calculateRadiusFromBounds(bounds),
-              ...filters,
-              limit: zoom > 15 ? 500 : 200, // Больше маркеров на больших зумах
-            },
-            signal: controller.signal,
-          }
+          `/api/v1/gis/search/radius?${detailParams}`
         );
 
         if (!controller.signal.aborted) {
@@ -101,19 +100,18 @@ export function useProgressiveLoading(options: ProgressiveLoadingOptions = {}) {
         if (mainDataResponse.data.data?.hasMore && zoom > 14) {
           setLoadingStage('complete');
 
+          const completeParams = new URLSearchParams({
+            latitude: ((bounds.north + bounds.south) / 2).toString(),
+            longitude: ((bounds.east + bounds.west) / 2).toString(),
+            radius: calculateRadiusFromBounds(bounds).toString(),
+            offset: '200',
+            limit: '800',
+            ...Object.fromEntries(
+              Object.entries(filters).map(([k, v]) => [k, String(v)])
+            ),
+          });
           const remainingDataResponse = await apiClient.get(
-            '/api/v1/gis/search/radius',
-            {
-              params: {
-                latitude: (bounds.north + bounds.south) / 2,
-                longitude: (bounds.east + bounds.west) / 2,
-                radius: calculateRadiusFromBounds(bounds),
-                ...filters,
-                offset: 200,
-                limit: 800,
-              },
-              signal: controller.signal,
-            }
+            `/api/v1/gis/search/radius?${completeParams}`
           );
 
           if (!controller.signal.aborted) {

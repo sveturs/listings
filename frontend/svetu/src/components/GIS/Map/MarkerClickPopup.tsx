@@ -66,8 +66,12 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
 
   const handleViewDetails = () => {
     // Если это витрина, переходим на страницу витрины
-    if (marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') {
-      const storefrontId = marker.storefront_id || parsedMetadata?.storefront_id || marker.id;
+    if (
+      marker.item_type === 'storefront' ||
+      parsedMetadata?.item_type === 'storefront'
+    ) {
+      const storefrontId =
+        marker.storefront_id || parsedMetadata?.storefront_id || marker.id;
       router.push(`/storefronts/${storefrontId}`);
     } else if (parsedData?.id || marker.id) {
       router.push(`/marketplace/${parsedData?.id || marker.id}`);
@@ -237,96 +241,119 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
             )}
 
             {/* Товары витрины (если это витрина) */}
-            {(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') && marker.products && marker.products.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">Товары в витрине</h4>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {marker.products.map((product: any, index: number) => (
-                    <div key={product.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3 flex-1">
-                        {product.image && (
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm text-gray-900 truncate">{product.title}</div>
-                          {product.category && (
-                            <div className="text-xs text-gray-500">{product.category}</div>
+            {(marker.item_type === 'storefront' ||
+              parsedMetadata?.item_type === 'storefront') &&
+              marker.products &&
+              marker.products.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-900">
+                    Товары в витрине
+                  </h4>
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {marker.products.map((product: any, index: number) => (
+                      <div
+                        key={product.id || index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          {product.image && (
+                            <img
+                              src={product.image}
+                              alt={product.title}
+                              className="w-12 h-12 rounded object-cover"
+                            />
                           )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm text-gray-900 truncate">
+                              {product.title}
+                            </div>
+                            {product.category && (
+                              <div className="text-xs text-gray-500">
+                                {product.category}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold text-primary ml-2">
+                          {formatPrice(product.price)} ₽
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-primary ml-2">
-                        {formatPrice(product.price)} ₽
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {parsedData?.products_count && parsedData.products_count > 5 && (
-                  <div className="text-xs text-gray-500 text-center">
-                    и еще {parsedData.products_count - 5} товаров...
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Атрибуты и характеристики */}
-            {!(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') && (parsedData?.attributes || parsedMetadata || parsedData) && (
-              <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">
-                  {t('characteristics')}
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {/* Показываем атрибуты из data.attributes или основные поля */}
-                  {parsedData?.attributes
-                    ? Object.entries(parsedData.attributes)
-                        .slice(0, 4)
-                        .map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-medium">{String(value)}</span>
-                          </div>
-                        ))
-                    : // Если нет attributes, показываем основные поля
-                      [
-                        (parsedMetadata?.category || parsedData?.category) && [
-                          t('category'),
-                          parsedMetadata?.category || parsedData?.category,
-                        ],
-                        parsedData?.area && [
-                          t('area'),
-                          `${parsedData.area} м²`,
-                        ],
-                        parsedData?.rooms && [t('rooms'), parsedData.rooms],
-                        parsedData?.condition && [
-                          t('condition'),
-                          parsedData.condition,
-                        ],
-                        parsedData?.type && [t('type'), parsedData.type],
-                        parsedData?.year && [t('year'), parsedData.year],
-                      ]
-                        .filter(Boolean)
-                        .slice(0, 4)
-                        .map(([key, value], index) => (
-                          <div key={index} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-medium">{String(value)}</span>
-                          </div>
-                        ))}
-                  {/* Показываем "еще X" если есть больше атрибутов */}
-                  {parsedData?.attributes &&
-                    Object.keys(parsedData.attributes).length > 4 && (
-                      <div className="col-span-2 text-center text-xs text-gray-500">
-                        {t('andMore', {
-                          count: Object.keys(parsedData.attributes).length - 4,
-                        })}
+                  {parsedData?.products_count &&
+                    parsedData.products_count > 5 && (
+                      <div className="text-xs text-gray-500 text-center">
+                        и еще {parsedData.products_count - 5} товаров...
                       </div>
                     )}
                 </div>
-              </div>
-            )}
+              )}
+
+            {/* Атрибуты и характеристики */}
+            {!(
+              marker.item_type === 'storefront' ||
+              parsedMetadata?.item_type === 'storefront'
+            ) &&
+              (parsedData?.attributes || parsedMetadata || parsedData) && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-900">
+                    {t('characteristics')}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {/* Показываем атрибуты из data.attributes или основные поля */}
+                    {parsedData?.attributes
+                      ? Object.entries(parsedData.attributes)
+                          .slice(0, 4)
+                          .map(([key, value]) => (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-medium">
+                                {String(value)}
+                              </span>
+                            </div>
+                          ))
+                      : // Если нет attributes, показываем основные поля
+                        [
+                          (parsedMetadata?.category ||
+                            parsedData?.category) && [
+                            t('category'),
+                            parsedMetadata?.category || parsedData?.category,
+                          ],
+                          parsedData?.area && [
+                            t('area'),
+                            `${parsedData.area} м²`,
+                          ],
+                          parsedData?.rooms && [t('rooms'), parsedData.rooms],
+                          parsedData?.condition && [
+                            t('condition'),
+                            parsedData.condition,
+                          ],
+                          parsedData?.type && [t('type'), parsedData.type],
+                          parsedData?.year && [t('year'), parsedData.year],
+                        ]
+                          .filter(Boolean)
+                          .slice(0, 4)
+                          .map(([key, value], index) => (
+                            <div key={index} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-medium">
+                                {String(value)}
+                              </span>
+                            </div>
+                          ))}
+                    {/* Показываем "еще X" если есть больше атрибутов */}
+                    {parsedData?.attributes &&
+                      Object.keys(parsedData.attributes).length > 4 && (
+                        <div className="col-span-2 text-center text-xs text-gray-500">
+                          {t('andMore', {
+                            count:
+                              Object.keys(parsedData.attributes).length - 4,
+                          })}
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
 
             {/* Дополнительная информация */}
             <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
@@ -407,7 +434,8 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   onClick={handleViewDetails}
                   className="flex-1 btn btn-primary btn-sm"
                 >
-                  {(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront')
+                  {marker.item_type === 'storefront' ||
+                  parsedMetadata?.item_type === 'storefront'
                     ? '🏪 Открыть витрину'
                     : t('viewDetails')}
                 </button>
@@ -418,7 +446,10 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                   >
                     🛒 {t('addToCart')}
                   </button>
-                ) : !(marker.item_type === 'storefront' || parsedMetadata?.item_type === 'storefront') ? (
+                ) : !(
+                    marker.item_type === 'storefront' ||
+                    parsedMetadata?.item_type === 'storefront'
+                  ) ? (
                   <button
                     onClick={() => {
                       // TODO: Открыть чат с продавцом

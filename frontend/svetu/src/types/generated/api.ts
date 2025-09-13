@@ -36089,6 +36089,8 @@ export interface components {
       location?: components['schemas']['backend_internal_proj_gis_types.Point'];
       price?: number;
       privacy_level?: string;
+      /** @description Товары витрины */
+      products?: components['schemas']['backend_internal_proj_gis_types.ProductInfo'][];
       rating?: number;
       status?: string;
       storefront_id?: number;
@@ -36198,6 +36200,13 @@ export interface components {
     'backend_internal_proj_gis_types.Polygon': {
       coordinates?: number[][][];
       type?: string;
+    };
+    'backend_internal_proj_gis_types.ProductInfo': {
+      category?: string;
+      id?: number;
+      image?: string;
+      price?: number;
+      title?: string;
     };
     'backend_internal_proj_gis_types.RadiusFilter': {
       center_lat: number;

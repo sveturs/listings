@@ -41162,6 +41162,13 @@ const docTemplate = `{
                 "privacy_level": {
                     "type": "string"
                 },
+                "products": {
+                    "description": "Товары витрины",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_gis_types.ProductInfo"
+                    }
+                },
                 "rating": {
                     "type": "number"
                 },
@@ -41519,6 +41526,26 @@ const docTemplate = `{
                     }
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.ProductInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "title": {
                     "type": "string"
                 }
             }

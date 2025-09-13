@@ -2,8 +2,7 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 import configManager from '@/config';
 
-// Базовый URL для backend API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Удалена неиспользуемая константа API_BASE_URL (используется configManager.getApiUrl())
 
 function getCurrentLocale(): string {
   // Проверяем URL для получения локали (Next.js i18n)
