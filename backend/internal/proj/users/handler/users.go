@@ -138,8 +138,6 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	})
 }
 
-
-
 // GetProfileByID returns public user profile
 // @Summary Get public user profile
 // @Description Returns public information about user by ID

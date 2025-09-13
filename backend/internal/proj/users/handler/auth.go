@@ -7,6 +7,7 @@ import (
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
+	_ "backend/pkg/utils" // For swagger documentation
 )
 
 type AuthHandler struct {
