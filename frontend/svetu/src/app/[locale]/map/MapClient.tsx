@@ -247,8 +247,8 @@ const MapPage: React.FC = () => {
   // Включить поиск по районам
   const _enableDistrictSearch = searchType === 'district';
 
-  // Состояние для сворачивания левой панели
-  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+  // Состояние для сворачивания левой панели (на мобильных по умолчанию свернута)
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(isMobile);
 
   // Состояние для раскрытия секции фильтров
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
@@ -1377,10 +1377,11 @@ const MapPage: React.FC = () => {
         />
       </div>
 
-      {/* Левая панель - поиск и категории */}
-      <div
-        className={`absolute left-0 top-0 bottom-0 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'} bg-base-100 shadow-2xl flex flex-col z-20 transition-all duration-300 ${isMobile ? 'hidden' : ''}`}
-      >
+      {/* Левая панель - поиск и категории (только для десктопа) */}
+      {!isMobile && (
+        <div
+          className={`absolute left-0 top-0 bottom-0 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'} bg-base-100 shadow-2xl flex flex-col z-20 transition-all duration-300`}
+        >
         {/* Кнопка сворачивания/разворачивания */}
         <button
           onClick={() => setIsLeftPanelCollapsed(!isLeftPanelCollapsed)}
@@ -1772,6 +1773,7 @@ const MapPage: React.FC = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* Мобильные плавающие кнопки */}
       {isMobile && (
