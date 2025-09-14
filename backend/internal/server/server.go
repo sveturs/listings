@@ -357,11 +357,12 @@ func (s *Server) setupMiddleware() {
 	s.app.Use(s.middleware.SecurityHeaders())
 
 	// Auth Proxy middleware - должен быть рано для перехвата /api/v1/auth/* запросов
-	authProxy := middleware.NewAuthProxyMiddleware()
-	s.app.Use(authProxy.ProxyToAuthService())
-
+	// CORS должен быть первым для обработки preflight запросов
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
+
+	authProxy := middleware.NewAuthProxyMiddleware()
+	s.app.Use(authProxy.ProxyToAuthService())
 
 	// Middleware для определения языка из запроса
 	s.app.Use(s.middleware.LocaleMiddleware())

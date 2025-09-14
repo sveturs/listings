@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -138,6 +139,16 @@ func (c *Client) GetOAuthURL(provider string) string {
 	return fmt.Sprintf("%s/api/v1/auth/oauth/%s", c.baseURL, provider)
 }
 
+// isWebSocketUpgrade проверяет, является ли Upgrade заголовок WebSocket запросом
+func isWebSocketUpgrade(values []string) bool {
+	for _, value := range values {
+		if strings.ToLower(value) == "websocket" {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Client) ProxyRequest(w http.ResponseWriter, r *http.Request, path string) error {
 	targetURL := c.baseURL + path
 
@@ -146,7 +157,21 @@ func (c *Client) ProxyRequest(w http.ResponseWriter, r *http.Request, path strin
 		return err
 	}
 
+	// Копируем заголовки, исключая несовместимые с HTTP/2
 	for key, values := range r.Header {
+		keyLower := strings.ToLower(key)
+
+		// Пропускаем заголовки, несовместимые с HTTP/2
+		if keyLower == "connection" ||
+			keyLower == "keep-alive" ||
+			keyLower == "proxy-connection" ||
+			keyLower == "transfer-encoding" ||
+			keyLower == "te" ||
+			// Upgrade пропускаем только если это не WebSocket
+			(keyLower == "upgrade" && !isWebSocketUpgrade(values)) {
+			continue
+		}
+
 		for _, value := range values {
 			proxyReq.Header.Add(key, value)
 		}

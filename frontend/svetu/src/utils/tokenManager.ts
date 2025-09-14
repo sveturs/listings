@@ -19,122 +19,93 @@ class TokenManager {
   constructor(config: TokenManagerConfig = {}) {
     this.config = config;
 
-    // Восстанавливаем токен из sessionStorage при инициализации
+    // Восстанавливаем токен из localStorage при инициализации
     if (typeof window !== 'undefined') {
-      const savedToken = sessionStorage.getItem('svetu_access_token');
+      const savedToken = localStorage.getItem('svetu_access_token');
 
       if (savedToken) {
-        // Check if it's an HS256 token and reject it
-        try {
-          const headerB64 = savedToken.split('.')[0];
-          if (headerB64) {
-            const headerJson = atob(
-              headerB64.replace(/-/g, '+').replace(/_/g, '/')
-            );
-            const header = JSON.parse(headerJson);
-
-            if (header.alg === 'HS256') {
-              console.error(
-                '[TokenManager] Constructor - found old HS256 token, removing'
-              );
-              sessionStorage.removeItem('svetu_access_token');
-              // Also clear any other auth-related storage
-              localStorage.removeItem('access_token');
-              localStorage.removeItem('refresh_token');
-              return;
-            }
-          }
-        } catch (e) {
-          console.warn(
-            '[TokenManager] Constructor - could not parse token, removing',
-            e
-          );
-          sessionStorage.removeItem('svetu_access_token');
-          return;
-        }
-
         this.accessToken = savedToken;
         // Проверяем, не истек ли токен
-        if (!this.isTokenExpired()) {
-          console.log(
-            '[TokenManager] Constructor - RS256 token is valid, scheduling refresh'
-          );
+        const isExpired = this.isTokenExpired();
+
+        if (!isExpired) {
           this.scheduleTokenRefresh();
         } else {
-          console.log(
-            '[TokenManager] Constructor - RS256 token is expired, removing'
-          );
-          sessionStorage.removeItem('svetu_access_token');
+          localStorage.removeItem('svetu_access_token');
           this.accessToken = null;
         }
-      }
-
-      // Также загружаем refresh токен если есть
-      const savedRefreshToken = sessionStorage.getItem('svetu_refresh_token');
-      if (savedRefreshToken) {
-        console.log('[TokenManager] Constructor - loaded refresh token');
       }
     }
   }
 
   /**
-   * Сохраняет refresh token в sessionStorage
+   * Инициализация токенов из localStorage после загрузки страницы
+   * Этот метод нужен, так как конструктор может вызываться на сервере (SSR)
+   */
+  initializeFromStorage() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Если токен уже загружен, не перезагружаем
+    if (this.accessToken) {
+      return;
+    }
+
+    const savedToken = localStorage.getItem('svetu_access_token');
+
+    if (savedToken) {
+      this.accessToken = savedToken;
+
+      // Проверяем, не истек ли токен
+      const isExpired = this.isTokenExpired();
+
+      if (!isExpired) {
+        this.scheduleTokenRefresh();
+      } else {
+        localStorage.removeItem('svetu_access_token');
+        this.accessToken = null;
+      }
+    }
+  }
+
+  /**
+   * Сохраняет refresh token в localStorage
    */
   setRefreshToken(token: string | null) {
     if (typeof window !== 'undefined') {
       if (token) {
-        sessionStorage.setItem('svetu_refresh_token', token);
+        localStorage.setItem('svetu_refresh_token', token);
         console.log('[TokenManager] Refresh token saved');
       } else {
-        sessionStorage.removeItem('svetu_refresh_token');
+        localStorage.removeItem('svetu_refresh_token');
         console.log('[TokenManager] Refresh token cleared');
       }
     }
   }
 
   /**
-   * Получает refresh token из sessionStorage
+   * Получает refresh token из localStorage
    */
   getRefreshToken(): string | null {
     if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('svetu_refresh_token');
+      return localStorage.getItem('svetu_refresh_token');
     }
     return null;
   }
 
   /**
-   * Сохраняет access token в памяти и sessionStorage
+   * Сохраняет access token в памяти и localStorage
    */
   setAccessToken(token: string | null) {
-    // Check if token is HS256 and reject it
-    if (token) {
-      try {
-        const headerB64 = token.split('.')[0];
-        const headerJson = atob(
-          headerB64.replace(/-/g, '+').replace(/_/g, '/')
-        );
-        const header = JSON.parse(headerJson);
-
-        if (header.alg === 'HS256') {
-          console.error(
-            '[TokenManager] Rejecting HS256 token - only RS256 tokens are supported'
-          );
-          this.clearTokens();
-          return;
-        }
-      } catch (e) {
-        console.error('[TokenManager] Failed to parse token header:', e);
-      }
-    }
-
     this.accessToken = token;
 
-    // Сохраняем в sessionStorage для сохранения между перезагрузками
+    // Сохраняем в localStorage для сохранения между перезагрузками
     if (typeof window !== 'undefined') {
       if (token) {
-        sessionStorage.setItem('svetu_access_token', token);
+        localStorage.setItem('svetu_access_token', token);
       } else {
-        sessionStorage.removeItem('svetu_access_token');
+        localStorage.removeItem('svetu_access_token');
       }
     }
 
@@ -188,8 +159,8 @@ class TokenManager {
   clearTokens() {
     this.accessToken = null;
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('svetu_access_token');
-      sessionStorage.removeItem('svetu_refresh_token');
+      localStorage.removeItem('svetu_access_token');
+      localStorage.removeItem('svetu_refresh_token');
     }
     this.clearRefreshTimer();
     this.refreshAttempts = 0;
@@ -433,15 +404,21 @@ class TokenManager {
    */
   isTokenExpired(token?: string): boolean {
     const tokenToCheck = token || this.accessToken;
-    if (!tokenToCheck) return true;
+    if (!tokenToCheck) {
+      return true;
+    }
 
     try {
       const payload = this.decodeToken(tokenToCheck);
-      if (!payload || !payload.exp) return true;
+      if (!payload || !payload.exp) {
+        return true;
+      }
 
       const now = Date.now() / 1000;
-      return payload.exp < now;
-    } catch {
+      const isExpired = payload.exp < now;
+      return isExpired;
+    } catch (error) {
+      console.log(error);
       return true;
     }
   }

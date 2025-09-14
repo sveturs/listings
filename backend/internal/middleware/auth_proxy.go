@@ -55,10 +55,13 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		}
 
 		// Логируем все проксируемые запросы для отладки
+		queryString := string(c.Request().URI().QueryString())
 		logger.Info().
 			Str("path", path).
 			Str("method", c.Method()).
-			Msg("Proxying request to Auth Service")
+			Str("queryString", queryString).
+			Str("baseURL", m.baseURL).
+			Msg("[AUTH_PROXY] === START PROXYING REQUEST TO AUTH SERVICE ===")
 
 		// Создаем новый HTTP запрос к Auth Service
 		targetURL := m.baseURL + path
@@ -67,6 +70,11 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		if c.Request().URI().QueryString() != nil {
 			targetURL += "?" + string(c.Request().URI().QueryString())
 		}
+
+		logger.Info().
+			Str("targetURL", targetURL).
+			Int("targetURLLength", len(targetURL)).
+			Msg("[AUTH_PROXY] Target URL constructed")
 
 		// Получаем тело запроса
 		body := c.Body()
@@ -79,9 +87,25 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 			})
 		}
 
-		// Копируем заголовки, включая cookies
+		// Копируем заголовки, включая cookies, но исключаем несовместимые с HTTP/2
+		// HTTP/2 не поддерживает следующие заголовки: Connection, Upgrade (кроме WebSocket),
+		// Keep-Alive, Proxy-Connection, Transfer-Encoding, TE
 		c.Request().Header.VisitAll(func(key, value []byte) {
-			req.Header.Set(string(key), string(value))
+			headerName := string(key)
+			headerNameLower := strings.ToLower(headerName)
+
+			// Пропускаем заголовки, несовместимые с HTTP/2
+			if headerNameLower == "connection" ||
+				headerNameLower == "keep-alive" ||
+				headerNameLower == "proxy-connection" ||
+				headerNameLower == "transfer-encoding" ||
+				headerNameLower == "te" ||
+				// Upgrade пропускаем только если это не WebSocket запрос
+				(headerNameLower == "upgrade" && !strings.Contains(strings.ToLower(string(value)), "websocket")) {
+				return
+			}
+
+			req.Header.Set(headerName, string(value))
 		})
 
 		// Копируем cookies из заголовка Cookie если он есть
@@ -113,10 +137,17 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 			})
 		}
 
-		// Копируем заголовки ответа
+		// Копируем заголовки ответа, но НЕ перезаписываем CORS заголовки
 		for key, values := range resp.Header {
+			keyLower := strings.ToLower(key)
+
+			// Пропускаем CORS заголовки - они должны устанавливаться основным приложением
+			if strings.HasPrefix(keyLower, "access-control-") {
+				continue
+			}
+
 			// Специальная обработка для Set-Cookie
-			if strings.ToLower(key) == "set-cookie" {
+			if keyLower == "set-cookie" {
 				// Set-Cookie заголовки должны обрабатываться отдельно для каждого cookie
 				for _, cookie := range values {
 					c.Response().Header.Add("Set-Cookie", cookie)
@@ -132,11 +163,22 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		// Для OAuth редиректов - возвращаем Location напрямую
 		if resp.StatusCode == 302 || resp.StatusCode == 301 || resp.StatusCode == 303 || resp.StatusCode == 307 || resp.StatusCode == 308 {
 			if location := resp.Header.Get("Location"); location != "" {
+				logger.Info().
+					Int("statusCode", resp.StatusCode).
+					Str("location", location).
+					Int("locationLength", len(location)).
+					Msg("[AUTH_PROXY] Redirect response from Auth Service")
+
 				// Возвращаем редирект напрямую для браузера
 				// Fiber.Redirect должен работать для любых URL
 				return c.Status(resp.StatusCode).Redirect(location)
 			}
 		}
+
+		logger.Info().
+			Int("statusCode", resp.StatusCode).
+			Int("responseBodyLength", len(respBody)).
+			Msg("[AUTH_PROXY] === END PROXYING REQUEST TO AUTH SERVICE ===")
 
 		// Возвращаем ответ
 		c.Status(resp.StatusCode)
@@ -163,13 +205,31 @@ func (m *AuthProxyMiddleware) ValidateTokenWithAuthService() fiber.Handler {
 			})
 		}
 
+		// Временное логирование токена для отладки - ПОЛНЫЙ ТОКЕН, НЕ БОИМСЯ!
+		logger.Info().
+			Str("path", c.Path()).
+			Int("token_length", len(token)).
+			Str("full_token", token).
+			Msg("[AuthProxy] Validating token")
+
 		// Валидируем токен через Auth Service
 		validateResp, err := m.authClient.ValidateToken(c.Context(), token)
 		if err != nil {
+			logger.Error().
+				Err(err).
+				Str("path", c.Path()).
+				Str("token", token).
+				Msg("[AuthProxy] Token validation failed")
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "invalid token",
 			})
 		}
+
+		logger.Info().
+			Int("userID", int(validateResp.UserID)).
+			Str("email", validateResp.Email).
+			Bool("valid", validateResp.Valid).
+			Msg("[AuthProxy] Token validated successfully")
 
 		if !validateResp.Valid {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

@@ -4,30 +4,30 @@ services:
       context: ./docker/postgres-postgis
       dockerfile: Dockerfile
     environment:
-      POSTGRES_USER: ${DATABASE_USER:-postgres}
-      POSTGRES_PASSWORD: ${DATABASE_PASS:-password}
-      POSTGRES_DB: ${DATABASE_DBNAME:-svetu_db}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
+      POSTGRES_DB: ${DATABASE_DBNAME}
     ports:
-      - "${DATABASE_PORT:-5432}:5432"
+      - "${DATABASE_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_preprod:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER:-postgres}"]
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
     stop_grace_period: 10s
     stop_signal: SIGINT
     networks:
-      - svetu_network
+      - svetu_network_preprod
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
-      - redis_data:/data
+      - redis_data_preprod:/data
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -35,7 +35,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - svetu_network
+      - svetu_network_preprod
     restart: unless-stopped
 
   opensearch:
@@ -50,73 +50,32 @@ services:
         soft: -1
         hard: -1
     volumes:
-      - opensearch-data:/usr/share/opensearch/data
+      - opensearch-data_preprod:/usr/share/opensearch/data
     ports:
-      - "${OPENSEARCH_PORT:-9200}:9200"
+      - "${OPENSEARCH_PORT}:9200"
     networks:
-      - svetu_network
+      - svetu_network_preprod
     restart: unless-stopped
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.11.0
     ports:
-      - "${OPENSEARCH_DASHBOARD_PORT:-5601}:5601"
+      - "${OPENSEARCH_DASHBOARD_PORT}:5601"
     environment:
       - "OPENSEARCH_HOSTS=http://opensearch:9200"
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
     networks:
-      - svetu_network
+      - svetu_network_preprod
     depends_on:
       - opensearch
     restart: unless-stopped
 
-  minio:
-    image: minio/minio:RELEASE.2023-09-30T07-02-29Z
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-1321321321321}
-      MINIO_BROWSER_REDIRECT_URL: http://localhost:${MINIO_CONSOLE_PORT:-9001}
-      MINIO_SERVER_URL: http://localhost:${MINIO_PORT:-9000}
-    volumes:
-      - minio_data:/data
-    ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - svetu_network
-    restart: unless-stopped
-
-  createbuckets:
-    image: minio/mc
-    depends_on:
-      - minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-1321321321321}
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc config host add myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
-      /usr/bin/mc mb --ignore-existing myminio/listings;
-      /usr/bin/mc policy set public myminio/listings;
-      /usr/bin/mc mb --ignore-existing myminio/chat-files;
-      /usr/bin/mc anonymous set public myminio/chat-files;
-      exit 0;
-      "
-    networks:
-      - svetu_network
-    restart: "no"
-
   backend:
-    image: harbor.svetu.rs/svetu/backend/api:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "${BACKEND_PORT}:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -124,66 +83,101 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./backend/migrations:/app/migrations
+      - ./backend/fixtures:/app/fixtures
     environment:
       APP_MODE: production
       ENV_FILE: .env
-      WS_ENABLED: true
+      WS_ENABLED: "true"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS}
+      GOOGLE_OAUTH_REDIRECT_URL: ${GOOGLE_OAUTH_REDIRECT_URL}
+      REDIS_URL: "redis://redis:6379"
+      FRONTEND_URL: ${FRONTEND_URL}
+      BACKEND_URL: ${BACKEND_URL}
       UPLOAD_DIR: /app/uploads
-      DATABASE_URL: postgres://${DATABASE_USER:-postgres}:${DATABASE_PASS:-password}@db:5432/${DATABASE_DBNAME:-svetu_db}?sslmode=disable
+      DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASS}@db:5432/${DATABASE_DBNAME}?sslmode=disable
       OPENSEARCH_URL: http://opensearch:9200
-      OPENSEARCH_MARKETPLACE_INDEX: ${OPENSEARCH_MARKETPLACE_INDEX:-marketplace}
-      FILE_STORAGE_PROVIDER: ${FILE_STORAGE_PROVIDER:-minio}
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-1321321321321}
-      MINIO_USE_SSL: false
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-listings}
-      MINIO_LOCATION: ${MINIO_LOCATION:-eu-central-1}
-      FILE_STORAGE_PUBLIC_URL: ${FILE_STORAGE_PUBLIC_URL:-http://localhost:3000}
+      OPENSEARCH_MARKETPLACE_INDEX: ${OPENSEARCH_MARKETPLACE_INDEX}
+      FILE_STORAGE_PROVIDER: ${FILE_STORAGE_PROVIDER}
+      # MinIO/S3 configuration
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+      MINIO_CHAT_BUCKET: ${MINIO_CHAT_BUCKET}
+      MINIO_STOREFRONT_BUCKET: ${MINIO_STOREFRONT_BUCKET}
+      MINIO_REVIEW_PHOTOS_BUCKET: ${MINIO_REVIEW_PHOTOS_BUCKET}
+      MINIO_LOCATION: ${MINIO_LOCATION}
+      FILE_STORAGE_PUBLIC_URL: ${FILE_STORAGE_PUBLIC_URL}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      MIGRATIONS_ON_API: full
+      MIGRATIONS_PATH: ${MIGRATIONS_PATH}
+      MIGRATION_DIRECTION: ${MIGRATION_DIRECTION}
+      MIGRATION_TARGET: ${MIGRATION_TARGET}
+      MIGRATIONS_FIXTURES_PATH: ${MIGRATIONS_FIXTURES_PATH}
+      MIGRATIONS_FIXTURES_TABLE: ${MIGRATIONS_FIXTURES_TABLE}
+      MIGRATIONS_ON_API: ${MIGRATIONS_ON_API}
+      REINDEX_ON_API: ${REINDEX_ON_API}
+      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN}
+      MAPBOX_SECRET_TOKEN: ${MAPBOX_SECRET_TOKEN}
+      GEOCODING_CACHE_TTL_HOURS: ${GEOCODING_CACHE_TTL_HOURS}
+      GEOCODING_MAX_SUGGESTIONS: ${GEOCODING_MAX_SUGGESTIONS}
+      USE_AUTH_SERVICE: ${USE_AUTH_SERVICE}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      AUTH_SERVICE_PUBLIC_KEY_PATH:  ${AUTH_SERVICE_PUBLIC_KEY_PATH}
     user: "101:101"
     stop_grace_period: 10s
     stop_signal: SIGTERM
     init: true
     networks:
-      - svetu_network
+      - svetu_network_preprod
     restart: unless-stopped
 
   frontend:
-    image: harbor.svetu.rs/svetu/frontend/app:latest
+    build:
+      context: ./frontend/svetu
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_MINIO_URL: ${NEXT_PUBLIC_MINIO_URL}
+        NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS}
+        NEXT_PUBLIC_IMAGE_PATH_PATTERN: ${NEXT_PUBLIC_IMAGE_PATH_PATTERN}
+        NEXT_PUBLIC_WEBSOCKET_URL: ${NEXT_PUBLIC_WEBSOCKET_URL}
+        NEXT_PUBLIC_ENABLE_PAYMENTS: ${NEXT_PUBLIC_ENABLE_PAYMENTS}
+        NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
+        NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
     ports:
-      - "${FRONTEND_PORT:-3001}:3000"
+      - "${FRONTEND_PORT}:3000"
     depends_on:
       - backend
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
-      NEXT_PUBLIC_MINIO_URL: ${NEXT_PUBLIC_MINIO_URL:-http://localhost:9000}
-      NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS:-http:localhost:9000,https:svetu.rs:443,http:localhost:3000}
-      NEXT_PUBLIC_IMAGE_PATH_PATTERN: ${NEXT_PUBLIC_IMAGE_PATH_PATTERN:-/listings/**}
-      NEXT_PUBLIC_WEBSOCKET_URL: ${NEXT_PUBLIC_WEBSOCKET_URL:-ws://localhost:3000}
-      NEXT_PUBLIC_ENABLE_PAYMENTS: ${NEXT_PUBLIC_ENABLE_PAYMENTS:-false}
+      INTERNAL_API_URL: http://backend:3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_MINIO_URL: ${NEXT_PUBLIC_MINIO_URL}
+      NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS}
+      NEXT_PUBLIC_IMAGE_PATH_PATTERN: ${NEXT_PUBLIC_IMAGE_PATH_PATTERN}
+      NEXT_PUBLIC_WEBSOCKET_URL: ${NEXT_PUBLIC_WEBSOCKET_URL}
+      NEXT_PUBLIC_ENABLE_PAYMENTS: ${NEXT_PUBLIC_ENABLE_PAYMENTS}
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+      NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
+      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
     networks:
-      - svetu_network
+      - svetu_network_preprod
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  opensearch-data:
-  redis_data:
-  minio_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/minio
+  postgres_data_preprod:
+  opensearch-data_preprod:
+  redis_data_preprod:
 
 networks:
-  svetu_network:
+  svetu_network_preprod:
     driver: bridge
