@@ -65,7 +65,25 @@
     "notFound": "Address not found",
     "error": "Address search error",
     "byAddress": "By address",
-    "byDistrict": "By district"
+    "byDistrict": "By district",
+    "placeholder": "Enter address or district...",
+    "quickActions": {
+      "title": "Quick actions",
+      "nearMe": "Near me",
+      "center": "City center",
+      "newDistricts": "New districts"
+    },
+    "recent": {
+      "title": "Recent searches",
+      "clear": "Clear"
+    },
+    "popular": {
+      "title": "Popular districts"
+    },
+    "tips": {
+      "title": "Tip",
+      "description": "Try searching by street name, district or nearest metro station for better results."
+    }
   },
   "filters": {
     "title": "Filters",
@@ -172,7 +190,14 @@
   },
   "results": {
     "showing": "Showing",
-    "listings": "listings"
+    "listings": "listings",
+    "title": "Search results",
+    "swipeUp": "Swipe up to view the list",
+    "empty": {
+      "title": "Nothing found",
+      "description": "Try changing the filters or expanding the search area"
+    },
+    "viewAll": "View all"
   },
   "actions": {
     "apply": "Apply",
@@ -180,10 +205,6 @@
   },
   "errors": {
     "loadingFailed": "Failed to load listings"
-  },
-  "geolocation": {
-    "findMe": "My location",
-    "error": "Failed to determine location"
   },
   "showAll": "Show all listings",
   "showHeader": "Show header",
@@ -226,7 +247,14 @@
   "walkingAccessibility": "Walking Accessibility",
   "searchRadius": "Search Radius",
   "common": {
-    "close": "Close"
+    "close": "Close",
+    "loading": "Loading..."
+  },
+  "geolocation": {
+    "findMe": "My location",
+    "error": "Failed to determine location",
+    "success": "Location found",
+    "notSupported": "Geolocation not supported"
   },
   "ru-RU": "Russian",
   "attributes": "Attributes",

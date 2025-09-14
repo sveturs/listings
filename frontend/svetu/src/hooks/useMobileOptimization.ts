@@ -53,6 +53,7 @@ const useMobileOptimization = (
 ): MobileOptimizationReturn => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState({
     isLowEndDevice: false,
     memory: null as number | null,
@@ -64,7 +65,11 @@ const useMobileOptimization = (
 
   // Детекция типа устройства и его характеристик
   useEffect(() => {
+    setIsMounted(true);
+
     const detectDevice = () => {
+      if (typeof window === 'undefined') return;
+
       const width = window.innerWidth;
       const _height = window.innerHeight;
 

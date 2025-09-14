@@ -1379,7 +1379,7 @@ const MapPage: React.FC = () => {
 
       {/* Левая панель - поиск и категории */}
       <div
-        className={`absolute left-0 top-0 bottom-0 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'} bg-base-100 shadow-2xl flex flex-col z-20 transition-all duration-300 ${isMobile ? '-translate-x-full' : ''}`}
+        className={`absolute left-0 top-0 bottom-0 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'} bg-base-100 shadow-2xl flex flex-col z-20 transition-all duration-300 ${isMobile ? 'hidden' : ''}`}
       >
         {/* Кнопка сворачивания/разворачивания */}
         <button

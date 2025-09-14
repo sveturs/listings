@@ -187,10 +187,10 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
     if (!isDragging) return;
     setIsDragging(false);
 
-    const deltaX = startX - currentX;
+    const deltaX = currentX - startX;
     const threshold = 100; // Minimum distance for closing
 
-    // Swipe left to close
+    // Swipe right to close
     if (deltaX > threshold) {
       onClose();
     }
@@ -226,15 +226,15 @@ const MobileFiltersDrawer: React.FC<MobileFiltersDrawerProps> = ({
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed inset-y-0 left-0 z-[9999] w-full max-w-sm bg-white shadow-xl transform transition-transform duration-300 md:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 right-0 z-[9999] w-full max-w-sm bg-white shadow-xl transform transition-transform duration-300 md:hidden ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{
           transform: isDragging
-            ? `translateX(${Math.min(0, currentX - startX)}px)`
+            ? `translateX(${Math.max(0, currentX - startX)}px)`
             : isOpen
               ? 'translateX(0)'
-              : 'translateX(-100%)',
+              : 'translateX(100%)',
         }}
       >
         <div className="flex flex-col h-full">
