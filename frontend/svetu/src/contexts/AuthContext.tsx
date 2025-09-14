@@ -40,11 +40,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  // Безопасная инициализация с кешированным состоянием из sessionStorage
+  // Безопасная инициализация с кешированным состоянием из localStorage
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const cached = sessionStorage.getItem('svetu_user');
+        const cached = localStorage.getItem('svetu_user');
         if (cached) {
           const parsedUser = JSON.parse(cached);
           // Проверяем, что объект пользователя имеет минимально необходимые поля
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         // Очищаем поврежденный кеш
         try {
-          sessionStorage.removeItem('svetu_user');
+          localStorage.removeItem('svetu_user');
         } catch {
           // Игнорируем ошибки очистки
         }
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
-        const cached = sessionStorage.getItem('svetu_user');
+        const cached = localStorage.getItem('svetu_user');
         if (cached) {
           const parsedUser = JSON.parse(cached);
           // Проверяем валидность кешированных данных
@@ -109,15 +109,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
   }, []);
 
-  // Безопасная работа с sessionStorage с fallback механизмами
+  // Безопасная работа с localStorage с fallback механизмами
   const storageUtils = useMemo(() => {
-    // Проверяем доступность sessionStorage
+    // Проверяем доступность localStorage
     const isStorageAvailable = (() => {
       if (typeof window === 'undefined') return false;
       try {
         const testKey = '__storage_test__';
-        sessionStorage.setItem(testKey, 'test');
-        sessionStorage.removeItem(testKey);
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
         return true;
       } catch {
         return false;
@@ -130,9 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       getItem: (key: string): string | null => {
         if (!isStorageAvailable) return null;
         try {
-          return sessionStorage.getItem(key);
+          return localStorage.getItem(key);
         } catch (error) {
-          console.warn(`Failed to read from sessionStorage (${key}):`, error);
+          console.warn(`Failed to read from localStorage (${key}):`, error);
           return null;
         }
       },
@@ -143,19 +143,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return false;
         }
         try {
-          sessionStorage.setItem(key, value);
+          localStorage.setItem(key, value);
           return true;
         } catch (error) {
-          console.warn(`Failed to write to sessionStorage (${key}):`, error);
+          console.warn(`Failed to write to localStorage (${key}):`, error);
           // Попытка очистить место, если ошибка связана с переполнением
           if (error instanceof Error && error.name === 'QuotaExceededError') {
             try {
-              sessionStorage.clear();
-              sessionStorage.setItem(key, value);
-              console.info('Cleared sessionStorage and retried');
+              localStorage.clear();
+              localStorage.setItem(key, value);
+              console.info('Cleared localStorage and retried');
               return true;
             } catch {
-              console.error('Failed to clear and retry sessionStorage');
+              console.error('Failed to clear and retry localStorage');
             }
           }
           return false;
@@ -165,17 +165,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       removeItem: (key: string): boolean => {
         if (!isStorageAvailable) return false;
         try {
-          sessionStorage.removeItem(key);
+          localStorage.removeItem(key);
           return true;
         } catch (error) {
-          console.warn(`Failed to remove from sessionStorage (${key}):`, error);
+          console.warn(`Failed to remove from localStorage (${key}):`, error);
           return false;
         }
       },
     };
   }, []);
 
-  // Функция для кеширования пользователя в sessionStorage
+  // Функция для кеширования пользователя в localStorage
   const cacheUser = useCallback(
     (userData: User | null) => {
       if (userData) {
@@ -351,10 +351,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     AuthService.initializeTokenManager();
 
     // Проверяем флаг logout
-    const logoutFlag = sessionStorage.getItem('svetu_logout_flag');
+    const logoutFlag = localStorage.getItem('svetu_logout_flag');
     if (logoutFlag === 'true') {
       // Пользователь вышел из системы, очищаем флаг и не восстанавливаем сессию
-      sessionStorage.removeItem('svetu_logout_flag');
+      localStorage.removeItem('svetu_logout_flag');
       storageUtils.removeItem('svetu_user');
       setIsLoading(false);
       return;
@@ -441,7 +441,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // New token was set, refresh session to get user data
         logger.auth.debug('New token detected, refreshing session...');
 
-        // Проверяем, есть ли уже пользователь в sessionStorage (например, после OAuth)
+        // Проверяем, есть ли уже пользователь в localStorage (например, после OAuth)
         const cachedUser = storageUtils.getItem('svetu_user');
         if (cachedUser) {
           try {
@@ -536,24 +536,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AuthService.logout();
       updateUser(null);
 
-      // Очищаем localStorage и sessionStorage, но сохраняем важные данные
+      // Очищаем только auth-related данные, сохраняем важные настройки
       const locale = localStorage.getItem('NEXT_LOCALE');
-      // НЕ сохраняем корзину - она должна быть привязана к пользователю!
+      const appVersion = localStorage.getItem('__APP_VERSION__');
+      const theme = localStorage.getItem('theme');
 
-      // Очищаем токен через tokenManager чтобы он удалился из sessionStorage
+      // Очищаем токены и данные пользователя
       tokenManager.clearTokens();
+      localStorage.removeItem('svetu_user');
+      localStorage.removeItem('svetu_access_token');
+      localStorage.removeItem('svetu_refresh_token');
 
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // Восстанавливаем важные данные
-      if (locale) {
-        localStorage.setItem('NEXT_LOCALE', locale);
-      }
-      // НЕ восстанавливаем корзину - при выходе корзина должна очищаться
-
-      // Устанавливаем флаг в sessionStorage чтобы предотвратить автоматическое восстановление
-      sessionStorage.setItem('svetu_logout_flag', 'true');
+      // Устанавливаем флаг в localStorage чтобы предотвратить автоматическое восстановление
+      localStorage.setItem('svetu_logout_flag', 'true');
 
       router.push('/');
     } catch (error) {

@@ -160,7 +160,7 @@ func (c *Client) ProxyRequest(w http.ResponseWriter, r *http.Request, path strin
 	// Копируем заголовки, исключая несовместимые с HTTP/2
 	for key, values := range r.Header {
 		keyLower := strings.ToLower(key)
-		
+
 		// Пропускаем заголовки, несовместимые с HTTP/2
 		if keyLower == "connection" ||
 			keyLower == "keep-alive" ||
@@ -171,7 +171,7 @@ func (c *Client) ProxyRequest(w http.ResponseWriter, r *http.Request, path strin
 			(keyLower == "upgrade" && !isWebSocketUpgrade(values)) {
 			continue
 		}
-		
+
 		for _, value := range values {
 			proxyReq.Header.Add(key, value)
 		}

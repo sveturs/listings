@@ -6,7 +6,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -49,35 +51,66 @@ func (m *Middleware) loadAuthServicePublicKey() error {
 	}
 	logger.Info().Str("path", pubKeyPath).Msg("Loading auth service public key from path")
 
+	// Проверяем существование файла
+	if _, err := os.Stat(pubKeyPath); os.IsNotExist(err) {
+		logger.Error().Str("path", pubKeyPath).Msg("Public key file does not exist")
+		return fmt.Errorf("public key file not found: %s", pubKeyPath)
+	}
+
 	pubKeyData, err := os.ReadFile(pubKeyPath) // #nosec G304 - path is from config or hardcoded default
 	if err != nil {
+		logger.Error().Err(err).Str("path", pubKeyPath).Msg("Failed to read public key file")
 		return err
 	}
 
+	// Временное логирование для отладки
+	logger.Info().
+		Str("path", pubKeyPath).
+		Int("size", len(pubKeyData)).
+		Str("first_line", strings.Split(string(pubKeyData), "\n")[0]).
+		Msg("Public key file loaded, details")
+
 	block, _ := pem.Decode(pubKeyData)
 	if block == nil {
+		logger.Error().Str("content_preview", string(pubKeyData[:100])).Msg("Failed to parse PEM block")
 		return errors.New("failed to parse PEM block")
 	}
 
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to parse public key")
 		return err
 	}
 
 	rsaPub, ok := pub.(*rsa.PublicKey)
 	if !ok {
+		logger.Error().Msg("Not an RSA public key")
 		return errors.New("not an RSA public key")
 	}
 
 	m.authServicePubKey = rsaPub
-	logger.Info().Msg("Auth service public key loaded successfully")
+
+	// Временное детальное логирование ключа для отладки
+	modulusBytes := rsaPub.N.Bytes()
+	previewLen := 32
+	if len(modulusBytes) < previewLen {
+		previewLen = len(modulusBytes)
+	}
+
+	logger.Info().
+		Int("key_size", rsaPub.Size()).
+		Int("exponent", rsaPub.E).
+		Str("modulus_first_32_bytes", fmt.Sprintf("%x", modulusBytes[:previewLen])).
+		Msg("Auth service RSA public key loaded successfully with details")
+
 	return nil
 }
 
-func (m *Middleware) Setup(app *fiber.App) {
-	app.Use(m.Logger())
-	app.Use(m.CORS())
-}
+// Setup - deprecated, middleware регистрируется в server.go
+// func (m *Middleware) Setup(app *fiber.App) {
+// 	app.Use(m.Logger())
+// 	app.Use(m.CORS())
+// }
 
 // ErrorHandler обрабатывает все ошибки приложения
 func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {

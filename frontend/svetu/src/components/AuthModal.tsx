@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,6 +21,8 @@ export default function AuthModal({
 }: AuthModalProps) {
   const t = useTranslations('auth');
   const { login, isLoading } = useAuth();
+  const params = useParams();
+  const locale = params?.locale || 'en';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,9 +58,25 @@ export default function AuthModal({
   const handleGoogleLogin = async () => {
     try {
       setError(null);
+
+      // Construct the OAuth redirect URL with proper callback
+      const currentUrl = window.location.href;
+      const callbackUrl = `${window.location.origin}/${locale}/auth/oauth/google/callback`;
+      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
+      const oauthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google?redirect_uri=${encodedCallbackUrl}`;
+
+      console.log('[AuthModal] === GOOGLE LOGIN INITIATED ===');
+      console.log('[AuthModal] Current URL:', currentUrl);
+      console.log('[AuthModal] Callback URL:', callbackUrl);
+      console.log('[AuthModal] Encoded Callback URL:', encodedCallbackUrl);
+      console.log('[AuthModal] OAuth URL:', oauthUrl);
+      console.log('[AuthModal] OAuth URL length:', oauthUrl.length);
+      console.log('[AuthModal] === END GOOGLE LOGIN INITIATED ===');
+
       // Redirect to Google OAuth
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-    } catch {
+      window.location.href = oauthUrl;
+    } catch (error) {
+      console.error('[AuthModal] Google login error:', error);
       setError(t('errors.googleLoginFailed'));
     }
   };
