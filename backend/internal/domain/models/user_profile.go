@@ -26,6 +26,7 @@ type UserProfile struct {
 
 // UserProfileUpdate используется для частичного обновления профиля
 type UserProfileUpdate struct {
+	Name              *string         `json:"name,omitempty"`
 	Phone             *string         `json:"phone,omitempty"`
 	Bio               *string         `json:"bio,omitempty"`
 	NotificationEmail *bool           `json:"notification_email,omitempty"`
@@ -37,6 +38,14 @@ type UserProfileUpdate struct {
 
 // Validate проверяет корректность данных профиля
 func (up *UserProfileUpdate) Validate() error {
+	if up.Name != nil {
+		if len(*up.Name) == 0 {
+			return fmt.Errorf("name cannot be empty")
+		}
+		if len(*up.Name) > 100 {
+			return fmt.Errorf("name is too long")
+		}
+	}
 	if up.Phone != nil && len(*up.Phone) > 20 {
 		return fmt.Errorf("phone number is too long")
 	}

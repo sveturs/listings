@@ -164,13 +164,25 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		COALESCE(uc.unread_count, 0) as unread_count,
 		-- Информация о пользователе
 		CASE
+			WHEN c.buyer_id = $1 THEN seller.id
+			ELSE buyer.id
+		END as other_user_id,
+		CASE
 			WHEN c.buyer_id = $1 THEN seller.name
 			ELSE buyer.name
 		END as other_user_name,
 		CASE
+			WHEN c.buyer_id = $1 THEN seller.email
+			ELSE buyer.email
+		END as other_user_email,
+		CASE
 			WHEN c.buyer_id = $1 THEN seller.picture_url
 			ELSE buyer.picture_url
 		END as other_user_picture,
+		CASE
+			WHEN c.buyer_id = $1 THEN seller.provider
+			ELSE buyer.provider
+		END as other_user_provider,
 		-- Изображения листинга
 		CASE
 			WHEN c.storefront_product_id IS NOT NULL THEN COALESCE(spi.images, '[]'::json)
@@ -198,8 +210,11 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	for rows.Next() {
 		var (
 			chat             models.MarketplaceChat
+			otherUserID      sql.NullInt64
 			otherUserName    sql.NullString
+			otherUserEmail   sql.NullString
 			otherUserPicture sql.NullString
+			otherUserProvider sql.NullString
 			imagesJSON       json.RawMessage
 		)
 		chat.Listing = &models.MarketplaceListing{}
@@ -209,8 +224,11 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
 			&chat.Listing.Title, &chat.Listing.Price,
 			&chat.UnreadCount,
+			&otherUserID,
 			&otherUserName,
+			&otherUserEmail,
 			&otherUserPicture,
+			&otherUserProvider,
 			&imagesJSON,
 		)
 		if err != nil {
@@ -227,8 +245,11 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 
 		// Создаем структуру other_user
 		chat.OtherUser = &models.User{
+			ID:         int(otherUserID.Int64),
 			Name:       otherUserName.String,
+			Email:      otherUserEmail.String,
 			PictureURL: otherUserPicture.String,
+			Provider:   otherUserProvider.String,
 		}
 
 		// Добавляем информацию о продавце и покупателе для полноты данных

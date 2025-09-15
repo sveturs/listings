@@ -247,7 +247,9 @@ export default function MessageInput({
   const fileUrls = useObjectURLs(selectedFiles);
 
   return (
-    <div className="bg-gradient-to-r from-base-100 via-base-100/95 to-base-100 border-t border-base-300/50 backdrop-blur-sm">
+    <div className="bg-base-100/50 backdrop-blur-lg border-t border-base-300/20">
+      {/* Внутренний контейнер */}
+      <div className="relative">
       {/* Отображение загружаемых файлов */}
       {uploadingFilesList.length > 0 && (
         <div className="p-4 pb-0">
@@ -338,7 +340,10 @@ export default function MessageInput({
                       ) : (
                         // Обычный вид для других файлов
                         <>
-                          <span className="truncate max-w-[100px]" title={file.name}>
+                          <span
+                            className="truncate max-w-[100px]"
+                            title={file.name}
+                          >
                             {file.name}
                           </span>
                           <button
@@ -392,7 +397,7 @@ export default function MessageInput({
 
           {/* Модерновое поле ввода */}
           <div className="relative flex-1">
-            <div className="relative bg-base-200/50 rounded-full shadow-inner">
+            <div className="relative bg-base-200/50 rounded-full border border-base-300/50 hover:border-base-300 hover:bg-base-200/70 transition-all">
               <textarea
                 ref={inputRef}
                 value={message}
@@ -459,6 +464,7 @@ export default function MessageInput({
             </svg>
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

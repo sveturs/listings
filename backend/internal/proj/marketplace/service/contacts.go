@@ -232,3 +232,26 @@ func (s *ContactsService) AreContacts(ctx context.Context, userID1, userID2 int)
 	return contact1 != nil && contact1.Status == models.ContactStatusAccepted &&
 		contact2 != nil && contact2.Status == models.ContactStatusAccepted, nil
 }
+
+// GetIncomingContactRequests возвращает список входящих запросов в контакты
+func (s *ContactsService) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) (*models.ContactsListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	// Получаем входящие запросы - это запросы ОТ других пользователей К текущему пользователю
+	contacts, total, err := s.storage.GetIncomingContactRequests(ctx, userID, page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ContactsListResponse{
+		Contacts: contacts,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
+	}, nil
+}

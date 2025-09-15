@@ -137,7 +137,9 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
               hasTextBelow={true}
             />
             {/* Текст прилепленный снизу - точно под картинкой */}
-            <div className={`chat-bubble ${isOwn ? 'chat-bubble-primary' : 'chat-bubble-accent'} mt-1`}>
+            <div
+              className={`chat-bubble ${isOwn ? 'chat-bubble-primary' : 'chat-bubble-accent'} mt-1`}
+            >
               <p
                 className="whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{
@@ -180,10 +182,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                 >
                   {isEmojiOnly ? (
                     animatedEmojis.includes(message.content.trim()) ? (
-                      <AnimatedEmoji
-                        emoji={message.content.trim()}
-                        size={64}
-                      />
+                      <AnimatedEmoji emoji={message.content.trim()} size={64} />
                     ) : (
                       <span>
                         {DOMPurify.sanitize(message.content, {
@@ -213,11 +212,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
       {/* Время и статус прочтения */}
       <div className="chat-footer opacity-50 text-xs">
         <time>{formatTime(message.created_at)}</time>
-        {isOwn && (
-          <span className="ml-1">
-            {message.is_read ? '✓✓' : '✓'}
-          </span>
-        )}
+        {isOwn && <span className="ml-1">{message.is_read ? '✓✓' : '✓'}</span>}
       </div>
     </div>
   );

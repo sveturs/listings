@@ -7,9 +7,11 @@ import { useTranslations } from 'next-intl';
 import { MarketplaceChat } from '@/types/chat';
 import { UserContact } from '@/types/contacts';
 import { contactsService } from '@/services/contacts';
+import { useIncomingContactRequests } from '@/hooks/useIncomingContactRequests';
 import Image from 'next/image';
 import { useLocale } from 'next-intl';
 import configManager from '@/config';
+import toast from 'react-hot-toast';
 
 interface ChatListProps {
   onChatSelect: (chat: MarketplaceChat) => void;
@@ -33,6 +35,13 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
     loadChats,
     onlineUsers,
   } = useChat();
+
+  const {
+    requests,
+    hasRequestFromUser,
+    removeRequest,
+    totalCount: totalIncomingRequests,
+  } = useIncomingContactRequests();
 
   // Функция для загрузки контактов
   const loadContacts = useCallback(async () => {
@@ -162,7 +171,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
     return '/placeholder-listing.jpg';
   };
 
-  // Функция для создания/открытия чата с контактом
+// Функция для создания/открытия чата с контактом
   const handleContactSelect = async (contact: UserContact) => {
     if (!contact.contact_user?.id || !user?.id) return;
 
@@ -234,7 +243,25 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-base-200">
+    <div className="relative flex flex-col h-full bg-base-200/50">
+      {/* Современный минималистичный фон с blur эффектом */}
+      <div className="absolute inset-0">
+        {/* Мягкое свечение в углах */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Тонкий паттерн сетки */}
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
+          backgroundSize: '24px 24px'
+        }}
+      ></div>
+
+      {/* Контент */}
+      <div className="relative z-10 flex flex-col h-full">
       {/* Заголовок и поиск */}
       <div className="p-4 bg-base-100 border-b border-base-300">
         {/* Поиск с иконкой */}
@@ -262,6 +289,28 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
             </svg>
           </div>
         </div>
+
+        {/* Индикатор общего количества входящих запросов */}
+        {totalIncomingRequests > 0 && (
+          <div className="alert alert-warning alert-sm mb-3">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+              />
+            </svg>
+            <span className="text-xs">
+              {t('incomingRequestsCount', { count: totalIncomingRequests })}
+            </span>
+          </div>
+        )}
 
         {/* Табы DaisyUI */}
         <div className="tabs tabs-boxed">
@@ -292,19 +341,26 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
             }`}
             onClick={() => setActiveTab('contacts')}
           >
-            <svg
-              className="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-              />
-            </svg>
+            <div className="indicator">
+              {totalIncomingRequests > 0 && (
+                <span className="indicator-item badge badge-warning badge-xs">
+                  {totalIncomingRequests}
+                </span>
+              )}
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                />
+              </svg>
+            </div>
             {t('contactsTab')}
           </button>
         </div>
@@ -341,8 +397,8 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                     onClick={() => onChatSelect(chat)}
                     className={`card card-compact cursor-pointer transition-all ${
                       currentChat?.id === chat.id
-                        ? 'bg-primary/10 border-primary shadow-md'
-                        : 'bg-base-100 hover:bg-base-200 shadow-sm'
+                        ? 'bg-primary/10 ring-1 ring-primary/20 shadow-sm'
+                        : 'bg-base-100/80 hover:bg-base-100 hover:shadow-sm border border-transparent'
                     }`}
                   >
                     <div className="card-body">
@@ -399,6 +455,66 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                               )}
                           </div>
 
+                          {/* Входящий запрос в контакты */}
+                          {chat.other_user && hasRequestFromUser(chat.other_user.id) && (
+                            <div className="mt-1 px-1 py-0.5 bg-warning/10 rounded border border-warning/30">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <svg
+                                    className="w-3 h-3 text-warning"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                    />
+                                  </svg>
+                                  <span className="text-xs font-medium text-warning">
+                                    {t('incomingContactRequest')}
+                                  </span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        await contactsService.acceptContactRequest(chat.other_user!.id);
+                                        removeRequest(chat.other_user!.id);
+                                        toast.success(t('contactRequestAccepted'));
+                                      } catch (error) {
+                                        console.error('Failed to accept request:', error);
+                                        toast.error(t('failedToAcceptRequest'));
+                                      }
+                                    }}
+                                    className="btn btn-success btn-xs h-5 min-h-0"
+                                  >
+                                    {t('accept')}
+                                  </button>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        await contactsService.rejectContactRequest(chat.other_user!.id);
+                                        removeRequest(chat.other_user!.id);
+                                        toast.success(t('contactRequestRejected'));
+                                      } catch (error) {
+                                        console.error('Failed to reject request:', error);
+                                        toast.error(t('failedToRejectRequest'));
+                                      }
+                                    }}
+                                    className="btn btn-ghost btn-xs h-5 min-h-0"
+                                  >
+                                    {t('reject')}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {chat.last_message && (
                             <div className="flex items-center gap-1 mt-1">
                               {chat.last_message.sender_id === user?.id && (
@@ -433,26 +549,105 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
               <div className="flex justify-center p-8">
                 <span className="loading loading-spinner loading-lg text-secondary"></span>
               </div>
-            ) : filteredContacts.length === 0 ? (
-              <div className="card bg-base-100 shadow-sm">
-                <div className="card-body text-center py-12">
-                  <div className="text-4xl mb-4">👥</div>
-                  <h3 className="card-title justify-center text-base-content/70">
-                    {searchQuery ? t('noSearchResults') : t('noContacts')}
-                  </h3>
-                  <p className="text-base-content/50">
-                    {searchQuery
-                      ? t('tryDifferentSearch')
-                      : t('addContactsMessage')}
-                  </p>
-                </div>
-              </div>
             ) : (
-              filteredContacts.map((contact) => (
+              <>
+                {/* Входящие запросы в контакты */}
+                {requests.length > 0 && !searchQuery && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold mb-2 text-base-content/70 px-2">
+                      {t('incomingContactRequests')}
+                    </h3>
+                    {requests.map((request) => (
+                      <div
+                        key={request.user_id}
+                        className="card card-compact bg-warning/10 border border-warning/20 mb-2"
+                      >
+                        <div className="card-body">
+                          <div className="flex items-center gap-4">
+                            {/* Аватар */}
+                            <div className="avatar placeholder">
+                              <div className="bg-warning text-warning-content rounded-full w-12">
+                                <span className="text-lg">
+                                  {request.user?.name?.charAt(0).toUpperCase() || '?'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Информация о пользователе */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm truncate">
+                                {request.user?.name || t('unknownUser')}
+                              </h3>
+                              <p className="text-xs opacity-70">
+                                {request.user?.email}
+                              </p>
+                            </div>
+
+                            {/* Кнопки действий */}
+                            <div className="flex gap-2">
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await contactsService.acceptContactRequest(request.user_id);
+                                    removeRequest(request.user_id);
+                                    toast.success(t('contactRequestAccepted'));
+                                    // Обновить список контактов
+                                    await loadContacts();
+                                  } catch (error) {
+                                    console.error('Failed to accept request:', error);
+                                    toast.error(t('failedToAcceptRequest'));
+                                  }
+                                }}
+                                className="btn btn-success btn-xs"
+                              >
+                                {t('accept')}
+                              </button>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await contactsService.rejectContactRequest(request.user_id);
+                                    removeRequest(request.user_id);
+                                    toast.success(t('contactRequestRejected'));
+                                  } catch (error) {
+                                    console.error('Failed to reject request:', error);
+                                    toast.error(t('failedToRejectRequest'));
+                                  }
+                                }}
+                                className="btn btn-ghost btn-xs"
+                              >
+                                {t('reject')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Список контактов */}
+                {filteredContacts.length === 0 && requests.length === 0 ? (
+                  <div className="card bg-base-100 shadow-sm">
+                    <div className="card-body text-center py-12">
+                      <div className="text-4xl mb-4">👥</div>
+                      <h3 className="card-title justify-center text-base-content/70">
+                        {searchQuery ? t('noSearchResults') : t('noContacts')}
+                      </h3>
+                      <p className="text-base-content/50">
+                        {searchQuery
+                          ? t('tryDifferentSearch')
+                          : t('addContactsMessage')}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  filteredContacts.map((contact) => (
                 <div
                   key={contact.id}
                   onClick={() => handleContactSelect(contact)}
-                  className="card card-compact bg-base-100 hover:bg-base-200 cursor-pointer shadow-sm transition-all"
+                  className="card card-compact bg-base-100/80 hover:bg-base-100 hover:shadow-sm cursor-pointer transition-all"
                 >
                   <div className="card-body">
                     <div className="flex items-center gap-4">
@@ -493,10 +688,13 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                     </div>
                   </div>
                 </div>
-              ))
+                  ))
+                )}
+              </>
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );

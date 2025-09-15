@@ -233,6 +233,7 @@ type Storage interface {
 	UpdateContactStatus(ctx context.Context, userID, contactUserID int, status, notes string) error
 	GetContact(ctx context.Context, userID, contactUserID int) (*models.UserContact, error)
 	GetUserContacts(ctx context.Context, userID int, status string, page, limit int) ([]models.UserContact, int, error)
+	GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error)
 	RemoveContact(ctx context.Context, userID, contactUserID int) error
 	GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdateUserPrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error

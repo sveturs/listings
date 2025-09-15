@@ -72,7 +72,8 @@ export class ChatErrorBoundary extends Component<Props, State> {
               </h2>
 
               <p className="text-base-content/70 mb-4">
-                Произошла ошибка при загрузке чата. Попробуйте обновить страницу или вернуться позже.
+                Произошла ошибка при загрузке чата. Попробуйте обновить страницу
+                или вернуться позже.
               </p>
 
               {/* Error details in development */}
@@ -93,10 +94,7 @@ export class ChatErrorBoundary extends Component<Props, State> {
               )}
 
               <div className="card-actions justify-center">
-                <button
-                  onClick={this.handleReset}
-                  className="btn btn-primary"
-                >
+                <button onClick={this.handleReset} className="btn btn-primary">
                   Попробовать снова
                 </button>
                 <button

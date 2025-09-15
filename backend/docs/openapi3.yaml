@@ -8505,6 +8505,45 @@ paths:
       summary: Обновить статус контакта
       tags:
         - contacts
+  /api/v1/contacts/incoming:
+    get:
+      description: Возвращает список входящих запросов в контакты со статусом pending
+      parameters:
+        - description: Номер страницы
+          in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - description: Количество на странице
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Список входящих запросов
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_domain_models.ContactsListResponse"
+                    type: object
+        "500":
+          description: contacts.fetchError
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Получить входящие запросы в контакты
+      tags:
+        - contacts
   /api/v1/contacts/privacy:
     get:
       description: Возвращает текущие настройки приватности пользователя
@@ -27405,6 +27444,8 @@ components:
           description: Указатель правильный для обновлений
           type: string
         country:
+          type: string
+        name:
           type: string
         notification_email:
           type: boolean
