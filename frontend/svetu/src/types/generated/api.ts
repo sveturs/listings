@@ -2064,6 +2064,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/ai/translate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Translate content to multiple languages
+     * @description Translates title and description to specified languages using Claude AI
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Translation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_ai_handler.TranslateContentRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_ai_handler.TranslateContentResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -36942,13 +37006,39 @@ export interface components {
         [key: string]: unknown;
       };
       category?: string;
+      categoryHints?: components['schemas']['internal_proj_ai_handler.CategoryHints'];
+      categoryProbabilities?: components['schemas']['internal_proj_ai_handler.CategoryProbability'][];
       condition?: string;
       currency?: string;
       description?: string;
       keywords?: string[];
       price?: number;
       suggestedLocation?: string;
+      tags?: string[];
       title?: string;
+      titleVariants?: string[];
+    };
+    'internal_proj_ai_handler.CategoryHints': {
+      domain?: string;
+      keywords?: string[];
+      productType?: string;
+    };
+    'internal_proj_ai_handler.CategoryProbability': {
+      name?: string;
+      probability?: number;
+    };
+    'internal_proj_ai_handler.TranslateContentRequest': {
+      content?: {
+        description?: string;
+        title?: string;
+      };
+      targetLanguages?: string[];
+    };
+    'internal_proj_ai_handler.TranslateContentResponse': {
+      [key: string]: {
+        description?: string;
+        title?: string;
+      };
     };
     'internal_proj_analytics_handler.EventRequest': {
       event_data?: number[];

@@ -282,7 +282,9 @@ export class UnifiedSearchService {
         total: data.total || items.length,
         page: params.page || 1,
         limit: params.limit || 20,
-        total_pages: Math.ceil((data.total || items.length) / (params.limit || 20)),
+        total_pages: Math.ceil(
+          (data.total || items.length) / (params.limit || 20)
+        ),
         has_more: data.has_more || false,
         took_ms: data.took_ms || 0,
       };

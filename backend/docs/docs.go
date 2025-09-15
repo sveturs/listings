@@ -2322,6 +2322,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ai/translate": {
+            "post": {
+                "description": "Translates title and description to specified languages using Claude AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Translate content to multiple languages",
+                "parameters": [
+                    {
+                        "description": "Translation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_ai_handler.TranslateContentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_ai_handler.TranslateContentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-check/{email}": {
             "get": {
                 "description": "Checks if user with specified email is an administrator (no authorization required)",
@@ -43523,6 +43581,15 @@ const docTemplate = `{
                 "category": {
                     "type": "string"
                 },
+                "categoryHints": {
+                    "$ref": "#/definitions/internal_proj_ai_handler.CategoryHints"
+                },
+                "categoryProbabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_proj_ai_handler.CategoryProbability"
+                    }
+                },
                 "condition": {
                     "type": "string"
                 },
@@ -43544,8 +43611,84 @@ const docTemplate = `{
                 "suggestedLocation": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "title": {
                     "type": "string"
+                },
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_ai_handler.CategoryHints": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "productType": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_ai_handler.CategoryProbability": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "probability": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_proj_ai_handler.TranslateContentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "targetLanguages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_ai_handler.TranslateContentResponse": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    }
                 }
             }
         },

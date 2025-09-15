@@ -1537,6 +1537,43 @@ paths:
       summary: Analyze product image using AI
       tags:
         - ai
+  /api/ai/translate:
+    post:
+      description: Translates title and description to specified languages using Claude AI
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_ai_handler.TranslateContentRequest"
+        description: Translation request
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_ai_handler.TranslateContentResponse"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Translate content to multiple languages
+      tags:
+        - ai
   "/api/v1/admin-check/{email}":
     get:
       description: Checks if user with specified email is an administrator (no
@@ -30033,6 +30070,12 @@ components:
           type: object
         category:
           type: string
+        categoryHints:
+          $ref: "#/components/schemas/internal_proj_ai_handler.CategoryHints"
+        categoryProbabilities:
+          items:
+            $ref: "#/components/schemas/internal_proj_ai_handler.CategoryProbability"
+          type: array
         condition:
           type: string
         currency:
@@ -30047,8 +30090,57 @@ components:
           type: number
         suggestedLocation:
           type: string
+        tags:
+          items:
+            type: string
+          type: array
         title:
           type: string
+        titleVariants:
+          items:
+            type: string
+          type: array
+      type: object
+    internal_proj_ai_handler.CategoryHints:
+      properties:
+        domain:
+          type: string
+        keywords:
+          items:
+            type: string
+          type: array
+        productType:
+          type: string
+      type: object
+    internal_proj_ai_handler.CategoryProbability:
+      properties:
+        name:
+          type: string
+        probability:
+          type: number
+      type: object
+    internal_proj_ai_handler.TranslateContentRequest:
+      properties:
+        content:
+          properties:
+            description:
+              type: string
+            title:
+              type: string
+          type: object
+        targetLanguages:
+          items:
+            type: string
+          type: array
+      type: object
+    internal_proj_ai_handler.TranslateContentResponse:
+      additionalProperties:
+        properties:
+          description:
+            type: string
+          title:
+            type: string
+        type: object
       type: object
     internal_proj_analytics_handler.EventRequest:
       properties:

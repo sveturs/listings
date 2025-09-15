@@ -7482,6 +7482,12 @@ definitions:
         type: object
       category:
         type: string
+      categoryHints:
+        $ref: '#/definitions/internal_proj_ai_handler.CategoryHints'
+      categoryProbabilities:
+        items:
+          $ref: '#/definitions/internal_proj_ai_handler.CategoryProbability'
+        type: array
       condition:
         type: string
       currency:
@@ -7496,8 +7502,57 @@ definitions:
         type: number
       suggestedLocation:
         type: string
+      tags:
+        items:
+          type: string
+        type: array
       title:
         type: string
+      titleVariants:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_proj_ai_handler.CategoryHints:
+    properties:
+      domain:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      productType:
+        type: string
+    type: object
+  internal_proj_ai_handler.CategoryProbability:
+    properties:
+      name:
+        type: string
+      probability:
+        type: number
+    type: object
+  internal_proj_ai_handler.TranslateContentRequest:
+    properties:
+      content:
+        properties:
+          description:
+            type: string
+          title:
+            type: string
+        type: object
+      targetLanguages:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_proj_ai_handler.TranslateContentResponse:
+    additionalProperties:
+      properties:
+        description:
+          type: string
+        title:
+          type: string
+      type: object
     type: object
   internal_proj_analytics_handler.EventRequest:
     properties:
@@ -11312,6 +11367,42 @@ paths:
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Analyze product image using AI
+      tags:
+      - ai
+  /api/ai/translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates title and description to specified languages using Claude
+        AI
+      parameters:
+      - description: Translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_ai_handler.TranslateContentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_ai_handler.TranslateContentResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Translate content to multiple languages
       tags:
       - ai
   /api/v1/admin-check/{email}:
