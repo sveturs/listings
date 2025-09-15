@@ -717,15 +717,15 @@ export default function ChatWindow({
         style={{
           backgroundColor: 'oklch(var(--b2))',
           backgroundImage: `
-            linear-gradient(30deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
-            linear-gradient(150deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
-            linear-gradient(30deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
-            linear-gradient(150deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
-            linear-gradient(60deg, oklch(var(--b3) / 0.15) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.15) 75%, oklch(var(--b3) / 0.15)),
-            linear-gradient(60deg, oklch(var(--b3) / 0.15) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.15) 75%, oklch(var(--b3) / 0.15))
+            linear-gradient(30deg, oklch(var(--p) / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(var(--p) / 0.05) 87.5%, oklch(var(--p) / 0.05)),
+            linear-gradient(150deg, oklch(var(--p) / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(var(--p) / 0.05) 87.5%, oklch(var(--p) / 0.05)),
+            linear-gradient(30deg, oklch(var(--p) / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(var(--p) / 0.05) 87.5%, oklch(var(--p) / 0.05)),
+            linear-gradient(150deg, oklch(var(--p) / 0.05) 12%, transparent 12.5%, transparent 87%, oklch(var(--p) / 0.05) 87.5%, oklch(var(--p) / 0.05)),
+            linear-gradient(60deg, oklch(var(--s) / 0.08) 25%, transparent 25.5%, transparent 75%, oklch(var(--s) / 0.08) 75%, oklch(var(--s) / 0.08)),
+            linear-gradient(60deg, oklch(var(--s) / 0.08) 25%, transparent 25.5%, transparent 75%, oklch(var(--s) / 0.08) 75%, oklch(var(--s) / 0.08))
           `,
-          backgroundSize: '80px 140px',
-          backgroundPosition: '0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px',
+          backgroundSize: '60px 104px',
+          backgroundPosition: '0 0, 0 0, 30px 52px, 30px 52px, 0 0, 30px 52px',
         }}
       >
         {/* Индикатор загрузки старых сообщений */}
