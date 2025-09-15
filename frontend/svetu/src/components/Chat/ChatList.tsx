@@ -234,16 +234,16 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-base-100">
-      {/* Заголовок и поиск с современным дизайном */}
-      <div className="p-4">
+    <div className="flex flex-col h-full bg-base-200">
+      {/* Заголовок и поиск */}
+      <div className="p-4 bg-base-100 border-b border-base-300">
         {/* Поиск с иконкой */}
         <div className="form-control mb-4">
           <div className="relative">
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
-              className="input input-bordered bg-white/90 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-200 pl-10 border-gray-200 focus:border-blue-300"
+              className="input input-bordered w-full pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -263,13 +263,11 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
           </div>
         </div>
 
-        {/* Кнопки переключения */}
-        <div className="flex gap-2">
+        {/* Табы DaisyUI */}
+        <div className="tabs tabs-boxed">
           <button
-            className={`flex-1 btn btn-sm ${
-              activeTab === 'chats'
-                ? 'btn-primary'
-                : 'btn-ghost border border-base-300 bg-base-100/50 hover:bg-base-200'
+            className={`tab tab-sm flex-1 gap-1 ${
+              activeTab === 'chats' ? 'tab-active' : ''
             }`}
             onClick={() => setActiveTab('chats')}
           >
@@ -289,10 +287,8 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
             {t('chatsTab')}
           </button>
           <button
-            className={`flex-1 btn btn-sm ${
-              activeTab === 'contacts'
-                ? 'btn-primary'
-                : 'btn-ghost border border-base-300 bg-base-100/50 hover:bg-base-200'
+            className={`tab tab-sm flex-1 gap-1 ${
+              activeTab === 'contacts' ? 'tab-active' : ''
             }`}
             onClick={() => setActiveTab('contacts')}
           >
@@ -315,7 +311,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
       </div>
 
       {/* Список чатов или контактов */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {activeTab === 'chats' ? (
           // Список чатов с card компонентами
           <>
@@ -343,55 +339,53 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                   <div
                     key={chat.id}
                     onClick={() => onChatSelect(chat)}
-                    className={`card bg-white hover:bg-gray-50 cursor-pointer ${
+                    className={`card card-compact cursor-pointer transition-all ${
                       currentChat?.id === chat.id
-                        ? 'ring-2 ring-blue-300 bg-blue-50/50'
-                        : 'border border-gray-100'
+                        ? 'bg-primary/10 border-primary shadow-md'
+                        : 'bg-base-100 hover:bg-base-200 shadow-sm'
                     }`}
                   >
-                    <div className="card-body p-4">
+                    <div className="card-body">
                       <div className="flex items-center gap-4">
                         {/* Аватар с индикатором */}
                         <div className="avatar indicator">
                           {chat.unread_count > 0 && (
-                            <span className="indicator-item badge bg-blue-500 text-white badge-sm border-0">
+                            <span className="indicator-item badge badge-primary badge-sm">
                               {chat.unread_count}
                             </span>
                           )}
-                          <div className="w-14 h-14 rounded-full ring-2 ring-gray-200">
+                          <div className="w-12 rounded-lg">
                             <Image
                               src={getChatAvatar(chat)}
                               alt={getChatTitle(chat)}
-                              width={56}
-                              height={56}
-                              className="object-cover rounded-full"
+                              width={48}
+                              height={48}
+                              className="object-cover"
                             />
                           </div>
                         </div>
 
                         {/* Информация о чате */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="card-title text-base truncate">
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-semibold text-sm truncate">
                               {getChatTitle(chat)}
                             </h3>
-                            <div className="flex items-center">
-                              {chat.other_user &&
-                                onlineUsers.includes(chat.other_user.id) && (
-                                  <span className="text-xs text-gray-500">
-                                    online
-                                  </span>
-                                )}
-                            </div>
+                            {chat.other_user &&
+                              onlineUsers.includes(chat.other_user.id) && (
+                                <div className="badge badge-success badge-xs">
+                                  online
+                                </div>
+                              )}
                           </div>
 
-                          <div className="flex justify-between items-center mb-1">
-                            <p className="text-sm text-base-content/70 truncate">
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs opacity-70 truncate">
                               {getChatSubtitle(chat)}
                             </p>
                             {chat.listing_id > 0 &&
                               chat.listing?.price !== undefined && (
-                                <span className="text-sm font-semibold text-green-600">
+                                <span className="badge badge-ghost badge-sm">
                                   {new Intl.NumberFormat(
                                     locale === 'ru' ? 'ru-RU' : 'en-US',
                                     {
@@ -406,11 +400,11 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                           </div>
 
                           {chat.last_message && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 mt-1">
                               {chat.last_message.sender_id === user?.id && (
-                                <span className="text-xs text-blue-500">✓</span>
+                                <span className="text-xs text-primary">✓</span>
                               )}
-                              <p className="text-xs text-base-content/50 truncate">
+                              <p className="text-xs opacity-50 truncate">
                                 {chat.last_message.content}
                               </p>
                             </div>
@@ -458,14 +452,14 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                 <div
                   key={contact.id}
                   onClick={() => handleContactSelect(contact)}
-                  className="card bg-white hover:bg-gray-50 cursor-pointer border border-gray-100"
+                  className="card card-compact bg-base-100 hover:bg-base-200 cursor-pointer shadow-sm transition-all"
                 >
-                  <div className="card-body p-4">
+                  <div className="card-body">
                     <div className="flex items-center gap-4">
-                      {/* Аватар контакта с онлайн индикатором */}
-                      <div className="avatar avatar-online">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center ring-2 ring-green-200">
-                          <span className="text-lg font-bold text-green-600">
+                      {/* Аватар контакта */}
+                      <div className="avatar placeholder">
+                        <div className="bg-neutral text-neutral-content rounded-full w-12">
+                          <span className="text-lg">
                             {contact.contact_user?.name
                               ?.charAt(0)
                               .toUpperCase() || '?'}
@@ -475,29 +469,27 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
 
                       {/* Информация о контакте */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="card-title text-base truncate">
+                        <h3 className="font-semibold text-sm truncate">
                           {contact.contact_user?.name ||
                             `User #${contact.contact_user_id}`}
                         </h3>
-                        <p className="text-sm text-base-content/70 truncate">
+                        <p className="text-xs opacity-70 truncate">
                           {contact.contact_user?.email}
                         </p>
                         {contact.notes && (
-                          <p className="text-xs text-base-content/50 truncate mt-1">
-                            📝 {contact.notes}
+                          <p className="text-xs opacity-50 truncate mt-1">
+                            {contact.notes}
                           </p>
                         )}
                       </div>
 
                       {/* Статус онлайн */}
-                      <div className="flex items-center">
-                        {contact.contact_user &&
-                          onlineUsers.includes(contact.contact_user.id) && (
-                            <span className="text-xs text-gray-500">
-                              online
-                            </span>
-                          )}
-                      </div>
+                      {contact.contact_user &&
+                        onlineUsers.includes(contact.contact_user.id) && (
+                          <div className="badge badge-success badge-xs">
+                            online
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>

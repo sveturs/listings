@@ -7,6 +7,7 @@ import { useLocale } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ChatLayout from '@/components/Chat/ChatLayout';
 import { PageTransition } from '@/components/ui/PageTransition';
+import ChatErrorBoundary from '@/components/Chat/ChatErrorBoundary';
 
 export default function ChatClient() {
   const locale = useLocale();
@@ -143,15 +144,17 @@ export default function ChatClient() {
   return (
     <PageTransition mode="slide">
       <div className="absolute inset-0 top-16 flex flex-col">
-        {/* Chat content */}
+        {/* Chat content wrapped in Error Boundary */}
         <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2">
-          <ChatLayout
-            initialListingId={listingId ? parseInt(listingId) : undefined}
-            initialStorefrontProductId={
-              storefrontProductId ? parseInt(storefrontProductId) : undefined
-            }
-            initialSellerId={sellerId ? parseInt(sellerId) : undefined}
-          />
+          <ChatErrorBoundary>
+            <ChatLayout
+              initialListingId={listingId ? parseInt(listingId) : undefined}
+              initialStorefrontProductId={
+                storefrontProductId ? parseInt(storefrontProductId) : undefined
+              }
+              initialSellerId={sellerId ? parseInt(sellerId) : undefined}
+            />
+          </ChatErrorBoundary>
         </div>
       </div>
     </PageTransition>

@@ -247,12 +247,12 @@ export default function MessageInput({
   const fileUrls = useObjectURLs(selectedFiles);
 
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 backdrop-blur-sm">
+    <div className="bg-base-100 border-t border-base-300">
       {/* Отображение загружаемых файлов */}
       {uploadingFilesList.length > 0 && (
         <div className="p-4 pb-0">
-          <div className="card bg-base-100/80 shadow-sm">
-            <div className="card-body p-3">
+          <div className="card card-compact bg-base-200">
+            <div className="card-body">
               <FileUploadProgress
                 uploadingFiles={uploadingFilesList}
                 onRemove={removeUploadingFile}
@@ -265,23 +265,23 @@ export default function MessageInput({
       {/* Отображение выбранных файлов */}
       {selectedFiles.length > 0 && (
         <div className="p-4 pb-0">
-          <div className="card bg-base-100/80 shadow-sm">
-            <div className="card-body p-3">
+          <div className="card card-compact bg-base-200">
+            <div className="card-body">
               <div className="flex items-center gap-2 mb-2">
-                <svg
-                  className="w-4 h-4 text-blue-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <p className="text-sm font-medium text-blue-600">
+                <div className="badge badge-primary badge-sm gap-1">
+                  <svg
+                    className="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                   {t('selectedFiles')}
-                </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {selectedFiles.map((file, index) => {
@@ -294,12 +294,12 @@ export default function MessageInput({
                       className={
                         isImage
                           ? 'relative group'
-                          : 'card card-sm bg-base-200/50 shadow-sm flex-1'
+                          : 'badge badge-lg badge-outline gap-2'
                       }
                     >
                       {isImage ? (
                         // Эскиз для изображений
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-2 border-base-300/50">
+                        <div className="relative w-20 h-20 rounded-lg overflow-hidden ring-2 ring-base-300">
                           {fileUrl ? (
                             <Image
                               src={fileUrl}
@@ -326,7 +326,7 @@ export default function MessageInput({
                           )}
                           <button
                             onClick={() => removeSelectedFile(index)}
-                            className="absolute top-1 right-1 btn btn-xs btn-circle bg-black/50 hover:bg-error/80 border-none text-white"
+                            className="absolute top-1 right-1 btn btn-circle btn-xs btn-error"
                           >
                             ✕
                           </button>
@@ -337,32 +337,17 @@ export default function MessageInput({
                         </div>
                       ) : (
                         // Обычный вид для других файлов
-                        <div className="card-body p-2 flex-row items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center">
-                              <svg
-                                className="w-3 h-3 text-blue-500"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <span className="text-sm truncate">
-                              {file.name}
-                            </span>
-                          </div>
+                        <>
+                          <span className="truncate max-w-[100px]" title={file.name}>
+                            {file.name}
+                          </span>
                           <button
                             onClick={() => removeSelectedFile(index)}
-                            className="btn btn-ghost btn-xs btn-circle hover:bg-error/20 hover:text-error"
+                            className="btn btn-ghost btn-xs btn-circle"
                           >
                             ✕
                           </button>
-                        </div>
+                        </>
                       )}
                     </div>
                   );
@@ -373,8 +358,9 @@ export default function MessageInput({
         </div>
       )}
 
-      <div className="p-2 sm:p-4">
-        <div className="flex items-end gap-2">
+      {/* DaisyUI join компонент для поля ввода */}
+      <div className="p-4">
+        <div className="join w-full">
           {/* Кнопка файлов */}
           <input
             ref={fileInputRef}
@@ -386,7 +372,7 @@ export default function MessageInput({
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="btn btn-circle btn-ghost hover:bg-violet-100 hover:text-violet-600 transition-all duration-200"
+            className="btn btn-square join-item"
             title={t('attachFile')}
           >
             <svg
@@ -404,41 +390,34 @@ export default function MessageInput({
             </svg>
           </button>
 
-          {/* Поле ввода с эмодзи внутри */}
-          <div className="flex-1 relative">
-            <div className="relative bg-base-100 rounded-2xl border border-base-300 shadow-sm hover:shadow-md transition-shadow">
-              <textarea
-                ref={inputRef}
-                value={message}
-                onChange={(e) => {
-                  handleTyping(e.target.value);
-                  // Автоматическая высота
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={t('messagePlaceholder')}
-                className="textarea w-full resize-none border-0 focus:outline-none bg-transparent placeholder:text-base-content/50 pr-12"
-                rows={1}
-                style={{
-                  minHeight: '44px',
-                  maxHeight: '120px',
-                  paddingTop: '0.75rem',
-                  paddingBottom: '0.75rem',
-                }}
-              />
+          {/* Поле ввода */}
+          <div className="relative flex-1">
+            <textarea
+              ref={inputRef}
+              value={message}
+              onChange={(e) => {
+                handleTyping(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder={t('messagePlaceholder')}
+              className="textarea textarea-bordered join-item w-full resize-none pr-12"
+              rows={1}
+              style={{
+                minHeight: '48px',
+                maxHeight: '120px',
+              }}
+            />
 
-              {/* Кнопка эмодзи внутри поля */}
-              <div className="absolute right-2 bottom-2">
-                <button
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="btn btn-ghost btn-sm btn-circle hover:bg-amber-100 hover:text-amber-600 transition-all duration-200"
-                  title={t('addEmoji')}
-                >
-                  <span className="text-xl">😊</span>
-                </button>
-              </div>
-            </div>
+            {/* Кнопка эмодзи внутри поля */}
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2"
+              title={t('addEmoji')}
+            >
+              <span className="text-xl">😊</span>
+            </button>
 
             {showEmojiPicker && (
               <div className="absolute bottom-full mb-2 right-0 z-[9999]">
@@ -454,11 +433,7 @@ export default function MessageInput({
           <button
             onClick={handleSend}
             disabled={!message.trim() && selectedFiles.length === 0}
-            className={`btn btn-square btn-ghost transition-all duration-200 ${
-              !message.trim() && selectedFiles.length === 0
-                ? 'text-base-content/30'
-                : 'hover:bg-blue-100 hover:text-blue-600 text-blue-500'
-            }`}
+            className="btn btn-primary btn-square join-item"
             title={t('sendMessage')}
           >
             <svg

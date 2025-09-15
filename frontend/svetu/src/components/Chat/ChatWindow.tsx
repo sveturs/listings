@@ -433,12 +433,12 @@ export default function ChatWindow({
   return (
     <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
       {/* Заголовок чата */}
-      <div className="p-3 sm:p-4 border-b border-base-300 bg-base-100 flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="navbar bg-base-100 border-b border-base-300 min-h-0 p-2 sm:p-3">
+        <div className="navbar-start flex-1 gap-2">
           {showBackButton && (
             <button
               onClick={onBack}
-              className="btn btn-ghost btn-sm btn-circle flex-shrink-0"
+              className="btn btn-ghost btn-circle btn-sm"
             >
               <svg
                 className="w-4 h-4 sm:w-5 sm:h-5"
@@ -568,8 +568,9 @@ export default function ChatWindow({
             </div>
           </div>
 
-          {/* Кнопки действий */}
-          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+        </div>
+        {/* Кнопки действий */}
+        <div className="navbar-end gap-1">
             {/* Кнопка добавить в корзину для товаров витрин */}
             {chat?.storefront_product_id && (
               <button
@@ -705,7 +706,6 @@ export default function ChatWindow({
                 )}
               </button>
             )}
-          </div>
         </div>
       </div>
 
@@ -713,7 +713,7 @@ export default function ChatWindow({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-2 sm:p-4 lg:px-8 space-y-2 sm:space-y-4 min-h-0 chat-pattern-hexagon"
+        className="flex-1 overflow-y-auto p-3 sm:p-4 lg:px-8 bg-base-200 bg-opacity-30 min-h-0"
       >
         {/* Индикатор загрузки старых сообщений */}
         {(hasMore || isLoadingOldMessages) && (
@@ -721,14 +721,14 @@ export default function ChatWindow({
             {isLoadingOldMessages ? (
               <div className="flex items-center justify-center gap-2">
                 <span className="loading loading-spinner loading-sm"></span>
-                <span className="text-sm text-base-content/50">
+                <span className="text-sm opacity-50">
                   {t('loadingOldMessages')}
                 </span>
               </div>
             ) : (
-              <div className="text-sm text-base-content/50">
+              <button className="btn btn-ghost btn-sm text-base-content/50" onClick={() => handleScroll()}>
                 {t('scrollUpToLoadMore')}
-              </div>
+              </button>
             )}
           </div>
         )}
@@ -752,13 +752,15 @@ export default function ChatWindow({
 
         {/* Индикатор печатания */}
         {typingInThisChat.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-base-content/50">
-            <span className="loading loading-dots loading-sm"></span>
-            <span>
+          <div className="chat chat-start">
+            <div className="chat-bubble chat-bubble-secondary">
+              <span className="loading loading-dots loading-xs"></span>
+            </div>
+            <div className="chat-footer opacity-50 text-xs">
               {typingInThisChat.length === 1
-                ? t('userTyping', { name: chat?.other_user?.name || '' })
+                ? chat?.other_user?.name || t('userTyping')
                 : t('usersTyping', { count: typingInThisChat.length })}
-            </span>
+            </div>
           </div>
         )}
 
@@ -769,7 +771,7 @@ export default function ChatWindow({
       {!isAtBottom && (
         <button
           onClick={scrollToBottom}
-          className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 btn btn-circle btn-xs sm:btn-sm shadow-lg"
+          className="absolute bottom-20 right-4 btn btn-circle btn-sm btn-primary shadow-lg"
         >
           <svg
             className="w-3 h-3 sm:w-4 sm:h-4"

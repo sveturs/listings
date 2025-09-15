@@ -1,7 +1,5 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
-@import '../styles/chat-patterns.css';
-@import '../styles/chat-bubble.css';
 
 /* Tailwind v4 требует явного определения breakpoints */
 @theme {
