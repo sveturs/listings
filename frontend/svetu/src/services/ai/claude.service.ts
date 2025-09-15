@@ -65,8 +65,8 @@ export class ClaudeAIService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageBase64,
-          userLanguage,
+          imageData: imageBase64,
+          userLang: userLanguage,
         }),
       });
 
@@ -76,7 +76,8 @@ export class ClaudeAIService {
         throw new Error(`Claude API error: ${response.status} - ${errorData}`);
       }
 
-      const analysis = await response.json();
+      const result = await response.json();
+      const analysis = result.data; // Extract data from success envelope
       console.log('Product analysis completed:', analysis.title);
 
       return analysis;

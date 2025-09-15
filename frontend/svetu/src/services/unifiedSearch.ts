@@ -153,7 +153,7 @@ export class UnifiedSearchService {
   ): Promise<UnifiedSearchResult> {
     const baseUrl = configManager.getApiUrl({ internal: true });
 
-    // Используем GIS endpoint если есть геопараметры
+    // Используем правильный эндпоинт в зависимости от наличия геокоординат
     const endpoint =
       params.latitude && params.longitude
         ? '/api/v1/gis/search'
@@ -174,6 +174,15 @@ export class UnifiedSearchService {
           return;
         }
 
+        // Backend теперь поддерживает оба параметра: 'q' и 'query'
+        // Но используем 'q' для совместимости
+        let paramKey = key;
+        if (key === 'query') {
+          paramKey = 'q';
+        } else if (key === 'language') {
+          paramKey = 'lang';
+        }
+
         if (Array.isArray(value)) {
           // Для массивов используем запятую в качестве разделителя
           if (key === 'product_types' || key === 'category_ids') {
@@ -181,12 +190,12 @@ export class UnifiedSearchService {
               `UnifiedSearchService - adding array param ${key}:`,
               value
             );
-            url.searchParams.append(key, value.join(','));
+            url.searchParams.append(paramKey, value.join(','));
           } else {
-            value.forEach((v) => url.searchParams.append(key, v));
+            value.forEach((v) => url.searchParams.append(paramKey, v));
           }
         } else {
-          url.searchParams.append(key, value.toString());
+          url.searchParams.append(paramKey, value.toString());
         }
       }
     });
@@ -226,7 +235,72 @@ export class UnifiedSearchService {
       throw new Error(`Search failed: ${response.status}`);
     }
 
-    const result = await response.json();
+    const data = await response.json();
+
+    // Адаптируем ответ к унифицированному формату
+    let result: UnifiedSearchResult;
+
+    if (data.data && Array.isArray(data.data)) {
+      // Старый формат от /marketplace/search
+      const items: UnifiedSearchItem[] = data.data.map((item: any) => ({
+        id: `marketplace-${item.id}`,
+        product_type: 'marketplace' as const,
+        product_id: item.id,
+        name: item.title || item.name,
+        description: item.description,
+        price: item.price,
+        currency: 'RSD',
+        images: (item.images || []).map((img: any) => ({
+          url: img.public_url || img.url,
+          alt_text: item.title,
+          is_main: img.is_main || false,
+        })),
+        category: {
+          id: item.category_id,
+          name: item.category_name || '',
+          slug: item.category_slug,
+        },
+        location: {
+          city: item.city,
+          country: item.country,
+          lat: item.latitude,
+          lng: item.longitude,
+        },
+        user: {
+          id: item.user_id,
+          name: item.user_name || '',
+          picture_url: item.user_picture_url,
+          is_verified: item.user_is_verified || false,
+        },
+        score: item.score || 1.0,
+        stock_quantity: item.stock_quantity,
+        stock_status: item.stock_status,
+      }));
+
+      result = {
+        items,
+        total: data.total || items.length,
+        page: params.page || 1,
+        limit: params.limit || 20,
+        total_pages: Math.ceil((data.total || items.length) / (params.limit || 20)),
+        has_more: data.has_more || false,
+        took_ms: data.took_ms || 0,
+      };
+    } else if (data.items) {
+      // Новый формат уже готов
+      result = data;
+    } else {
+      // Неизвестный формат
+      result = {
+        items: [],
+        total: 0,
+        page: params.page || 1,
+        limit: params.limit || 20,
+        total_pages: 0,
+        has_more: false,
+        took_ms: 0,
+      };
+    }
 
     // Сохраняем успешный поиск в историю
     if (params.query && result.items && result.items.length > 0) {

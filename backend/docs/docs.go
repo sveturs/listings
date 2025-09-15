@@ -2264,6 +2264,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ai/analyze": {
+            "post": {
+                "description": "Analyzes a product image and extracts information using Claude AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Analyze product image using AI",
+                "parameters": [
+                    {
+                        "description": "Analysis request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_ai_handler.AnalyzeProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_ai_handler.AnalyzeProductResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-check/{email}": {
             "get": {
                 "description": "Checks if user with specified email is an administrator (no authorization required)",
@@ -43441,6 +43499,53 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "internal_proj_ai_handler.AnalyzeProductRequest": {
+            "type": "object",
+            "properties": {
+                "imageData": {
+                    "type": "string"
+                },
+                "userLang": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_ai_handler.AnalyzeProductResponse": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "suggestedLocation": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

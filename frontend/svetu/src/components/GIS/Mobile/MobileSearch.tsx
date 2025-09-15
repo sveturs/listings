@@ -7,7 +7,7 @@ interface MobileSearchProps {
   onClose: () => void;
   onSearch: (query: string) => void;
   searchQuery: string;
-  onSearchChange: (query: string) => void;
+  _onSearchChange?: (query: string) => void;
   isSearching?: boolean;
   recentSearches?: string[];
   onRecentSearchClick?: (query: string) => void;
@@ -19,14 +19,14 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
   onClose,
   onSearch,
   searchQuery,
-  onSearchChange,
+  _onSearchChange,
   isSearching = false,
   recentSearches = [],
   onRecentSearchClick,
   onClearRecentSearches,
 }) => {
   const t = useTranslations('map');
-  const [_inputFocused, setInputFocused] = useState(false);
+  const [_inputFocused, _setInputFocused] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Автофокус при открытии
@@ -50,17 +50,17 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
 
   const quickActions = [
     {
-      title: t('search.quickActions.nearMe', 'Рядом со мной'),
+      title: t('search.quickActions.nearMe'),
       icon: '📍',
       action: 'geolocation',
     },
     {
-      title: t('search.quickActions.center', 'Центр города'),
+      title: t('search.quickActions.center'),
       icon: '🏛️',
       action: 'center',
     },
     {
-      title: t('search.quickActions.newDistricts', 'Новые районы'),
+      title: t('search.quickActions.newDistricts'),
       icon: '🏢',
       action: 'new-districts',
     },
@@ -117,21 +117,13 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
 
           <div className="flex-1">
             <SearchBar
-              ref={searchRef}
               initialQuery={searchQuery}
               onSearch={(query) => {
                 onSearch(query);
                 onClose();
               }}
-              onChange={onSearchChange}
-              placeholder={t(
-                'search.placeholder',
-                'Введите адрес или район...'
-              )}
+              placeholder={t('search.placeholder')}
               className="w-full"
-              autoFocus
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
             />
           </div>
 
@@ -145,7 +137,7 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
           {/* Быстрые действия */}
           <div className="p-4 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              {t('search.quickActions.title', 'Быстрые действия')}
+              {t('search.quickActions.title')}
             </h3>
             <div className="grid grid-cols-1 gap-2">
               {quickActions.map((action, index) => (
@@ -166,13 +158,13 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700">
-                  {t('search.recent.title', 'Недавние поиски')}
+                  {t('search.recent.title')}
                 </h3>
                 <button
                   onClick={onClearRecentSearches}
                   className="text-xs text-blue-600 hover:text-blue-700"
                 >
-                  {t('search.recent.clear', 'Очистить')}
+                  {t('search.recent.clear')}
                 </button>
               </div>
               <div className="space-y-1">
@@ -208,7 +200,7 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
           {/* Популярные районы */}
           <div className="p-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">
-              {t('search.popular.title', 'Популярные районы')}
+              {t('search.popular.title')}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {popularSearches.map((item, index) => (
@@ -249,13 +241,10 @@ const MobileSearch: React.FC<MobileSearchProps> = ({
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-blue-900 mb-1">
-                  {t('search.tips.title', 'Совет')}
+                  {t('search.tips.title')}
                 </h4>
                 <p className="text-xs text-blue-700 leading-relaxed">
-                  {t(
-                    'search.tips.description',
-                    'Попробуйте искать по названию улицы, района или ближайшей станции метро для лучших результатов.'
-                  )}
+                  {t('search.tips.description')}
                 </p>
               </div>
             </div>

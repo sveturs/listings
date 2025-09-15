@@ -119,6 +119,7 @@
       "main_photo": "Main",
       "ai_recommends": "AI recommends adding:",
       "category_title": "Category",
+      "category_detected": "Detected category",
       "category_auto_selected": "AI automatically selected category: {category}",
       "manual_category_selection": "Change category manually:",
       "select_category": "Select category",

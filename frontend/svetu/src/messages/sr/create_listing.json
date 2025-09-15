@@ -119,6 +119,7 @@
       "main_photo": "Главна",
       "ai_recommends": "АИ препоручује додавање:",
       "category_title": "Категорија",
+      "category_detected": "Откривена категорија",
       "category_auto_selected": "АИ је аутоматски изабрао категорију: {category}",
       "manual_category_selection": "Промени категорију ручно:",
       "select_category": "Изабери категорију",

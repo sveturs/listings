@@ -35,16 +35,19 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
   }, []);
 
   // Получаем высоту в пикселях
-  const getSheetHeight = useCallback((state: SheetState) => {
-    if (!isMounted) return 0;
-    // Высоты для разных состояний (в процентах от высоты экрана)
-    const SHEET_HEIGHTS = {
-      collapsed: 0,
-      peek: 20, // 20% от высоты экрана
-      expanded: 85, // 85% от высоты экрана
-    };
-    return (window.innerHeight * SHEET_HEIGHTS[state]) / 100;
-  }, [isMounted]);
+  const getSheetHeight = useCallback(
+    (state: SheetState) => {
+      if (!isMounted) return 0;
+      // Высоты для разных состояний (в процентах от высоты экрана)
+      const SHEET_HEIGHTS = {
+        collapsed: 0,
+        peek: 20, // 20% от высоты экрана
+        expanded: 85, // 85% от высоты экрана
+      };
+      return (window.innerHeight * SHEET_HEIGHTS[state]) / 100;
+    },
+    [isMounted]
+  );
 
   // Обработчики touch событий
   const handleTouchStart = useCallback(
@@ -167,7 +170,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-gray-900">
-                {t('results.title', 'Результаты поиска')}
+                {t('results.title')}
               </h3>
               <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                 {isLoading ? '...' : markers.length}
@@ -196,9 +199,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
           </div>
 
           {sheetState === 'peek' && (
-            <p className="text-sm text-gray-500 mt-1">
-              {t('results.swipeUp', 'Потяните вверх для просмотра списка')}
-            </p>
+            <p className="text-sm text-gray-500 mt-1">{t('results.swipeUp')}</p>
           )}
         </div>
 
@@ -208,9 +209,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             <div className="flex items-center justify-center py-8">
               <div className="flex items-center gap-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                <span className="text-gray-600">
-                  {t('common.loading', 'Загрузка...')}
-                </span>
+                <span className="text-gray-600">{t('common.loading')}</span>
               </div>
             </div>
           ) : markers.length === 0 ? (
@@ -231,100 +230,99 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {t('results.empty.title', 'Ничего не найдено')}
+                {t('results.empty.title')}
               </h3>
               <p className="text-gray-500 text-center">
-                {t(
-                  'results.empty.description',
-                  'Попробуйте изменить фильтры или расширить область поиска'
-                )}
+                {t('results.empty.description')}
               </p>
             </div>
           ) : (
             <div className="px-4 max-h-96 overflow-y-auto">
-              {markers.slice(0, settings.maxMarkersCount).map((marker, index) => (
-                <div
-                  key={`${marker.id}-${index}`}
-                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer mb-3"
-                  onClick={() => onMarkerClick?.(marker)}
-                >
-                  <div className="flex gap-3">
-                    {/* Изображение или иконка */}
-                    <div className="flex-shrink-0">
-                      {marker.imageUrl ? (
-                        <img
-                          src={optimizeImageUrl(marker.imageUrl, 64, 64)}
-                          alt={marker.title}
-                          className="w-16 h-16 object-cover rounded-lg"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <span className="text-2xl">
-                            {marker.metadata?.icon || '📦'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Информация */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-base font-medium text-gray-900 truncate mb-1">
-                        {marker.title}
-                      </h4>
-
-                      {marker.metadata?.price && (
-                        <p className="text-lg font-semibold text-blue-600 mb-1">
-                          {new Intl.NumberFormat('sr-RS').format(
-                            marker.metadata.price
-                          )}{' '}
-                          {marker.metadata.currency || 'RSD'}
-                        </p>
-                      )}
-
-                      {marker.metadata?.category && (
-                        <p className="text-sm text-gray-500 mb-1">
-                          {marker.metadata.category}
-                        </p>
-                      )}
-
-                      {marker.data?.address && (
-                        <p className="text-sm text-gray-400 truncate">
-                          📍 {marker.data.address}
-                        </p>
-                      )}
-
-                      {/* Дополнительная информация */}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                        {marker.data?.views_count && (
-                          <span>👁 {marker.data.views_count}</span>
-                        )}
-                        {marker.data?.rating && (
-                          <span>⭐ {marker.data.rating}</span>
+              {markers
+                .slice(0, settings.maxMarkersCount)
+                .map((marker, index) => (
+                  <div
+                    key={`${marker.id}-${index}`}
+                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer mb-3"
+                    onClick={() => onMarkerClick?.(marker)}
+                  >
+                    <div className="flex gap-3">
+                      {/* Изображение или иконка */}
+                      <div className="flex-shrink-0">
+                        {marker.imageUrl ? (
+                          <img
+                            src={optimizeImageUrl(marker.imageUrl, 64, 64)}
+                            alt={marker.title}
+                            className="w-16 h-16 object-cover rounded-lg"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <span className="text-2xl">
+                              {marker.metadata?.icon || '📦'}
+                            </span>
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Стрелка */}
-                    <div className="flex-shrink-0 flex items-center">
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                      {/* Информация */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-base font-medium text-gray-900 truncate mb-1">
+                          {marker.title}
+                        </h4>
+
+                        {marker.metadata?.price && (
+                          <p className="text-lg font-semibold text-blue-600 mb-1">
+                            {new Intl.NumberFormat('sr-RS').format(
+                              marker.metadata.price
+                            )}{' '}
+                            {marker.metadata.currency || 'RSD'}
+                          </p>
+                        )}
+
+                        {marker.metadata?.category && (
+                          <p className="text-sm text-gray-500 mb-1">
+                            {marker.metadata.category}
+                          </p>
+                        )}
+
+                        {marker.data?.address && (
+                          <p className="text-sm text-gray-400 truncate">
+                            📍 {marker.data.address}
+                          </p>
+                        )}
+
+                        {/* Дополнительная информация */}
+                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                          {marker.data?.views_count && (
+                            <span>👁 {marker.data.views_count}</span>
+                          )}
+                          {marker.data?.rating && (
+                            <span>⭐ {marker.data.rating}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Стрелка */}
+                      <div className="flex-shrink-0 flex items-center">
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
 
@@ -368,7 +366,7 @@ const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
               onClick={() => setSheetState('expanded')}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
             >
-              {t('results.viewAll', 'Посмотреть все')} ({markers.length})
+              {t('results.viewAll')} ({markers.length})
             </button>
           </div>
         )}

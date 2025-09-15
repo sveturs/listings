@@ -67,7 +67,10 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		params.AdvancedGeoFilters = postRequest.AdvancedGeoFilters
 
 		// Также парсим query параметры для POST запроса
-		if query := c.Query("query"); query != "" {
+		// Поддерживаем оба параметра: "q" и "query"
+		if query := c.Query("q"); query != "" {
+			params.Query = query
+		} else if query := c.Query("query"); query != "" {
 			params.Query = query
 		}
 		if page := c.QueryInt("page", 0); page > 0 {
@@ -80,8 +83,13 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 		logger.Error().Err(err).Msg("Failed to parse search params")
 
 		// Попробуем разобрать запрос как form-data
+		// Поддерживаем оба параметра: "q" и "query"
+		query := c.FormValue("q")
+		if query == "" {
+			query = c.FormValue("query")
+		}
 		params = search.ServiceParams{
-			Query:         c.FormValue("query"),
+			Query:         query,
 			Page:          parseIntOrDefault(c.FormValue("page"), 1),
 			Size:          parseIntOrDefault(c.FormValue("limit"), 20),
 			Sort:          c.FormValue("sort_by"),
@@ -123,6 +131,50 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 		if len(attributeFilters) > 0 {
 			params.AttributeFilters = attributeFilters
+		}
+	}
+
+	// Если Query пустой, проверяем параметр "q" из URL для GET запросов
+	if params.Query == "" {
+		if query := c.Query("q"); query != "" {
+			params.Query = query
+		} else if query := c.Query("query"); query != "" {
+			params.Query = query
+		}
+	}
+
+	// Парсим остальные параметры из URL для GET запросов, если они не установлены
+	if params.Page == 0 {
+		if page := c.QueryInt("page", 0); page > 0 {
+			params.Page = page
+		}
+	}
+	if params.Size == 0 {
+		if limit := c.QueryInt("limit", 0); limit > 0 {
+			params.Size = limit
+		}
+	}
+	if params.CategoryID == "" {
+		params.CategoryID = c.Query("category_id")
+	}
+	if params.Sort == "" {
+		params.Sort = c.Query("sort_by")
+	}
+	if params.SortDirection == "" {
+		params.SortDirection = c.Query("sort_order")
+	}
+	if params.PriceMin == 0 {
+		if minPrice := c.Query("price_min"); minPrice != "" {
+			if price, err := strconv.ParseFloat(minPrice, 64); err == nil && price > 0 {
+				params.PriceMin = price
+			}
+		}
+	}
+	if params.PriceMax == 0 {
+		if maxPrice := c.Query("price_max"); maxPrice != "" {
+			if price, err := strconv.ParseFloat(maxPrice, 64); err == nil && price > 0 {
+				params.PriceMax = price
+			}
 		}
 	}
 

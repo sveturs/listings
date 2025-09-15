@@ -2000,6 +2000,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/ai/analyze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze product image using AI
+     * @description Analyzes a product image and extracts information using Claude AI
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Analysis request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_ai_handler.AnalyzeProductRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_ai_handler.AnalyzeProductResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -36868,6 +36932,23 @@ export interface components {
       data?: unknown;
       /** @example true */
       success?: boolean;
+    };
+    'internal_proj_ai_handler.AnalyzeProductRequest': {
+      imageData?: string;
+      userLang?: string;
+    };
+    'internal_proj_ai_handler.AnalyzeProductResponse': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      category?: string;
+      condition?: string;
+      currency?: string;
+      description?: string;
+      keywords?: string[];
+      price?: number;
+      suggestedLocation?: string;
+      title?: string;
     };
     'internal_proj_analytics_handler.EventRequest': {
       event_data?: number[];

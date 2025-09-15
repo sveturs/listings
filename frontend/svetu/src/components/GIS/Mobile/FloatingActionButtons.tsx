@@ -49,7 +49,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
             onClick={onSearchClick}
             className="flex-1 text-left text-gray-500 text-sm truncate"
           >
-            {t('search.placeholder', 'Введите адрес или район...')}
+            {t('search.placeholder')}
           </button>
           {isLoading && (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 flex-shrink-0"></div>
@@ -68,7 +68,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
           style={{
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
           }}
-          aria-label={t('filters.title', 'Меню')}
+          aria-label={t('filters.title')}
         >
           <svg
             className="w-6 h-6 text-gray-700 transition-transform duration-300"
@@ -104,7 +104,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 ? 'bg-orange-600 hover:bg-orange-700 text-white'
                 : 'bg-white hover:bg-gray-50 text-gray-700'
             }`}
-            title={t('filters.title', 'Фильтры')}
+            title={t('filters.title')}
           >
             <svg
               className="w-5 h-5"
@@ -131,7 +131,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
               setIsExpanded(false);
             }}
             className="bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200"
-            title={t('geolocation.findMe', 'Моё местоположение')}
+            title={t('geolocation.findMe')}
           >
             <svg
               className="w-5 h-5"
@@ -162,7 +162,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
                 setIsExpanded(false);
               }}
               className="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 relative"
-              title={t('showAll.title', 'Показать все результаты')}
+              title={t('showAll.title')}
             >
               <svg
                 className="w-5 h-5"
@@ -206,9 +206,7 @@ const FloatingActionButtons: React.FC<FloatingActionButtonsProps> = ({
               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
             />
           </svg>
-          <span>
-            {t('results.showCount', { count: markersCount })}
-          </span>
+          <span>{t('results.showCount', { count: markersCount })}</span>
         </button>
       )}
     </>

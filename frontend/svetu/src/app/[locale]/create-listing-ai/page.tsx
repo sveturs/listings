@@ -495,6 +495,37 @@ export default function AIPoweredListingCreationPage() {
       // Call Claude AI service with user's language
       const analysis = await claudeAI.analyzeProduct(base64Image, locale);
 
+      // Generate translations for other languages
+      const targetLanguages = ['en', 'sr', 'ru'].filter(
+        (lang) => lang !== locale
+      );
+      let translations = {};
+
+      try {
+        const translationResponse = await claudeAI.translateContent(
+          {
+            title: analysis.title,
+            description: analysis.description,
+          },
+          targetLanguages
+        );
+        // Извлекаем только данные переводов из ответа
+        translations = translationResponse.data || translationResponse;
+      } catch (error) {
+        console.error('Translation error:', error);
+        // Create empty translations as fallback
+        translations = targetLanguages.reduce(
+          (acc, lang) => {
+            acc[lang] = {
+              title: analysis.title,
+              description: analysis.description,
+            };
+            return acc;
+          },
+          {} as Record<string, { title: string; description: string }>
+        );
+      }
+
       // Update state with AI analysis with validation
       setAiData({
         ...aiData,
@@ -512,7 +543,15 @@ export default function AIPoweredListingCreationPage() {
           ? analysis.suggestedPhotos
           : [],
         // Извлекаем только число из цены, убираем валюту
-        price: analysis.price?.replace(/[^\d.,]/g, '').replace(',', '.') || '',
+        price: (() => {
+          const priceValue = analysis.price as string | number | undefined;
+          if (typeof priceValue === 'string') {
+            return priceValue.replace(/[^\d.,]/g, '').replace(',', '.');
+          } else if (typeof priceValue === 'number') {
+            return priceValue.toString();
+          }
+          return '';
+        })(),
         selectedTitleIndex: 0,
         publishTime: '19:00',
         location: exifLocationData || {
@@ -522,6 +561,7 @@ export default function AIPoweredListingCreationPage() {
         },
         condition: analysis.condition || 'used',
         insights: analysis.insights || {},
+        translations: translations, // Add translations
       });
 
       // Используем новую систему определения категории если есть categoryHints
@@ -1060,6 +1100,23 @@ export default function AIPoweredListingCreationPage() {
                 <Package className="w-5 h-5" />
                 {t('ai.enhance.category_title')}
               </h3>
+
+              {/* Отображаем выбранную категорию, если она есть */}
+              {aiData.category && (
+                <div className="mb-4">
+                  <div className="alert alert-success">
+                    <Check className="w-4 h-4" />
+                    <span>
+                      {t('ai.enhance.category_detected')}:{' '}
+                      <strong>
+                        {getCategoryData(aiData.category)?.name ||
+                          aiData.category}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 {(aiData.categoryProbabilities || []).map((cat, index) => {
                   if (!cat || !cat.name) {
@@ -1094,10 +1151,11 @@ export default function AIPoweredListingCreationPage() {
                 })}
               </div>
 
-              {aiData.categoryProbabilities &&
-                aiData.categoryProbabilities.length > 0 && (
-                  <div className="mt-4">
-                    <div className="alert alert-info">
+              {/* Селектор категорий - всегда показываем для возможности изменения */}
+              <div className="mt-4">
+                {aiData.categoryProbabilities &&
+                  aiData.categoryProbabilities.length > 0 && (
+                    <div className="alert alert-info mb-2">
                       <Check className="w-4 h-4" />
                       <span className="text-sm">
                         {t('ai.enhance.category_auto_selected', {
@@ -1107,42 +1165,40 @@ export default function AIPoweredListingCreationPage() {
                         })}
                       </span>
                     </div>
-                    <div className="mt-2">
-                      <label className="label">
-                        <span className="label-text">
-                          {t('ai.enhance.manual_category_selection')}
-                        </span>
-                      </label>
-                      <select
-                        className="select select-bordered w-full"
-                        value={getCategoryData(aiData.category)?.id || ''}
-                        onChange={(e) => {
-                          const selectedCat = categories.find(
-                            (cat) => cat.id === Number(e.target.value)
-                          );
-                          if (selectedCat) {
-                            setAiData({
-                              ...aiData,
-                              category: selectedCat.slug,
-                            });
-                            loadCategoryAttributes(selectedCat.id);
-                            // Сбрасываем выбор автомобиля при смене категории
-                            setCarSelection({});
-                          }
-                        }}
-                      >
-                        <option value="">
-                          {t('ai.enhance.select_category')}
-                        </option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                )}
+                  )}
+                <div className="mt-2">
+                  <label className="label">
+                    <span className="label-text">
+                      {t('ai.enhance.manual_category_selection')}
+                    </span>
+                  </label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={getCategoryData(aiData.category)?.id || ''}
+                    onChange={(e) => {
+                      const selectedCat = categories.find(
+                        (cat) => cat.id === Number(e.target.value)
+                      );
+                      if (selectedCat) {
+                        setAiData({
+                          ...aiData,
+                          category: selectedCat.slug,
+                        });
+                        loadCategoryAttributes(selectedCat.id);
+                        // Сбрасываем выбор автомобиля при смене категории
+                        setCarSelection({});
+                      }
+                    }}
+                  >
+                    <option value="">{t('ai.enhance.select_category')}</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2203,7 +2259,7 @@ export default function AIPoweredListingCreationPage() {
 
             <div className="card-body">
               <h2 className="card-title text-2xl">
-                {previewLanguage === 'ru'
+                {previewLanguage === locale
                   ? aiData.titleVariants[aiData.selectedTitleIndex] ||
                     aiData.title
                   : aiData.translations[previewLanguage]?.title ||
@@ -2216,7 +2272,7 @@ export default function AIPoweredListingCreationPage() {
               </div>
 
               <p className="text-base-content/80 mb-4 whitespace-pre-wrap">
-                {previewLanguage === 'ru'
+                {previewLanguage === locale
                   ? aiData.description
                   : aiData.translations[previewLanguage]?.description ||
                     aiData.description}

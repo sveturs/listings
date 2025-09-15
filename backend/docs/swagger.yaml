@@ -7468,6 +7468,37 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_proj_ai_handler.AnalyzeProductRequest:
+    properties:
+      imageData:
+        type: string
+      userLang:
+        type: string
+    type: object
+  internal_proj_ai_handler.AnalyzeProductResponse:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      category:
+        type: string
+      condition:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      price:
+        type: number
+      suggestedLocation:
+        type: string
+      title:
+        type: string
+    type: object
   internal_proj_analytics_handler.EventRequest:
     properties:
       event_data:
@@ -11247,6 +11278,42 @@ paths:
       summary: Update variant attribute
       tags:
       - marketplace-admin-variant-attributes
+  /api/ai/analyze:
+    post:
+      consumes:
+      - application/json
+      description: Analyzes a product image and extracts information using Claude
+        AI
+      parameters:
+      - description: Analysis request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_ai_handler.AnalyzeProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_ai_handler.AnalyzeProductResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Analyze product image using AI
+      tags:
+      - ai
   /api/v1/admin-check/{email}:
     get:
       consumes:

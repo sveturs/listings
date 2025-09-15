@@ -537,9 +537,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateUser(null);
 
       // Очищаем только auth-related данные, сохраняем важные настройки
-      const locale = localStorage.getItem('NEXT_LOCALE');
-      const appVersion = localStorage.getItem('__APP_VERSION__');
-      const theme = localStorage.getItem('theme');
+      const _locale = localStorage.getItem('NEXT_LOCALE');
+      const _appVersion = localStorage.getItem('__APP_VERSION__');
+      const _theme = localStorage.getItem('theme');
 
       // Очищаем токены и данные пользователя
       tokenManager.clearTokens();

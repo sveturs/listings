@@ -33,7 +33,7 @@ export default function OAuthProcessor() {
       if (userData) {
         try {
           localStorage.setItem('svetu_user', JSON.stringify(userData));
-        } catch (e) {
+        } catch {
           // Ignore cache errors
         }
       }
@@ -86,8 +86,12 @@ export default function OAuthProcessor() {
               <h2 className="text-2xl font-bold mb-2 text-error">
                 Authentication Failed
               </h2>
-              <p className="text-base-content/70 mb-2">{error || 'No authorization data received'}</p>
-              <p className="text-sm text-base-content/50">Redirecting to home...</p>
+              <p className="text-base-content/70 mb-2">
+                {error || 'No authorization data received'}
+              </p>
+              <p className="text-sm text-base-content/50">
+                Redirecting to home...
+              </p>
             </>
           )}
         </div>

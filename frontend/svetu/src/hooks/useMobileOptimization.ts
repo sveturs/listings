@@ -53,7 +53,7 @@ const useMobileOptimization = (
 ): MobileOptimizationReturn => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [_isMounted, setIsMounted] = useState(false);
   const [deviceInfo, setDeviceInfo] = useState({
     isLowEndDevice: false,
     memory: null as number | null,
