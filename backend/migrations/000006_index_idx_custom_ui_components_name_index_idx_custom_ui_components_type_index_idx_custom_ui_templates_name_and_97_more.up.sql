@@ -52,6 +52,7 @@ CREATE INDEX idx_listing_attribute_values_attribute ON public.listing_attribute_
 CREATE INDEX idx_listing_attribute_values_listing ON public.listing_attribute_values USING btree (listing_id);
 CREATE INDEX idx_listing_attribute_values_numeric ON public.listing_attribute_values USING btree (numeric_value) WHERE (numeric_value IS NOT NULL);
 CREATE INDEX idx_listing_attribute_values_text ON public.listing_attribute_values USING btree (text_value) WHERE (text_value IS NOT NULL);
+CREATE INDEX idx_listing_attribute_values_unit ON public.listing_attribute_values USING btree (unit) WHERE (unit IS NOT NULL);
 CREATE INDEX idx_listing_views_listing_ip ON public.listing_views USING btree (listing_id, ip_hash);
 CREATE INDEX idx_listing_views_listing_user ON public.listing_views USING btree (listing_id, user_id);
 CREATE INDEX idx_listing_views_time ON public.listing_views USING btree (view_time);
@@ -62,8 +63,10 @@ CREATE INDEX idx_listings_geo_geohash ON public.listings_geo USING btree (geohas
 CREATE INDEX idx_listings_geo_geohash_precise ON public.listings_geo USING btree (geohash, is_precise);
 CREATE INDEX idx_listings_geo_input_method ON public.listings_geo USING btree (input_method);
 CREATE INDEX idx_listings_geo_is_precise ON public.listings_geo USING btree (is_precise);
+CREATE INDEX idx_listings_geo_listing_id ON public.listings_geo USING btree (listing_id);
 CREATE INDEX idx_listings_geo_municipality ON public.listings_geo USING btree (municipality_id);
 CREATE INDEX idx_listings_geo_privacy ON public.listings_geo USING btree (location_privacy);
+CREATE INDEX idx_listings_geo_privacy_level ON public.listings_geo USING btree (location_privacy);
 CREATE INDEX idx_listings_geo_verified ON public.listings_geo USING btree (address_verified);
 CREATE INDEX idx_listings_metadata_discount ON public.marketplace_listings USING gin (((metadata -> 'discount'::text)));
 CREATE INDEX idx_map_items_cache_category ON public.map_items_cache USING btree (category_id) WHERE (category_id IS NOT NULL);
@@ -95,6 +98,3 @@ CREATE INDEX idx_marketplace_listings_city ON public.marketplace_listings USING 
 CREATE INDEX idx_marketplace_listings_created_at_desc ON public.marketplace_listings USING btree (created_at DESC) WHERE ((status)::text = 'active'::text);
 CREATE INDEX idx_marketplace_listings_description_trgm ON public.marketplace_listings USING gin (description public.gin_trgm_ops);
 CREATE INDEX idx_marketplace_listings_external_id ON public.marketplace_listings USING btree (external_id);
-CREATE INDEX idx_marketplace_listings_external_id_storefront_id ON public.marketplace_listings USING btree (external_id, storefront_id);
-CREATE INDEX idx_marketplace_listings_price ON public.marketplace_listings USING btree (price) WHERE ((price IS NOT NULL) AND ((status)::text = 'active'::text));
-CREATE INDEX idx_marketplace_listings_status ON public.marketplace_listings USING btree (status);

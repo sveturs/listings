@@ -534,7 +534,8 @@ CREATE TABLE public.listing_attribute_values (
     date_value date,
     json_value jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    unit character varying(50)
 );
 CREATE TABLE public.listing_views (
     id integer NOT NULL,
