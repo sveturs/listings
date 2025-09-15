@@ -65,7 +65,25 @@
     "notFound": "Adresa nije pronađena",
     "error": "Greška pri pretrazi adrese",
     "byAddress": "Po adresi",
-    "byDistrict": "Po opštini"
+    "byDistrict": "Po opštini",
+    "placeholder": "Unesite adresu ili opštinu...",
+    "quickActions": {
+      "title": "Brze akcije",
+      "nearMe": "U mojoj blizini",
+      "center": "Centar grada",
+      "newDistricts": "Novi delovi grada"
+    },
+    "recent": {
+      "title": "Nedavne pretrage",
+      "clear": "Obriši"
+    },
+    "popular": {
+      "title": "Popularne opštine"
+    },
+    "tips": {
+      "title": "Savet",
+      "description": "Pokušajte pretragu po nazivu ulice, opštine ili najbliže metro stanice za bolje rezultate."
+    }
   },
   "filters": {
     "title": "Filteri",
@@ -172,7 +190,14 @@
   },
   "results": {
     "showing": "Prikazano",
-    "listings": "oglasa"
+    "listings": "oglasa",
+    "title": "Rezultati pretrage",
+    "swipeUp": "Povucite naviše za pregled liste",
+    "empty": {
+      "title": "Ništa nije pronađeno",
+      "description": "Pokušajte da promenite filtere ili proširite oblast pretrage"
+    },
+    "viewAll": "Pogledaj sve"
   },
   "actions": {
     "apply": "Primeni",
@@ -180,10 +205,6 @@
   },
   "errors": {
     "loadingFailed": "Neuspešno učitavanje oglasa"
-  },
-  "geolocation": {
-    "findMe": "Moja lokacija",
-    "error": "Neuspešno određivanje lokacije"
   },
   "showAll": "Prikaži sve oglase",
   "showHeader": "Prikaži zaglavlje",
@@ -226,7 +247,14 @@
   "walkingAccessibility": "Pešačka dostupnost",
   "searchRadius": "Radijus pretrage",
   "common": {
-    "close": "Zatvori"
+    "close": "Zatvori",
+    "loading": "Učitavanje..."
+  },
+  "geolocation": {
+    "findMe": "Moja lokacija",
+    "error": "Neuspešno određivanje lokacije",
+    "success": "Lokacija pronađena",
+    "notSupported": "Geolokacija nije podržana"
   },
   "ru-RU": "Српски",
   "attributes": "Atributi",

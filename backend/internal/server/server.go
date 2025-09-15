@@ -27,6 +27,7 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics"
+	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/analytics"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
@@ -60,6 +61,7 @@ type Server struct {
 	app                *fiber.App
 	cfg                *config.Config
 	configModule       *configHandler.Module
+	ai                 *aiHandler.Handler
 	users              *userHandler.Handler
 	middleware         *middleware.Middleware
 	review             *reviewHandler.Handler
@@ -131,6 +133,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	services := globalService.NewService(ctx, db, cfg, translationService)
 
 	configModule := configHandler.NewModule(cfg)
+	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
@@ -251,6 +254,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		app:                app,
 		cfg:                cfg,
 		configModule:       configModule,
+		ai:                 aiHandlerInstance,
 		users:              usersHandler,
 		middleware:         middleware,
 		review:             reviewHandler,
@@ -445,7 +449,7 @@ func (s *Server) registerProjectRoutes() {
 	// config регистрируется отдельно до этого метода для публичных роутов
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)
+	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {

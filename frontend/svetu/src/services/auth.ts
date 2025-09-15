@@ -64,15 +64,23 @@ export class AuthService {
 
     // Добавляем JWT токен если есть
     const token = tokenManager.getAccessToken();
-    console.log('[AuthService] getAuthHeaders - token from tokenManager:', token ? `exists (${token.length} chars)` : 'null');
+    console.log(
+      '[AuthService] getAuthHeaders - token from tokenManager:',
+      token ? `exists (${token.length} chars)` : 'null'
+    );
 
     // Дополнительная проверка sessionStorage напрямую
     if (typeof window !== 'undefined') {
       const storedToken = sessionStorage.getItem('svetu_access_token');
-      console.log('[AuthService] getAuthHeaders - token from sessionStorage:', storedToken ? `exists (${storedToken.length} chars)` : 'null');
+      console.log(
+        '[AuthService] getAuthHeaders - token from sessionStorage:',
+        storedToken ? `exists (${storedToken.length} chars)` : 'null'
+      );
 
       if (storedToken && !token) {
-        console.warn('[AuthService] Token exists in sessionStorage but not in tokenManager!');
+        console.warn(
+          '[AuthService] Token exists in sessionStorage but not in tokenManager!'
+        );
       }
     }
 

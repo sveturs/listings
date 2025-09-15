@@ -14,6 +14,9 @@
 # Claude local configuration
 CLAUDE.local.md
 
+# Auth service public key
+public.pem
+
 # MinIO dev storage
 data/minio_dev/
 

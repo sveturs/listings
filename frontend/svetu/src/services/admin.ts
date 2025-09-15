@@ -2,8 +2,7 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 import configManager from '@/config';
 
-// Базовый URL для backend API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Удалена неиспользуемая константа API_BASE_URL (используется configManager.getApiUrl())
 
 function getCurrentLocale(): string {
   // Проверяем URL для получения локали (Next.js i18n)
@@ -995,11 +994,14 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'GET',
-        headers,
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'GET',
+          headers,
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1015,12 +1017,15 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(attribute),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(attribute),
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1037,12 +1042,15 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(attribute),
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(attribute),
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1056,11 +1064,14 @@ export const adminApi = {
       const headers = await getAuthHeaders();
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/variant-attributes/${id}`, {
-        method: 'DELETE',
-        headers,
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/variant-attributes/${id}`,
+        {
+          method: 'DELETE',
+          headers,
+          credentials: 'include',
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

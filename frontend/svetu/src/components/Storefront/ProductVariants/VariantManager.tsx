@@ -101,11 +101,14 @@ export default function VariantManager({
     try {
       const token = localStorage.getItem('access_token');
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/public/variants/attributes`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/public/variants/attributes`,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        }
+      );
       if (response.ok) {
         const data = await response.json();
         setAttributes(

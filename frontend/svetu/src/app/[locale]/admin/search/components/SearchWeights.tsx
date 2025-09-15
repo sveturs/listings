@@ -65,14 +65,17 @@ export default function SearchWeights() {
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/search/weights/${weightId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({ weight: newWeight }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/search/weights/${weightId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({ weight: newWeight }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to update weight');
@@ -91,16 +94,19 @@ export default function SearchWeights() {
   const createBackup = async () => {
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/search/backup-weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          item_type: selectedItemType,
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/search/backup-weights`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({
+            item_type: selectedItemType,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to create backup');

@@ -2000,6 +2000,134 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/ai/analyze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze product image using AI
+     * @description Analyzes a product image and extracts information using Claude AI
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Analysis request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_ai_handler.AnalyzeProductRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_ai_handler.AnalyzeProductResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/ai/translate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Translate content to multiple languages
+     * @description Translates title and description to specified languages using Claude AI
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Translation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_ai_handler.TranslateContentRequest'];
+        };
+      };
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_ai_handler.TranslateContentResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -13163,6 +13291,76 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/gis/clusters': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить кластеры объявлений
+     * @description Возвращает кластеризованные точки для отображения на карте
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Уровень зума карты (1-20) */
+          zoom: number;
+          /** @description Границы видимой области (south,west,north,east) */
+          bounds: string;
+          /** @description ID категории для фильтрации */
+          category_id?: number;
+          /** @description Минимальная цена */
+          min_price?: number;
+          /** @description Максимальная цена */
+          max_price?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Массив кластеров */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_gis_handler.ClusterPoint'][];
+            };
+          };
+        };
+        /** @description Некорректные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/gis/districts': {
     parameters: {
       query?: never;
@@ -13739,6 +13937,72 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/gis/heatmap': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить данные для тепловой карты
+     * @description Возвращает точки с весами для построения тепловой карты
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Границы видимой области (south,west,north,east) */
+          bounds: string;
+          /** @description Метрика для веса (price, views, density) */
+          metric?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Данные для тепловой карты */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              }[];
+            };
+          };
+        };
+        /** @description Некорректные параметры */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/gis/listings/{id}/address': {
     parameters: {
       query?: never;
@@ -14121,7 +14385,7 @@ export interface paths {
           lng: number;
           /** @description Радиус поиска в километрах (по умолчанию 5) */
           radius_km?: number;
-          /** @description Количество результатов (по умолчанию 20) */
+          /** @description Количество результатов (по умолчанию 200, максимум 5000) */
           limit?: number;
         };
         header?: never;
@@ -14273,7 +14537,7 @@ export interface paths {
           min_price?: number;
           /** @description Maximum price */
           max_price?: number;
-          /** @description Limit results (default: 50, max: 200) */
+          /** @description Limit results (default: 1000, max: 5000) */
           limit?: number;
           /** @description Offset for pagination */
           offset?: number;
@@ -14355,7 +14619,7 @@ export interface paths {
           min_price?: number;
           /** @description Maximum price */
           max_price?: number;
-          /** @description Limit results (default: 50, max: 200) */
+          /** @description Limit results (default: 1000, max: 5000) */
           limit?: number;
           /** @description Offset for pagination */
           offset?: number;
@@ -14453,7 +14717,7 @@ export interface paths {
           sort_by?: string;
           /** @description Порядок сортировки (asc, desc) */
           sort_order?: string;
-          /** @description Количество результатов (по умолчанию 50, максимум 1000) */
+          /** @description Количество результатов (по умолчанию 1000, максимум 5000) */
           limit?: number;
           /** @description Смещение */
           offset?: number;
@@ -35953,6 +36217,8 @@ export interface components {
       location?: components['schemas']['backend_internal_proj_gis_types.Point'];
       price?: number;
       privacy_level?: string;
+      /** @description Товары витрины */
+      products?: components['schemas']['backend_internal_proj_gis_types.ProductInfo'][];
       rating?: number;
       status?: string;
       storefront_id?: number;
@@ -36062,6 +36328,13 @@ export interface components {
     'backend_internal_proj_gis_types.Polygon': {
       coordinates?: number[][][];
       type?: string;
+    };
+    'backend_internal_proj_gis_types.ProductInfo': {
+      category?: string;
+      id?: number;
+      image?: string;
+      price?: number;
+      title?: string;
     };
     'backend_internal_proj_gis_types.RadiusFilter': {
       center_lat: number;
@@ -36724,6 +36997,49 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
+    'internal_proj_ai_handler.AnalyzeProductRequest': {
+      imageData?: string;
+      userLang?: string;
+    };
+    'internal_proj_ai_handler.AnalyzeProductResponse': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      category?: string;
+      categoryHints?: components['schemas']['internal_proj_ai_handler.CategoryHints'];
+      categoryProbabilities?: components['schemas']['internal_proj_ai_handler.CategoryProbability'][];
+      condition?: string;
+      currency?: string;
+      description?: string;
+      keywords?: string[];
+      price?: number;
+      suggestedLocation?: string;
+      tags?: string[];
+      title?: string;
+      titleVariants?: string[];
+    };
+    'internal_proj_ai_handler.CategoryHints': {
+      domain?: string;
+      keywords?: string[];
+      productType?: string;
+    };
+    'internal_proj_ai_handler.CategoryProbability': {
+      name?: string;
+      probability?: number;
+    };
+    'internal_proj_ai_handler.TranslateContentRequest': {
+      content?: {
+        description?: string;
+        title?: string;
+      };
+      targetLanguages?: string[];
+    };
+    'internal_proj_ai_handler.TranslateContentResponse': {
+      [key: string]: {
+        description?: string;
+        title?: string;
+      };
+    };
     'internal_proj_analytics_handler.EventRequest': {
       event_data?: number[];
       /** @enum {string} */
@@ -36817,6 +37133,12 @@ export interface components {
       files?: components['schemas']['internal_proj_docserver_handler.DocFile'][];
       /** @example ./docs */
       rootPath?: string;
+    };
+    'internal_proj_gis_handler.ClusterPoint': {
+      count?: number;
+      ids?: number[];
+      lat?: number;
+      lng?: number;
     };
     'internal_proj_global_handler.UnifiedCategoryInfo': {
       id?: number;

@@ -126,11 +126,14 @@ export default function AITranslations({
   const fetchProviders = async () => {
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/providers`, {
-        headers: {
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/translations/ai/providers`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -223,22 +226,25 @@ export default function AITranslations({
     setIsTranslating(true);
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/translate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          provider: activeProvider,
-          text: singleText,
-          key: singleKey,
-          module: singleModule,
-          source_language: sourceLanguage,
-          target_languages: targetLanguages,
-          context: singleContext || undefined,
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/translations/ai/translate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({
+            provider: activeProvider,
+            text: singleText,
+            key: singleKey,
+            module: singleModule,
+            source_language: sourceLanguage,
+            target_languages: targetLanguages,
+            context: singleContext || undefined,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -269,20 +275,23 @@ export default function AITranslations({
     setIsTranslating(true);
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          provider: activeProvider,
-          modules: batchMode ? modules : [selectedModule],
-          source_language: sourceLanguage,
-          target_languages: targetLanguages,
-          missing_only: missingOnly,
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/translations/ai/batch`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({
+            provider: activeProvider,
+            modules: batchMode ? modules : [selectedModule],
+            source_language: sourceLanguage,
+            target_languages: targetLanguages,
+            missing_only: missingOnly,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -317,14 +326,17 @@ export default function AITranslations({
       );
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/translations/ai/apply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({ translations: updates }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/translations/ai/apply`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({ translations: updates }),
+        }
+      );
 
       if (response.ok) {
         toast.success('Переводы применены успешно');

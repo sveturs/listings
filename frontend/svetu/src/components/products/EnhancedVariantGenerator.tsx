@@ -48,7 +48,9 @@ export default function EnhancedVariantGenerator({
 
         // Загружаем информацию о вариативных атрибутах
         const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/product-variant-attributes`);
+        const response = await fetch(
+          `${apiUrl}/api/v1/product-variant-attributes`
+        );
         if (response.ok) {
           const data = await response.json();
           const allAttributes: ProductVariantAttribute[] =

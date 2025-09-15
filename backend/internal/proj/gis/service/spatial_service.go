@@ -12,6 +12,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"backend/internal/proj/gis/constants"
 	"backend/internal/proj/gis/repository"
 	"backend/internal/proj/gis/types"
 	"backend/pkg/utils"
@@ -40,14 +41,14 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 
 	// Устанавливаем дефолтные значения
 	if params.Limit <= 0 {
-		params.Limit = 50
+		params.Limit = constants.DEFAULT_LIMIT
 	}
-	if params.Limit > 1000 {
-		params.Limit = 1000
+	if params.Limit > constants.MAX_LIMIT {
+		params.Limit = constants.MAX_LIMIT
 	}
 
 	// Выполняем поиск
-	listings, totalCount, err := s.repo.SearchListings(ctx, params)
+	listings, _, err := s.repo.SearchListings(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search listings: %w", err)
 	}
@@ -109,11 +110,14 @@ func (s *SpatialService) SearchListings(ctx context.Context, params types.Search
 		}
 	}
 
+	// Группируем товары витрин
+	groupedListings := s.groupStorefrontProducts(ctx, listings, &params)
+
 	// Формируем ответ
 	response := &types.SearchResponse{
-		Listings:   listings,
-		TotalCount: totalCount,
-		HasMore:    int64(params.Offset+len(listings)) < totalCount,
+		Listings:   groupedListings,
+		TotalCount: int64(len(groupedListings)),
+		HasMore:    false, // После группировки пагинация становится сложной
 	}
 
 	return response, nil
@@ -625,6 +629,178 @@ func (s *SpatialService) calculateConfidenceScore(req types.UpdateAddressRequest
 func (s *SpatialService) calculateGeohash(point types.Point) string {
 	// Упрощенная версия - в реальности стоит использовать библиотеку
 	return fmt.Sprintf("gh%.6f%.6f", point.Lat, point.Lng)
+}
+
+// groupStorefrontProducts группирует товары витрин по витринам с учетом фильтров
+func (s *SpatialService) groupStorefrontProducts(ctx context.Context, listings []types.GeoListing, filters *types.SearchParams) []types.GeoListing {
+	// Создаем карту для группировки витрин
+	storefrontMap := make(map[int]*types.GeoListing)
+	// Список обычных объявлений (не товары витрин)
+	var regularListings []types.GeoListing
+	// Карта для подсчета товаров в каждой витрине
+	storefrontProductCounts := make(map[int]int)
+	// Карта для суммирования цен товаров витрин
+	storefrontPriceSums := make(map[int]float64)
+	// Карта для хранения товаров каждой витрины
+	storefrontProducts := make(map[int][]types.ProductInfo)
+
+	fmt.Printf("🛍️ groupStorefrontProducts: Processing %d listings\n", len(listings))
+
+	for _, listing := range listings {
+		storefrontIDValue := 0
+		if listing.StorefrontID != nil {
+			storefrontIDValue = *listing.StorefrontID
+		}
+		fmt.Printf("  - Listing ID=%d, ItemType='%s' (len=%d), StorefrontID=%d\n",
+			listing.ID, listing.ItemType, len(listing.ItemType), storefrontIDValue)
+
+		// Если это товар витрины и у него есть storefront_id
+		if listing.ItemType == "storefront_product" && listing.StorefrontID != nil && *listing.StorefrontID > 0 {
+			storefrontID := *listing.StorefrontID
+			fmt.Printf("    -> Product of storefront %d detected\n", storefrontID)
+
+			// Если витрина еще не добавлена в карту
+			if _, exists := storefrontMap[storefrontID]; !exists {
+				fmt.Printf("    -> Fetching storefront %d from DB\n", storefrontID)
+				// Получаем информацию о витрине из БД
+				storefrontListing := types.GeoListing{
+					StorefrontID:    &storefrontID,
+					ItemType:        "storefront",
+					DisplayStrategy: "storefront_grouped",
+					PrivacyLevel:    "exact",
+					Status:          "active",
+				}
+
+				var lat, lng float64
+				query := `
+					SELECT
+						s.id,
+						s.name,
+						COALESCE(s.description, ''),
+						COALESCE(ST_Y(ug.location::geometry), 0),
+						COALESCE(ST_X(ug.location::geometry), 0),
+						COALESCE(s.address, ''),
+						s.user_id,
+						s.created_at,
+						s.updated_at
+					FROM storefronts s
+					LEFT JOIN unified_geo ug ON ug.source_type = 'storefront' AND ug.source_id = s.id
+					WHERE s.id = $1`
+
+				err := s.db.QueryRowContext(ctx, query, storefrontID).Scan(
+					&storefrontListing.ID,
+					&storefrontListing.Title,
+					&storefrontListing.Description,
+					&lat,
+					&lng,
+					&storefrontListing.Address,
+					&storefrontListing.UserID,
+					&storefrontListing.CreatedAt,
+					&storefrontListing.UpdatedAt,
+				)
+
+				if err == nil {
+					storefrontListing.Location = types.Point{Lat: lat, Lng: lng}
+					fmt.Printf("    -> Storefront %d found: %s\n", storefrontID, storefrontListing.Title)
+					// Копируем расстояние от первого товара
+					storefrontListing.Distance = listing.Distance
+					storefrontListing.DisplayStrategy = "storefront_grouped"
+					storefrontMap[storefrontID] = &storefrontListing
+				} else {
+					fmt.Printf("    -> ERROR fetching storefront %d: %v\n", storefrontID, err)
+					// Если не удалось получить витрину, добавляем товар как обычный
+					regularListings = append(regularListings, listing)
+					continue
+				}
+			}
+
+			// Проверяем, соответствует ли товар фильтрам
+			passesFilters := true
+
+			// Фильтр по категориям
+			if filters != nil && len(filters.Categories) > 0 {
+				categoryFound := false
+				for _, cat := range filters.Categories {
+					if listing.Category == cat {
+						categoryFound = true
+						break
+					}
+				}
+				if !categoryFound {
+					passesFilters = false
+				}
+			}
+
+			// Фильтр по цене
+			if filters != nil && passesFilters {
+				if filters.MinPrice != nil && listing.Price < *filters.MinPrice {
+					passesFilters = false
+				}
+				if filters.MaxPrice != nil && listing.Price > *filters.MaxPrice {
+					passesFilters = false
+				}
+			}
+
+			// Добавляем информацию о товаре в витрину только если он проходит фильтры
+			if passesFilters {
+				// Увеличиваем счетчик товаров для витрины
+				storefrontProductCounts[storefrontID]++
+				// Суммируем цены для расчета средней
+				storefrontPriceSums[storefrontID] += listing.Price
+
+				// Добавляем товар в список товаров витрины
+				productInfo := types.ProductInfo{
+					ID:       listing.ID,
+					Title:    listing.Title,
+					Price:    listing.Price,
+					Category: listing.Category,
+				}
+				// Берем первое изображение если есть
+				if len(listing.Images) > 0 {
+					productInfo.Image = listing.Images[0]
+				}
+				storefrontProducts[storefrontID] = append(storefrontProducts[storefrontID], productInfo)
+			}
+		} else {
+			// Обычное объявление
+			regularListings = append(regularListings, listing)
+		}
+	}
+
+	// Обновляем информацию о витринах (количество товаров, средняя цена и список товаров)
+	for storefrontID, storefront := range storefrontMap {
+		if count := storefrontProductCounts[storefrontID]; count > 0 {
+			// Устанавливаем среднюю цену товаров витрины
+			storefront.Price = storefrontPriceSums[storefrontID] / float64(count)
+			// Можно добавить количество товаров в описание или отдельное поле
+			storefront.Title = fmt.Sprintf("%s (%d товаров)", storefront.Title, count)
+			// Добавляем список товаров витрины (первые 5 товаров для превью)
+			if products, ok := storefrontProducts[storefrontID]; ok {
+				maxProducts := 5
+				if len(products) < maxProducts {
+					maxProducts = len(products)
+				}
+				storefront.Products = products[:maxProducts]
+			}
+		}
+	}
+
+	// Объединяем результаты: сначала обычные объявления, потом витрины
+	result := make([]types.GeoListing, 0, len(regularListings)+len(storefrontMap))
+	result = append(result, regularListings...)
+
+	// Добавляем витрины только если у них есть товары после фильтрации
+	for _, storefront := range storefrontMap {
+		// Проверяем что у витрины есть товары
+		if len(storefront.Products) > 0 {
+			result = append(result, *storefront)
+		}
+	}
+
+	fmt.Printf("🛍️ groupStorefrontProducts: Result - %d regular listings, %d storefronts, total %d\n",
+		len(regularListings), len(storefrontMap), len(result))
+
+	return result
 }
 
 // Helper функции

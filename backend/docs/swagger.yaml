@@ -5919,6 +5919,11 @@ definitions:
         type: number
       privacy_level:
         type: string
+      products:
+        description: Товары витрины
+        items:
+          $ref: '#/definitions/backend_internal_proj_gis_types.ProductInfo'
+        type: array
       rating:
         type: number
       status:
@@ -6168,6 +6173,19 @@ definitions:
           type: array
         type: array
       type:
+        type: string
+    type: object
+  backend_internal_proj_gis_types.ProductInfo:
+    properties:
+      category:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      price:
+        type: number
+      title:
         type: string
     type: object
   backend_internal_proj_gis_types.RadiusFilter:
@@ -7450,6 +7468,92 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_proj_ai_handler.AnalyzeProductRequest:
+    properties:
+      imageData:
+        type: string
+      userLang:
+        type: string
+    type: object
+  internal_proj_ai_handler.AnalyzeProductResponse:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      category:
+        type: string
+      categoryHints:
+        $ref: '#/definitions/internal_proj_ai_handler.CategoryHints'
+      categoryProbabilities:
+        items:
+          $ref: '#/definitions/internal_proj_ai_handler.CategoryProbability'
+        type: array
+      condition:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      price:
+        type: number
+      suggestedLocation:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      titleVariants:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_proj_ai_handler.CategoryHints:
+    properties:
+      domain:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      productType:
+        type: string
+    type: object
+  internal_proj_ai_handler.CategoryProbability:
+    properties:
+      name:
+        type: string
+      probability:
+        type: number
+    type: object
+  internal_proj_ai_handler.TranslateContentRequest:
+    properties:
+      content:
+        properties:
+          description:
+            type: string
+          title:
+            type: string
+        type: object
+      targetLanguages:
+        items:
+          type: string
+        type: array
+    type: object
+  internal_proj_ai_handler.TranslateContentResponse:
+    additionalProperties:
+      properties:
+        description:
+          type: string
+        title:
+          type: string
+      type: object
+    type: object
   internal_proj_analytics_handler.EventRequest:
     properties:
       event_data:
@@ -7583,6 +7687,19 @@ definitions:
       rootPath:
         example: ./docs
         type: string
+    type: object
+  internal_proj_gis_handler.ClusterPoint:
+    properties:
+      count:
+        type: integer
+      ids:
+        items:
+          type: integer
+        type: array
+      lat:
+        type: number
+      lng:
+        type: number
     type: object
   internal_proj_global_handler.UnifiedCategoryInfo:
     properties:
@@ -11216,6 +11333,78 @@ paths:
       summary: Update variant attribute
       tags:
       - marketplace-admin-variant-attributes
+  /api/ai/analyze:
+    post:
+      consumes:
+      - application/json
+      description: Analyzes a product image and extracts information using Claude
+        AI
+      parameters:
+      - description: Analysis request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_ai_handler.AnalyzeProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_ai_handler.AnalyzeProductResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Analyze product image using AI
+      tags:
+      - ai
+  /api/ai/translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates title and description to specified languages using Claude
+        AI
+      parameters:
+      - description: Translation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_ai_handler.TranslateContentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_ai_handler.TranslateContentResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Translate content to multiple languages
+      tags:
+      - ai
   /api/v1/admin-check/{email}:
     get:
       consumes:
@@ -17912,6 +18101,59 @@ paths:
       summary: Get visible cities
       tags:
       - gis
+  /api/v1/gis/clusters:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает кластеризованные точки для отображения на карте
+      parameters:
+      - description: Уровень зума карты (1-20)
+        in: query
+        name: zoom
+        required: true
+        type: integer
+      - description: Границы видимой области (south,west,north,east)
+        in: query
+        name: bounds
+        required: true
+        type: string
+      - description: ID категории для фильтрации
+        in: query
+        name: category_id
+        type: integer
+      - description: Минимальная цена
+        in: query
+        name: min_price
+        type: number
+      - description: Максимальная цена
+        in: query
+        name: max_price
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Массив кластеров
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_gis_handler.ClusterPoint'
+                  type: array
+              type: object
+        "400":
+          description: Некорректные параметры
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Получить кластеры объявлений
+      tags:
+      - gis
   /api/v1/gis/districts:
     get:
       consumes:
@@ -18259,6 +18501,48 @@ paths:
       summary: Валидация геокодирования адреса
       tags:
       - gis
+  /api/v1/gis/heatmap:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает точки с весами для построения тепловой карты
+      parameters:
+      - description: Границы видимой области (south,west,north,east)
+        in: query
+        name: bounds
+        required: true
+        type: string
+      - default: density
+        description: Метрика для веса (price, views, density)
+        in: query
+        name: metric
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные для тепловой карты
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    additionalProperties: true
+                    type: object
+                  type: array
+              type: object
+        "400":
+          description: Некорректные параметры
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Получить данные для тепловой карты
+      tags:
+      - gis
   /api/v1/gis/listings/{id}/address:
     put:
       consumes:
@@ -18497,7 +18781,7 @@ paths:
         in: query
         name: radius_km
         type: number
-      - description: Количество результатов (по умолчанию 20)
+      - description: Количество результатов (по умолчанию 200, максимум 5000)
         in: query
         name: limit
         type: integer
@@ -18624,7 +18908,7 @@ paths:
         in: query
         name: max_price
         type: number
-      - description: 'Limit results (default: 50, max: 200)'
+      - description: 'Limit results (default: 1000, max: 5000)'
         in: query
         name: limit
         type: integer
@@ -18684,7 +18968,7 @@ paths:
         in: query
         name: max_price
         type: number
-      - description: 'Limit results (default: 50, max: 200)'
+      - description: 'Limit results (default: 1000, max: 5000)'
         in: query
         name: limit
         type: integer
@@ -18774,7 +19058,7 @@ paths:
         in: query
         name: sort_order
         type: string
-      - description: Количество результатов (по умолчанию 50, максимум 1000)
+      - description: Количество результатов (по умолчанию 1000, максимум 5000)
         in: query
         name: limit
         type: integer

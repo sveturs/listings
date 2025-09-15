@@ -70,6 +70,8 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/user/profile
 psql -c "UPDATE table SET ..."
 
 # ДЕЛАЙ ТАК:
+0. изучи нашу БД DATABASE_URL=postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable
+
 # 1. Создай файлы миграции
 backend/migrations/000XXX_description.up.sql
 backend/migrations/000XXX_description.down.sql
@@ -171,7 +173,8 @@ screen -dmS backend-3000 bash -c 'cd /data/hostel-booking-system/backend && go r
 ### Мониторинг подключений к БД:
 ```bash
 # Проверить количество текущих подключений
-psql "postgres://postgres:password@localhost:5432/svetubd?sslmode=disable" -c "SELECT COUNT(*) FROM pg_stat_activity;"
+
+psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable" -c "SELECT COUNT(*) FROM pg_stat_activity;"
 
 # Если подключений больше 90 - это критично!
 # Перезапусти PostgreSQL для сброса всех подключений:

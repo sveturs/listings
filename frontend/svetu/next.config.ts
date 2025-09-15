@@ -96,6 +96,10 @@ const nextConfig: NextConfig = {
           destination: `${minioUrl}/listings/:path*`,
         },
         {
+          source: '/products/:path*',
+          destination: `${minioUrl}/products/:path*`,
+        },
+        {
           source: '/chat-files/:path*',
           destination: `${minioUrl}/chat-files/:path*`,
         },

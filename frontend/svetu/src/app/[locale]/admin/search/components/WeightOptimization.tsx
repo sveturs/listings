@@ -112,14 +112,17 @@ export default function WeightOptimization() {
     try {
       setIsOptimizing(true);
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/search/optimize-weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify(params),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/search/optimize-weights`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify(params),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to start optimization');
@@ -174,17 +177,20 @@ export default function WeightOptimization() {
 
     try {
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/search/apply-weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          session_id: currentSession.id,
-          selected_results: selectedResults,
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/search/apply-weights`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({
+            session_id: currentSession.id,
+            selected_results: selectedResults,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to apply weights');
@@ -205,19 +211,22 @@ export default function WeightOptimization() {
       fromDate.setDate(fromDate.getDate() - params.analysis_period_days);
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/admin/search/analyze-weights`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-        body: JSON.stringify({
-          item_type: params.item_type,
-          category_id: params.category_id,
-          from_date: fromDate.toISOString().split('T')[0],
-          to_date: new Date().toISOString().split('T')[0],
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/admin/search/analyze-weights`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+          body: JSON.stringify({
+            item_type: params.item_type,
+            category_id: params.category_id,
+            from_date: fromDate.toISOString().split('T')[0],
+            to_date: new Date().toISOString().split('T')[0],
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to analyze weights');

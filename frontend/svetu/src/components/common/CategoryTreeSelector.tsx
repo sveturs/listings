@@ -148,13 +148,25 @@ export function CategoryTreeSelector({
   // Initialize selected categories from value prop
   useEffect(() => {
     if (value !== undefined) {
-      if (Array.isArray(value)) {
-        setSelectedCategories(new Set(value));
-      } else if (value) {
-        setSelectedCategories(new Set([value]));
-      } else {
-        setSelectedCategories(new Set());
-      }
+      setSelectedCategories((prevCategories) => {
+        const newSet = Array.isArray(value)
+          ? new Set<number>(value)
+          : value
+            ? new Set<number>([value])
+            : new Set<number>();
+
+        // Проверяем, изменилось ли значение
+        const currentArray = Array.from(prevCategories);
+        const newArray = Array.from(newSet);
+
+        if (
+          JSON.stringify(currentArray.sort()) !==
+          JSON.stringify(newArray.sort())
+        ) {
+          return newSet;
+        }
+        return prevCategories;
+      });
     }
   }, [value]);
 

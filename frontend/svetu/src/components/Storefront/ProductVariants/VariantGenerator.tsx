@@ -180,13 +180,16 @@ export default function VariantGenerator({
       };
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/storefront/variants/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/storefront/variants/generate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();

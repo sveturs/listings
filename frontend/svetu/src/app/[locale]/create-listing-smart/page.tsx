@@ -381,17 +381,20 @@ export default function CreateListingSmartPage() {
           .filter((word) => word.length > 2);
 
         const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/marketplace/categories/detect`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: title,
-            keywords: keywords,
-            language: locale,
-          }),
-        });
+        const response = await fetch(
+          `${apiUrl}/api/v1/marketplace/categories/detect`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: title,
+              keywords: keywords,
+              language: locale,
+            }),
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();

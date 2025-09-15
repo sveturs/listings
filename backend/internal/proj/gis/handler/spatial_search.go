@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
+	"backend/internal/proj/gis/constants"
 	"backend/internal/proj/gis/service"
 	"backend/internal/proj/gis/types"
 	"backend/pkg/utils"
@@ -54,7 +55,7 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 
 	// Границы поиска
 	if boundsStr := c.Query("bounds"); boundsStr != "" {
-		bounds, err := parseBounds(boundsStr)
+		bounds, err := parseBoundsStruct(boundsStr)
 		if err != nil {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "gis.invalidBounds")
 		}
@@ -131,8 +132,13 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	params.SearchQuery = c.Query("q")
 	params.SortBy = c.Query("sort_by", "created_at")
 	params.SortOrder = c.Query("sort_order", "desc")
-	params.Limit = c.QueryInt("limit", 50)
+	params.Limit = c.QueryInt("limit", constants.DEFAULT_LIMIT)
 	params.Offset = c.QueryInt("offset", 0)
+
+	// Ограничиваем максимальный лимит
+	if params.Limit > constants.MAX_LIMIT {
+		params.Limit = constants.MAX_LIMIT
+	}
 
 	// Выполняем поиск
 	response, err := h.service.SearchListings(c.Context(), params)
@@ -152,7 +158,7 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 // @Param lat query number true "Широта"
 // @Param lng query number true "Долгота"
 // @Param radius_km query number false "Радиус поиска в километрах (по умолчанию 5)"
-// @Param limit query int false "Количество результатов (по умолчанию 20)"
+// @Param limit query int false "Количество результатов (по умолчанию 200, максимум 5000)"
 // @Success 200 {object} utils.SuccessResponseSwag{data=types.SearchResponse} "Ближайшие объявления"
 // @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
@@ -167,8 +173,13 @@ func (h *SpatialHandler) GetNearbyListings(c *fiber.Ctx) error {
 	}
 
 	center := types.Point{Lat: lat, Lng: lng}
-	radiusKm := c.QueryFloat("radius_km", 5.0)
-	limit := c.QueryInt("limit", 20)
+	radiusKm := c.QueryFloat("radius_km", constants.DEFAULT_RADIUS_KM)
+	limit := c.QueryInt("limit", constants.DEFAULT_NEARBY_LIMIT)
+
+	// Ограничиваем максимальный лимит
+	if limit > constants.MAX_LIMIT {
+		limit = constants.MAX_LIMIT
+	}
 
 	// Получаем ближайшие объявления
 	response, err := h.service.GetNearbyListings(c.Context(), center, radiusKm, limit)
@@ -349,7 +360,7 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 // @Param q query string false "Текстовый поиск"
 // @Param sort_by query string false "Поле сортировки (distance, price, created_at)"
 // @Param sort_order query string false "Порядок сортировки (asc, desc)"
-// @Param limit query int false "Количество результатов (по умолчанию 50, максимум 1000)"
+// @Param limit query int false "Количество результатов (по умолчанию 1000, максимум 5000)"
 // @Param offset query int false "Смещение"
 // @Success 200 {object} utils.SuccessResponseSwag{data=types.RadiusSearchResponse} "Результаты радиусного поиска"
 // @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
@@ -404,7 +415,12 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 	req.Latitude = c.QueryFloat("latitude", 0)
 	req.Longitude = c.QueryFloat("longitude", 0)
 	req.Radius = c.QueryFloat("radius", 0)
-	req.Limit = c.QueryInt("limit", 50)
+	req.Limit = c.QueryInt("limit", constants.DEFAULT_LIMIT)
+
+	// Ограничиваем максимальный лимит
+	if req.Limit > constants.MAX_LIMIT {
+		req.Limit = constants.MAX_LIMIT
+	}
 	req.Offset = c.QueryInt("offset", 0)
 
 	// Валидация основных параметров
@@ -496,7 +512,7 @@ func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 
 // Helper функции
 
-func parseBounds(boundsStr string) (types.Bounds, error) {
+func parseBoundsStruct(boundsStr string) (types.Bounds, error) {
 	var bounds types.Bounds
 	// Ожидаем формат: south,west,north,east (как в Leaflet/OpenStreetMap)
 	_, err := fmt.Sscanf(boundsStr, "%f,%f,%f,%f",

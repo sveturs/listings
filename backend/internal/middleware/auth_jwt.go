@@ -60,6 +60,7 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 		if method == httpMethodGet && (strings.HasSuffix(path, "/search") ||
 			strings.HasSuffix(path, "/search/radius") ||
 			strings.HasSuffix(path, "/clusters") ||
+			strings.HasSuffix(path, "/heatmap") ||
 			strings.HasSuffix(path, "/nearby") ||
 			strings.Contains(path, "/listings/") && strings.HasSuffix(path, "/location") ||
 			strings.HasSuffix(path, "/districts") ||

@@ -119,6 +119,7 @@
       "main_photo": "Главная",
       "ai_recommends": "ИИ рекомендует добавить:",
       "category_title": "Категория",
+      "category_detected": "Определена категория",
       "category_auto_selected": "ИИ автоматически выбрал категорию: {category}",
       "manual_category_selection": "Изменить категорию вручную:",
       "select_category": "Выберите категорию",

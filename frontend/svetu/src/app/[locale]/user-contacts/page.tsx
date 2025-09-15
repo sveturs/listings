@@ -193,12 +193,15 @@ export default function UserContactsPage() {
       }
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/contacts/${contactUserID}/status`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify({ status, notes }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/contacts/${contactUserID}/status`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({ status, notes }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to update contact status');
@@ -238,11 +241,14 @@ export default function UserContactsPage() {
       }
 
       const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/contacts/${contactUserID}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers,
-      });
+      const response = await fetch(
+        `${apiUrl}/api/v1/contacts/${contactUserID}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers,
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to remove contact');

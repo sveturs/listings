@@ -2264,6 +2264,122 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/ai/analyze": {
+            "post": {
+                "description": "Analyzes a product image and extracts information using Claude AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Analyze product image using AI",
+                "parameters": [
+                    {
+                        "description": "Analysis request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_ai_handler.AnalyzeProductRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_ai_handler.AnalyzeProductResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/translate": {
+            "post": {
+                "description": "Translates title and description to specified languages using Claude AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ai"
+                ],
+                "summary": "Translate content to multiple languages",
+                "parameters": [
+                    {
+                        "description": "Translation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_ai_handler.TranslateContentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_ai_handler.TranslateContentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-check/{email}": {
             "get": {
                 "description": "Checks if user with specified email is an administrator (no authorization required)",
@@ -13217,6 +13333,90 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/gis/clusters": {
+            "get": {
+                "description": "Возвращает кластеризованные точки для отображения на карте",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить кластеры объявлений",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Уровень зума карты (1-20)",
+                        "name": "zoom",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID категории для фильтрации",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Минимальная цена",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Максимальная цена",
+                        "name": "max_price",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Массив кластеров",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_proj_gis_handler.ClusterPoint"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/districts": {
             "get": {
                 "description": "Get all districts with optional filtering",
@@ -13777,6 +13977,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/gis/heatmap": {
+            "get": {
+                "description": "Возвращает точки с весами для построения тепловой карты",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gis"
+                ],
+                "summary": "Получить данные для тепловой карты",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Границы видимой области (south,west,north,east)",
+                        "name": "bounds",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "density",
+                        "description": "Метрика для веса (price, views, density)",
+                        "name": "metric",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Данные для тепловой карты",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/gis/listings/{id}/address": {
             "put": {
                 "security": [
@@ -14169,7 +14436,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Количество результатов (по умолчанию 20)",
+                        "description": "Количество результатов (по умолчанию 200, максимум 5000)",
                         "name": "limit",
                         "in": "query"
                     }
@@ -14370,7 +14637,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -14465,7 +14732,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Limit results (default: 50, max: 200)",
+                        "description": "Limit results (default: 1000, max: 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -14604,7 +14871,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Количество результатов (по умолчанию 50, максимум 1000)",
+                        "description": "Количество результатов (по умолчанию 1000, максимум 5000)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -41011,6 +41278,13 @@ const docTemplate = `{
                 "privacy_level": {
                     "type": "string"
                 },
+                "products": {
+                    "description": "Товары витрины",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_gis_types.ProductInfo"
+                    }
+                },
                 "rating": {
                     "type": "number"
                 },
@@ -41368,6 +41642,26 @@ const docTemplate = `{
                     }
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_gis_types.ProductInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -43266,6 +43560,138 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_ai_handler.AnalyzeProductRequest": {
+            "type": "object",
+            "properties": {
+                "imageData": {
+                    "type": "string"
+                },
+                "userLang": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_ai_handler.AnalyzeProductResponse": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "categoryHints": {
+                    "$ref": "#/definitions/internal_proj_ai_handler.CategoryHints"
+                },
+                "categoryProbabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_proj_ai_handler.CategoryProbability"
+                    }
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "suggestedLocation": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_ai_handler.CategoryHints": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "productType": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_ai_handler.CategoryProbability": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "probability": {
+                    "type": "number"
+                }
+            }
+        },
+        "internal_proj_ai_handler.TranslateContentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "targetLanguages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_proj_ai_handler.TranslateContentResponse": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "internal_proj_analytics_handler.EventRequest": {
             "type": "object",
             "required": [
@@ -43449,6 +43875,26 @@ const docTemplate = `{
                 "rootPath": {
                     "type": "string",
                     "example": "./docs"
+                }
+            }
+        },
+        "internal_proj_gis_handler.ClusterPoint": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
                 }
             }
         },

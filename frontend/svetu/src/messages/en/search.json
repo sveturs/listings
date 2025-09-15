@@ -76,6 +76,20 @@
   "conditionLikeNew": "Like new",
   "conditionGood": "Good",
   "conditionUsed": "Used",
+  "conditions": {
+    "new": "New",
+    "likeNew": "Like new",
+    "good": "Good",
+    "used": "Used"
+  },
+  "enterCityName": "Enter city name",
+  "sortOptions": {
+    "relevance": "Relevance",
+    "priceAsc": "Price (Low to High)",
+    "priceDesc": "Price (High to Low)",
+    "date": "Newest First",
+    "popularity": "Most Popular"
+  },
   "location": "Location",
   "enterCity": "Enter city name",
   "searchRadius": "Search radius",

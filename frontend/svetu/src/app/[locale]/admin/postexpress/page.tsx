@@ -92,7 +92,9 @@ export default function PostExpressAdminPage() {
 
   const loadStats = async () => {
     const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments/stats`);
+    const response = await fetch(
+      `${apiUrl}/api/v1/postexpress/shipments/stats`
+    );
     const data = await response.json();
     if (data.success) {
       setStats(data.data);
@@ -108,7 +110,9 @@ export default function PostExpressAdminPage() {
     params.append('limit', '50');
 
     const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/postexpress/shipments?${params}`);
+    const response = await fetch(
+      `${apiUrl}/api/v1/postexpress/shipments?${params}`
+    );
     const data = await response.json();
     if (data.success) {
       setShipments(data.data || []);

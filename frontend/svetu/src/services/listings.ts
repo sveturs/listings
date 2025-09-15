@@ -100,8 +100,30 @@ export class ListingsService {
     };
 
     // Добавляем переводы, если они есть
-    if (data.translations && Object.keys(data.translations).length > 0) {
-      request.translations = data.translations;
+    if (data.translations) {
+      // Извлекаем только данные переводов из ответа API
+      const translationsObj = data.translations as any;
+      if (
+        'data' in translationsObj &&
+        typeof translationsObj.data === 'object'
+      ) {
+        // Это ответ от API с полями data, message, success
+        request.translations = translationsObj.data as Record<
+          string,
+          Record<string, string>
+        >;
+      } else if (
+        !('success' in translationsObj) &&
+        !('message' in translationsObj)
+      ) {
+        // Если это уже чистый объект переводов (без полей success/message)
+        request.translations = translationsObj as Record<
+          string,
+          Record<string, string>
+        >;
+      }
+      // Дополнительная проверка для отладки
+      console.log('Translations being sent:', request.translations);
     }
 
     // Добавляем язык оригинала, если он указан

@@ -1500,6 +1500,80 @@ paths:
       summary: Update variant attribute
       tags:
         - marketplace-admin-variant-attributes
+  /api/ai/analyze:
+    post:
+      description: Analyzes a product image and extracts information using Claude AI
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_ai_handler.AnalyzeProductRequest"
+        description: Analysis request
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_ai_handler.AnalyzeProductResponse"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Analyze product image using AI
+      tags:
+        - ai
+  /api/ai/translate:
+    post:
+      description: Translates title and description to specified languages using Claude AI
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_ai_handler.TranslateContentRequest"
+        description: Translation request
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/internal_proj_ai_handler.TranslateContentResponse"
+                    type: object
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Translate content to multiple languages
+      tags:
+        - ai
   "/api/v1/admin-check/{email}":
     get:
       description: Checks if user with specified email is an administrator (no
@@ -8929,6 +9003,66 @@ paths:
       summary: Get visible cities
       tags:
         - gis
+  /api/v1/gis/clusters:
+    get:
+      description: Возвращает кластеризованные точки для отображения на карте
+      parameters:
+        - description: Уровень зума карты (1-20)
+          in: query
+          name: zoom
+          required: true
+          schema:
+            type: integer
+        - description: Границы видимой области (south,west,north,east)
+          in: query
+          name: bounds
+          required: true
+          schema:
+            type: string
+        - description: ID категории для фильтрации
+          in: query
+          name: category_id
+          schema:
+            type: integer
+        - description: Минимальная цена
+          in: query
+          name: min_price
+          schema:
+            type: number
+        - description: Максимальная цена
+          in: query
+          name: max_price
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Массив кластеров
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/internal_proj_gis_handler.ClusterPoint"
+                        type: array
+                    type: object
+        "400":
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Получить кластеры объявлений
+      tags:
+        - gis
   /api/v1/gis/districts:
     get:
       description: Get all districts with optional filtering
@@ -9313,6 +9447,52 @@ paths:
       summary: Валидация геокодирования адреса
       tags:
         - gis
+  /api/v1/gis/heatmap:
+    get:
+      description: Возвращает точки с весами для построения тепловой карты
+      parameters:
+        - description: Границы видимой области (south,west,north,east)
+          in: query
+          name: bounds
+          required: true
+          schema:
+            type: string
+        - description: Метрика для веса (price, views, density)
+          in: query
+          name: metric
+          schema:
+            type: string
+            default: density
+      responses:
+        "200":
+          description: Данные для тепловой карты
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          additionalProperties: true
+                          type: object
+                        type: array
+                    type: object
+        "400":
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Получить данные для тепловой карты
+      tags:
+        - gis
   "/api/v1/gis/listings/{id}/address":
     put:
       description: Обновляет геолокацию и адрес объявления с полной валидацией и
@@ -9586,7 +9766,7 @@ paths:
           name: radius_km
           schema:
             type: number
-        - description: Количество результатов (по умолчанию 20)
+        - description: Количество результатов (по умолчанию 200, максимум 5000)
           in: query
           name: limit
           schema:
@@ -9737,7 +9917,7 @@ paths:
           name: max_price
           schema:
             type: number
-        - description: "Limit results (default: 50, max: 200)"
+        - description: "Limit results (default: 1000, max: 5000)"
           in: query
           name: limit
           schema:
@@ -9807,7 +9987,7 @@ paths:
           name: max_price
           schema:
             type: number
-        - description: "Limit results (default: 50, max: 200)"
+        - description: "Limit results (default: 1000, max: 5000)"
           in: query
           name: limit
           schema:
@@ -9920,7 +10100,7 @@ paths:
           name: sort_order
           schema:
             type: string
-        - description: Количество результатов (по умолчанию 50, максимум 1000)
+        - description: Количество результатов (по умолчанию 1000, максимум 5000)
           in: query
           name: limit
           schema:
@@ -28317,6 +28497,11 @@ components:
           type: number
         privacy_level:
           type: string
+        products:
+          description: Товары витрины
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_gis_types.ProductInfo"
+          type: array
         rating:
           type: number
         status:
@@ -28566,6 +28751,19 @@ components:
             type: array
           type: array
         type:
+          type: string
+      type: object
+    backend_internal_proj_gis_types.ProductInfo:
+      properties:
+        category:
+          type: string
+        id:
+          type: integer
+        image:
+          type: string
+        price:
+          type: number
+        title:
           type: string
       type: object
     backend_internal_proj_gis_types.RadiusFilter:
@@ -29858,6 +30056,92 @@ components:
           example: true
           type: boolean
       type: object
+    internal_proj_ai_handler.AnalyzeProductRequest:
+      properties:
+        imageData:
+          type: string
+        userLang:
+          type: string
+      type: object
+    internal_proj_ai_handler.AnalyzeProductResponse:
+      properties:
+        attributes:
+          additionalProperties: true
+          type: object
+        category:
+          type: string
+        categoryHints:
+          $ref: "#/components/schemas/internal_proj_ai_handler.CategoryHints"
+        categoryProbabilities:
+          items:
+            $ref: "#/components/schemas/internal_proj_ai_handler.CategoryProbability"
+          type: array
+        condition:
+          type: string
+        currency:
+          type: string
+        description:
+          type: string
+        keywords:
+          items:
+            type: string
+          type: array
+        price:
+          type: number
+        suggestedLocation:
+          type: string
+        tags:
+          items:
+            type: string
+          type: array
+        title:
+          type: string
+        titleVariants:
+          items:
+            type: string
+          type: array
+      type: object
+    internal_proj_ai_handler.CategoryHints:
+      properties:
+        domain:
+          type: string
+        keywords:
+          items:
+            type: string
+          type: array
+        productType:
+          type: string
+      type: object
+    internal_proj_ai_handler.CategoryProbability:
+      properties:
+        name:
+          type: string
+        probability:
+          type: number
+      type: object
+    internal_proj_ai_handler.TranslateContentRequest:
+      properties:
+        content:
+          properties:
+            description:
+              type: string
+            title:
+              type: string
+          type: object
+        targetLanguages:
+          items:
+            type: string
+          type: array
+      type: object
+    internal_proj_ai_handler.TranslateContentResponse:
+      additionalProperties:
+        properties:
+          description:
+            type: string
+          title:
+            type: string
+        type: object
+      type: object
     internal_proj_analytics_handler.EventRequest:
       properties:
         event_data:
@@ -29991,6 +30275,19 @@ components:
         rootPath:
           example: ./docs
           type: string
+      type: object
+    internal_proj_gis_handler.ClusterPoint:
+      properties:
+        count:
+          type: integer
+        ids:
+          items:
+            type: integer
+          type: array
+        lat:
+          type: number
+        lng:
+          type: number
       type: object
     internal_proj_global_handler.UnifiedCategoryInfo:
       properties:
