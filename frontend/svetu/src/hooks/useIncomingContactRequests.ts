@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { contactsService } from '@/services/contacts';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,9 +18,11 @@ export function useIncomingContactRequests() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<IncomingRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [requestsByUserId, setRequestsByUserId] = useState<Record<number, IncomingRequest>>({});
+  const [requestsByUserId, setRequestsByUserId] = useState<
+    Record<number, IncomingRequest>
+  >({});
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     if (!user) {
       setRequests([]);
       setRequestsByUserId({});
@@ -50,7 +52,7 @@ export function useIncomingContactRequests() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadRequests();
@@ -59,7 +61,7 @@ export function useIncomingContactRequests() {
     const interval = setInterval(loadRequests, 60000);
 
     return () => clearInterval(interval);
-  }, [user?.id]);
+  }, [user?.id, loadRequests]);
 
   const hasRequestFromUser = (userId: number): boolean => {
     return !!requestsByUserId[userId];
@@ -70,8 +72,8 @@ export function useIncomingContactRequests() {
   };
 
   const removeRequest = (userId: number) => {
-    setRequests(prev => prev.filter(r => r.user_id !== userId));
-    setRequestsByUserId(prev => {
+    setRequests((prev) => prev.filter((r) => r.user_id !== userId));
+    setRequestsByUserId((prev) => {
       const newMap = { ...prev };
       delete newMap[userId];
       return newMap;

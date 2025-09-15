@@ -159,7 +159,7 @@ export default function IncomingContactRequest({
             </div>
             {request.notes && (
               <div className="text-xs opacity-80 mt-1 italic">
-                "{request.notes}"
+                &ldquo;{request.notes}&rdquo;
               </div>
             )}
           </div>

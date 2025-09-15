@@ -209,13 +209,13 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	var chats []models.MarketplaceChat
 	for rows.Next() {
 		var (
-			chat             models.MarketplaceChat
-			otherUserID      sql.NullInt64
-			otherUserName    sql.NullString
-			otherUserEmail   sql.NullString
-			otherUserPicture sql.NullString
+			chat              models.MarketplaceChat
+			otherUserID       sql.NullInt64
+			otherUserName     sql.NullString
+			otherUserEmail    sql.NullString
+			otherUserPicture  sql.NullString
 			otherUserProvider sql.NullString
-			imagesJSON       json.RawMessage
+			imagesJSON        json.RawMessage
 		)
 		chat.Listing = &models.MarketplaceListing{}
 

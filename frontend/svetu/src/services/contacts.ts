@@ -251,10 +251,12 @@ class ContactsService {
     }>(`/status/${contactUserID}`);
   }
 
-  async getIncomingRequests(params: {
-    page?: number;
-    limit?: number;
-  } = {}): Promise<ContactsResponse> {
+  async getIncomingRequests(
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<ContactsResponse> {
     const queryParams = new URLSearchParams();
     if (params.page) {
       queryParams.append('page', params.page.toString());
@@ -263,7 +265,9 @@ class ContactsService {
       queryParams.append('limit', params.limit.toString());
     }
 
-    return this.request<ContactsResponse>(`/incoming?${queryParams.toString()}`);
+    return this.request<ContactsResponse>(
+      `/incoming?${queryParams.toString()}`
+    );
   }
 }
 

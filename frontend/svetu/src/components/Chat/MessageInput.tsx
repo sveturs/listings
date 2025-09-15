@@ -250,221 +250,221 @@ export default function MessageInput({
     <div className="bg-base-100/50 backdrop-blur-lg border-t border-base-300/20">
       {/* Внутренний контейнер */}
       <div className="relative">
-      {/* Отображение загружаемых файлов */}
-      {uploadingFilesList.length > 0 && (
-        <div className="p-4 pb-0">
-          <div className="card card-compact bg-base-200">
-            <div className="card-body">
-              <FileUploadProgress
-                uploadingFiles={uploadingFilesList}
-                onRemove={removeUploadingFile}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Отображение выбранных файлов */}
-      {selectedFiles.length > 0 && (
-        <div className="p-4 pb-0">
-          <div className="card card-compact bg-base-200">
-            <div className="card-body">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="badge badge-primary badge-sm gap-1">
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  {t('selectedFiles')}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {selectedFiles.map((file, index) => {
-                  const isImage = file.type.startsWith('image/');
-                  const fileUrl = fileUrls[index];
-
-                  return (
-                    <div
-                      key={index}
-                      className={
-                        isImage
-                          ? 'relative group'
-                          : 'badge badge-lg badge-outline gap-2'
-                      }
-                    >
-                      {isImage ? (
-                        // Эскиз для изображений
-                        <div className="relative w-20 h-20 rounded-lg overflow-hidden ring-2 ring-base-300">
-                          {fileUrl ? (
-                            <Image
-                              src={fileUrl}
-                              alt={file.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-base-300 flex items-center justify-center">
-                              <svg
-                                className="w-8 h-8 text-base-content/30"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => removeSelectedFile(index)}
-                            className="absolute top-1 right-1 btn btn-circle btn-xs btn-error"
-                          >
-                            ✕
-                          </button>
-                          {/* Tooltip с названием файла */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                            {file.name}
-                          </div>
-                        </div>
-                      ) : (
-                        // Обычный вид для других файлов
-                        <>
-                          <span
-                            className="truncate max-w-[100px]"
-                            title={file.name}
-                          >
-                            {file.name}
-                          </span>
-                          <button
-                            onClick={() => removeSelectedFile(index)}
-                            className="btn btn-ghost btn-xs btn-circle"
-                          >
-                            ✕
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Красивое поле ввода как в популярных мессенджерах */}
-      <div className="p-3">
-        <div className="flex items-end gap-2">
-          {/* Кнопка файлов */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-            accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="btn btn-circle btn-ghost btn-sm hover:bg-primary/10"
-            title={t('attachFile')}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"
-              />
-            </svg>
-          </button>
-
-          {/* Модерновое поле ввода */}
-          <div className="relative flex-1">
-            <div className="relative bg-base-200/50 rounded-full border border-base-300/50 hover:border-base-300 hover:bg-base-200/70 transition-all">
-              <textarea
-                ref={inputRef}
-                value={message}
-                onChange={(e) => {
-                  handleTyping(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={t('messagePlaceholder')}
-                className="textarea w-full resize-none bg-transparent border-0 focus:outline-none pl-4 pr-12 text-sm placeholder:text-base-content/50"
-                rows={1}
-                style={{
-                  minHeight: '42px',
-                  maxHeight: '120px',
-                  paddingTop: '10px',
-                  paddingBottom: '10px',
-                }}
-              />
-
-              {/* Кнопка эмодзи внутри поля */}
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2 hover:bg-warning/20"
-                title={t('addEmoji')}
-              >
-                <span className="text-lg">😊</span>
-              </button>
-            </div>
-
-            {showEmojiPicker && (
-              <div className="absolute bottom-full mb-2 right-0 z-[9999]">
-                <EmojiPicker
-                  onSelect={handleEmojiSelect}
-                  onClose={() => setShowEmojiPicker(false)}
+        {/* Отображение загружаемых файлов */}
+        {uploadingFilesList.length > 0 && (
+          <div className="p-4 pb-0">
+            <div className="card card-compact bg-base-200">
+              <div className="card-body">
+                <FileUploadProgress
+                  uploadingFiles={uploadingFilesList}
+                  onRemove={removeUploadingFile}
                 />
               </div>
-            )}
+            </div>
           </div>
+        )}
 
-          {/* Круглая кнопка отправки */}
-          <button
-            onClick={handleSend}
-            disabled={!message.trim() && selectedFiles.length === 0}
-            className={`btn btn-circle btn-sm transition-all ${
-              message.trim() || selectedFiles.length > 0
-                ? 'btn-primary shadow-lg hover:shadow-xl'
-                : 'btn-ghost opacity-50'
-            }`}
-            title={t('sendMessage')}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
+        {/* Отображение выбранных файлов */}
+        {selectedFiles.length > 0 && (
+          <div className="p-4 pb-0">
+            <div className="card card-compact bg-base-200">
+              <div className="card-body">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="badge badge-primary badge-sm gap-1">
+                    <svg
+                      className="w-3 h-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {t('selectedFiles')}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => {
+                    const isImage = file.type.startsWith('image/');
+                    const fileUrl = fileUrls[index];
+
+                    return (
+                      <div
+                        key={index}
+                        className={
+                          isImage
+                            ? 'relative group'
+                            : 'badge badge-lg badge-outline gap-2'
+                        }
+                      >
+                        {isImage ? (
+                          // Эскиз для изображений
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden ring-2 ring-base-300">
+                            {fileUrl ? (
+                              <Image
+                                src={fileUrl}
+                                alt={file.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-base-300 flex items-center justify-center">
+                                <svg
+                                  className="w-8 h-8 text-base-content/30"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => removeSelectedFile(index)}
+                              className="absolute top-1 right-1 btn btn-circle btn-xs btn-error"
+                            >
+                              ✕
+                            </button>
+                            {/* Tooltip с названием файла */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                              {file.name}
+                            </div>
+                          </div>
+                        ) : (
+                          // Обычный вид для других файлов
+                          <>
+                            <span
+                              className="truncate max-w-[100px]"
+                              title={file.name}
+                            >
+                              {file.name}
+                            </span>
+                            <button
+                              onClick={() => removeSelectedFile(index)}
+                              className="btn btn-ghost btn-xs btn-circle"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Красивое поле ввода как в популярных мессенджерах */}
+        <div className="p-3">
+          <div className="flex items-end gap-2">
+            {/* Кнопка файлов */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="btn btn-circle btn-ghost btn-sm hover:bg-primary/10"
+              title={t('attachFile')}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"
+                />
+              </svg>
+            </button>
+
+            {/* Модерновое поле ввода */}
+            <div className="relative flex-1">
+              <div className="relative bg-base-200/50 rounded-full border border-base-300/50 hover:border-base-300 hover:bg-base-200/70 transition-all">
+                <textarea
+                  ref={inputRef}
+                  value={message}
+                  onChange={(e) => {
+                    handleTyping(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t('messagePlaceholder')}
+                  className="textarea w-full resize-none bg-transparent border-0 focus:outline-none pl-4 pr-12 text-sm placeholder:text-base-content/50"
+                  rows={1}
+                  style={{
+                    minHeight: '42px',
+                    maxHeight: '120px',
+                    paddingTop: '10px',
+                    paddingBottom: '10px',
+                  }}
+                />
+
+                {/* Кнопка эмодзи внутри поля */}
+                <button
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2 hover:bg-warning/20"
+                  title={t('addEmoji')}
+                >
+                  <span className="text-lg">😊</span>
+                </button>
+              </div>
+
+              {showEmojiPicker && (
+                <div className="absolute bottom-full mb-2 right-0 z-[9999]">
+                  <EmojiPicker
+                    onSelect={handleEmojiSelect}
+                    onClose={() => setShowEmojiPicker(false)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Круглая кнопка отправки */}
+            <button
+              onClick={handleSend}
+              disabled={!message.trim() && selectedFiles.length === 0}
+              className={`btn btn-circle btn-sm transition-all ${
+                message.trim() || selectedFiles.length > 0
+                  ? 'btn-primary shadow-lg hover:shadow-xl'
+                  : 'btn-ghost opacity-50'
+              }`}
+              title={t('sendMessage')}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

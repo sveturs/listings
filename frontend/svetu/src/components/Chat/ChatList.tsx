@@ -171,7 +171,7 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
     return '/placeholder-listing.jpg';
   };
 
-// Функция для создания/открытия чата с контактом
+  // Функция для создания/открытия чата с контактом
   const handleContactSelect = async (contact: UserContact) => {
     if (!contact.contact_user?.id || !user?.id) return;
 
@@ -256,97 +256,70 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
         className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)`,
-          backgroundSize: '24px 24px'
+          backgroundSize: '24px 24px',
         }}
       ></div>
 
       {/* Контент */}
       <div className="relative z-10 flex flex-col h-full">
-      {/* Заголовок и поиск */}
-      <div className="p-4 bg-base-100 border-b border-base-300">
-        {/* Поиск с иконкой */}
-        <div className="form-control mb-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={t('searchPlaceholder')}
-              className="input input-bordered w-full pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        {/* Заголовок и поиск */}
+        <div className="p-4 bg-base-100 border-b border-base-300">
+          {/* Поиск с иконкой */}
+          <div className="form-control mb-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={t('searchPlaceholder')}
+                className="input input-bordered w-full pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </svg>
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
 
-        {/* Индикатор общего количества входящих запросов */}
-        {totalIncomingRequests > 0 && (
-          <div className="alert alert-warning alert-sm mb-3">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              />
-            </svg>
-            <span className="text-xs">
-              {t('incomingRequestsCount', { count: totalIncomingRequests })}
-            </span>
-          </div>
-        )}
+          {/* Индикатор общего количества входящих запросов */}
+          {totalIncomingRequests > 0 && (
+            <div className="alert alert-warning alert-sm mb-3">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
+              <span className="text-xs">
+                {t('incomingRequestsCount', { count: totalIncomingRequests })}
+              </span>
+            </div>
+          )}
 
-        {/* Табы DaisyUI */}
-        <div className="tabs tabs-boxed">
-          <button
-            className={`tab tab-sm flex-1 gap-1 ${
-              activeTab === 'chats' ? 'tab-active' : ''
-            }`}
-            onClick={() => setActiveTab('chats')}
-          >
-            <svg
-              className="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
+          {/* Табы DaisyUI */}
+          <div className="tabs tabs-boxed">
+            <button
+              className={`tab tab-sm flex-1 gap-1 ${
+                activeTab === 'chats' ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab('chats')}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
-              />
-            </svg>
-            {t('chatsTab')}
-          </button>
-          <button
-            className={`tab tab-sm flex-1 gap-1 ${
-              activeTab === 'contacts' ? 'tab-active' : ''
-            }`}
-            onClick={() => setActiveTab('contacts')}
-          >
-            <div className="indicator">
-              {totalIncomingRequests > 0 && (
-                <span className="indicator-item badge badge-warning badge-xs">
-                  {totalIncomingRequests}
-                </span>
-              )}
               <svg
                 className="w-4 h-4 mr-1"
                 fill="none"
@@ -357,344 +330,412 @@ export default function ChatList({ onChatSelect }: ChatListProps) {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                  d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
                 />
               </svg>
-            </div>
-            {t('contactsTab')}
-          </button>
+              {t('chatsTab')}
+            </button>
+            <button
+              className={`tab tab-sm flex-1 gap-1 ${
+                activeTab === 'contacts' ? 'tab-active' : ''
+              }`}
+              onClick={() => setActiveTab('contacts')}
+            >
+              <div className="indicator">
+                {totalIncomingRequests > 0 && (
+                  <span className="indicator-item badge badge-warning badge-xs">
+                    {totalIncomingRequests}
+                  </span>
+                )}
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+                  />
+                </svg>
+              </div>
+              {t('contactsTab')}
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Список чатов или контактов */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {activeTab === 'chats' ? (
-          // Список чатов с card компонентами
-          <>
-            {isLoading && chats.length === 0 ? (
-              <div className="flex justify-center p-8">
-                <span className="loading loading-spinner loading-lg text-primary"></span>
-              </div>
-            ) : sortedChats.length === 0 ? (
-              <div className="card bg-base-100 shadow-sm">
-                <div className="card-body text-center py-12">
-                  <div className="text-4xl mb-4">💬</div>
-                  <h3 className="card-title justify-center text-base-content/70">
-                    {searchQuery ? t('noSearchResults') : t('noChats')}
-                  </h3>
-                  <p className="text-base-content/50">
-                    {searchQuery
-                      ? t('tryDifferentSearch')
-                      : t('startNewConversation')}
-                  </p>
+        {/* Список чатов или контактов */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {activeTab === 'chats' ? (
+            // Список чатов с card компонентами
+            <>
+              {isLoading && chats.length === 0 ? (
+                <div className="flex justify-center p-8">
+                  <span className="loading loading-spinner loading-lg text-primary"></span>
                 </div>
-              </div>
-            ) : (
-              <>
-                {sortedChats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onClick={() => onChatSelect(chat)}
-                    className={`card card-compact cursor-pointer transition-all ${
-                      currentChat?.id === chat.id
-                        ? 'bg-primary/10 ring-1 ring-primary/20 shadow-sm'
-                        : 'bg-base-100/80 hover:bg-base-100 hover:shadow-sm border border-transparent'
-                    }`}
-                  >
-                    <div className="card-body">
-                      <div className="flex items-center gap-4">
-                        {/* Аватар с индикатором */}
-                        <div className="avatar indicator">
-                          {chat.unread_count > 0 && (
-                            <span className="indicator-item badge badge-primary badge-sm">
-                              {chat.unread_count}
-                            </span>
-                          )}
-                          <div className="w-12 rounded-lg">
-                            <Image
-                              src={getChatAvatar(chat)}
-                              alt={getChatTitle(chat)}
-                              width={48}
-                              height={48}
-                              className="object-cover"
-                            />
+              ) : sortedChats.length === 0 ? (
+                <div className="card bg-base-100 shadow-sm">
+                  <div className="card-body text-center py-12">
+                    <div className="text-4xl mb-4">💬</div>
+                    <h3 className="card-title justify-center text-base-content/70">
+                      {searchQuery ? t('noSearchResults') : t('noChats')}
+                    </h3>
+                    <p className="text-base-content/50">
+                      {searchQuery
+                        ? t('tryDifferentSearch')
+                        : t('startNewConversation')}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {sortedChats.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => onChatSelect(chat)}
+                      className={`card card-compact cursor-pointer transition-all ${
+                        currentChat?.id === chat.id
+                          ? 'bg-primary/10 ring-1 ring-primary/20 shadow-sm'
+                          : 'bg-base-100/80 hover:bg-base-100 hover:shadow-sm border border-transparent'
+                      }`}
+                    >
+                      <div className="card-body">
+                        <div className="flex items-center gap-4">
+                          {/* Аватар с индикатором */}
+                          <div className="avatar indicator">
+                            {chat.unread_count > 0 && (
+                              <span className="indicator-item badge badge-primary badge-sm">
+                                {chat.unread_count}
+                              </span>
+                            )}
+                            <div className="w-12 rounded-lg">
+                              <Image
+                                src={getChatAvatar(chat)}
+                                alt={getChatTitle(chat)}
+                                width={48}
+                                height={48}
+                                className="object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Информация о чате */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                              <h3 className="font-semibold text-sm truncate">
+                                {getChatTitle(chat)}
+                              </h3>
+                              {chat.other_user &&
+                                onlineUsers.includes(chat.other_user.id) && (
+                                  <div className="badge badge-success badge-xs">
+                                    online
+                                  </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs opacity-70 truncate">
+                                {getChatSubtitle(chat)}
+                              </p>
+                              {chat.listing_id > 0 &&
+                                chat.listing?.price !== undefined && (
+                                  <span className="badge badge-ghost badge-sm">
+                                    {new Intl.NumberFormat(
+                                      locale === 'ru' ? 'ru-RU' : 'en-US',
+                                      {
+                                        style: 'currency',
+                                        currency: 'RSD',
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 0,
+                                      }
+                                    ).format(chat.listing.price)}
+                                  </span>
+                                )}
+                            </div>
+
+                            {/* Входящий запрос в контакты */}
+                            {chat.other_user &&
+                              hasRequestFromUser(chat.other_user.id) && (
+                                <div className="mt-1 px-1 py-0.5 bg-warning/10 rounded border border-warning/30">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1">
+                                      <svg
+                                        className="w-3 h-3 text-warning"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                                        />
+                                      </svg>
+                                      <span className="text-xs font-medium text-warning">
+                                        {t('incomingContactRequest')}
+                                      </span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          try {
+                                            await contactsService.updateContactStatus(
+                                              chat.other_user!.id,
+                                              { status: 'accepted' }
+                                            );
+                                            removeRequest(chat.other_user!.id);
+                                            toast.success(
+                                              t('contactRequestAccepted')
+                                            );
+                                          } catch (error) {
+                                            console.error(
+                                              'Failed to accept request:',
+                                              error
+                                            );
+                                            toast.error(
+                                              t('failedToAcceptRequest')
+                                            );
+                                          }
+                                        }}
+                                        className="btn btn-success btn-xs h-5 min-h-0"
+                                      >
+                                        {t('accept')}
+                                      </button>
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          try {
+                                            await contactsService.updateContactStatus(
+                                              chat.other_user!.id,
+                                              { status: 'blocked' }
+                                            );
+                                            removeRequest(chat.other_user!.id);
+                                            toast.success(
+                                              t('contactRequestRejected')
+                                            );
+                                          } catch (error) {
+                                            console.error(
+                                              'Failed to reject request:',
+                                              error
+                                            );
+                                            toast.error(
+                                              t('failedToRejectRequest')
+                                            );
+                                          }
+                                        }}
+                                        className="btn btn-ghost btn-xs h-5 min-h-0"
+                                      >
+                                        {t('reject')}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                            {chat.last_message && (
+                              <div className="flex items-center gap-1 mt-1">
+                                {chat.last_message.sender_id === user?.id && (
+                                  <span className="text-xs text-primary">
+                                    ✓
+                                  </span>
+                                )}
+                                <p className="text-xs opacity-50 truncate">
+                                  {chat.last_message.content}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  ))}
 
-                        {/* Информация о чате */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start">
-                            <h3 className="font-semibold text-sm truncate">
-                              {getChatTitle(chat)}
-                            </h3>
-                            {chat.other_user &&
-                              onlineUsers.includes(chat.other_user.id) && (
+                  {/* Индикатор загрузки следующей страницы */}
+                  {hasMoreChats && (
+                    <div ref={loadMoreRef} className="flex justify-center p-4">
+                      {isLoading && (
+                        <span className="loading loading-spinner loading-md text-primary"></span>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            // Список контактов с card компонентами
+            <>
+              {contactsLoading ? (
+                <div className="flex justify-center p-8">
+                  <span className="loading loading-spinner loading-lg text-secondary"></span>
+                </div>
+              ) : (
+                <>
+                  {/* Входящие запросы в контакты */}
+                  {requests.length > 0 && !searchQuery && (
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold mb-2 text-base-content/70 px-2">
+                        {t('incomingContactRequests')}
+                      </h3>
+                      {requests.map((request) => (
+                        <div
+                          key={request.user_id}
+                          className="card card-compact bg-warning/10 border border-warning/20 mb-2"
+                        >
+                          <div className="card-body">
+                            <div className="flex items-center gap-4">
+                              {/* Аватар */}
+                              <div className="avatar placeholder">
+                                <div className="bg-warning text-warning-content rounded-full w-12">
+                                  <span className="text-lg">
+                                    {request.user?.name
+                                      ?.charAt(0)
+                                      .toUpperCase() || '?'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Информация о пользователе */}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-sm truncate">
+                                  {request.user?.name || t('unknownUser')}
+                                </h3>
+                                <p className="text-xs opacity-70">
+                                  {request.user?.email}
+                                </p>
+                              </div>
+
+                              {/* Кнопки действий */}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      await contactsService.updateContactStatus(
+                                        request.user_id,
+                                        { status: 'accepted' }
+                                      );
+                                      removeRequest(request.user_id);
+                                      toast.success(
+                                        t('contactRequestAccepted')
+                                      );
+                                      // Обновить список контактов
+                                      await loadContacts();
+                                    } catch (error) {
+                                      console.error(
+                                        'Failed to accept request:',
+                                        error
+                                      );
+                                      toast.error(t('failedToAcceptRequest'));
+                                    }
+                                  }}
+                                  className="btn btn-success btn-xs"
+                                >
+                                  {t('accept')}
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      await contactsService.updateContactStatus(
+                                        request.user_id,
+                                        { status: 'blocked' }
+                                      );
+                                      removeRequest(request.user_id);
+                                      toast.success(
+                                        t('contactRequestRejected')
+                                      );
+                                    } catch (error) {
+                                      console.error(
+                                        'Failed to reject request:',
+                                        error
+                                      );
+                                      toast.error(t('failedToRejectRequest'));
+                                    }
+                                  }}
+                                  className="btn btn-ghost btn-xs"
+                                >
+                                  {t('reject')}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Список контактов */}
+                  {filteredContacts.length === 0 && requests.length === 0 ? (
+                    <div className="card bg-base-100 shadow-sm">
+                      <div className="card-body text-center py-12">
+                        <div className="text-4xl mb-4">👥</div>
+                        <h3 className="card-title justify-center text-base-content/70">
+                          {searchQuery ? t('noSearchResults') : t('noContacts')}
+                        </h3>
+                        <p className="text-base-content/50">
+                          {searchQuery
+                            ? t('tryDifferentSearch')
+                            : t('addContactsMessage')}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    filteredContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        onClick={() => handleContactSelect(contact)}
+                        className="card card-compact bg-base-100/80 hover:bg-base-100 hover:shadow-sm cursor-pointer transition-all"
+                      >
+                        <div className="card-body">
+                          <div className="flex items-center gap-4">
+                            {/* Аватар контакта */}
+                            <div className="avatar placeholder">
+                              <div className="bg-neutral text-neutral-content rounded-full w-12">
+                                <span className="text-lg">
+                                  {contact.contact_user?.name
+                                    ?.charAt(0)
+                                    .toUpperCase() || '?'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Информация о контакте */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm truncate">
+                                {contact.contact_user?.name ||
+                                  `User #${contact.contact_user_id}`}
+                              </h3>
+                              <p className="text-xs opacity-70 truncate">
+                                {contact.contact_user?.email}
+                              </p>
+                              {contact.notes && (
+                                <p className="text-xs opacity-50 truncate mt-1">
+                                  {contact.notes}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Статус онлайн */}
+                            {contact.contact_user &&
+                              onlineUsers.includes(contact.contact_user.id) && (
                                 <div className="badge badge-success badge-xs">
                                   online
                                 </div>
                               )}
                           </div>
-
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs opacity-70 truncate">
-                              {getChatSubtitle(chat)}
-                            </p>
-                            {chat.listing_id > 0 &&
-                              chat.listing?.price !== undefined && (
-                                <span className="badge badge-ghost badge-sm">
-                                  {new Intl.NumberFormat(
-                                    locale === 'ru' ? 'ru-RU' : 'en-US',
-                                    {
-                                      style: 'currency',
-                                      currency: 'RSD',
-                                      minimumFractionDigits: 0,
-                                      maximumFractionDigits: 0,
-                                    }
-                                  ).format(chat.listing.price)}
-                                </span>
-                              )}
-                          </div>
-
-                          {/* Входящий запрос в контакты */}
-                          {chat.other_user && hasRequestFromUser(chat.other_user.id) && (
-                            <div className="mt-1 px-1 py-0.5 bg-warning/10 rounded border border-warning/30">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1">
-                                  <svg
-                                    className="w-3 h-3 text-warning"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                                    />
-                                  </svg>
-                                  <span className="text-xs font-medium text-warning">
-                                    {t('incomingContactRequest')}
-                                  </span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      try {
-                                        await contactsService.acceptContactRequest(chat.other_user!.id);
-                                        removeRequest(chat.other_user!.id);
-                                        toast.success(t('contactRequestAccepted'));
-                                      } catch (error) {
-                                        console.error('Failed to accept request:', error);
-                                        toast.error(t('failedToAcceptRequest'));
-                                      }
-                                    }}
-                                    className="btn btn-success btn-xs h-5 min-h-0"
-                                  >
-                                    {t('accept')}
-                                  </button>
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      try {
-                                        await contactsService.rejectContactRequest(chat.other_user!.id);
-                                        removeRequest(chat.other_user!.id);
-                                        toast.success(t('contactRequestRejected'));
-                                      } catch (error) {
-                                        console.error('Failed to reject request:', error);
-                                        toast.error(t('failedToRejectRequest'));
-                                      }
-                                    }}
-                                    className="btn btn-ghost btn-xs h-5 min-h-0"
-                                  >
-                                    {t('reject')}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {chat.last_message && (
-                            <div className="flex items-center gap-1 mt-1">
-                              {chat.last_message.sender_id === user?.id && (
-                                <span className="text-xs text-primary">✓</span>
-                              )}
-                              <p className="text-xs opacity-50 truncate">
-                                {chat.last_message.content}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Индикатор загрузки следующей страницы */}
-                {hasMoreChats && (
-                  <div ref={loadMoreRef} className="flex justify-center p-4">
-                    {isLoading && (
-                      <span className="loading loading-spinner loading-md text-primary"></span>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          // Список контактов с card компонентами
-          <>
-            {contactsLoading ? (
-              <div className="flex justify-center p-8">
-                <span className="loading loading-spinner loading-lg text-secondary"></span>
-              </div>
-            ) : (
-              <>
-                {/* Входящие запросы в контакты */}
-                {requests.length > 0 && !searchQuery && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold mb-2 text-base-content/70 px-2">
-                      {t('incomingContactRequests')}
-                    </h3>
-                    {requests.map((request) => (
-                      <div
-                        key={request.user_id}
-                        className="card card-compact bg-warning/10 border border-warning/20 mb-2"
-                      >
-                        <div className="card-body">
-                          <div className="flex items-center gap-4">
-                            {/* Аватар */}
-                            <div className="avatar placeholder">
-                              <div className="bg-warning text-warning-content rounded-full w-12">
-                                <span className="text-lg">
-                                  {request.user?.name?.charAt(0).toUpperCase() || '?'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Информация о пользователе */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm truncate">
-                                {request.user?.name || t('unknownUser')}
-                              </h3>
-                              <p className="text-xs opacity-70">
-                                {request.user?.email}
-                              </p>
-                            </div>
-
-                            {/* Кнопки действий */}
-                            <div className="flex gap-2">
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await contactsService.acceptContactRequest(request.user_id);
-                                    removeRequest(request.user_id);
-                                    toast.success(t('contactRequestAccepted'));
-                                    // Обновить список контактов
-                                    await loadContacts();
-                                  } catch (error) {
-                                    console.error('Failed to accept request:', error);
-                                    toast.error(t('failedToAcceptRequest'));
-                                  }
-                                }}
-                                className="btn btn-success btn-xs"
-                              >
-                                {t('accept')}
-                              </button>
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await contactsService.rejectContactRequest(request.user_id);
-                                    removeRequest(request.user_id);
-                                    toast.success(t('contactRequestRejected'));
-                                  } catch (error) {
-                                    console.error('Failed to reject request:', error);
-                                    toast.error(t('failedToRejectRequest'));
-                                  }
-                                }}
-                                className="btn btn-ghost btn-xs"
-                              >
-                                {t('reject')}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Список контактов */}
-                {filteredContacts.length === 0 && requests.length === 0 ? (
-                  <div className="card bg-base-100 shadow-sm">
-                    <div className="card-body text-center py-12">
-                      <div className="text-4xl mb-4">👥</div>
-                      <h3 className="card-title justify-center text-base-content/70">
-                        {searchQuery ? t('noSearchResults') : t('noContacts')}
-                      </h3>
-                      <p className="text-base-content/50">
-                        {searchQuery
-                          ? t('tryDifferentSearch')
-                          : t('addContactsMessage')}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  filteredContacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  onClick={() => handleContactSelect(contact)}
-                  className="card card-compact bg-base-100/80 hover:bg-base-100 hover:shadow-sm cursor-pointer transition-all"
-                >
-                  <div className="card-body">
-                    <div className="flex items-center gap-4">
-                      {/* Аватар контакта */}
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-12">
-                          <span className="text-lg">
-                            {contact.contact_user?.name
-                              ?.charAt(0)
-                              .toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Информация о контакте */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm truncate">
-                          {contact.contact_user?.name ||
-                            `User #${contact.contact_user_id}`}
-                        </h3>
-                        <p className="text-xs opacity-70 truncate">
-                          {contact.contact_user?.email}
-                        </p>
-                        {contact.notes && (
-                          <p className="text-xs opacity-50 truncate mt-1">
-                            {contact.notes}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Статус онлайн */}
-                      {contact.contact_user &&
-                        onlineUsers.includes(contact.contact_user.id) && (
-                          <div className="badge badge-success badge-xs">
-                            online
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
-                  ))
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+                    ))
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

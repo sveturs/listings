@@ -734,57 +734,57 @@ export default function ChatWindow({
           onScroll={handleScroll}
           className="absolute inset-x-0 top-0 bottom-20 overflow-y-auto p-3 sm:p-4 lg:px-8"
         >
-        {/* Индикатор загрузки старых сообщений */}
-        {(hasMore || isLoadingOldMessages) && (
-          <div className="text-center py-2">
-            {isLoadingOldMessages ? (
-              <div className="flex items-center justify-center gap-2">
-                <span className="loading loading-spinner loading-sm"></span>
-                <span className="text-sm opacity-50">
-                  {t('loadingOldMessages')}
-                </span>
+          {/* Индикатор загрузки старых сообщений */}
+          {(hasMore || isLoadingOldMessages) && (
+            <div className="text-center py-2">
+              {isLoadingOldMessages ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <span className="text-sm opacity-50">
+                    {t('loadingOldMessages')}
+                  </span>
+                </div>
+              ) : (
+                <button
+                  className="btn btn-ghost btn-sm text-base-content/50"
+                  onClick={() => handleScroll()}
+                >
+                  {t('scrollUpToLoadMore')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Сообщения */}
+          {chatMessages.length > 0 ? (
+            chatMessages.map((message, index) => (
+              <MessageItem
+                key={`${message.id}-${index}`}
+                message={message}
+                isOwn={message.sender_id === user?.id}
+              />
+            ))
+          ) : isNewChat ? (
+            <div className="flex items-center justify-center h-full text-base-content/50">
+              <div className="text-center">
+                <p className="text-lg">{t('sendFirstMessage')}</p>
               </div>
-            ) : (
-              <button
-                className="btn btn-ghost btn-sm text-base-content/50"
-                onClick={() => handleScroll()}
-              >
-                {t('scrollUpToLoadMore')}
-              </button>
-            )}
-          </div>
-        )}
+            </div>
+          ) : null}
 
-        {/* Сообщения */}
-        {chatMessages.length > 0 ? (
-          chatMessages.map((message, index) => (
-            <MessageItem
-              key={`${message.id}-${index}`}
-              message={message}
-              isOwn={message.sender_id === user?.id}
-            />
-          ))
-        ) : isNewChat ? (
-          <div className="flex items-center justify-center h-full text-base-content/50">
-            <div className="text-center">
-              <p className="text-lg">{t('sendFirstMessage')}</p>
+          {/* Индикатор печатания */}
+          {typingInThisChat.length > 0 && (
+            <div className="chat chat-start">
+              <div className="chat-bubble chat-bubble-secondary">
+                <span className="loading loading-dots loading-xs"></span>
+              </div>
+              <div className="chat-footer opacity-50 text-xs">
+                {typingInThisChat.length === 1
+                  ? chat?.other_user?.name || t('userTyping')
+                  : t('usersTyping', { count: typingInThisChat.length })}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        {/* Индикатор печатания */}
-        {typingInThisChat.length > 0 && (
-          <div className="chat chat-start">
-            <div className="chat-bubble chat-bubble-secondary">
-              <span className="loading loading-dots loading-xs"></span>
-            </div>
-            <div className="chat-footer opacity-50 text-xs">
-              {typingInThisChat.length === 1
-                ? chat?.other_user?.name || t('userTyping')
-                : t('usersTyping', { count: typingInThisChat.length })}
-            </div>
-          </div>
-        )}
+          )}
 
           <div ref={messagesEndRef} />
         </div>
