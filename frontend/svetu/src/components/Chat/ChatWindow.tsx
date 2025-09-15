@@ -715,16 +715,17 @@ export default function ChatWindow({
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-3 sm:p-4 lg:px-8 min-h-0 relative"
         style={{
-          backgroundImage: `
-            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(255, 199, 125, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 20%, rgba(255, 162, 177, 0.1) 0%, transparent 50%),
-            linear-gradient(135deg,
-              oklch(var(--b2) / 0.95) 0%,
-              oklch(var(--b2) / 0.98) 50%,
-              oklch(var(--b2) / 0.95) 100%)
-          `,
           backgroundColor: 'oklch(var(--b2))',
+          backgroundImage: `
+            linear-gradient(30deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
+            linear-gradient(150deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
+            linear-gradient(30deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
+            linear-gradient(150deg, oklch(var(--b3) / 0.3) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.3) 87.5%, oklch(var(--b3) / 0.3)),
+            linear-gradient(60deg, oklch(var(--b3) / 0.15) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.15) 75%, oklch(var(--b3) / 0.15)),
+            linear-gradient(60deg, oklch(var(--b3) / 0.15) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.15) 75%, oklch(var(--b3) / 0.15))
+          `,
+          backgroundSize: '80px 140px',
+          backgroundPosition: '0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px',
         }}
       >
         {/* Индикатор загрузки старых сообщений */}
