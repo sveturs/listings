@@ -716,8 +716,16 @@ export default function ChatWindow({
         className="flex-1 overflow-y-auto p-3 sm:p-4 lg:px-8 min-h-0 relative"
         style={{
           backgroundColor: 'oklch(var(--b2))',
-          backgroundImage: `radial-gradient(circle, oklch(var(--b3) / 0.4) 1px, transparent 1px)`,
-          backgroundSize: '20px 20px',
+          backgroundImage: `
+            linear-gradient(30deg, oklch(var(--b3) / 0.5) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.5) 87.5%, oklch(var(--b3) / 0.5)),
+            linear-gradient(150deg, oklch(var(--b3) / 0.5) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.5) 87.5%, oklch(var(--b3) / 0.5)),
+            linear-gradient(30deg, oklch(var(--b3) / 0.5) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.5) 87.5%, oklch(var(--b3) / 0.5)),
+            linear-gradient(150deg, oklch(var(--b3) / 0.5) 12%, transparent 12.5%, transparent 87%, oklch(var(--b3) / 0.5) 87.5%, oklch(var(--b3) / 0.5)),
+            linear-gradient(60deg, oklch(var(--b3) / 0.25) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.25) 75%, oklch(var(--b3) / 0.25)),
+            linear-gradient(60deg, oklch(var(--b3) / 0.25) 25%, transparent 25.5%, transparent 75%, oklch(var(--b3) / 0.25) 75%, oklch(var(--b3) / 0.25))
+          `,
+          backgroundSize: '80px 140px',
+          backgroundPosition: '0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px',
         }}
       >
         {/* Индикатор загрузки старых сообщений */}
