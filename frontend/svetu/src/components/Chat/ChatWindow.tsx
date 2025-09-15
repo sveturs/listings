@@ -523,7 +523,7 @@ export default function ChatWindow({
                 {getChatTitle()}
               </h2>
               {/* Цена для товара витрины */}
-              {chat?.storefront_product_id && chat?.listing?.price ? (
+              {!!chat?.storefront_product_id && chat?.listing?.price ? (
                 <span className="text-sm font-bold text-primary">
                   {chat.listing.price} RSD
                 </span>
@@ -572,7 +572,7 @@ export default function ChatWindow({
         {/* Кнопки действий */}
         <div className="navbar-end gap-1">
             {/* Кнопка добавить в корзину для товаров витрин */}
-            {chat?.storefront_product_id && (
+            {!!chat?.storefront_product_id && (
               <button
                 className="btn btn-primary btn-xs sm:btn-sm"
                 title={t('addToCart')}
@@ -635,7 +635,7 @@ export default function ChatWindow({
             )}
 
             {/* Кнопка просмотра детальной страницы */}
-            {chat?.storefront_product_id ? (
+            {!!chat?.storefront_product_id ? (
               <Link
                 href={`/${locale}/storefronts/product/${chat.storefront_product_id}`}
                 className="btn btn-ghost btn-xs sm:btn-sm"
@@ -813,7 +813,7 @@ export default function ChatWindow({
       </div>
 
       {/* Quick View Modal for Storefront Product */}
-      {chat?.storefront_product_id && (
+      {!!chat?.storefront_product_id && (
         <StorefrontProductQuickView
           productId={chat.storefront_product_id}
           isOpen={showProductQuickView}
