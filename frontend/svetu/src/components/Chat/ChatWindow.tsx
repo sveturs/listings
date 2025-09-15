@@ -656,7 +656,7 @@ export default function ChatWindow({
                 </svg>
               </Link>
             ) : (
-              (chat?.listing || chat?.listing_id || listingInfo) &&
+              !!(chat?.listing || chat?.listing_id || listingInfo) &&
               !isContactChat && (
                 <Link
                   href={`/${locale}/marketplace/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
