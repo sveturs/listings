@@ -247,7 +247,7 @@ export default function MessageInput({
   const fileUrls = useObjectURLs(selectedFiles);
 
   return (
-    <div className="bg-base-100 border-t border-base-300">
+    <div className="bg-gradient-to-r from-base-100 via-base-100/95 to-base-100 border-t border-base-300/50 backdrop-blur-sm">
       {/* Отображение загружаемых файлов */}
       {uploadingFilesList.length > 0 && (
         <div className="p-4 pb-0">
@@ -358,9 +358,9 @@ export default function MessageInput({
         </div>
       )}
 
-      {/* DaisyUI join компонент для поля ввода */}
-      <div className="p-4">
-        <div className="join w-full">
+      {/* Красивое поле ввода как в популярных мессенджерах */}
+      <div className="p-3">
+        <div className="flex items-end gap-2">
           {/* Кнопка файлов */}
           <input
             ref={fileInputRef}
@@ -372,7 +372,7 @@ export default function MessageInput({
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="btn btn-square join-item"
+            className="btn btn-circle btn-ghost btn-sm hover:bg-primary/10"
             title={t('attachFile')}
           >
             <svg
@@ -390,34 +390,38 @@ export default function MessageInput({
             </svg>
           </button>
 
-          {/* Поле ввода */}
+          {/* Модерновое поле ввода */}
           <div className="relative flex-1">
-            <textarea
-              ref={inputRef}
-              value={message}
-              onChange={(e) => {
-                handleTyping(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={t('messagePlaceholder')}
-              className="textarea textarea-bordered join-item w-full resize-none pr-12"
-              rows={1}
-              style={{
-                minHeight: '48px',
-                maxHeight: '120px',
-              }}
-            />
+            <div className="relative bg-base-200/50 rounded-full shadow-inner">
+              <textarea
+                ref={inputRef}
+                value={message}
+                onChange={(e) => {
+                  handleTyping(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder={t('messagePlaceholder')}
+                className="textarea w-full resize-none bg-transparent border-0 focus:outline-none pl-4 pr-12 text-sm placeholder:text-base-content/50"
+                rows={1}
+                style={{
+                  minHeight: '42px',
+                  maxHeight: '120px',
+                  paddingTop: '10px',
+                  paddingBottom: '10px',
+                }}
+              />
 
-            {/* Кнопка эмодзи внутри поля */}
-            <button
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2"
-              title={t('addEmoji')}
-            >
-              <span className="text-xl">😊</span>
-            </button>
+              {/* Кнопка эмодзи внутри поля */}
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="btn btn-ghost btn-sm btn-circle absolute right-2 top-1/2 -translate-y-1/2 hover:bg-warning/20"
+                title={t('addEmoji')}
+              >
+                <span className="text-lg">😊</span>
+              </button>
+            </div>
 
             {showEmojiPicker && (
               <div className="absolute bottom-full mb-2 right-0 z-[9999]">
@@ -429,11 +433,15 @@ export default function MessageInput({
             )}
           </div>
 
-          {/* Кнопка отправки */}
+          {/* Круглая кнопка отправки */}
           <button
             onClick={handleSend}
             disabled={!message.trim() && selectedFiles.length === 0}
-            className="btn btn-primary btn-square join-item"
+            className={`btn btn-circle btn-sm transition-all ${
+              message.trim() || selectedFiles.length > 0
+                ? 'btn-primary shadow-lg hover:shadow-xl'
+                : 'btn-ghost opacity-50'
+            }`}
             title={t('sendMessage')}
           >
             <svg
