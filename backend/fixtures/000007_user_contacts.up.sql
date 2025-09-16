@@ -8,7 +8,8 @@ INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_
 INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (22, 25, 26, 'accepted', '2025-06-16 10:43:05.694162+00', '2025-06-16 10:43:05.694162+00', NULL, NULL);
 INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (23, 15, 25, 'accepted', '2025-06-17 11:54:30.540278+00', '2025-06-17 11:54:39.799142+00', 79, NULL);
 INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (24, 25, 15, 'accepted', '2025-06-17 11:54:39.800312+00', '2025-06-17 11:54:39.800312+00', NULL, NULL);
-INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (25, 2, 5, 'pending', '2025-08-04 14:42:18.146449+00', '2025-08-04 14:42:18.146449+00', 1, 'Added from chat about Ретро телефон Siemens ME45 T-Mobile');
+INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (25, 6, 5, 'pending', '2025-08-04 14:42:18.146449+00', '2025-08-04 14:42:18.146449+00', 1, 'Added from chat about Ретро телефон Siemens ME45 T-Mobile');
+INSERT INTO public.user_contacts (id, user_id, contact_user_id, status, created_at, updated_at, added_from_chat_id, notes) VALUES (31, 8, 7, 'pending', '2025-09-15 20:27:52.559287+00', '2025-09-15 20:27:52.559287+00', 18, 'Added from chat about Indesit Fridge');
 
 
 --

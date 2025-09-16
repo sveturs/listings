@@ -579,6 +579,7 @@ CREATE TABLE public.users (
     provider character varying(50) DEFAULT 'email'::character varying,
     preferred_language character varying(10) DEFAULT 'ru'::character varying,
     role_id integer,
+    old_email text,
     CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
     CONSTRAINT users_preferred_language_check CHECK (((preferred_language)::text = ANY (ARRAY[('ru'::character varying)::text, ('sr'::character varying)::text, ('en'::character varying)::text])))
 );
