@@ -417,11 +417,88 @@ func (s *Storage) CanAddContact(ctx context.Context, userID, targetUserID int) (
 	return true, nil
 }
 
+// GetIncomingContactRequests получает входящие запросы в контакты
+func (s *Storage) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error) {
+	offset := (page - 1) * limit
+
+	// Получаем только входящие запросы со статусом pending
+	// Входящие = где текущий пользователь является contact_user_id
+	countQuery := `
+		SELECT COUNT(*)
+		FROM user_contacts uc
+		WHERE uc.contact_user_id = $1 AND uc.status = 'pending'
+	`
+
+	var total int
+	err := s.pool.QueryRow(ctx, countQuery, userID).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error counting incoming requests: %w", err)
+	}
+
+	// Получаем запросы с информацией об отправителе
+	query := `
+		SELECT
+			uc.id, uc.user_id, uc.contact_user_id, uc.status,
+			uc.created_at, uc.updated_at, uc.notes, uc.added_from_chat_id,
+			u.name as sender_name,
+			u.email as sender_email,
+			u.picture_url as sender_picture
+		FROM user_contacts uc
+		JOIN users u ON uc.user_id = u.id
+		WHERE uc.contact_user_id = $1 AND uc.status = 'pending'
+		ORDER BY uc.created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := s.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error querying incoming requests: %w", err)
+	}
+	defer rows.Close()
+
+	var contacts []models.UserContact
+	for rows.Next() {
+		contact := models.UserContact{
+			User: &models.User{},
+		}
+
+		var senderPicture sql.NullString
+
+		err := rows.Scan(
+			&contact.ID,
+			&contact.UserID,
+			&contact.ContactUserID,
+			&contact.Status,
+			&contact.CreatedAt,
+			&contact.UpdatedAt,
+			&contact.Notes,
+			&contact.AddedFromChatID,
+			&contact.User.Name,
+			&contact.User.Email,
+			&senderPicture,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error scanning incoming request: %w", err)
+		}
+
+		contact.User.ID = contact.UserID
+		contact.User.PictureURL = senderPicture.String
+
+		contacts = append(contacts, contact)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating incoming requests: %w", err)
+	}
+
+	return contacts, total, nil
+}
+
 // AreContacts проверяет, являются ли пользователи контактами
 func (s *Storage) AreContacts(ctx context.Context, userID1, userID2 int) (bool, error) {
 	query := `
 		SELECT EXISTS (
-			SELECT 1 FROM user_contacts 
+			SELECT 1 FROM user_contacts
 			WHERE user_id = $1 AND contact_user_id = $2 AND status = 'accepted'
 		)
 	`

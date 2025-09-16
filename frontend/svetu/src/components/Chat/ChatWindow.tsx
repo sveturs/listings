@@ -15,6 +15,7 @@ import { contactsService } from '@/services/contacts';
 import { getLastSeenText } from '@/utils/timeUtils';
 import { toast } from '@/utils/toast';
 import StorefrontProductQuickView from './StorefrontProductQuickView';
+import IncomingContactRequest from './IncomingContactRequest';
 import { useAppDispatch } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cartSlice';
 import { addItem } from '@/store/slices/localCartSlice';
@@ -431,14 +432,14 @@ export default function ChatWindow({
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-full overflow-hidden relative">
       {/* Заголовок чата */}
-      <div className="p-3 sm:p-4 border-b border-base-300 bg-base-100 flex-shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="navbar bg-base-100 border-b border-base-300 min-h-0 p-2 sm:p-3 relative z-30">
+        <div className="navbar-start flex-1 gap-2">
           {showBackButton && (
             <button
               onClick={onBack}
-              className="btn btn-ghost btn-sm btn-circle flex-shrink-0"
+              className="btn btn-ghost btn-circle btn-sm"
             >
               <svg
                 className="w-4 h-4 sm:w-5 sm:h-5"
@@ -523,7 +524,7 @@ export default function ChatWindow({
                 {getChatTitle()}
               </h2>
               {/* Цена для товара витрины */}
-              {chat?.storefront_product_id && chat?.listing?.price ? (
+              {!!chat?.storefront_product_id && chat?.listing?.price ? (
                 <span className="text-sm font-bold text-primary">
                   {chat.listing.price} RSD
                 </span>
@@ -567,78 +568,100 @@ export default function ChatWindow({
               )}
             </div>
           </div>
+        </div>
+        {/* Кнопки действий */}
+        <div className="navbar-end gap-1">
+          {/* Кнопка добавить в корзину для товаров витрин */}
+          {!!chat?.storefront_product_id && (
+            <button
+              className="btn btn-primary btn-xs sm:btn-sm"
+              title={t('addToCart')}
+              disabled={isAddingToCart || !storefrontProduct}
+              onClick={async () => {
+                if (!storefrontProduct || isAddingToCart) return;
 
-          {/* Кнопки действий */}
-          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-            {/* Кнопка добавить в корзину для товаров витрин */}
-            {chat?.storefront_product_id && (
-              <button
-                className="btn btn-primary btn-xs sm:btn-sm"
-                title={t('addToCart')}
-                disabled={isAddingToCart || !storefrontProduct}
-                onClick={async () => {
-                  if (!storefrontProduct || isAddingToCart) return;
-
-                  setIsAddingToCart(true);
-                  try {
-                    if (user) {
-                      // For authenticated users, save to backend
-                      await dispatch(
-                        addToCart({
-                          storefrontId: storefrontProduct.storefront_id,
-                          item: {
-                            product_id: storefrontProduct.id,
-                            quantity: 1,
-                          },
-                        })
-                      ).unwrap();
-                      toast.success(t('productAddedToCart'));
-                    } else {
-                      // For non-authenticated users, save to local storage
-                      dispatch(
-                        addItem({
-                          productId: storefrontProduct.id,
-                          name: storefrontProduct.name,
-                          price: storefrontProduct.price,
-                          currency: 'RSD',
+                setIsAddingToCart(true);
+                try {
+                  if (user) {
+                    // For authenticated users, save to backend
+                    await dispatch(
+                      addToCart({
+                        storefrontId: storefrontProduct.storefront_id,
+                        item: {
+                          product_id: storefrontProduct.id,
                           quantity: 1,
-                          stockQuantity: storefrontProduct.stock_quantity,
-                          image: storefrontProduct.images?.[0]?.url,
-                          storefrontId: storefrontProduct.storefront_id,
-                        })
-                      );
-                      toast.success(t('productAddedToCart'));
-                    }
-                  } catch (error) {
-                    console.error('Failed to add to cart:', error);
-                    toast.error(t('failedToAddToCart'));
-                  } finally {
-                    setIsAddingToCart(false);
+                        },
+                      })
+                    ).unwrap();
+                    toast.success(t('productAddedToCart'));
+                  } else {
+                    // For non-authenticated users, save to local storage
+                    dispatch(
+                      addItem({
+                        productId: storefrontProduct.id,
+                        name: storefrontProduct.name,
+                        price: storefrontProduct.price,
+                        currency: 'RSD',
+                        quantity: 1,
+                        stockQuantity: storefrontProduct.stock_quantity,
+                        image: storefrontProduct.images?.[0]?.url,
+                        storefrontId: storefrontProduct.storefront_id,
+                      })
+                    );
+                    toast.success(t('productAddedToCart'));
                   }
-                }}
+                } catch (error) {
+                  console.error('Failed to add to cart:', error);
+                  toast.error(t('failedToAddToCart'));
+                } finally {
+                  setIsAddingToCart(false);
+                }
+              }}
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </button>
-            )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </button>
+          )}
 
-            {/* Кнопка просмотра детальной страницы */}
-            {chat?.storefront_product_id ? (
+          {/* Кнопка просмотра детальной страницы */}
+          {!!chat?.storefront_product_id ? (
+            <Link
+              href={`/${locale}/storefronts/product/${chat.storefront_product_id}`}
+              className="btn btn-ghost btn-xs sm:btn-sm"
+              title={t('viewDetails')}
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </Link>
+          ) : (
+            !!(chat?.listing || chat?.listing_id || listingInfo) &&
+            !isContactChat && (
               <Link
-                href={`/${locale}/storefronts/product/${chat.storefront_product_id}`}
+                href={`/${locale}/marketplace/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
                 className="btn btn-ghost btn-xs sm:btn-sm"
-                title={t('viewDetails')}
+                title={t('viewListing')}
               >
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5"
@@ -650,155 +673,157 @@ export default function ChatWindow({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                   />
                 </svg>
               </Link>
-            ) : (
-              (chat?.listing || chat?.listing_id || listingInfo) &&
-              !isContactChat && (
-                <Link
-                  href={`/${locale}/marketplace/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
-                  className="btn btn-ghost btn-xs sm:btn-sm"
-                  title={t('viewListing')}
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                    />
-                  </svg>
-                </Link>
-              )
-            )}
+            )
+          )}
 
-            {getContactUserId() && (
-              <button
-                className="btn btn-ghost btn-xs sm:btn-sm"
-                title={t('addToContacts')}
-                onClick={handleAddToContacts}
-                disabled={isAddingContact}
-              >
-                {isAddingContact ? (
-                  <span className="loading loading-spinner loading-xs sm:loading-sm"></span>
-                ) : (
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                    />
-                  </svg>
-                )}
-              </button>
-            )}
-          </div>
+          {getContactUserId() && (
+            <button
+              className="btn btn-ghost btn-xs sm:btn-sm"
+              title={t('addToContacts')}
+              onClick={handleAddToContacts}
+              disabled={isAddingContact}
+            >
+              {isAddingContact ? (
+                <span className="loading loading-spinner loading-xs sm:loading-sm"></span>
+              ) : (
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Область сообщений */}
-      <div
-        ref={messagesContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-2 sm:p-4 lg:px-8 space-y-2 sm:space-y-4 min-h-0 chat-pattern-hexagon"
-      >
-        {/* Индикатор загрузки старых сообщений */}
-        {(hasMore || isLoadingOldMessages) && (
-          <div className="text-center py-2">
-            {isLoadingOldMessages ? (
-              <div className="flex items-center justify-center gap-2">
-                <span className="loading loading-spinner loading-sm"></span>
-                <span className="text-sm text-base-content/50">
-                  {t('loadingOldMessages')}
-                </span>
-              </div>
-            ) : (
-              <div className="text-sm text-base-content/50">
-                {t('scrollUpToLoadMore')}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Сообщения */}
-        {chatMessages.length > 0 ? (
-          chatMessages.map((message, index) => (
-            <MessageItem
-              key={`${message.id}-${index}`}
-              message={message}
-              isOwn={message.sender_id === user?.id}
-            />
-          ))
-        ) : isNewChat ? (
-          <div className="flex items-center justify-center h-full text-base-content/50">
-            <div className="text-center">
-              <p className="text-lg">{t('sendFirstMessage')}</p>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Индикатор печатания */}
-        {typingInThisChat.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-base-content/50">
-            <span className="loading loading-dots loading-sm"></span>
-            <span>
-              {typingInThisChat.length === 1
-                ? t('userTyping', { name: chat?.other_user?.name || '' })
-                : t('usersTyping', { count: typingInThisChat.length })}
-            </span>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Кнопка прокрутки вниз */}
-      {!isAtBottom && (
-        <button
-          onClick={scrollToBottom}
-          className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 btn btn-circle btn-xs sm:btn-sm shadow-lg"
-        >
-          <svg
-            className="w-3 h-3 sm:w-4 sm:h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-        </button>
+      {/* Уведомление о входящем запросе в контакты */}
+      {chat?.other_user?.id && (
+        <IncomingContactRequest
+          otherUserId={chat.other_user.id}
+          chatId={chat?.id}
+          onRequestHandled={() => {
+            // Можно обновить UI или показать уведомление после обработки запроса
+          }}
+        />
       )}
 
-      {/* Поле ввода */}
-      <div className="flex-shrink-0">
-        <MessageInput
-          chat={chat}
-          initialListingId={initialListingId}
-          initialStorefrontProductId={initialStorefrontProductId}
-          initialSellerId={initialSellerId || initialContactId}
-        />
+      {/* Контейнер с фоном на всю высоту */}
+      <div
+        className="flex-1 relative"
+        style={{
+          backgroundColor: 'oklch(var(--b2))',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239C92AC' fill-opacity='0.1' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      >
+        {/* Область сообщений */}
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="absolute inset-x-0 top-0 bottom-20 overflow-y-auto p-3 sm:p-4 lg:px-8"
+        >
+          {/* Индикатор загрузки старых сообщений */}
+          {(hasMore || isLoadingOldMessages) && (
+            <div className="text-center py-2">
+              {isLoadingOldMessages ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <span className="text-sm opacity-50">
+                    {t('loadingOldMessages')}
+                  </span>
+                </div>
+              ) : (
+                <button
+                  className="btn btn-ghost btn-sm text-base-content/50"
+                  onClick={() => handleScroll()}
+                >
+                  {t('scrollUpToLoadMore')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Сообщения */}
+          {chatMessages.length > 0 ? (
+            chatMessages.map((message, index) => (
+              <MessageItem
+                key={`${message.id}-${index}`}
+                message={message}
+                isOwn={message.sender_id === user?.id}
+              />
+            ))
+          ) : isNewChat ? (
+            <div className="flex items-center justify-center h-full text-base-content/50">
+              <div className="text-center">
+                <p className="text-lg">{t('sendFirstMessage')}</p>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Индикатор печатания */}
+          {typingInThisChat.length > 0 && (
+            <div className="chat chat-start">
+              <div className="chat-bubble chat-bubble-secondary">
+                <span className="loading loading-dots loading-xs"></span>
+              </div>
+              <div className="chat-footer opacity-50 text-xs">
+                {typingInThisChat.length === 1
+                  ? chat?.other_user?.name || t('userTyping')
+                  : t('usersTyping', { count: typingInThisChat.length })}
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Кнопка прокрутки вниз */}
+        {!isAtBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-24 right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
+          >
+            <svg
+              className="w-3 h-3 sm:w-4 sm:h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+          </button>
+        )}
+
+        {/* Поле ввода - позиционировано внизу контейнера с фоном */}
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <MessageInput
+            chat={chat}
+            initialListingId={initialListingId}
+            initialStorefrontProductId={initialStorefrontProductId}
+            initialSellerId={initialSellerId || initialContactId}
+          />
+        </div>
       </div>
 
       {/* Quick View Modal for Storefront Product */}
-      {chat?.storefront_product_id && (
+      {!!chat?.storefront_product_id && (
         <StorefrontProductQuickView
           productId={chat.storefront_product_id}
           isOpen={showProductQuickView}

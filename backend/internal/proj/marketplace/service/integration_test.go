@@ -585,6 +585,10 @@ func (m *MockStorage) DeleteListingVariant(ctx context.Context, variantID int) e
 	return nil
 }
 
+func (m *MockStorage) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error) {
+	return []models.UserContact{}, 0, nil
+}
+
 // Создание тестового сервиса
 func createTestService() *MarketplaceService {
 	mockStorage := &MockStorage{}

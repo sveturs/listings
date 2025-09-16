@@ -13,6 +13,13 @@ export interface UserContact {
     id: number;
     name: string;
     email: string;
+    picture_url?: string;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    picture_url?: string;
   };
 }
 
@@ -242,6 +249,25 @@ class ContactsService {
       user_id: number;
       contact_id: number;
     }>(`/status/${contactUserID}`);
+  }
+
+  async getIncomingRequests(
+    params: {
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<ContactsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    return this.request<ContactsResponse>(
+      `/incoming?${queryParams.toString()}`
+    );
   }
 }
 

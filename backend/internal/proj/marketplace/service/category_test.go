@@ -1182,6 +1182,10 @@ func (ts *testStorage) DeleteListingVariant(ctx context.Context, variantID int) 
 	return nil
 }
 
+func (ts *testStorage) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error) {
+	return []models.UserContact{}, 0, nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

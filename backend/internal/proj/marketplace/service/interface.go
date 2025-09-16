@@ -112,6 +112,7 @@ type ContactsServiceInterface interface {
 	AddContact(ctx context.Context, userID int, req *models.AddContactRequest) (*models.UserContact, error)
 	UpdateContactStatus(ctx context.Context, userID int, contactUserID int, req *models.UpdateContactRequest) error
 	GetContacts(ctx context.Context, userID int, status string, page, limit int) (*models.ContactsListResponse, error)
+	GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) (*models.ContactsListResponse, error)
 	RemoveContact(ctx context.Context, userID, contactUserID int) error
 	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdatePrivacySettings(ctx context.Context, userID int, req *models.UpdatePrivacySettingsRequest) (*models.UserPrivacySettings, error)

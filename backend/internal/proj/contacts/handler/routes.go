@@ -16,6 +16,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Маршруты для работы с контактами
 	contacts.Get("/", h.GetContacts)                                // Получить список контактов
 	contacts.Post("/", h.AddContact)                                // Добавить контакт
+	contacts.Get("/incoming", h.GetIncomingRequests)                // Получить входящие запросы
 	contacts.Put("/:contact_user_id/status", h.UpdateContactStatus) // Обновить статус контакта
 	contacts.Delete("/:contact_user_id", h.RemoveContact)           // Удалить контакт
 	contacts.Get("/:contact_user_id/check", h.GetContactStatus)     // Проверить статус контакта

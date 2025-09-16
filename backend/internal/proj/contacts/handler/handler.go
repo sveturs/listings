@@ -141,6 +141,32 @@ func (h *Handler) GetContacts(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, contacts)
 }
 
+// GetIncomingRequests возвращает список входящих запросов в контакты
+// @Summary Получить входящие запросы в контакты
+// @Description Возвращает список входящих запросов в контакты со статусом pending
+// @Tags contacts
+// @Accept json
+// @Produce json
+// @Param page query int false "Номер страницы" default(1)
+// @Param limit query int false "Количество на странице" default(20)
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ContactsListResponse} "Список входящих запросов"
+// @Failure 500 {object} utils.ErrorResponseSwag "contacts.fetchError"
+// @Security BearerAuth
+// @Router /api/v1/contacts/incoming [get]
+func (h *Handler) GetIncomingRequests(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+
+	page := utils.StringToInt(c.Query("page"), 1)
+	limit := utils.StringToInt(c.Query("limit"), 20)
+
+	requests, err := h.services.Contacts().GetIncomingContactRequests(c.Context(), userID, page, limit)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "contacts.fetchError")
+	}
+
+	return utils.SuccessResponse(c, requests)
+}
+
 // RemoveContact удаляет контакт из списка
 // @Summary Удалить контакт
 // @Description Удаляет пользователя из списка контактов

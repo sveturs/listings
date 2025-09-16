@@ -81,6 +81,11 @@ func (s *Storage) UpdateUserProfile(ctx context.Context, userID int, update *mod
 	var params []interface{}
 	paramCount := 1
 
+	if update.Name != nil {
+		setFields = append(setFields, fmt.Sprintf("name = $%d", paramCount))
+		params = append(params, update.Name)
+		paramCount++
+	}
 	if update.Phone != nil {
 		setFields = append(setFields, fmt.Sprintf("phone = $%d", paramCount))
 		params = append(params, update.Phone)

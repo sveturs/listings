@@ -12503,6 +12503,61 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/contacts/incoming': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить входящие запросы в контакты
+     * @description Возвращает список входящих запросов в контакты со статусом pending
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Номер страницы */
+          page?: number;
+          /** @description Количество на странице */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Список входящих запросов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ContactsListResponse'];
+            };
+          };
+        };
+        /** @description contacts.fetchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/contacts/privacy': {
     parameters: {
       query?: never;
@@ -35662,6 +35717,7 @@ export interface components {
       /** @description Указатель правильный для обновлений */
       city?: string;
       country?: string;
+      name?: string;
       notification_email?: boolean;
       phone?: string;
       settings?: number[];

@@ -1083,6 +1083,10 @@ func (db *Database) GetUserContacts(ctx context.Context, userID int, status stri
 	return db.marketplaceDB.GetUserContacts(ctx, userID, status, page, limit)
 }
 
+func (db *Database) GetIncomingContactRequests(ctx context.Context, userID int, page, limit int) ([]models.UserContact, int, error) {
+	return db.marketplaceDB.GetIncomingContactRequests(ctx, userID, page, limit)
+}
+
 func (db *Database) RemoveContact(ctx context.Context, userID, contactUserID int) error {
 	return db.marketplaceDB.RemoveContact(ctx, userID, contactUserID)
 }
