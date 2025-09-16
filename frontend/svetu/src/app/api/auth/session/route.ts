@@ -4,6 +4,10 @@ import configManager from '@/config';
 const BACKEND_URL =
   process.env.BACKEND_URL || configManager.getApiUrl({ internal: true });
 
+// Auth service URL - для auth endpoints
+const AUTH_SERVICE_URL =
+  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || configManager.getAuthServiceUrl();
+
 export async function GET(request: NextRequest) {
   try {
     // Получаем refresh_token cookie из запроса
@@ -61,21 +65,34 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback на старый метод с session token
-    const response = await fetch(`${BACKEND_URL}/auth/session`, {
-      method: 'GET',
-      headers,
-    });
+    // Если нет JWT токена, проверяем access token из localStorage через header
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const accessToken = authHeader.substring(7);
 
-    const data = await response.json();
-    console.log('[API Route] Session response from backend:', data);
+      // Пробуем получить данные пользователя через auth service
+      const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[API Route] User data from auth service:', data);
+
+        return NextResponse.json({
+          authenticated: true,
+          user: data.user || data,
+        });
+      }
     }
 
-    console.log('[API Route] Returning session to frontend:', data);
-    return NextResponse.json(data);
+    // Если ничего не сработало, возвращаем неаутентифицированный статус
+    return NextResponse.json({
+      authenticated: false,
+    });
   } catch (error) {
     console.error('Session API error:', error);
     return NextResponse.json(
