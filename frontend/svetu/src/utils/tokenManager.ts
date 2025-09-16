@@ -176,7 +176,7 @@ class TokenManager {
       console.log('[TokenManager] Trying cookie-based refresh...');
 
       const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
+        `${configManager.getAuthServiceUrl()}/api/v1/auth/refresh`,
         {
           method: 'POST',
           credentials: 'include', // КРИТИЧНО: отправляет cookies
@@ -290,13 +290,12 @@ class TokenManager {
       }
 
       const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
+        `${configManager.getAuthServiceUrl()}/api/v1/auth/refresh`,
         {
           method: 'POST',
           credentials: 'include', // Важно для cookies если используются
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${refreshToken}`, // Отправляем refresh токен в заголовке
           },
           body: JSON.stringify({
             refresh_token: refreshToken, // Также отправляем в теле запроса для совместимости
