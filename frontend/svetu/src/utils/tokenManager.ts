@@ -169,6 +169,46 @@ class TokenManager {
   }
 
   /**
+   * Выполняет refresh токена через cookie (для OAuth авторизации)
+   */
+  private async performCookieRefresh(): Promise<string | null> {
+    try {
+      console.log('[TokenManager] Trying cookie-based refresh...');
+
+      const response = await fetch(
+        `${configManager.getApiUrl()}/api/v1/auth/refresh`,
+        {
+          method: 'POST',
+          credentials: 'include', // КРИТИЧНО: отправляет cookies
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Не отправляем тело запроса - refresh token в cookie
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.access_token) {
+          this.setAccessToken(data.access_token);
+          // Если вернулся новый refresh token, сохраняем его
+          if (data.refresh_token) {
+            this.setRefreshToken(data.refresh_token);
+          }
+          return data.access_token;
+        }
+      } else if (response.status === 401 || response.status === 400) {
+        // Cookie refresh не сработал - это нормально для email auth
+        console.log('[TokenManager] Cookie refresh not available');
+        return null;
+      }
+    } catch (error) {
+      console.log('[TokenManager] Cookie refresh failed:', error);
+    }
+    return null;
+  }
+
+  /**
    * Обновляет access token используя refresh token из httpOnly cookie
    */
   async refreshAccessToken(): Promise<string> {
@@ -234,10 +274,17 @@ class TokenManager {
     try {
       console.log('[TokenManager] Attempting to refresh token...');
 
-      // Получаем refresh токен
+      // Сначала пробуем refresh через cookie (основной метод для OAuth)
+      const cookieResponse = await this.performCookieRefresh();
+      if (cookieResponse) {
+        console.log('[TokenManager] Token refreshed via cookie');
+        return cookieResponse;
+      }
+
+      // Если cookie refresh не сработал, пробуем через localStorage (для email auth)
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) {
-        console.log('[TokenManager] No refresh token available');
+        console.log('[TokenManager] No refresh token available in localStorage');
         this.clearTokens();
         return '';
       }

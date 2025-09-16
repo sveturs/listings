@@ -38,6 +38,26 @@ export default function OAuthProcessor() {
         }
       }
 
+      // ВАЖНО: Делаем запрос к /auth/session для установки cookies
+      // Это критично для работы refresh на dev.svetu.rs
+      fetch('/api/v1/auth/session', {
+        method: 'GET',
+        credentials: 'include', // КРИТИЧНО: включает cookies
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.warn('[OAuthProcessor] Failed to establish session cookies');
+          } else {
+            console.log('[OAuthProcessor] Session cookies established');
+          }
+        })
+        .catch((error) => {
+          console.error('[OAuthProcessor] Session request failed:', error);
+        });
+
       // Wait a bit to ensure token is saved before redirect
       setTimeout(() => {
         // Проверяем и дублируем сохранение для надежности

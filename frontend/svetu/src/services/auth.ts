@@ -129,29 +129,30 @@ export class AuthService {
         }
       }
 
-      // Проверяем есть ли refresh токен (для старой системы авторизации)
-      const refreshToken = tokenManager.getRefreshToken();
-      if (!refreshToken) {
-        console.log(
-          '[AuthService] No refresh token available, session cannot be restored via refresh'
-        );
-        // Если нет refresh токена, но был access token - это OAuth авторизация
-        // В этом случае мы уже попытались получить сессию выше
-        return null;
-      }
+      // Пробуем обновить токен через refresh (поддерживаем и cookie и localStorage)
+      // TokenManager теперь сам определит какой метод использовать (cookie или localStorage)
+      console.log('[AuthService] Attempting token refresh...');
 
       // Только если токен отсутствует или истек, пытаемся обновить
       console.log(
         '[AuthService] Access token expired or invalid, attempting refresh...'
       );
-      accessToken = await tokenManager.refreshAccessToken();
 
-      if (accessToken) {
-        console.log('[AuthService] Access token obtained, fetching session...');
-        // Если удалось получить access token, получаем сессию
-        return await this.getSession();
-      } else {
-        console.log('[AuthService] No access token obtained from refresh');
+      try {
+        // TokenManager автоматически попробует сначала cookie refresh, потом localStorage
+        accessToken = await tokenManager.refreshAccessToken();
+
+        if (accessToken) {
+          console.log('[AuthService] Access token obtained, fetching session...');
+          // Если удалось получить access token, получаем сессию
+          return await this.getSession();
+        } else {
+          console.log('[AuthService] No access token obtained from refresh');
+          return null;
+        }
+      } catch (refreshError: any) {
+        console.log('[AuthService] Refresh failed:', refreshError.message);
+        // Продолжаем обработку ошибок ниже
       }
     } catch (error: any) {
       // Обрабатываем специфичные ошибки
