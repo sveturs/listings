@@ -54,7 +54,7 @@ export default function StorefrontActions({ storefront, isOwner }: StorefrontAct
     <>
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
-          <h3 className="card-title">{tCommon('actions')}</h3>
+          <h3 className="card-title">{tCommon('actionsTitle')}</h3>
           
           <div className="space-y-3">
             {isOwner ? (

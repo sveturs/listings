@@ -73,6 +73,19 @@
   "vacationMode": "Режим отпуска",
   "storeSettings": "Настройки магазина",
   "viewAnalytics": "Посмотреть аналитику",
+  "contactStore": "Связаться с магазином",
+  "follow": "Подписаться",
+  "following": "Вы подписаны",
+  "acceptedPayments": "Принимаемые платежи",
+  "deliveryOptions": "Варианты доставки",
+  "shareStore": "Поделиться магазином",
+  "storeLink": "Ссылка на магазин",
+  "payment_methods": {
+    "cash": "Наличные",
+    "card": "Карта",
+    "bank_transfer": "Банковский перевод",
+    "cod": "Наложенный платеж"
+  },
   "delivery": {
     "title": "Доставка"
   },
@@ -150,8 +163,33 @@
   "backToDashboard": "Вернуться к панели управления",
   "back": "Назад",
   "next": "Далее",
+  "unsavedChanges": "Несохранённые изменения",
+  "unsavedChangesDescription": "У вас есть несохранённые изменения. Пожалуйста, сохраните или отмените их перед продолжением.",
+  "photosStepDescription": "Добавьте фотографии для демонстрации вашего товара",
+  "totalImages": "Всего изображений",
+  "images": "изображений",
+  "dragDropImages": "Перетащите изображения сюда или нажмите для загрузки",
+  "imageRequirements": "JPG, PNG, GIF до 10MB каждое. Максимум 10 изображений.",
+  "selectedImages": "Выбранные изображения",
+  "setAsMain": "Сделать главным",
+  "deleteImage": "Удалить",
+  "main": "Главное",
+  "previewStepDescription": "Проверьте ваш товар перед публикацией",
+  "visibleToCustomers": "Ваш товар будет виден покупателям после сохранения",
+  "imageChanges": "Изменения изображений",
+  "newImagesToAdd": "новых изображений будет добавлено",
+  "imagesToDelete": "изображений будет удалено",
+  "updateProduct": "Обновить товар",
   "products": {
     "title": "Товары",
+    "steps": {
+      "basic": "Основная информация",
+      "category": "Категория",
+      "location": "Местоположение",
+      "attributes": "Атрибуты",
+      "photos": "Фотографии",
+      "preview": "Предпросмотр"
+    },
     "addProduct": "Добавить товар",
     "importProducts": "Импортировать товары",
     "searchPlaceholder": "Поиск товаров...",
@@ -265,6 +303,21 @@
     "defaultStockQuantity": "Количество по умолчанию",
     "useIndividualQuantities": "Использовать индивидуальные количества",
     "errorLoadingProducts": "Ошибка загрузки товаров"
+  },
+  "storefronts": {
+    "products": {
+      "steps": {
+        "basic": "Основная информация",
+        "category": "Категория",
+        "location": "Местоположение",
+        "attributes": "Атрибуты",
+        "photos": "Фотографии",
+        "preview": "Предпросмотр"
+      },
+      "privacy": {
+        "exact": "Точный адрес"
+      }
+    }
   },
   "storefront": {
     "products": {

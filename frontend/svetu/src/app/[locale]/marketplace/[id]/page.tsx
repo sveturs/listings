@@ -219,13 +219,63 @@ export default function ListingPage({ params }: Props) {
 
   const fetchListing = useCallback(async () => {
     try {
-      const response = await fetch(
+      // Сначала пробуем загрузить как обычное объявление
+      let response = await fetch(
         `${config.getApiUrl()}/api/v1/marketplace/listings/${id}`
       );
-      if (!response.ok) throw new Error('Failed to fetch listing');
-      const result = await response.json();
+
+      let result;
+      let isStorefrontProduct = false;
+
+      if (!response.ok) {
+        // Если не найдено как обычное объявление, пробуем как товар витрины
+        response = await fetch(
+          `${config.getApiUrl()}/api/v1/storefronts/products/${id}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch listing');
+        isStorefrontProduct = true;
+      }
+
+      result = await response.json();
       // Проверяем обертку ответа
-      const listingData = result.data || result;
+      let listingData = result.data || result;
+
+      // Адаптируем данные товара витрины под формат обычного объявления
+      if (isStorefrontProduct) {
+        // Получаем информацию о витрине для user_id
+        let storefrontInfo = null;
+        try {
+          const storefrontResponse = await fetch(
+            `${config.getApiUrl()}/api/v1/storefronts/${listingData.storefront_id}`
+          );
+          if (storefrontResponse.ok) {
+            storefrontInfo = await storefrontResponse.json();
+          }
+        } catch (error) {
+          console.error('Failed to fetch storefront info:', error);
+        }
+
+        listingData = {
+          ...listingData,
+          id: listingData.id,
+          title: listingData.name,
+          // Добавляем координаты для отображения на карте
+          latitude: listingData.individual_latitude || listingData.latitude,
+          longitude: listingData.individual_longitude || listingData.longitude,
+          address: listingData.individual_address || listingData.address,
+          // Добавляем флаг что это товар витрины
+          product_type: 'storefront',
+          // Добавляем user_id владельца витрины
+          user_id: storefrontInfo?.user_id || 6,
+          // Добавляем ссылку на витрину
+          storefront: storefrontInfo || listingData.storefront || {
+            id: listingData.storefront_id,
+            name: 'Store',
+            slug: 'store',
+          },
+        };
+      }
+
       console.log('Listing data:', listingData);
       // Если storefront_id есть, но storefront отсутствует, создаем минимальный объект
       if (listingData.storefront_id && !listingData.storefront) {

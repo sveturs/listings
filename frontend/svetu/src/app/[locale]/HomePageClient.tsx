@@ -424,10 +424,11 @@ export default function HomePageClient({
       setIsLoadingStores(true);
       try {
         // Загружаем активные витрины
+        // Сначала загружаем больше витрин, чтобы выбрать те, у которых есть изображения
         const response = await api.get('/api/v1/storefronts', {
           params: {
             is_active: true,
-            limit: 4,
+            limit: 10,
             sort_by: 'products_count',
             sort_order: 'desc',
           },
@@ -482,50 +483,27 @@ export default function HomePageClient({
             }
           );
 
-          setOfficialStores(formattedStores);
-          logger.debug('Loaded storefronts:', formattedStores);
+          // Приоритизируем витрины с изображениями
+          const storesWithImages = formattedStores.filter(
+            (store: any) => store.logo && store.logo.includes('svetu.rs')
+          );
+          const storesWithoutImages = formattedStores.filter(
+            (store: any) => !store.logo || !store.logo.includes('svetu.rs')
+          );
+
+          // Комбинируем: сначала с изображениями, потом без
+          const finalStores = [...storesWithImages, ...storesWithoutImages].slice(0, 4);
+
+          setOfficialStores(finalStores);
+          logger.debug('Loaded storefronts:', finalStores);
         } else {
-          // Если нет реальных витрин, используем заглушки
-          setOfficialStores([
-            {
-              id: 1,
-              name: 'Агентство недвижимости',
-              category: 'Недвижимость',
-              logo: 'https://via.placeholder.com/100x100/3b82f6/ffffff?text=Logo',
-              followers: '2K',
-              products: 38,
-              rating: 4.5,
-              verified: true,
-              discount: '',
-              bgImage:
-                'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
-              slug: 'agenstvo',
-              description:
-                'Тут мы раскидаем по карте квартиры и будем их продавать',
-            },
-          ]);
+          // Если нет реальных витрин, показываем пустой массив
+          setOfficialStores([]);
         }
       } catch (error) {
         console.error('Failed to load storefronts:', error);
-        // В случае ошибки тоже используем одну витрину из БД как заглушку
-        setOfficialStores([
-          {
-            id: 1,
-            name: 'Агентство недвижимости',
-            category: 'Недвижимость',
-            logo: '/listings/storefronts/1/logo/10_2.jpeg',
-            followers: '2K',
-            products: 38,
-            rating: 4.5,
-            verified: true,
-            discount: '',
-            bgImage:
-              'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=200&fit=crop',
-            slug: 'agenstvo',
-            description:
-              'Тут мы раскидаем по карте квартиры и будем их продавать',
-          },
-        ]);
+        // В случае ошибки показываем пустой массив
+        setOfficialStores([]);
       } finally {
         setIsLoadingStores(false);
       }
@@ -1314,8 +1292,9 @@ export default function HomePageClient({
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {officialStores.map((store) => (
-              <div
+              <Link
                 key={store.id}
+                href={`/${locale}/storefronts/${store.slug || store.id}`}
                 className="card bg-base-100 hover:shadow-xl transition-all overflow-hidden"
               >
                 {/* Фоновое изображение магазина */}
@@ -1388,11 +1367,11 @@ export default function HomePageClient({
                     </div>
                   </div>
 
-                  <button className="btn btn-primary btn-sm mt-4 w-full">
+                  <div className="btn btn-primary btn-sm mt-4 w-full">
                     {t('goToStore')}
-                  </button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

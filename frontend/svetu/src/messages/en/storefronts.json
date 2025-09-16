@@ -72,6 +72,19 @@
   "vacationMode": "Vacation mode",
   "storeSettings": "Store Settings",
   "viewAnalytics": "View Analytics",
+  "contactStore": "Contact Store",
+  "follow": "Follow",
+  "following": "Following",
+  "acceptedPayments": "Accepted Payments",
+  "deliveryOptions": "Delivery Options",
+  "shareStore": "Share Store",
+  "storeLink": "Store Link",
+  "payment_methods": {
+    "cash": "Cash",
+    "card": "Card",
+    "bank_transfer": "Bank Transfer",
+    "cod": "Cash on Delivery"
+  },
   "delivery": {
     "title": "Delivery"
   },
@@ -149,8 +162,33 @@
   "backToDashboard": "Back to Dashboard",
   "back": "Back",
   "next": "Next",
+  "unsavedChanges": "Unsaved changes",
+  "unsavedChangesDescription": "You have unsaved changes. Please save or discard them before proceeding.",
+  "photosStepDescription": "Add photos to showcase your product",
+  "totalImages": "Total Images",
+  "images": "images",
+  "dragDropImages": "Drag and drop images here or click to upload",
+  "imageRequirements": "JPG, PNG, GIF up to 10MB each. Maximum 10 images.",
+  "selectedImages": "Selected Images",
+  "setAsMain": "Set as Main",
+  "deleteImage": "Delete",
+  "main": "Main",
+  "previewStepDescription": "Review your product before publishing",
+  "visibleToCustomers": "Your product will be visible to customers after saving",
+  "imageChanges": "Image Changes",
+  "newImagesToAdd": "new images will be added",
+  "imagesToDelete": "images will be deleted",
+  "updateProduct": "Update Product",
   "products": {
     "title": "Products",
+    "steps": {
+      "basic": "Basic Info",
+      "category": "Category",
+      "location": "Location",
+      "attributes": "Attributes",
+      "photos": "Photos",
+      "preview": "Preview"
+    },
     "addProduct": "Add Product",
     "importProducts": "Import Products",
     "searchPlaceholder": "Search products...",
@@ -265,10 +303,28 @@
     "useIndividualQuantities": "Use Individual Quantities",
     "errorLoadingProducts": "Error Loading Products"
   },
+  "storefronts": {
+    "products": {
+      "steps": {
+        "basic": "Basic Info",
+        "category": "Category",
+        "location": "Location",
+        "attributes": "Attributes",
+        "photos": "Photos",
+        "preview": "Preview"
+      },
+      "privacy": {
+        "exact": "Exact Address"
+      }
+    }
+  },
   "storefront": {
     "products": {
       "attributes": "Product Attributes",
-      "default": "Default"
+      "default": "Default",
+      "privacy": {
+        "exact": "Exact Address"
+      }
     },
     "categories": {
       "attributes": "Category Attributes"
