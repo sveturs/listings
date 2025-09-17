@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Омиљено - SveTu",
+  "pageDescription": "Ваши омиљени огласи на SveTu тржишту",
+  "title": "Омиљено",
+  "description": "Сви ваши омиљени огласи на једном месту",
+  "emptyTitle": "Још нема омиљених",
+  "emptyDescription": "Додајте огласе који вам се свиђају у омиљене да их не изгубите",
+  "browseListings": "Прегледај огласе",
+  "removeFromFavorites": "Уклони из омиљених",
+  "viewDetails": "Детаљи",
+  "contactSeller": "Контактирај",
+  "addToCart": "У корпу",
+  "loading": "Учитавање омиљених...",
+  "addedToFavorites": "Додато у омиљено",
+  "removedFromFavorites": "Уклоњено из омиљених",
+  "loginRequired": "Пријавите се да додате у омиљено"
+}

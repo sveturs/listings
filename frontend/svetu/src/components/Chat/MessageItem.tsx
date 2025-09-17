@@ -141,7 +141,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
               className={`chat-bubble ${isOwn ? 'chat-bubble-primary' : 'chat-bubble-accent'} mt-1`}
             >
               <p
-                className="whitespace-pre-wrap break-words"
+                className="whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(message.content, {
                     ALLOWED_TAGS: [],
@@ -192,7 +192,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                       </span>
                     )
                   ) : (
-                    <p className="whitespace-pre-wrap break-words">
+                    <p className="whitespace-pre-wrap">
                       <span
                         dangerouslySetInnerHTML={{
                           __html: DOMPurify.sanitize(message.content, {

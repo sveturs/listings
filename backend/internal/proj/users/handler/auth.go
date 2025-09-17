@@ -2,6 +2,9 @@
 package handler
 
 import (
+	"crypto/rand"
+	"math/big"
+
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/logger"
@@ -32,12 +35,16 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 // @Success 302 {string} string "Redirect to Google OAuth"
 // @Router /auth/google [get]
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("GoogleAuth handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "OAuth authentication should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
-	})
+	origin := c.Get("Origin")
+	if origin == "" {
+		origin = c.Get("Referer")
+	}
+	if origin == "" {
+		origin = "http://localhost:3001" // Default for local development
+	}
+
+	authURL := h.authService.GetGoogleAuthURL(origin)
+	return c.Redirect(authURL, fiber.StatusTemporaryRedirect)
 }
 
 // GoogleCallback - DEPRECATED: This endpoint should be handled by Auth Service
@@ -51,17 +58,67 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "auth.google_callback.error.authentication_failed"
 // @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("GoogleCallback handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "OAuth callback should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
+	code := c.Query("code")
+	if code == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "auth.google_callback.error.missing_code",
+		})
+	}
+
+	state := c.Query("state")
+	sessionData, err := h.authService.HandleGoogleCallback(c.Context(), code)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Str("code", code[:10]+"...").
+			Msg("GoogleCallback: Failed to handle callback")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "auth.google_callback.error.authentication_failed",
+		})
+	}
+
+	// Generate JWT token for OAuth user
+	jwtToken, err := h.authService.GenerateJWT(sessionData.UserID, sessionData.Email)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("user_id", sessionData.UserID).
+			Msg("GoogleCallback: Failed to generate JWT token")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "auth.google_callback.error.token_generation_failed",
+		})
+	}
+
+	// Generate session token and save session
+	sessionToken := generateSessionToken()
+	h.authService.SaveSession(sessionToken, sessionData)
+
+	// Set session cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "session_token",
+		Value:    sessionToken,
+		MaxAge:   24 * 60 * 60, // 24 hours
+		Path:     "/",
+		HTTPOnly: true,
+		Secure:   false, // Set to true in production
+		SameSite: "Lax",
 	})
+
+	// Redirect to frontend with JWT token
+	redirectURL := state
+	if redirectURL == "" || redirectURL == "default" {
+		redirectURL = "http://localhost:3001" // Default frontend URL
+	}
+
+	// Добавляем JWT токен в URL для передачи на frontend
+	redirectURL = redirectURL + "?token=" + jwtToken
+
+	return c.Redirect(redirectURL, fiber.StatusTemporaryRedirect)
 }
 
-// GetSession - DEPRECATED: This endpoint should be handled by Auth Service
+// GetSession - Local implementation when Auth Service is disabled
 // @Summary Get current session
-// @Description This endpoint is deprecated and should be proxied to Auth Service
+// @Description Get current user session information
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -69,11 +126,38 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 // @Success 200 {object} utils.SuccessResponseSwag{data=SessionResponse} "Session information"
 // @Router /auth/session [get]
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("GetSession handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "Session endpoint should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
+	// Check if user is authenticated via JWT middleware
+	userID := c.Locals("user_id")
+	if userID == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "auth.session.error.not_authenticated",
+		})
+	}
+
+	// Get user profile from database
+	userProfile, err := h.services.User().GetUserProfile(c.Context(), userID.(int))
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("user_id", userID.(int)).
+			Msg("GetSession: Failed to get user profile")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "auth.session.error.failed",
+		})
+	}
+
+	// Return session information
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"authenticated": true,
+			"user": fiber.Map{
+				"id":       userProfile.ID,
+				"email":    userProfile.Email,
+				"name":     userProfile.Name,
+				"is_admin": userProfile.IsAdmin,
+			},
+		},
 	})
 }
 
@@ -153,4 +237,20 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		"error":   "RefreshToken endpoint should be handled by Auth Service",
 		"message": "Auth Service proxy is not configured correctly",
 	})
+}
+
+// generateSessionToken generates a secure random session token
+func generateSessionToken() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token := make([]byte, 32)
+	for i := range token {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			// Fallback to a less random but still functional approach
+			// This should never happen with crypto/rand
+			continue
+		}
+		token[i] = charset[n.Int64()]
+	}
+	return string(token)
 }

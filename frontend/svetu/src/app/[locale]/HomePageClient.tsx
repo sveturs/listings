@@ -19,6 +19,7 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '@/store/slices/cartSlice';
 import type { AppDispatch } from '@/store';
 import { toast } from 'react-hot-toast';
+import { favoritesService } from '@/services/favorites';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -100,6 +101,7 @@ export default function HomePageClient({
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
   const [popularCategories, setPopularCategories] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [officialStores, setOfficialStores] = useState<any[]>([]);
   const [_isLoadingStores, setIsLoadingStores] = useState(false);
@@ -257,6 +259,8 @@ export default function HomePageClient({
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
     setMounted(true);
+    // Инициализируем сервис избранного
+    initializeFavorites();
 
     // Check for OAuth token in URL
     const token = searchParams.get('token');
@@ -279,6 +283,65 @@ export default function HomePageClient({
       });
     }
   }, [searchParams, refreshSession, t]);
+
+  // Инициализация избранного
+  const initializeFavorites = async () => {
+    if (user) {
+      await favoritesService.initialize();
+      const favorites = await favoritesService.getFavorites();
+      setFavoriteIds(new Set(favorites.map((f) => f.id)));
+    }
+  };
+
+  // Обработчик добавления/удаления из избранного
+  const handleToggleFavorite = async (
+    listingId: number | string,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      toast.error('Войдите, чтобы добавить в избранное');
+      router.push(`/${locale}/login`);
+      return;
+    }
+
+    // Извлекаем числовой ID для проверки в favoriteIds
+    const numericId =
+      typeof listingId === 'string' && listingId.startsWith('sp_')
+        ? parseInt(listingId.replace('sp_', ''))
+        : Number(listingId);
+
+    const isCurrentlyFavorite = favoriteIds.has(numericId);
+
+    // Оптимистичное обновление UI
+    if (isCurrentlyFavorite) {
+      setFavoriteIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(numericId);
+        return newSet;
+      });
+    } else {
+      setFavoriteIds((prev) => new Set([...prev, numericId]));
+    }
+
+    // Выполняем запрос к API (передаем оригинальный listingId с префиксом)
+    const success = await favoritesService.toggleFavorite(listingId);
+
+    if (!success) {
+      // Откатываем изменения если ошибка
+      if (isCurrentlyFavorite) {
+        setFavoriteIds((prev) => new Set([...prev, numericId]));
+      } else {
+        setFavoriteIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(numericId);
+          return newSet;
+        });
+      }
+    }
+  };
 
   // Баннеры для hero секции
   const banners = [
@@ -320,6 +383,16 @@ export default function HomePageClient({
       toast.success(t('loginSuccessful') || 'Successfully logged in!');
     }
   }, [user, searchParams, t]);
+
+  // Загружаем избранное при изменении пользователя
+  useEffect(() => {
+    if (user) {
+      initializeFavorites();
+    } else {
+      setFavoriteIds(new Set());
+      favoritesService.clearCache();
+    }
+  }, [user]);
 
   // Автоматическая смена баннеров
   useEffect(() => {
@@ -470,10 +543,13 @@ export default function HomePageClient({
                   store.logo_url ||
                   `https://ui-avatars.com/api/?name=${initials}&background=${bgColor}&color=fff&size=128`,
                 followers: store.followers_count
-                  ? `${Math.floor(store.followers_count / 1000)}K`
-                  : '0',
-                products: store.products_count || 0,
-                rating: store.rating || 0,
+                  ? store.followers_count >= 1000
+                    ? `${(store.followers_count / 1000).toFixed(1)}K`
+                    : store.followers_count.toString()
+                  : '-', // Показываем прочерк вместо 0
+                products: store.products_count || '-', // Показываем прочерк если нет товаров
+                rating: store.rating || null, // Используем реальный рейтинг из API
+                viewsCount: store.views_count || 0, // Используем реальные просмотры из API
                 verified: store.is_verified || false,
                 discount: store.discount_text || '',
                 bgImage: store.banner_url || bgImage,
@@ -492,7 +568,10 @@ export default function HomePageClient({
           );
 
           // Комбинируем: сначала с изображениями, потом без
-          const finalStores = [...storesWithImages, ...storesWithoutImages].slice(0, 4);
+          const finalStores = [
+            ...storesWithImages,
+            ...storesWithoutImages,
+          ].slice(0, 4);
 
           setOfficialStores(finalStores);
           logger.debug('Loaded storefronts:', finalStores);
@@ -726,14 +805,14 @@ export default function HomePageClient({
                 );
                 return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop';
               })(),
-              rating: listing.rating || 4.0 + Math.random() * 1.0, // Используем настоящий рейтинг или генерируем
-              reviews:
-                listing.reviewCount || Math.floor(Math.random() * 500) + 10,
+              rating: listing.rating || null, // Используем реальный рейтинг из API
+              reviews: listing.reviewCount || listing.review_count || null, // Используем реальные отзывы из API
+              viewsCount: listing.view_count ?? listing.views_count ?? null, // Используем реальные просмотры из API, включая 0
               isNew:
                 new Date(listing.created_at || listing.createdAt) >
                 new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Новое если создано за последнюю неделю
               isPremium: listing.isPremium || false,
-              isFavorite: false, // Это нужно будет получать из профиля пользователя
+              isFavorite: favoriteIds.has(listing.id),
               category: listing.category?.name || listing.categoryName,
               isStorefront: listing.product_type === 'storefront',
               // Извлекаем user_id из объекта user (search API) или напрямую (marketplace API)
@@ -784,6 +863,7 @@ export default function HomePageClient({
                 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop',
               rating: 4.8,
               reviews: 234,
+              viewsCount: 0,
               isNew: true,
               isPremium: false,
               isFavorite: false,
@@ -799,6 +879,7 @@ export default function HomePageClient({
                 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=400&h=300&fit=crop',
               rating: 4.9,
               reviews: 567,
+              viewsCount: 0,
               isNew: true,
               isPremium: false,
               isFavorite: false,
@@ -1074,9 +1155,44 @@ export default function HomePageClient({
                       <button
                         className={`btn btn-circle btn-sm absolute ${deal.isPremium ? 'top-12 right-2' : 'top-2 right-2'} bg-base-100/80 hover:bg-base-100`}
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          logger.debug('Add to favorites:', deal.id);
+                          // Используем listing_id если он есть
+                          let listingId: number | string;
+                          if (deal.listing_id) {
+                            listingId =
+                              typeof deal.listing_id === 'number'
+                                ? deal.listing_id
+                                : parseInt(String(deal.listing_id));
+                          } else if (
+                            typeof deal.id === 'string' &&
+                            deal.id.startsWith('ml_')
+                          ) {
+                            listingId = parseInt(deal.id.replace('ml_', ''));
+                          } else if (
+                            typeof deal.id === 'string' &&
+                            deal.id.startsWith('sp_')
+                          ) {
+                            // Сохраняем полный ID с префиксом для storefront продуктов
+                            listingId = deal.id;
+                          } else {
+                            listingId = parseInt(String(deal.id));
+                          }
+
+                          // Проверяем валидность ID
+                          const isValidId =
+                            (typeof listingId === 'string' &&
+                              listingId.startsWith('sp_')) ||
+                            (typeof listingId === 'number' &&
+                              !isNaN(listingId));
+
+                          if (isValidId) {
+                            handleToggleFavorite(listingId, e);
+                          } else {
+                            console.error(
+                              'Invalid listing ID:',
+                              deal.id,
+                              deal.listing_id
+                            );
+                          }
                         }}
                       >
                         <FiHeart
@@ -1094,15 +1210,34 @@ export default function HomePageClient({
                           {deal.location}
                         </span>
                       </div>
-                      {deal.rating && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <FiStar className="w-3 h-3 fill-warning text-warning" />
-                          <span>{deal.rating}</span>
-                          <span className="text-base-content/60">
-                            ({deal.reviews})
-                          </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-3">
+                          {deal.rating !== null && deal.rating > 0 && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <FiStar className="w-3 h-3 fill-warning text-warning" />
+                              <span className="font-medium">
+                                {deal.rating.toFixed(1)}
+                              </span>
+                              {deal.reviews !== null && deal.reviews > 0 && (
+                                <span className="text-base-content/60">
+                                  ({deal.reviews})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {deal.viewsCount !== null &&
+                            deal.viewsCount !== undefined && (
+                              <div className="flex items-center gap-1 text-sm text-base-content/60">
+                                <AiOutlineEye className="w-3.5 h-3.5" />
+                                <span>
+                                  {deal.viewsCount === 0
+                                    ? '-'
+                                    : deal.viewsCount.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
                         </div>
-                      )}
+                      </div>
                       <div className="flex items-center gap-2 mt-2">
                         {deal.oldPrice && (
                           <span className="text-base-content/40 line-through text-sm">
@@ -1116,7 +1251,7 @@ export default function HomePageClient({
 
                       {/* Кнопки действий в зависимости от типа объявления */}
                       {deal.isStorefront ? (
-                        // B2C (витрина) - кнопка "В корзину" + "Написать в чат"
+                        // B2C (витрина) - кнопка "В корзину" + "В избранное" + "Написать в чат"
                         <div className="flex gap-2 mt-2">
                           <button
                             className="btn btn-primary btn-sm flex-1"
@@ -1127,6 +1262,36 @@ export default function HomePageClient({
                             }}
                           >
                             {t('addToCart')}
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // Для товаров витрин используем ID с префиксом sp_
+                              const productId =
+                                deal.id &&
+                                typeof deal.id === 'string' &&
+                                deal.id.startsWith('sp_')
+                                  ? deal.id
+                                  : `sp_${deal.id || deal.product_id}`;
+                              handleToggleFavorite(productId, e);
+                            }}
+                          >
+                            <FiHeart
+                              className={`w-4 h-4 ${
+                                favoriteIds.has(
+                                  parseInt(
+                                    String(deal.id || deal.product_id).replace(
+                                      'sp_',
+                                      ''
+                                    )
+                                  )
+                                )
+                                  ? 'fill-current text-error'
+                                  : ''
+                              }`}
+                            />
                           </button>
                           <button
                             className="btn btn-outline btn-sm"
@@ -1156,12 +1321,51 @@ export default function HomePageClient({
                           <button
                             className="btn btn-outline btn-sm"
                             onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              logger.debug('Add to favorites:', deal.id);
+                              // Используем listing_id если он есть
+                              let listingId: number | string;
+                              if (deal.listing_id) {
+                                listingId =
+                                  typeof deal.listing_id === 'number'
+                                    ? deal.listing_id
+                                    : parseInt(String(deal.listing_id));
+                              } else if (
+                                typeof deal.id === 'string' &&
+                                deal.id.startsWith('ml_')
+                              ) {
+                                listingId = parseInt(
+                                  deal.id.replace('ml_', '')
+                                );
+                              } else if (
+                                typeof deal.id === 'string' &&
+                                deal.id.startsWith('sp_')
+                              ) {
+                                // Сохраняем полный ID с префиксом для storefront продуктов
+                                listingId = deal.id;
+                              } else {
+                                listingId = parseInt(String(deal.id));
+                              }
+
+                              // Проверяем валидность ID
+                              const isValidId =
+                                (typeof listingId === 'string' &&
+                                  listingId.startsWith('sp_')) ||
+                                (typeof listingId === 'number' &&
+                                  !isNaN(listingId));
+
+                              if (isValidId) {
+                                handleToggleFavorite(listingId, e);
+                              } else {
+                                console.error(
+                                  'Invalid listing ID:',
+                                  deal.id,
+                                  deal.listing_id
+                                );
+                              }
                             }}
                           >
-                            <FiHeart className="w-4 h-4" />
+                            <FiHeart
+                              className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                            />
                           </button>
                         </div>
                       )}
@@ -1361,11 +1565,26 @@ export default function HomePageClient({
                     <div className="text-center">
                       <p className="text-base-content/60">{t('rating')}</p>
                       <p className="font-bold flex items-center gap-1">
-                        <FiStar className="w-3 h-3 fill-warning text-warning" />
-                        {store.rating}
+                        {store.rating ? (
+                          <>
+                            <FiStar className="w-3 h-3 fill-warning text-warning" />
+                            {store.rating.toFixed(1)}
+                          </>
+                        ) : (
+                          '-'
+                        )}
                       </p>
                     </div>
                   </div>
+
+                  {store.viewsCount !== undefined && store.viewsCount > 0 && (
+                    <div className="flex items-center justify-center gap-1 text-xs text-base-content/60 mt-3 pt-3 border-t border-base-200">
+                      <AiOutlineEye className="w-3.5 h-3.5" />
+                      <span>
+                        {store.viewsCount.toLocaleString()} {t('views')}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="btn btn-primary btn-sm mt-4 w-full">
                     {t('goToStore')}
@@ -1387,35 +1606,115 @@ export default function HomePageClient({
             <div className="carousel carousel-center w-full space-x-4 pb-4 overflow-x-auto">
               {listings.map((deal, idx) => (
                 <div key={`rec-${idx}`} className="carousel-item">
-                  <div className="card bg-base-100 w-64 hover:shadow-xl transition-all flex-shrink-0">
-                    <figure className="h-40 overflow-hidden">
-                      <img
-                        src={deal.image}
-                        alt={deal.title}
-                        className="h-full w-full object-cover hover:scale-110 transition-transform duration-300"
-                      />
-                    </figure>
-                    <div className="card-body p-4">
-                      <h3 className="font-medium text-sm line-clamp-2">
-                        {deal.title}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        {deal.oldPrice && (
-                          <span className="text-sm text-base-content/40 line-through">
-                            {deal.oldPrice}
-                          </span>
-                        )}
-                        <p className="text-lg font-bold text-primary">
-                          {deal.price}
-                        </p>
-                      </div>
-                      {deal.discount && (
-                        <div className="badge badge-error badge-sm">
-                          {deal.discount}
+                  <Link href={getListingUrl(deal)} className="block">
+                    <div className="card bg-base-100 w-64 hover:shadow-xl transition-all flex-shrink-0">
+                      <figure className="h-40 overflow-hidden relative">
+                        <img
+                          src={deal.image}
+                          alt={deal.title}
+                          className="h-full w-full object-cover hover:scale-110 transition-transform duration-300"
+                        />
+                        {/* Кнопка избранного */}
+                        <button
+                          className="btn btn-circle btn-sm absolute top-2 right-2 bg-base-100/80 hover:bg-base-100"
+                          onClick={(e) => {
+                            // Используем listing_id если он есть
+                            let listingId: number | string;
+                            if (deal.listing_id) {
+                              listingId =
+                                typeof deal.listing_id === 'number'
+                                  ? deal.listing_id
+                                  : parseInt(String(deal.listing_id));
+                            } else if (
+                              typeof deal.id === 'string' &&
+                              deal.id.startsWith('ml_')
+                            ) {
+                              listingId = parseInt(deal.id.replace('ml_', ''));
+                            } else if (
+                              typeof deal.id === 'string' &&
+                              deal.id.startsWith('sp_')
+                            ) {
+                              // Сохраняем полный ID с префиксом для storefront продуктов
+                              listingId = deal.id;
+                            } else {
+                              listingId = parseInt(String(deal.id));
+                            }
+
+                            // Проверяем валидность ID
+                            const isValidId =
+                              (typeof listingId === 'string' &&
+                                listingId.startsWith('sp_')) ||
+                              (typeof listingId === 'number' &&
+                                !isNaN(listingId));
+
+                            if (isValidId) {
+                              handleToggleFavorite(listingId, e);
+                            } else {
+                              console.error(
+                                'Invalid listing ID:',
+                                deal.id,
+                                deal.listing_id
+                              );
+                            }
+                          }}
+                        >
+                          <FiHeart
+                            className={`w-4 h-4 ${deal.isFavorite ? 'fill-error text-error' : ''}`}
+                          />
+                        </button>
+                      </figure>
+                      <div className="card-body p-4">
+                        <h3 className="font-medium text-sm line-clamp-2 mb-2">
+                          {deal.title}
+                        </h3>
+
+                        {/* Цена и скидка */}
+                        <div className="flex items-center gap-2 mb-2">
+                          {deal.oldPrice && (
+                            <span className="text-sm text-base-content/40 line-through">
+                              {deal.oldPrice}
+                            </span>
+                          )}
+                          <p className="text-lg font-bold text-primary">
+                            {deal.price}
+                          </p>
+                          {deal.discount && (
+                            <div className="badge badge-error badge-sm">
+                              {deal.discount}
+                            </div>
+                          )}
                         </div>
-                      )}
+
+                        {/* Рейтинг и просмотры */}
+                        <div className="flex items-center gap-3 text-xs">
+                          {deal.rating !== null && deal.rating > 0 && (
+                            <div className="flex items-center gap-1">
+                              <FiStar className="w-3 h-3 fill-warning text-warning" />
+                              <span className="font-medium">
+                                {deal.rating.toFixed(1)}
+                              </span>
+                              {deal.reviews !== null && deal.reviews > 0 && (
+                                <span className="text-base-content/60">
+                                  ({deal.reviews})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {deal.viewsCount !== null &&
+                            deal.viewsCount !== undefined && (
+                              <div className="flex items-center gap-1 text-base-content/60">
+                                <AiOutlineEye className="w-3 h-3" />
+                                <span>
+                                  {deal.viewsCount === 0
+                                    ? '-'
+                                    : deal.viewsCount.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

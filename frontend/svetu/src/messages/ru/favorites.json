@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Избранное - SveTu",
+  "pageDescription": "Ваши избранные объявления на торговой площадке SveTu",
+  "title": "Избранное",
+  "description": "Здесь собраны все ваши избранные объявления",
+  "emptyTitle": "В избранном пока пусто",
+  "emptyDescription": "Добавляйте понравившиеся объявления в избранное, чтобы не потерять их",
+  "browseListings": "Смотреть объявления",
+  "removeFromFavorites": "Удалить из избранного",
+  "viewDetails": "Подробнее",
+  "contactSeller": "Написать",
+  "addToCart": "В корзину",
+  "loading": "Загрузка избранного...",
+  "addedToFavorites": "Добавлено в избранное",
+  "removedFromFavorites": "Удалено из избранного",
+  "loginRequired": "Войдите, чтобы добавить в избранное"
+}

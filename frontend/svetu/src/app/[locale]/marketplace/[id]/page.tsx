@@ -224,7 +224,6 @@ export default function ListingPage({ params }: Props) {
         `${config.getApiUrl()}/api/v1/marketplace/listings/${id}`
       );
 
-      let result;
       let isStorefrontProduct = false;
 
       if (!response.ok) {
@@ -236,7 +235,7 @@ export default function ListingPage({ params }: Props) {
         isStorefrontProduct = true;
       }
 
-      result = await response.json();
+      const result = await response.json();
       // Проверяем обертку ответа
       let listingData = result.data || result;
 
@@ -268,11 +267,12 @@ export default function ListingPage({ params }: Props) {
           // Добавляем user_id владельца витрины
           user_id: storefrontInfo?.user_id || 6,
           // Добавляем ссылку на витрину
-          storefront: storefrontInfo || listingData.storefront || {
-            id: listingData.storefront_id,
-            name: 'Store',
-            slug: 'store',
-          },
+          storefront: storefrontInfo ||
+            listingData.storefront || {
+              id: listingData.storefront_id,
+              name: 'Store',
+              slug: 'store',
+            },
         };
       }
 

@@ -53,8 +53,9 @@ export default function IncomingContactRequest({
         });
 
         // Ищем запрос от этого пользователя
-        const foundRequest = response.contacts.find(
-          (req) => req.user_id === otherUserId
+        const contacts = response.contacts || [];
+        const foundRequest = contacts.find(
+          (req) => req && req.user_id === otherUserId
         );
 
         if (foundRequest) {

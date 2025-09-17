@@ -87,6 +87,9 @@ type (
 
 		// Варианты товара
 		Variants []MarketplaceListingVariant `json:"variants,omitempty" db:"-"`
+
+		// Флаг что это товар витрины (для правильной обработки в favorites)
+		IsStorefrontProduct bool `json:"is_storefront_product,omitempty" db:"-"`
 	}
 )
 

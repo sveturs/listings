@@ -40,7 +40,9 @@ export default function OAuthProcessor() {
 
       // Пропускаем вызов /auth/session - его нет в backend
       // Cookies должны устанавливаться самим Auth Service при OAuth callback
-      console.log('[OAuthProcessor] Token saved, cookies should be set by Auth Service');
+      console.log(
+        '[OAuthProcessor] Token saved, cookies should be set by Auth Service'
+      );
 
       // Wait a bit to ensure token is saved before redirect
       setTimeout(() => {

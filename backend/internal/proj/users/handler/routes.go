@@ -18,12 +18,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// TODO: исправить логику refresh на frontend чтобы не было избыточных вызовов
 	app.Post("/api/v1/auth/refresh", h.Auth.RefreshToken)
 	app.Get("/api/v1/auth/session", h.Auth.GetSession)
-	// OAuth routes are now handled by Auth Service proxy middleware
-	// These routes are commented out to prevent conflicts
-	// app.Get("/api/v1/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
-	// app.Get("/api/v1/auth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
-	// app.Get("/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
-	// app.Get("/auth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
+	// OAuth routes - локальные, Auth Service отключен
+	app.Get("/api/v1/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
+	app.Get("/api/v1/auth/oauth/google/start", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
+	app.Get("/api/v1/auth/oauth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
+	app.Get("/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
+	app.Get("/auth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
 	app.Get("/api/v1/auth/logout", h.Auth.Logout)
 	app.Post("/api/v1/auth/logout", mw.CSRFProtection(), h.Auth.Logout) // Поддержка POST для logout
 	app.Get("/api/v1/admin-check/:email", h.User.IsAdminPublic)

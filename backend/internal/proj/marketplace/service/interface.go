@@ -29,6 +29,10 @@ type MarketplaceServiceInterface interface {
 	RemoveFromFavorites(ctx context.Context, userID int, listingID int) error
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
 	GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error)
+
+	// Storefront favorites
+	AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error
+	RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error
 	GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
 	UpdateTranslation(ctx context.Context, translation *models.Translation) error
 	UpdateTranslationWithProvider(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error

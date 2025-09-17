@@ -144,3 +144,23 @@ body {
 .animate-pulse-subtle {
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Chat bubble custom styles */
+.chat-bubble {
+  max-width: fit-content !important;
+  min-width: min-content !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+}
+
+/* For long continuous text without spaces */
+.chat-bubble.break-all {
+  word-break: break-all !important;
+}
+
+/* Ensure container doesn't force wrapping */
+.chat-bubble-container {
+  max-width: 100% !important;
+  width: auto !important;
+}

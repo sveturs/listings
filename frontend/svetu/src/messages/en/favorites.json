@@ -1,0 +1,17 @@
+{
+  "pageTitle": "Favorites - SveTu",
+  "pageDescription": "Your favorite listings on SveTu marketplace",
+  "title": "Favorites",
+  "description": "All your favorite listings in one place",
+  "emptyTitle": "No favorites yet",
+  "emptyDescription": "Add listings you like to favorites to keep track of them",
+  "browseListings": "Browse Listings",
+  "removeFromFavorites": "Remove from Favorites",
+  "viewDetails": "View Details",
+  "contactSeller": "Contact",
+  "addToCart": "Add to Cart",
+  "loading": "Loading favorites...",
+  "addedToFavorites": "Added to favorites",
+  "removedFromFavorites": "Removed from favorites",
+  "loginRequired": "Login to add favorites"
+}

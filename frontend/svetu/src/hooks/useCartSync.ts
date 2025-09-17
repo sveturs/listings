@@ -51,7 +51,12 @@ export function useCartSync() {
 
         // Теперь мигрируем локальную корзину на сервер (только один раз)
         // Товары из локальной корзины добавятся к существующим на сервере
-        if (!localCartMigrated.current && localCart && localCart.items && localCart.items.length > 0) {
+        if (
+          !localCartMigrated.current &&
+          localCart &&
+          localCart.items &&
+          localCart.items.length > 0
+        ) {
           localCartMigrated.current = true; // Помечаем что миграция началась
           // Группируем товары по витринам
           const itemsByStorefront = localCart.items.reduce(
@@ -114,7 +119,9 @@ export function useCartSync() {
         if (error && typeof error === 'object' && 'message' in error) {
           const message = String(error.message).toLowerCase();
           if (message.includes('401') || message.includes('unauthorized')) {
-            console.warn('[CartSync] Authorization error, stopping sync attempts');
+            console.warn(
+              '[CartSync] Authorization error, stopping sync attempts'
+            );
             lastSyncedUserId.current = user.id; // Помечаем как синхронизированного чтобы не повторять
           }
         }

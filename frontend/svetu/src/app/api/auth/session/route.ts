@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       const response = await fetch(`${AUTH_SERVICE_URL}/api/v1/auth/me`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });

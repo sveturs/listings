@@ -50,23 +50,32 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
-	// Получаем ID объявления из параметров URL
-	listingID, err := strconv.Atoi(c.Params("id"))
+	// Получаем ID из параметров URL
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
-	// Проверяем, существует ли объявление
-	_, err = h.marketplaceService.GetListingByID(c.Context(), listingID)
-	if err != nil {
-		logger.Error().Err(err).Int("listingId", listingID).Msg("Listing not found")
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
-	}
+	// Проверяем тип - обычное объявление или товар витрины
+	isStorefront := c.Query("type") == "storefront"
 
-	// Добавляем объявление в избранное
-	err = h.marketplaceService.AddToFavorites(c.Context(), userID, listingID)
+	if isStorefront {
+		// Для товаров витрин используем отдельную таблицу storefront_favorites
+		logger.Info().Int("productId", id).Int("userId", userID).Msg("Adding storefront product to favorites")
+		err = h.marketplaceService.AddStorefrontToFavorites(c.Context(), userID, id)
+	} else {
+		// Проверяем, существует ли обычное объявление
+		_, err = h.marketplaceService.GetListingByID(c.Context(), id)
+		if err != nil {
+			logger.Error().Err(err).Int("listingId", id).Msg("Listing not found")
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.notFound")
+		}
+
+		// Добавляем объявление в избранное
+		err = h.marketplaceService.AddToFavorites(c.Context(), userID, id)
+	}
 	if err != nil {
-		logger.Error().Err(err).Int("listingId", listingID).Int("userId", userID).Msg("Failed to add listing to favorites")
+		logger.Error().Err(err).Int("id", id).Int("userId", userID).Bool("isStorefront", isStorefront).Msg("Failed to add to favorites")
 		// Проверяем, было ли объявление уже в избранном
 		if strings.Contains(err.Error(), "already in favorites") {
 			return utils.SuccessResponse(c, MessageResponse{
@@ -103,16 +112,23 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
-	// Получаем ID объявления из параметров URL
-	listingID, err := strconv.Atoi(c.Params("id"))
+	// Получаем ID из параметров URL
+	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
-	// Удаляем объявление из избранного
-	err = h.marketplaceService.RemoveFromFavorites(c.Context(), userID, listingID)
+	// Проверяем тип - обычное объявление или товар витрины
+	isStorefront := c.Query("type") == "storefront"
+
+	// Удаляем из избранного в зависимости от типа
+	if isStorefront {
+		err = h.marketplaceService.RemoveStorefrontFromFavorites(c.Context(), userID, id)
+	} else {
+		err = h.marketplaceService.RemoveFromFavorites(c.Context(), userID, id)
+	}
 	if err != nil {
-		logger.Error().Err(err).Int("listingId", listingID).Int("userId", userID).Msg("Failed to remove listing from favorites")
+		logger.Error().Err(err).Int("id", id).Int("userId", userID).Bool("isStorefront", isStorefront).Msg("Failed to remove from favorites")
 		// Проверяем, было ли объявление в избранном
 		if strings.Contains(err.Error(), "not in favorites") {
 			return utils.SuccessResponse(c, MessageResponse{
