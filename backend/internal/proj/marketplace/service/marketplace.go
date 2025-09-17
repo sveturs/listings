@@ -101,15 +101,15 @@ func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) (
 	}
 
 	// Объединяем оба списка
-	allFavorites := append(regularFavorites, storefrontFavorites...)
+	regularFavorites = append(regularFavorites, storefrontFavorites...)
 
 	// Сортируем по времени добавления (новые сначала)
 	// Предполагаем, что более новые имеют больший ID
-	sort.Slice(allFavorites, func(i, j int) bool {
-		return allFavorites[i].CreatedAt.After(allFavorites[j].CreatedAt)
+	sort.Slice(regularFavorites, func(i, j int) bool {
+		return regularFavorites[i].CreatedAt.After(regularFavorites[j].CreatedAt)
 	})
 
-	return allFavorites, nil
+	return regularFavorites, nil
 }
 
 // SetTranslationService allows injecting a translation service after creation

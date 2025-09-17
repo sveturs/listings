@@ -32126,7 +32126,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Get current user session information",
                 "consumes": [
                     "application/json"
                 ],
@@ -36118,6 +36118,10 @@ const docTemplate = `{
                     }
                 },
                 "is_favorite": {
+                    "type": "boolean"
+                },
+                "is_storefront_product": {
+                    "description": "Флаг что это товар витрины (для правильной обработки в favorites)",
                     "type": "boolean"
                 },
                 "latitude": {

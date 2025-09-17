@@ -129,5 +129,6 @@ export function useCartSync() {
     };
 
     syncCarts();
-  }, [user?.id, isAuthenticated, dispatch]); // Убираем только localCart из зависимостей чтобы избежать бесконечных циклов
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, isAuthenticated, dispatch]); // Убираем localCart и user из зависимостей чтобы избежать бесконечных циклов
 }

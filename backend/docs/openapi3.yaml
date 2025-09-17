@@ -22261,7 +22261,7 @@ paths:
         - auth
   /auth/session:
     get:
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Get current user session information
       responses:
         "200":
           description: Session information
@@ -25032,6 +25032,9 @@ components:
             $ref: "#/components/schemas/backend_internal_domain_models.MarketplaceImage"
           type: array
         is_favorite:
+          type: boolean
+        is_storefront_product:
+          description: Флаг что это товар витрины (для правильной обработки в favorites)
           type: boolean
         latitude:
           type: number

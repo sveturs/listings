@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 // import Image from 'next/image';
@@ -256,6 +256,15 @@ export default function HomePageClient({
     }
   };
 
+  // Инициализация избранного
+  const initializeFavorites = useCallback(async () => {
+    if (user) {
+      await favoritesService.initialize();
+      const favorites = await favoritesService.getFavorites();
+      setFavoriteIds(new Set(favorites.map((f) => Number(f.id))));
+    }
+  }, [user]);
+
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
     setMounted(true);
@@ -282,16 +291,7 @@ export default function HomePageClient({
         toast.success(t('loginSuccessful') || 'Successfully logged in!');
       });
     }
-  }, [searchParams, refreshSession, t]);
-
-  // Инициализация избранного
-  const initializeFavorites = async () => {
-    if (user) {
-      await favoritesService.initialize();
-      const favorites = await favoritesService.getFavorites();
-      setFavoriteIds(new Set(favorites.map((f) => f.id)));
-    }
-  };
+  }, [searchParams, refreshSession, t, initializeFavorites]);
 
   // Обработчик добавления/удаления из избранного
   const handleToggleFavorite = async (
@@ -392,7 +392,7 @@ export default function HomePageClient({
       setFavoriteIds(new Set());
       favoritesService.clearCache();
     }
-  }, [user]);
+  }, [user, initializeFavorites]);
 
   // Автоматическая смена баннеров
   useEffect(() => {
@@ -897,7 +897,7 @@ export default function HomePageClient({
     };
 
     loadListings();
-  }, [locale]);
+  }, [locale, favoriteIds]);
 
   return (
     <PageTransition mode="fade">

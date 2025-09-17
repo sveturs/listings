@@ -20,6 +20,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Define typed context keys
+type contextKey string
+
+const (
+	contextKeyUserID    contextKey = "user_id"
+	contextKeyIPAddress contextKey = "ip_address"
+)
+
 // ListingsHandler обрабатывает запросы, связанные с объявлениями
 type ListingsHandler struct {
 	services           globalService.ServicesInterface
@@ -153,7 +161,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
 	// Создаем новый контекст с данными из текущего запроса
-	viewCtx := context.WithValue(context.Background(), "user_id", c.Locals("user_id"))
+	viewCtx := context.WithValue(context.Background(), contextKeyUserID, c.Locals("user_id"))
 
 	// Получаем IP адрес клиента
 	clientIP := c.IP()
@@ -168,7 +176,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 			clientIP = "127.0.0.1"
 		}
 	}
-	viewCtx = context.WithValue(viewCtx, "ip_address", clientIP)
+	viewCtx = context.WithValue(viewCtx, contextKeyIPAddress, clientIP)
 
 	logger.Debug().Str("clientIP", clientIP).Int("listingId", id).Msg("Incrementing views count")
 
@@ -229,7 +237,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
 	// Создаем новый контекст с данными из текущего запроса
-	viewCtx := context.WithValue(context.Background(), "user_id", c.Locals("user_id"))
+	viewCtx := context.WithValue(context.Background(), contextKeyUserID, c.Locals("user_id"))
 
 	// Получаем IP адрес клиента
 	clientIP := c.IP()
@@ -244,7 +252,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 			clientIP = "127.0.0.1"
 		}
 	}
-	viewCtx = context.WithValue(viewCtx, "ip_address", clientIP)
+	viewCtx = context.WithValue(viewCtx, contextKeyIPAddress, clientIP)
 
 	logger.Debug().Str("clientIP", clientIP).Int("listingId", listing.ID).Msg("Incrementing views count")
 

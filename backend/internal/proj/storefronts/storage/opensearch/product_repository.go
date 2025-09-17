@@ -91,7 +91,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	productID := fmt.Sprintf("sp_%d", product.ID)
 
 	doc := map[string]interface{}{
-		"id":             productID,  // ID в формате sp_XXX для унифицированного поиска
+		"id":             productID, // ID в формате sp_XXX для унифицированного поиска
 		"product_id":     product.ID,
 		"product_type":   "storefront",
 		"storefront_id":  product.StorefrontID,
@@ -105,9 +105,9 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
-		"views_count":    product.ViewCount,  // Добавляем счетчик просмотров для единообразия с marketplace
-		"sold_count":     product.SoldCount,  // Добавляем количество продаж
-		"status":         "active", // Добавляем статус для совместимости с фильтром поиска
+		"views_count":    product.ViewCount, // Добавляем счетчик просмотров для единообразия с marketplace
+		"sold_count":     product.SoldCount, // Добавляем количество продаж
+		"status":         "active",          // Добавляем статус для совместимости с фильтром поиска
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
 	}

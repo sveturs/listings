@@ -32787,7 +32787,7 @@ export interface paths {
     };
     /**
      * Get current session
-     * @description This endpoint is deprecated and should be proxied to Auth Service
+     * @description Get current user session information
      */
     get: {
       parameters: {
@@ -34460,6 +34460,8 @@ export interface components {
       id?: number;
       images?: components['schemas']['backend_internal_domain_models.MarketplaceImage'][];
       is_favorite?: boolean;
+      /** @description Флаг что это товар витрины (для правильной обработки в favorites) */
+      is_storefront_product?: boolean;
       latitude?: number;
       location?: string;
       location_privacy?: string;
