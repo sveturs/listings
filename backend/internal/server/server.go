@@ -51,7 +51,9 @@ import (
 	"backend/internal/proj/storefronts"
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/translation_admin"
+	"backend/internal/proj/tracking"
 	userHandler "backend/internal/proj/users/handler"
+	"backend/internal/proj/viber"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
@@ -85,6 +87,8 @@ type Server struct {
 	global             *globalHandler.Handler
 	gis                *gisHandler.Handler
 	subscriptions      *subscriptions.Module
+	tracking           *tracking.Module
+	viber              *viber.Module
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
@@ -220,6 +224,12 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Используем nil для AllSecure - модуль автоматически переключится на mock payments
 	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New())
 
+	// Инициализация модуля трекинга
+	trackingModule := tracking.NewModule(db)
+
+	// Инициализация модуля Viber
+	viberModule := viber.NewModule(services)
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
@@ -278,6 +288,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		global:             globalHandlerInstance,
 		gis:                gisHandlerInstance,
 		subscriptions:      subscriptionsModule,
+		tracking:           trackingModule,
+		viber:              viberModule,
 		fileStorage:        fileStorage,
 		health:             healthHandlerInstance,
 		redisClient:        redisClient,
@@ -423,6 +435,35 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		return fiber.ErrUpgradeRequired
 	})
 
+	// WebSocket для трекинга доставок (публичный, по токену)
+	s.app.Get("/ws/tracking/:token", func(c *fiber.Ctx) error {
+		token := c.Params("token")
+		if token == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "Missing tracking token")
+		}
+
+		// Проверяем, что это WebSocket запрос
+		if websocket.IsWebSocketUpgrade(c) {
+			return websocket.New(func(conn *websocket.Conn) {
+				// Здесь нужно будет добавить логику для трекинга
+				// Пока оставим заглушку
+				conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","token":"`+token+`"}`))
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						break
+					}
+				}
+			}, websocket.Config{
+				HandshakeTimeout:  10 * time.Second,
+				ReadBufferSize:    1024,
+				WriteBufferSize:   1024,
+				EnableCompression: false,
+			})(c)
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
 	// CSRF токен - регистрируем ДО проектных роутов чтобы избежать конфликта с AuthRequiredJWT
 	s.app.Get("/api/v1/csrf-token", s.middleware.GetCSRFToken())
 
@@ -469,7 +510,7 @@ func (s *Server) registerProjectRoutes() {
 		registrars = append(registrars, s.adminLogistics)
 	}
 
-	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin)
+	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.tracking, s.viber)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
