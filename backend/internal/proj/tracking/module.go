@@ -1,6 +1,8 @@
 package tracking
 
 import (
+	"context"
+
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/middleware"
@@ -10,6 +12,8 @@ import (
 // Module представляет модуль трекинга доставок
 type Module struct {
 	trackingHandler *TrackingHandler
+	DeliveryService *DeliveryService
+	Hub             *Hub
 }
 
 // NewModule создает новый модуль трекинга
@@ -19,11 +23,16 @@ func NewModule(db *postgres.Database) *Module {
 	courierService := NewCourierService(db)
 	hub := NewHub()
 
+	// Запускаем Hub в отдельной горутине
+	go hub.Run(context.Background())
+
 	// Создаем handler
 	trackingHandler := NewTrackingHandler(deliveryService, courierService, hub)
 
 	return &Module{
 		trackingHandler: trackingHandler,
+		DeliveryService: deliveryService,
+		Hub:             hub,
 	}
 }
 

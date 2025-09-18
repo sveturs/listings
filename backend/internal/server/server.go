@@ -447,8 +447,8 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		if websocket.IsWebSocketUpgrade(c) {
 			return websocket.New(func(conn *websocket.Conn) {
 				// Проверяем токен и получаем delivery
-				if s.trackingModule != nil && s.trackingModule.DeliveryService != nil {
-					delivery, err := s.trackingModule.DeliveryService.ValidateTrackingToken(token)
+				if s.tracking != nil && s.tracking.DeliveryService != nil {
+					delivery, err := s.tracking.DeliveryService.ValidateTrackingToken(token)
 					if err != nil {
 						// Отправляем ошибку и закрываем соединение
 						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","message":"Invalid tracking token"}`))
@@ -457,8 +457,8 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 					}
 
 					// Используем Hub для обработки WebSocket
-					if s.trackingModule.Hub != nil {
-						s.trackingModule.Hub.HandleWebSocket(conn, delivery.ID)
+					if s.tracking.Hub != nil {
+						s.tracking.Hub.HandleWebSocket(conn, delivery.ID)
 					} else {
 						// Fallback если Hub не инициализирован
 						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","delivery_id":`+strconv.Itoa(delivery.ID)+`}`))
