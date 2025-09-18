@@ -22,6 +22,7 @@ import enCheckout from '@/messages/en/checkout.json';
 import enOrders from '@/messages/en/orders.json';
 import enSubscription from '@/messages/en/subscription.json';
 import enFavorites from '@/messages/en/favorites.json';
+import enTracking from '@/messages/en/tracking.json';
 
 // Русские переводы
 import ruCommon from '@/messages/ru/common.json';
@@ -43,6 +44,7 @@ import ruCheckout from '@/messages/ru/checkout.json';
 import ruOrders from '@/messages/ru/orders.json';
 import ruSubscription from '@/messages/ru/subscription.json';
 import ruFavorites from '@/messages/ru/favorites.json';
+import ruTracking from '@/messages/ru/tracking.json';
 
 // Сербские переводы
 import srCommon from '@/messages/sr/common.json';
@@ -64,6 +66,7 @@ import srCheckout from '@/messages/sr/checkout.json';
 import srOrders from '@/messages/sr/orders.json';
 import srSubscription from '@/messages/sr/subscription.json';
 import srFavorites from '@/messages/sr/favorites.json';
+import srTracking from '@/messages/sr/tracking.json';
 
 // Объединённые сообщения по языкам
 export const messages = {
@@ -87,6 +90,7 @@ export const messages = {
     orders: enOrders,
     subscription: enSubscription,
     favorites: enFavorites,
+    tracking: enTracking,
   },
   ru: {
     common: ruCommon,
@@ -108,6 +112,7 @@ export const messages = {
     orders: ruOrders,
     subscription: ruSubscription,
     favorites: ruFavorites,
+    tracking: ruTracking,
   },
   sr: {
     common: srCommon,
@@ -129,6 +134,7 @@ export const messages = {
     orders: srOrders,
     subscription: srSubscription,
     favorites: srFavorites,
+    tracking: srTracking,
   },
 };
 
