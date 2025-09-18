@@ -145,3 +145,22 @@ docker_run_migrator_down:
 		-e MIGRATIONS_PATH="/migrations" \
 		-e MIGRATION_DIRECTION="down" \
 		migrator:local
+
+# Development restart command - build, kill old processes and restart with logging
+dev-restart:
+	@echo "🔨 Building all binaries..."
+	@$(MAKE) build_all
+	@echo "📦 Renaming api to api_dev..."
+	@mv bin/api bin/api_dev
+	@echo "🔪 Killing old api_dev processes..."
+	@for pid in $$(pgrep -f "^\./bin/api_dev" || echo ""); do \
+		if [ -n "$$pid" ]; then \
+			echo "  Killing PID: $$pid"; \
+			kill $$pid 2>/dev/null || true; \
+		fi; \
+	done
+	@echo "🚀 Starting api_dev in background with logging..."
+	@nohup ./bin/api_dev > api_dev.log 2>&1 &
+	@echo "✅ api_dev started! Check logs with: tail -f api_dev.log"
+	@sleep 1
+	@echo "📍 PID: $$(pgrep -f "^\./bin/api_dev" | head -n1)"

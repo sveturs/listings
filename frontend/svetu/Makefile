@@ -106,3 +106,14 @@ docker-compose-down:
 docker-compose-logs:
 	@echo "Showing docker-compose logs..."
 	docker-compose logs -f frontend
+
+# Development restart command - stop old process and start new one on port 3003
+.PHONY: dev-restart
+dev-restart:
+	@echo "🔪 Stopping frontend on port 3003..."
+	@lsof -ti:3003 | xargs -r kill 2>/dev/null || true
+	@sleep 1
+	@echo "🚀 Starting frontend on port 3003..."
+	@nohup yarn dev -p 3003 > frontend-dev.log 2>&1 &
+	@sleep 2
+	@echo "✅ Frontend running! Logs: tail -f frontend-dev.log"
