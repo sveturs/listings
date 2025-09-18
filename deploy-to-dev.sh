@@ -39,7 +39,8 @@ echo "Current branch on server: $BRANCH"
 # Pull latest changes
 echo "Pulling latest changes..."
 git fetch origin
-git pull origin $BRANCH
+# Use reset --hard for force pushed branches
+git reset --hard origin/$BRANCH
 
 # Restore database
 echo "Restoring database..."
