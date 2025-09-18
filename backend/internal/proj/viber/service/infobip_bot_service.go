@@ -337,9 +337,11 @@ func (s *InfobipBotService) richMediaToMap(rm *models.RichMedia) map[string]inte
 
 // generateStaticMapURL генерирует URL для статической карты
 func (s *InfobipBotService) generateStaticMapURL(delivery *DeliveryInfo) string {
-	mapboxToken := os.Getenv("MAPBOX_TOKEN")
+	mapboxToken := os.Getenv("MAPBOX_ACCESS_TOKEN")
 	if mapboxToken == "" {
-		mapboxToken = "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA" //nolint:gosec // TODO: move to config
+		// Mapbox токен требуется для создания статичных карт
+		// Установите MAPBOX_ACCESS_TOKEN в переменных окружения
+		return ""
 	}
 
 	// Маркеры и путь

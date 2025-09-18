@@ -33,9 +33,9 @@ func LoadViberConfig() *ViberConfig {
 
 		// Infobip API
 		UseInfobip:      useInfobip,
-		InfobipAPIKey:   getEnv("INFOBIP_API_KEY", "d225d6436a020569e4dee8468919de13-5d9211b6-0f93-4829-bd40-59855773e867"),
-		InfobipBaseURL:  getEnv("INFOBIP_BASE_URL", "d9vgp1.api.infobip.com"),
-		InfobipSenderID: getEnv("INFOBIP_SENDER_ID", "SveTuBot"), // Нужно будет зарегистрировать в Infobip
+		InfobipAPIKey:   getEnv("INFOBIP_API_KEY", ""), // Требуется из переменной окружения
+		InfobipBaseURL:  getEnv("INFOBIP_BASE_URL", ""),
+		InfobipSenderID: getEnv("INFOBIP_SENDER_ID", ""), // Требуется из переменной окружения
 	}
 }
 
