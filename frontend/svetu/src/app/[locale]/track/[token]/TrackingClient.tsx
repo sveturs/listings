@@ -76,8 +76,11 @@ export default function TrackingClient({ token }: TrackingClientProps) {
   } | null>(null);
 
   // WebSocket connection
+  // Используем относительный путь который будет проксирован через Next.js
+  const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsHost = typeof window !== 'undefined' ? window.location.host : 'localhost:3001';
   const { connectionState, sendMessage } = useWebSocket(
-    `ws://localhost:3000/ws/tracking/${token}`,
+    `${wsProtocol}//${wsHost}/ws/tracking/${token}`,
     {
       onMessage: (event: MessageEvent) => {
         try {

@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	globalService "backend/internal/proj/global/service"
@@ -445,14 +446,33 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
 			return websocket.New(func(conn *websocket.Conn) {
-				// Здесь нужно будет добавить логику для трекинга
-				// Пока оставим заглушку
-				_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","token":"`+token+`"}`))
-				for {
-					_, _, err := conn.ReadMessage()
+				// Проверяем токен и получаем delivery
+				if s.trackingModule != nil && s.trackingModule.DeliveryService != nil {
+					delivery, err := s.trackingModule.DeliveryService.ValidateTrackingToken(token)
 					if err != nil {
-						break
+						// Отправляем ошибку и закрываем соединение
+						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","message":"Invalid tracking token"}`))
+						_ = conn.Close()
+						return
 					}
+
+					// Используем Hub для обработки WebSocket
+					if s.trackingModule.Hub != nil {
+						s.trackingModule.Hub.HandleWebSocket(conn, delivery.ID)
+					} else {
+						// Fallback если Hub не инициализирован
+						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","delivery_id":`+strconv.Itoa(delivery.ID)+`}`))
+						for {
+							_, _, err := conn.ReadMessage()
+							if err != nil {
+								break
+							}
+						}
+					}
+				} else {
+					// Если tracking module не инициализирован
+					_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","message":"Tracking service unavailable"}`))
+					_ = conn.Close()
 				}
 			}, websocket.Config{
 				HandshakeTimeout:  10 * time.Second,
