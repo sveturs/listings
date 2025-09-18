@@ -10,6 +10,7 @@ type ViberConfig struct {
 	BotAvatar   string
 	WebhookURL  string
 	APIEndpoint string
+	FrontendURL string // URL фронтенда для генерации ссылок
 
 	// Infobip API (рекомендуемый способ)
 	UseInfobip      bool
@@ -30,6 +31,7 @@ func LoadViberConfig() *ViberConfig {
 		BotAvatar:   getEnv("VIBER_BOT_AVATAR", "https://svetu.rs/logo-720.png"),
 		WebhookURL:  getEnv("VIBER_WEBHOOK_URL", "https://svetu.rs/api/viber/webhook"),
 		APIEndpoint: getEnv("VIBER_API_ENDPOINT", "https://chatapi.viber.com/pa"),
+		FrontendURL: getEnv("FRONTEND_URL", "https://svetu.rs"),
 
 		// Infobip API
 		UseInfobip:      useInfobip,

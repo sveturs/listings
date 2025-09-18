@@ -181,7 +181,7 @@ func (s *InfobipBotService) SendTrackingNotification(ctx context.Context, viberI
 			Columns:    3,
 			Rows:       2,
 			ActionType: "open-url",
-			ActionBody: fmt.Sprintf("https://svetu.rs/track/%s?viber=true&embedded=true", delivery.TrackingToken),
+			ActionBody: fmt.Sprintf("%s/track/%s?viber=true&embedded=true", s.config.FrontendURL, delivery.TrackingToken),
 			Text:       "🗺️ Открыть карту",
 			TextSize:   "medium",
 			TextVAlign: "middle",
