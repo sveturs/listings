@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/models"
 	"backend/internal/proj/viber/service"
 
@@ -21,6 +22,7 @@ type WebhookHandler struct {
 	sessionManager *service.SessionManager
 	messageHandler *MessageHandler
 	authToken      string
+	config         *config.ViberConfig
 }
 
 // NewWebhookHandler создаёт новый обработчик webhook
@@ -29,12 +31,14 @@ func NewWebhookHandler(
 	sessionManager *service.SessionManager,
 	messageHandler *MessageHandler,
 	authToken string,
+	cfg *config.ViberConfig,
 ) *WebhookHandler {
 	return &WebhookHandler{
 		botService:     botService,
 		sessionManager: sessionManager,
 		messageHandler: messageHandler,
 		authToken:      authToken,
+		config:         cfg,
 	}
 }
 
@@ -245,7 +249,7 @@ func (h *WebhookHandler) handleConversationStarted(c *fiber.Ctx, event *models.W
 					Columns:    6,
 					Rows:       1,
 					ActionType: "open-url",
-					ActionBody: "https://svetu.rs",
+					ActionBody: h.config.FrontendURL,
 					Text:       "🌐 Открыть сайт",
 					TextSize:   "medium",
 					TextVAlign: "middle",
@@ -359,8 +363,8 @@ func (h *WebhookHandler) handleTextMessage(c *fiber.Ctx, event *models.WebhookEv
 func (h *WebhookHandler) handlePictureMessage(c *fiber.Ctx, event *models.WebhookEvent) error {
 	ctx := c.Context()
 
-	msg := "Вы отправили изображение. Если хотите добавить товар с фото, " +
-		"пожалуйста, используйте наш сайт: https://svetu.rs/create-listing"
+	msg := fmt.Sprintf("Вы отправили изображение. Если хотите добавить товар с фото, " +
+		"пожалуйста, используйте наш сайт: %s/create-listing", h.config.FrontendURL)
 
 	return h.botService.SendTextMessage(ctx, event.Sender.ID, msg)
 }

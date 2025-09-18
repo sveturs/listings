@@ -11,6 +11,7 @@ import (
 	globalService "backend/internal/proj/global/service"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	storefrontService "backend/internal/proj/storefronts/service"
+	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/service"
 )
 
@@ -22,6 +23,7 @@ type MessageHandler struct {
 	marketplaceService marketplaceService.MarketplaceServiceInterface
 	storefrontService  storefrontService.StorefrontService
 	useInfobip         bool
+	config             *config.ViberConfig
 }
 
 // NewMessageHandler создаёт новый обработчик сообщений
@@ -32,6 +34,7 @@ func NewMessageHandler(
 	marketplaceService marketplaceService.MarketplaceServiceInterface,
 	storefrontService storefrontService.StorefrontService,
 	useInfobip bool,
+	cfg *config.ViberConfig,
 ) *MessageHandler {
 	return &MessageHandler{
 		botService:         botService,
@@ -40,6 +43,7 @@ func NewMessageHandler(
 		marketplaceService: marketplaceService,
 		storefrontService:  storefrontService,
 		useInfobip:         useInfobip,
+		config:             cfg,
 	}
 }
 

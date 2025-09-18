@@ -49,9 +49,11 @@ echo "Using dump: $DUMP_FILE"
 
 # Clear and restore database in docker
 cd /opt/svetu-dev
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" 2>&1 | head -5
+echo "Clearing database..."
+docker exec svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" 2>&1 > /tmp/db_clear.log
 echo "Loading database dump..."
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < $DUMP_FILE 2>&1 | tail -10
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < $DUMP_FILE 2>&1 > /tmp/db_load.log
+tail -5 /tmp/db_load.log
 
 # Update schema_migrations to prevent migration issues
 docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
@@ -67,24 +69,12 @@ fi
 # Restart backend
 echo "Restarting backend..."
 cd /opt/svetu-dev/backend
-make dev-restart || {
-    echo "make dev-restart not found, using port-based restart"
-    # Убиваем только процесс на порту 3002
-    lsof -ti:3002 | xargs kill -9 2>/dev/null || true
-    screen -S backend-dev -X quit 2>/dev/null || true
-    screen -dmS backend-dev bash -c 'go run ./cmd/api/main.go 2>&1 | tee /tmp/backend-dev.log'
-}
+make dev-restart
 
 # Restart frontend
 echo "Restarting frontend..."
 cd /opt/svetu-dev/frontend/svetu
-make dev-restart || {
-    echo "make dev-restart not found, using port-based restart"
-    # Убиваем только процесс на порту 3003
-    lsof -ti:3003 | xargs kill -9 2>/dev/null || true
-    screen -S frontend-dev -X quit 2>/dev/null || true
-    screen -dmS frontend-dev bash -c 'yarn dev -p 3003 2>&1 | tee /tmp/frontend-dev.log'
-}
+make dev-restart
 
 echo "✅ Services restarted"
 
