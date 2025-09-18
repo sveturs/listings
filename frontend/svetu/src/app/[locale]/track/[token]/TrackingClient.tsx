@@ -76,29 +76,38 @@ export default function TrackingClient({ token }: TrackingClientProps) {
   } | null>(null);
 
   // WebSocket connection
-  const { isConnected, sendMessage } = useWebSocket({
-    url: `ws://localhost:3000/ws/tracking/${token}`,
-    onMessage: (message: WebSocketMessage) => {
-      console.log('WebSocket message:', message);
+  const { connectionState, sendMessage } = useWebSocket(
+    `ws://localhost:3000/ws/tracking/${token}`,
+    {
+      onMessage: (event: MessageEvent) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          console.log('WebSocket message:', message);
 
-      if (message.type === 'location_update') {
-        const update = message.data as LocationUpdate;
-        setCourierLocation({
-          latitude: update.latitude,
-          longitude: update.longitude,
-          speed: update.speed,
-          heading: update.heading,
-          updatedAt: update.timestamp,
-        });
-      } else if (message.type === 'delivery_update') {
-        setDelivery(message.data as DeliveryData);
-      }
-    },
-    onError: (error) => {
-      console.error('WebSocket error:', error);
-    },
-    reconnectInterval: 5000,
-  });
+          if (message.type === 'location_update') {
+            const update = message.data as LocationUpdate;
+            setCourierLocation({
+              latitude: update.latitude,
+              longitude: update.longitude,
+              speed: update.speed,
+              heading: update.heading,
+              updatedAt: update.timestamp,
+            });
+          } else if (message.type === 'delivery_update') {
+            setDelivery(message.data as DeliveryData);
+          }
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error);
+        }
+      },
+      onError: (error) => {
+        console.error('WebSocket error:', error);
+      },
+      reconnectInterval: 5000,
+    }
+  );
+
+  const isConnected = connectionState === 'connected';
 
   // Fetch initial delivery data
   useEffect(() => {
@@ -142,10 +151,10 @@ export default function TrackingClient({ token }: TrackingClientProps) {
   // Request ETA update
   const handleRequestETA = () => {
     if (isConnected) {
-      sendMessage({
+      sendMessage(JSON.stringify({
         type: 'request_eta',
         delivery_id: delivery?.id,
-      });
+      }));
     }
   };
 
@@ -216,8 +225,15 @@ export default function TrackingClient({ token }: TrackingClientProps) {
           {/* Map - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <TrackingMap
-              delivery={delivery}
-              courierLocation={courierLocation}
+              delivery={{
+                ...delivery,
+                courier_location: courierLocation ? {
+                  latitude: courierLocation.latitude,
+                  longitude: courierLocation.longitude,
+                  speed: courierLocation.speed,
+                  heading: courierLocation.heading,
+                } : delivery.courier_location
+              }}
               onRequestETA={handleRequestETA}
             />
           </div>
@@ -225,9 +241,18 @@ export default function TrackingClient({ token }: TrackingClientProps) {
           {/* Info Panel - Takes 1 column */}
           <div className="lg:col-span-1">
             <DeliveryInfo
-              delivery={delivery}
-              courierLocation={courierLocation}
-              isConnected={isConnected}
+              delivery={{
+                ...delivery,
+                courier_location: courierLocation ? {
+                  latitude: courierLocation.latitude,
+                  longitude: courierLocation.longitude,
+                  speed: courierLocation.speed,
+                  heading: courierLocation.heading,
+                  updated_at: courierLocation.updatedAt,
+                } : delivery.courier_location
+              }}
+              connectionStatus={connectionState === 'error' ? 'disconnected' : connectionState}
+              onRequestETA={handleRequestETA}
             />
           </div>
         </div>
