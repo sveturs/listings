@@ -95,7 +95,7 @@ func (h *Hub) Run(ctx context.Context) {
 			if connections, ok := h.connections[sub.deliveryID]; ok {
 				if _, ok := connections[sub.conn]; ok {
 					delete(connections, sub.conn)
-					sub.conn.Close()
+					_ = sub.conn.Close()
 
 					// Если больше нет соединений для этой доставки, удаляем мапу
 					if len(connections) == 0 {
@@ -246,7 +246,7 @@ func (h *Hub) HandleWebSocket(conn *websocket.Conn, deliveryID int) {
 	}
 
 	if data, err := json.Marshal(initialMessage); err == nil {
-		conn.WriteMessage(websocket.TextMessage, data)
+		_ = conn.WriteMessage(websocket.TextMessage, data)
 	}
 
 	// Обрабатываем сообщения от клиента
@@ -273,7 +273,7 @@ func (h *Hub) HandleWebSocket(conn *websocket.Conn, deliveryID int) {
 						"timestamp": time.Now().UTC().Format(time.RFC3339),
 					}
 					if data, err := json.Marshal(pongMessage); err == nil {
-						conn.WriteMessage(websocket.TextMessage, data)
+						_ = conn.WriteMessage(websocket.TextMessage, data)
 					}
 				}
 			}

@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/infobip"
@@ -51,7 +53,6 @@ func (s *InfobipBotService) SendTextMessage(ctx context.Context, viberID, text s
 		text,
 		sessionInfo,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to send text message via Infobip: %w", err)
 	}
@@ -81,7 +82,6 @@ func (s *InfobipBotService) SendImageMessage(ctx context.Context, viberID, image
 		text,
 		sessionInfo,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to send image message via Infobip: %w", err)
 	}
@@ -111,7 +111,6 @@ func (s *InfobipBotService) SendButtonMessage(ctx context.Context, viberID, text
 		buttonURL,
 		sessionInfo,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to send button message via Infobip: %w", err)
 	}
@@ -148,7 +147,6 @@ func (s *InfobipBotService) SendRichMedia(ctx context.Context, viberID string, r
 		text,
 		sessionInfo,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to send rich media via Infobip: %w", err)
 	}
@@ -216,7 +214,6 @@ func (s *InfobipBotService) SendTrackingNotification(ctx context.Context, viberI
 		"Отслеживание доставки",
 		sessionInfo,
 	)
-
 	if err != nil {
 		return fmt.Errorf("failed to send tracking notification via Infobip: %w", err)
 	}
@@ -257,7 +254,7 @@ func (s *InfobipBotService) SendBulkMessages(ctx context.Context, messages []Bul
 
 	// Сохраняем результаты в БД
 	for i, status := range resp.Messages {
-		s.saveOutgoingMessage(
+		_ = s.saveOutgoingMessage(
 			ctx,
 			status.To,
 			"text",
@@ -340,7 +337,10 @@ func (s *InfobipBotService) richMediaToMap(rm *models.RichMedia) map[string]inte
 
 // generateStaticMapURL генерирует URL для статической карты
 func (s *InfobipBotService) generateStaticMapURL(delivery *DeliveryInfo) string {
-	mapboxToken := "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA"
+	mapboxToken := os.Getenv("MAPBOX_TOKEN")
+	if mapboxToken == "" {
+		mapboxToken = "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA" //nolint:gosec // TODO: move to config
+	}
 
 	// Маркеры и путь
 	courierMarker := fmt.Sprintf("pin-l-bicycle+3b82f6(%f,%f)",
@@ -436,11 +436,11 @@ func (s *InfobipBotService) processInboundMessage(ctx context.Context, webhook *
 
 	// Создаём или обновляем сессию
 	session, err := s.sessionManager.GetActiveSession(ctx, webhook.From)
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrNoActiveSession) {
 		return err
 	}
 
-	if session == nil {
+	if errors.Is(err, ErrNoActiveSession) {
 		session, err = s.sessionManager.CreateSession(ctx, webhook.From)
 		if err != nil {
 			return err

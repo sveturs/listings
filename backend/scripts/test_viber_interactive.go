@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"backend/internal/proj/viber/infobip"
 
 	"github.com/joho/godotenv"
-	"svetu/internal/proj/viber/infobip"
 )
 
 func main() {

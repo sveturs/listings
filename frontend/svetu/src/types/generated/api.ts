@@ -12656,6 +12656,253 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/courier/{courier_id}/deliveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get active deliveries for courier
+     * @description Retrieves list of active deliveries assigned to a courier
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Courier ID */
+          courier_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Active deliveries */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_tracking.Delivery'][];
+            };
+          };
+        };
+        /** @description Invalid courier ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Courier not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/courier/{courier_id}/location': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Update courier location
+     * @description Updates courier's current location and broadcasts to tracking clients
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Courier ID */
+          courier_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Location data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_tracking.CourierLocationUpdate'];
+        };
+      };
+      responses: {
+        /** @description Location updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Courier not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create new delivery
+     * @description Creates a new delivery with courier assignment
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Delivery data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_tracking.CreateDeliveryRequest'];
+        };
+      };
+      responses: {
+        /** @description Delivery created */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_tracking.Delivery'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery/{delivery_id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update delivery status
+     * @description Updates the status of a delivery (picked_up, in_transit, delivered, failed)
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Delivery ID */
+          delivery_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Status update */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_tracking.DeliveryStatusUpdate'];
+        };
+      };
+      responses: {
+        /** @description Status updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Delivery not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/docs/content': {
     parameters: {
       query?: never;
@@ -31448,6 +31695,111 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/tracking/{token}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery information by tracking token
+     * @description Retrieves delivery details using tracking token
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Tracking token */
+          token: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Delivery information */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_tracking.Delivery'];
+            };
+          };
+        };
+        /** @description Invalid token */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Delivery not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/tracking/connections': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get WebSocket connections statistics
+     * @description Returns the number of active WebSocket connections per delivery
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Active connections */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: number;
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/translation/limits': {
     parameters: {
       query?: never;
@@ -32670,6 +33022,366 @@ export interface paths {
         };
         /** @description Internal server error */
         500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/estimate-cost': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Estimate message cost
+     * @description Estimates the cost of sending a message to a Viber user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Cost estimation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_viber.EstimateCostRequest'];
+        };
+      };
+      responses: {
+        /** @description Estimated cost */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: number;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Estimation failed */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/infobip-webhook': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle Infobip webhook
+     * @description Processes webhook events from Infobip Viber API
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Infobip webhook event */
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Event processed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid event */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/send': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send message to Viber user
+     * @description Sends a text message to a Viber user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Message data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_viber.SendMessageRequest'];
+        };
+      };
+      responses: {
+        /** @description Message sent */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Send failed */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/send-tracking': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send tracking notification
+     * @description Sends a rich media message with tracking information
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Tracking data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_viber.SendTrackingRequest'];
+        };
+      };
+      responses: {
+        /** @description Notification sent */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Send failed */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get session statistics
+     * @description Returns statistics about Viber bot sessions
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Session statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Failed to get statistics */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/viber/webhook': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle Viber webhook
+     * @description Processes webhook events from Viber (subscriptions, messages, etc.)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Viber signature */
+          'X-Viber-Content-Signature': string;
+        };
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Viber webhook event */
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Event processed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid event */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Invalid signature */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -38006,6 +38718,65 @@ export interface components {
       plan_code: string;
       return_url?: string;
     };
+    'internal_proj_tracking.CourierLocation': {
+      heading?: number;
+      latitude?: number;
+      longitude?: number;
+      speed?: number;
+      updatedAt?: string;
+    };
+    'internal_proj_tracking.CourierLocationUpdate': {
+      heading?: number;
+      latitude: number;
+      longitude: number;
+      speed?: number;
+    };
+    'internal_proj_tracking.CreateDeliveryRequest': {
+      courier_id: number;
+      delivery_address: string;
+      delivery_latitude: number;
+      delivery_longitude: number;
+      order_id: number;
+      pickup_address: string;
+      pickup_latitude: number;
+      pickup_longitude: number;
+    };
+    'internal_proj_tracking.Delivery': {
+      actualDeliveryTime?: string;
+      courierID?: number;
+      courierLocation?: components['schemas']['internal_proj_tracking.CourierLocation'];
+      courierName?: string;
+      courierPhone?: string;
+      createdAt?: string;
+      deliveryAddress?: string;
+      deliveryLatitude?: number;
+      deliveryLongitude?: number;
+      /** @description в метрах */
+      distance?: number;
+      /** @description в минутах */
+      duration?: number;
+      estimatedDeliveryTime?: string;
+      id?: number;
+      lastKnownLocation?: components['schemas']['internal_proj_tracking.LocationUpdate'];
+      orderID?: number;
+      pickupAddress?: string;
+      pickupLatitude?: number;
+      pickupLongitude?: number;
+      status?: string;
+      trackingToken?: string;
+      updatedAt?: string;
+    };
+    'internal_proj_tracking.DeliveryStatusUpdate': {
+      /** @enum {string} */
+      status: 'pending' | 'picked_up' | 'in_transit' | 'delivered' | 'failed';
+    };
+    'internal_proj_tracking.LocationUpdate': {
+      courier_id?: number;
+      heading?: number;
+      latitude?: number;
+      longitude?: number;
+      speed?: number;
+    };
     'internal_proj_translation_admin.ProviderCosts': {
       /** @description map[date]cost */
       daily_costs?: {
@@ -38140,6 +38911,18 @@ export interface components {
       name?: string;
       /** @example https://example.com/avatar.jpg */
       picture_url?: string;
+    };
+    'internal_proj_viber.EstimateCostRequest': {
+      is_rich_media?: boolean;
+      viber_id: string;
+    };
+    'internal_proj_viber.SendMessageRequest': {
+      text: string;
+      viber_id: string;
+    };
+    'internal_proj_viber.SendTrackingRequest': {
+      delivery_id: number;
+      viber_id: string;
     };
     'tgbotapi.Animation': {
       file_id?: string;

@@ -4,12 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"backend/internal/proj/viber/models"
 	"backend/internal/storage/postgres"
 )
+
+// ErrNoActiveSession indicates that there is no active session for the user
+var ErrNoActiveSession = errors.New("no active session")
 
 // SessionManager управляет сессиями Viber (24-часовые окна бесплатных сообщений)
 type SessionManager struct {
@@ -44,8 +48,8 @@ func (sm *SessionManager) GetActiveSession(ctx context.Context, viberID string) 
 	var session models.ViberSession
 	err = sm.db.GetSQLXDB().GetContext(ctx, &session, query, user.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Нет активной сессии
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoActiveSession
 		}
 		return nil, fmt.Errorf("failed to get active session: %w", err)
 	}
@@ -97,7 +101,6 @@ func (sm *SessionManager) CreateSession(ctx context.Context, viberID string) (*m
 		session.Context,
 		session.Active,
 	).Scan(&session.ID, &session.CreatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
@@ -181,7 +184,7 @@ func (sm *SessionManager) getOrCreateViberUser(ctx context.Context, viberID stri
 		return &user, nil
 	}
 
-	if err != sql.ErrNoRows {
+	if !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to get viber user: %w", err)
 	}
 

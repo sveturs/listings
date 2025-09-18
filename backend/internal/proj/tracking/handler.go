@@ -3,8 +3,9 @@ package tracking
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // TrackingHandler обрабатывает запросы связанные с трекингом доставок

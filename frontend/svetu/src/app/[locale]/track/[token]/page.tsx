@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -63,12 +63,14 @@ export default function TrackingPage() {
   const params = useParams();
   const token = params.token as string;
   const t = useTranslations('tracking');
-  
+
   const [delivery, setDelivery] = useState<DeliveryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
-  
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connecting' | 'connected' | 'disconnected'
+  >('connecting');
+
   // WebSocket подключение
   const { lastMessage, connectionState, sendMessage } = useWebSocket(
     `${process.env.NEXT_PUBLIC_WEBSOCKET_URL?.replace('http', 'ws')}/tracking?token=${token}`,
@@ -79,7 +81,7 @@ export default function TrackingPage() {
         console.error('WebSocket error:', error);
         setConnectionStatus('disconnected');
       },
-      shouldReconnect: (closeEvent) => true,
+      shouldReconnect: (_closeEvent) => true,
     }
   );
 
@@ -87,12 +89,18 @@ export default function TrackingPage() {
   useEffect(() => {
     const fetchDeliveryData = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/tracking/${token}`);
-        
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/tracking/${token}`
+        );
+
         if (!response.ok) {
-          throw new Error(response.status === 404 ? 'Доставка не найдена' : 'Ошибка загрузки данных');
+          throw new Error(
+            response.status === 404
+              ? 'Доставка не найдена'
+              : 'Ошибка загрузки данных'
+          );
         }
-        
+
         const data = await response.json();
         setDelivery(data.data);
       } catch (err) {
@@ -112,13 +120,13 @@ export default function TrackingPage() {
     if (lastMessage) {
       try {
         const message: WebSocketMessage = JSON.parse(lastMessage.data);
-        
+
         switch (message.type) {
           case 'location_update':
             const locationUpdate = message.data as LocationUpdate;
-            setDelivery(prev => {
+            setDelivery((prev) => {
               if (!prev || prev.id !== locationUpdate.delivery_id) return prev;
-              
+
               return {
                 ...prev,
                 courier_location: {
@@ -126,31 +134,39 @@ export default function TrackingPage() {
                   longitude: locationUpdate.longitude,
                   speed: locationUpdate.speed,
                   heading: locationUpdate.heading,
-                  updated_at: locationUpdate.timestamp
+                  updated_at: locationUpdate.timestamp,
                 },
-                estimated_delivery_time: locationUpdate.eta
+                estimated_delivery_time: locationUpdate.eta,
               };
             });
             break;
-            
+
           case 'delivery_info':
             const deliveryInfo = message.data as DeliveryData;
-            setDelivery(prev => prev ? { ...prev, ...deliveryInfo } : deliveryInfo);
+            setDelivery((prev) =>
+              prev ? { ...prev, ...deliveryInfo } : deliveryInfo
+            );
             break;
-            
+
           case 'nearby_items':
             const nearbyItems = message.data;
-            setDelivery(prev => prev ? { ...prev, nearby_items: nearbyItems } : prev);
+            setDelivery((prev) =>
+              prev ? { ...prev, nearby_items: nearbyItems } : prev
+            );
             break;
-            
+
           case 'eta_update':
             const etaUpdate = message.data;
-            setDelivery(prev => prev ? { 
-              ...prev, 
-              estimated_delivery_time: etaUpdate.eta 
-            } : prev);
+            setDelivery((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    estimated_delivery_time: etaUpdate.eta,
+                  }
+                : prev
+            );
             break;
-            
+
           default:
             console.log('Unknown message type:', message.type);
         }
@@ -183,9 +199,11 @@ export default function TrackingPage() {
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="text-6xl mb-4">📦</div>
-          <h1 className="text-2xl font-bold text-base-content mb-2">{t('error.title')}</h1>
+          <h1 className="text-2xl font-bold text-base-content mb-2">
+            {t('error.title')}
+          </h1>
           <p className="text-base-content/70 mb-6">{error}</p>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => window.location.reload()}
           >
@@ -201,7 +219,9 @@ export default function TrackingPage() {
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🔍</div>
-          <h1 className="text-2xl font-bold text-base-content">{t('notFound.title')}</h1>
+          <h1 className="text-2xl font-bold text-base-content">
+            {t('notFound.title')}
+          </h1>
           <p className="text-base-content/70">{t('notFound.description')}</p>
         </div>
       </div>
@@ -222,18 +242,24 @@ export default function TrackingPage() {
                 {t('trackingCode')}: {delivery.tracking_token}
               </p>
             </div>
-            
+
             {/* Connection Status */}
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${
-                connectionStatus === 'connected' ? 'bg-success' :
-                connectionStatus === 'connecting' ? 'bg-warning' :
-                'bg-error'
-              }`}></div>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  connectionStatus === 'connected'
+                    ? 'bg-success'
+                    : connectionStatus === 'connecting'
+                      ? 'bg-warning'
+                      : 'bg-error'
+                }`}
+              ></div>
               <span className="text-sm text-base-content/70">
-                {connectionStatus === 'connected' ? t('status.connected') :
-                 connectionStatus === 'connecting' ? t('status.connecting') :
-                 t('status.disconnected')}
+                {connectionStatus === 'connected'
+                  ? t('status.connected')
+                  : connectionStatus === 'connecting'
+                    ? t('status.connecting')
+                    : t('status.disconnected')}
               </span>
             </div>
           </div>
@@ -245,16 +271,13 @@ export default function TrackingPage() {
           {/* Карта */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <TrackingMap 
-                delivery={delivery}
-                onRequestETA={requestETA}
-              />
+              <TrackingMap delivery={delivery} onRequestETA={requestETA} />
             </div>
           </div>
-          
+
           {/* Информация о доставке */}
           <div className="lg:col-span-1">
-            <DeliveryInfo 
+            <DeliveryInfo
               delivery={delivery}
               connectionStatus={connectionStatus}
               onRequestETA={requestETA}
@@ -271,7 +294,7 @@ export default function TrackingPage() {
                 <h3 className="font-semibold">{t('viber.title')}</h3>
                 <p className="text-sm opacity-90">{t('viber.description')}</p>
               </div>
-              <a 
+              <a
                 href={`viber://pa?chatURI=SveTuBot&context=track_${delivery.tracking_token}`}
                 className="btn btn-sm bg-white text-purple-600 hover:bg-gray-100 border-none"
               >

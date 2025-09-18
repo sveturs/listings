@@ -28,25 +28,25 @@ func NewClient(apiKey, baseURL string) *Client {
 
 // ViberMessage сообщение для отправки через Viber
 type ViberMessage struct {
-	From        string                `json:"from"`
-	To          string                `json:"to"`
-	Content     ViberContent          `json:"content"`
-	CallbackData string               `json:"callbackData,omitempty"`
-	NotifyURL   string                `json:"notifyUrl,omitempty"`
-	Label       *ViberLabel           `json:"label,omitempty"`
-	SessionInfo *ViberSessionInfo     `json:"sessionInfo,omitempty"`
+	From         string            `json:"from"`
+	To           string            `json:"to"`
+	Content      ViberContent      `json:"content"`
+	CallbackData string            `json:"callbackData,omitempty"`
+	NotifyURL    string            `json:"notifyUrl,omitempty"`
+	Label        *ViberLabel       `json:"label,omitempty"`
+	SessionInfo  *ViberSessionInfo `json:"sessionInfo,omitempty"`
 }
 
 // ViberContent содержимое сообщения
 type ViberContent struct {
-	Type         string               `json:"type"` // TEXT, IMAGE, VIDEO, FILE, BUTTON, RICH_MEDIA
-	Text         string               `json:"text,omitempty"`
-	ImageURL     string               `json:"imageUrl,omitempty"`
-	FileURL      string               `json:"fileUrl,omitempty"`
-	ButtonText   string               `json:"buttonText,omitempty"`
-	ButtonURL    string               `json:"buttonUrl,omitempty"`
-	TrackingData string               `json:"trackingData,omitempty"`
-	RichMedia    *ViberRichMedia      `json:"richMedia,omitempty"`
+	Type         string          `json:"type"` // TEXT, IMAGE, VIDEO, FILE, BUTTON, RICH_MEDIA
+	Text         string          `json:"text,omitempty"`
+	ImageURL     string          `json:"imageUrl,omitempty"`
+	FileURL      string          `json:"fileUrl,omitempty"`
+	ButtonText   string          `json:"buttonText,omitempty"`
+	ButtonURL    string          `json:"buttonUrl,omitempty"`
+	TrackingData string          `json:"trackingData,omitempty"`
+	RichMedia    *ViberRichMedia `json:"richMedia,omitempty"`
 }
 
 // ViberRichMedia для rich media сообщений
@@ -90,14 +90,14 @@ type ViberBulkMessage struct {
 // ViberResponse ответ от API
 type ViberResponse struct {
 	Messages []ViberMessageStatus `json:"messages"`
-	BulkID   string              `json:"bulkId,omitempty"`
+	BulkID   string               `json:"bulkId,omitempty"`
 }
 
 // ViberMessageStatus статус отправленного сообщения
 type ViberMessageStatus struct {
-	To         string            `json:"to"`
-	Status     ViberStatus       `json:"status"`
-	MessageID  string            `json:"messageId"`
+	To        string      `json:"to"`
+	Status    ViberStatus `json:"status"`
+	MessageID string      `json:"messageId"`
 }
 
 // ViberStatus статус сообщения
@@ -111,16 +111,16 @@ type ViberStatus struct {
 
 // ViberWebhook структура для вебхука
 type ViberWebhook struct {
-	MessageID     string                 `json:"messageId"`
-	To            string                 `json:"to"`
-	From          string                 `json:"from"`
-	SentAt        string                 `json:"sentAt"`
-	DoneAt        string                 `json:"doneAt,omitempty"`
-	Status        ViberStatus            `json:"status"`
-	Price         *ViberPrice            `json:"price,omitempty"`
-	Error         *ViberError            `json:"error,omitempty"`
-	CallbackData  string                 `json:"callbackData,omitempty"`
-	InboundContent *ViberInboundContent  `json:"content,omitempty"`
+	MessageID      string               `json:"messageId"`
+	To             string               `json:"to"`
+	From           string               `json:"from"`
+	SentAt         string               `json:"sentAt"`
+	DoneAt         string               `json:"doneAt,omitempty"`
+	Status         ViberStatus          `json:"status"`
+	Price          *ViberPrice          `json:"price,omitempty"`
+	Error          *ViberError          `json:"error,omitempty"`
+	CallbackData   string               `json:"callbackData,omitempty"`
+	InboundContent *ViberInboundContent `json:"content,omitempty"`
 }
 
 // ViberPrice стоимость сообщения
@@ -140,11 +140,11 @@ type ViberError struct {
 
 // ViberInboundContent входящее сообщение от пользователя
 type ViberInboundContent struct {
-	Type         string                 `json:"type"`
-	Text         string                 `json:"text,omitempty"`
-	Media        *ViberInboundMedia     `json:"media,omitempty"`
-	Location     *ViberInboundLocation  `json:"location,omitempty"`
-	TrackingData string                 `json:"trackingData,omitempty"`
+	Type         string                `json:"type"`
+	Text         string                `json:"text,omitempty"`
+	Media        *ViberInboundMedia    `json:"media,omitempty"`
+	Location     *ViberInboundLocation `json:"location,omitempty"`
+	TrackingData string                `json:"trackingData,omitempty"`
 }
 
 // ViberInboundMedia медиа во входящем сообщении
@@ -306,7 +306,9 @@ func (c *Client) sendMessage(ctx context.Context, msg ViberMessage) (*ViberRespo
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -347,7 +349,9 @@ func (c *Client) sendBulk(ctx context.Context, bulk ViberBulkMessage) (*ViberRes
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -382,7 +386,9 @@ func (c *Client) GetMessageStatus(ctx context.Context, messageID string) (*Viber
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

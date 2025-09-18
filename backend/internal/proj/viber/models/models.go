@@ -25,15 +25,15 @@ type ViberUser struct {
 
 // ViberSession представляет 24-часовую сессию
 type ViberSession struct {
-	ID            int                    `json:"id" db:"id"`
-	ViberUserID   int                    `json:"viber_user_id" db:"viber_user_id"`
-	StartedAt     time.Time              `json:"started_at" db:"started_at"`
-	LastMessageAt time.Time              `json:"last_message_at" db:"last_message_at"`
-	ExpiresAt     time.Time              `json:"expires_at" db:"expires_at"`
-	MessageCount  int                    `json:"message_count" db:"message_count"`
-	Context       json.RawMessage        `json:"context" db:"context"`
-	Active        bool                   `json:"active" db:"active"`
-	CreatedAt     time.Time              `json:"created_at" db:"created_at"`
+	ID            int             `json:"id" db:"id"`
+	ViberUserID   int             `json:"viber_user_id" db:"viber_user_id"`
+	StartedAt     time.Time       `json:"started_at" db:"started_at"`
+	LastMessageAt time.Time       `json:"last_message_at" db:"last_message_at"`
+	ExpiresAt     time.Time       `json:"expires_at" db:"expires_at"`
+	MessageCount  int             `json:"message_count" db:"message_count"`
+	Context       json.RawMessage `json:"context" db:"context"`
+	Active        bool            `json:"active" db:"active"`
+	CreatedAt     time.Time       `json:"created_at" db:"created_at"`
 }
 
 // ViberMessage представляет сообщение
@@ -53,24 +53,24 @@ type ViberMessage struct {
 
 // Webhook Events from Viber
 type WebhookEvent struct {
-	Event        string                 `json:"event"`
-	Timestamp    int64                  `json:"timestamp"`
-	ChatHostname string                 `json:"chat_hostname"`
-	MessageToken string                 `json:"message_token"`
-	Sender       *ViberSender           `json:"sender,omitempty"`
-	Message      *ViberMessageData      `json:"message,omitempty"`
-	User         *ViberSender           `json:"user,omitempty"`
-	Context      string                 `json:"context,omitempty"`
-	Silent       bool                   `json:"silent"`
+	Event        string            `json:"event"`
+	Timestamp    int64             `json:"timestamp"`
+	ChatHostname string            `json:"chat_hostname"`
+	MessageToken string            `json:"message_token"`
+	Sender       *ViberSender      `json:"sender,omitempty"`
+	Message      *ViberMessageData `json:"message,omitempty"`
+	User         *ViberSender      `json:"user,omitempty"`
+	Context      string            `json:"context,omitempty"`
+	Silent       bool              `json:"silent"`
 }
 
 type ViberSender struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Avatar      string `json:"avatar,omitempty"`
-	Country     string `json:"country,omitempty"`
-	Language    string `json:"language,omitempty"`
-	APIVersion  int    `json:"api_version,omitempty"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Avatar     string `json:"avatar,omitempty"`
+	Country    string `json:"country,omitempty"`
+	Language   string `json:"language,omitempty"`
+	APIVersion int    `json:"api_version,omitempty"`
 }
 
 type ViberMessageData struct {
@@ -98,18 +98,18 @@ type ViberContact struct {
 
 // Outgoing message structures
 type OutgoingMessage struct {
-	Receiver     string                 `json:"receiver"`
+	Receiver      string                 `json:"receiver"`
 	MinAPIVersion int                    `json:"min_api_version,omitempty"`
-	Sender       OutgoingSender         `json:"sender"`
-	TrackingData string                 `json:"tracking_data,omitempty"`
-	Type         string                 `json:"type"`
-	Text         string                 `json:"text,omitempty"`
-	Media        string                 `json:"media,omitempty"`
-	Thumbnail    string                 `json:"thumbnail,omitempty"`
-	Size         int                    `json:"size,omitempty"`
-	Duration     int                    `json:"duration,omitempty"`
-	RichMedia    map[string]interface{} `json:"rich_media,omitempty"`
-	Keyboard     *Keyboard              `json:"keyboard,omitempty"`
+	Sender        OutgoingSender         `json:"sender"`
+	TrackingData  string                 `json:"tracking_data,omitempty"`
+	Type          string                 `json:"type"`
+	Text          string                 `json:"text,omitempty"`
+	Media         string                 `json:"media,omitempty"`
+	Thumbnail     string                 `json:"thumbnail,omitempty"`
+	Size          int                    `json:"size,omitempty"`
+	Duration      int                    `json:"duration,omitempty"`
+	RichMedia     map[string]interface{} `json:"rich_media,omitempty"`
+	Keyboard      *Keyboard              `json:"keyboard,omitempty"`
 }
 
 type OutgoingSender struct {
@@ -143,11 +143,11 @@ type Button struct {
 
 // Rich Media structures
 type RichMedia struct {
-	Type                string        `json:"Type"`
-	ButtonsGroupColumns int           `json:"ButtonsGroupColumns"`
-	ButtonsGroupRows    int           `json:"ButtonsGroupRows"`
-	BgColor             string        `json:"BgColor,omitempty"`
-	Buttons             []RichButton  `json:"Buttons"`
+	Type                string       `json:"Type"`
+	ButtonsGroupColumns int          `json:"ButtonsGroupColumns"`
+	ButtonsGroupRows    int          `json:"ButtonsGroupRows"`
+	BgColor             string       `json:"BgColor,omitempty"`
+	Buttons             []RichButton `json:"Buttons"`
 }
 
 type RichButton struct {

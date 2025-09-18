@@ -3,6 +3,7 @@ package tracking
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"backend/internal/storage/postgres"
@@ -20,16 +21,16 @@ func NewCourierService(db *postgres.Database) *CourierService {
 
 // Courier представляет курьера
 type Courier struct {
-	ID                  int     `json:"id" db:"id"`
-	Name                string  `json:"name" db:"name"`
-	Phone               string  `json:"phone" db:"phone"`
-	Email               string  `json:"email" db:"email"`
-	Status              string  `json:"status" db:"status"`
-	CurrentLatitude     *float64 `json:"current_latitude" db:"current_latitude"`
-	CurrentLongitude    *float64 `json:"current_longitude" db:"current_longitude"`
-	LastLocationUpdate  sql.NullTime `json:"last_location_update" db:"last_location_update"`
-	IsOnline            bool    `json:"is_online" db:"is_online"`
-	ActiveDeliveries    int     `json:"active_deliveries"`
+	ID                 int          `json:"id" db:"id"`
+	Name               string       `json:"name" db:"name"`
+	Phone              string       `json:"phone" db:"phone"`
+	Email              string       `json:"email" db:"email"`
+	Status             string       `json:"status" db:"status"`
+	CurrentLatitude    *float64     `json:"current_latitude" db:"current_latitude"`
+	CurrentLongitude   *float64     `json:"current_longitude" db:"current_longitude"`
+	LastLocationUpdate sql.NullTime `json:"last_location_update" db:"last_location_update"`
+	IsOnline           bool         `json:"is_online" db:"is_online"`
+	ActiveDeliveries   int          `json:"active_deliveries"`
 }
 
 // LocationUpdate представляет обновление локации
@@ -55,7 +56,7 @@ func (s *CourierService) GetCourier(ctx context.Context, courierID int) (*Courie
 
 	err := s.db.GetSQLXDB().GetContext(ctx, courier, query, courierID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("courier not found")
 		}
 		return nil, fmt.Errorf("failed to get courier: %w", err)

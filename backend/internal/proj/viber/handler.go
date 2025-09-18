@@ -3,22 +3,23 @@ package viber
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/handler"
 	"backend/internal/proj/viber/service"
-	globalService "backend/internal/proj/global/service"
-	"backend/pkg/utils"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // ViberHandler обрабатывает запросы Viber Bot
 type ViberHandler struct {
-	webhookHandler   *handler.WebhookHandler
-	botService       *service.BotService
-	infobipService   *service.InfobipBotService
-	sessionManager   *service.SessionManager
-	config           *config.ViberConfig
+	webhookHandler *handler.WebhookHandler
+	botService     *service.BotService
+	infobipService *service.InfobipBotService
+	sessionManager *service.SessionManager
+	config         *config.ViberConfig
 }
 
 // NewViberHandler создаёт новый обработчик Viber
@@ -54,11 +55,11 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 	)
 
 	return &ViberHandler{
-		webhookHandler:   webhookHandler,
-		botService:       botService,
-		infobipService:   infobipService,
-		sessionManager:   sessionManager,
-		config:           cfg,
+		webhookHandler: webhookHandler,
+		botService:     botService,
+		infobipService: infobipService,
+		sessionManager: sessionManager,
+		config:         cfg,
 	}
 }
 
@@ -127,6 +128,7 @@ func (h *ViberHandler) SendMessage(c *fiber.Ctx) error {
 
 	// Отправляем через подходящий сервис
 	var err error
+	//nolint:gocritic // if-else chain is appropriate here for service selection
 	if h.config.UseInfobip && h.infobipService != nil {
 		err = h.infobipService.SendTextMessage(c.Context(), req.ViberID, req.Text)
 	} else if h.botService != nil {
@@ -168,6 +170,7 @@ func (h *ViberHandler) SendTrackingNotification(c *fiber.Ctx) error {
 
 	// Отправляем через подходящий сервис
 	var err error
+	//nolint:gocritic // if-else chain is appropriate here for service selection
 	if h.config.UseInfobip && h.infobipService != nil {
 		// err = h.infobipService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
 		err = h.infobipService.SendTextMessage(c.Context(), req.ViberID, "🚚 Ваш заказ в пути! Отследить: https://svetu.rs/track/"+strconv.Itoa(req.DeliveryID))

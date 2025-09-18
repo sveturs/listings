@@ -12738,6 +12738,223 @@
                 }
             }
         },
+        "/api/v1/courier/{courier_id}/deliveries": {
+            "get": {
+                "description": "Retrieves list of active deliveries assigned to a courier",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courier"
+                ],
+                "summary": "Get active deliveries for courier",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Courier ID",
+                        "name": "courier_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active deliveries",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_proj_tracking.Delivery"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid courier ID",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Courier not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/courier/{courier_id}/location": {
+            "post": {
+                "description": "Updates courier's current location and broadcasts to tracking clients",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracking"
+                ],
+                "summary": "Update courier location",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Courier ID",
+                        "name": "courier_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Location data",
+                        "name": "location",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_tracking.CourierLocationUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Location updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Courier not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery": {
+            "post": {
+                "description": "Creates a new delivery with courier assignment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Create new delivery",
+                "parameters": [
+                    {
+                        "description": "Delivery data",
+                        "name": "delivery",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_tracking.CreateDeliveryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Delivery created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_tracking.Delivery"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery/{delivery_id}/status": {
+            "put": {
+                "description": "Updates the status of a delivery (picked_up, in_transit, delivered, failed)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracking"
+                ],
+                "summary": "Update delivery status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Delivery ID",
+                        "name": "delivery_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status update",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_tracking.DeliveryStatusUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Delivery not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/docs/content": {
             "get": {
                 "description": "Returns the content of a specific markdown file",
@@ -30852,6 +31069,100 @@
                 }
             }
         },
+        "/api/v1/tracking/connections": {
+            "get": {
+                "description": "Returns the number of active WebSocket connections per delivery",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracking"
+                ],
+                "summary": "Get WebSocket connections statistics",
+                "responses": {
+                    "200": {
+                        "description": "Active connections",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tracking/{token}": {
+            "get": {
+                "description": "Retrieves delivery details using tracking token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tracking"
+                ],
+                "summary": "Get delivery information by tracking token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delivery information",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_tracking.Delivery"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Delivery not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/translation/limits": {
             "get": {
                 "description": "Returns current usage limits and statistics for the translation service",
@@ -32037,6 +32348,294 @@
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/estimate-cost": {
+            "post": {
+                "description": "Estimates the cost of sending a message to a Viber user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Estimate message cost",
+                "parameters": [
+                    {
+                        "description": "Cost estimation request",
+                        "name": "estimate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_viber.EstimateCostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estimated cost",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Estimation failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/infobip-webhook": {
+            "post": {
+                "description": "Processes webhook events from Infobip Viber API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Handle Infobip webhook",
+                "parameters": [
+                    {
+                        "description": "Infobip webhook event",
+                        "name": "webhook",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event processed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid event",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/send": {
+            "post": {
+                "description": "Sends a text message to a Viber user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Send message to Viber user",
+                "parameters": [
+                    {
+                        "description": "Message data",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_viber.SendMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message sent",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Send failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/send-tracking": {
+            "post": {
+                "description": "Sends a rich media message with tracking information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Send tracking notification",
+                "parameters": [
+                    {
+                        "description": "Tracking data",
+                        "name": "notification",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_viber.SendTrackingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification sent",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Send failed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/stats": {
+            "get": {
+                "description": "Returns statistics about Viber bot sessions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Get session statistics",
+                "responses": {
+                    "200": {
+                        "description": "Session statistics",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get statistics",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/viber/webhook": {
+            "post": {
+                "description": "Processes webhook events from Viber (subscriptions, messages, etc.)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "viber"
+                ],
+                "summary": "Handle Viber webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Viber signature",
+                        "name": "X-Viber-Content-Signature",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Viber webhook event",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event processed",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid event",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid signature",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -45979,6 +46578,213 @@
                 }
             }
         },
+        "internal_proj_tracking.CourierLocation": {
+            "type": "object",
+            "properties": {
+                "heading": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "speed": {
+                    "type": "number"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_tracking.CourierLocationUpdate": {
+            "type": "object",
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "heading": {
+                    "type": "integer",
+                    "maximum": 359,
+                    "minimum": 0
+                },
+                "latitude": {
+                    "type": "number",
+                    "maximum": 90,
+                    "minimum": -90
+                },
+                "longitude": {
+                    "type": "number",
+                    "maximum": 180,
+                    "minimum": -180
+                },
+                "speed": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "internal_proj_tracking.CreateDeliveryRequest": {
+            "type": "object",
+            "required": [
+                "courier_id",
+                "delivery_address",
+                "delivery_latitude",
+                "delivery_longitude",
+                "order_id",
+                "pickup_address",
+                "pickup_latitude",
+                "pickup_longitude"
+            ],
+            "properties": {
+                "courier_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "delivery_address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "delivery_latitude": {
+                    "type": "number",
+                    "maximum": 90,
+                    "minimum": -90
+                },
+                "delivery_longitude": {
+                    "type": "number",
+                    "maximum": 180,
+                    "minimum": -180
+                },
+                "order_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "pickup_address": {
+                    "type": "string",
+                    "minLength": 5
+                },
+                "pickup_latitude": {
+                    "type": "number",
+                    "maximum": 90,
+                    "minimum": -90
+                },
+                "pickup_longitude": {
+                    "type": "number",
+                    "maximum": 180,
+                    "minimum": -180
+                }
+            }
+        },
+        "internal_proj_tracking.Delivery": {
+            "type": "object",
+            "properties": {
+                "actualDeliveryTime": {
+                    "type": "string"
+                },
+                "courierID": {
+                    "type": "integer"
+                },
+                "courierLocation": {
+                    "$ref": "#/definitions/internal_proj_tracking.CourierLocation"
+                },
+                "courierName": {
+                    "type": "string"
+                },
+                "courierPhone": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deliveryAddress": {
+                    "type": "string"
+                },
+                "deliveryLatitude": {
+                    "type": "number"
+                },
+                "deliveryLongitude": {
+                    "type": "number"
+                },
+                "distance": {
+                    "description": "в метрах",
+                    "type": "integer"
+                },
+                "duration": {
+                    "description": "в минутах",
+                    "type": "integer"
+                },
+                "estimatedDeliveryTime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lastKnownLocation": {
+                    "$ref": "#/definitions/internal_proj_tracking.LocationUpdate"
+                },
+                "orderID": {
+                    "type": "integer"
+                },
+                "pickupAddress": {
+                    "type": "string"
+                },
+                "pickupLatitude": {
+                    "type": "number"
+                },
+                "pickupLongitude": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "trackingToken": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_tracking.DeliveryStatusUpdate": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "picked_up",
+                        "in_transit",
+                        "delivered",
+                        "failed"
+                    ]
+                }
+            }
+        },
+        "internal_proj_tracking.LocationUpdate": {
+            "type": "object",
+            "properties": {
+                "courier_id": {
+                    "type": "integer"
+                },
+                "heading": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "speed": {
+                    "type": "number"
+                }
+            }
+        },
         "internal_proj_translation_admin.ProviderCosts": {
             "type": "object",
             "properties": {
@@ -46289,6 +47095,53 @@
                 "picture_url": {
                     "type": "string",
                     "example": "https://example.com/avatar.jpg"
+                }
+            }
+        },
+        "internal_proj_viber.EstimateCostRequest": {
+            "type": "object",
+            "required": [
+                "viber_id"
+            ],
+            "properties": {
+                "is_rich_media": {
+                    "type": "boolean"
+                },
+                "viber_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_viber.SendMessageRequest": {
+            "type": "object",
+            "required": [
+                "text",
+                "viber_id"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "maxLength": 7000,
+                    "minLength": 1
+                },
+                "viber_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_viber.SendTrackingRequest": {
+            "type": "object",
+            "required": [
+                "delivery_id",
+                "viber_id"
+            ],
+            "properties": {
+                "delivery_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "viber_id": {
+                    "type": "string"
                 }
             }
         },

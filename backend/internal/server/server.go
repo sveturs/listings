@@ -50,8 +50,8 @@ import (
 	"backend/internal/proj/search_optimization"
 	"backend/internal/proj/storefronts"
 	"backend/internal/proj/subscriptions"
-	"backend/internal/proj/translation_admin"
 	"backend/internal/proj/tracking"
+	"backend/internal/proj/translation_admin"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/proj/viber"
 	"backend/internal/storage/filestorage"
@@ -447,7 +447,7 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 			return websocket.New(func(conn *websocket.Conn) {
 				// Здесь нужно будет добавить логику для трекинга
 				// Пока оставим заглушку
-				conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","token":"`+token+`"}`))
+				_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","token":"`+token+`"}`))
 				for {
 					_, _, err := conn.ReadMessage()
 					if err != nil {

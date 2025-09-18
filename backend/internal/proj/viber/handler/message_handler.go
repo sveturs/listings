@@ -15,12 +15,12 @@ import (
 
 // MessageHandler обрабатывает сообщения от пользователей Viber
 type MessageHandler struct {
-	botService          *service.BotService
-	infobipService      *service.InfobipBotService
-	services            globalService.ServicesInterface
-	marketplaceService  marketplaceService.MarketplaceServiceInterface
-	storefrontService   storefrontService.StorefrontService
-	useInfobip          bool
+	botService         *service.BotService
+	infobipService     *service.InfobipBotService
+	services           globalService.ServicesInterface
+	marketplaceService marketplaceService.MarketplaceServiceInterface
+	storefrontService  storefrontService.StorefrontService
+	useInfobip         bool
 }
 
 // NewMessageHandler создаёт новый обработчик сообщений
@@ -206,14 +206,14 @@ func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, token
 	// Создаём ссылку на трекинг
 	trackingURL := fmt.Sprintf("https://svetu.rs/track/%s", token)
 
-	msg := fmt.Sprintf("🚚 Отслеживание доставки\n\n" +
-		"Номер: %s\n\n" +
-		"Для просмотра подробной информации и карты с местоположением курьера перейдите по ссылке:\n\n" +
-		"🔗 %s\n\n" +
-		"На карте вы увидите:\n" +
-		"📍 Текущее местоположение курьера\n" +
-		"🕐 Примерное время прибытия\n" +
-		"📦 Статус доставки\n" +
+	msg := fmt.Sprintf("🚚 Отслеживание доставки\n\n"+
+		"Номер: %s\n\n"+
+		"Для просмотра подробной информации и карты с местоположением курьера перейдите по ссылке:\n\n"+
+		"🔗 %s\n\n"+
+		"На карте вы увидите:\n"+
+		"📍 Текущее местоположение курьера\n"+
+		"🕐 Примерное время прибытия\n"+
+		"📦 Статус доставки\n"+
 		"🛒 Ближайшие товары", token, trackingURL)
 
 	return m.sendMessage(ctx, viberID, msg)
@@ -223,16 +223,15 @@ func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, token
 func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID string, lat, lng float64) error {
 	// Ищем товары в радиусе 5 км
 	markers, err := m.marketplaceService.GetListingsInBounds(ctx,
-		lat+0.045,   // ~5км к северу
-		lng+0.063,   // ~5км к востоку
-		lat-0.045,   // ~5км к югу
-		lng-0.063,   // ~5км к западу
-		14,          // zoom level
-		"",          // все категории
-		"",          // все состояния
-		nil, nil,    // без фильтра по цене
-		"")          // без фильтра атрибутов
-
+		lat+0.045, // ~5км к северу
+		lng+0.063, // ~5км к востоку
+		lat-0.045, // ~5км к югу
+		lng-0.063, // ~5км к западу
+		14,        // zoom level
+		"",        // все категории
+		"",        // все состояния
+		nil, nil,  // без фильтра по цене
+		"") // без фильтра атрибутов
 	if err != nil {
 		msg := "Произошла ошибка при поиске товаров рядом с вами. Попробуйте позже."
 		return m.sendMessage(ctx, viberID, msg)

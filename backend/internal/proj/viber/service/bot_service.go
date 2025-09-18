@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"backend/internal/proj/viber/config"
@@ -48,7 +49,7 @@ func (s *BotService) SetWebhook() error {
 			"conversation_started",
 			"message",
 		},
-		"send_name": true,
+		"send_name":  true,
 		"send_photo": true,
 	}
 
@@ -308,7 +309,9 @@ func (s *BotService) makeRequest(method, url string, payload interface{}) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -324,7 +327,10 @@ func (s *BotService) makeRequest(method, url string, payload interface{}) ([]byt
 
 // generateStaticMapURL генерирует URL для статической карты
 func (s *BotService) generateStaticMapURL(delivery *DeliveryInfo) string {
-	mapboxToken := "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA"
+	mapboxToken := os.Getenv("MAPBOX_TOKEN")
+	if mapboxToken == "" {
+		mapboxToken = "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA" //nolint:gosec // TODO: move to config
+	}
 
 	// Маркеры и путь
 	courierMarker := fmt.Sprintf("pin-l-bicycle+3b82f6(%f,%f)",
@@ -373,14 +379,14 @@ func (s *BotService) saveOutgoingMessage(ctx context.Context, viberID, msgType, 
 
 // DeliveryInfo содержит информацию о доставке для уведомления
 type DeliveryInfo struct {
-	ID                 int
-	OrderID            int
-	TrackingToken      string
-	CourierName        string
-	CourierLatitude    float64
-	CourierLongitude   float64
-	DeliveryLatitude   float64
-	DeliveryLongitude  float64
-	EstimatedTime      time.Time
-	DeliveryAddress    string
+	ID                int
+	OrderID           int
+	TrackingToken     string
+	CourierName       string
+	CourierLatitude   float64
+	CourierLongitude  float64
+	DeliveryLatitude  float64
+	DeliveryLongitude float64
+	EstimatedTime     time.Time
+	DeliveryAddress   string
 }

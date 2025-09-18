@@ -85,7 +85,6 @@ func (s *DeliveryService) CreateDelivery(ctx context.Context, orderID, courierID
 		deliveryLat, deliveryLng,
 		estimatedTime,
 	).Scan(&d.ID, &d.CreatedAt, &d.UpdatedAt)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create delivery: %w", err)
 	}
@@ -133,7 +132,6 @@ func (s *DeliveryService) GetDelivery(deliveryID int) (*Delivery, error) {
 		&d.CreatedAt, &d.UpdatedAt,
 		&d.CourierName, &d.CourierPhone,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("delivery not found")
@@ -171,7 +169,6 @@ func (s *DeliveryService) ValidateTrackingToken(token string) (*Delivery, error)
 		&d.EstimatedDeliveryTime,
 		&d.CourierName,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("invalid tracking token")
@@ -186,7 +183,7 @@ func (s *DeliveryService) ValidateTrackingToken(token string) (*Delivery, error)
 // UpdateDeliveryStatus обновляет статус доставки
 func (s *DeliveryService) UpdateDeliveryStatus(ctx context.Context, deliveryID int, status string) error {
 	query := `UPDATE deliveries SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
-	
+
 	if status == "delivered" {
 		query = `UPDATE deliveries SET status = $2, actual_delivery_time = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
 	}
@@ -258,20 +255,22 @@ func (s *DeliveryService) GetNearbyItems(lat, lng float64, radiusMeters int) ([]
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var items []map[string]interface{}
 	for rows.Next() {
 		var item struct {
-			ID         int
-			Title      string
-			Price      float64
-			Currency   string
-			Latitude   float64
-			Longitude  float64
-			Distance   int
-			StoreName  sql.NullString
-			StoreLogo  sql.NullString
+			ID        int
+			Title     string
+			Price     float64
+			Currency  string
+			Latitude  float64
+			Longitude float64
+			Distance  int
+			StoreName sql.NullString
+			StoreLogo sql.NullString
 		}
 
 		err := rows.Scan(
@@ -303,6 +302,10 @@ func (s *DeliveryService) GetNearbyItems(lat, lng float64, radiusMeters int) ([]
 		}
 
 		items = append(items, itemMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return items, nil
@@ -353,7 +356,9 @@ func (s *DeliveryService) CalculateETA(delivery *Delivery) time.Time {
 // generateTrackingToken генерирует уникальный токен для трекинга
 func (s *DeliveryService) generateTrackingToken() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return hex.EncodeToString(b) // Return partially filled buffer even on error
+	}
 	return hex.EncodeToString(b)
 }
 
@@ -376,7 +381,6 @@ func (s *DeliveryService) getLastCourierLocation(courierID int) *CourierLocation
 	err := s.db.GetSQLXDB().QueryRow(query, courierID).Scan(
 		&loc.Latitude, &loc.Longitude, &loc.UpdatedAt,
 	)
-
 	if err != nil {
 		return nil
 	}
@@ -403,7 +407,9 @@ func (s *DeliveryService) GetActiveDeliveries(courierID int) ([]*Delivery, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	var deliveries []*Delivery
 	for rows.Next() {
@@ -420,6 +426,10 @@ func (s *DeliveryService) GetActiveDeliveries(courierID int) ([]*Delivery, error
 		}
 		d.CourierID = courierID
 		deliveries = append(deliveries, &d)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return deliveries, nil

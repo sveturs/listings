@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
@@ -55,15 +55,17 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
 
     try {
       // Центр между точками получения и доставки
-      const centerLat = (delivery.pickup_latitude + delivery.delivery_latitude) / 2;
-      const centerLng = (delivery.pickup_longitude + delivery.delivery_longitude) / 2;
+      const centerLat =
+        (delivery.pickup_latitude + delivery.delivery_latitude) / 2;
+      const centerLng =
+        (delivery.pickup_longitude + delivery.delivery_longitude) / 2;
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [centerLng, centerLat],
         zoom: 12,
-        language: 'ru'
+        language: 'ru',
       });
 
       map.current.on('load', () => {
@@ -74,13 +76,15 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
 
       // Контролы навигации
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      
-      // Контроль масштаба
-      map.current.addControl(new mapboxgl.ScaleControl({
-        maxWidth: 100,
-        unit: 'metric'
-      }), 'bottom-left');
 
+      // Контроль масштаба
+      map.current.addControl(
+        new mapboxgl.ScaleControl({
+          maxWidth: 100,
+          unit: 'metric',
+        }),
+        'bottom-left'
+      );
     } catch (error) {
       console.error('Error initializing map:', error);
     }
@@ -91,6 +95,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         map.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Добавление начальных маркеров
@@ -102,12 +107,11 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
     pickupEl.className = 'pickup-marker';
     pickupEl.innerHTML = '🏢';
     pickupEl.style.fontSize = '24px';
-    
+
     new mapboxgl.Marker(pickupEl)
       .setLngLat([delivery.pickup_longitude, delivery.pickup_latitude])
       .setPopup(
-        new mapboxgl.Popup({ offset: 25 })
-          .setHTML(`
+        new mapboxgl.Popup({ offset: 25 }).setHTML(`
             <div class="p-2">
               <div class="font-semibold text-sm">${t('pickup')}</div>
               <div class="text-xs text-gray-600">${delivery.pickup_address}</div>
@@ -121,12 +125,11 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
     deliveryEl.className = 'delivery-marker';
     deliveryEl.innerHTML = '🏠';
     deliveryEl.style.fontSize = '24px';
-    
+
     new mapboxgl.Marker(deliveryEl)
       .setLngLat([delivery.delivery_longitude, delivery.delivery_latitude])
       .setPopup(
-        new mapboxgl.Popup({ offset: 25 })
-          .setHTML(`
+        new mapboxgl.Popup({ offset: 25 }).setHTML(`
             <div class="p-2">
               <div class="font-semibold text-sm">${t('delivery')}</div>
               <div class="text-xs text-gray-600">${delivery.delivery_address}</div>
@@ -150,12 +153,11 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
       courierEl.style.fontSize = '32px';
       courierEl.style.transform = `rotate(${heading}deg)`;
       courierEl.style.transition = 'transform 0.5s ease';
-      
+
       courierMarker.current = new mapboxgl.Marker(courierEl)
         .setLngLat([longitude, latitude])
         .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
               <div class="p-2">
                 <div class="font-semibold text-sm">${t('courier')}</div>
                 <div class="text-xs text-gray-600">
@@ -169,23 +171,26 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
     } else {
       // Плавное обновление позиции
       courierMarker.current.setLngLat([longitude, latitude]);
-      
+
       // Обновляем направление
       const markerElement = courierMarker.current.getElement();
       if (markerElement) {
         markerElement.style.transform = `rotate(${heading}deg)`;
       }
-      
+
       // Обновляем popup
-      courierMarker.current.getPopup().setHTML(`
-        <div class="p-2">
-          <div class="font-semibold text-sm">${t('courier')}</div>
-          <div class="text-xs text-gray-600">
-            📈 ${speed.toFixed(1)} км/ч<br/>
-            🧭 ${heading}°
+      const popup = courierMarker.current.getPopup();
+      if (popup) {
+        popup.setHTML(`
+          <div class="p-2">
+            <div class="font-semibold text-sm">${t('courier')}</div>
+            <div class="text-xs text-gray-600">
+              📈 ${speed.toFixed(1)} км/ч<br/>
+              🧭 ${heading}°
+            </div>
           </div>
-        </div>
-      `);
+        `);
+      }
     }
   }, [delivery.courier_location, mapLoaded]);
 
@@ -195,21 +200,20 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
 
     // Удаляем предыдущие маркеры товаров
     const existingMarkers = document.querySelectorAll('.nearby-item-marker');
-    existingMarkers.forEach(marker => marker.remove());
+    existingMarkers.forEach((marker) => marker.remove());
 
     // Добавляем новые маркеры
-    delivery.nearby_items.forEach(item => {
+    delivery.nearby_items.forEach((item) => {
       const itemEl = document.createElement('div');
       itemEl.className = 'nearby-item-marker';
       itemEl.innerHTML = '🛒';
       itemEl.style.fontSize = '18px';
       itemEl.style.cursor = 'pointer';
-      
+
       new mapboxgl.Marker(itemEl)
         .setLngLat([item.location.longitude, item.location.latitude])
         .setPopup(
-          new mapboxgl.Popup({ offset: 25 })
-            .setHTML(`
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`
               <div class="p-3 max-w-xs">
                 <div class="font-semibold text-sm mb-1">${item.title}</div>
                 <div class="text-lg font-bold text-green-600 mb-1">
@@ -236,32 +240,38 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
     const bounds = new mapboxgl.LngLatBounds();
     bounds.extend([delivery.pickup_longitude, delivery.pickup_latitude]);
     bounds.extend([delivery.delivery_longitude, delivery.delivery_latitude]);
-    
+
     if (delivery.courier_location) {
-      bounds.extend([delivery.courier_location.longitude, delivery.courier_location.latitude]);
+      bounds.extend([
+        delivery.courier_location.longitude,
+        delivery.courier_location.latitude,
+      ]);
     }
 
     map.current.fitBounds(bounds, {
       padding: 50,
-      maxZoom: 15
+      maxZoom: 15,
     });
   };
 
   // Центрирование на курьере
   const centerOnCourier = () => {
     if (!map.current || !delivery.courier_location) return;
-    
+
     map.current.flyTo({
-      center: [delivery.courier_location.longitude, delivery.courier_location.latitude],
+      center: [
+        delivery.courier_location.longitude,
+        delivery.courier_location.latitude,
+      ],
       zoom: 16,
-      duration: 1000
+      duration: 1000,
     });
   };
 
   return (
     <div className="relative w-full h-96 lg:h-[500px]">
       <div ref={mapContainer} className="w-full h-full rounded-lg" />
-      
+
       {/* Кнопки управления */}
       <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
         <button
@@ -271,7 +281,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         >
           🗺️
         </button>
-        
+
         {delivery.courier_location && (
           <button
             onClick={centerOnCourier}
@@ -281,7 +291,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
             🚴‍♂️
           </button>
         )}
-        
+
         {onRequestETA && (
           <button
             onClick={onRequestETA}
@@ -292,7 +302,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
           </button>
         )}
       </div>
-      
+
       {/* Легенда */}
       <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg text-xs z-10">
         <div className="font-semibold mb-2">{t('legend.title')}</div>
@@ -319,7 +329,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
           )}
         </div>
       </div>
-      
+
       {!mapLoaded && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center rounded-lg">
           <div className="text-center">

@@ -5,14 +5,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/proj/viber/models"
 	"backend/internal/proj/viber/service"
-)
 
+	"github.com/gofiber/fiber/v2"
+)
 
 // WebhookHandler обрабатывает webhook события от Viber
 type WebhookHandler struct {
@@ -147,7 +148,7 @@ func (h *WebhookHandler) validateSignature(c *fiber.Ctx) error {
 // handleWebhookVerification обрабатывает первую верификацию webhook
 func (h *WebhookHandler) handleWebhookVerification(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
-		"status": 0,
+		"status":         0,
 		"status_message": "ok",
 	})
 }
@@ -277,14 +278,14 @@ func (h *WebhookHandler) handleMessage(c *fiber.Ctx, event *models.WebhookEvent)
 
 	// Создаём или обновляем сессию
 	session, err := h.sessionManager.GetActiveSession(ctx, event.Sender.ID)
-	if err != nil {
+	if err != nil && !errors.Is(err, service.ErrNoActiveSession) {
 		fmt.Printf("Failed to get session: %v\n", err)
 		return c.SendStatus(fiber.StatusOK)
 	}
 
-	if session == nil {
+	if errors.Is(err, service.ErrNoActiveSession) {
 		// Создаём новую сессию
-		session, err = h.sessionManager.CreateSession(ctx, event.Sender.ID)
+		_, err = h.sessionManager.CreateSession(ctx, event.Sender.ID)
 		if err != nil {
 			fmt.Printf("Failed to create session: %v\n", err)
 			return c.SendStatus(fiber.StatusOK)
@@ -308,7 +309,7 @@ func (h *WebhookHandler) handleMessage(c *fiber.Ctx, event *models.WebhookEvent)
 		// Неподдерживаемый тип сообщения
 		msg := "Извините, я пока не умею обрабатывать такие сообщения. " +
 			"Пожалуйста, используйте текстовые сообщения или кнопки меню."
-		h.botService.SendTextMessage(ctx, event.Sender.ID, msg)
+		_ = h.botService.SendTextMessage(ctx, event.Sender.ID, msg)
 	}
 
 	return c.SendStatus(fiber.StatusOK)
