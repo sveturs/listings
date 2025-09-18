@@ -1,0 +1,80 @@
+{
+  "title": "Praćenje dostave",
+  "trackingCode": "Kod praćenja",
+  "loading": "Učitavanje podataka o dostavi...",
+  "error": {
+    "title": "Greška učitavanja",
+    "retry": "Pokušaj ponovo"
+  },
+  "notFound": {
+    "title": "Dostava nije pronađena",
+    "description": "Proverite ispravnost koda praćenja"
+  },
+  "status": {
+    "connected": "Povezano",
+    "connecting": "Povezivanje...",
+    "disconnected": "Nema konekcije",
+    "pending": "Čeka",
+    "picked_up": "Pokupljeno",
+    "in_transit": "U toku",
+    "delivered": "Dostavljeno",
+    "failed": "Greška dostave"
+  },
+  "viber": {
+    "title": "Dobijajte Viber obaveštenja",
+    "description": "Otvorite chat sa botom za obaveštenja u realnom vremenu",
+    "open": "Otvori Viber"
+  },
+  "map": {
+    "pickup": "Mesto preuzimanja",
+    "delivery": "Mesto dostave",
+    "courier": "Kurir",
+    "loading": "Učitavanje mape...",
+    "fitBounds": "Prikaži sve",
+    "centerOnCourier": "Centriraj na kurira",
+    "requestETA": "Ažuriraj vreme dolaska",
+    "viewItem": "Pogledaj proizvod",
+    "legend": {
+      "title": "Legenda",
+      "pickup": "Preuzimanje",
+      "delivery": "Dostava",
+      "courier": "Kurir",
+      "items": "Proizvodi u blizini"
+    }
+  },
+  "info": {
+    "status": {
+      "title": "Status dostave"
+    },
+    "orderNumber": "Narudžbina #{number}",
+    "eta": {
+      "title": "Očekivano vreme",
+      "refresh": "Osveži",
+      "overdue": "Kašnjenje",
+      "unknown": "Nepoznato"
+    },
+    "liveTracking": "Praćenje uživo",
+    "connectionLost": "Veza je izgubljena",
+    "courier": {
+      "title": "Kurir",
+      "role": "Dostavljač",
+      "call": "Pozovi",
+      "chat": "Napisaj",
+      "currentData": "Trenutni podaci",
+      "speed": "Brzina",
+      "direction": "Smer",
+      "lastUpdate": "Ažurirano"
+    },
+    "addresses": {
+      "title": "Adrese",
+      "pickup": "Preuzimanje",
+      "delivery": "Dostava"
+    },
+    "actions": {
+      "title": "Akcije",
+      "share": "Podeli",
+      "notifications": "Obaveštenja",
+      "support": "Podrška"
+    }
+  }
+}

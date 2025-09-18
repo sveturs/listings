@@ -9080,6 +9080,153 @@ definitions:
     required:
     - plan_code
     type: object
+  internal_proj_tracking.CourierLocation:
+    properties:
+      heading:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      speed:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  internal_proj_tracking.CourierLocationUpdate:
+    properties:
+      heading:
+        maximum: 359
+        minimum: 0
+        type: integer
+      latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      speed:
+        minimum: 0
+        type: number
+    required:
+    - latitude
+    - longitude
+    type: object
+  internal_proj_tracking.CreateDeliveryRequest:
+    properties:
+      courier_id:
+        minimum: 1
+        type: integer
+      delivery_address:
+        minLength: 5
+        type: string
+      delivery_latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      delivery_longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+      order_id:
+        minimum: 1
+        type: integer
+      pickup_address:
+        minLength: 5
+        type: string
+      pickup_latitude:
+        maximum: 90
+        minimum: -90
+        type: number
+      pickup_longitude:
+        maximum: 180
+        minimum: -180
+        type: number
+    required:
+    - courier_id
+    - delivery_address
+    - delivery_latitude
+    - delivery_longitude
+    - order_id
+    - pickup_address
+    - pickup_latitude
+    - pickup_longitude
+    type: object
+  internal_proj_tracking.Delivery:
+    properties:
+      actualDeliveryTime:
+        type: string
+      courierID:
+        type: integer
+      courierLocation:
+        $ref: '#/definitions/internal_proj_tracking.CourierLocation'
+      courierName:
+        type: string
+      courierPhone:
+        type: string
+      createdAt:
+        type: string
+      deliveryAddress:
+        type: string
+      deliveryLatitude:
+        type: number
+      deliveryLongitude:
+        type: number
+      distance:
+        description: в метрах
+        type: integer
+      duration:
+        description: в минутах
+        type: integer
+      estimatedDeliveryTime:
+        type: string
+      id:
+        type: integer
+      lastKnownLocation:
+        $ref: '#/definitions/internal_proj_tracking.LocationUpdate'
+      orderID:
+        type: integer
+      pickupAddress:
+        type: string
+      pickupLatitude:
+        type: number
+      pickupLongitude:
+        type: number
+      status:
+        type: string
+      trackingToken:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  internal_proj_tracking.DeliveryStatusUpdate:
+    properties:
+      status:
+        enum:
+        - pending
+        - picked_up
+        - in_transit
+        - delivered
+        - failed
+        type: string
+    required:
+    - status
+    type: object
+  internal_proj_tracking.LocationUpdate:
+    properties:
+      courier_id:
+        type: integer
+      heading:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      speed:
+        type: number
+    type: object
   internal_proj_translation_admin.ProviderCosts:
     properties:
       daily_costs:
@@ -9300,6 +9447,38 @@ definitions:
       picture_url:
         example: https://example.com/avatar.jpg
         type: string
+    type: object
+  internal_proj_viber.EstimateCostRequest:
+    properties:
+      is_rich_media:
+        type: boolean
+      viber_id:
+        type: string
+    required:
+    - viber_id
+    type: object
+  internal_proj_viber.SendMessageRequest:
+    properties:
+      text:
+        maxLength: 7000
+        minLength: 1
+        type: string
+      viber_id:
+        type: string
+    required:
+    - text
+    - viber_id
+    type: object
+  internal_proj_viber.SendTrackingRequest:
+    properties:
+      delivery_id:
+        minimum: 1
+        type: integer
+      viber_id:
+        type: string
+    required:
+    - delivery_id
+    - viber_id
     type: object
   tgbotapi.Animation:
     properties:
@@ -17745,6 +17924,144 @@ paths:
       summary: Обновить настройки приватности
       tags:
       - contacts
+  /api/v1/courier/{courier_id}/deliveries:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves list of active deliveries assigned to a courier
+      parameters:
+      - description: Courier ID
+        in: path
+        name: courier_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Active deliveries
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_tracking.Delivery'
+                  type: array
+              type: object
+        "400":
+          description: Invalid courier ID
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Courier not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get active deliveries for courier
+      tags:
+      - courier
+  /api/v1/courier/{courier_id}/location:
+    post:
+      consumes:
+      - application/json
+      description: Updates courier's current location and broadcasts to tracking clients
+      parameters:
+      - description: Courier ID
+        in: path
+        name: courier_id
+        required: true
+        type: integer
+      - description: Location data
+        in: body
+        name: location
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_tracking.CourierLocationUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Location updated successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Courier not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update courier location
+      tags:
+      - tracking
+  /api/v1/delivery:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new delivery with courier assignment
+      parameters:
+      - description: Delivery data
+        in: body
+        name: delivery
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_tracking.CreateDeliveryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Delivery created
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_tracking.Delivery'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Create new delivery
+      tags:
+      - delivery
+  /api/v1/delivery/{delivery_id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates the status of a delivery (picked_up, in_transit, delivered,
+        failed)
+      parameters:
+      - description: Delivery ID
+        in: path
+        name: delivery_id
+        required: true
+        type: integer
+      - description: Status update
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_tracking.DeliveryStatusUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Status updated successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Delivery not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Update delivery status
+      tags:
+      - tracking
   /api/v1/docs/content:
     get:
       consumes:
@@ -29082,6 +29399,62 @@ paths:
       summary: Upgrade subscription
       tags:
       - subscriptions
+  /api/v1/tracking/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves delivery details using tracking token
+      parameters:
+      - description: Tracking token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Delivery information
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_tracking.Delivery'
+              type: object
+        "400":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Delivery not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get delivery information by tracking token
+      tags:
+      - tracking
+  /api/v1/tracking/connections:
+    get:
+      consumes:
+      - application/json
+      description: Returns the number of active WebSocket connections per delivery
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Active connections
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: integer
+                  type: object
+              type: object
+      summary: Get WebSocket connections statistics
+      tags:
+      - tracking
   /api/v1/translation/limits:
     get:
       consumes:
@@ -29805,6 +30178,189 @@ paths:
       summary: Save attribute values for a listing
       tags:
       - marketplace-attributes-v2
+  /api/viber/estimate-cost:
+    post:
+      consumes:
+      - application/json
+      description: Estimates the cost of sending a message to a Viber user
+      parameters:
+      - description: Cost estimation request
+        in: body
+        name: estimate
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_viber.EstimateCostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Estimated cost
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: number
+                  type: object
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Estimation failed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Estimate message cost
+      tags:
+      - viber
+  /api/viber/infobip-webhook:
+    post:
+      consumes:
+      - application/json
+      description: Processes webhook events from Infobip Viber API
+      parameters:
+      - description: Infobip webhook event
+        in: body
+        name: webhook
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event processed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid event
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Handle Infobip webhook
+      tags:
+      - viber
+  /api/viber/send:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text message to a Viber user
+      parameters:
+      - description: Message data
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_viber.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message sent
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Send failed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Send message to Viber user
+      tags:
+      - viber
+  /api/viber/send-tracking:
+    post:
+      consumes:
+      - application/json
+      description: Sends a rich media message with tracking information
+      parameters:
+      - description: Tracking data
+        in: body
+        name: notification
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_viber.SendTrackingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification sent
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Send failed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Send tracking notification
+      tags:
+      - viber
+  /api/viber/stats:
+    get:
+      consumes:
+      - application/json
+      description: Returns statistics about Viber bot sessions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Session statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: Failed to get statistics
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get session statistics
+      tags:
+      - viber
+  /api/viber/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Processes webhook events from Viber (subscriptions, messages, etc.)
+      parameters:
+      - description: Viber signature
+        in: header
+        name: X-Viber-Content-Signature
+        required: true
+        type: string
+      - description: Viber webhook event
+        in: body
+        name: event
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event processed
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid event
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Invalid signature
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Handle Viber webhook
+      tags:
+      - viber
   /auth/google:
     get:
       consumes:

@@ -1,0 +1,80 @@
+{
+  "title": "Delivery Tracking",
+  "trackingCode": "Tracking Code",
+  "loading": "Loading delivery data...",
+  "error": {
+    "title": "Loading Error",
+    "retry": "Try Again"
+  },
+  "notFound": {
+    "title": "Delivery Not Found",
+    "description": "Please check your tracking code"
+  },
+  "status": {
+    "connected": "Connected",
+    "connecting": "Connecting...",
+    "disconnected": "No Connection",
+    "pending": "Pending",
+    "picked_up": "Picked Up",
+    "in_transit": "In Transit",
+    "delivered": "Delivered",
+    "failed": "Delivery Failed"
+  },
+  "viber": {
+    "title": "Get Viber Notifications",
+    "description": "Open chat with bot for real-time updates",
+    "open": "Open Viber"
+  },
+  "map": {
+    "pickup": "Pickup Point",
+    "delivery": "Delivery Point",
+    "courier": "Courier",
+    "loading": "Loading map...",
+    "fitBounds": "Fit to view",
+    "centerOnCourier": "Center on courier",
+    "requestETA": "Update ETA",
+    "viewItem": "View Item",
+    "legend": {
+      "title": "Legend",
+      "pickup": "Pickup",
+      "delivery": "Delivery",
+      "courier": "Courier",
+      "items": "Nearby Items"
+    }
+  },
+  "info": {
+    "status": {
+      "title": "Delivery Status"
+    },
+    "orderNumber": "Order #{number}",
+    "eta": {
+      "title": "Estimated Time",
+      "refresh": "Refresh",
+      "overdue": "Delayed",
+      "unknown": "Unknown"
+    },
+    "liveTracking": "Live tracking",
+    "connectionLost": "Connection lost",
+    "courier": {
+      "title": "Courier",
+      "role": "Delivery Driver",
+      "call": "Call",
+      "chat": "Chat",
+      "currentData": "Current Data",
+      "speed": "Speed",
+      "direction": "Direction",
+      "lastUpdate": "Updated"
+    },
+    "addresses": {
+      "title": "Addresses",
+      "pickup": "Pickup",
+      "delivery": "Delivery"
+    },
+    "actions": {
+      "title": "Actions",
+      "share": "Share",
+      "notifications": "Notifications",
+      "support": "Support"
+    }
+  }
+}
