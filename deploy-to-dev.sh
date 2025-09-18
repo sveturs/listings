@@ -47,12 +47,12 @@ DUMP_FILE=$(ls -t /tmp/svetubd_dump_*.sql | head -1)
 echo "Using dump: $DUMP_FILE"
 
 # Clear and restore database in docker
-docker exec -i svetu-dev_db_1 psql -U postgres -c "DROP DATABASE IF EXISTS svetubd;"
-docker exec -i svetu-dev_db_1 psql -U postgres -c "CREATE DATABASE svetubd;"
-docker exec -i svetu-dev_db_1 psql -U postgres svetubd < $DUMP_FILE
+cd /opt/svetu-dev
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < $DUMP_FILE
 
 # Update schema_migrations to prevent migration issues
-docker exec -i svetu-dev_db_1 psql -U postgres svetubd -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
 
 # Restart backend
 echo "Restarting backend..."
