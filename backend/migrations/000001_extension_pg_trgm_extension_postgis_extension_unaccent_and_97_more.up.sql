@@ -253,6 +253,27 @@ CREATE SEQUENCE public.component_templates_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.courier_location_history_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.courier_zones_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.couriers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.custom_ui_component_usage_id_seq
     AS integer
     START WITH 1
@@ -268,6 +289,20 @@ CREATE SEQUENCE public.custom_ui_components_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.custom_ui_templates_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.deliveries_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.delivery_notifications_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -712,41 +747,6 @@ CREATE SEQUENCE public.storefronts_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.subscription_history_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.subscription_payments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.subscription_plans_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.subscription_usage_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_audit_log_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.translation_providers_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
