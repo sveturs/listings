@@ -48,11 +48,20 @@ echo "Using dump: $DUMP_FILE"
 
 # Clear and restore database in docker
 cd /opt/svetu-dev
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < $DUMP_FILE
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" 2>&1 | head -5
+echo "Loading database dump..."
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < $DUMP_FILE 2>&1 | tail -10
 
 # Update schema_migrations to prevent migration issues
 docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
+
+# Sync Mapbox token from local env
+echo "Syncing Mapbox token..."
+LOCAL_MAPBOX_TOKEN=$(grep NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN /data/hostel-booking-system/frontend/svetu/.env.local 2>/dev/null | cut -d'=' -f2)
+if [ ! -z "$LOCAL_MAPBOX_TOKEN" ]; then
+  sed -i "s/NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=.*/NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=$LOCAL_MAPBOX_TOKEN/" /opt/svetu-dev/frontend/svetu/.env.local
+  sed -i "s/NEXT_PUBLIC_MAPBOX_TOKEN=.*/NEXT_PUBLIC_MAPBOX_TOKEN=$LOCAL_MAPBOX_TOKEN/" /opt/svetu-dev/frontend/svetu/.env.local
+fi
 
 # Restart backend
 echo "Restarting backend..."
