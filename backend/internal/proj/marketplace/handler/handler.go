@@ -312,9 +312,17 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Post("/listings/check-slug", h.Listings.CheckSlugAvailability)
 	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)
 	marketplaceProtected.Delete("/listings/:id/images/:image_id", h.Images.DeleteImage)
+	// Favorites routes - поддерживаем оба варианта для совместимости
+	// Старый формат через listings
 	marketplaceProtected.Post("/listings/:id/favorite", h.Favorites.AddToFavorites)
 	marketplaceProtected.Delete("/listings/:id/favorite", h.Favorites.RemoveFromFavorites)
+
+	// Новый формат - основной
 	marketplaceProtected.Get("/favorites", h.Favorites.GetFavorites)
+	marketplaceProtected.Get("/favorites/count", h.Favorites.GetFavoritesCount)
+	marketplaceProtected.Post("/favorites/:id", h.Favorites.AddToFavorites)
+	marketplaceProtected.Delete("/favorites/:id", h.Favorites.RemoveFromFavorites)
+	marketplaceProtected.Get("/favorites/:id/check", h.Favorites.IsInFavorites)
 	marketplaceProtected.Put("/translations/:id", h.Translations.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", h.Translations.TranslateText) // Предполагается, что этот метод переименован
 	marketplaceProtected.Post("/moderate-image", h.Images.ModerateImage)

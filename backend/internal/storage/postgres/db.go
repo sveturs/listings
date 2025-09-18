@@ -579,6 +579,19 @@ func (db *Database) GetUserFavorites(ctx context.Context, userID int) ([]models.
 	return db.marketplaceDB.GetUserFavorites(ctx, userID)
 }
 
+// Storefront favorites
+func (db *Database) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
+	return db.marketplaceDB.AddStorefrontToFavorites(ctx, userID, productID)
+}
+
+func (db *Database) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
+	return db.marketplaceDB.RemoveStorefrontFromFavorites(ctx, userID, productID)
+}
+
+func (db *Database) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+	return db.marketplaceDB.GetUserStorefrontFavorites(ctx, userID)
+}
+
 // Добавляем делегирующие методы
 func (db *Database) CreateReview(ctx context.Context, review *models.Review) (*models.Review, error) {
 	return db.reviewDB.CreateReview(ctx, review)
@@ -861,12 +874,18 @@ func (db *Database) GetStorefrontRatingSummary(ctx context.Context, storefrontID
 // IncrementViewsCount увеличивает счетчик просмотров объявления на 1,
 // но только если данный пользователь ещё не просматривал это объявление
 func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
+	// Логируем вызов функции
+	fmt.Printf("IncrementViewsCount called for listing %d\n", id)
+
 	// Получаем ID пользователя из контекста
 	var userID int
 	if uid := ctx.Value("user_id"); uid != nil {
 		if uidInt, ok := uid.(int); ok {
 			userID = uidInt
 		}
+		fmt.Printf("User ID from context: %v (type: %T)\n", uid, uid)
+	} else {
+		fmt.Printf("No user_id in context\n")
 	}
 
 	// Для неавторизованных пользователей используем IP-адрес как идентификатор
@@ -875,6 +894,9 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		if ipStr, ok := ip.(string); ok {
 			userIdentifier = ipStr
 		}
+		fmt.Printf("IP address from context: %v (type: %T)\n", ip, ip)
+	} else {
+		fmt.Printf("No ip_address in context\n")
 	}
 
 	// Проверяем, есть ли уже запись о просмотре этого объявления данным пользователем
@@ -910,7 +932,9 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 	}
 
 	// Если просмотра ещё не было, увеличиваем счетчик и добавляем запись о просмотре
+	fmt.Printf("View exists check for listing %d: %v\n", id, viewExists)
 	if !viewExists {
+		fmt.Printf("View does not exist, incrementing counter for listing %d\n", id)
 		// Начинаем транзакцию
 		tx, err := db.pool.Begin(ctx)
 		if err != nil {
@@ -924,13 +948,39 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		}()
 
 		// Увеличиваем счетчик просмотров
-		_, err = tx.Exec(ctx, `
+		// Сначала пробуем обновить в marketplace_listings
+		commandTag, err := tx.Exec(ctx, `
 			UPDATE marketplace_listings
 			SET views_count = views_count + 1
 			WHERE id = $1
 		`, id)
 		if err != nil {
+			fmt.Printf("Error updating marketplace_listings: %v\n", err)
 			return err
+		}
+
+		rowsAffected := commandTag.RowsAffected()
+		fmt.Printf("marketplace_listings rows affected: %d\n", rowsAffected)
+
+		// Если не нашли в marketplace_listings, пробуем в storefront_products
+		if rowsAffected == 0 {
+			fmt.Printf("Trying to update storefront_products for id %d\n", id)
+			commandTag, err = tx.Exec(ctx, `
+				UPDATE storefront_products
+				SET view_count = view_count + 1
+				WHERE id = $1
+			`, id)
+			if err != nil {
+				fmt.Printf("Error updating storefront_products: %v\n", err)
+				return err
+			}
+
+			rowsAffected = commandTag.RowsAffected()
+			fmt.Printf("storefront_products rows affected: %d\n", rowsAffected)
+			if rowsAffected == 0 {
+				// Если ни в одной таблице не нашли товар
+				return fmt.Errorf("listing or product with id %d not found", id)
+			}
 		}
 
 		// Добавляем запись о просмотре
@@ -950,19 +1000,29 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		}
 
 		// Фиксируем транзакцию
+		fmt.Printf("Committing transaction for listing %d view increment\n", id)
 		err = tx.Commit(ctx)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("View increment committed successfully for listing %d\n", id)
 
 		// После успешного обновления в PostgreSQL синхронизируем данные с OpenSearch
 		if db.osMarketplaceRepo != nil && db.osClient != nil {
 			// Получаем обновленное значение счетчика просмотров
 			var viewsCount int
+			// Сначала пробуем получить из marketplace_listings
 			err = db.pool.QueryRow(ctx, "SELECT views_count FROM marketplace_listings WHERE id = $1", id).Scan(&viewsCount)
 			if err != nil {
-				log.Printf("Ошибка при получении обновленного счетчика просмотров: %v", err)
-				// Не прерываем выполнение, так как главное - обновить в PostgreSQL
+				// Если не нашли в marketplace_listings, пробуем из storefront_products
+				err = db.pool.QueryRow(ctx, "SELECT view_count FROM storefront_products WHERE id = $1", id).Scan(&viewsCount)
+				if err != nil {
+					log.Printf("Ошибка при получении обновленного счетчика просмотров: %v", err)
+					// Не прерываем выполнение, так как главное - обновить в PostgreSQL
+				} else {
+					// Обновляем данные в OpenSearch
+					go db.updateViewCountInOpenSearch(id, viewsCount) //nolint:contextcheck // фоновое обновление
+				}
 			} else {
 				// Обновляем данные в OpenSearch
 				go db.updateViewCountInOpenSearch(id, viewsCount) //nolint:contextcheck // фоновое обновление

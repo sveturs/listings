@@ -21,6 +21,7 @@ import enSearch from '@/messages/en/search.json';
 import enCheckout from '@/messages/en/checkout.json';
 import enOrders from '@/messages/en/orders.json';
 import enSubscription from '@/messages/en/subscription.json';
+import enFavorites from '@/messages/en/favorites.json';
 
 // Русские переводы
 import ruCommon from '@/messages/ru/common.json';
@@ -41,6 +42,7 @@ import ruSearch from '@/messages/ru/search.json';
 import ruCheckout from '@/messages/ru/checkout.json';
 import ruOrders from '@/messages/ru/orders.json';
 import ruSubscription from '@/messages/ru/subscription.json';
+import ruFavorites from '@/messages/ru/favorites.json';
 
 // Сербские переводы
 import srCommon from '@/messages/sr/common.json';
@@ -61,6 +63,7 @@ import srSearch from '@/messages/sr/search.json';
 import srCheckout from '@/messages/sr/checkout.json';
 import srOrders from '@/messages/sr/orders.json';
 import srSubscription from '@/messages/sr/subscription.json';
+import srFavorites from '@/messages/sr/favorites.json';
 
 // Объединённые сообщения по языкам
 export const messages = {
@@ -83,6 +86,7 @@ export const messages = {
     checkout: enCheckout,
     orders: enOrders,
     subscription: enSubscription,
+    favorites: enFavorites,
   },
   ru: {
     common: ruCommon,
@@ -103,6 +107,7 @@ export const messages = {
     checkout: ruCheckout,
     orders: ruOrders,
     subscription: ruSubscription,
+    favorites: ruFavorites,
   },
   sr: {
     common: srCommon,
@@ -123,6 +128,7 @@ export const messages = {
     checkout: srCheckout,
     orders: srOrders,
     subscription: srSubscription,
+    favorites: srFavorites,
   },
 };
 

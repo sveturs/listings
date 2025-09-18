@@ -42,6 +42,19 @@
   "buyerProtection": "Zaštita kupaca",
   "manageDashboard": "Upravljanje prodavnicom",
   "managementDashboard": "Kontrolna tabla upravljanja",
+  "contactStore": "Kontaktiraj prodavnicu",
+  "follow": "Prati",
+  "following": "Pratiš",
+  "acceptedPayments": "Prihvaćeni načini plaćanja",
+  "deliveryOptions": "Opcije dostave",
+  "shareStore": "Podeli prodavnicu",
+  "storeLink": "Link prodavnice",
+  "payment_methods": {
+    "cash": "Gotovina",
+    "card": "Kartica",
+    "bank_transfer": "Bankovni transfer",
+    "cod": "Pouzećem"
+  },
   "activeProducts": "Aktivni proizvodi",
   "pendingOrders": "Poružbine na čekanju",
   "requiresAction": "Zahteva akciju",
@@ -149,8 +162,33 @@
   "backToDashboard": "Nazad na kontrolnu tablu",
   "back": "Nazad",
   "next": "Dalje",
+  "unsavedChanges": "Nesačuvane izmene",
+  "unsavedChangesDescription": "Imate nesačuvane izmene. Molimo sačuvajte ili odbacite ih pre nastavka.",
+  "photosStepDescription": "Dodajte fotografije za prikaz vašeg proizvoda",
+  "totalImages": "Ukupno slika",
+  "images": "slika",
+  "dragDropImages": "Prevucite i ispustite slike ovde ili kliknite za učitavanje",
+  "imageRequirements": "JPG, PNG, GIF do 10MB svaka. Maksimalno 10 slika.",
+  "selectedImages": "Izabrane slike",
+  "setAsMain": "Postavi kao glavnu",
+  "deleteImage": "Obriši",
+  "main": "Glavna",
+  "previewStepDescription": "Pregledajte vaš proizvod pre objavljivanja",
+  "visibleToCustomers": "Vaš proizvod će biti vidljiv kupcima posle čuvanja",
+  "imageChanges": "Izmene slika",
+  "newImagesToAdd": "novih slika će biti dodato",
+  "imagesToDelete": "slika će biti obrisano",
+  "updateProduct": "Ažuriraj proizvod",
   "products": {
     "title": "Proizvodi",
+    "steps": {
+      "basic": "Osnovne informacije",
+      "category": "Kategorija",
+      "location": "Lokacija",
+      "attributes": "Atributi",
+      "photos": "Fotografije",
+      "preview": "Pregled"
+    },
     "addProduct": "Dodaj proizvod",
     "importProducts": "Uvezi proizvode",
     "searchPlaceholder": "Pretraži proizvode...",
@@ -264,6 +302,21 @@
     "defaultStockQuantity": "Podrazumevana količina",
     "useIndividualQuantities": "Koristi pojedinačne količine",
     "errorLoadingProducts": "Greška pri učitavanju proizvoda"
+  },
+  "storefronts": {
+    "products": {
+      "steps": {
+        "basic": "Osnovne informacije",
+        "category": "Kategorija",
+        "location": "Lokacija",
+        "attributes": "Atributi",
+        "photos": "Fotografije",
+        "preview": "Pregled"
+      },
+      "privacy": {
+        "exact": "Tačna adresa"
+      }
+    }
   },
   "storefront": {
     "products": {

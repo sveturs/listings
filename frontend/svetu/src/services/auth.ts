@@ -143,7 +143,9 @@ export class AuthService {
         accessToken = await tokenManager.refreshAccessToken();
 
         if (accessToken) {
-          console.log('[AuthService] Access token obtained, fetching session...');
+          console.log(
+            '[AuthService] Access token obtained, fetching session...'
+          );
           // Если удалось получить access token, получаем сессию
           return await this.getSession();
         } else {
@@ -335,26 +337,13 @@ export class AuthService {
     returnTo?: string,
     redirect = true
   ): Promise<string> {
-    // Get current locale from URL
-    const locale =
-      typeof window !== 'undefined'
-        ? window.location.pathname.split('/')[1] || 'en'
-        : 'en';
-
-    // Build redirect URI with locale
-    const redirectUri = `${window.location.origin}/${locale}/auth/oauth/google/callback`;
-
     // Save return URL for after OAuth
     if (returnTo && typeof window !== 'undefined') {
       sessionStorage.setItem('oauth_return_to', returnTo);
     }
 
-    // Build OAuth URL with redirect_uri parameter
-    const params = new URLSearchParams({
-      redirect_uri: redirectUri,
-    });
-
-    const url = `${API_BASE}/api/v1/auth/google?${params.toString()}`;
+    // Build OAuth URL without redirect_uri parameter - backend handles it internally
+    const url = `${API_BASE}/api/v1/auth/google`;
 
     if (redirect && typeof window !== 'undefined') {
       window.location.href = url;

@@ -86,7 +86,30 @@ func NewMarketplaceService(storage storage.Storage, translationService Translati
 }
 
 func (s *MarketplaceService) GetUserFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
-	return s.storage.GetUserFavorites(ctx, userID)
+	// Получаем обычные избранные объявления
+	regularFavorites, err := s.storage.GetUserFavorites(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем избранные товары витрин
+	storefrontFavorites, err := s.storage.GetUserStorefrontFavorites(ctx, userID)
+	if err != nil {
+		// Если ошибка при получении товаров витрин, просто логируем и возвращаем обычные избранные
+		log.Printf("Error getting storefront favorites: %v", err)
+		return regularFavorites, nil
+	}
+
+	// Объединяем оба списка
+	regularFavorites = append(regularFavorites, storefrontFavorites...)
+
+	// Сортируем по времени добавления (новые сначала)
+	// Предполагаем, что более новые имеют больший ID
+	sort.Slice(regularFavorites, func(i, j int) bool {
+		return regularFavorites[i].CreatedAt.After(regularFavorites[j].CreatedAt)
+	})
+
+	return regularFavorites, nil
 }
 
 // SetTranslationService allows injecting a translation service after creation
@@ -1393,6 +1416,15 @@ func (s *MarketplaceService) AddToFavorites(ctx context.Context, userID int, lis
 
 func (s *MarketplaceService) RemoveFromFavorites(ctx context.Context, userID int, listingID int) error {
 	return s.storage.RemoveFromFavorites(ctx, userID, listingID)
+}
+
+// Storefront favorites
+func (s *MarketplaceService) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
+	return s.storage.AddStorefrontToFavorites(ctx, userID, productID)
+}
+
+func (s *MarketplaceService) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
+	return s.storage.RemoveStorefrontFromFavorites(ctx, userID, productID)
 }
 
 func (s *MarketplaceService) UpdateTranslation(ctx context.Context, translation *models.Translation) error {

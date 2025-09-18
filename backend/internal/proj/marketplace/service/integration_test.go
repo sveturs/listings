@@ -589,6 +589,18 @@ func (m *MockStorage) GetIncomingContactRequests(ctx context.Context, userID int
 	return []models.UserContact{}, 0, nil
 }
 
+func (m *MockStorage) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
+	return nil
+}
+
+func (m *MockStorage) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
+	return nil
+}
+
+func (m *MockStorage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+	return []models.MarketplaceListing{}, nil
+}
+
 // Создание тестового сервиса
 func createTestService() *MarketplaceService {
 	mockStorage := &MockStorage{}

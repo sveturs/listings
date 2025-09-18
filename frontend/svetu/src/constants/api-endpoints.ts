@@ -13,7 +13,7 @@ export const API_ENDPOINTS = {
     validate: '/api/v1/auth/validate',
     session: '/api/v1/auth/session',
     google: '/api/v1/auth/google',
-    googleCallback: '/api/v1/auth/google/callback',
+    googleCallback: '/api/v1/auth/oauth/google/callback',
   },
 
   // User endpoints

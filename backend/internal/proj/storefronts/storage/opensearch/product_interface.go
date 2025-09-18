@@ -97,6 +97,8 @@ type ProductSearchItem struct {
 	Highlights        map[string][]string // Подсвеченные фрагменты
 	PopularityScore   float64             // Показатель популярности
 	QualityScore      float64             // Показатель качества
+	ViewsCount        int                 // Количество просмотров
+	SoldCount         int                 // Количество продаж
 	CreatedAt         *time.Time          // Дата создания товара
 	UpdatedAt         *time.Time          // Дата обновления товара
 }

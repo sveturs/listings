@@ -284,7 +284,9 @@ class TokenManager {
       // Если cookie refresh не сработал, пробуем через localStorage (для email auth)
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) {
-        console.log('[TokenManager] No refresh token available in localStorage');
+        console.log(
+          '[TokenManager] No refresh token available in localStorage'
+        );
         this.clearTokens();
         return '';
       }

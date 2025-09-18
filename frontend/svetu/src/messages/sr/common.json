@@ -69,6 +69,7 @@
     "markedAsRead": "Obaveštenje je označeno kao pročitano",
     "updateError": "Greška pri ažuriranju statusa obaveštenja"
   },
+  "actionsTitle": "Akcije",
   "countries": {
     "RS": "Serbia",
     "BA": "Bosnia and Herzegovina",

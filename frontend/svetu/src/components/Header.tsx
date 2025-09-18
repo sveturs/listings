@@ -256,17 +256,6 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   <FiMapPin className="w-5 h-5" />
                 </Link>
 
-                {/* Избранное - показываем только для авторизованных */}
-                {mounted && user && (
-                  <Link
-                    href="/favorites"
-                    className="btn btn-ghost btn-circle relative hidden sm:inline-flex"
-                  >
-                    <FiHeart className="w-5 h-5" />
-                    {/* TODO: Добавить счетчик избранного */}
-                  </Link>
-                )}
-
                 {/* Чат - показываем только для авторизованных */}
                 {mounted && user && <ChatIcon />}
 

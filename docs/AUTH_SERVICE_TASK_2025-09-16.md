@@ -32,6 +32,15 @@
 
 ---
 
+## 🚨 ТЕКУЩАЯ ОШИБКА НА dev.svetu.rs
+
+При попытке refresh через cookie получаем:
+```
+POST https://devapi.svetu.rs/api/v1/auth/refresh 400 (Bad Request)
+```
+
+Это происходит потому что endpoint `/api/v1/auth/refresh` не умеет читать refresh_token из cookie.
+
 ## 🎯 ТРЕБУЕМЫЕ ИЗМЕНЕНИЯ В AUTH SERVICE
 
 ### 1. Endpoint `/api/v1/auth/refresh` должен поддерживать ДВА режима:
@@ -70,7 +79,30 @@ cors.Config{
 }
 ```
 
-### 3. Cookie настройки - КРИТИЧЕСКИ ВАЖНО:
+### 3. OAuth Callback должен устанавливать refresh_token в cookie:
+
+При OAuth callback (`/api/v1/auth/oauth/google/callback`) когда Auth Service генерирует токены, он должен:
+1. Отправить access_token в URL параметре (уже работает)
+2. **ДОБАВИТЬ: Установить refresh_token в HTTP-only cookie** (сейчас НЕ делается!)
+
+```go
+// В handler OAuth callback после генерации токенов:
+http.SetCookie(w, &http.Cookie{
+    Name:     "refresh_token",
+    Value:    refreshToken,
+    Path:     "/",
+    Domain:   ".svetu.rs",
+    Secure:   true,
+    HttpOnly: true,
+    SameSite: http.SameSiteNone,
+    MaxAge:   30 * 24 * 60 * 60,
+})
+
+// Затем редирект с access_token в URL
+http.Redirect(w, r, redirectURL + "?token=" + accessToken, http.StatusFound)
+```
+
+### 4. Cookie настройки - КРИТИЧЕСКИ ВАЖНО:
 
 ⚠️ **ОБЯЗАТЕЛЬНО изменить SameSite во ВСЕХ местах установки cookies!**
 

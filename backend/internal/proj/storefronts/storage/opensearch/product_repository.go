@@ -67,7 +67,7 @@ func (r *ProductRepository) BulkIndexProducts(ctx context.Context, products []*m
 	docs := make([]map[string]interface{}, 0, len(products))
 	for _, product := range products {
 		doc := r.productToDoc(product)
-		doc["id"] = fmt.Sprintf("sp_%d", product.ID)
+		// ID уже добавлен в productToDoc
 		docs = append(docs, doc)
 	}
 
@@ -88,7 +88,10 @@ func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.S
 
 // productToDoc преобразует модель товара витрины в документ для индексации
 func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[string]interface{} {
+	productID := fmt.Sprintf("sp_%d", product.ID)
+
 	doc := map[string]interface{}{
+		"id":             productID, // ID в формате sp_XXX для унифицированного поиска
 		"product_id":     product.ID,
 		"product_type":   "storefront",
 		"storefront_id":  product.StorefrontID,
@@ -102,7 +105,9 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
-		"status":         "active", // Добавляем статус для совместимости с фильтром поиска
+		"views_count":    product.ViewCount, // Добавляем счетчик просмотров для единообразия с marketplace
+		"sold_count":     product.SoldCount, // Добавляем количество продаж
+		"status":         "active",          // Добавляем статус для совместимости с фильтром поиска
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
 	}
@@ -1045,6 +1050,12 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 	}
 	if v, ok := source["popularity_score"].(float64); ok {
 		item.PopularityScore = v
+	}
+	if v, ok := source["views_count"].(float64); ok {
+		item.ViewsCount = int(v)
+	}
+	if v, ok := source["sold_count"].(float64); ok {
+		item.SoldCount = int(v)
 	}
 	if v, ok := source["quality_score"].(float64); ok {
 		item.QualityScore = v

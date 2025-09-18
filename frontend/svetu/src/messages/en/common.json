@@ -506,6 +506,7 @@
     "showing": "Showing",
     "listings": "listings"
   },
+  "actionsTitle": "Actions",
   "actions": {
     "apply": "Apply",
     "reset": "Reset"

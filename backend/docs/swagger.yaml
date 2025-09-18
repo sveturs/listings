@@ -2427,6 +2427,9 @@ definitions:
         type: array
       is_favorite:
         type: boolean
+      is_storefront_product:
+        description: Флаг что это товар витрины (для правильной обработки в favorites)
+        type: boolean
       latitude:
         type: number
       location:
@@ -29851,7 +29854,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Get current user session information
       produces:
       - application/json
       responses:

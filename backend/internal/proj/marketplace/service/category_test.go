@@ -1186,6 +1186,18 @@ func (ts *testStorage) GetIncomingContactRequests(ctx context.Context, userID in
 	return []models.UserContact{}, 0, nil
 }
 
+func (ts *testStorage) AddStorefrontToFavorites(ctx context.Context, userID int, productID int) error {
+	return nil
+}
+
+func (ts *testStorage) RemoveStorefrontFromFavorites(ctx context.Context, userID int, productID int) error {
+	return nil
+}
+
+func (ts *testStorage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
+	return []models.MarketplaceListing{}, nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

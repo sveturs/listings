@@ -28,7 +28,10 @@ func NewAuthProxyMiddleware() *AuthProxyMiddleware {
 		authServiceURL = "http://localhost:28080"
 	}
 
-	// Auth Service proxy is always enabled now
+	// Проверяем переменную USE_AUTH_SERVICE
+	useAuthService := os.Getenv("USE_AUTH_SERVICE")
+	enabled := useAuthService == "true"
+
 	return &AuthProxyMiddleware{
 		authClient: authclient.NewClient(authServiceURL),
 		httpClient: &http.Client{
@@ -38,19 +41,23 @@ func NewAuthProxyMiddleware() *AuthProxyMiddleware {
 				return http.ErrUseLastResponse
 			},
 		},
-		enabled: true, // Always enabled
+		enabled: enabled,
 		baseURL: authServiceURL,
 	}
 }
 
 func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Always proxy auth requests to Auth Service
 		path := c.Path()
 
 		// Проверяем, относится ли запрос к Auth Service
 		// Проксируем ВСЕ auth запросы включая OAuth
 		if !strings.HasPrefix(path, "/api/v1/auth/") && !strings.HasPrefix(path, "/auth/") {
+			return c.Next()
+		}
+
+		// Если Auth Service отключен, пропускаем
+		if !m.enabled {
 			return c.Next()
 		}
 

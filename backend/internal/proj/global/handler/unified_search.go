@@ -647,8 +647,9 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Name: product.Category.Name,
 				Slug: product.Category.Slug,
 			},
-			Score:     product.Score,
-			CreatedAt: product.CreatedAt,
+			Score:      product.Score,
+			ViewsCount: product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
+			CreatedAt:  product.CreatedAt,
 		}
 
 		// Debug code removed

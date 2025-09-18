@@ -37,12 +37,15 @@ export function useIncomingContactRequests() {
         limit: 100,
       });
 
-      setRequests(response.contacts);
+      const contacts = response.contacts || [];
+      setRequests(contacts);
 
       // Создаем мапу по user_id для быстрого доступа
       const byUserId: Record<number, IncomingRequest> = {};
-      response.contacts.forEach((req) => {
-        byUserId[req.user_id] = req;
+      contacts.forEach((req) => {
+        if (req && req.user_id) {
+          byUserId[req.user_id] = req;
+        }
       });
       setRequestsByUserId(byUserId);
     } catch (error) {
