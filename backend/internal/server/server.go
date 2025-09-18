@@ -510,7 +510,8 @@ func (s *Server) registerProjectRoutes() {
 	// config регистрируется отдельно до этого метода для публичных роутов
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)
+	// tracking должен быть раньше marketplace, чтобы его публичные роуты не перехватывались auth middleware
+	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {
@@ -530,7 +531,7 @@ func (s *Server) registerProjectRoutes() {
 		registrars = append(registrars, s.adminLogistics)
 	}
 
-	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.tracking, s.viber)
+	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.viber)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {
