@@ -114,7 +114,7 @@ export function DeliveryInfo({
           <div className="text-2xl">{getStatusIcon(delivery.status)}</div>
           <div>
             <div className={`font-semibold ${getStatusColor(delivery.status)}`}>
-              {t(`status.${delivery.status}`)}
+              {t(`status.${delivery.status || 'undefined'}`)}
             </div>
             <div className="text-sm text-base-content/70">
               {t('orderNumber', { number: delivery.order_id })}

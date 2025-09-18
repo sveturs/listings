@@ -44,7 +44,19 @@
   },
   "info": {
     "status": {
-      "title": "Delivery Status"
+      "title": "Delivery Status",
+      "undefined": "Unknown",
+      "created": "Created",
+      "pending": "Pending",
+      "picked_up": "Picked Up",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "processing": "Processing",
+      "awaiting_pickup": "Awaiting Pickup",
+      "out_for_delivery": "Out for Delivery",
+      "returned": "Returned"
     },
     "orderNumber": "Order #{number}",
     "eta": {

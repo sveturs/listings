@@ -45,12 +45,13 @@ func (h *TrackingHandler) GetDeliveryByToken(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "tracking.error.invalidToken")
 	}
 
-	delivery, err := h.deliveryService.ValidateTrackingToken(token)
+	// For now, return simplified data for Post Express shipments
+	shipment, err := h.deliveryService.GetPostExpressShipment(token)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusNotFound, "tracking.error.notFound")
 	}
 
-	return utils.SuccessResponse(c, delivery)
+	return utils.SuccessResponse(c, shipment)
 }
 
 // UpdateCourierLocation обновляет местоположение курьера

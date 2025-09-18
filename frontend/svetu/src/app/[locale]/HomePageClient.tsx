@@ -1833,7 +1833,7 @@ export default function HomePageClient({
                 <h4 className="font-bold mb-4">{tFooter('buyers')}</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="/how-to-buy" className="hover:text-primary">
+                    1. <Link href="/how-to-buy" className="hover:text-primary">
                       {tFooter('howToBuy')}
                     </Link>
                   </li>
