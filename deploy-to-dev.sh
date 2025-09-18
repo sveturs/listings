@@ -67,8 +67,8 @@ fi
 echo "Restarting backend..."
 cd /opt/svetu-dev/backend
 make dev-restart || {
-    echo "make dev-restart not found, using custom restart"
-    pkill -f 'go run ./cmd/api/main.go' || true
+    echo "make dev-restart not found, using port-based restart"
+    # Убиваем только процесс на порту 3002
     lsof -ti:3002 | xargs kill -9 2>/dev/null || true
     screen -S backend-dev -X quit 2>/dev/null || true
     screen -dmS backend-dev bash -c 'go run ./cmd/api/main.go 2>&1 | tee /tmp/backend-dev.log'
@@ -78,8 +78,8 @@ make dev-restart || {
 echo "Restarting frontend..."
 cd /opt/svetu-dev/frontend/svetu
 make dev-restart || {
-    echo "make dev-restart not found, using custom restart"
-    pkill -f 'yarn dev.*3003' || true
+    echo "make dev-restart not found, using port-based restart"
+    # Убиваем только процесс на порту 3003
     lsof -ti:3003 | xargs kill -9 2>/dev/null || true
     screen -S frontend-dev -X quit 2>/dev/null || true
     screen -dmS frontend-dev bash -c 'yarn dev -p 3003 2>&1 | tee /tmp/frontend-dev.log'
