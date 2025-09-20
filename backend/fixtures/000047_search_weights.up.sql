@@ -25,3 +25,9 @@ INSERT INTO public.search_weights (id, field_name, weight, search_type, item_typ
 --
 -- Data for Name: shopping_cart_items; Type: TABLE DATA; Schema: public; Owner: -
 --
+
+
+
+--
+-- Data for Name: shopping_carts; Type: TABLE DATA; Schema: public; Owner: -
+--

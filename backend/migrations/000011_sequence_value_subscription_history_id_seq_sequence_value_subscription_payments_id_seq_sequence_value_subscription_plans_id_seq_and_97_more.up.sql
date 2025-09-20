@@ -12,9 +12,9 @@ SELECT pg_catalog.setval('public.translations_id_seq', 5011, true);
 SELECT pg_catalog.setval('public.transliteration_rules_id_seq', 52, false);
 SELECT pg_catalog.setval('public.unified_attribute_stats_id_seq', 1, false);
 SELECT pg_catalog.setval('public.unified_attribute_values_id_seq', 31, true);
-SELECT pg_catalog.setval('public.unified_attributes_id_seq', 332, true);
+SELECT pg_catalog.setval('public.unified_attributes_id_seq', 333, true);
 SELECT pg_catalog.setval('public.unified_category_attributes_id_seq', 2306, true);
-SELECT pg_catalog.setval('public.unified_geo_id_seq', 478, true);
+SELECT pg_catalog.setval('public.unified_geo_id_seq', 490, true);
 SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 2688, true);
 SELECT pg_catalog.setval('public.user_contacts_id_seq', 31, true);
 SELECT pg_catalog.setval('public.user_storefronts_id_seq', 1, false);
@@ -22,9 +22,9 @@ SELECT pg_catalog.setval('public.user_subscriptions_id_seq', 1, false);
 SELECT pg_catalog.setval('public.users_id_seq', 12, true);
 SELECT pg_catalog.setval('public.variant_attribute_mappings_id_seq', 1, false);
 SELECT pg_catalog.setval('public.viber_messages_id_seq', 1, false);
-SELECT pg_catalog.setval('public.viber_sessions_id_seq', 1, true);
+SELECT pg_catalog.setval('public.viber_sessions_id_seq', 2, true);
 SELECT pg_catalog.setval('public.viber_tracking_sessions_id_seq', 1, false);
-SELECT pg_catalog.setval('public.viber_users_id_seq', 1, true);
+SELECT pg_catalog.setval('public.viber_users_id_seq', 2, true);
 ALTER TABLE ONLY public.address_change_log
     ADD CONSTRAINT address_change_log_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.admin_users
