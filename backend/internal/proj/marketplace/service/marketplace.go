@@ -1724,13 +1724,6 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		}, nil
 	}
 
-	log.Printf("Найдено %d объявлений", len(searchResult.Listings))
-	for i, listing := range searchResult.Listings {
-		log.Printf("Объявление %d: ID=%d, Название=%s, Координаты=%v,%v, Статус=%s",
-			i+1, listing.ID, listing.Title, listing.Latitude, listing.Longitude, listing.Status)
-	}
-	log.Printf("Запрос поиска с параметрами сортировки: sort_by=%s, direction=%s", params.Sort, params.SortDirection)
-	log.Printf("Итоговый параметр сортировки в запросе к OpenSearch: %s", params.Sort)
 	// ЗДЕСЬ ДОБАВЛЯЕМ ДОПОЛНИТЕЛЬНУЮ СОРТИРОВКУ РЕЗУЛЬТАТОВ
 	// Особая обработка для многословных запросов (марка+модель)
 	if len(searchResult.Listings) > 0 && strings.Contains(params.Query, " ") {
@@ -1896,21 +1889,6 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		result.Suggestions = searchResult.Suggestions
 	}
 
-	log.Printf("Результаты поиска для атрибутов %v:", params.AttributeFilters)
-	for i, listing := range searchResult.Listings {
-		log.Printf("Объявление %d: ID=%d, Название=%s", i+1, listing.ID, listing.Title)
-
-		// Добавляем отладочную информацию о атрибутах
-		if len(listing.Attributes) > 0 {
-			log.Printf("  Объявление %d имеет %d атрибутов:", listing.ID, len(listing.Attributes))
-			for _, attr := range listing.Attributes {
-				log.Printf("  Атрибут: name=%s, type=%s, value=%s",
-					attr.AttributeName, attr.AttributeType, attr.DisplayValue)
-			}
-		} else {
-			log.Printf("  Объявление %d не имеет атрибутов", listing.ID)
-		}
-	}
 
 	return result, nil
 }

@@ -51,7 +51,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	courier.Get("/:courier_id/deliveries", m.trackingHandler.GetActiveDeliveries)
 
 	// Роуты для управления доставками
-	delivery := api.Group("/delivery", middleware.AuthRequiredJWT)
+	delivery := api.Group("/tracking/delivery", middleware.AuthRequiredJWT)
 	delivery.Post("/", m.trackingHandler.CreateDelivery)
 	delivery.Put("/:delivery_id/status", m.trackingHandler.UpdateDeliveryStatus)
 

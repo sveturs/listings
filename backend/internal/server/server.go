@@ -25,6 +25,7 @@ import (
 	_ "backend/docs"
 	"backend/internal/cache"
 	"backend/internal/config"
+	"backend/internal/interfaces"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics"
@@ -35,6 +36,7 @@ import (
 	"backend/internal/proj/bexexpress"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
+	"backend/internal/proj/delivery"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	gisHandler "backend/internal/proj/gis/handler"
@@ -75,6 +77,7 @@ type Server struct {
 	postexpress        *postexpressHandler.Handler
 	bexexpress         *bexexpress.Module
 	adminLogistics     *adminLogistics.Module
+	delivery           *delivery.Module
 	orders             *orders.Module
 	storefront         *storefronts.Module
 	geocode            *geocodeHandler.Handler
@@ -212,6 +215,17 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		// Не возвращаем ошибку, продолжаем без админки логистики
 	}
 
+	// Delivery система инициализация с консолидацией admin/logistics
+	deliveryModule, err := delivery.NewModule(db.GetSQLXDB(), cfg, pkglogger.New())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to initialize Delivery module, continuing without it")
+		// Не возвращаем ошибку, продолжаем без delivery системы
+	} else if deliveryModule != nil && services != nil {
+		// Подключаем сервис уведомлений к модулю доставки
+		deliveryModule.SetNotificationService(services.Notification())
+		logger.Info().Msg("Notification service integrated with delivery module")
+	}
+
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 
 	// Health handler
@@ -287,6 +301,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		postexpress:        postexpressHandlerInstance,
 		bexexpress:         bexexpressModule,
 		adminLogistics:     adminLogisticsModule,
+		delivery:           deliveryModule,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
@@ -517,7 +532,7 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 // registerProjectRoutes регистрирует роуты проектов через новую систему
 func (s *Server) registerProjectRoutes() {
 	// Создаем слайс всех проектов, которые реализуют RouteRegistrar
-	var registrars []RouteRegistrar
+	var registrars []interfaces.RouteRegistrar
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
@@ -534,6 +549,11 @@ func (s *Server) registerProjectRoutes() {
 
 	registrars = append(registrars, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
+
+	// Добавляем Delivery если он инициализирован
+	if s.delivery != nil {
+		registrars = append(registrars, s.delivery)
+	}
 
 	// Добавляем BEX Express если он инициализирован
 	if s.bexexpress != nil {

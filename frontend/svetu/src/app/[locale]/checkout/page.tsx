@@ -425,7 +425,10 @@ export default function CheckoutPage() {
             country: formData.shipping!.country,
           },
           payment_method: formData.payment!.paymentMethod,
-          shipping_method: formData.shipping!.shippingMethod,
+          shipping_method: selectedDeliveryQuote?.provider_code || 'standard',
+          shipping_cost: selectedDeliveryQuote?.total_price || 0,
+          delivery_provider_id: selectedDeliveryQuote?.provider_id,
+          delivery_type: selectedDeliveryQuote?.delivery_type,
           customer_notes: '',
         };
 

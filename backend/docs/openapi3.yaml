@@ -2163,6 +2163,149 @@ paths:
       summary: Update category variant attributes
       tags:
         - admin-variant-attributes
+  /api/v1/admin/delivery/analytics:
+    get:
+      description: Get analytics and statistics for deliveries
+      parameters:
+        - description: From date (YYYY-MM-DD)
+          in: query
+          name: from
+          schema:
+            type: string
+        - description: To date (YYYY-MM-DD)
+          in: query
+          name: to
+          schema:
+            type: string
+        - description: Provider ID
+          in: query
+          name: provider_id
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_service.DeliveryAnal\
+                          ytics"
+                    type: object
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get delivery analytics
+      tags:
+        - admin-delivery
+  /api/v1/admin/delivery/pricing-rules:
+    post:
+      description: Create new pricing rule for provider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_models.PricingRule"
+        description: Pricing rule
+        required: true
+      responses:
+        "200":
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_models.PricingRule"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Create pricing rule
+      tags:
+        - admin-delivery
+  /api/v1/admin/delivery/providers:
+    get:
+      description: Get detailed list of all providers for admin panel
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_delivery_models.Provider"
+                        type: array
+                    type: object
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get providers for admin
+      tags:
+        - admin-delivery
+  "/api/v1/admin/delivery/providers/{id}":
+    put:
+      description: Update provider settings
+      parameters:
+        - description: Provider ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_models.Provider"
+        description: Provider data
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Update provider
+      tags:
+        - admin-delivery
   /api/v1/admin/listings/statistics:
     get:
       description: Returns listing statistics for admin dashboard
@@ -8247,6 +8390,123 @@ paths:
       summary: Decode VIN number
       tags:
         - marketplace-cars
+  "/api/v1/categories/{id}/apply-defaults":
+    post:
+      description: Apply default delivery attributes to all products in category
+        without attributes
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number of updated products
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Apply category defaults to products
+      tags:
+        - delivery
+  "/api/v1/categories/{id}/delivery-defaults":
+    get:
+      description: Get default delivery attributes for a category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category defaults
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_models.CategoryDefau\
+                          lts"
+                    type: object
+        "404":
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get category default attributes
+      tags:
+        - delivery
+    put:
+      description: Update default delivery attributes for a category
+      parameters:
+        - description: Category ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_models.CategoryDefau\
+                lts"
+        description: Category defaults
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Update category default attributes
+      tags:
+        - delivery
   "/api/v1/categories/{slug}/variant-attributes":
     get:
       description: Returns variant attributes suitable for specific category
@@ -8791,6 +9051,166 @@ paths:
       summary: Update delivery status
       tags:
         - tracking
+  /api/v1/delivery/calculate-cart:
+    post:
+      description: Calculate delivery rates for cart items with optimization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_delivery_handler.CartCalculationReque\
+                st"
+        description: Cart calculation request
+        required: true
+      responses:
+        "200":
+          description: Calculation results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Calculati\
+                          onResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Calculate delivery for cart
+      tags:
+        - delivery
+  /api/v1/delivery/calculate-universal:
+    post:
+      description: Calculate delivery rates across all available providers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Calculati\
+                onRequest"
+        description: Calculation request
+        required: true
+      responses:
+        "200":
+          description: Calculation results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Calculati\
+                          onResponse"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Calculate universal delivery rates
+      tags:
+        - delivery
+  /api/v1/delivery/providers:
+    get:
+      description: Get list of available delivery providers
+      parameters:
+        - description: Only active providers
+          in: query
+          name: active
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        items:
+                          $ref: "#/components/schemas/backend_internal_proj_delivery_models.Provider"
+                        type: array
+                    type: object
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get delivery providers
+      tags:
+        - delivery
+  "/api/v1/delivery/webhooks/{provider}/tracking":
+    post:
+      description: Process tracking status updates from delivery providers
+      parameters:
+        - description: Provider code (post_express, bex_express, etc.)
+          in: path
+          name: provider
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Webhook payload from provider
+        required: true
+      responses:
+        "200":
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        type: object
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Provider not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Handle tracking webhook
+      tags:
+        - delivery
   /api/v1/docs/content:
     get:
       description: Returns the content of a specific markdown file
@@ -15626,6 +16046,101 @@ paths:
       summary: Get product variant attributes
       tags:
         - marketplace-variant-attributes
+  "/api/v1/products/{id}/delivery-attributes":
+    get:
+      description: Get delivery attributes for a product
+      parameters:
+        - description: Product ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Product type (listing or storefront_product)
+          in: query
+          name: type
+          schema:
+            type: string
+            default: listing
+      responses:
+        "200":
+          description: Product attributes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_models.DeliveryAttri\
+                          butes"
+                    type: object
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get product delivery attributes
+      tags:
+        - delivery
+    put:
+      description: Update delivery attributes for a product
+      parameters:
+        - description: Product ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Product type (listing or storefront_product)
+          in: query
+          name: type
+          schema:
+            type: string
+            default: listing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_models.DeliveryAttri\
+                butes"
+        description: Delivery attributes
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Update product delivery attributes
+      tags:
+        - delivery
   "/api/v1/public/categories/{category_id}/attributes":
     get:
       description: Public endpoint for getting all attributes that can be used for
@@ -17543,6 +18058,161 @@ paths:
       summary: Get search suggestions
       tags:
         - search
+  /api/v1/shipments:
+    post:
+      description: Create a new shipment with selected provider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_delivery_service.CreateShipme\
+                ntRequest"
+        description: Shipment request
+        required: true
+      responses:
+        "200":
+          description: Created shipment
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_models.Shipment"
+                    type: object
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Create shipment
+      tags:
+        - delivery
+  "/api/v1/shipments/{id}":
+    delete:
+      description: Cancel an existing shipment
+      parameters:
+        - description: Shipment ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/internal_proj_delivery_handler.CancelRequest"
+        description: Cancel reason
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Cannot cancel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Shipment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Cancel shipment
+      tags:
+        - delivery
+    get:
+      description: Get shipment information by ID
+      parameters:
+        - description: Shipment ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Shipment info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_models.Shipment"
+                    type: object
+        "404":
+          description: Shipment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Get shipment
+      tags:
+        - delivery
+  "/api/v1/shipments/track/{tracking}":
+    get:
+      description: Track shipment by tracking number
+      parameters:
+        - description: Tracking number
+          in: path
+          name: tracking
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tracking info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_delivery_service.TrackingInfo"
+                    type: object
+        "404":
+          description: Shipment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Track shipment
+      tags:
+        - delivery
   "/api/v1/storefront/categories/{category_id}/attributes":
     get:
       description: Returns all attributes that can be used for products in a specific
@@ -28689,6 +29359,562 @@ components:
         - ShipmentStatusReturnToSender
         - ShipmentStatusReturnedToSender
         - ShipmentStatusCODPaid
+    backend_internal_proj_delivery_calculator.CalculationRequest:
+      properties:
+        cod_amount:
+          type: number
+        delivery_type:
+          type: string
+        from_location:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Location"
+        insurance_value:
+          type: number
+        items:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ItemWithA\
+              ttrs"
+          type: array
+        provider_id:
+          type: integer
+        to_location:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Location"
+      type: object
+    backend_internal_proj_delivery_calculator.CalculationResponse:
+      properties:
+        cheapest:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ProviderQ\
+            uote"
+        fastest:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ProviderQ\
+            uote"
+        providers:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ProviderQ\
+              uote"
+          type: array
+        recommended:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ProviderQ\
+            uote"
+      type: object
+    backend_internal_proj_delivery_calculator.ItemWithAttrs:
+      properties:
+        attributes:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_models.DeliveryAttri\
+            butes"
+        product_id:
+          type: integer
+        product_type:
+          description: '"listing" или "storefront_product"'
+          type: string
+        quantity:
+          type: integer
+      type: object
+    backend_internal_proj_delivery_calculator.Location:
+      properties:
+        city:
+          type: string
+        country:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        postal_code:
+          type: string
+      type: object
+    backend_internal_proj_delivery_calculator.ProviderQuote:
+      properties:
+        cost_breakdown:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_models.CostBreakdown"
+        delivery_type:
+          type: string
+        estimated_days:
+          type: integer
+        is_available:
+          type: boolean
+        provider_code:
+          type: string
+        provider_id:
+          type: integer
+        provider_name:
+          type: string
+        services:
+          items:
+            type: string
+          type: array
+        total_cost:
+          type: number
+        unavailable_reason:
+          type: string
+      type: object
+    backend_internal_proj_delivery_interfaces.Address:
+      properties:
+        city:
+          type: string
+        company_name:
+          type: string
+        country:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        note:
+          type: string
+        phone:
+          type: string
+        postal_code:
+          type: string
+        street:
+          type: string
+      type: object
+    backend_internal_proj_delivery_interfaces.DeliveryAttrs:
+      properties:
+        dimensions:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.Dimension\
+            s"
+        hazmat_class:
+          type: string
+        is_fragile:
+          type: boolean
+        max_stack_weight_kg:
+          type: number
+        packaging_type:
+          description: box, envelope, pallet, custom
+          type: string
+        requires_special_handling:
+          type: boolean
+        stackable:
+          type: boolean
+        volume_m3:
+          type: number
+        weight_kg:
+          type: number
+      type: object
+    backend_internal_proj_delivery_interfaces.Dimensions:
+      properties:
+        height_cm:
+          description: Высота в сантиметрах
+          type: number
+        length_cm:
+          description: Длина в сантиметрах
+          type: number
+        width_cm:
+          description: Ширина в сантиметрах
+          type: number
+      type: object
+    backend_internal_proj_delivery_interfaces.Package:
+      properties:
+        attributes:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.DeliveryA\
+                ttrs"
+          description: Дополнительные атрибуты
+        description:
+          description: Описание содержимого
+          type: string
+        dimensions:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.Dimension\
+                s"
+          description: Габариты
+        is_fragile:
+          description: Хрупкий товар
+          type: boolean
+        value:
+          description: Объявленная ценность
+          type: number
+        weight_kg:
+          description: Вес в килограммах
+          type: number
+      type: object
+    backend_internal_proj_delivery_interfaces.ProofOfDelivery:
+      properties:
+        delivered_at:
+          type: string
+        notes:
+          type: string
+        photo_url:
+          type: string
+        recipient_name:
+          type: string
+        signature_url:
+          type: string
+      type: object
+    backend_internal_proj_delivery_interfaces.TrackingEvent:
+      properties:
+        description:
+          type: string
+        details:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+      type: object
+    backend_internal_proj_delivery_models.CategoryDefaults:
+      properties:
+        category_id:
+          type: integer
+        created_at:
+          type: string
+        default_height_cm:
+          type: number
+        default_length_cm:
+          type: number
+        default_packaging_type:
+          type: string
+        default_weight_kg:
+          type: number
+        default_width_cm:
+          type: number
+        id:
+          type: integer
+        is_typically_fragile:
+          type: boolean
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_delivery_models.CostBreakdown:
+      properties:
+        base_price:
+          type: number
+        cod_fee:
+          type: number
+        discount:
+          type: number
+        fragile_surcharge:
+          type: number
+        fuel_surcharge:
+          type: number
+        insurance_fee:
+          type: number
+        oversize_surcharge:
+          type: number
+        remote_area_surcharge:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        weight_surcharge:
+          type: number
+      type: object
+    backend_internal_proj_delivery_models.DeliveryAttributes:
+      properties:
+        dimensions:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_models.Dimensions"
+        hazmat_class:
+          type: string
+        is_fragile:
+          type: boolean
+        max_stack_weight_kg:
+          type: number
+        packaging_type:
+          type: string
+        requires_special_handling:
+          type: boolean
+        stackable:
+          type: boolean
+        volume_m3:
+          type: number
+        weight_kg:
+          type: number
+      type: object
+    backend_internal_proj_delivery_models.Dimensions:
+      properties:
+        height_cm:
+          type: number
+        length_cm:
+          type: number
+        width_cm:
+          type: number
+      type: object
+    backend_internal_proj_delivery_models.PricingRule:
+      properties:
+        created_at:
+          type: string
+        custom_formula:
+          type: string
+        fragile_surcharge:
+          type: number
+        id:
+          type: integer
+        is_active:
+          type: boolean
+        max_price:
+          type: number
+        min_price:
+          type: number
+        oversized_surcharge:
+          type: number
+        priority:
+          type: integer
+        provider_id:
+          type: integer
+        rule_type:
+          type: string
+        special_handling_surcharge:
+          type: number
+        updated_at:
+          type: string
+        volume_ranges:
+          items:
+            type: integer
+          type: array
+        weight_ranges:
+          items:
+            type: integer
+          type: array
+        zone_multipliers:
+          items:
+            type: integer
+          type: array
+      type: object
+    backend_internal_proj_delivery_models.Provider:
+      properties:
+        api_config:
+          items:
+            type: integer
+          type: array
+        capabilities:
+          items:
+            type: integer
+          type: array
+        code:
+          type: string
+        created_at:
+          type: string
+        id:
+          type: integer
+        is_active:
+          type: boolean
+        logo_url:
+          type: string
+        name:
+          type: string
+        supports_cod:
+          type: boolean
+        supports_insurance:
+          type: boolean
+        supports_tracking:
+          type: boolean
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_delivery_models.Shipment:
+      properties:
+        actual_delivery_date:
+          type: string
+        cod_amount:
+          type: number
+        cost_breakdown:
+          items:
+            type: integer
+          type: array
+        created_at:
+          type: string
+        delivery_cost:
+          type: number
+        estimated_delivery:
+          type: string
+        events:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_models.TrackingEvent"
+          type: array
+        external_id:
+          type: string
+        id:
+          type: integer
+        insurance_cost:
+          type: number
+        labels:
+          items:
+            type: integer
+          type: array
+        order_id:
+          type: integer
+        package_info:
+          items:
+            type: integer
+          type: array
+        pickup_date:
+          type: string
+        provider:
+          allOf:
+            - $ref: "#/components/schemas/backend_internal_proj_delivery_models.Provider"
+          description: Связанные данные (не из БД, заполняются при необходимости)
+        provider_id:
+          type: integer
+        provider_response:
+          items:
+            type: integer
+          type: array
+        recipient_info:
+          items:
+            type: integer
+          type: array
+        sender_info:
+          items:
+            type: integer
+          type: array
+        status:
+          type: string
+        tracking_number:
+          type: string
+        updated_at:
+          type: string
+      type: object
+    backend_internal_proj_delivery_models.TrackingEvent:
+      properties:
+        created_at:
+          type: string
+        description:
+          type: string
+        event_time:
+          type: string
+        id:
+          type: integer
+        location:
+          type: string
+        provider_id:
+          type: integer
+        raw_data:
+          items:
+            type: integer
+          type: array
+        shipment_id:
+          type: integer
+        status:
+          type: string
+      type: object
+    backend_internal_proj_delivery_service.AnalyticsPeriod:
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+      type: object
+    backend_internal_proj_delivery_service.CreateShipmentRequest:
+      properties:
+        cod_amount:
+          type: number
+        delivery_type:
+          type: string
+        from_address:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.Address"
+        insurance_value:
+          type: number
+        notes:
+          type: string
+        order_id:
+          type: integer
+        packages:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.Package"
+          type: array
+        pickup_date:
+          type: string
+        provider_code:
+          type: string
+        provider_id:
+          type: integer
+        reference:
+          type: string
+        services:
+          items:
+            type: string
+          type: array
+        to_address:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.Address"
+      type: object
+    backend_internal_proj_delivery_service.DeliveryAnalytics:
+      properties:
+        average_cost:
+          type: number
+        average_delivery_days:
+          additionalProperties:
+            type: number
+          type: object
+        period:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_service.AnalyticsPer\
+            iod"
+        provider_breakdown:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_service.ProviderStat\
+              istics"
+          type: array
+        status_breakdown:
+          additionalProperties:
+            type: integer
+          type: object
+        top_routes:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_service.RouteStatist\
+              ics"
+          type: array
+        total_cost:
+          type: number
+        total_shipments:
+          type: integer
+      type: object
+    backend_internal_proj_delivery_service.ProviderStatistics:
+      properties:
+        average_cost:
+          type: number
+        provider_id:
+          type: integer
+        provider_name:
+          type: string
+        shipment_count:
+          type: integer
+        success_rate:
+          type: number
+        total_cost:
+          type: number
+      type: object
+    backend_internal_proj_delivery_service.RouteStatistics:
+      properties:
+        average_cost:
+          type: number
+        average_days:
+          type: number
+        from_city:
+          type: string
+        shipment_count:
+          type: integer
+        to_city:
+          type: string
+      type: object
+    backend_internal_proj_delivery_service.TrackingInfo:
+      properties:
+        current_location:
+          type: string
+        delivered_date:
+          type: string
+        estimated_date:
+          type: string
+        events:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.TrackingE\
+              vent"
+          type: array
+        last_updated:
+          type: string
+        proof_of_delivery:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_interfaces.ProofOfDe\
+            livery"
+        shipment_id:
+          type: integer
+        status:
+          type: string
+        status_text:
+          type: string
+        tracking_number:
+          type: string
+      type: object
     backend_internal_proj_gis_types.AddressComponents:
       properties:
         city:
@@ -30710,6 +31936,29 @@ components:
           description: Сообщение об успешном обновлении
           example: contacts.statusUpdated
           type: string
+      type: object
+    internal_proj_delivery_handler.CancelRequest:
+      properties:
+        reason:
+          type: string
+      type: object
+    internal_proj_delivery_handler.CartCalculationRequest:
+      properties:
+        cod_amount:
+          type: number
+        delivery_type:
+          type: string
+        from_location:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Location"
+        insurance_value:
+          type: number
+        items:
+          items:
+            $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.ItemWithA\
+              ttrs"
+          type: array
+        to_location:
+          $ref: "#/components/schemas/backend_internal_proj_delivery_calculator.Location"
       type: object
     internal_proj_docserver_handler.DocContentResponse:
       properties:

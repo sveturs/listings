@@ -2995,6 +2995,242 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/delivery/analytics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery analytics
+     * @description Get analytics and statistics for deliveries
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description From date (YYYY-MM-DD) */
+          from?: string;
+          /** @description To date (YYYY-MM-DD) */
+          to?: string;
+          /** @description Provider ID */
+          provider_id?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Analytics data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_service.DeliveryAnalytics'];
+            };
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/pricing-rules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create pricing rule
+     * @description Create new pricing rule for provider
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Pricing rule */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.PricingRule'];
+        };
+      };
+      responses: {
+        /** @description Created rule */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.PricingRule'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/providers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get providers for admin
+     * @description Get detailed list of all providers for admin panel
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of providers */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.Provider'][];
+            };
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/providers/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update provider
+     * @description Update provider settings
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Provider ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Provider data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.Provider'];
+        };
+      };
+      responses: {
+        /** @description Success */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/listings/statistics': {
     parameters: {
       query?: never;
@@ -12127,6 +12363,181 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/categories/{id}/apply-defaults': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Apply category defaults to products
+     * @description Apply default delivery attributes to all products in category without attributes
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Number of updated products */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: number;
+              };
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/categories/{id}/delivery-defaults': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get category default attributes
+     * @description Get default delivery attributes for a category
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Category defaults */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.CategoryDefaults'];
+            };
+          };
+        };
+        /** @description Category not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update category default attributes
+     * @description Update default delivery attributes for a category
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Category defaults */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.CategoryDefaults'];
+        };
+      };
+      responses: {
+        /** @description Success */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/categories/{slug}/variant-attributes': {
     parameters: {
       query?: never;
@@ -12956,6 +13367,263 @@ export interface paths {
       };
     };
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery/calculate-cart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate delivery for cart
+     * @description Calculate delivery rates for cart items with optimization
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Cart calculation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_delivery_handler.CartCalculationRequest'];
+        };
+      };
+      responses: {
+        /** @description Calculation results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_calculator.CalculationResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery/calculate-universal': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate universal delivery rates
+     * @description Calculate delivery rates across all available providers
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Calculation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_calculator.CalculationRequest'];
+        };
+      };
+      responses: {
+        /** @description Calculation results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_calculator.CalculationResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery/providers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get delivery providers
+     * @description Get list of available delivery providers
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Only active providers */
+          active?: boolean;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of providers */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.Provider'][];
+            };
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/delivery/webhooks/{provider}/tracking': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Handle tracking webhook
+     * @description Process tracking status updates from delivery providers
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Provider code (post_express, bex_express, etc.) */
+          provider: string;
+        };
+        cookie?: never;
+      };
+      /** @description Webhook payload from provider */
+      requestBody: {
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      responses: {
+        /** @description Webhook processed successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: Record<string, never>;
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Provider not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -23059,6 +23727,132 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/products/{id}/delivery-attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product delivery attributes
+     * @description Get delivery attributes for a product
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Product type (listing or storefront_product) */
+          type?: string;
+        };
+        header?: never;
+        path: {
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product attributes */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.DeliveryAttributes'];
+            };
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update product delivery attributes
+     * @description Update delivery attributes for a product
+     */
+    put: {
+      parameters: {
+        query?: {
+          /** @description Product type (listing or storefront_product) */
+          type?: string;
+        };
+        header?: never;
+        path: {
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Delivery attributes */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.DeliveryAttributes'];
+        };
+      };
+      responses: {
+        /** @description Success */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/categories/{category_id}/attributes': {
     parameters: {
       query?: never;
@@ -25845,6 +26639,252 @@ export interface paths {
           };
         };
         /** @description marketplace.suggestionsError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/shipments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create shipment
+     * @description Create a new shipment with selected provider
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Shipment request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_service.CreateShipmentRequest'];
+        };
+      };
+      responses: {
+        /** @description Created shipment */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.Shipment'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/shipments/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shipment
+     * @description Get shipment information by ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Shipment info */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.Shipment'];
+            };
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Cancel shipment
+     * @description Cancel an existing shipment
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Shipment ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Cancel reason */
+      requestBody?: {
+        content: {
+          'application/json': components['schemas']['internal_proj_delivery_handler.CancelRequest'];
+        };
+      };
+      responses: {
+        /** @description Success */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Cannot cancel */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/shipments/track/{tracking}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Track shipment
+     * @description Track shipment by tracking number
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Tracking number */
+          tracking: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Tracking info */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_service.TrackingInfo'];
+            };
+          };
+        };
+        /** @description Shipment not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
         500: {
           headers: {
             [name: string]: unknown;
@@ -36910,6 +37950,275 @@ export interface components {
       | 7
       | 8
       | 9;
+    'backend_internal_proj_delivery_calculator.CalculationRequest': {
+      cod_amount?: number;
+      delivery_type?: string;
+      from_location?: components['schemas']['backend_internal_proj_delivery_calculator.Location'];
+      insurance_value?: number;
+      items?: components['schemas']['backend_internal_proj_delivery_calculator.ItemWithAttrs'][];
+      provider_id?: number;
+      to_location?: components['schemas']['backend_internal_proj_delivery_calculator.Location'];
+    };
+    'backend_internal_proj_delivery_calculator.CalculationResponse': {
+      cheapest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+      fastest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+      providers?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'][];
+      recommended?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+    };
+    'backend_internal_proj_delivery_calculator.ItemWithAttrs': {
+      attributes?: components['schemas']['backend_internal_proj_delivery_models.DeliveryAttributes'];
+      product_id?: number;
+      /** @description "listing" или "storefront_product" */
+      product_type?: string;
+      quantity?: number;
+    };
+    'backend_internal_proj_delivery_calculator.Location': {
+      city?: string;
+      country?: string;
+      latitude?: number;
+      longitude?: number;
+      postal_code?: string;
+    };
+    'backend_internal_proj_delivery_calculator.ProviderQuote': {
+      cost_breakdown?: components['schemas']['backend_internal_proj_delivery_models.CostBreakdown'];
+      delivery_type?: string;
+      estimated_days?: number;
+      is_available?: boolean;
+      provider_code?: string;
+      provider_id?: number;
+      provider_name?: string;
+      services?: string[];
+      total_cost?: number;
+      unavailable_reason?: string;
+    };
+    'backend_internal_proj_delivery_interfaces.Address': {
+      city?: string;
+      company_name?: string;
+      country?: string;
+      email?: string;
+      name?: string;
+      note?: string;
+      phone?: string;
+      postal_code?: string;
+      street?: string;
+    };
+    'backend_internal_proj_delivery_interfaces.DeliveryAttrs': {
+      dimensions?: components['schemas']['backend_internal_proj_delivery_interfaces.Dimensions'];
+      hazmat_class?: string;
+      is_fragile?: boolean;
+      max_stack_weight_kg?: number;
+      /** @description box, envelope, pallet, custom */
+      packaging_type?: string;
+      requires_special_handling?: boolean;
+      stackable?: boolean;
+      volume_m3?: number;
+      weight_kg?: number;
+    };
+    'backend_internal_proj_delivery_interfaces.Dimensions': {
+      /** @description Высота в сантиметрах */
+      height_cm?: number;
+      /** @description Длина в сантиметрах */
+      length_cm?: number;
+      /** @description Ширина в сантиметрах */
+      width_cm?: number;
+    };
+    'backend_internal_proj_delivery_interfaces.Package': {
+      /** @description Дополнительные атрибуты */
+      attributes?: components['schemas']['backend_internal_proj_delivery_interfaces.DeliveryAttrs'];
+      /** @description Описание содержимого */
+      description?: string;
+      /** @description Габариты */
+      dimensions?: components['schemas']['backend_internal_proj_delivery_interfaces.Dimensions'];
+      /** @description Хрупкий товар */
+      is_fragile?: boolean;
+      /** @description Объявленная ценность */
+      value?: number;
+      /** @description Вес в килограммах */
+      weight_kg?: number;
+    };
+    'backend_internal_proj_delivery_interfaces.ProofOfDelivery': {
+      delivered_at?: string;
+      notes?: string;
+      photo_url?: string;
+      recipient_name?: string;
+      signature_url?: string;
+    };
+    'backend_internal_proj_delivery_interfaces.TrackingEvent': {
+      description?: string;
+      details?: string;
+      location?: string;
+      status?: string;
+      timestamp?: string;
+    };
+    'backend_internal_proj_delivery_models.CategoryDefaults': {
+      category_id?: number;
+      created_at?: string;
+      default_height_cm?: number;
+      default_length_cm?: number;
+      default_packaging_type?: string;
+      default_weight_kg?: number;
+      default_width_cm?: number;
+      id?: number;
+      is_typically_fragile?: boolean;
+      updated_at?: string;
+    };
+    'backend_internal_proj_delivery_models.CostBreakdown': {
+      base_price?: number;
+      cod_fee?: number;
+      discount?: number;
+      fragile_surcharge?: number;
+      fuel_surcharge?: number;
+      insurance_fee?: number;
+      oversize_surcharge?: number;
+      remote_area_surcharge?: number;
+      tax?: number;
+      total?: number;
+      weight_surcharge?: number;
+    };
+    'backend_internal_proj_delivery_models.DeliveryAttributes': {
+      dimensions?: components['schemas']['backend_internal_proj_delivery_models.Dimensions'];
+      hazmat_class?: string;
+      is_fragile?: boolean;
+      max_stack_weight_kg?: number;
+      packaging_type?: string;
+      requires_special_handling?: boolean;
+      stackable?: boolean;
+      volume_m3?: number;
+      weight_kg?: number;
+    };
+    'backend_internal_proj_delivery_models.Dimensions': {
+      height_cm?: number;
+      length_cm?: number;
+      width_cm?: number;
+    };
+    'backend_internal_proj_delivery_models.PricingRule': {
+      created_at?: string;
+      custom_formula?: string;
+      fragile_surcharge?: number;
+      id?: number;
+      is_active?: boolean;
+      max_price?: number;
+      min_price?: number;
+      oversized_surcharge?: number;
+      priority?: number;
+      provider_id?: number;
+      rule_type?: string;
+      special_handling_surcharge?: number;
+      updated_at?: string;
+      volume_ranges?: number[];
+      weight_ranges?: number[];
+      zone_multipliers?: number[];
+    };
+    'backend_internal_proj_delivery_models.Provider': {
+      api_config?: number[];
+      capabilities?: number[];
+      code?: string;
+      created_at?: string;
+      id?: number;
+      is_active?: boolean;
+      logo_url?: string;
+      name?: string;
+      supports_cod?: boolean;
+      supports_insurance?: boolean;
+      supports_tracking?: boolean;
+      updated_at?: string;
+    };
+    'backend_internal_proj_delivery_models.Shipment': {
+      actual_delivery_date?: string;
+      cod_amount?: number;
+      cost_breakdown?: number[];
+      created_at?: string;
+      delivery_cost?: number;
+      estimated_delivery?: string;
+      events?: components['schemas']['backend_internal_proj_delivery_models.TrackingEvent'][];
+      external_id?: string;
+      id?: number;
+      insurance_cost?: number;
+      labels?: number[];
+      order_id?: number;
+      package_info?: number[];
+      pickup_date?: string;
+      /** @description Связанные данные (не из БД, заполняются при необходимости) */
+      provider?: components['schemas']['backend_internal_proj_delivery_models.Provider'];
+      provider_id?: number;
+      provider_response?: number[];
+      recipient_info?: number[];
+      sender_info?: number[];
+      status?: string;
+      tracking_number?: string;
+      updated_at?: string;
+    };
+    'backend_internal_proj_delivery_models.TrackingEvent': {
+      created_at?: string;
+      description?: string;
+      event_time?: string;
+      id?: number;
+      location?: string;
+      provider_id?: number;
+      raw_data?: number[];
+      shipment_id?: number;
+      status?: string;
+    };
+    'backend_internal_proj_delivery_service.AnalyticsPeriod': {
+      from?: string;
+      to?: string;
+    };
+    'backend_internal_proj_delivery_service.CreateShipmentRequest': {
+      cod_amount?: number;
+      delivery_type?: string;
+      from_address?: components['schemas']['backend_internal_proj_delivery_interfaces.Address'];
+      insurance_value?: number;
+      notes?: string;
+      order_id?: number;
+      packages?: components['schemas']['backend_internal_proj_delivery_interfaces.Package'][];
+      pickup_date?: string;
+      provider_code?: string;
+      provider_id?: number;
+      reference?: string;
+      services?: string[];
+      to_address?: components['schemas']['backend_internal_proj_delivery_interfaces.Address'];
+    };
+    'backend_internal_proj_delivery_service.DeliveryAnalytics': {
+      average_cost?: number;
+      average_delivery_days?: {
+        [key: string]: number;
+      };
+      period?: components['schemas']['backend_internal_proj_delivery_service.AnalyticsPeriod'];
+      provider_breakdown?: components['schemas']['backend_internal_proj_delivery_service.ProviderStatistics'][];
+      status_breakdown?: {
+        [key: string]: number;
+      };
+      top_routes?: components['schemas']['backend_internal_proj_delivery_service.RouteStatistics'][];
+      total_cost?: number;
+      total_shipments?: number;
+    };
+    'backend_internal_proj_delivery_service.ProviderStatistics': {
+      average_cost?: number;
+      provider_id?: number;
+      provider_name?: string;
+      shipment_count?: number;
+      success_rate?: number;
+      total_cost?: number;
+    };
+    'backend_internal_proj_delivery_service.RouteStatistics': {
+      average_cost?: number;
+      average_days?: number;
+      from_city?: string;
+      shipment_count?: number;
+      to_city?: string;
+    };
+    'backend_internal_proj_delivery_service.TrackingInfo': {
+      current_location?: string;
+      delivered_date?: string;
+      estimated_date?: string;
+      events?: components['schemas']['backend_internal_proj_delivery_interfaces.TrackingEvent'][];
+      last_updated?: string;
+      proof_of_delivery?: components['schemas']['backend_internal_proj_delivery_interfaces.ProofOfDelivery'];
+      shipment_id?: number;
+      status?: string;
+      status_text?: string;
+      tracking_number?: string;
+    };
     'backend_internal_proj_gis_types.AddressComponents': {
       city?: string;
       country?: string;
@@ -37937,6 +39246,17 @@ export interface components {
        * @example contacts.statusUpdated
        */
       message?: string;
+    };
+    'internal_proj_delivery_handler.CancelRequest': {
+      reason?: string;
+    };
+    'internal_proj_delivery_handler.CartCalculationRequest': {
+      cod_amount?: number;
+      delivery_type?: string;
+      from_location?: components['schemas']['backend_internal_proj_delivery_calculator.Location'];
+      insurance_value?: number;
+      items?: components['schemas']['backend_internal_proj_delivery_calculator.ItemWithAttrs'][];
+      to_location?: components['schemas']['backend_internal_proj_delivery_calculator.Location'];
     };
     'internal_proj_docserver_handler.DocContentResponse': {
       /** @example # Documentation

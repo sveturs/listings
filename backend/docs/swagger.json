@@ -3258,6 +3258,216 @@
                 }
             }
         },
+        "/api/v1/admin/delivery/analytics": {
+            "get": {
+                "description": "Get analytics and statistics for deliveries",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-delivery"
+                ],
+                "summary": "Get delivery analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "To date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "provider_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Analytics data",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_service.DeliveryAnalytics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/pricing-rules": {
+            "post": {
+                "description": "Create new pricing rule for provider",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-delivery"
+                ],
+                "summary": "Create pricing rule",
+                "parameters": [
+                    {
+                        "description": "Pricing rule",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.PricingRule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created rule",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.PricingRule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/providers": {
+            "get": {
+                "description": "Get detailed list of all providers for admin panel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-delivery"
+                ],
+                "summary": "Get providers for admin",
+                "responses": {
+                    "200": {
+                        "description": "List of providers",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_delivery_models.Provider"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/providers/{id}": {
+            "put": {
+                "description": "Update provider settings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin-delivery"
+                ],
+                "summary": "Update provider",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Provider data",
+                        "name": "provider",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.Provider"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/listings/statistics": {
             "get": {
                 "security": [
@@ -12185,6 +12395,166 @@
                 }
             }
         },
+        "/api/v1/categories/{id}/apply-defaults": {
+            "post": {
+                "description": "Apply default delivery attributes to all products in category without attributes",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Apply category defaults to products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Number of updated products",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/categories/{id}/delivery-defaults": {
+            "get": {
+                "description": "Get default delivery attributes for a category",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Get category default attributes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category defaults",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.CategoryDefaults"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Category not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update default delivery attributes for a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Update category default attributes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Category defaults",
+                        "name": "defaults",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.CategoryDefaults"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/categories/{slug}/variant-attributes": {
             "get": {
                 "description": "Returns variant attributes suitable for specific category",
@@ -12947,6 +13317,242 @@
                     },
                     "400": {
                         "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery/calculate-cart": {
+            "post": {
+                "description": "Calculate delivery rates for cart items with optimization",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Calculate delivery for cart",
+                "parameters": [
+                    {
+                        "description": "Cart calculation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_delivery_handler.CartCalculationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Calculation results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_calculator.CalculationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery/calculate-universal": {
+            "post": {
+                "description": "Calculate delivery rates across all available providers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Calculate universal delivery rates",
+                "parameters": [
+                    {
+                        "description": "Calculation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_calculator.CalculationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Calculation results",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_calculator.CalculationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery/providers": {
+            "get": {
+                "description": "Get list of available delivery providers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Get delivery providers",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Only active providers",
+                        "name": "active",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of providers",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_delivery_models.Provider"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/delivery/webhooks/{provider}/tracking": {
+            "post": {
+                "description": "Process tracking status updates from delivery providers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Handle tracking webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider code (post_express, bex_express, etc.)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Webhook payload from provider",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Webhook processed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Provider not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -22893,6 +23499,130 @@
                 }
             }
         },
+        "/api/v1/products/{id}/delivery-attributes": {
+            "get": {
+                "description": "Get delivery attributes for a product",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Get product delivery attributes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "listing",
+                        "description": "Product type (listing or storefront_product)",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product attributes",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.DeliveryAttributes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update delivery attributes for a product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Update product delivery attributes",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "listing",
+                        "description": "Product type (listing or storefront_product)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "description": "Delivery attributes",
+                        "name": "attributes",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.DeliveryAttributes"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/public/categories/{category_id}/attributes": {
             "get": {
                 "description": "Public endpoint for getting all attributes that can be used for products in a specific category - no authentication required",
@@ -25689,6 +26419,223 @@
                     },
                     "500": {
                         "description": "marketplace.suggestionsError",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/shipments": {
+            "post": {
+                "description": "Create a new shipment with selected provider",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Create shipment",
+                "parameters": [
+                    {
+                        "description": "Shipment request",
+                        "name": "shipment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_service.CreateShipmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created shipment",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.Shipment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/shipments/track/{tracking}": {
+            "get": {
+                "description": "Track shipment by tracking number",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Track shipment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tracking number",
+                        "name": "tracking",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tracking info",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_service.TrackingInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Shipment not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/shipments/{id}": {
+            "get": {
+                "description": "Get shipment information by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Get shipment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Shipment info",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.Shipment"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Shipment not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Cancel an existing shipment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery"
+                ],
+                "summary": "Cancel shipment",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shipment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancel reason",
+                        "name": "reason",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_delivery_handler.CancelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Cannot cancel",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Shipment not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -41565,6 +42512,833 @@
                 "ShipmentStatusCODPaid"
             ]
         },
+        "backend_internal_proj_delivery_calculator.CalculationRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "from_location": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.Location"
+                },
+                "insurance_value": {
+                    "type": "number"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ItemWithAttrs"
+                    }
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "to_location": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.Location"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_calculator.CalculationResponse": {
+            "type": "object",
+            "properties": {
+                "cheapest": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                },
+                "fastest": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                    }
+                },
+                "recommended": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_calculator.ItemWithAttrs": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_models.DeliveryAttributes"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "product_type": {
+                    "description": "\"listing\" или \"storefront_product\"",
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_calculator.Location": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "postal_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_calculator.ProviderQuote": {
+            "type": "object",
+            "properties": {
+                "cost_breakdown": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_models.CostBreakdown"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "estimated_days": {
+                    "type": "integer"
+                },
+                "is_available": {
+                    "type": "boolean"
+                },
+                "provider_code": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_cost": {
+                    "type": "number"
+                },
+                "unavailable_reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.Address": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "company_name": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.DeliveryAttrs": {
+            "type": "object",
+            "properties": {
+                "dimensions": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.Dimensions"
+                },
+                "hazmat_class": {
+                    "type": "string"
+                },
+                "is_fragile": {
+                    "type": "boolean"
+                },
+                "max_stack_weight_kg": {
+                    "type": "number"
+                },
+                "packaging_type": {
+                    "description": "box, envelope, pallet, custom",
+                    "type": "string"
+                },
+                "requires_special_handling": {
+                    "type": "boolean"
+                },
+                "stackable": {
+                    "type": "boolean"
+                },
+                "volume_m3": {
+                    "type": "number"
+                },
+                "weight_kg": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.Dimensions": {
+            "type": "object",
+            "properties": {
+                "height_cm": {
+                    "description": "Высота в сантиметрах",
+                    "type": "number"
+                },
+                "length_cm": {
+                    "description": "Длина в сантиметрах",
+                    "type": "number"
+                },
+                "width_cm": {
+                    "description": "Ширина в сантиметрах",
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.Package": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "description": "Дополнительные атрибуты",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.DeliveryAttrs"
+                        }
+                    ]
+                },
+                "description": {
+                    "description": "Описание содержимого",
+                    "type": "string"
+                },
+                "dimensions": {
+                    "description": "Габариты",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.Dimensions"
+                        }
+                    ]
+                },
+                "is_fragile": {
+                    "description": "Хрупкий товар",
+                    "type": "boolean"
+                },
+                "value": {
+                    "description": "Объявленная ценность",
+                    "type": "number"
+                },
+                "weight_kg": {
+                    "description": "Вес в килограммах",
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.ProofOfDelivery": {
+            "type": "object",
+            "properties": {
+                "delivered_at": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "photo_url": {
+                    "type": "string"
+                },
+                "recipient_name": {
+                    "type": "string"
+                },
+                "signature_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_interfaces.TrackingEvent": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.CategoryDefaults": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "default_height_cm": {
+                    "type": "number"
+                },
+                "default_length_cm": {
+                    "type": "number"
+                },
+                "default_packaging_type": {
+                    "type": "string"
+                },
+                "default_weight_kg": {
+                    "type": "number"
+                },
+                "default_width_cm": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_typically_fragile": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.CostBreakdown": {
+            "type": "object",
+            "properties": {
+                "base_price": {
+                    "type": "number"
+                },
+                "cod_fee": {
+                    "type": "number"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "fragile_surcharge": {
+                    "type": "number"
+                },
+                "fuel_surcharge": {
+                    "type": "number"
+                },
+                "insurance_fee": {
+                    "type": "number"
+                },
+                "oversize_surcharge": {
+                    "type": "number"
+                },
+                "remote_area_surcharge": {
+                    "type": "number"
+                },
+                "tax": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "number"
+                },
+                "weight_surcharge": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.DeliveryAttributes": {
+            "type": "object",
+            "properties": {
+                "dimensions": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_models.Dimensions"
+                },
+                "hazmat_class": {
+                    "type": "string"
+                },
+                "is_fragile": {
+                    "type": "boolean"
+                },
+                "max_stack_weight_kg": {
+                    "type": "number"
+                },
+                "packaging_type": {
+                    "type": "string"
+                },
+                "requires_special_handling": {
+                    "type": "boolean"
+                },
+                "stackable": {
+                    "type": "boolean"
+                },
+                "volume_m3": {
+                    "type": "number"
+                },
+                "weight_kg": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.Dimensions": {
+            "type": "object",
+            "properties": {
+                "height_cm": {
+                    "type": "number"
+                },
+                "length_cm": {
+                    "type": "number"
+                },
+                "width_cm": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.PricingRule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "custom_formula": {
+                    "type": "string"
+                },
+                "fragile_surcharge": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "max_price": {
+                    "type": "number"
+                },
+                "min_price": {
+                    "type": "number"
+                },
+                "oversized_surcharge": {
+                    "type": "number"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "rule_type": {
+                    "type": "string"
+                },
+                "special_handling_surcharge": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "volume_ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "weight_ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "zone_multipliers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.Provider": {
+            "type": "object",
+            "properties": {
+                "api_config": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "capabilities": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "supports_cod": {
+                    "type": "boolean"
+                },
+                "supports_insurance": {
+                    "type": "boolean"
+                },
+                "supports_tracking": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.Shipment": {
+            "type": "object",
+            "properties": {
+                "actual_delivery_date": {
+                    "type": "string"
+                },
+                "cod_amount": {
+                    "type": "number"
+                },
+                "cost_breakdown": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "delivery_cost": {
+                    "type": "number"
+                },
+                "estimated_delivery": {
+                    "type": "string"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_models.TrackingEvent"
+                    }
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "insurance_cost": {
+                    "type": "number"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "package_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "pickup_date": {
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "Связанные данные (не из БД, заполняются при необходимости)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.Provider"
+                        }
+                    ]
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "provider_response": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "recipient_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "sender_info": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.TrackingEvent": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "event_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "raw_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "shipment_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.AnalyticsPeriod": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.CreateShipmentRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "from_address": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.Address"
+                },
+                "insurance_value": {
+                    "type": "number"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer"
+                },
+                "packages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.Package"
+                    }
+                },
+                "pickup_date": {
+                    "type": "string"
+                },
+                "provider_code": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "services": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "to_address": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.Address"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.DeliveryAnalytics": {
+            "type": "object",
+            "properties": {
+                "average_cost": {
+                    "type": "number"
+                },
+                "average_delivery_days": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "period": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_service.AnalyticsPeriod"
+                },
+                "provider_breakdown": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_service.ProviderStatistics"
+                    }
+                },
+                "status_breakdown": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "top_routes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_service.RouteStatistics"
+                    }
+                },
+                "total_cost": {
+                    "type": "number"
+                },
+                "total_shipments": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.ProviderStatistics": {
+            "type": "object",
+            "properties": {
+                "average_cost": {
+                    "type": "number"
+                },
+                "provider_id": {
+                    "type": "integer"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "shipment_count": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "total_cost": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.RouteStatistics": {
+            "type": "object",
+            "properties": {
+                "average_cost": {
+                    "type": "number"
+                },
+                "average_days": {
+                    "type": "number"
+                },
+                "from_city": {
+                    "type": "string"
+                },
+                "shipment_count": {
+                    "type": "integer"
+                },
+                "to_city": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_service.TrackingInfo": {
+            "type": "object",
+            "properties": {
+                "current_location": {
+                    "type": "string"
+                },
+                "delivered_date": {
+                    "type": "string"
+                },
+                "estimated_date": {
+                    "type": "string"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.TrackingEvent"
+                    }
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "proof_of_delivery": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_interfaces.ProofOfDelivery"
+                },
+                "shipment_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "status_text": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_proj_gis_types.AddressComponents": {
             "type": "object",
             "properties": {
@@ -44534,6 +46308,40 @@
                     "description": "Сообщение об успешном обновлении",
                     "type": "string",
                     "example": "contacts.statusUpdated"
+                }
+            }
+        },
+        "internal_proj_delivery_handler.CancelRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_delivery_handler.CartCalculationRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "type": "number"
+                },
+                "delivery_type": {
+                    "type": "string"
+                },
+                "from_location": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.Location"
+                },
+                "insurance_value": {
+                    "type": "number"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ItemWithAttrs"
+                    }
+                },
+                "to_location": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.Location"
                 }
             }
         },
