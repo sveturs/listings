@@ -483,20 +483,20 @@ func (s *DeliveryService) GetPostExpressShipment(trackingNumber string) (map[str
 
 	// Convert to map for flexible response
 	result := map[string]interface{}{
-		"id":              shipment.ID,
-		"tracking_token":  shipment.TrackingNumber, // Use tracking_token for frontend compatibility
-		"status":          shipment.Status,
-		"courier_name":    "Post Express Courier", // Mock data for now
-		"courier_phone":   "+381601234567",
-		"pickup_address":  fmt.Sprintf("%s, %s %s", shipment.SenderAddress, shipment.SenderCity, shipment.SenderPostalCode),
+		"id":               shipment.ID,
+		"tracking_token":   shipment.TrackingNumber, // Use tracking_token for frontend compatibility
+		"status":           shipment.Status,
+		"courier_name":     "Post Express Courier", // Mock data for now
+		"courier_phone":    "+381601234567",
+		"pickup_address":   fmt.Sprintf("%s, %s %s", shipment.SenderAddress, shipment.SenderCity, shipment.SenderPostalCode),
 		"delivery_address": fmt.Sprintf("%s, %s %s", shipment.RecipientAddress, shipment.RecipientCity, shipment.RecipientPostalCode),
 		// Mock coordinates for Belgrade and Novi Sad
-		"pickup_latitude":          44.8176,
-		"pickup_longitude":         20.4633,
-		"delivery_latitude":        45.2671,
-		"delivery_longitude":       19.8335,
-		"estimated_delivery_time":  time.Now().Add(2 * time.Hour),
-		"order_id":                 shipment.ID,
+		"pickup_latitude":         44.8176,
+		"pickup_longitude":        20.4633,
+		"delivery_latitude":       45.2671,
+		"delivery_longitude":      19.8335,
+		"estimated_delivery_time": time.Now().Add(2 * time.Hour),
+		"order_id":                shipment.ID,
 	}
 
 	if shipment.StatusDescription.Valid {

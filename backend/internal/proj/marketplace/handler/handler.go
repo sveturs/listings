@@ -343,6 +343,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
 
+	// Статистика для админ панели
+	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)
+
 	// Регистрируем маршруты администрирования категорий
 	logger.Info().Msg("Registering admin categories routes")
 	logger.Info().Interface("AdminCategories", h.AdminCategories).Msg("AdminCategories handler")

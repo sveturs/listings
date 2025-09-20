@@ -83,8 +83,12 @@ export default function TrackingClient({ token }: TrackingClientProps) {
 
   // WebSocket connection
   // Используем относительный путь который будет проксирован через Next.js
-  const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsHost = typeof window !== 'undefined' ? window.location.host : 'localhost:3001';
+  const wsProtocol =
+    typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? 'wss:'
+      : 'ws:';
+  const wsHost =
+    typeof window !== 'undefined' ? window.location.host : 'localhost:3001';
   const { connectionState, sendMessage } = useWebSocket(
     `${wsProtocol}//${wsHost}/ws/tracking/${token}`,
     {
@@ -162,10 +166,12 @@ export default function TrackingClient({ token }: TrackingClientProps) {
   // Request ETA update
   const handleRequestETA = () => {
     if (isConnected) {
-      sendMessage(JSON.stringify({
-        type: 'request_eta',
-        delivery_id: delivery?.id,
-      }));
+      sendMessage(
+        JSON.stringify({
+          type: 'request_eta',
+          delivery_id: delivery?.id,
+        })
+      );
     }
   };
 
@@ -221,12 +227,14 @@ export default function TrackingClient({ token }: TrackingClientProps) {
         <TrackingMap
           delivery={{
             ...delivery,
-            courier_location: courierLocation ? {
-              latitude: courierLocation.latitude,
-              longitude: courierLocation.longitude,
-              speed: courierLocation.speed,
-              heading: courierLocation.heading,
-            } : delivery.courier_location
+            courier_location: courierLocation
+              ? {
+                  latitude: courierLocation.latitude,
+                  longitude: courierLocation.longitude,
+                  speed: courierLocation.speed,
+                  heading: courierLocation.heading,
+                }
+              : delivery.courier_location,
           }}
           onRequestETA={handleRequestETA}
         />
@@ -235,12 +243,22 @@ export default function TrackingClient({ token }: TrackingClientProps) {
         <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="text-2xl">{delivery.status === 'in_transit' ? '🚴' : '📦'}</div>
+              <div className="text-2xl">
+                {delivery.status === 'in_transit' ? '🚴' : '📦'}
+              </div>
               <div>
-                <div className="font-semibold">{t(`status.${delivery.status || 'undefined'}`)}</div>
+                <div className="font-semibold">
+                  {t(`status.${delivery.status || 'undefined'}`)}
+                </div>
                 <div className="text-sm text-base-content/70">
-                  ETA: {delivery.estimated_delivery_time ?
-                    new Date(delivery.estimated_delivery_time).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
+                  ETA:{' '}
+                  {delivery.estimated_delivery_time
+                    ? new Date(
+                        delivery.estimated_delivery_time
+                      ).toLocaleTimeString('ru', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
                     : '--:--'}
                 </div>
               </div>
@@ -285,12 +303,14 @@ export default function TrackingClient({ token }: TrackingClientProps) {
             <TrackingMap
               delivery={{
                 ...delivery,
-                courier_location: courierLocation ? {
-                  latitude: courierLocation.latitude,
-                  longitude: courierLocation.longitude,
-                  speed: courierLocation.speed,
-                  heading: courierLocation.heading,
-                } : delivery.courier_location
+                courier_location: courierLocation
+                  ? {
+                      latitude: courierLocation.latitude,
+                      longitude: courierLocation.longitude,
+                      speed: courierLocation.speed,
+                      heading: courierLocation.heading,
+                    }
+                  : delivery.courier_location,
               }}
               onRequestETA={handleRequestETA}
             />
@@ -301,15 +321,19 @@ export default function TrackingClient({ token }: TrackingClientProps) {
             <DeliveryInfo
               delivery={{
                 ...delivery,
-                courier_location: courierLocation ? {
-                  latitude: courierLocation.latitude,
-                  longitude: courierLocation.longitude,
-                  speed: courierLocation.speed,
-                  heading: courierLocation.heading,
-                  updated_at: courierLocation.updatedAt,
-                } : delivery.courier_location
+                courier_location: courierLocation
+                  ? {
+                      latitude: courierLocation.latitude,
+                      longitude: courierLocation.longitude,
+                      speed: courierLocation.speed,
+                      heading: courierLocation.heading,
+                      updated_at: courierLocation.updatedAt,
+                    }
+                  : delivery.courier_location,
               }}
-              connectionStatus={connectionState === 'error' ? 'disconnected' : connectionState}
+              connectionStatus={
+                connectionState === 'error' ? 'disconnected' : connectionState
+              }
               onRequestETA={handleRequestETA}
             />
           </div>
@@ -322,21 +346,29 @@ export default function TrackingClient({ token }: TrackingClientProps) {
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-base-content">{t('viber.title')}</p>
-                <p className="text-sm text-base-content/70">{t('viber.description')}</p>
+                <p className="font-medium text-base-content">
+                  {t('viber.title')}
+                </p>
+                <p className="text-sm text-base-content/70">
+                  {t('viber.description')}
+                </p>
               </div>
               <a
                 href={`viber://pa?chatURI=svetu_bot&text=track_${token}`}
                 className="btn btn-primary"
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M11.398 0C5.078.254.254 5.078 0 11.398v1.204C.254 18.922 5.078 23.746 11.398 24h1.204c6.32-.254 11.144-5.078 11.398-11.398v-1.204C23.746 5.078 18.922.254 12.602 0h-1.204zm.067 2.923c.59-.014 1.186.007 1.766.063 2.356.229 3.892.893 5.086 2.086 1.272 1.272 1.937 2.943 2.165 5.396.076.915.076 1.843 0 2.758-.229 2.453-.893 4.124-2.165 5.396-1.272 1.272-2.943 1.937-5.396 2.165-.457.038-.915.057-1.372.057-.458 0-.916-.019-1.373-.057-2.453-.228-4.124-.893-5.396-2.165-1.272-1.272-1.937-2.943-2.165-5.396-.076-.915-.076-1.843 0-2.758.228-2.453.893-4.124 2.165-5.396 1.194-1.193 2.73-1.857 5.086-2.086.58-.056 1.175-.077 1.765-.063h.002zm.102 2.137c-.495-.012-.997.005-1.485.051-1.908.19-3.16.686-4.05 1.576-.889.889-1.385 2.141-1.575 4.05-.057.68-.057 1.385 0 2.065.19 1.908.686 3.16 1.575 4.05.89.889 2.142 1.385 4.05 1.575.68.057 1.385.057 2.065 0 1.908-.19 3.16-.686 4.05-1.575.889-.89 1.385-2.142 1.575-4.05.057-.68.057-1.385 0-2.065-.19-1.909-.686-3.161-1.575-4.05-.89-.89-2.142-1.386-4.05-1.576-.488-.046-.99-.063-1.485-.051h-.095zm-.034 2.743c1.718 0 3.436.915 4.351 2.299.153.23.077.537-.153.69-.077.039-.154.077-.23.077-.154 0-.307-.077-.422-.23-.689-1.07-2.03-1.762-3.392-1.762-1.439 0-2.78.69-3.469 1.839-.115.152-.268.23-.422.23-.076 0-.153 0-.23-.039-.23-.153-.307-.46-.153-.69.843-1.461 2.414-2.414 4.12-2.414zm.038 1.991c.574 0 1.073.23 1.438.613.153.191.153.46 0 .651-.192.153-.46.153-.652 0-.191-.23-.498-.345-.805-.345-.345 0-.652.153-.843.422-.154.191-.46.23-.652.038-.191-.153-.23-.46-.077-.652.384-.574 1.035-.881 1.744-.804l-.153.077zm2.011 1.225c.191 0 .383.077.498.268.384.575.575 1.264.575 1.953 0 .69-.191 1.379-.575 1.954-.115.19-.307.268-.498.268-.116 0-.231-.039-.346-.115-.268-.192-.345-.575-.154-.843.269-.422.422-.881.422-1.341 0-.46-.153-.919-.422-1.34-.191-.269-.114-.652.154-.844.115-.076.23-.115.346-.115v.155z"/>
-              </svg>
-              {t('viber.open')}
-            </a>
+                <svg
+                  className="w-5 h-5 mr-2"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M11.398 0C5.078.254.254 5.078 0 11.398v1.204C.254 18.922 5.078 23.746 11.398 24h1.204c6.32-.254 11.144-5.078 11.398-11.398v-1.204C23.746 5.078 18.922.254 12.602 0h-1.204zm.067 2.923c.59-.014 1.186.007 1.766.063 2.356.229 3.892.893 5.086 2.086 1.272 1.272 1.937 2.943 2.165 5.396.076.915.076 1.843 0 2.758-.229 2.453-.893 4.124-2.165 5.396-1.272 1.272-2.943 1.937-5.396 2.165-.457.038-.915.057-1.372.057-.458 0-.916-.019-1.373-.057-2.453-.228-4.124-.893-5.396-2.165-1.272-1.272-1.937-2.943-2.165-5.396-.076-.915-.076-1.843 0-2.758.228-2.453.893-4.124 2.165-5.396 1.194-1.193 2.73-1.857 5.086-2.086.58-.056 1.175-.077 1.765-.063h.002zm.102 2.137c-.495-.012-.997.005-1.485.051-1.908.19-3.16.686-4.05 1.576-.889.889-1.385 2.141-1.575 4.05-.057.68-.057 1.385 0 2.065.19 1.908.686 3.16 1.575 4.05.89.889 2.142 1.385 4.05 1.575.68.057 1.385.057 2.065 0 1.908-.19 3.16-.686 4.05-1.575.889-.89 1.385-2.142 1.575-4.05.057-.68.057-1.385 0-2.065-.19-1.909-.686-3.161-1.575-4.05-.89-.89-2.142-1.386-4.05-1.576-.488-.046-.99-.063-1.485-.051h-.095zm-.034 2.743c1.718 0 3.436.915 4.351 2.299.153.23.077.537-.153.69-.077.039-.154.077-.23.077-.154 0-.307-.077-.422-.23-.689-1.07-2.03-1.762-3.392-1.762-1.439 0-2.78.69-3.469 1.839-.115.152-.268.23-.422.23-.076 0-.153 0-.23-.039-.23-.153-.307-.46-.153-.69.843-1.461 2.414-2.414 4.12-2.414zm.038 1.991c.574 0 1.073.23 1.438.613.153.191.153.46 0 .651-.192.153-.46.153-.652 0-.191-.23-.498-.345-.805-.345-.345 0-.652.153-.843.422-.154.191-.46.23-.652.038-.191-.153-.23-.46-.077-.652.384-.574 1.035-.881 1.744-.804l-.153.077zm2.011 1.225c.191 0 .383.077.498.268.384.575.575 1.264.575 1.953 0 .69-.191 1.379-.575 1.954-.115.19-.307.268-.498.268-.116 0-.231-.039-.346-.115-.268-.192-.345-.575-.154-.843.269-.422.422-.881.422-1.341 0-.46-.153-.919-.422-1.34-.191-.269-.114-.652.154-.844.115-.076.23-.115.346-.115v.155z" />
+                </svg>
+                {t('viber.open')}
+              </a>
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

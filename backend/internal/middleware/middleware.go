@@ -154,7 +154,7 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 	}
 
 	// Затем проверяем ID пользователя (для обратной совместимости)
-	if userID == 1 || userID == 2 || userID == 3 {
+	if userID == 1 || userID == 2 || userID == 3 || userID == 6 || userID == 11 {
 		logger.Info().
 			Int("user_id", userID).
 			Msg("AdminRequired: Access granted for hardcoded user ID")

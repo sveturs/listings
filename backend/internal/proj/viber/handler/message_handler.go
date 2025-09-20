@@ -138,12 +138,12 @@ func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, track
 
 	// Генерируем динамическую карту для Viber
 	delivery := &service.DeliveryInfo{
-		TrackingToken:      trackingToken,
-		CourierLatitude:    44.95,  // Между Белградом и Нови-Садом
-		CourierLongitude:   20.10,
-		DeliveryLatitude:   45.2671, // Нови-Сад
-		DeliveryLongitude:  19.8335,
-		EstimatedTime:      time.Now().Add(2 * time.Hour),
+		TrackingToken:     trackingToken,
+		CourierLatitude:   44.95, // Между Белградом и Нови-Садом
+		CourierLongitude:  20.10,
+		DeliveryLatitude:  45.2671, // Нови-Сад
+		DeliveryLongitude: 19.8335,
+		EstimatedTime:     time.Now().Add(2 * time.Hour),
 	}
 
 	// Используем InfobipService для отправки Rich Media с картой
@@ -228,7 +228,6 @@ func (m *MessageHandler) HandleHelp(ctx context.Context, viberID string) error {
 
 	return m.sendMessage(ctx, viberID, msg)
 }
-
 
 // HandleNearbyProducts обрабатывает поиск товаров рядом
 func (m *MessageHandler) HandleNearbyProducts(ctx context.Context, viberID string, lat, lng float64) error {

@@ -95,6 +95,15 @@ type Server struct {
 	redisClient        *redis.Client
 }
 
+// serviceProviderWrapper обертка для service.Service чтобы реализовать middleware.ServiceProvider
+type serviceProviderWrapper struct {
+	services *globalService.Service
+}
+
+func (s *serviceProviderWrapper) User() interface{ IsUserAdmin(ctx context.Context, email string) (bool, error) } {
+	return s.services.User()
+}
+
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	fileStorage, err := filestorage.NewFileStorage(ctx, cfg.FileStorage)
 	if err != nil {
@@ -297,7 +306,10 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	notificationsHandler.ConnectTelegramWebhook()
-	server.setupMiddleware() //nolint:contextcheck
+
+	// Создаем обертку для services чтобы удовлетворить интерфейс middleware.ServiceProvider
+	serviceWrapper := &serviceProviderWrapper{services: services}
+	server.setupMiddleware(serviceWrapper) //nolint:contextcheck
 	server.setupRoutes()     //nolint:contextcheck
 
 	return server, nil
@@ -368,7 +380,7 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 	return osClient, nil
 }
 
-func (s *Server) setupMiddleware() {
+func (s *Server) setupMiddleware(services middleware.ServiceProvider) {
 	// Общие middleware для observability
 	// Security headers должны быть первыми
 	s.app.Use(s.middleware.SecurityHeaders())
@@ -378,7 +390,7 @@ func (s *Server) setupMiddleware() {
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
 
-	authProxy := middleware.NewAuthProxyMiddleware()
+	authProxy := middleware.NewAuthProxyMiddleware(services)
 	s.app.Use(authProxy.ProxyToAuthService())
 
 	// Middleware для определения языка из запроса

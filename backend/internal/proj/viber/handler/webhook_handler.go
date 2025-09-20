@@ -363,7 +363,7 @@ func (h *WebhookHandler) handleTextMessage(c *fiber.Ctx, event *models.WebhookEv
 func (h *WebhookHandler) handlePictureMessage(c *fiber.Ctx, event *models.WebhookEvent) error {
 	ctx := c.Context()
 
-	msg := fmt.Sprintf("Вы отправили изображение. Если хотите добавить товар с фото, " +
+	msg := fmt.Sprintf("Вы отправили изображение. Если хотите добавить товар с фото, "+
 		"пожалуйста, используйте наш сайт: %s/create-listing", h.config.FrontendURL)
 
 	return h.botService.SendTextMessage(ctx, event.Sender.ID, msg)

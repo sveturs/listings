@@ -1,44 +1,66 @@
-import { Suspense } from 'react';
-import { setRequestLocale } from 'next-intl/server';
-import { getTranslations } from 'next-intl/server';
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import AdminListingsTable from './AdminListingsTable';
+import { tokenManager } from '@/utils/tokenManager';
 
-interface PageProps {
-  params: Promise<{ locale: string }>;
-}
-
-async function getListingsStats() {
-  try {
-    const response = await fetch(
-      'http://localhost:3000/api/v1/marketplace/listings?limit=1',
-      {
-        cache: 'no-store',
-      }
-    );
-    const data = await response.json();
-    if (data.success && data.data?.meta) {
-      return {
-        total: data.data.meta.total || 0,
-        // Эти значения можно будет расширить, когда API будет возвращать больше статистики
-        active: Math.floor((data.data.meta.total || 0) * 0.7), // Примерное значение
-        pending: Math.floor((data.data.meta.total || 0) * 0.1), // Примерное значение
-        views: Math.floor((data.data.meta.total || 0) * 150), // Примерное значение
-      };
-    }
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-  }
-  return { total: 0, active: 0, pending: 0, views: 0 };
+interface ListingsStats {
+  total: number;
+  active: number;
+  pending: number;
+  views: number;
 }
 
 // Делаем страницу динамической из-за API вызовов
 export const dynamic = 'force-dynamic';
 
-export default async function ListingsPage({ params }: PageProps) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations('admin');
-  const stats = await getListingsStats();
+export default function ListingsPage() {
+  const t = useTranslations('admin');
+  const [stats, setStats] = useState<ListingsStats>({
+    total: 0,
+    active: 0,
+    pending: 0,
+    views: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const token = tokenManager.getAccessToken();
+        console.log('[Admin Listings] Fetching statistics with token:', token ? 'present' : 'missing');
+
+        const response = await fetch('/api/v1/admin/listings/statistics', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        console.log('[Admin Listings] Statistics response status:', response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[Admin Listings] Statistics data:', data);
+
+          if (data.success && data.data) {
+            setStats({
+              total: data.data.total || 0,
+              active: data.data.active || 0,
+              pending: data.data.pending || 0,
+              views: data.data.views || 0,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching admin statistics:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
 
   return (
     <div>
@@ -104,7 +126,13 @@ export default async function ListingsPage({ params }: PageProps) {
             </svg>
           </div>
           <div className="stat-title">{t('listings.stats.total')}</div>
-          <div className="stat-value">{stats.total}</div>
+          <div className="stat-value">
+            {loading ? (
+              <span className="loading loading-dots loading-sm"></span>
+            ) : (
+              stats.total
+            )}
+          </div>
           <div className="stat-desc">{t('listings.stats.totalDesc')}</div>
         </div>
 
@@ -125,7 +153,13 @@ export default async function ListingsPage({ params }: PageProps) {
             </svg>
           </div>
           <div className="stat-title">{t('listings.stats.active')}</div>
-          <div className="stat-value">{stats.active}</div>
+          <div className="stat-value">
+            {loading ? (
+              <span className="loading loading-dots loading-sm"></span>
+            ) : (
+              stats.active
+            )}
+          </div>
           <div className="stat-desc">{t('listings.stats.activeDesc')}</div>
         </div>
 
@@ -146,7 +180,13 @@ export default async function ListingsPage({ params }: PageProps) {
             </svg>
           </div>
           <div className="stat-title">{t('listings.stats.pending')}</div>
-          <div className="stat-value">{stats.pending}</div>
+          <div className="stat-value">
+            {loading ? (
+              <span className="loading loading-dots loading-sm"></span>
+            ) : (
+              stats.pending
+            )}
+          </div>
           <div className="stat-desc">{t('listings.stats.pendingDesc')}</div>
         </div>
 
@@ -167,7 +207,13 @@ export default async function ListingsPage({ params }: PageProps) {
             </svg>
           </div>
           <div className="stat-title">{t('listings.stats.views')}</div>
-          <div className="stat-value">{stats.views.toLocaleString()}</div>
+          <div className="stat-value">
+            {loading ? (
+              <span className="loading loading-dots loading-sm"></span>
+            ) : (
+              stats.views.toLocaleString()
+            )}
+          </div>
           <div className="stat-desc">{t('listings.stats.viewsDesc')}</div>
         </div>
       </div>

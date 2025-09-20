@@ -44,6 +44,7 @@ type Storage interface {
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
+	IncrementProductViews(ctx context.Context, productID int) error
 
 	// Bulk operations
 	BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error)
@@ -146,6 +147,17 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 		return nil, fmt.Errorf("product not found")
 	}
 
+	// Проверяем, откуда идет вызов
+	// Если это первичная загрузка страницы товара витрины - увеличиваем счетчик
+	if isInitialLoad := ctx.Value("initial_load"); isInitialLoad == nil || isInitialLoad.(bool) {
+		// Увеличиваем счетчик просмотров в фоновом режиме
+		go func() {
+			if err := s.storage.IncrementProductViews(context.Background(), productID); err != nil {
+				logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
+			}
+		}()
+	}
+
 	// Обрабатываем адрес с учетом приватности
 	s.processProductLocationPrivacy(product)
 
@@ -162,6 +174,14 @@ func (s *ProductService) GetProductByID(ctx context.Context, productID int) (*mo
 	if product == nil {
 		return nil, fmt.Errorf("product not found")
 	}
+
+	// Увеличиваем счетчик просмотров в фоновом режиме
+	// Этот метод используется для прямого доступа к товару по ID
+	go func() {
+		if err := s.storage.IncrementProductViews(context.Background(), productID); err != nil {
+			logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
+		}
+	}()
 
 	// Обрабатываем адрес с учетом приватности
 	s.processProductLocationPrivacy(product)

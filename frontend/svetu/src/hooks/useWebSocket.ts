@@ -59,15 +59,20 @@ export function useWebSocket(
     }
 
     // Prevent multiple simultaneous connections
-    if (websocket.current && websocket.current.readyState === WebSocket.CONNECTING) {
+    if (
+      websocket.current &&
+      websocket.current.readyState === WebSocket.CONNECTING
+    ) {
       console.log('WebSocket is already connecting...');
       return;
     }
 
     // Close existing connection if any
-    if (websocket.current &&
-        (websocket.current.readyState === WebSocket.OPEN ||
-         websocket.current.readyState === WebSocket.CONNECTING)) {
+    if (
+      websocket.current &&
+      (websocket.current.readyState === WebSocket.OPEN ||
+        websocket.current.readyState === WebSocket.CONNECTING)
+    ) {
       websocket.current.close();
     }
 
@@ -96,7 +101,8 @@ export function useWebSocket(
         if (
           !isManualClose.current &&
           optionsRef.current.shouldReconnect?.(event) !== false &&
-          reconnectAttempts.current < (optionsRef.current.maxReconnectAttempts || 5)
+          reconnectAttempts.current <
+            (optionsRef.current.maxReconnectAttempts || 5)
         ) {
           reconnectAttempts.current++;
           console.log(
@@ -106,7 +112,10 @@ export function useWebSocket(
           reconnectTimeoutId.current = setTimeout(() => {
             connect();
           }, optionsRef.current.reconnectInterval || 3000);
-        } else if (reconnectAttempts.current >= (optionsRef.current.maxReconnectAttempts || 5)) {
+        } else if (
+          reconnectAttempts.current >=
+          (optionsRef.current.maxReconnectAttempts || 5)
+        ) {
           console.error('Max reconnection attempts reached');
           setConnectionState('error');
         }
