@@ -207,7 +207,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         `);
       }
     }
-  }, [delivery.courier_location, mapLoaded]);
+  }, [delivery.courier_location, mapLoaded, t]);
 
   // Отображение товаров поблизости
   useEffect(() => {
@@ -246,7 +246,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         )
         .addTo(map.current!);
     });
-  }, [delivery.nearby_items, mapLoaded]);
+  }, [delivery.nearby_items, mapLoaded, t]);
 
   // Подгонка границ карты
   const fitBounds = () => {

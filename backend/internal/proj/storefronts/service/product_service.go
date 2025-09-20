@@ -151,11 +151,11 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 	// Если это первичная загрузка страницы товара витрины - увеличиваем счетчик
 	if isInitialLoad := ctx.Value("initial_load"); isInitialLoad == nil || isInitialLoad.(bool) {
 		// Увеличиваем счетчик просмотров в фоновом режиме
-		go func() {
-			if err := s.storage.IncrementProductViews(context.Background(), productID); err != nil {
+		go func(bgCtx context.Context) {
+			if err := s.storage.IncrementProductViews(bgCtx, productID); err != nil {
 				logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
 			}
-		}()
+		}(context.WithoutCancel(ctx))
 	}
 
 	// Обрабатываем адрес с учетом приватности
@@ -177,11 +177,11 @@ func (s *ProductService) GetProductByID(ctx context.Context, productID int) (*mo
 
 	// Увеличиваем счетчик просмотров в фоновом режиме
 	// Этот метод используется для прямого доступа к товару по ID
-	go func() {
-		if err := s.storage.IncrementProductViews(context.Background(), productID); err != nil {
+	go func(bgCtx context.Context) {
+		if err := s.storage.IncrementProductViews(bgCtx, productID); err != nil {
 			logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
 		}
-	}()
+	}(context.WithoutCancel(ctx))
 
 	// Обрабатываем адрес с учетом приватности
 	s.processProductLocationPrivacy(product)

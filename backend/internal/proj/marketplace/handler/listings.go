@@ -1143,6 +1143,14 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 	}
 }
 
+// AdminStatisticsResponse represents statistics for admin dashboard
+type AdminStatisticsResponse struct {
+	Total   int `json:"total"`
+	Active  int `json:"active"`
+	Pending int `json:"pending"`
+	Views   int `json:"views"`
+}
+
 // GetAdminStatistics возвращает статистику для админ панели
 // @Summary Get admin statistics
 // @Description Returns listing statistics for admin dashboard
@@ -1150,7 +1158,7 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminStatisticsResponse} "Statistics"
+// @Success 200 {object} utils.SuccessResponseSwag{data=handler.AdminStatisticsResponse} "Statistics"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/listings/statistics [get]
@@ -1167,14 +1175,6 @@ func (h *ListingsHandler) GetAdminStatistics(c *fiber.Ctx) error {
 	db, ok := h.services.Storage().(*postgres.Database)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internal")
-	}
-
-	// Структура для ответа
-	type AdminStatisticsResponse struct {
-		Total   int `json:"total"`
-		Active  int `json:"active"`
-		Pending int `json:"pending"`
-		Views   int `json:"views"`
 	}
 
 	var stats AdminStatisticsResponse

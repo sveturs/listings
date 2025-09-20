@@ -100,7 +100,9 @@ type serviceProviderWrapper struct {
 	services *globalService.Service
 }
 
-func (s *serviceProviderWrapper) User() interface{ IsUserAdmin(ctx context.Context, email string) (bool, error) } {
+func (s *serviceProviderWrapper) User() interface {
+	IsUserAdmin(ctx context.Context, email string) (bool, error)
+} {
 	return s.services.User()
 }
 
@@ -235,7 +237,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New())
 
 	// Инициализация модуля трекинга
-	trackingModule := tracking.NewModule(db)
+	trackingModule := tracking.NewModule(db) //nolint:contextcheck
 
 	// Инициализация модуля Viber
 	viberModule := viber.NewModule(services)
@@ -310,7 +312,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Создаем обертку для services чтобы удовлетворить интерфейс middleware.ServiceProvider
 	serviceWrapper := &serviceProviderWrapper{services: services}
 	server.setupMiddleware(serviceWrapper) //nolint:contextcheck
-	server.setupRoutes()     //nolint:contextcheck
+	server.setupRoutes()                   //nolint:contextcheck
 
 	return server, nil
 }

@@ -29,15 +29,21 @@ export default function ListingsPage() {
     async function fetchStats() {
       try {
         const token = tokenManager.getAccessToken();
-        console.log('[Admin Listings] Fetching statistics with token:', token ? 'present' : 'missing');
+        console.log(
+          '[Admin Listings] Fetching statistics with token:',
+          token ? 'present' : 'missing'
+        );
 
         const response = await fetch('/api/v1/admin/listings/statistics', {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
-        console.log('[Admin Listings] Statistics response status:', response.status);
+        console.log(
+          '[Admin Listings] Statistics response status:',
+          response.status
+        );
 
         if (response.ok) {
           const data = await response.json();

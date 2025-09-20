@@ -2995,6 +2995,65 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/listings/statistics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get admin statistics
+     * @description Returns listing statistics for admin dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.AdminStatisticsResponse'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/logistics/analytics/couriers': {
     parameters: {
       query?: never;
@@ -38024,6 +38083,12 @@ export interface components {
     };
     'internal_proj_marketplace_handler.AddMessageRequest': {
       content: string;
+    };
+    'internal_proj_marketplace_handler.AdminStatisticsResponse': {
+      active?: number;
+      pending?: number;
+      total?: number;
+      views?: number;
     };
     'internal_proj_marketplace_handler.AlternativeCategoryResponse': {
       category_id?: number;

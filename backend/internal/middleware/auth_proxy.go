@@ -20,7 +20,9 @@ import (
 // ServiceProvider предоставляет доступ к сервисам
 // Используем интерфейс для избежания циклических зависимостей
 type ServiceProvider interface {
-	User() interface{ IsUserAdmin(ctx context.Context, email string) (bool, error) }
+	User() interface {
+		IsUserAdmin(ctx context.Context, email string) (bool, error)
+	}
 }
 
 type AuthProxyMiddleware struct {
@@ -50,8 +52,8 @@ func NewAuthProxyMiddleware(services ServiceProvider) *AuthProxyMiddleware {
 				return http.ErrUseLastResponse
 			},
 		},
-		enabled: enabled,
-		baseURL: authServiceURL,
+		enabled:  enabled,
+		baseURL:  authServiceURL,
 		services: services,
 	}
 }

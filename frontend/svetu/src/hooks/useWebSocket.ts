@@ -29,13 +29,13 @@ export function useWebSocket(
   options: UseWebSocketOptions = {}
 ): UseWebSocketReturn {
   const {
-    onOpen,
-    onClose,
-    onError,
-    onMessage,
-    shouldReconnect = () => true,
-    reconnectInterval = 3000,
-    maxReconnectAttempts = 5,
+    onOpen: _onOpen,
+    onClose: _onClose,
+    onError: _onError,
+    onMessage: _onMessage,
+    shouldReconnect: _shouldReconnect = () => true,
+    reconnectInterval: _reconnectInterval = 3000,
+    maxReconnectAttempts: _maxReconnectAttempts = 5,
   } = options;
 
   const [lastMessage, setLastMessage] = useState<MessageEvent | null>(null);
@@ -183,7 +183,7 @@ export function useWebSocket(
         websocket.current.close();
       }
     };
-  }, [connect]); // Only run on mount and when connect changes (which is stable)
+  }, [url, connect]); // Only run on mount and when connect changes (which is stable)
 
   // Handle URL changes
   useEffect(() => {
