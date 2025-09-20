@@ -35,15 +35,23 @@ func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
 // @Success 302 {string} string "Redirect to Google OAuth"
 // @Router /auth/google [get]
 func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
-	origin := c.Get("Origin")
-	if origin == "" {
-		origin = c.Get("Referer")
+	// Check for explicit returnTo parameter first
+	returnTo := c.Query("returnTo")
+
+	if returnTo == "" {
+		// Fallback to Origin header
+		returnTo = c.Get("Origin")
 	}
-	if origin == "" {
-		origin = h.cfg.FrontendURL // Use configured frontend URL
+	if returnTo == "" {
+		// Fallback to Referer header
+		returnTo = c.Get("Referer")
+	}
+	if returnTo == "" {
+		// Use configured frontend URL as last resort
+		returnTo = h.cfg.FrontendURL
 	}
 
-	authURL := h.authService.GetGoogleAuthURL(origin)
+	authURL := h.authService.GetGoogleAuthURL(returnTo)
 	return c.Redirect(authURL, fiber.StatusTemporaryRedirect)
 }
 
