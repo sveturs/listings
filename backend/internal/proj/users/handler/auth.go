@@ -40,7 +40,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 		origin = c.Get("Referer")
 	}
 	if origin == "" {
-		origin = "http://localhost:3001" // Default for local development
+		origin = h.cfg.FrontendURL // Use configured frontend URL
 	}
 
 	authURL := h.authService.GetGoogleAuthURL(origin)
@@ -107,7 +107,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	// Redirect to frontend with JWT token
 	redirectURL := state
 	if redirectURL == "" || redirectURL == "default" {
-		redirectURL = "http://localhost:3001" // Default frontend URL
+		redirectURL = h.cfg.FrontendURL // Use configured frontend URL
 	}
 
 	// Добавляем JWT токен в URL для передачи на frontend
