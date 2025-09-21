@@ -12,7 +12,6 @@ type ProviderConfig struct {
 	TestMode  bool   `json:"test_mode"`
 }
 
-
 // ProblemAssignment represents problem assignment request
 type ProblemAssignment struct {
 	AdminID int `json:"admin_id"`
@@ -41,14 +40,14 @@ type ProblemShipment struct {
 
 // DashboardStats represents dashboard statistics
 type DashboardStats struct {
-	TodayShipments   int                `json:"today_shipments"`
-	TodayDelivered   int                `json:"today_delivered"`
-	InTransit        int                `json:"in_transit"`
-	Problems         int                `json:"problems"`
-	AvgDeliveryTime  string             `json:"avg_delivery_time"`
-	SuccessRate      float64            `json:"success_rate"`
-	ProviderStats    []ProviderStats    `json:"provider_stats"`
-	CostAnalysis     CostAnalysis       `json:"cost_analysis"`
+	TodayShipments  int             `json:"today_shipments"`
+	TodayDelivered  int             `json:"today_delivered"`
+	InTransit       int             `json:"in_transit"`
+	Problems        int             `json:"problems"`
+	AvgDeliveryTime string          `json:"avg_delivery_time"`
+	SuccessRate     float64         `json:"success_rate"`
+	ProviderStats   []ProviderStats `json:"provider_stats"`
+	CostAnalysis    CostAnalysis    `json:"cost_analysis"`
 }
 
 // ProviderStats represents statistics per provider
@@ -70,16 +69,16 @@ type CostAnalysis struct {
 
 // AnalyticsData represents comprehensive analytics
 type AnalyticsData struct {
-	Period                string                     `json:"period"`
-	TotalShipments        int                        `json:"total_shipments"`
-	DeliveryRate          float64                    `json:"delivery_rate"`
-	AvgDeliveryTime       string                     `json:"avg_delivery_time"`
-	CustomerSatisfaction  float64                    `json:"customer_satisfaction"`
-	CostPerShipment       float64                    `json:"cost_per_shipment"`
-	ProblemRate           float64                    `json:"problem_rate"`
-	TrendData             []TrendPoint               `json:"trend_data"`
-	ProviderComparison    []ProviderStats            `json:"provider_comparison"`
-	GeographicDistribution map[string]float64         `json:"geographic_distribution"`
+	Period                 string             `json:"period"`
+	TotalShipments         int                `json:"total_shipments"`
+	DeliveryRate           float64            `json:"delivery_rate"`
+	AvgDeliveryTime        string             `json:"avg_delivery_time"`
+	CustomerSatisfaction   float64            `json:"customer_satisfaction"`
+	CostPerShipment        float64            `json:"cost_per_shipment"`
+	ProblemRate            float64            `json:"problem_rate"`
+	TrendData              []TrendPoint       `json:"trend_data"`
+	ProviderComparison     []ProviderStats    `json:"provider_comparison"`
+	GeographicDistribution map[string]float64 `json:"geographic_distribution"`
 }
 
 // TrendPoint represents a point in trend data

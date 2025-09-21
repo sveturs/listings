@@ -1889,7 +1889,6 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		result.Suggestions = searchResult.Suggestions
 	}
 
-
 	return result, nil
 }
 

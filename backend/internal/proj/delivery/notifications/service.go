@@ -35,9 +35,9 @@ type EmailConfig struct {
 
 // SMSConfig - конфигурация SMS
 type SMSConfig struct {
-	Provider string // "twilio", "infobip", "sns"
-	APIKey   string
-	APISecret string
+	Provider   string // "twilio", "infobip", "sns"
+	APIKey     string
+	APISecret  string
 	FromNumber string
 }
 
@@ -49,22 +49,22 @@ type ViberConfig struct {
 
 // TelegramConfig - конфигурация Telegram
 type TelegramConfig struct {
-	BotToken string
+	BotToken    string
 	BotUsername string
 }
 
 // DeliveryNotification - уведомление о доставке
 type DeliveryNotification struct {
-	ID           int       `db:"id"`
-	ShipmentID   int       `db:"shipment_id"`
-	UserID       int       `db:"user_id"`
-	Channel      string    `db:"channel"` // email, sms, viber, telegram, push
-	Status       string    `db:"status"`  // pending, sent, failed
-	Template     string    `db:"template"`
+	ID           int             `db:"id"`
+	ShipmentID   int             `db:"shipment_id"`
+	UserID       int             `db:"user_id"`
+	Channel      string          `db:"channel"` // email, sms, viber, telegram, push
+	Status       string          `db:"status"`  // pending, sent, failed
+	Template     string          `db:"template"`
 	Data         json.RawMessage `db:"data"`
-	SentAt       *time.Time `db:"sent_at"`
-	ErrorMessage *string    `db:"error_message"`
-	CreatedAt    time.Time  `db:"created_at"`
+	SentAt       *time.Time      `db:"sent_at"`
+	ErrorMessage *string         `db:"error_message"`
+	CreatedAt    time.Time       `db:"created_at"`
 }
 
 // StatusChangeEvent - событие изменения статуса
@@ -134,14 +134,14 @@ func (s *NotificationService) NotifyStatusChange(ctx context.Context, event *Sta
 // shouldNotifyForStatus определяет, нужно ли отправлять уведомление для статуса
 func (s *NotificationService) shouldNotifyForStatus(status string) bool {
 	notifiableStatuses := map[string]bool{
-		"confirmed":    true,
-		"picked_up":    true,
-		"in_transit":   true,
+		"confirmed":        true,
+		"picked_up":        true,
+		"in_transit":       true,
 		"out_for_delivery": true,
-		"delivered":    true,
-		"failed":       true,
-		"returned":     true,
-		"cancelled":    true,
+		"delivered":        true,
+		"failed":           true,
+		"returned":         true,
+		"cancelled":        true,
 	}
 	return notifiableStatuses[status]
 }
@@ -151,8 +151,8 @@ func (s *NotificationService) isCriticalStatus(status string) bool {
 	criticalStatuses := map[string]bool{
 		"out_for_delivery": true,
 		"delivered":        true,
-		"failed":          true,
-		"returned":        true,
+		"failed":           true,
+		"returned":         true,
 	}
 	return criticalStatuses[status]
 }
@@ -160,14 +160,14 @@ func (s *NotificationService) isCriticalStatus(status string) bool {
 // getTemplateForStatus возвращает шаблон для статуса
 func (s *NotificationService) getTemplateForStatus(status string) string {
 	templates := map[string]string{
-		"confirmed":    "delivery_confirmed",
-		"picked_up":    "delivery_picked_up",
-		"in_transit":   "delivery_in_transit",
+		"confirmed":        "delivery_confirmed",
+		"picked_up":        "delivery_picked_up",
+		"in_transit":       "delivery_in_transit",
 		"out_for_delivery": "delivery_out_for_delivery",
-		"delivered":    "delivery_delivered",
-		"failed":       "delivery_failed",
-		"returned":     "delivery_returned",
-		"cancelled":    "delivery_cancelled",
+		"delivered":        "delivery_delivered",
+		"failed":           "delivery_failed",
+		"returned":         "delivery_returned",
+		"cancelled":        "delivery_cancelled",
 	}
 	return templates[status]
 }
@@ -176,11 +176,11 @@ func (s *NotificationService) getTemplateForStatus(status string) string {
 func (s *NotificationService) prepareTemplateData(event *StatusChangeEvent) json.RawMessage {
 	data := map[string]interface{}{
 		"tracking_number": event.TrackingNumber,
-		"status":         event.NewStatus,
-		"location":       event.Location,
-		"description":    event.Description,
-		"event_time":     event.EventTime.Format("02.01.2006 15:04"),
-		"recipient_name": event.RecipientName,
+		"status":          event.NewStatus,
+		"location":        event.Location,
+		"description":     event.Description,
+		"event_time":      event.EventTime.Format("02.01.2006 15:04"),
+		"recipient_name":  event.RecipientName,
 	}
 
 	jsonData, _ := json.Marshal(data)
@@ -205,12 +205,12 @@ func (s *NotificationService) sendEmailNotification(ctx context.Context, event *
 
 	msg := []byte(fmt.Sprintf(
 		"From: %s\r\n"+
-		"To: %s\r\n"+
-		"Subject: %s\r\n"+
-		"MIME-Version: 1.0\r\n"+
-		"Content-Type: text/html; charset=\"UTF-8\"\r\n"+
-		"\r\n"+
-		"%s",
+			"To: %s\r\n"+
+			"Subject: %s\r\n"+
+			"MIME-Version: 1.0\r\n"+
+			"Content-Type: text/html; charset=\"UTF-8\"\r\n"+
+			"\r\n"+
+			"%s",
 		from, to, subject, body,
 	))
 
@@ -234,14 +234,14 @@ func (s *NotificationService) sendEmailNotification(ctx context.Context, event *
 // getEmailSubject возвращает тему письма
 func (s *NotificationService) getEmailSubject(status, trackingNumber string) string {
 	subjects := map[string]string{
-		"confirmed":    "Заказ #%s подтвержден",
-		"picked_up":    "Заказ #%s передан в службу доставки",
-		"in_transit":   "Заказ #%s в пути",
+		"confirmed":        "Заказ #%s подтвержден",
+		"picked_up":        "Заказ #%s передан в службу доставки",
+		"in_transit":       "Заказ #%s в пути",
 		"out_for_delivery": "Заказ #%s передан курьеру",
-		"delivered":    "Заказ #%s доставлен",
-		"failed":       "Проблема с доставкой заказа #%s",
-		"returned":     "Заказ #%s возвращен отправителю",
-		"cancelled":    "Заказ #%s отменен",
+		"delivered":        "Заказ #%s доставлен",
+		"failed":           "Проблема с доставкой заказа #%s",
+		"returned":         "Заказ #%s возвращен отправителю",
+		"cancelled":        "Заказ #%s отменен",
 	}
 
 	format, ok := subjects[status]
@@ -334,14 +334,14 @@ func (s *NotificationService) renderEmailTemplate(event *StatusChangeEvent) (str
 // getStatusText возвращает человекочитаемый текст статуса
 func (s *NotificationService) getStatusText(status string) string {
 	statusTexts := map[string]string{
-		"confirmed":    "Заказ подтвержден",
-		"picked_up":    "Передан в службу доставки",
-		"in_transit":   "В пути",
+		"confirmed":        "Заказ подтвержден",
+		"picked_up":        "Передан в службу доставки",
+		"in_transit":       "В пути",
 		"out_for_delivery": "Передан курьеру для доставки",
-		"delivered":    "Доставлен",
-		"failed":       "Доставка не удалась",
-		"returned":     "Возвращен отправителю",
-		"cancelled":    "Отменен",
+		"delivered":        "Доставлен",
+		"failed":           "Доставка не удалась",
+		"returned":         "Возвращен отправителю",
+		"cancelled":        "Отменен",
 	}
 
 	if text, ok := statusTexts[status]; ok {
@@ -392,8 +392,8 @@ func (s *NotificationService) formatSMSMessage(event *StatusChangeEvent) string 
 	formats := map[string]string{
 		"out_for_delivery": "Ваш заказ %s передан курьеру. Ожидайте доставку сегодня.",
 		"delivered":        "Ваш заказ %s доставлен. Спасибо за покупку!",
-		"failed":          "Проблема с доставкой заказа %s. Свяжитесь с нами.",
-		"returned":        "Заказ %s возвращен отправителю.",
+		"failed":           "Проблема с доставкой заказа %s. Свяжитесь с нами.",
+		"returned":         "Заказ %s возвращен отправителю.",
 	}
 
 	format, ok := formats[event.NewStatus]
@@ -430,13 +430,13 @@ func (s *NotificationService) sendInfobipSMS(to, message string) error {
 func (s *NotificationService) sendPushNotification(ctx context.Context, event *StatusChangeEvent) error {
 	// Формируем push уведомление
 	notification := map[string]interface{}{
-		"type":           "delivery_status",
-		"shipment_id":    event.ShipmentID,
+		"type":            "delivery_status",
+		"shipment_id":     event.ShipmentID,
 		"tracking_number": event.TrackingNumber,
-		"status":         event.NewStatus,
-		"title":          s.getEmailSubject(event.NewStatus, event.TrackingNumber),
-		"body":           s.getStatusText(event.NewStatus),
-		"timestamp":      event.EventTime.Unix(),
+		"status":          event.NewStatus,
+		"title":           s.getEmailSubject(event.NewStatus, event.TrackingNumber),
+		"body":            s.getStatusText(event.NewStatus),
+		"timestamp":       event.EventTime.Unix(),
 	}
 
 	// Отправляем через WebSocket (если подключен)

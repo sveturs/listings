@@ -48,7 +48,9 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 	}
 	if returnTo == "" {
 		// Use configured frontend URL as last resort
-		returnTo = h.cfg.FrontendURL
+		if h.services != nil && h.services.Config() != nil {
+			returnTo = h.services.Config().FrontendURL
+		}
 	}
 
 	authURL := h.authService.GetGoogleAuthURL(returnTo)
@@ -115,7 +117,9 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	// Redirect to frontend with JWT token
 	redirectURL := state
 	if redirectURL == "" || redirectURL == "default" {
-		redirectURL = h.cfg.FrontendURL // Use configured frontend URL
+		if h.services != nil && h.services.Config() != nil {
+			redirectURL = h.services.Config().FrontendURL // Use configured frontend URL
+		}
 	}
 
 	// Добавляем JWT токен в URL для передачи на frontend

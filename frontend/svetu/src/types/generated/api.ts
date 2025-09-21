@@ -3052,6 +3052,53 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/delivery/dashboard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get dashboard statistics */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.DashboardStats'];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/delivery/pricing-rules': {
     parameters: {
       query?: never;
@@ -3059,7 +3106,38 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** Get pricing rules */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of pricing rules */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.PricingRule'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     put?: never;
     /**
      * Create pricing rule
@@ -3072,12 +3150,7 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Pricing rule */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_delivery_models.PricingRule'];
-        };
-      };
+      requestBody: components['requestBodies']['backend_internal_proj_delivery_models.PricingRule'];
       responses: {
         /** @description Created rule */
         200: {
@@ -3101,6 +3174,252 @@ export interface paths {
         };
         /** @description Server error */
         500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/pricing-rules/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update pricing rule */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Rule ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['backend_internal_proj_delivery_models.PricingRule'];
+      responses: {
+        /** @description Rule updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /** Delete pricing rule */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Rule ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Rule deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/problems': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get problem shipments */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Problem type filter */
+          type?: string;
+          /** @description Status filter */
+          status?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of problem shipments */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_delivery_models.ProblemShipment'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/problems/{id}/assign': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Assign problem to admin */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Problem ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Assignment details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.ProblemAssignment'];
+        };
+      };
+      responses: {
+        /** @description Problem assigned */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/problems/{id}/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Resolve problem */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Problem ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Resolution details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.ProblemResolution'];
+        };
+      };
+      responses: {
+        /** @description Problem resolved */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -3225,6 +3544,111 @@ export interface paths {
       };
     };
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/providers/{id}/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Update provider configuration */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Provider ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Provider configuration */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_delivery_models.ProviderConfig'];
+        };
+      };
+      responses: {
+        /** @description Configuration updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/delivery/providers/{id}/toggle': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Toggle provider status */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Provider ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Provider status updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: boolean;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -37950,6 +38374,12 @@ export interface components {
       | 7
       | 8
       | 9;
+    'backend_internal_proj_delivery_calculator.CalculationData': {
+      cheapest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+      fastest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+      providers?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'][];
+      recommended?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+    };
     'backend_internal_proj_delivery_calculator.CalculationRequest': {
       cod_amount?: number;
       delivery_type?: string;
@@ -37960,10 +38390,9 @@ export interface components {
       to_location?: components['schemas']['backend_internal_proj_delivery_calculator.Location'];
     };
     'backend_internal_proj_delivery_calculator.CalculationResponse': {
-      cheapest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
-      fastest?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
-      providers?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'][];
-      recommended?: components['schemas']['backend_internal_proj_delivery_calculator.ProviderQuote'];
+      data?: components['schemas']['backend_internal_proj_delivery_calculator.CalculationData'];
+      message?: string;
+      success?: boolean;
     };
     'backend_internal_proj_delivery_calculator.ItemWithAttrs': {
       attributes?: components['schemas']['backend_internal_proj_delivery_models.DeliveryAttributes'];
@@ -37980,15 +38409,19 @@ export interface components {
       postal_code?: string;
     };
     'backend_internal_proj_delivery_calculator.ProviderQuote': {
+      cod_fee?: number;
       cost_breakdown?: components['schemas']['backend_internal_proj_delivery_models.CostBreakdown'];
+      delivery_cost?: number;
       delivery_type?: string;
       estimated_days?: number;
+      estimated_delivery_date?: string;
+      insurance_cost?: number;
       is_available?: boolean;
       provider_code?: string;
       provider_id?: number;
       provider_name?: string;
-      services?: string[];
-      total_cost?: number;
+      services?: components['schemas']['backend_internal_proj_delivery_models.DeliveryService'][];
+      total_price?: number;
       unavailable_reason?: string;
     };
     'backend_internal_proj_delivery_interfaces.Address': {
@@ -38050,6 +38483,20 @@ export interface components {
       status?: string;
       timestamp?: string;
     };
+    'backend_internal_proj_delivery_models.AnalyticsData': {
+      avg_delivery_time?: string;
+      cost_per_shipment?: number;
+      customer_satisfaction?: number;
+      delivery_rate?: number;
+      geographic_distribution?: {
+        [key: string]: number;
+      };
+      period?: string;
+      problem_rate?: number;
+      provider_comparison?: components['schemas']['backend_internal_proj_delivery_models.ProviderStats'][];
+      total_shipments?: number;
+      trend_data?: components['schemas']['backend_internal_proj_delivery_models.TrendPoint'][];
+    };
     'backend_internal_proj_delivery_models.CategoryDefaults': {
       category_id?: number;
       created_at?: string;
@@ -38061,6 +38508,11 @@ export interface components {
       id?: number;
       is_typically_fragile?: boolean;
       updated_at?: string;
+    };
+    'backend_internal_proj_delivery_models.CostAnalysis': {
+      avg_cost?: number;
+      savings?: number;
+      total_cost?: number;
     };
     'backend_internal_proj_delivery_models.CostBreakdown': {
       base_price?: number;
@@ -38075,6 +38527,16 @@ export interface components {
       total?: number;
       weight_surcharge?: number;
     };
+    'backend_internal_proj_delivery_models.DashboardStats': {
+      avg_delivery_time?: string;
+      cost_analysis?: components['schemas']['backend_internal_proj_delivery_models.CostAnalysis'];
+      in_transit?: number;
+      problems?: number;
+      provider_stats?: components['schemas']['backend_internal_proj_delivery_models.ProviderStats'][];
+      success_rate?: number;
+      today_delivered?: number;
+      today_shipments?: number;
+    };
     'backend_internal_proj_delivery_models.DeliveryAttributes': {
       dimensions?: components['schemas']['backend_internal_proj_delivery_models.Dimensions'];
       hazmat_class?: string;
@@ -38085,6 +38547,14 @@ export interface components {
       stackable?: boolean;
       volume_m3?: number;
       weight_kg?: number;
+    };
+    'backend_internal_proj_delivery_models.DeliveryService': {
+      code?: string;
+      description?: string;
+      is_available?: boolean;
+      is_included?: boolean;
+      name?: string;
+      price?: number;
     };
     'backend_internal_proj_delivery_models.Dimensions': {
       height_cm?: number;
@@ -38109,6 +38579,26 @@ export interface components {
       weight_ranges?: number[];
       zone_multipliers?: number[];
     };
+    'backend_internal_proj_delivery_models.ProblemAssignment': {
+      admin_id?: number;
+    };
+    'backend_internal_proj_delivery_models.ProblemResolution': {
+      notify_customer?: boolean;
+      resolution?: string;
+    };
+    'backend_internal_proj_delivery_models.ProblemShipment': {
+      assigned_to?: string;
+      created_at?: string;
+      customer_name?: string;
+      customer_phone?: string;
+      description?: string;
+      id?: number;
+      priority?: string;
+      problem_type?: string;
+      provider_name?: string;
+      status?: string;
+      tracking_number?: string;
+    };
     'backend_internal_proj_delivery_models.Provider': {
       api_config?: number[];
       capabilities?: number[];
@@ -38122,6 +38612,20 @@ export interface components {
       supports_insurance?: boolean;
       supports_tracking?: boolean;
       updated_at?: string;
+    };
+    'backend_internal_proj_delivery_models.ProviderConfig': {
+      api_key?: string;
+      api_secret?: string;
+      api_url?: string;
+      test_mode?: boolean;
+    };
+    'backend_internal_proj_delivery_models.ProviderStats': {
+      avg_time?: string;
+      code?: string;
+      delivered?: number;
+      name?: string;
+      shipments?: number;
+      success_rate?: number;
     };
     'backend_internal_proj_delivery_models.Shipment': {
       actual_delivery_date?: string;
@@ -38158,6 +38662,12 @@ export interface components {
       raw_data?: number[];
       shipment_id?: number;
       status?: string;
+    };
+    'backend_internal_proj_delivery_models.TrendPoint': {
+      date?: string;
+      delivered?: number;
+      problems?: number;
+      shipments?: number;
     };
     'backend_internal_proj_delivery_service.AnalyticsPeriod': {
       from?: string;
@@ -40711,6 +41221,12 @@ export interface components {
           source_language?: string;
           target_languages?: string[];
         };
+      };
+    };
+    /** @description Pricing rule */
+    'backend_internal_proj_delivery_models.PricingRule': {
+      content: {
+        'application/json': components['schemas']['backend_internal_proj_delivery_models.PricingRule'];
       };
     };
     /** @description Search parameters */

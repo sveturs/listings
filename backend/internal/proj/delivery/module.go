@@ -18,9 +18,9 @@ import (
 
 // Module - модуль универсальной системы доставки
 type Module struct {
-	handler          *handler.Handler
-	adminHandler     *handler.AdminHandler
-	service          *service.Service
+	handler      *handler.Handler
+	adminHandler *handler.AdminHandler
+	service      *service.Service
 	// Сервисы из admin/logistics для консолидации
 	monitoringService *adminLogistics.MonitoringService
 	problemService    *adminLogistics.ProblemService

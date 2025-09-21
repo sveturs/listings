@@ -11,7 +11,6 @@ import {
   CheckIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
 import {
   DeliveryQuote,
   CalculationRequest,
@@ -53,7 +52,6 @@ export default function CartDeliveryCalculator({
   onDeliverySelected,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
   const [selectedQuote, setSelectedQuote] = useState<DeliveryQuote | null>(
     null
   );
@@ -61,7 +59,7 @@ export default function CartDeliveryCalculator({
   const [itemsWithAttributes, setItemsWithAttributes] = useState<CartItem[]>(
     []
   );
-  const [splitByProvider, setSplitByProvider] = useState<{
+  const [_splitByProvider, setSplitByProvider] = useState<{
     [providerId: number]: CartItem[];
   }>({});
   const [showAddressForm, setShowAddressForm] = useState(!deliveryAddress);
@@ -75,6 +73,7 @@ export default function CartDeliveryCalculator({
     if (cartItems.length > 0) {
       loadItemAttributes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartItems]);
 
   const loadItemAttributes = async () => {

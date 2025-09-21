@@ -120,7 +120,7 @@ export default function TrackingPage({
   initialTrackingNumber,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  const _t = useTranslations('delivery');
   const [trackingNumber, setTrackingNumber] = useState(
     initialTrackingNumber || ''
   );
@@ -132,6 +132,7 @@ export default function TrackingPage({
     if (initialTrackingNumber) {
       trackShipment(initialTrackingNumber);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTrackingNumber]);
 
   const trackShipment = async (number?: string) => {

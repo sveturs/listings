@@ -30,7 +30,7 @@ export default function DeliveryDashboard() {
     inTransit: 0,
     problems: 0,
     avgDeliveryTime: '0 ч',
-    successRate: 0
+    successRate: 0,
   });
   const [providerStats, setProviderStats] = useState<ProviderStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,8 +46,8 @@ export default function DeliveryDashboard() {
       // Получаем данные с реального API
       const response = await fetch('/api/v1/admin/delivery/dashboard', {
         headers: {
-          'Authorization': `Bearer ${tokenManager.getAccessToken()}`
-        }
+          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+        },
       });
 
       if (response.ok) {
@@ -62,24 +62,31 @@ export default function DeliveryDashboard() {
           const delivery = dashboardData.delivery || {};
 
           setStats({
-            todayShipments: logistics.TodayShipments || delivery.todayShipments || 45,
-            todayDelivered: logistics.TodayDelivered || delivery.todayDelivered || 38,
+            todayShipments:
+              logistics.TodayShipments || delivery.todayShipments || 45,
+            todayDelivered:
+              logistics.TodayDelivered || delivery.todayDelivered || 38,
             inTransit: logistics.ActiveShipments || delivery.inTransit || 127,
             problems: logistics.ProblemShipments || delivery.problems || 3,
-            avgDeliveryTime: logistics.AvgDeliveryTime ? `${logistics.AvgDeliveryTime} ч` : '2.3 дня',
-            successRate: logistics.DeliverySuccessRate || delivery.successRate || 94.5
+            avgDeliveryTime: logistics.AvgDeliveryTime
+              ? `${logistics.AvgDeliveryTime} ч`
+              : '2.3 дня',
+            successRate:
+              logistics.DeliverySuccessRate || delivery.successRate || 94.5,
           });
 
           // Извлекаем статистику по провайдерам
           if (logistics.CourierPerformance) {
-            const providers = logistics.CourierPerformance.map((courier: any) => ({
-              code: courier.Name?.toLowerCase().replace(/\s+/g, ''),
-              name: courier.Name,
-              shipments: courier.Shipments,
-              delivered: courier.Delivered,
-              successRate: courier.SuccessRate,
-              avgTime: `${courier.AvgTime} ч`
-            }));
+            const providers = logistics.CourierPerformance.map(
+              (courier: any) => ({
+                code: courier.Name?.toLowerCase().replace(/\s+/g, ''),
+                name: courier.Name,
+                shipments: courier.Shipments,
+                delivered: courier.Delivered,
+                successRate: courier.SuccessRate,
+                avgTime: `${courier.AvgTime} ч`,
+              })
+            );
             setProviderStats(providers);
           }
         }
@@ -91,14 +98,49 @@ export default function DeliveryDashboard() {
           inTransit: 127,
           problems: 3,
           avgDeliveryTime: '2.3 дня',
-          successRate: 94.5
+          successRate: 94.5,
         });
         setProviderStats([
-          { code: 'postexpress', name: 'Post Express', shipments: 234, delivered: 220, successRate: 94, avgTime: '2.1 дня' },
-          { code: 'bex', name: 'BEX Express', shipments: 156, delivered: 148, successRate: 95, avgTime: '1.8 дня' },
-          { code: 'aks', name: 'AKS', shipments: 89, delivered: 82, successRate: 92, avgTime: '2.5 дня' },
-          { code: 'dexpress', name: 'D Express', shipments: 67, delivered: 65, successRate: 97, avgTime: '1.5 дня' },
-          { code: 'cityexpress', name: 'City Express', shipments: 45, delivered: 41, successRate: 91, avgTime: '1.2 дня' },
+          {
+            code: 'postexpress',
+            name: 'Post Express',
+            shipments: 234,
+            delivered: 220,
+            successRate: 94,
+            avgTime: '2.1 дня',
+          },
+          {
+            code: 'bex',
+            name: 'BEX Express',
+            shipments: 156,
+            delivered: 148,
+            successRate: 95,
+            avgTime: '1.8 дня',
+          },
+          {
+            code: 'aks',
+            name: 'AKS',
+            shipments: 89,
+            delivered: 82,
+            successRate: 92,
+            avgTime: '2.5 дня',
+          },
+          {
+            code: 'dexpress',
+            name: 'D Express',
+            shipments: 67,
+            delivered: 65,
+            successRate: 97,
+            avgTime: '1.5 дня',
+          },
+          {
+            code: 'cityexpress',
+            name: 'City Express',
+            shipments: 45,
+            delivered: 41,
+            successRate: 91,
+            avgTime: '1.2 дня',
+          },
         ]);
       }
     } catch (error) {
@@ -111,11 +153,25 @@ export default function DeliveryDashboard() {
         inTransit: 127,
         problems: 3,
         avgDeliveryTime: '2.3 дня',
-        successRate: 94.5
+        successRate: 94.5,
       });
       setProviderStats([
-        { code: 'postexpress', name: 'Post Express', shipments: 234, delivered: 220, successRate: 94, avgTime: '2.1 дня' },
-        { code: 'bex', name: 'BEX Express', shipments: 156, delivered: 148, successRate: 95, avgTime: '1.8 дня' },
+        {
+          code: 'postexpress',
+          name: 'Post Express',
+          shipments: 234,
+          delivered: 220,
+          successRate: 94,
+          avgTime: '2.1 дня',
+        },
+        {
+          code: 'bex',
+          name: 'BEX Express',
+          shipments: 156,
+          delivered: 148,
+          successRate: 95,
+          avgTime: '1.8 дня',
+        },
       ]);
     } finally {
       setLoading(false);
@@ -138,13 +194,17 @@ export default function DeliveryDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow">
             <div className="stat-title">{t('shipments')}</div>
-            <div className="stat-value text-primary">{stats.todayShipments}</div>
+            <div className="stat-value text-primary">
+              {stats.todayShipments}
+            </div>
             <div className="stat-desc">↗︎ +12% от вчера</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow">
             <div className="stat-title">{t('delivered')}</div>
-            <div className="stat-value text-success">{stats.todayDelivered}</div>
+            <div className="stat-value text-success">
+              {stats.todayDelivered}
+            </div>
             <div className="stat-desc">↗︎ +8% от вчера</div>
           </div>
 
@@ -197,7 +257,9 @@ export default function DeliveryDashboard() {
                   <td className="text-center">{provider.delivered}</td>
                   <td className="text-center">
                     <div className="flex items-center justify-center">
-                      <span className={`badge ${provider.successRate >= 95 ? 'badge-success' : provider.successRate >= 90 ? 'badge-warning' : 'badge-error'}`}>
+                      <span
+                        className={`badge ${provider.successRate >= 95 ? 'badge-success' : provider.successRate >= 90 ? 'badge-warning' : 'badge-error'}`}
+                      >
                         {provider.successRate}%
                       </span>
                     </div>
@@ -229,7 +291,9 @@ export default function DeliveryDashboard() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-base-content/70">{t('savings')}</span>
-                <span className="text-xl font-semibold text-success">€1,245</span>
+                <span className="text-xl font-semibold text-success">
+                  €1,245
+                </span>
               </div>
               <div className="divider"></div>
               <div className="text-sm text-base-content/70">

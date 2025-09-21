@@ -80,8 +80,8 @@ func (m *MockCalculator) CalculateMock(ctx context.Context, req *CalculationRequ
 				priceModifier: 1.0,
 				days:          3,
 				services: []models.DeliveryService{
-					{Name: "Отслеживание", Code: "tracking", Included: true},
-					{Name: "SMS уведомления", Code: "sms", Included: false, Price: 50},
+					{Name: "Отслеживание", Code: "tracking", IsIncluded: true},
+					{Name: "SMS уведомления", Code: "sms", IsIncluded: false, Price: 50, IsAvailable: true},
 				},
 			},
 			{
@@ -89,9 +89,9 @@ func (m *MockCalculator) CalculateMock(ctx context.Context, req *CalculationRequ
 				priceModifier: 1.5,
 				days:          1,
 				services: []models.DeliveryService{
-					{Name: "Отслеживание", Code: "tracking", Included: true},
-					{Name: "SMS уведомления", Code: "sms", Included: true},
-					{Name: "Приоритетная обработка", Code: "priority", Included: true},
+					{Name: "Отслеживание", Code: "tracking", IsIncluded: true},
+					{Name: "SMS уведомления", Code: "sms", IsIncluded: true, IsAvailable: true},
+					{Name: "Приоритетная обработка", Code: "priority", IsIncluded: true, IsAvailable: true},
 				},
 			},
 		}
@@ -108,8 +108,8 @@ func (m *MockCalculator) CalculateMock(ctx context.Context, req *CalculationRequ
 				priceModifier: 0,
 				days:          1,
 				services: []models.DeliveryService{
-					{Name: "Самовывоз со склада", Code: "self_pickup", Included: true},
-					{Name: "Хранение 7 дней", Code: "storage", Included: true},
+					{Name: "Самовывоз со склада", Code: "self_pickup", IsIncluded: true, IsAvailable: true},
+					{Name: "Хранение 7 дней", Code: "storage", IsIncluded: true, IsAvailable: true},
 				},
 			})
 		}
@@ -142,14 +142,14 @@ func (m *MockCalculator) CalculateMock(ctx context.Context, req *CalculationRequ
 			estimatedDate := time.Now().AddDate(0, 0, dt.days)
 
 			quote := ProviderQuote{
-				ProviderID:   provider.id,
-				ProviderCode: provider.code,
-				ProviderName: provider.name,
-				DeliveryType: dt.name,
-				TotalPrice:   totalCost,
-				DeliveryCost: deliveryCost,
+				ProviderID:    provider.id,
+				ProviderCode:  provider.code,
+				ProviderName:  provider.name,
+				DeliveryType:  dt.name,
+				TotalPrice:    totalCost,
+				DeliveryCost:  deliveryCost,
 				InsuranceCost: insuranceCost,
-				CODFee:       codFee,
+				CODFee:        codFee,
 				CostBreakdown: models.CostBreakdown{
 					BasePrice:        basePrice * dt.priceModifier,
 					WeightSurcharge:  weightSurcharge,

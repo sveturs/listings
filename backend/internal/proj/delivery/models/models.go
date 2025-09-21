@@ -10,13 +10,13 @@ import (
 
 // Константы статусов отправления
 const (
-	ShipmentStatusPending   = "pending"
+	ShipmentStatusPending    = "pending"
 	ShipmentStatusProcessing = "processing"
-	ShipmentStatusShipped   = "shipped"
-	ShipmentStatusInTransit = "in_transit"
-	ShipmentStatusDelivered = "delivered"
-	ShipmentStatusCancelled = "cancelled"
-	ShipmentStatusFailed    = "failed"
+	ShipmentStatusShipped    = "shipped"
+	ShipmentStatusInTransit  = "in_transit"
+	ShipmentStatusDelivered  = "delivered"
+	ShipmentStatusCancelled  = "cancelled"
+	ShipmentStatusFailed     = "failed"
 )
 
 // Константы типов зон
@@ -29,42 +29,42 @@ const (
 
 // Provider - модель провайдера доставки
 type Provider struct {
-	ID               int             `json:"id" db:"id"`
-	Code             string          `json:"code" db:"code"`
-	Name             string          `json:"name" db:"name"`
-	LogoURL          *string         `json:"logo_url,omitempty" db:"logo_url"`
-	IsActive         bool            `json:"is_active" db:"is_active"`
-	SupportsCOD      bool            `json:"supports_cod" db:"supports_cod"`
-	SupportsInsurance bool           `json:"supports_insurance" db:"supports_insurance"`
-	SupportsTracking bool            `json:"supports_tracking" db:"supports_tracking"`
-	APIConfig        *json.RawMessage `json:"api_config,omitempty" db:"api_config"`
-	Capabilities     *json.RawMessage `json:"capabilities,omitempty" db:"capabilities"`
-	CreatedAt        time.Time       `json:"created_at" db:"created_at"`
-	UpdatedAt        time.Time       `json:"updated_at" db:"updated_at"`
+	ID                int              `json:"id" db:"id"`
+	Code              string           `json:"code" db:"code"`
+	Name              string           `json:"name" db:"name"`
+	LogoURL           *string          `json:"logo_url,omitempty" db:"logo_url"`
+	IsActive          bool             `json:"is_active" db:"is_active"`
+	SupportsCOD       bool             `json:"supports_cod" db:"supports_cod"`
+	SupportsInsurance bool             `json:"supports_insurance" db:"supports_insurance"`
+	SupportsTracking  bool             `json:"supports_tracking" db:"supports_tracking"`
+	APIConfig         *json.RawMessage `json:"api_config,omitempty" db:"api_config"`
+	Capabilities      *json.RawMessage `json:"capabilities,omitempty" db:"capabilities"`
+	CreatedAt         time.Time        `json:"created_at" db:"created_at"`
+	UpdatedAt         time.Time        `json:"updated_at" db:"updated_at"`
 }
 
 // Shipment - модель отправления
 type Shipment struct {
-	ID                  int             `json:"id" db:"id"`
-	ProviderID          int             `json:"provider_id" db:"provider_id"`
-	OrderID             *int            `json:"order_id,omitempty" db:"order_id"`
-	ExternalID          *string         `json:"external_id,omitempty" db:"external_id"`
-	TrackingNumber      *string         `json:"tracking_number,omitempty" db:"tracking_number"`
-	Status              string          `json:"status" db:"status"`
-	SenderInfo          json.RawMessage `json:"sender_info" db:"sender_info"`
-	RecipientInfo       json.RawMessage `json:"recipient_info" db:"recipient_info"`
-	PackageInfo         json.RawMessage `json:"package_info" db:"package_info"`
-	DeliveryCost        *float64        `json:"delivery_cost,omitempty" db:"delivery_cost"`
-	InsuranceCost       *float64        `json:"insurance_cost,omitempty" db:"insurance_cost"`
-	CODAmount           *float64        `json:"cod_amount,omitempty" db:"cod_amount"`
-	CostBreakdown       json.RawMessage `json:"cost_breakdown,omitempty" db:"cost_breakdown"`
-	PickupDate          *time.Time      `json:"pickup_date,omitempty" db:"pickup_date"`
-	EstimatedDelivery   *time.Time      `json:"estimated_delivery,omitempty" db:"estimated_delivery"`
-	ActualDeliveryDate  *time.Time      `json:"actual_delivery_date,omitempty" db:"actual_delivery_date"`
-	ProviderResponse    json.RawMessage `json:"provider_response,omitempty" db:"provider_response"`
-	Labels              json.RawMessage `json:"labels,omitempty" db:"labels"`
-	CreatedAt           time.Time       `json:"created_at" db:"created_at"`
-	UpdatedAt           time.Time       `json:"updated_at" db:"updated_at"`
+	ID                 int             `json:"id" db:"id"`
+	ProviderID         int             `json:"provider_id" db:"provider_id"`
+	OrderID            *int            `json:"order_id,omitempty" db:"order_id"`
+	ExternalID         *string         `json:"external_id,omitempty" db:"external_id"`
+	TrackingNumber     *string         `json:"tracking_number,omitempty" db:"tracking_number"`
+	Status             string          `json:"status" db:"status"`
+	SenderInfo         json.RawMessage `json:"sender_info" db:"sender_info"`
+	RecipientInfo      json.RawMessage `json:"recipient_info" db:"recipient_info"`
+	PackageInfo        json.RawMessage `json:"package_info" db:"package_info"`
+	DeliveryCost       *float64        `json:"delivery_cost,omitempty" db:"delivery_cost"`
+	InsuranceCost      *float64        `json:"insurance_cost,omitempty" db:"insurance_cost"`
+	CODAmount          *float64        `json:"cod_amount,omitempty" db:"cod_amount"`
+	CostBreakdown      json.RawMessage `json:"cost_breakdown,omitempty" db:"cost_breakdown"`
+	PickupDate         *time.Time      `json:"pickup_date,omitempty" db:"pickup_date"`
+	EstimatedDelivery  *time.Time      `json:"estimated_delivery,omitempty" db:"estimated_delivery"`
+	ActualDeliveryDate *time.Time      `json:"actual_delivery_date,omitempty" db:"actual_delivery_date"`
+	ProviderResponse   json.RawMessage `json:"provider_response,omitempty" db:"provider_response"`
+	Labels             json.RawMessage `json:"labels,omitempty" db:"labels"`
+	CreatedAt          time.Time       `json:"created_at" db:"created_at"`
+	UpdatedAt          time.Time       `json:"updated_at" db:"updated_at"`
 
 	// Связанные данные (не из БД, заполняются при необходимости)
 	Provider *Provider       `json:"provider,omitempty" db:"-"`
@@ -202,6 +202,16 @@ type ZoneMultiplier struct {
 	Multiplier float64 `json:"multiplier"`
 }
 
+// DeliveryService - дополнительная услуга доставки
+type DeliveryService struct {
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	Description string  `json:"description,omitempty"`
+	Price       float64 `json:"price,omitempty"`
+	IsIncluded  bool    `json:"is_included"`
+	IsAvailable bool    `json:"is_available"`
+}
+
 // CostBreakdown - детализация стоимости
 type CostBreakdown struct {
 	BasePrice           float64 `json:"base_price"`
@@ -254,14 +264,14 @@ func (da *DeliveryAttributes) Scan(value interface{}) error {
 
 // Дополнительные статусы отправления (к уже определенным выше)
 const (
-	ShipmentStatusConfirmed        = "confirmed"
-	ShipmentStatusPickedUp         = "picked_up"
-	ShipmentStatusOutForDelivery   = "out_for_delivery"
+	ShipmentStatusConfirmed         = "confirmed"
+	ShipmentStatusPickedUp          = "picked_up"
+	ShipmentStatusOutForDelivery    = "out_for_delivery"
 	ShipmentStatusDeliveryAttempted = "delivery_attempted"
-	ShipmentStatusReturning        = "returning"
-	ShipmentStatusReturned         = "returned"
-	ShipmentStatusLost             = "lost"
-	ShipmentStatusDamaged          = "damaged"
+	ShipmentStatusReturning         = "returning"
+	ShipmentStatusReturned          = "returned"
+	ShipmentStatusLost              = "lost"
+	ShipmentStatusDamaged           = "damaged"
 )
 
 // RuleType - типы правил расчета стоимости

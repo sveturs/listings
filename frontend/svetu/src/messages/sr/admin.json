@@ -1360,9 +1360,11 @@
   },
   "delivery": {
     "title": "Upravljanje dostavom",
+    "subtitle": "Sveobuhvatan sistem upravljanja dostavom i logistikom",
     "description": "Upravljanje provajderima dostave i pošiljkama",
     "tabs": {
       "dashboard": "Kontrolna tabla",
+      "shipments": "Pošiljke",
       "providers": "Provajderi",
       "pricingRules": "Pravila cena",
       "problems": "Problematične pošiljke",
@@ -1583,6 +1585,77 @@
         "costAnalysis": "Analiza troškova",
         "geographicDistribution": "Geografska distribucija"
       }
+    },
+    "problemShipments": {
+      "title": "Problematične pošiljke",
+      "filters": {
+        "allTypes": "Svi tipovi",
+        "allStatuses": "Svi statusi",
+        "delayed": "Kašnjenje",
+        "lost": "Izgubljeno",
+        "damaged": "Oštećeno",
+        "wrongAddress": "Pogrešna adresa",
+        "refused": "Odbijeno"
+      },
+      "table": {
+        "tracking": "Praćenje",
+        "provider": "Provajder",
+        "problemType": "Tip problema",
+        "priority": "Prioritet",
+        "status": "Status",
+        "assignedTo": "Dodeljeno",
+        "createdAt": "Kreirano",
+        "actions": "Akcije"
+      },
+      "priority": {
+        "low": "Nizak",
+        "medium": "Srednji",
+        "high": "Visok",
+        "critical": "Kritičan"
+      },
+      "status": {
+        "open": "Otvoreno",
+        "investigating": "U istrazi",
+        "resolved": "Rešeno",
+        "closed": "Zatvoreno"
+      },
+      "types": {
+        "delayed": "Kašnjenje",
+        "lost": "Izgubljeno",
+        "damaged": "Oštećeno",
+        "wrongAddress": "Pogrešna adresa",
+        "refused": "Odbijeno",
+        "returnRequested": "Zahtev za povrat"
+      },
+      "stats": {
+        "open": "Otvorene",
+        "inProgress": "U toku",
+        "resolved": "Rešene",
+        "critical": "Kritične"
+      },
+      "actions": {
+        "view": "Pregled",
+        "assign": "Dodeli",
+        "resolve": "Reši",
+        "comment": "Komentar",
+        "escalate": "Eskalirati",
+        "contact": "Kontaktiraj kupca"
+      },
+      "assignModal": {
+        "title": "Dodeli problem",
+        "selectAdmin": "Izaberite administratora",
+        "assign": "Dodeli",
+        "cancel": "Otkaži"
+      },
+      "resolveModal": {
+        "title": "Reši problem",
+        "description": "Opis problema",
+        "resolution": "Rešenje",
+        "resolutionPlaceholder": "Opišite kako je problem rešen...",
+        "resolve": "Reši",
+        "cancel": "Otkaži"
+      },
+      "noProblems": "Nema problematičnih pošiljki"
     }
   }
 }

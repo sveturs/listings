@@ -8,7 +8,6 @@ import {
   InformationCircleIcon,
   TruckIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from 'next-intl';
 import { DeliveryAttributes } from '@/types/delivery';
 
 interface Props {
@@ -31,8 +30,6 @@ export default function DeliveryAttributesDisplay({
   compact = false,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
-
   const calculateVolume = () => {
     const { dimensions } = attributes;
     return (

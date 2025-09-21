@@ -78,7 +78,7 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 
 	// Базовая стоимость
 	basePrice := 300.0
-	weightPrice := totalWeight * 50 // 50 RSD за кг
+	weightPrice := totalWeight * 50    // 50 RSD за кг
 	volumePrice := totalVolume * 10000 // 10000 RSD за м³
 
 	// Берем максимум из весовой и объемной стоимости
@@ -110,8 +110,8 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 		TotalCost:     standardCost,
 		EstimatedDays: 3 + rand.Intn(3),
 		CostBreakdown: &interfaces.CostBreakdown{
-			BasePrice:        basePrice,
-			WeightSurcharge:  weightPrice,
+			BasePrice:       basePrice,
+			WeightSurcharge: weightPrice,
 			FragileSurcharge: func() float64 {
 				if hasFragile {
 					return 100
@@ -131,8 +131,8 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 		TotalCost:     expressCost,
 		EstimatedDays: 1 + rand.Intn(2),
 		CostBreakdown: &interfaces.CostBreakdown{
-			BasePrice:        basePrice * 1.5,
-			WeightSurcharge:  weightPrice * 1.5,
+			BasePrice:       basePrice * 1.5,
+			WeightSurcharge: weightPrice * 1.5,
 			FragileSurcharge: func() float64 {
 				if hasFragile {
 					return 150
@@ -327,16 +327,16 @@ func (m *MockProvider) ValidateAddress(ctx context.Context, address *interfaces.
 
 	// Список поддерживаемых городов
 	supportedCities := map[string]bool{
-		"Белград":   true,
-		"Belgrade":  true,
-		"Нови Сад":  true,
-		"Novi Sad":  true,
-		"Ниш":       true,
-		"Nis":       true,
+		"Белград":    true,
+		"Belgrade":   true,
+		"Нови Сад":   true,
+		"Novi Sad":   true,
+		"Ниш":        true,
+		"Nis":        true,
 		"Крагујевац": true,
 		"Kragujevac": true,
-		"Суботица":  true,
-		"Subotica":  true,
+		"Суботица":   true,
+		"Subotica":   true,
 	}
 
 	isValid := supportedCities[address.City]
@@ -384,18 +384,18 @@ func (m *MockProvider) GetCapabilities() *interfaces.ProviderCapabilities {
 
 func getStatusDescription(status string) string {
 	descriptions := map[string]string{
-		interfaces.StatusPending:          "Ожидает обработки",
-		interfaces.StatusConfirmed:        "Заказ подтвержден",
-		interfaces.StatusPickedUp:         "Забрано курьером",
-		interfaces.StatusInTransit:        "В пути",
-		interfaces.StatusOutForDelivery:   "Передано курьеру для доставки",
-		interfaces.StatusDelivered:        "Доставлено",
+		interfaces.StatusPending:           "Ожидает обработки",
+		interfaces.StatusConfirmed:         "Заказ подтвержден",
+		interfaces.StatusPickedUp:          "Забрано курьером",
+		interfaces.StatusInTransit:         "В пути",
+		interfaces.StatusOutForDelivery:    "Передано курьеру для доставки",
+		interfaces.StatusDelivered:         "Доставлено",
 		interfaces.StatusDeliveryAttempted: "Попытка доставки не удалась",
-		interfaces.StatusReturning:        "Возвращается отправителю",
-		interfaces.StatusReturned:         "Возвращено отправителю",
-		interfaces.StatusCancelled:        "Отменено",
-		interfaces.StatusLost:             "Утеряно",
-		interfaces.StatusDamaged:          "Повреждено при транспортировке",
+		interfaces.StatusReturning:         "Возвращается отправителю",
+		interfaces.StatusReturned:          "Возвращено отправителю",
+		interfaces.StatusCancelled:         "Отменено",
+		interfaces.StatusLost:              "Утеряно",
+		interfaces.StatusDamaged:           "Повреждено при транспортировке",
 	}
 
 	if desc, ok := descriptions[status]; ok {

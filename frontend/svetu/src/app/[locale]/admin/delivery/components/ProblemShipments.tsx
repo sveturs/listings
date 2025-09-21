@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
 
 interface ProblemShipment {
   id: number;
@@ -24,11 +23,13 @@ export default function ProblemShipments() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedProblem, setSelectedProblem] = useState<ProblemShipment | null>(null);
+  const [selectedProblem, setSelectedProblem] =
+    useState<ProblemShipment | null>(null);
   const [resolveModalOpen, setResolveModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProblemShipments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterType, filterStatus]);
 
   const fetchProblemShipments = async () => {
@@ -47,7 +48,7 @@ export default function ProblemShipments() {
             created_at: '2024-11-23 14:30',
             customer_name: 'Марко Петровић',
             customer_phone: '+381 65 123 4567',
-            description: 'Задержка доставки более 48 часов'
+            description: 'Задержка доставки более 48 часов',
           },
           {
             id: 2,
@@ -59,7 +60,7 @@ export default function ProblemShipments() {
             created_at: '2024-11-23 10:15',
             customer_name: 'Ана Јовановић',
             customer_phone: '+381 64 987 6543',
-            description: 'Посылка не найдена в системе отслеживания'
+            description: 'Посылка не найдена в системе отслеживания',
           },
           {
             id: 3,
@@ -72,7 +73,7 @@ export default function ProblemShipments() {
             created_at: '2024-11-22 16:45',
             customer_name: 'Милан Стојановић',
             customer_phone: '+381 66 555 4444',
-            description: 'Товар поврежден при транспортировке'
+            description: 'Товар поврежден при транспортировке',
           },
           {
             id: 4,
@@ -85,7 +86,7 @@ export default function ProblemShipments() {
             created_at: '2024-11-23 09:00',
             customer_name: 'Јелена Николић',
             customer_phone: '+381 63 222 3333',
-            description: 'Неверный адрес доставки'
+            description: 'Неверный адрес доставки',
           },
           {
             id: 5,
@@ -98,16 +99,16 @@ export default function ProblemShipments() {
             created_at: '2024-11-22 12:30',
             customer_name: 'Драган Ђорђевић',
             customer_phone: '+381 65 777 8888',
-            description: 'Получатель отказался от посылки'
-          }
+            description: 'Получатель отказался от посылки',
+          },
         ];
 
         let filtered = mockData;
         if (filterType !== 'all') {
-          filtered = filtered.filter(p => p.problem_type === filterType);
+          filtered = filtered.filter((p) => p.problem_type === filterType);
         }
         if (filterStatus !== 'all') {
-          filtered = filtered.filter(p => p.status === filterStatus);
+          filtered = filtered.filter((p) => p.status === filterStatus);
         }
 
         setProblems(filtered);
@@ -124,7 +125,7 @@ export default function ProblemShipments() {
       low: 'badge-ghost',
       medium: 'badge-warning',
       high: 'badge-error',
-      critical: 'badge-error animate-pulse'
+      critical: 'badge-error animate-pulse',
     };
     return `badge ${classes[priority] || 'badge-ghost'}`;
   };
@@ -134,7 +135,7 @@ export default function ProblemShipments() {
       open: 'badge-info',
       investigating: 'badge-warning',
       resolved: 'badge-success',
-      closed: 'badge-ghost'
+      closed: 'badge-ghost',
     };
     return `badge ${classes[status] || 'badge-ghost'}`;
   };
@@ -225,8 +226,12 @@ export default function ProblemShipments() {
               <tr key={problem.id}>
                 <td>
                   <div>
-                    <div className="font-mono text-sm">{problem.tracking_number}</div>
-                    <div className="text-xs text-base-content/60">{problem.customer_name}</div>
+                    <div className="font-mono text-sm">
+                      {problem.tracking_number}
+                    </div>
+                    <div className="text-xs text-base-content/60">
+                      {problem.customer_name}
+                    </div>
                   </div>
                 </td>
                 <td>{problem.provider_name}</td>
@@ -248,14 +253,30 @@ export default function ProblemShipments() {
                     <label tabIndex={0} className="btn btn-ghost btn-xs">
                       ⋮
                     </label>
-                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                      <li><a>{t('actions.view')}</a></li>
-                      <li><a>{t('actions.assign')}</a></li>
-                      {problem.status !== 'resolved' && problem.status !== 'closed' && (
-                        <li><a onClick={() => openResolveModal(problem)}>{t('actions.resolve')}</a></li>
-                      )}
-                      <li><a>{t('actions.escalate')}</a></li>
-                      <li><a>{t('actions.contact')}</a></li>
+                    <ul
+                      tabIndex={0}
+                      className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+                    >
+                      <li>
+                        <a>{t('actions.view')}</a>
+                      </li>
+                      <li>
+                        <a>{t('actions.assign')}</a>
+                      </li>
+                      {problem.status !== 'resolved' &&
+                        problem.status !== 'closed' && (
+                          <li>
+                            <a onClick={() => openResolveModal(problem)}>
+                              {t('actions.resolve')}
+                            </a>
+                          </li>
+                        )}
+                      <li>
+                        <a>{t('actions.escalate')}</a>
+                      </li>
+                      <li>
+                        <a>{t('actions.contact')}</a>
+                      </li>
                     </ul>
                   </div>
                 </td>
@@ -275,8 +296,12 @@ export default function ProblemShipments() {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-base-content/70 mb-2">Описание проблемы:</p>
-                <p className="p-3 bg-base-200 rounded">{selectedProblem.description}</p>
+                <p className="text-sm text-base-content/70 mb-2">
+                  Описание проблемы:
+                </p>
+                <p className="p-3 bg-base-200 rounded">
+                  {selectedProblem.description}
+                </p>
               </div>
 
               <div className="form-control">
@@ -291,7 +316,9 @@ export default function ProblemShipments() {
 
               <div className="form-control">
                 <label className="label cursor-pointer">
-                  <span className="label-text">Отправить уведомление клиенту</span>
+                  <span className="label-text">
+                    Отправить уведомление клиенту
+                  </span>
                   <input type="checkbox" className="checkbox" defaultChecked />
                 </label>
               </div>
@@ -299,12 +326,19 @@ export default function ProblemShipments() {
 
             <div className="modal-action">
               <button className="btn btn-success">Решить</button>
-              <button className="btn" onClick={() => setResolveModalOpen(false)}>
+              <button
+                className="btn"
+                onClick={() => setResolveModalOpen(false)}
+              >
                 Отмена
               </button>
             </div>
           </div>
-          <form method="dialog" className="modal-backdrop" onClick={() => setResolveModalOpen(false)}>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setResolveModalOpen(false)}
+          >
             <button>close</button>
           </form>
         </dialog>

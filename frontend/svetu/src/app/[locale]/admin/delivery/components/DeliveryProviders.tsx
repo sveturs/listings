@@ -21,7 +21,9 @@ export default function DeliveryProviders() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [configModalOpen, setConfigModalOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(
+    null
+  );
 
   useEffect(() => {
     fetchProviders();
@@ -40,7 +42,7 @@ export default function DeliveryProviders() {
 
       const response = await fetch('/api/v1/admin/delivery/providers', {
         credentials: 'include',
-        headers
+        headers,
       });
 
       if (response.ok) {
@@ -58,7 +60,7 @@ export default function DeliveryProviders() {
             supports_cod: true,
             supports_insurance: true,
             supports_tracking: true,
-            api_configured: true
+            api_configured: true,
           },
           {
             id: 2,
@@ -69,7 +71,7 @@ export default function DeliveryProviders() {
             supports_cod: true,
             supports_insurance: false,
             supports_tracking: true,
-            api_configured: false
+            api_configured: false,
           },
           {
             id: 3,
@@ -80,7 +82,7 @@ export default function DeliveryProviders() {
             supports_cod: true,
             supports_insurance: true,
             supports_tracking: true,
-            api_configured: false
+            api_configured: false,
           },
           {
             id: 4,
@@ -91,7 +93,7 @@ export default function DeliveryProviders() {
             supports_cod: false,
             supports_insurance: true,
             supports_tracking: true,
-            api_configured: false
+            api_configured: false,
           },
           {
             id: 5,
@@ -102,7 +104,7 @@ export default function DeliveryProviders() {
             supports_cod: true,
             supports_insurance: false,
             supports_tracking: true,
-            api_configured: false
+            api_configured: false,
           },
           {
             id: 6,
@@ -113,8 +115,8 @@ export default function DeliveryProviders() {
             supports_cod: false,
             supports_insurance: true,
             supports_tracking: true,
-            api_configured: false
-          }
+            api_configured: false,
+          },
         ]);
       }
     } catch (error) {
@@ -135,23 +137,30 @@ export default function DeliveryProviders() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`/api/v1/admin/delivery/providers/${provider.id}/toggle`, {
-        method: 'POST',
-        credentials: 'include',
-        headers
-      });
+      const response = await fetch(
+        `/api/v1/admin/delivery/providers/${provider.id}/toggle`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers,
+        }
+      );
 
       if (response.ok) {
-        setProviders(prev => prev.map(p =>
-          p.id === provider.id ? { ...p, is_active: !p.is_active } : p
-        ));
+        setProviders((prev) =>
+          prev.map((p) =>
+            p.id === provider.id ? { ...p, is_active: !p.is_active } : p
+          )
+        );
       }
     } catch (error) {
       console.error('Failed to toggle provider status:', error);
       // В случае ошибки, все равно обновляем локально для демонстрации
-      setProviders(prev => prev.map(p =>
-        p.id === provider.id ? { ...p, is_active: !p.is_active } : p
-      ));
+      setProviders((prev) =>
+        prev.map((p) =>
+          p.id === provider.id ? { ...p, is_active: !p.is_active } : p
+        )
+      );
     }
   };
 
@@ -194,7 +203,11 @@ export default function DeliveryProviders() {
                   <div className="avatar">
                     <div className="w-12 h-12 rounded bg-base-200 flex items-center justify-center">
                       {provider.logo_url ? (
-                        <img src={provider.logo_url} alt={provider.name} className="w-10 h-10 object-contain" />
+                        <img
+                          src={provider.logo_url}
+                          alt={provider.name}
+                          className="w-10 h-10 object-contain"
+                        />
                       ) : (
                         <span className="text-2xl">📦</span>
                       )}
@@ -207,24 +220,45 @@ export default function DeliveryProviders() {
                 <td className="font-medium">{provider.name}</td>
                 <td>
                   <div className="flex flex-col gap-1">
-                    <span className={`badge ${provider.is_active ? 'badge-success' : 'badge-ghost'}`}>
-                      {provider.is_active ? t('status.active') : t('status.inactive')}
+                    <span
+                      className={`badge ${provider.is_active ? 'badge-success' : 'badge-ghost'}`}
+                    >
+                      {provider.is_active
+                        ? t('status.active')
+                        : t('status.inactive')}
                     </span>
                     {provider.api_configured && (
-                      <span className="badge badge-info badge-sm">API настроен</span>
+                      <span className="badge badge-info badge-sm">
+                        API настроен
+                      </span>
                     )}
                   </div>
                 </td>
                 <td>
                   <div className="flex flex-wrap gap-1">
                     {provider.supports_cod && (
-                      <span className="badge badge-sm" title={t('capabilities.cod')}>COD</span>
+                      <span
+                        className="badge badge-sm"
+                        title={t('capabilities.cod')}
+                      >
+                        COD
+                      </span>
                     )}
                     {provider.supports_insurance && (
-                      <span className="badge badge-sm" title={t('capabilities.insurance')}>📋</span>
+                      <span
+                        className="badge badge-sm"
+                        title={t('capabilities.insurance')}
+                      >
+                        📋
+                      </span>
                     )}
                     {provider.supports_tracking && (
-                      <span className="badge badge-sm" title={t('capabilities.tracking')}>📍</span>
+                      <span
+                        className="badge badge-sm"
+                        title={t('capabilities.tracking')}
+                      >
+                        📍
+                      </span>
                     )}
                   </div>
                 </td>
@@ -240,7 +274,9 @@ export default function DeliveryProviders() {
                       className={`btn btn-xs ${provider.is_active ? 'btn-error' : 'btn-success'}`}
                       onClick={() => toggleProviderStatus(provider)}
                     >
-                      {provider.is_active ? t('actions.deactivate') : t('actions.activate')}
+                      {provider.is_active
+                        ? t('actions.deactivate')
+                        : t('actions.activate')}
                     </button>
                     <button className="btn btn-ghost btn-xs">
                       {t('actions.test')}
@@ -266,26 +302,42 @@ export default function DeliveryProviders() {
                 <label className="label">
                   <span className="label-text">{t('configModal.apiUrl')}</span>
                 </label>
-                <input type="text" className="input input-bordered" placeholder="https://api.provider.com" />
+                <input
+                  type="text"
+                  className="input input-bordered"
+                  placeholder="https://api.provider.com"
+                />
               </div>
 
               <div className="form-control">
                 <label className="label">
                   <span className="label-text">{t('configModal.apiKey')}</span>
                 </label>
-                <input type="text" className="input input-bordered" placeholder="your-api-key" />
+                <input
+                  type="text"
+                  className="input input-bordered"
+                  placeholder="your-api-key"
+                />
               </div>
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">{t('configModal.apiSecret')}</span>
+                  <span className="label-text">
+                    {t('configModal.apiSecret')}
+                  </span>
                 </label>
-                <input type="password" className="input input-bordered" placeholder="your-api-secret" />
+                <input
+                  type="password"
+                  className="input input-bordered"
+                  placeholder="your-api-secret"
+                />
               </div>
 
               <div className="form-control">
                 <label className="label cursor-pointer">
-                  <span className="label-text">{t('configModal.testMode')}</span>
+                  <span className="label-text">
+                    {t('configModal.testMode')}
+                  </span>
                   <input type="checkbox" className="toggle toggle-primary" />
                 </label>
               </div>
@@ -296,13 +348,19 @@ export default function DeliveryProviders() {
             </div>
 
             <div className="modal-action">
-              <button className="btn btn-primary">{t('configModal.save')}</button>
+              <button className="btn btn-primary">
+                {t('configModal.save')}
+              </button>
               <button className="btn" onClick={() => setConfigModalOpen(false)}>
                 {t('configModal.cancel')}
               </button>
             </div>
           </div>
-          <form method="dialog" className="modal-backdrop" onClick={() => setConfigModalOpen(false)}>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setConfigModalOpen(false)}
+          >
             <button>close</button>
           </form>
         </dialog>

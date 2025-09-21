@@ -5641,6 +5641,19 @@ definitions:
     - ShipmentStatusReturnToSender
     - ShipmentStatusReturnedToSender
     - ShipmentStatusCODPaid
+  backend_internal_proj_delivery_calculator.CalculationData:
+    properties:
+      cheapest:
+        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
+      fastest:
+        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
+      providers:
+        items:
+          $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
+        type: array
+      recommended:
+        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
+    type: object
   backend_internal_proj_delivery_calculator.CalculationRequest:
     properties:
       cod_amount:
@@ -5662,16 +5675,12 @@ definitions:
     type: object
   backend_internal_proj_delivery_calculator.CalculationResponse:
     properties:
-      cheapest:
-        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
-      fastest:
-        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
-      providers:
-        items:
-          $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
-        type: array
-      recommended:
-        $ref: '#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote'
+      data:
+        $ref: '#/definitions/backend_internal_proj_delivery_calculator.CalculationData'
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   backend_internal_proj_delivery_calculator.ItemWithAttrs:
     properties:
@@ -5700,12 +5709,20 @@ definitions:
     type: object
   backend_internal_proj_delivery_calculator.ProviderQuote:
     properties:
+      cod_fee:
+        type: number
       cost_breakdown:
         $ref: '#/definitions/backend_internal_proj_delivery_models.CostBreakdown'
+      delivery_cost:
+        type: number
       delivery_type:
         type: string
       estimated_days:
         type: integer
+      estimated_delivery_date:
+        type: string
+      insurance_cost:
+        type: number
       is_available:
         type: boolean
       provider_code:
@@ -5716,9 +5733,9 @@ definitions:
         type: string
       services:
         items:
-          type: string
+          $ref: '#/definitions/backend_internal_proj_delivery_models.DeliveryService'
         type: array
-      total_cost:
+      total_price:
         type: number
       unavailable_reason:
         type: string
@@ -5827,6 +5844,35 @@ definitions:
       timestamp:
         type: string
     type: object
+  backend_internal_proj_delivery_models.AnalyticsData:
+    properties:
+      avg_delivery_time:
+        type: string
+      cost_per_shipment:
+        type: number
+      customer_satisfaction:
+        type: number
+      delivery_rate:
+        type: number
+      geographic_distribution:
+        additionalProperties:
+          type: number
+        type: object
+      period:
+        type: string
+      problem_rate:
+        type: number
+      provider_comparison:
+        items:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.ProviderStats'
+        type: array
+      total_shipments:
+        type: integer
+      trend_data:
+        items:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.TrendPoint'
+        type: array
+    type: object
   backend_internal_proj_delivery_models.CategoryDefaults:
     properties:
       category_id:
@@ -5849,6 +5895,15 @@ definitions:
         type: boolean
       updated_at:
         type: string
+    type: object
+  backend_internal_proj_delivery_models.CostAnalysis:
+    properties:
+      avg_cost:
+        type: number
+      savings:
+        type: number
+      total_cost:
+        type: number
     type: object
   backend_internal_proj_delivery_models.CostBreakdown:
     properties:
@@ -5875,6 +5930,27 @@ definitions:
       weight_surcharge:
         type: number
     type: object
+  backend_internal_proj_delivery_models.DashboardStats:
+    properties:
+      avg_delivery_time:
+        type: string
+      cost_analysis:
+        $ref: '#/definitions/backend_internal_proj_delivery_models.CostAnalysis'
+      in_transit:
+        type: integer
+      problems:
+        type: integer
+      provider_stats:
+        items:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.ProviderStats'
+        type: array
+      success_rate:
+        type: number
+      today_delivered:
+        type: integer
+      today_shipments:
+        type: integer
+    type: object
   backend_internal_proj_delivery_models.DeliveryAttributes:
     properties:
       dimensions:
@@ -5894,6 +5970,21 @@ definitions:
       volume_m3:
         type: number
       weight_kg:
+        type: number
+    type: object
+  backend_internal_proj_delivery_models.DeliveryService:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      is_available:
+        type: boolean
+      is_included:
+        type: boolean
+      name:
+        type: string
+      price:
         type: number
     type: object
   backend_internal_proj_delivery_models.Dimensions:
@@ -5946,6 +6037,43 @@ definitions:
           type: integer
         type: array
     type: object
+  backend_internal_proj_delivery_models.ProblemAssignment:
+    properties:
+      admin_id:
+        type: integer
+    type: object
+  backend_internal_proj_delivery_models.ProblemResolution:
+    properties:
+      notify_customer:
+        type: boolean
+      resolution:
+        type: string
+    type: object
+  backend_internal_proj_delivery_models.ProblemShipment:
+    properties:
+      assigned_to:
+        type: string
+      created_at:
+        type: string
+      customer_name:
+        type: string
+      customer_phone:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      priority:
+        type: string
+      problem_type:
+        type: string
+      provider_name:
+        type: string
+      status:
+        type: string
+      tracking_number:
+        type: string
+    type: object
   backend_internal_proj_delivery_models.Provider:
     properties:
       api_config:
@@ -5976,6 +6104,32 @@ definitions:
         type: boolean
       updated_at:
         type: string
+    type: object
+  backend_internal_proj_delivery_models.ProviderConfig:
+    properties:
+      api_key:
+        type: string
+      api_secret:
+        type: string
+      api_url:
+        type: string
+      test_mode:
+        type: boolean
+    type: object
+  backend_internal_proj_delivery_models.ProviderStats:
+    properties:
+      avg_time:
+        type: string
+      code:
+        type: string
+      delivered:
+        type: integer
+      name:
+        type: string
+      shipments:
+        type: integer
+      success_rate:
+        type: number
     type: object
   backend_internal_proj_delivery_models.Shipment:
     properties:
@@ -6062,6 +6216,17 @@ definitions:
         type: integer
       status:
         type: string
+    type: object
+  backend_internal_proj_delivery_models.TrendPoint:
+    properties:
+      date:
+        type: string
+      delivered:
+        type: integer
+      problems:
+        type: integer
+      shipments:
+        type: integer
     type: object
   backend_internal_proj_delivery_service.AnalyticsPeriod:
     properties:
@@ -12737,7 +12902,58 @@ paths:
       summary: Get delivery analytics
       tags:
       - admin-delivery
+  /api/v1/admin/delivery/dashboard:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_delivery_models.DashboardStats'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get dashboard statistics
+      tags:
+      - delivery-admin
   /api/v1/admin/delivery/pricing-rules:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pricing rules
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_delivery_models.PricingRule'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get pricing rules
+      tags:
+      - delivery-admin
     post:
       consumes:
       - application/json
@@ -12772,6 +12988,183 @@ paths:
       summary: Create pricing rule
       tags:
       - admin-delivery
+  /api/v1/admin/delivery/pricing-rules/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rule deleted
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Delete pricing rule
+      tags:
+      - delivery-admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Rule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pricing rule
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.PricingRule'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Rule updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Update pricing rule
+      tags:
+      - delivery-admin
+  /api/v1/admin/delivery/problems:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Problem type filter
+        in: query
+        name: type
+        type: string
+      - description: Status filter
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of problem shipments
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_proj_delivery_models.ProblemShipment'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get problem shipments
+      tags:
+      - delivery-admin
+  /api/v1/admin/delivery/problems/{id}/assign:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Problem ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Assignment details
+        in: body
+        name: assignment
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.ProblemAssignment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Problem assigned
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Assign problem to admin
+      tags:
+      - delivery-admin
+  /api/v1/admin/delivery/problems/{id}/resolve:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Problem ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Resolution details
+        in: body
+        name: resolution
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.ProblemResolution'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Problem resolved
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Resolve problem
+      tags:
+      - delivery-admin
   /api/v1/admin/delivery/providers:
     get:
       description: Get detailed list of all providers for admin panel
@@ -12831,6 +13224,74 @@ paths:
       summary: Update provider
       tags:
       - admin-delivery
+  /api/v1/admin/delivery/providers/{id}/config:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Provider ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Provider configuration
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_delivery_models.ProviderConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Configuration updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Update provider configuration
+      tags:
+      - delivery-admin
+  /api/v1/admin/delivery/providers/{id}/toggle:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Provider ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Provider status updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Toggle provider status
+      tags:
+      - delivery-admin
   /api/v1/admin/listings/statistics:
     get:
       consumes:

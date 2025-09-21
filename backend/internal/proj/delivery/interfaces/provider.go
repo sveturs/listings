@@ -56,12 +56,12 @@ type Address struct {
 
 // Package - параметры посылки
 type Package struct {
-	Weight       float64       `json:"weight_kg"`          // Вес в килограммах
-	Dimensions   *Dimensions   `json:"dimensions"`         // Габариты
-	IsFragile    bool          `json:"is_fragile"`         // Хрупкий товар
-	Value        float64       `json:"value,omitempty"`    // Объявленная ценность
-	Description  string        `json:"description"`        // Описание содержимого
-	Attributes   *DeliveryAttrs `json:"attributes,omitempty"` // Дополнительные атрибуты
+	Weight      float64        `json:"weight_kg"`            // Вес в килограммах
+	Dimensions  *Dimensions    `json:"dimensions"`           // Габариты
+	IsFragile   bool           `json:"is_fragile"`           // Хрупкий товар
+	Value       float64        `json:"value,omitempty"`      // Объявленная ценность
+	Description string         `json:"description"`          // Описание содержимого
+	Attributes  *DeliveryAttrs `json:"attributes,omitempty"` // Дополнительные атрибуты
 }
 
 // Dimensions - габариты посылки
@@ -73,26 +73,26 @@ type Dimensions struct {
 
 // DeliveryAttrs - атрибуты доставки товара
 type DeliveryAttrs struct {
-	WeightKg              float64     `json:"weight_kg"`
-	Dimensions            *Dimensions `json:"dimensions"`
-	VolumeM3              float64     `json:"volume_m3,omitempty"`
-	IsFragile             bool        `json:"is_fragile"`
-	RequiresSpecialHandling bool      `json:"requires_special_handling"`
-	Stackable             bool        `json:"stackable"`
-	MaxStackWeightKg      float64     `json:"max_stack_weight_kg,omitempty"`
-	PackagingType         string      `json:"packaging_type"` // box, envelope, pallet, custom
-	HazmatClass           *string     `json:"hazmat_class,omitempty"`
+	WeightKg                float64     `json:"weight_kg"`
+	Dimensions              *Dimensions `json:"dimensions"`
+	VolumeM3                float64     `json:"volume_m3,omitempty"`
+	IsFragile               bool        `json:"is_fragile"`
+	RequiresSpecialHandling bool        `json:"requires_special_handling"`
+	Stackable               bool        `json:"stackable"`
+	MaxStackWeightKg        float64     `json:"max_stack_weight_kg,omitempty"`
+	PackagingType           string      `json:"packaging_type"` // box, envelope, pallet, custom
+	HazmatClass             *string     `json:"hazmat_class,omitempty"`
 }
 
 // RateRequest - запрос расчета стоимости
 type RateRequest struct {
-	FromAddress   *Address        `json:"from_address"`
-	ToAddress     *Address        `json:"to_address"`
-	Packages      []Package       `json:"packages"`
-	DeliveryType  string          `json:"delivery_type,omitempty"` // standard, express, same_day
-	InsuranceValue float64        `json:"insurance_value,omitempty"`
-	CODAmount     float64         `json:"cod_amount,omitempty"`
-	Services      []string        `json:"services,omitempty"` // дополнительные услуги
+	FromAddress    *Address  `json:"from_address"`
+	ToAddress      *Address  `json:"to_address"`
+	Packages       []Package `json:"packages"`
+	DeliveryType   string    `json:"delivery_type,omitempty"` // standard, express, same_day
+	InsuranceValue float64   `json:"insurance_value,omitempty"`
+	CODAmount      float64   `json:"cod_amount,omitempty"`
+	Services       []string  `json:"services,omitempty"` // дополнительные услуги
 }
 
 // RateResponse - ответ с расчетом стоимости
@@ -106,61 +106,61 @@ type RateResponse struct {
 
 // DeliveryOption - вариант доставки
 type DeliveryOption struct {
-	Type            string          `json:"type"` // standard, express, same_day
-	Name            string          `json:"name"`
-	TotalCost       float64         `json:"total_cost"`
-	CostBreakdown   *CostBreakdown  `json:"cost_breakdown,omitempty"`
-	EstimatedDays   int             `json:"estimated_days"`
-	EstimatedDate   *time.Time      `json:"estimated_date,omitempty"`
-	Services        []string        `json:"services,omitempty"`
+	Type          string         `json:"type"` // standard, express, same_day
+	Name          string         `json:"name"`
+	TotalCost     float64        `json:"total_cost"`
+	CostBreakdown *CostBreakdown `json:"cost_breakdown,omitempty"`
+	EstimatedDays int            `json:"estimated_days"`
+	EstimatedDate *time.Time     `json:"estimated_date,omitempty"`
+	Services      []string       `json:"services,omitempty"`
 }
 
 // CostBreakdown - детализация стоимости
 type CostBreakdown struct {
-	BasePrice          float64 `json:"base_price"`
-	WeightSurcharge    float64 `json:"weight_surcharge,omitempty"`
-	OversizeSurcharge  float64 `json:"oversize_surcharge,omitempty"`
-	FragileSurcharge   float64 `json:"fragile_surcharge,omitempty"`
-	InsuranceFee       float64 `json:"insurance_fee,omitempty"`
-	CODFee             float64 `json:"cod_fee,omitempty"`
-	FuelSurcharge      float64 `json:"fuel_surcharge,omitempty"`
+	BasePrice           float64 `json:"base_price"`
+	WeightSurcharge     float64 `json:"weight_surcharge,omitempty"`
+	OversizeSurcharge   float64 `json:"oversize_surcharge,omitempty"`
+	FragileSurcharge    float64 `json:"fragile_surcharge,omitempty"`
+	InsuranceFee        float64 `json:"insurance_fee,omitempty"`
+	CODFee              float64 `json:"cod_fee,omitempty"`
+	FuelSurcharge       float64 `json:"fuel_surcharge,omitempty"`
 	RemoteAreaSurcharge float64 `json:"remote_area_surcharge,omitempty"`
-	Discount           float64 `json:"discount,omitempty"`
-	Tax                float64 `json:"tax,omitempty"`
+	Discount            float64 `json:"discount,omitempty"`
+	Tax                 float64 `json:"tax,omitempty"`
 }
 
 // ShipmentRequest - запрос создания отправления
 type ShipmentRequest struct {
-	OrderID        int             `json:"order_id"`
-	FromAddress    *Address        `json:"from_address"`
-	ToAddress      *Address        `json:"to_address"`
-	Packages       []Package       `json:"packages"`
-	DeliveryType   string          `json:"delivery_type"`
-	PickupDate     *time.Time      `json:"pickup_date,omitempty"`
-	InsuranceValue float64         `json:"insurance_value,omitempty"`
-	CODAmount      float64         `json:"cod_amount,omitempty"`
-	Services       []string        `json:"services,omitempty"`
-	Reference      string          `json:"reference,omitempty"` // внутренний номер заказа
-	Notes          string          `json:"notes,omitempty"`
+	OrderID        int        `json:"order_id"`
+	FromAddress    *Address   `json:"from_address"`
+	ToAddress      *Address   `json:"to_address"`
+	Packages       []Package  `json:"packages"`
+	DeliveryType   string     `json:"delivery_type"`
+	PickupDate     *time.Time `json:"pickup_date,omitempty"`
+	InsuranceValue float64    `json:"insurance_value,omitempty"`
+	CODAmount      float64    `json:"cod_amount,omitempty"`
+	Services       []string   `json:"services,omitempty"`
+	Reference      string     `json:"reference,omitempty"` // внутренний номер заказа
+	Notes          string     `json:"notes,omitempty"`
 }
 
 // ShipmentResponse - ответ создания отправления
 type ShipmentResponse struct {
-	ShipmentID      string          `json:"shipment_id"`
-	TrackingNumber  string          `json:"tracking_number"`
-	ExternalID      string          `json:"external_id,omitempty"` // ID в системе провайдера
-	Status          string          `json:"status"`
-	TotalCost       float64         `json:"total_cost"`
-	CostBreakdown   *CostBreakdown  `json:"cost_breakdown,omitempty"`
-	EstimatedDate   *time.Time      `json:"estimated_date,omitempty"`
-	Labels          []LabelInfo     `json:"labels,omitempty"`
-	PickupInfo      *PickupInfo     `json:"pickup_info,omitempty"`
-	CreatedAt       time.Time       `json:"created_at"`
+	ShipmentID     string         `json:"shipment_id"`
+	TrackingNumber string         `json:"tracking_number"`
+	ExternalID     string         `json:"external_id,omitempty"` // ID в системе провайдера
+	Status         string         `json:"status"`
+	TotalCost      float64        `json:"total_cost"`
+	CostBreakdown  *CostBreakdown `json:"cost_breakdown,omitempty"`
+	EstimatedDate  *time.Time     `json:"estimated_date,omitempty"`
+	Labels         []LabelInfo    `json:"labels,omitempty"`
+	PickupInfo     *PickupInfo    `json:"pickup_info,omitempty"`
+	CreatedAt      time.Time      `json:"created_at"`
 }
 
 // LabelInfo - информация об этикетке
 type LabelInfo struct {
-	Type   string `json:"type"` // shipping, return, customs
+	Type   string `json:"type"`   // shipping, return, customs
 	Format string `json:"format"` // pdf, zpl, png
 	URL    string `json:"url,omitempty"`
 	Data   []byte `json:"data,omitempty"`
@@ -176,13 +176,13 @@ type PickupInfo struct {
 
 // TrackingResponse - ответ отслеживания
 type TrackingResponse struct {
-	TrackingNumber string           `json:"tracking_number"`
-	Status         string           `json:"status"`
-	StatusText     string           `json:"status_text"`
-	CurrentLocation string          `json:"current_location,omitempty"`
-	EstimatedDate  *time.Time       `json:"estimated_date,omitempty"`
-	DeliveredDate  *time.Time       `json:"delivered_date,omitempty"`
-	Events         []TrackingEvent  `json:"events"`
+	TrackingNumber  string           `json:"tracking_number"`
+	Status          string           `json:"status"`
+	StatusText      string           `json:"status_text"`
+	CurrentLocation string           `json:"current_location,omitempty"`
+	EstimatedDate   *time.Time       `json:"estimated_date,omitempty"`
+	DeliveredDate   *time.Time       `json:"delivered_date,omitempty"`
+	Events          []TrackingEvent  `json:"events"`
 	ProofOfDelivery *ProofOfDelivery `json:"proof_of_delivery,omitempty"`
 }
 
@@ -211,42 +211,42 @@ type LabelResponse struct {
 
 // AddressValidationResponse - ответ валидации адреса
 type AddressValidationResponse struct {
-	IsValid           bool      `json:"is_valid"`
-	SuggestedAddress  *Address  `json:"suggested_address,omitempty"`
-	ValidationErrors  []string  `json:"validation_errors,omitempty"`
-	DeliveryAvailable bool      `json:"delivery_available"`
-	Zone              string    `json:"zone,omitempty"` // local, regional, national, international
+	IsValid           bool     `json:"is_valid"`
+	SuggestedAddress  *Address `json:"suggested_address,omitempty"`
+	ValidationErrors  []string `json:"validation_errors,omitempty"`
+	DeliveryAvailable bool     `json:"delivery_available"`
+	Zone              string   `json:"zone,omitempty"` // local, regional, national, international
 }
 
 // ProviderCapabilities - возможности провайдера
 type ProviderCapabilities struct {
-	MaxWeightKg      float64  `json:"max_weight_kg"`
-	MaxVolumeM3      float64  `json:"max_volume_m3"`
-	MaxLengthCm      float64  `json:"max_length_cm"`
-	DeliveryZones    []string `json:"delivery_zones"`
-	DeliveryTypes    []string `json:"delivery_types"`
-	SupportsCOD      bool     `json:"supports_cod"`
-	SupportsInsurance bool    `json:"supports_insurance"`
-	SupportsTracking bool     `json:"supports_tracking"`
-	SupportsPickup   bool     `json:"supports_pickup"`
-	SupportsReturn   bool     `json:"supports_return"`
-	Services         []string `json:"services"` // список дополнительных услуг
+	MaxWeightKg       float64  `json:"max_weight_kg"`
+	MaxVolumeM3       float64  `json:"max_volume_m3"`
+	MaxLengthCm       float64  `json:"max_length_cm"`
+	DeliveryZones     []string `json:"delivery_zones"`
+	DeliveryTypes     []string `json:"delivery_types"`
+	SupportsCOD       bool     `json:"supports_cod"`
+	SupportsInsurance bool     `json:"supports_insurance"`
+	SupportsTracking  bool     `json:"supports_tracking"`
+	SupportsPickup    bool     `json:"supports_pickup"`
+	SupportsReturn    bool     `json:"supports_return"`
+	Services          []string `json:"services"` // список дополнительных услуг
 }
 
 // DeliveryStatus - универсальные статусы доставки
 const (
-	StatusPending          = "pending"           // ожидает обработки
-	StatusConfirmed        = "confirmed"         // подтверждено
-	StatusPickedUp         = "picked_up"         // забрано курьером
-	StatusInTransit        = "in_transit"        // в пути
-	StatusOutForDelivery   = "out_for_delivery"  // передано на доставку
-	StatusDelivered        = "delivered"         // доставлено
+	StatusPending           = "pending"            // ожидает обработки
+	StatusConfirmed         = "confirmed"          // подтверждено
+	StatusPickedUp          = "picked_up"          // забрано курьером
+	StatusInTransit         = "in_transit"         // в пути
+	StatusOutForDelivery    = "out_for_delivery"   // передано на доставку
+	StatusDelivered         = "delivered"          // доставлено
 	StatusDeliveryAttempted = "delivery_attempted" // попытка доставки
-	StatusReturning        = "returning"         // возвращается
-	StatusReturned         = "returned"          // возвращено
-	StatusCancelled        = "cancelled"         // отменено
-	StatusLost             = "lost"              // потеряно
-	StatusDamaged          = "damaged"           // повреждено
+	StatusReturning         = "returning"          // возвращается
+	StatusReturned          = "returned"           // возвращено
+	StatusCancelled         = "cancelled"          // отменено
+	StatusLost              = "lost"               // потеряно
+	StatusDamaged           = "damaged"            // повреждено
 )
 
 // DeliveryType - типы доставки
@@ -268,13 +268,13 @@ const (
 
 // WebhookResponse - ответ обработки webhook
 type WebhookResponse struct {
-	TrackingNumber string           `json:"tracking_number"`
-	Status         string           `json:"status"`
-	StatusDetails  string           `json:"status_details,omitempty"`
-	Location       string           `json:"location,omitempty"`
-	Timestamp      time.Time        `json:"timestamp"`
+	TrackingNumber  string           `json:"tracking_number"`
+	Status          string           `json:"status"`
+	StatusDetails   string           `json:"status_details,omitempty"`
+	Location        string           `json:"location,omitempty"`
+	Timestamp       time.Time        `json:"timestamp"`
 	DeliveryDetails *ProofOfDelivery `json:"delivery_details,omitempty"`
-	Events         []TrackingEvent  `json:"events,omitempty"`
-	Processed      bool             `json:"processed"`
-	Error          string           `json:"error,omitempty"`
+	Events          []TrackingEvent  `json:"events,omitempty"`
+	Processed       bool             `json:"processed"`
+	Error           string           `json:"error,omitempty"`
 }

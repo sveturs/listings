@@ -3,10 +3,12 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/delivery/models"
 )
@@ -118,7 +120,7 @@ func (s *Storage) GetShipmentByTracking(ctx context.Context, trackingNumber stri
 	query := `SELECT * FROM delivery_shipments WHERE tracking_number = $1`
 
 	if err := s.db.GetContext(ctx, &shipment, query, trackingNumber); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("shipment not found")
 		}
 		return nil, err
@@ -279,7 +281,7 @@ func (s *Storage) GetZoneByLocation(ctx context.Context, country, city string) (
 		LIMIT 1`
 
 	if err := s.db.GetContext(ctx, &zone, query, country, city); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// Возвращаем дефолтную национальную зону
 			zone.Type = models.ZoneTypeNational
 			zone.Name = "Default National"
@@ -359,7 +361,11 @@ func (s *Storage) GetShipmentStats(ctx context.Context, providerID *int, from, t
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	stats.ByStatus = make(map[string]int)
 	for rows.Next() {
@@ -369,6 +375,10 @@ func (s *Storage) GetShipmentStats(ctx context.Context, providerID *int, from, t
 			return nil, err
 		}
 		stats.ByStatus[status] = count
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	// Общая стоимость
@@ -402,12 +412,12 @@ func (s *Storage) GetShipmentStats(ctx context.Context, providerID *int, from, t
 
 // ShipmentStats - статистика по отправлениям
 type ShipmentStats struct {
-	TotalCount       int            `json:"total_count"`
-	ByStatus         map[string]int `json:"by_status"`
-	TotalDelivery    float64        `json:"total_delivery" db:"total_delivery"`
-	TotalInsurance   float64        `json:"total_insurance" db:"total_insurance"`
-	TotalCOD         float64        `json:"total_cod" db:"total_cod"`
-	AvgDeliveryDays  float64        `json:"avg_delivery_days"`
+	TotalCount      int            `json:"total_count"`
+	ByStatus        map[string]int `json:"by_status"`
+	TotalDelivery   float64        `json:"total_delivery" db:"total_delivery"`
+	TotalInsurance  float64        `json:"total_insurance" db:"total_insurance"`
+	TotalCOD        float64        `json:"total_cod" db:"total_cod"`
+	AvgDeliveryDays float64        `json:"avg_delivery_days"`
 }
 
 // UpdateProvider - обновляет провайдера
@@ -473,7 +483,11 @@ func (s *Storage) GetShipmentStatistics(ctx context.Context, from, to time.Time,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	for rows.Next() {
 		var status string
@@ -482,6 +496,10 @@ func (s *Storage) GetShipmentStatistics(ctx context.Context, from, to time.Time,
 			return nil, err
 		}
 		stats.StatusBreakdown[status] = count
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	return stats, nil
@@ -589,7 +607,11 @@ func (s *Storage) GetAverageDeliveryTimes(ctx context.Context, from, to time.Tim
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	result := make(map[string]float64)
 	for rows.Next() {
@@ -599,6 +621,10 @@ func (s *Storage) GetAverageDeliveryTimes(ctx context.Context, from, to time.Tim
 			return nil, err
 		}
 		result[status] = avgDays
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	return result, nil

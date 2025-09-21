@@ -1385,9 +1385,11 @@
   },
   "delivery": {
     "title": "Delivery Management",
+    "subtitle": "Comprehensive delivery and logistics management system",
     "description": "Manage delivery providers and shipments",
     "tabs": {
       "dashboard": "Dashboard",
+      "shipments": "Shipments",
       "providers": "Providers",
       "pricingRules": "Pricing Rules",
       "problems": "Problem Shipments",
@@ -1608,6 +1610,77 @@
         "costAnalysis": "Cost Analysis",
         "geographicDistribution": "Geographic Distribution"
       }
+    },
+    "problemShipments": {
+      "title": "Problem Shipments",
+      "filters": {
+        "allTypes": "All types",
+        "allStatuses": "All statuses",
+        "delayed": "Delayed",
+        "lost": "Lost",
+        "damaged": "Damaged",
+        "wrongAddress": "Wrong Address",
+        "refused": "Refused"
+      },
+      "table": {
+        "tracking": "Tracking",
+        "provider": "Provider",
+        "problemType": "Problem Type",
+        "priority": "Priority",
+        "status": "Status",
+        "assignedTo": "Assigned To",
+        "createdAt": "Created",
+        "actions": "Actions"
+      },
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "status": {
+        "open": "Open",
+        "investigating": "Investigating",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      },
+      "types": {
+        "delayed": "Delayed",
+        "lost": "Lost",
+        "damaged": "Damaged",
+        "wrongAddress": "Wrong Address",
+        "refused": "Refused",
+        "returnRequested": "Return Requested"
+      },
+      "stats": {
+        "open": "Open",
+        "inProgress": "In Progress",
+        "resolved": "Resolved",
+        "critical": "Critical"
+      },
+      "actions": {
+        "view": "View",
+        "assign": "Assign",
+        "resolve": "Resolve",
+        "comment": "Comment",
+        "escalate": "Escalate",
+        "contact": "Contact Customer"
+      },
+      "assignModal": {
+        "title": "Assign Problem",
+        "selectAdmin": "Select Administrator",
+        "assign": "Assign",
+        "cancel": "Cancel"
+      },
+      "resolveModal": {
+        "title": "Resolve Problem",
+        "description": "Problem Description",
+        "resolution": "Resolution",
+        "resolutionPlaceholder": "Describe how the problem was resolved...",
+        "resolve": "Resolve",
+        "cancel": "Cancel"
+      },
+      "noProblems": "No problem shipments found"
     }
   }
 }

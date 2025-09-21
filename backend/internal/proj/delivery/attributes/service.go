@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 
 	"backend/internal/proj/delivery/models"
 )
@@ -78,7 +80,7 @@ func (s *Service) GetProductAttributes(ctx context.Context, productID int, produ
 	}
 
 	if err := s.db.GetContext(ctx, &jsonData, query, productID); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("product not found")
 		}
 		return nil, err
@@ -202,7 +204,7 @@ func (s *Service) GetCategoryDefaults(ctx context.Context, categoryID int) (*mod
 		WHERE category_id = $1`
 
 	if err := s.db.GetContext(ctx, &defaults, query, categoryID); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// Возвращаем пустые дефолты если не найдены
 			return &models.CategoryDefaults{
 				CategoryID: categoryID,
@@ -266,7 +268,11 @@ func (s *Service) BatchUpdateProductAttributes(ctx context.Context, updates []Pr
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			log.Error().Err(rollbackErr).Msg("Failed to rollback transaction")
+		}
+	}()
 
 	for _, update := range updates {
 		if err := s.updateProductAttributesTx(ctx, tx, update.ProductID, update.ProductType, update.Attributes); err != nil {

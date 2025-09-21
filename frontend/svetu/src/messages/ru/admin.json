@@ -1404,6 +1404,7 @@
   },
   "delivery": {
     "title": "Управление доставкой",
+    "subtitle": "Комплексная система управления доставкой и логистикой",
     "description": "Настройки провайдеров доставки и правил расчета",
     "tabs": {
       "dashboard": "Dashboard",
@@ -1582,6 +1583,77 @@
       "cacheDuration": "Время кэширования расчетов (минуты)",
       "maxRetries": "Максимум попыток при ошибке",
       "save": "Сохранить настройки"
+    },
+    "problemShipments": {
+      "title": "Проблемные отправления",
+      "filters": {
+        "allTypes": "Все типы",
+        "allStatuses": "Все статусы",
+        "delayed": "Задержка",
+        "lost": "Потеряно",
+        "damaged": "Повреждено",
+        "wrongAddress": "Неверный адрес",
+        "refused": "Отказ"
+      },
+      "table": {
+        "tracking": "Трекинг",
+        "provider": "Провайдер",
+        "problemType": "Тип проблемы",
+        "priority": "Приоритет",
+        "status": "Статус",
+        "assignedTo": "Ответственный",
+        "createdAt": "Создано",
+        "actions": "Действия"
+      },
+      "priority": {
+        "low": "Низкий",
+        "medium": "Средний",
+        "high": "Высокий",
+        "critical": "Критический"
+      },
+      "status": {
+        "open": "Открытые",
+        "investigating": "В работе",
+        "resolved": "Решенные",
+        "closed": "Закрытые"
+      },
+      "types": {
+        "delayed": "Задержка",
+        "lost": "Потеряно",
+        "damaged": "Повреждено",
+        "wrongAddress": "Неверный адрес",
+        "refused": "Отказ",
+        "returnRequested": "Запрос на возврат"
+      },
+      "stats": {
+        "open": "Открытые",
+        "inProgress": "В работе",
+        "resolved": "Решенные",
+        "critical": "Критические"
+      },
+      "actions": {
+        "view": "Просмотр",
+        "assign": "Назначить",
+        "resolve": "Решить",
+        "comment": "Комментарий",
+        "escalate": "Эскалировать",
+        "contact": "Связаться с клиентом"
+      },
+      "assignModal": {
+        "title": "Назначить проблему",
+        "selectAdmin": "Выберите администратора",
+        "assign": "Назначить",
+        "cancel": "Отмена"
+      },
+      "resolveModal": {
+        "title": "Решить проблему",
+        "description": "Описание проблемы",
+        "resolution": "Решение",
+        "resolutionPlaceholder": "Опишите как была решена проблема...",
+        "resolve": "Решить",
+        "cancel": "Отмена"
+      },
+      "noProblems": "Проблемные отправления не найдены"
     }
   }
 }

@@ -3316,7 +3316,98 @@
                 }
             }
         },
+        "/api/v1/admin/delivery/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Get dashboard statistics",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard statistics",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_delivery_models.DashboardStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin/delivery/pricing-rules": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Get pricing rules",
+                "responses": {
+                    "200": {
+                        "description": "List of pricing rules",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_delivery_models.PricingRule"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create new pricing rule for provider",
                 "consumes": [
@@ -3367,6 +3458,309 @@
                     },
                     "500": {
                         "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/pricing-rules/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Update pricing rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pricing rule",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.PricingRule"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Delete pricing rule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rule deleted",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/problems": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Get problem shipments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Problem type filter",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status filter",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of problem shipments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/backend_internal_proj_delivery_models.ProblemShipment"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/problems/{id}/assign": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Assign problem to admin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Problem ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Assignment details",
+                        "name": "assignment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.ProblemAssignment"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Problem assigned",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/problems/{id}/resolve": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Resolve problem",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Problem ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resolution details",
+                        "name": "resolution",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.ProblemResolution"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Problem resolved",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -3461,6 +3855,123 @@
                     },
                     "500": {
                         "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/providers/{id}/config": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Update provider configuration",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Provider configuration",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_delivery_models.ProviderConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Configuration updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/delivery/providers/{id}/toggle": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "delivery-admin"
+                ],
+                "summary": "Toggle provider status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Provider ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Provider status updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -42512,6 +43023,26 @@
                 "ShipmentStatusCODPaid"
             ]
         },
+        "backend_internal_proj_delivery_calculator.CalculationData": {
+            "type": "object",
+            "properties": {
+                "cheapest": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                },
+                "fastest": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                    }
+                },
+                "recommended": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                }
+            }
+        },
         "backend_internal_proj_delivery_calculator.CalculationRequest": {
             "type": "object",
             "properties": {
@@ -42544,20 +43075,14 @@
         "backend_internal_proj_delivery_calculator.CalculationResponse": {
             "type": "object",
             "properties": {
-                "cheapest": {
-                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                "data": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.CalculationData"
                 },
-                "fastest": {
-                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                "message": {
+                    "type": "string"
                 },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
-                    }
-                },
-                "recommended": {
-                    "$ref": "#/definitions/backend_internal_proj_delivery_calculator.ProviderQuote"
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -42602,14 +43127,26 @@
         "backend_internal_proj_delivery_calculator.ProviderQuote": {
             "type": "object",
             "properties": {
+                "cod_fee": {
+                    "type": "number"
+                },
                 "cost_breakdown": {
                     "$ref": "#/definitions/backend_internal_proj_delivery_models.CostBreakdown"
+                },
+                "delivery_cost": {
+                    "type": "number"
                 },
                 "delivery_type": {
                     "type": "string"
                 },
                 "estimated_days": {
                     "type": "integer"
+                },
+                "estimated_delivery_date": {
+                    "type": "string"
+                },
+                "insurance_cost": {
+                    "type": "number"
                 },
                 "is_available": {
                     "type": "boolean"
@@ -42626,10 +43163,10 @@
                 "services": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/backend_internal_proj_delivery_models.DeliveryService"
                     }
                 },
-                "total_cost": {
+                "total_price": {
                     "type": "number"
                 },
                 "unavailable_reason": {
@@ -42796,6 +43333,50 @@
                 }
             }
         },
+        "backend_internal_proj_delivery_models.AnalyticsData": {
+            "type": "object",
+            "properties": {
+                "avg_delivery_time": {
+                    "type": "string"
+                },
+                "cost_per_shipment": {
+                    "type": "number"
+                },
+                "customer_satisfaction": {
+                    "type": "number"
+                },
+                "delivery_rate": {
+                    "type": "number"
+                },
+                "geographic_distribution": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "period": {
+                    "type": "string"
+                },
+                "problem_rate": {
+                    "type": "number"
+                },
+                "provider_comparison": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_models.ProviderStats"
+                    }
+                },
+                "total_shipments": {
+                    "type": "integer"
+                },
+                "trend_data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_models.TrendPoint"
+                    }
+                }
+            }
+        },
         "backend_internal_proj_delivery_models.CategoryDefaults": {
             "type": "object",
             "properties": {
@@ -42828,6 +43409,20 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.CostAnalysis": {
+            "type": "object",
+            "properties": {
+                "avg_cost": {
+                    "type": "number"
+                },
+                "savings": {
+                    "type": "number"
+                },
+                "total_cost": {
+                    "type": "number"
                 }
             }
         },
@@ -42869,6 +43464,38 @@
                 }
             }
         },
+        "backend_internal_proj_delivery_models.DashboardStats": {
+            "type": "object",
+            "properties": {
+                "avg_delivery_time": {
+                    "type": "string"
+                },
+                "cost_analysis": {
+                    "$ref": "#/definitions/backend_internal_proj_delivery_models.CostAnalysis"
+                },
+                "in_transit": {
+                    "type": "integer"
+                },
+                "problems": {
+                    "type": "integer"
+                },
+                "provider_stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_delivery_models.ProviderStats"
+                    }
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "today_delivered": {
+                    "type": "integer"
+                },
+                "today_shipments": {
+                    "type": "integer"
+                }
+            }
+        },
         "backend_internal_proj_delivery_models.DeliveryAttributes": {
             "type": "object",
             "properties": {
@@ -42897,6 +43524,29 @@
                     "type": "number"
                 },
                 "weight_kg": {
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.DeliveryService": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_available": {
+                    "type": "boolean"
+                },
+                "is_included": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
                     "type": "number"
                 }
             }
@@ -42977,6 +43627,63 @@
                 }
             }
         },
+        "backend_internal_proj_delivery_models.ProblemAssignment": {
+            "type": "object",
+            "properties": {
+                "admin_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.ProblemResolution": {
+            "type": "object",
+            "properties": {
+                "notify_customer": {
+                    "type": "boolean"
+                },
+                "resolution": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.ProblemShipment": {
+            "type": "object",
+            "properties": {
+                "assigned_to": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "customer_name": {
+                    "type": "string"
+                },
+                "customer_phone": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "problem_type": {
+                    "type": "string"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tracking_number": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_proj_delivery_models.Provider": {
             "type": "object",
             "properties": {
@@ -43021,6 +43728,46 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.ProviderConfig": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "api_secret": {
+                    "type": "string"
+                },
+                "api_url": {
+                    "type": "string"
+                },
+                "test_mode": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.ProviderStats": {
+            "type": "object",
+            "properties": {
+                "avg_time": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "delivered": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "shipments": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
                 }
             }
         },
@@ -43153,6 +43900,23 @@
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_delivery_models.TrendPoint": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "delivered": {
+                    "type": "integer"
+                },
+                "problems": {
+                    "type": "integer"
+                },
+                "shipments": {
+                    "type": "integer"
                 }
             }
         },

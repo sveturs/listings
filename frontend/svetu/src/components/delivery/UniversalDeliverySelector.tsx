@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   TruckIcon,
   ClockIcon,
-  CurrencyDollarIcon,
   CheckIcon,
-  XMarkIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   ArrowPathIcon,
@@ -47,7 +45,7 @@ export default function UniversalDeliverySelector({
   showComparison = true,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  const _t = useTranslations('delivery');
   const [quotes, setQuotes] = useState<DeliveryQuote[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +56,7 @@ export default function UniversalDeliverySelector({
     if (autoCalculate && calculationRequest.items.length > 0) {
       calculateRates();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calculationRequest, autoCalculate]);
 
   const calculateRates = async () => {

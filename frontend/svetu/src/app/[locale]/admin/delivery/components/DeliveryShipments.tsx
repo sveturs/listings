@@ -21,7 +21,7 @@ interface Shipment {
 }
 
 export default function DeliveryShipments() {
-  const t = useTranslations('admin.delivery');
+  const _t = useTranslations('admin.delivery');
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +29,7 @@ export default function DeliveryShipments() {
   const [filters, setFilters] = useState({
     status: '',
     provider: '',
-    search: ''
+    search: '',
   });
 
   const fetchShipments = async () => {
@@ -40,14 +40,17 @@ export default function DeliveryShipments() {
         limit: '20',
         ...(filters.status && { status: filters.status }),
         ...(filters.provider && { provider: filters.provider }),
-        ...(filters.search && { search: filters.search })
+        ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`/api/v1/admin/delivery/shipments?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${tokenManager.getAccessToken()}`
+      const response = await fetch(
+        `/api/v1/admin/delivery/shipments?${params}`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -67,6 +70,7 @@ export default function DeliveryShipments() {
 
   useEffect(() => {
     fetchShipments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filters]);
 
   const getMockShipments = (): Shipment[] => [
@@ -83,7 +87,7 @@ export default function DeliveryShipments() {
       estimated_delivery: '2024-01-22T18:00:00Z',
       delivery_cost: 450,
       weight: 2.5,
-      items_count: 3
+      items_count: 3,
     },
     {
       id: 2,
@@ -98,7 +102,7 @@ export default function DeliveryShipments() {
       estimated_delivery: '2024-01-23T12:00:00Z',
       delivery_cost: 380,
       weight: 1.8,
-      items_count: 1
+      items_count: 1,
     },
     {
       id: 3,
@@ -113,8 +117,8 @@ export default function DeliveryShipments() {
       estimated_delivery: '2024-01-24T16:00:00Z',
       delivery_cost: 520,
       weight: 3.2,
-      items_count: 2
-    }
+      items_count: 2,
+    },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -123,7 +127,7 @@ export default function DeliveryShipments() {
       in_transit: 'badge badge-info',
       delivered: 'badge badge-success',
       failed: 'badge badge-error',
-      cancelled: 'badge badge-ghost'
+      cancelled: 'badge badge-ghost',
     };
     return badges[status] || 'badge';
   };
@@ -134,21 +138,24 @@ export default function DeliveryShipments() {
       in_transit: 'В пути',
       delivered: 'Доставлено',
       failed: 'Проблема',
-      cancelled: 'Отменено'
+      cancelled: 'Отменено',
     };
     return texts[status] || status;
   };
 
   const handleShipmentAction = async (id: number, action: string) => {
     try {
-      const response = await fetch(`/api/v1/admin/delivery/shipments/${id}/action`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ action })
-      });
+      const response = await fetch(
+        `/api/v1/admin/delivery/shipments/${id}/action`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({ action }),
+        }
+      );
 
       if (response.ok) {
         fetchShipments();
@@ -186,7 +193,9 @@ export default function DeliveryShipments() {
           <select
             className="select select-bordered"
             value={filters.provider}
-            onChange={(e) => setFilters({ ...filters, provider: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, provider: e.target.value })
+            }
           >
             <option value="">Все провайдеры</option>
             <option value="post_express">Post Express</option>
@@ -197,9 +206,7 @@ export default function DeliveryShipments() {
             <option value="dhl">DHL</option>
           </select>
 
-          <button className="btn btn-primary ml-auto">
-            Экспорт CSV
-          </button>
+          <button className="btn btn-primary ml-auto">Экспорт CSV</button>
         </div>
       </div>
 
@@ -229,14 +236,19 @@ export default function DeliveryShipments() {
                 </tr>
               ) : shipments.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-8 text-base-content/50">
+                  <td
+                    colSpan={9}
+                    className="text-center py-8 text-base-content/50"
+                  >
                     Отправления не найдены
                   </td>
                 </tr>
               ) : (
                 shipments.map((shipment) => (
                   <tr key={shipment.id} className="hover">
-                    <td className="font-mono text-sm">{shipment.tracking_number}</td>
+                    <td className="font-mono text-sm">
+                      {shipment.tracking_number}
+                    </td>
                     <td>{shipment.provider}</td>
                     <td>
                       <span className={getStatusBadge(shipment.status)}>
@@ -245,45 +257,82 @@ export default function DeliveryShipments() {
                     </td>
                     <td>
                       <div>
-                        <div className="font-semibold">{shipment.sender_name}</div>
-                        <div className="text-sm text-base-content/70">{shipment.sender_city}</div>
+                        <div className="font-semibold">
+                          {shipment.sender_name}
+                        </div>
+                        <div className="text-sm text-base-content/70">
+                          {shipment.sender_city}
+                        </div>
                       </div>
                     </td>
                     <td>
                       <div>
-                        <div className="font-semibold">{shipment.recipient_name}</div>
-                        <div className="text-sm text-base-content/70">{shipment.recipient_city}</div>
+                        <div className="font-semibold">
+                          {shipment.recipient_name}
+                        </div>
+                        <div className="text-sm text-base-content/70">
+                          {shipment.recipient_city}
+                        </div>
                       </div>
                     </td>
                     <td>{shipment.weight}</td>
                     <td>{shipment.delivery_cost} RSD</td>
-                    <td>{new Date(shipment.created_at).toLocaleDateString('sr-RS')}</td>
+                    <td>
+                      {new Date(shipment.created_at).toLocaleDateString(
+                        'sr-RS'
+                      )}
+                    </td>
                     <td>
                       <div className="dropdown dropdown-end">
                         <label tabIndex={0} className="btn btn-sm btn-ghost">
                           ⋮
                         </label>
-                        <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content z-[1] menu p-2 shadow bg-base-200 rounded-box w-52"
+                        >
                           <li>
-                            <button onClick={() => window.open(`/tracking/${shipment.tracking_number}`, '_blank')}>
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `/tracking/${shipment.tracking_number}`,
+                                  '_blank'
+                                )
+                              }
+                            >
                               Отследить
                             </button>
                           </li>
                           <li>
-                            <button onClick={() => handleShipmentAction(shipment.id, 'print_label')}>
+                            <button
+                              onClick={() =>
+                                handleShipmentAction(shipment.id, 'print_label')
+                              }
+                            >
                               Печать этикетки
                             </button>
                           </li>
                           {shipment.status === 'pending' && (
                             <li>
-                              <button onClick={() => handleShipmentAction(shipment.id, 'confirm')}>
+                              <button
+                                onClick={() =>
+                                  handleShipmentAction(shipment.id, 'confirm')
+                                }
+                              >
                                 Подтвердить отправку
                               </button>
                             </li>
                           )}
                           {shipment.status === 'in_transit' && (
                             <li>
-                              <button onClick={() => handleShipmentAction(shipment.id, 'mark_delivered')}>
+                              <button
+                                onClick={() =>
+                                  handleShipmentAction(
+                                    shipment.id,
+                                    'mark_delivered'
+                                  )
+                                }
+                              >
                                 Отметить доставленным
                               </button>
                             </li>
@@ -291,7 +340,9 @@ export default function DeliveryShipments() {
                           <li>
                             <button
                               className="text-error"
-                              onClick={() => handleShipmentAction(shipment.id, 'cancel')}
+                              onClick={() =>
+                                handleShipmentAction(shipment.id, 'cancel')
+                              }
                             >
                               Отменить
                             </button>

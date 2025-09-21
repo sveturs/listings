@@ -37,17 +37,17 @@ func (a *PostExpressAdapter) IsActive() bool {
 // GetCapabilities возвращает возможности провайдера
 func (a *PostExpressAdapter) GetCapabilities() *interfaces.ProviderCapabilities {
 	return &interfaces.ProviderCapabilities{
-		MaxWeightKg:      30.0,
-		MaxVolumeM3:      0.5,
-		MaxLengthCm:      120.0,
-		DeliveryZones:    []string{"local", "national"},
-		DeliveryTypes:    []string{"standard", "express"},
-		SupportsCOD:      true,
+		MaxWeightKg:       30.0,
+		MaxVolumeM3:       0.5,
+		MaxLengthCm:       120.0,
+		DeliveryZones:     []string{"local", "national"},
+		DeliveryTypes:     []string{"standard", "express"},
+		SupportsCOD:       true,
 		SupportsInsurance: true,
-		SupportsTracking: true,
-		SupportsPickup:   true,
-		SupportsReturn:   false,
-		Services:         []string{"tracking", "insurance", "cod"},
+		SupportsTracking:  true,
+		SupportsPickup:    true,
+		SupportsReturn:    false,
+		Services:          []string{"tracking", "insurance", "cod"},
 	}
 }
 
@@ -142,12 +142,12 @@ func (a *PostExpressAdapter) HandleWebhook(ctx context.Context, payload []byte, 
 	// На данный момент возвращаем заглушку
 
 	response := &interfaces.WebhookResponse{
-		Processed:     true,
-		Timestamp:     time.Now(),
+		Processed:      true,
+		Timestamp:      time.Now(),
 		TrackingNumber: "PE_" + string(payload[:min(len(payload), 10)]), // временная логика
-		Status:        interfaces.StatusInTransit,
-		StatusDetails: "Post Express webhook received",
-		Location:      "Beograd, Serbia",
+		Status:         interfaces.StatusInTransit,
+		StatusDetails:  "Post Express webhook received",
+		Location:       "Beograd, Serbia",
 	}
 
 	// Создаем базовое событие отслеживания

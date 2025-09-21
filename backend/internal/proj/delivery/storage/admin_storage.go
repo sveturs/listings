@@ -5,6 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
+	"github.com/rs/zerolog/log"
+
 	"backend/internal/proj/delivery/models"
 )
 
@@ -22,7 +25,11 @@ func (s *Storage) GetAllProviders(ctx context.Context) ([]models.Provider, error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	var providers []models.Provider
 	for rows.Next() {
@@ -41,6 +48,10 @@ func (s *Storage) GetAllProviders(ctx context.Context) ([]models.Provider, error
 		// Check if API is configured - we can use this for display purposes
 
 		providers = append(providers, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	return providers, nil
@@ -90,7 +101,11 @@ func (s *Storage) GetAllPricingRules(ctx context.Context) ([]models.PricingRule,
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	var rules []models.PricingRule
 	for rows.Next() {
@@ -111,18 +126,25 @@ func (s *Storage) GetAllPricingRules(ctx context.Context) ([]models.PricingRule,
 
 		// Parse JSON ranges if present
 		if weightRanges.Valid {
-			json.Unmarshal([]byte(weightRanges.String), &r.WeightRanges)
+			if err := json.Unmarshal([]byte(weightRanges.String), &r.WeightRanges); err != nil {
+				log.Error().Err(err).Msg("Failed to unmarshal weight ranges")
+			}
 		}
 		if volumeRanges.Valid {
-			json.Unmarshal([]byte(volumeRanges.String), &r.VolumeRanges)
+			if err := json.Unmarshal([]byte(volumeRanges.String), &r.VolumeRanges); err != nil {
+				log.Error().Err(err).Msg("Failed to unmarshal volume ranges")
+			}
 		}
 
 		rules = append(rules, r)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
 	return rules, nil
 }
-
 
 // UpdatePricingRule updates an existing pricing rule
 func (s *Storage) UpdatePricingRule(ctx context.Context, rule models.PricingRule) error {
@@ -192,7 +214,11 @@ func (s *Storage) GetProblemShipments(ctx context.Context, problemType, status s
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	var problems []models.ProblemShipment
 	for rows.Next() {
@@ -221,6 +247,10 @@ func (s *Storage) GetProblemShipments(ctx context.Context, problemType, status s
 		}
 
 		problems = append(problems, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	return problems, nil
@@ -351,7 +381,11 @@ func (s *Storage) GetDashboardStats(ctx context.Context) (*models.DashboardStats
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			log.Error().Err(closeErr).Msg("Failed to close database rows")
+		}
+	}()
 
 	for rows.Next() {
 		var ps models.ProviderStats
@@ -373,6 +407,10 @@ func (s *Storage) GetDashboardStats(ctx context.Context) (*models.DashboardStats
 		}
 
 		stats.ProviderStats = append(stats.ProviderStats, ps)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	// Cost analysis
@@ -479,12 +517,12 @@ func (s *Storage) GetAnalytics(ctx context.Context, period string) (*models.Anal
 
 	// Geographic distribution (simplified)
 	analytics.GeographicDistribution = map[string]float64{
-		"Белград":    42.0,
-		"Нови-Сад":   18.0,
-		"Ниш":        12.0,
-		"Крагуевац":  8.0,
-		"Суботица":   6.0,
-		"Другие":     14.0,
+		"Белград":   42.0,
+		"Нови-Сад":  18.0,
+		"Ниш":       12.0,
+		"Крагуевац": 8.0,
+		"Суботица":  6.0,
+		"Другие":    14.0,
 	}
 
 	return analytics, nil

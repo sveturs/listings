@@ -63,7 +63,7 @@ export default function DeliveryAttributesForm({
   errors,
   className = '',
 }: Props) {
-  const t = useTranslations('delivery');
+  const _t = useTranslations('delivery');
   const [categoryDefaults, setCategoryDefaults] =
     useState<CategoryDefaults | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,6 +74,7 @@ export default function DeliveryAttributesForm({
     if (categoryId && showDefaults) {
       loadCategoryDefaults();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, showDefaults]);
 
   const loadCategoryDefaults = async () => {

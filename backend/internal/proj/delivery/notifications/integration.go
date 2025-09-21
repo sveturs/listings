@@ -6,6 +6,7 @@ import (
 
 	"backend/internal/domain/models"
 	notificationService "backend/internal/proj/notifications/service"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,7 +35,6 @@ func (i *DeliveryNotificationIntegration) SendDeliveryStatusUpdate(ctx context.C
 		message,
 		0, // listingID не используется для доставки
 	)
-
 	if err != nil {
 		log.Error().Err(err).
 			Int("user_id", userID).
@@ -91,8 +91,8 @@ func (i *DeliveryNotificationIntegration) formatDeliveryMessage(event *StatusCha
 	// Формируем сообщение
 	message := fmt.Sprintf(
 		"%s <b>Обновление статуса доставки</b>\n\n"+
-		"📦 Трек-номер: <code>%s</code>\n"+
-		"📍 Статус: <b>%s</b>\n",
+			"📦 Трек-номер: <code>%s</code>\n"+
+			"📍 Статус: <b>%s</b>\n",
 		emoji, event.TrackingNumber, statusText,
 	)
 
@@ -187,9 +187,9 @@ func (i *DeliveryNotificationIntegration) SendDeliveryReminder(ctx context.Conte
 	case "pickup_ready":
 		message = fmt.Sprintf(
 			"📦 <b>Напоминание</b>\n\n"+
-			"Ваш заказ <code>%s</code> готов к получению.\n"+
-			"Пожалуйста, заберите его в ближайшее время.\n\n"+
-			"🔗 <a href=\"%s\">Подробности</a>",
+				"Ваш заказ <code>%s</code> готов к получению.\n"+
+				"Пожалуйста, заберите его в ближайшее время.\n\n"+
+				"🔗 <a href=\"%s\">Подробности</a>",
 			trackingNumber,
 			i.FormatTrackingLink(trackingNumber),
 		)
@@ -197,9 +197,9 @@ func (i *DeliveryNotificationIntegration) SendDeliveryReminder(ctx context.Conte
 	case "delivery_today":
 		message = fmt.Sprintf(
 			"🚚 <b>Доставка сегодня</b>\n\n"+
-			"Ваш заказ <code>%s</code> будет доставлен сегодня.\n"+
-			"Пожалуйста, будьте доступны для связи.\n\n"+
-			"🔗 <a href=\"%s\">Отследить</a>",
+				"Ваш заказ <code>%s</code> будет доставлен сегодня.\n"+
+				"Пожалуйста, будьте доступны для связи.\n\n"+
+				"🔗 <a href=\"%s\">Отследить</a>",
 			trackingNumber,
 			i.FormatTrackingLink(trackingNumber),
 		)
@@ -207,9 +207,9 @@ func (i *DeliveryNotificationIntegration) SendDeliveryReminder(ctx context.Conte
 	case "feedback_request":
 		message = fmt.Sprintf(
 			"⭐ <b>Оцените доставку</b>\n\n"+
-			"Ваш заказ <code>%s</code> был доставлен.\n"+
-			"Поделитесь вашим опытом!\n\n"+
-			"🔗 <a href=\"%s\">Оставить отзыв</a>",
+				"Ваш заказ <code>%s</code> был доставлен.\n"+
+				"Поделитесь вашим опытом!\n\n"+
+				"🔗 <a href=\"%s\">Оставить отзыв</a>",
 			trackingNumber,
 			i.FormatTrackingLink(trackingNumber),
 		)

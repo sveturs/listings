@@ -21,13 +21,13 @@ import (
 
 // Service - основной сервис управления доставкой
 type Service struct {
-	db                *sqlx.DB
-	storage           *storage.Storage
-	calculator        *calculator.Service
-	attributes        *attributes.Service
-	providerFactory   *factory.ProviderFactory
-	notifications     *notifications.DeliveryNotificationIntegration
-	cache             map[string]interfaces.DeliveryProvider // кеш провайдеров
+	db              *sqlx.DB
+	storage         *storage.Storage
+	calculator      *calculator.Service
+	attributes      *attributes.Service
+	providerFactory *factory.ProviderFactory
+	notifications   *notifications.DeliveryNotificationIntegration
+	cache           map[string]interfaces.DeliveryProvider // кеш провайдеров
 }
 
 // NewService создает новый экземпляр сервиса доставки
@@ -198,7 +198,9 @@ func (s *Service) TrackShipment(ctx context.Context, trackingNumber string) (*Tr
 		if trackingResp.DeliveredDate != nil {
 			shipment.ActualDeliveryDate = trackingResp.DeliveredDate
 		}
-		s.storage.UpdateShipmentStatus(ctx, shipment.ID, shipment.Status, shipment.ActualDeliveryDate)
+		if err := s.storage.UpdateShipmentStatus(ctx, shipment.ID, shipment.Status, shipment.ActualDeliveryDate); err != nil {
+			log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to update shipment status")
+		}
 
 		// Отправляем уведомление об изменении статуса
 		s.sendStatusNotification(ctx, shipment, oldStatus, trackingResp.Status, trackingResp.CurrentLocation, trackingResp.StatusText)
@@ -214,20 +216,22 @@ func (s *Service) TrackShipment(ctx context.Context, trackingNumber string) (*Tr
 			Location:    &event.Location,
 			Description: &event.Description,
 		}
-		s.storage.CreateTrackingEvent(ctx, trackEvent)
+		if err := s.storage.CreateTrackingEvent(ctx, trackEvent); err != nil {
+			log.Error().Err(err).Int("shipment_id", shipment.ID).Msg("Failed to create tracking event")
+		}
 	}
 
 	return &TrackingInfo{
-		ShipmentID:       shipment.ID,
-		TrackingNumber:   trackingNumber,
-		Status:           trackingResp.Status,
-		StatusText:       trackingResp.StatusText,
-		CurrentLocation:  trackingResp.CurrentLocation,
-		EstimatedDate:    trackingResp.EstimatedDate,
-		DeliveredDate:    trackingResp.DeliveredDate,
-		Events:           trackingResp.Events,
-		ProofOfDelivery:  trackingResp.ProofOfDelivery,
-		LastUpdated:      shipment.UpdatedAt,
+		ShipmentID:      shipment.ID,
+		TrackingNumber:  trackingNumber,
+		Status:          trackingResp.Status,
+		StatusText:      trackingResp.StatusText,
+		CurrentLocation: trackingResp.CurrentLocation,
+		EstimatedDate:   trackingResp.EstimatedDate,
+		DeliveredDate:   trackingResp.DeliveredDate,
+		Events:          trackingResp.Events,
+		ProofOfDelivery: trackingResp.ProofOfDelivery,
+		LastUpdated:     shipment.UpdatedAt,
 	}, nil
 }
 
@@ -303,8 +307,8 @@ func convertEvents(dbEvents []models.TrackingEvent) []interfaces.TrackingEvent {
 	events := make([]interfaces.TrackingEvent, len(dbEvents))
 	for i, e := range dbEvents {
 		events[i] = interfaces.TrackingEvent{
-			Timestamp:   e.EventTime,
-			Status:      e.Status,
+			Timestamp: e.EventTime,
+			Status:    e.Status,
 			Description: func() string {
 				if e.Description != nil {
 					return *e.Description
@@ -362,47 +366,47 @@ func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.S
 	}
 
 	// Отправляем уведомление асинхронно
-	go func() {
-		if err := s.notifications.SendDeliveryStatusUpdate(context.Background(), userID, event); err != nil {
+	go func(ctx context.Context) {
+		if err := s.notifications.SendDeliveryStatusUpdate(ctx, userID, event); err != nil {
 			log.Error().Err(err).
 				Int("shipment_id", shipment.ID).
 				Str("tracking_number", trackingNumber).
 				Msg("Failed to send delivery notification")
 		}
-	}()
+	}(ctx)
 }
 
 // Структуры запросов и ответов
 
 // CreateShipmentRequest - запрос создания отправления
 type CreateShipmentRequest struct {
-	ProviderID     int                    `json:"provider_id"`
-	ProviderCode   string                 `json:"provider_code"`
-	OrderID        int                    `json:"order_id"`
-	FromAddress    *interfaces.Address    `json:"from_address"`
-	ToAddress      *interfaces.Address    `json:"to_address"`
-	Packages       []interfaces.Package   `json:"packages"`
-	DeliveryType   string                 `json:"delivery_type"`
-	PickupDate     *time.Time             `json:"pickup_date,omitempty"`
-	InsuranceValue float64                `json:"insurance_value,omitempty"`
-	CODAmount      float64                `json:"cod_amount,omitempty"`
-	Services       []string               `json:"services,omitempty"`
-	Reference      string                 `json:"reference,omitempty"`
-	Notes          string                 `json:"notes,omitempty"`
+	ProviderID     int                  `json:"provider_id"`
+	ProviderCode   string               `json:"provider_code"`
+	OrderID        int                  `json:"order_id"`
+	FromAddress    *interfaces.Address  `json:"from_address"`
+	ToAddress      *interfaces.Address  `json:"to_address"`
+	Packages       []interfaces.Package `json:"packages"`
+	DeliveryType   string               `json:"delivery_type"`
+	PickupDate     *time.Time           `json:"pickup_date,omitempty"`
+	InsuranceValue float64              `json:"insurance_value,omitempty"`
+	CODAmount      float64              `json:"cod_amount,omitempty"`
+	Services       []string             `json:"services,omitempty"`
+	Reference      string               `json:"reference,omitempty"`
+	Notes          string               `json:"notes,omitempty"`
 }
 
 // TrackingInfo - информация об отслеживании
 type TrackingInfo struct {
-	ShipmentID       int                          `json:"shipment_id"`
-	TrackingNumber   string                       `json:"tracking_number"`
-	Status           string                       `json:"status"`
-	StatusText       string                       `json:"status_text"`
-	CurrentLocation  string                       `json:"current_location,omitempty"`
-	EstimatedDate    *time.Time                   `json:"estimated_date,omitempty"`
-	DeliveredDate    *time.Time                   `json:"delivered_date,omitempty"`
-	Events           []interfaces.TrackingEvent   `json:"events"`
-	ProofOfDelivery  *interfaces.ProofOfDelivery  `json:"proof_of_delivery,omitempty"`
-	LastUpdated      time.Time                    `json:"last_updated"`
+	ShipmentID      int                         `json:"shipment_id"`
+	TrackingNumber  string                      `json:"tracking_number"`
+	Status          string                      `json:"status"`
+	StatusText      string                      `json:"status_text"`
+	CurrentLocation string                      `json:"current_location,omitempty"`
+	EstimatedDate   *time.Time                  `json:"estimated_date,omitempty"`
+	DeliveredDate   *time.Time                  `json:"delivered_date,omitempty"`
+	Events          []interfaces.TrackingEvent  `json:"events"`
+	ProofOfDelivery *interfaces.ProofOfDelivery `json:"proof_of_delivery,omitempty"`
+	LastUpdated     time.Time                   `json:"last_updated"`
 }
 
 // HandleProviderWebhook - обрабатывает webhook от провайдера доставки
@@ -449,13 +453,13 @@ func (s *Service) HandleProviderWebhook(ctx context.Context, providerCode string
 			}
 
 			trackingEvent := &models.TrackingEvent{
-				ShipmentID:    shipment.ID,
-				ProviderID:    shipment.ProviderID,
-				EventTime:     event.Timestamp,
-				Status:        event.Status,
-				Location:      location,
-				Description:   description,
-				RawData:       json.RawMessage(fmt.Sprintf(`{"webhook_payload": %q}`, string(payload))),
+				ShipmentID:  shipment.ID,
+				ProviderID:  shipment.ProviderID,
+				EventTime:   event.Timestamp,
+				Status:      event.Status,
+				Location:    location,
+				Description: description,
+				RawData:     json.RawMessage(fmt.Sprintf(`{"webhook_payload": %q}`, string(payload))),
 			}
 
 			if err := s.storage.CreateTrackingEvent(ctx, trackingEvent); err != nil {
@@ -633,14 +637,14 @@ func (s *Service) GetDeliveryAnalytics(ctx context.Context, from, to time.Time, 
 
 // DeliveryAnalytics - структура аналитики доставки
 type DeliveryAnalytics struct {
-	Period            AnalyticsPeriod            `json:"period"`
-	TotalShipments    int                        `json:"total_shipments"`
-	TotalCost         float64                    `json:"total_cost"`
-	AverageCost       float64                    `json:"average_cost"`
-	StatusBreakdown   map[string]int             `json:"status_breakdown"`
-	ProviderBreakdown []ProviderStatistics       `json:"provider_breakdown"`
-	TopRoutes         []RouteStatistics          `json:"top_routes"`
-	AverageDeliveryDays map[string]float64       `json:"average_delivery_days"`
+	Period              AnalyticsPeriod      `json:"period"`
+	TotalShipments      int                  `json:"total_shipments"`
+	TotalCost           float64              `json:"total_cost"`
+	AverageCost         float64              `json:"average_cost"`
+	StatusBreakdown     map[string]int       `json:"status_breakdown"`
+	ProviderBreakdown   []ProviderStatistics `json:"provider_breakdown"`
+	TopRoutes           []RouteStatistics    `json:"top_routes"`
+	AverageDeliveryDays map[string]float64   `json:"average_delivery_days"`
 }
 
 // AnalyticsPeriod - период аналитики
@@ -651,12 +655,12 @@ type AnalyticsPeriod struct {
 
 // ProviderStatistics - статистика по провайдеру
 type ProviderStatistics struct {
-	ProviderID     int     `json:"provider_id"`
-	ProviderName   string  `json:"provider_name"`
-	ShipmentCount  int     `json:"shipment_count"`
-	TotalCost      float64 `json:"total_cost"`
-	AverageCost    float64 `json:"average_cost"`
-	SuccessRate    float64 `json:"success_rate"`
+	ProviderID    int     `json:"provider_id"`
+	ProviderName  string  `json:"provider_name"`
+	ShipmentCount int     `json:"shipment_count"`
+	TotalCost     float64 `json:"total_cost"`
+	AverageCost   float64 `json:"average_cost"`
+	SuccessRate   float64 `json:"success_rate"`
 }
 
 // RouteStatistics - статистика маршрута

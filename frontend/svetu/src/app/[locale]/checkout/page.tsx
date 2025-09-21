@@ -109,6 +109,7 @@ export default function CheckoutPage() {
   const [storefrontDeliveryProviders, setStorefrontDeliveryProviders] =
     useState<any[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
+  const [selectedDeliveryQuote, setSelectedDeliveryQuote] = useState<any>(null);
   const [formData, setFormData] = useState<{
     customer?: CustomerInfo;
     shipping?: ShippingAddress;
@@ -426,9 +427,6 @@ export default function CheckoutPage() {
           },
           payment_method: formData.payment!.paymentMethod,
           shipping_method: selectedDeliveryQuote?.provider_code || 'standard',
-          shipping_cost: selectedDeliveryQuote?.total_price || 0,
-          delivery_provider_id: selectedDeliveryQuote?.provider_id,
-          delivery_type: selectedDeliveryQuote?.delivery_type,
           customer_notes: '',
         };
 

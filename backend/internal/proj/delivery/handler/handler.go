@@ -398,7 +398,9 @@ func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 	}
 
 	var req CancelRequest
-	c.BodyParser(&req)
+	if err := c.BodyParser(&req); err != nil {
+		return utils.SendErrorResponse(c, fiber.StatusBadRequest, "error.invalid_request_body", nil)
+	}
 
 	if err := h.service.CancelShipment(c.Context(), shipmentID, req.Reason); err != nil {
 		return utils.SendErrorResponse(c, fiber.StatusInternalServerError, "error.failed_to_cancel", fiber.Map{
@@ -631,12 +633,12 @@ func (h *Handler) HandleTrackingWebhook(c *fiber.Ctx) error {
 
 // CartCalculationRequest - запрос расчета для корзины
 type CartCalculationRequest struct {
-	FromLocation   calculator.Location      `json:"from_location"`
-	ToLocation     calculator.Location      `json:"to_location"`
+	FromLocation   calculator.Location        `json:"from_location"`
+	ToLocation     calculator.Location        `json:"to_location"`
 	Items          []calculator.ItemWithAttrs `json:"items"`
-	InsuranceValue float64                  `json:"insurance_value,omitempty"`
-	CODAmount      float64                  `json:"cod_amount,omitempty"`
-	DeliveryType   string                   `json:"delivery_type,omitempty"`
+	InsuranceValue float64                    `json:"insurance_value,omitempty"`
+	CODAmount      float64                    `json:"cod_amount,omitempty"`
+	DeliveryType   string                     `json:"delivery_type,omitempty"`
 }
 
 // CancelRequest - запрос отмены

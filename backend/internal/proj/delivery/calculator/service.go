@@ -26,13 +26,13 @@ func NewService(db *sqlx.DB) *Service {
 
 // CalculationRequest - запрос расчета стоимости доставки
 type CalculationRequest struct {
-	FromLocation  Location         `json:"from_location"`
-	ToLocation    Location         `json:"to_location"`
-	Items         []ItemWithAttrs  `json:"items"`
-	ProviderID    *int             `json:"provider_id,omitempty"`
+	FromLocation   Location        `json:"from_location"`
+	ToLocation     Location        `json:"to_location"`
+	Items          []ItemWithAttrs `json:"items"`
+	ProviderID     *int            `json:"provider_id,omitempty"`
 	InsuranceValue float64         `json:"insurance_value,omitempty"`
-	CODAmount     float64          `json:"cod_amount,omitempty"`
-	DeliveryType  string           `json:"delivery_type,omitempty"`
+	CODAmount      float64         `json:"cod_amount,omitempty"`
+	DeliveryType   string          `json:"delivery_type,omitempty"`
 }
 
 // Location - местоположение
@@ -52,33 +52,14 @@ type ItemWithAttrs struct {
 	Attributes  *models.DeliveryAttributes `json:"attributes,omitempty"`
 }
 
-// CalculationResponse - ответ с расчетом стоимости
-type CalculationResponse struct {
-	Providers   []ProviderQuote `json:"providers"`
-	Cheapest    *ProviderQuote  `json:"cheapest,omitempty"`
-	Fastest     *ProviderQuote  `json:"fastest,omitempty"`
-	Recommended *ProviderQuote  `json:"recommended,omitempty"`
-}
-
-// ProviderQuote - предложение от провайдера
-type ProviderQuote struct {
-	ProviderID      int                    `json:"provider_id"`
-	ProviderCode    string                 `json:"provider_code"`
-	ProviderName    string                 `json:"provider_name"`
-	DeliveryType    string                 `json:"delivery_type"`
-	TotalCost       float64                `json:"total_cost"`
-	CostBreakdown   *models.CostBreakdown  `json:"cost_breakdown,omitempty"`
-	EstimatedDays   int                    `json:"estimated_days"`
-	Services        []string               `json:"services,omitempty"`
-	IsAvailable     bool                   `json:"is_available"`
-	UnavailableReason string               `json:"unavailable_reason,omitempty"`
-}
-
 // Calculate - рассчитывает стоимость доставки для всех доступных провайдеров
 func (s *Service) Calculate(ctx context.Context, req *CalculationRequest) (*CalculationResponse, error) {
 	// Загружаем атрибуты товаров если не переданы
 	if err := s.loadItemAttributes(ctx, req.Items); err != nil {
-		return nil, fmt.Errorf("failed to load item attributes: %w", err)
+		return &CalculationResponse{
+			Success: false,
+			Message: "Failed to load item attributes",
+		}, fmt.Errorf("failed to load item attributes: %w", err)
 	}
 
 	// Оптимизируем упаковку товаров
@@ -87,13 +68,19 @@ func (s *Service) Calculate(ctx context.Context, req *CalculationRequest) (*Calc
 	// Определяем зону доставки
 	zone, err := s.determineZone(ctx, req.FromLocation, req.ToLocation)
 	if err != nil {
-		return nil, fmt.Errorf("failed to determine zone: %w", err)
+		return &CalculationResponse{
+			Success: false,
+			Message: "Failed to determine delivery zone",
+		}, fmt.Errorf("failed to determine zone: %w", err)
 	}
 
 	// Получаем активных провайдеров
 	providers, err := s.getActiveProviders(ctx, req.ProviderID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get providers: %w", err)
+		return &CalculationResponse{
+			Success: false,
+			Message: "Failed to get delivery providers",
+		}, fmt.Errorf("failed to get providers: %w", err)
 	}
 
 	// Рассчитываем стоимость для каждого провайдера
@@ -107,11 +94,19 @@ func (s *Service) Calculate(ctx context.Context, req *CalculationRequest) (*Calc
 		quotes = append(quotes, *quote)
 	}
 
-	// Выбираем лучшие предложения
-	response := &CalculationResponse{
+	// Создаем данные расчета
+	data := &CalculationData{
 		Providers: quotes,
 	}
-	s.selectBestQuotes(response)
+
+	// Выбираем лучшие предложения
+	s.selectBestQuotes(data)
+
+	// Формируем ответ
+	response := &CalculationResponse{
+		Success: true,
+		Data:    data,
+	}
 
 	return response, nil
 }
@@ -196,11 +191,11 @@ func (s *Service) getProductAttributes(ctx context.Context, productID int, produ
 
 // Package - упакованная посылка
 type Package struct {
-	Items       []ItemWithAttrs
-	TotalWeight float64
-	Dimensions  models.Dimensions
-	Volume      float64
-	IsFragile   bool
+	Items         []ItemWithAttrs
+	TotalWeight   float64
+	Dimensions    models.Dimensions
+	Volume        float64
+	IsFragile     bool
 	PackagingType string
 }
 
@@ -374,7 +369,7 @@ func (s *Service) calculateProviderQuote(ctx context.Context, provider models.Pr
 	}
 
 	// Применяем правила расчета
-	breakdown := &models.CostBreakdown{}
+	breakdown := models.CostBreakdown{}
 
 	for _, rule := range rules {
 		if rule.RuleType == models.RuleTypeWeightBased {
@@ -433,7 +428,10 @@ func (s *Service) calculateProviderQuote(ctx context.Context, provider models.Pr
 		ProviderCode:  provider.Code,
 		ProviderName:  provider.Name,
 		DeliveryType:  req.DeliveryType,
-		TotalCost:     breakdown.Total,
+		TotalPrice:    breakdown.Total,
+		DeliveryCost:  breakdown.BasePrice,
+		InsuranceCost: breakdown.InsuranceFee,
+		CODFee:        breakdown.CODFee,
 		CostBreakdown: breakdown,
 		EstimatedDays: estimatedDays,
 		IsAvailable:   true,
@@ -470,22 +468,22 @@ func (s *Service) estimateDeliveryDays(zone string, deliveryType string) int {
 }
 
 // selectBestQuotes - выбирает лучшие предложения
-func (s *Service) selectBestQuotes(response *CalculationResponse) {
-	if len(response.Providers) == 0 {
+func (s *Service) selectBestQuotes(data *CalculationData) {
+	if len(data.Providers) == 0 {
 		return
 	}
 
 	var cheapest, fastest, recommended *ProviderQuote
 
-	for i := range response.Providers {
-		quote := &response.Providers[i]
+	for i := range data.Providers {
+		quote := &data.Providers[i]
 
 		if !quote.IsAvailable {
 			continue
 		}
 
 		// Самый дешевый
-		if cheapest == nil || quote.TotalCost < cheapest.TotalCost {
+		if cheapest == nil || quote.TotalPrice < cheapest.TotalPrice {
 			cheapest = quote
 		}
 
@@ -499,17 +497,17 @@ func (s *Service) selectBestQuotes(response *CalculationResponse) {
 			recommended = quote
 		} else {
 			// Простая формула: цена + дни * 100
-			currentScore := recommended.TotalCost + float64(recommended.EstimatedDays*100)
-			quoteScore := quote.TotalCost + float64(quote.EstimatedDays*100)
+			currentScore := recommended.TotalPrice + float64(recommended.EstimatedDays*100)
+			quoteScore := quote.TotalPrice + float64(quote.EstimatedDays*100)
 			if quoteScore < currentScore {
 				recommended = quote
 			}
 		}
 	}
 
-	response.Cheapest = cheapest
-	response.Fastest = fastest
-	response.Recommended = recommended
+	data.Cheapest = cheapest
+	data.Fastest = fastest
+	data.Recommended = recommended
 }
 
 // GetCategoryDefaults - получает дефолтные атрибуты для категории

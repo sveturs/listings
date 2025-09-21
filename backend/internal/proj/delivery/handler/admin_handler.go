@@ -4,12 +4,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"backend/internal/domain/logistics"
+	adminLogistics "backend/internal/proj/admin/logistics/service"
 	"backend/internal/proj/delivery/models"
 	"backend/internal/proj/delivery/service"
-	adminLogistics "backend/internal/proj/admin/logistics/service"
 	"backend/pkg/logger"
+	_ "backend/pkg/utils" // For swagger documentation
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // AdminHandler handles admin endpoints for delivery management
@@ -19,7 +21,7 @@ type AdminHandler struct {
 	monitoringService *adminLogistics.MonitoringService
 	problemService    *adminLogistics.ProblemService
 	analyticsService  *adminLogistics.AnalyticsService
-	logger           *logger.Logger
+	logger            *logger.Logger
 }
 
 // NewAdminHandler creates a new admin handler
@@ -117,15 +119,15 @@ func (h *AdminHandler) ToggleProvider(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid provider ID",
-	})
+			"error": "Invalid provider ID",
+		})
 	}
 
 	err = h.service.ToggleProviderStatus(c.Context(), providerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to toggle provider status",
-	})
+			"error": "Failed to toggle provider status",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -141,7 +143,7 @@ func (h *AdminHandler) ToggleProvider(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Provider ID"
-// @Param config body ProviderConfig true "Provider configuration"
+// @Param config body models.ProviderConfig true "Provider configuration"
 // @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Configuration updated"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/providers/{id}/config [put]
@@ -149,22 +151,22 @@ func (h *AdminHandler) UpdateProviderConfig(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid provider ID",
-	})
+			"error": "Invalid provider ID",
+		})
 	}
 
 	var config models.ProviderConfig
 	if err := c.BodyParser(&config); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid request body",
-	})
+			"error": "Invalid request body",
+		})
 	}
 
 	err = h.service.UpdateProviderConfig(c.Context(), providerID, config)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to update configuration",
-	})
+			"error": "Failed to update configuration",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -179,15 +181,15 @@ func (h *AdminHandler) UpdateProviderConfig(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]PricingRule} "List of pricing rules"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PricingRule} "List of pricing rules"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules [get]
 func (h *AdminHandler) GetPricingRules(c *fiber.Ctx) error {
 	rules, err := h.service.GetAllPricingRules(c.Context())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to fetch pricing rules",
-	})
+			"error": "Failed to fetch pricing rules",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -202,23 +204,23 @@ func (h *AdminHandler) GetPricingRules(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param rule body PricingRule true "Pricing rule"
-// @Success 200 {object} utils.SuccessResponseSwag{data=PricingRule} "Created rule"
+// @Param rule body models.PricingRule true "Pricing rule"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PricingRule} "Created rule"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules [post]
 func (h *AdminHandler) CreatePricingRule(c *fiber.Ctx) error {
 	var rule models.PricingRule
 	if err := c.BodyParser(&rule); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid request body",
-	})
+			"error": "Invalid request body",
+		})
 	}
 
 	created, err := h.service.CreatePricingRule(c.Context(), &rule)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to create pricing rule",
-	})
+			"error": "Failed to create pricing rule",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -234,7 +236,7 @@ func (h *AdminHandler) CreatePricingRule(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Rule ID"
-// @Param rule body PricingRule true "Pricing rule"
+// @Param rule body models.PricingRule true "Pricing rule"
 // @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Rule updated"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules/{id} [put]
@@ -242,23 +244,23 @@ func (h *AdminHandler) UpdatePricingRule(c *fiber.Ctx) error {
 	ruleID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid rule ID",
-	})
+			"error": "Invalid rule ID",
+		})
 	}
 
 	var rule models.PricingRule
 	if err := c.BodyParser(&rule); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid request body",
-	})
+			"error": "Invalid request body",
+		})
 	}
 
 	rule.ID = ruleID
 	err = h.service.UpdatePricingRule(c.Context(), rule)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to update pricing rule",
-	})
+			"error": "Failed to update pricing rule",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -281,15 +283,15 @@ func (h *AdminHandler) DeletePricingRule(c *fiber.Ctx) error {
 	ruleID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid rule ID",
-	})
+			"error": "Invalid rule ID",
+		})
 	}
 
 	err = h.service.DeletePricingRule(c.Context(), ruleID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to delete pricing rule",
-	})
+			"error": "Failed to delete pricing rule",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -306,7 +308,7 @@ func (h *AdminHandler) DeletePricingRule(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param type query string false "Problem type filter"
 // @Param status query string false "Status filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]ProblemShipment} "List of problem shipments"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ProblemShipment} "List of problem shipments"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems [get]
 func (h *AdminHandler) GetProblemShipments(c *fiber.Ctx) error {
@@ -316,8 +318,8 @@ func (h *AdminHandler) GetProblemShipments(c *fiber.Ctx) error {
 	problems, err := h.service.GetProblemShipments(c.Context(), problemType, status)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to fetch problem shipments",
-	})
+			"error": "Failed to fetch problem shipments",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -333,7 +335,7 @@ func (h *AdminHandler) GetProblemShipments(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Problem ID"
-// @Param assignment body ProblemAssignment true "Assignment details"
+// @Param assignment body models.ProblemAssignment true "Assignment details"
 // @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Problem assigned"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems/{id}/assign [post]
@@ -341,22 +343,22 @@ func (h *AdminHandler) AssignProblem(c *fiber.Ctx) error {
 	problemID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid problem ID",
-	})
+			"error": "Invalid problem ID",
+		})
 	}
 
 	var assignment models.ProblemAssignment
 	if err := c.BodyParser(&assignment); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid request body",
-	})
+			"error": "Invalid request body",
+		})
 	}
 
 	err = h.service.AssignProblem(c.Context(), problemID, assignment.AdminID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to assign problem",
-	})
+			"error": "Failed to assign problem",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -372,7 +374,7 @@ func (h *AdminHandler) AssignProblem(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Problem ID"
-// @Param resolution body ProblemResolution true "Resolution details"
+// @Param resolution body models.ProblemResolution true "Resolution details"
 // @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Problem resolved"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems/{id}/resolve [post]
@@ -380,22 +382,22 @@ func (h *AdminHandler) ResolveProblem(c *fiber.Ctx) error {
 	problemID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid problem ID",
-	})
+			"error": "Invalid problem ID",
+		})
 	}
 
 	var resolution models.ProblemResolution
 	if err := c.BodyParser(&resolution); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": "Invalid request body",
-	})
+			"error": "Invalid request body",
+		})
 	}
 
 	err = h.service.ResolveProblem(c.Context(), problemID, resolution.Resolution)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to resolve problem",
-	})
+			"error": "Failed to resolve problem",
+		})
 	}
 
 	// Send notification if requested
@@ -415,15 +417,15 @@ func (h *AdminHandler) ResolveProblem(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponseSwag{data=DashboardStats} "Dashboard statistics"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.DashboardStats} "Dashboard statistics"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/dashboard [get]
 func (h *AdminHandler) GetDashboard(c *fiber.Ctx) error {
 	stats, err := h.service.GetDashboardStats(c.Context())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to fetch dashboard stats",
-	})
+			"error": "Failed to fetch dashboard stats",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -439,7 +441,7 @@ func (h *AdminHandler) GetDashboard(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param period query string false "Time period (7d, 30d, 90d, 365d)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AnalyticsData} "Analytics data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AnalyticsData} "Analytics data"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/analytics [get]
 func (h *AdminHandler) GetAnalytics(c *fiber.Ctx) error {
@@ -448,8 +450,8 @@ func (h *AdminHandler) GetAnalytics(c *fiber.Ctx) error {
 	analytics, err := h.service.GetAnalytics(c.Context(), period)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"error": "Failed to fetch analytics",
-	})
+			"error": "Failed to fetch analytics",
+		})
 	}
 
 	return c.JSON(fiber.Map{
@@ -630,10 +632,10 @@ func (h *AdminHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 	}
 
 	var req struct {
-		Status      string `json:"status"`
-		Comment     string `json:"comment"`
+		Status       string `json:"status"`
+		Comment      string `json:"comment"`
 		ShipmentType string `json:"shipment_type"`
-		AdminID     int    `json:"admin_id"`
+		AdminID      int    `json:"admin_id"`
 	}
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -919,8 +921,8 @@ func (h *AdminHandler) GetConsolidatedAnalytics(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
-			"delivery":  deliveryAnalytics,
-			"period":    period,
+			"delivery": deliveryAnalytics,
+			"period":   period,
 		},
 	})
 }

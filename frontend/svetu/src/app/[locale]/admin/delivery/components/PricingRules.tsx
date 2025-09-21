@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
 
 interface PricingRule {
   id: number;
@@ -13,8 +12,8 @@ interface PricingRule {
   is_active: boolean;
   min_price: number;
   max_price: number;
-  weight_ranges?: Array<{from: number; to: number; price_per_kg: number}>;
-  volume_ranges?: Array<{from: number; to: number; price_per_m3: number}>;
+  weight_ranges?: Array<{ from: number; to: number; price_per_kg: number }>;
+  volume_ranges?: Array<{ from: number; to: number; price_per_m3: number }>;
   fragile_surcharge?: number;
   oversized_surcharge?: number;
   special_handling_surcharge?: number;
@@ -53,7 +52,7 @@ export default function PricingRules() {
               { from: 50, to: 100, price_per_kg: 2.5 },
             ],
             fragile_surcharge: 2,
-            oversized_surcharge: 5
+            oversized_surcharge: 5,
           },
           {
             id: 2,
@@ -63,7 +62,7 @@ export default function PricingRules() {
             priority: 1,
             is_active: true,
             min_price: 4,
-            max_price: 400
+            max_price: 400,
           },
           {
             id: 3,
@@ -73,7 +72,7 @@ export default function PricingRules() {
             priority: 2,
             is_active: true,
             min_price: 6,
-            max_price: 450
+            max_price: 450,
           },
           {
             id: 4,
@@ -87,9 +86,9 @@ export default function PricingRules() {
             volume_ranges: [
               { from: 0, to: 0.01, price_per_m3: 100 },
               { from: 0.01, to: 0.05, price_per_m3: 90 },
-              { from: 0.05, to: 0.1, price_per_m3: 80 }
-            ]
-          }
+              { from: 0.05, to: 0.1, price_per_m3: 80 },
+            ],
+          },
         ]);
         setLoading(false);
       }, 500);
@@ -105,17 +104,19 @@ export default function PricingRules() {
   };
 
   const toggleRuleStatus = (ruleId: number) => {
-    setRules(prev => prev.map(rule =>
-      rule.id === ruleId ? { ...rule, is_active: !rule.is_active } : rule
-    ));
+    setRules((prev) =>
+      prev.map((rule) =>
+        rule.id === ruleId ? { ...rule, is_active: !rule.is_active } : rule
+      )
+    );
   };
 
   const getRuleTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      'weight_based': t('ruleTypes.weight_based'),
-      'volume_based': t('ruleTypes.volume_based'),
-      'zone_based': t('ruleTypes.zone_based'),
-      'combined': t('ruleTypes.combined')
+      weight_based: t('ruleTypes.weight_based'),
+      volume_based: t('ruleTypes.volume_based'),
+      zone_based: t('ruleTypes.zone_based'),
+      combined: t('ruleTypes.combined'),
     };
     return labels[type] || type;
   };
@@ -135,9 +136,7 @@ export default function PricingRules() {
           <h2 className="text-xl font-semibold mb-2">{t('title')}</h2>
           <p className="text-base-content/70">{t('description')}</p>
         </div>
-        <button className="btn btn-primary">
-          {t('addRule')}
-        </button>
+        <button className="btn btn-primary">{t('addRule')}</button>
       </div>
 
       <div className="overflow-x-auto">
@@ -206,7 +205,9 @@ export default function PricingRules() {
               {/* Weight Ranges */}
               {selectedRule.weight_ranges && (
                 <div>
-                  <h4 className="font-semibold mb-3">{t('editModal.weightRanges')}</h4>
+                  <h4 className="font-semibold mb-3">
+                    {t('editModal.weightRanges')}
+                  </h4>
                   <div className="space-y-2">
                     {selectedRule.weight_ranges.map((range, index) => (
                       <div key={index} className="flex gap-3 items-center">
@@ -231,7 +232,9 @@ export default function PricingRules() {
                           placeholder={t('editModal.pricePerKg')}
                         />
                         <span className="text-sm">€/кг</span>
-                        <button className="btn btn-ghost btn-xs text-error">✕</button>
+                        <button className="btn btn-ghost btn-xs text-error">
+                          ✕
+                        </button>
                       </div>
                     ))}
                     <button className="btn btn-sm btn-outline">
@@ -244,7 +247,9 @@ export default function PricingRules() {
               {/* Volume Ranges */}
               {selectedRule.volume_ranges && (
                 <div>
-                  <h4 className="font-semibold mb-3">{t('editModal.volumeRanges')}</h4>
+                  <h4 className="font-semibold mb-3">
+                    {t('editModal.volumeRanges')}
+                  </h4>
                   <div className="space-y-2">
                     {selectedRule.volume_ranges.map((range, index) => (
                       <div key={index} className="flex gap-3 items-center">
@@ -269,7 +274,9 @@ export default function PricingRules() {
                           placeholder={t('editModal.pricePerM3')}
                         />
                         <span className="text-sm">€/м³</span>
-                        <button className="btn btn-ghost btn-xs text-error">✕</button>
+                        <button className="btn btn-ghost btn-xs text-error">
+                          ✕
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -278,11 +285,15 @@ export default function PricingRules() {
 
               {/* Surcharges */}
               <div>
-                <h4 className="font-semibold mb-3">{t('editModal.surcharges')}</h4>
+                <h4 className="font-semibold mb-3">
+                  {t('editModal.surcharges')}
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text text-sm">{t('editModal.fragile')}</span>
+                      <span className="label-text text-sm">
+                        {t('editModal.fragile')}
+                      </span>
                     </label>
                     <input
                       type="number"
@@ -293,7 +304,9 @@ export default function PricingRules() {
                   </div>
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text text-sm">{t('editModal.oversized')}</span>
+                      <span className="label-text text-sm">
+                        {t('editModal.oversized')}
+                      </span>
                     </label>
                     <input
                       type="number"
@@ -304,12 +317,16 @@ export default function PricingRules() {
                   </div>
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text text-sm">{t('editModal.specialHandling')}</span>
+                      <span className="label-text text-sm">
+                        {t('editModal.specialHandling')}
+                      </span>
                     </label>
                     <input
                       type="number"
                       className="input input-bordered input-sm"
-                      defaultValue={selectedRule.special_handling_surcharge || 0}
+                      defaultValue={
+                        selectedRule.special_handling_surcharge || 0
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -335,7 +352,11 @@ export default function PricingRules() {
               </button>
             </div>
           </div>
-          <form method="dialog" className="modal-backdrop" onClick={() => setEditModalOpen(false)}>
+          <form
+            method="dialog"
+            className="modal-backdrop"
+            onClick={() => setEditModalOpen(false)}
+          >
             <button>close</button>
           </form>
         </dialog>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
 
 interface AnalyticsData {
   totalShipments: number;
@@ -21,7 +20,7 @@ export default function DeliveryAnalytics() {
     avgDeliveryTime: '0 дней',
     customerSatisfaction: 0,
     costPerShipment: 0,
-    problemRate: 0
+    problemRate: 0,
   });
   const [timeRange, setTimeRange] = useState('30d');
   const [loading, setLoading] = useState(true);
@@ -39,8 +38,8 @@ export default function DeliveryAnalytics() {
           deliveryRate: 94.3,
           avgDeliveryTime: '2.1 дня',
           customerSatisfaction: 4.5,
-          costPerShipment: 12.50,
-          problemRate: 2.3
+          costPerShipment: 12.5,
+          problemRate: 2.3,
         });
         setLoading(false);
       }, 500);
@@ -74,34 +73,44 @@ export default function DeliveryAnalytics() {
             <option value="90d">Последние 90 дней</option>
             <option value="365d">Последний год</option>
           </select>
-          <button className="btn btn-primary btn-sm">
-            {t('export')}
-          </button>
+          <button className="btn btn-primary btn-sm">{t('export')}</button>
         </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <div className="stat bg-base-100 rounded-lg shadow">
-          <div className="stat-title text-sm">{t('metrics.totalShipments')}</div>
-          <div className="stat-value text-2xl">{analyticsData.totalShipments}</div>
+          <div className="stat-title text-sm">
+            {t('metrics.totalShipments')}
+          </div>
+          <div className="stat-value text-2xl">
+            {analyticsData.totalShipments}
+          </div>
           <div className="stat-desc">↗︎ +15% от предыдущего периода</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg shadow">
           <div className="stat-title text-sm">{t('metrics.deliveryRate')}</div>
-          <div className="stat-value text-2xl">{analyticsData.deliveryRate}%</div>
+          <div className="stat-value text-2xl">
+            {analyticsData.deliveryRate}%
+          </div>
           <div className="stat-desc">↗︎ +2.3% от предыдущего</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg shadow">
-          <div className="stat-title text-sm">{t('metrics.avgDeliveryTime')}</div>
-          <div className="stat-value text-2xl">{analyticsData.avgDeliveryTime}</div>
+          <div className="stat-title text-sm">
+            {t('metrics.avgDeliveryTime')}
+          </div>
+          <div className="stat-value text-2xl">
+            {analyticsData.avgDeliveryTime}
+          </div>
           <div className="stat-desc">↘︎ -4ч от предыдущего</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg shadow">
-          <div className="stat-title text-sm">{t('metrics.customerSatisfaction')}</div>
+          <div className="stat-title text-sm">
+            {t('metrics.customerSatisfaction')}
+          </div>
           <div className="stat-value text-2xl">
             {analyticsData.customerSatisfaction}
             <span className="text-lg">/5</span>
@@ -110,14 +119,20 @@ export default function DeliveryAnalytics() {
         </div>
 
         <div className="stat bg-base-100 rounded-lg shadow">
-          <div className="stat-title text-sm">{t('metrics.costPerShipment')}</div>
-          <div className="stat-value text-2xl">€{analyticsData.costPerShipment}</div>
+          <div className="stat-title text-sm">
+            {t('metrics.costPerShipment')}
+          </div>
+          <div className="stat-value text-2xl">
+            €{analyticsData.costPerShipment}
+          </div>
           <div className="stat-desc">↘︎ -€0.50 от предыдущего</div>
         </div>
 
         <div className="stat bg-base-100 rounded-lg shadow">
           <div className="stat-title text-sm">{t('metrics.problemRate')}</div>
-          <div className="stat-value text-2xl">{analyticsData.problemRate}%</div>
+          <div className="stat-value text-2xl">
+            {analyticsData.problemRate}%
+          </div>
           <div className="stat-desc">↘︎ -0.5% от предыдущего</div>
         </div>
       </div>
@@ -127,9 +142,13 @@ export default function DeliveryAnalytics() {
         {/* Delivery Trends Chart */}
         <div className="card bg-base-100 shadow">
           <div className="card-body">
-            <h3 className="card-title text-base">{t('charts.deliveryTrends')}</h3>
+            <h3 className="card-title text-base">
+              {t('charts.deliveryTrends')}
+            </h3>
             <div className="h-64 flex items-center justify-center bg-base-200 rounded">
-              <span className="text-base-content/50">График трендов доставок</span>
+              <span className="text-base-content/50">
+                График трендов доставок
+              </span>
             </div>
           </div>
         </div>
@@ -137,19 +156,23 @@ export default function DeliveryAnalytics() {
         {/* Provider Comparison */}
         <div className="card bg-base-100 shadow">
           <div className="card-body">
-            <h3 className="card-title text-base">{t('charts.providerComparison')}</h3>
+            <h3 className="card-title text-base">
+              {t('charts.providerComparison')}
+            </h3>
             <div className="space-y-3">
               {[
                 { name: 'Post Express', value: 94, color: 'primary' },
                 { name: 'BEX Express', value: 95, color: 'secondary' },
                 { name: 'AKS', value: 92, color: 'accent' },
                 { name: 'D Express', value: 97, color: 'success' },
-                { name: 'City Express', value: 91, color: 'warning' }
+                { name: 'City Express', value: 91, color: 'warning' },
               ].map((provider) => (
                 <div key={provider.name}>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm">{provider.name}</span>
-                    <span className="text-sm font-semibold">{provider.value}%</span>
+                    <span className="text-sm font-semibold">
+                      {provider.value}%
+                    </span>
                   </div>
                   <progress
                     className={`progress progress-${provider.color} h-2`}
@@ -167,7 +190,9 @@ export default function DeliveryAnalytics() {
           <div className="card-body">
             <h3 className="card-title text-base">{t('charts.costAnalysis')}</h3>
             <div className="h-64 flex items-center justify-center bg-base-200 rounded">
-              <span className="text-base-content/50">График анализа затрат</span>
+              <span className="text-base-content/50">
+                График анализа затрат
+              </span>
             </div>
           </div>
         </div>
@@ -175,7 +200,9 @@ export default function DeliveryAnalytics() {
         {/* Geographic Distribution */}
         <div className="card bg-base-100 shadow">
           <div className="card-body">
-            <h3 className="card-title text-base">{t('charts.geographicDistribution')}</h3>
+            <h3 className="card-title text-base">
+              {t('charts.geographicDistribution')}
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Белград</span>
