@@ -45,7 +45,7 @@ export default function DeliveryDashboard() {
       setLoading(true);
 
       // Получаем данные с реального API
-      const response = await fetch(`${configManager.getApiUrl()}/admin/delivery/dashboard`, {
+      const response = await fetch(`${configManager.getApiUrl()}/api/v1/admin/delivery/dashboard`, {
         headers: {
           Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },

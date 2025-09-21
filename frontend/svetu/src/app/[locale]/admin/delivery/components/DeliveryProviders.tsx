@@ -41,7 +41,7 @@ export default function DeliveryProviders() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${configManager.getApiUrl()}/admin/delivery/providers`, {
+      const response = await fetch(`${configManager.getApiUrl()}/api/v1/admin/delivery/providers`, {
         credentials: 'include',
         headers,
       });
