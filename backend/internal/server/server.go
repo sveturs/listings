@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	globalService "backend/internal/proj/global/service"
@@ -24,6 +25,7 @@ import (
 	_ "backend/docs"
 	"backend/internal/cache"
 	"backend/internal/config"
+	"backend/internal/interfaces"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	adminLogistics "backend/internal/proj/admin/logistics"
@@ -34,6 +36,7 @@ import (
 	"backend/internal/proj/bexexpress"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
+	"backend/internal/proj/delivery"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	gisHandler "backend/internal/proj/gis/handler"
@@ -74,6 +77,7 @@ type Server struct {
 	postexpress        *postexpressHandler.Handler
 	bexexpress         *bexexpress.Module
 	adminLogistics     *adminLogistics.Module
+	delivery           *delivery.Module
 	orders             *orders.Module
 	storefront         *storefronts.Module
 	geocode            *geocodeHandler.Handler
@@ -92,6 +96,17 @@ type Server struct {
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
+}
+
+// serviceProviderWrapper обертка для service.Service чтобы реализовать middleware.ServiceProvider
+type serviceProviderWrapper struct {
+	services *globalService.Service
+}
+
+func (s *serviceProviderWrapper) User() interface {
+	IsUserAdmin(ctx context.Context, email string) (bool, error)
+} {
+	return s.services.User()
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -200,6 +215,17 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		// Не возвращаем ошибку, продолжаем без админки логистики
 	}
 
+	// Delivery система инициализация с консолидацией admin/logistics
+	deliveryModule, err := delivery.NewModule(db.GetSQLXDB(), cfg, pkglogger.New())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to initialize Delivery module, continuing without it")
+		// Не возвращаем ошибку, продолжаем без delivery системы
+	} else if deliveryModule != nil && services != nil {
+		// Подключаем сервис уведомлений к модулю доставки
+		deliveryModule.SetNotificationService(services.Notification())
+		logger.Info().Msg("Notification service integrated with delivery module")
+	}
+
 	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
 
 	// Health handler
@@ -225,7 +251,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New())
 
 	// Инициализация модуля трекинга
-	trackingModule := tracking.NewModule(db)
+	trackingModule := tracking.NewModule(db) //nolint:contextcheck
 
 	// Инициализация модуля Viber
 	viberModule := viber.NewModule(services)
@@ -275,6 +301,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		postexpress:        postexpressHandlerInstance,
 		bexexpress:         bexexpressModule,
 		adminLogistics:     adminLogisticsModule,
+		delivery:           deliveryModule,
 		orders:             ordersModule,
 		storefront:         storefrontModule,
 		geocode:            geocodeHandler,
@@ -296,8 +323,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	}
 
 	notificationsHandler.ConnectTelegramWebhook()
-	server.setupMiddleware() //nolint:contextcheck
-	server.setupRoutes()     //nolint:contextcheck
+
+	// Создаем обертку для services чтобы удовлетворить интерфейс middleware.ServiceProvider
+	serviceWrapper := &serviceProviderWrapper{services: services}
+	server.setupMiddleware(serviceWrapper) //nolint:contextcheck
+	server.setupRoutes()                   //nolint:contextcheck
 
 	return server, nil
 }
@@ -367,7 +397,7 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 	return osClient, nil
 }
 
-func (s *Server) setupMiddleware() {
+func (s *Server) setupMiddleware(services middleware.ServiceProvider) {
 	// Общие middleware для observability
 	// Security headers должны быть первыми
 	s.app.Use(s.middleware.SecurityHeaders())
@@ -377,7 +407,7 @@ func (s *Server) setupMiddleware() {
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
 
-	authProxy := middleware.NewAuthProxyMiddleware()
+	authProxy := middleware.NewAuthProxyMiddleware(services)
 	s.app.Use(authProxy.ProxyToAuthService())
 
 	// Middleware для определения языка из запроса
@@ -445,14 +475,33 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
 			return websocket.New(func(conn *websocket.Conn) {
-				// Здесь нужно будет добавить логику для трекинга
-				// Пока оставим заглушку
-				_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","token":"`+token+`"}`))
-				for {
-					_, _, err := conn.ReadMessage()
+				// Проверяем токен и получаем delivery
+				if s.tracking != nil && s.tracking.DeliveryService != nil {
+					delivery, err := s.tracking.DeliveryService.ValidateTrackingToken(token)
 					if err != nil {
-						break
+						// Отправляем ошибку и закрываем соединение
+						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","message":"Invalid tracking token"}`))
+						_ = conn.Close()
+						return
 					}
+
+					// Используем Hub для обработки WebSocket
+					if s.tracking.Hub != nil {
+						s.tracking.Hub.HandleWebSocket(conn, delivery.ID)
+					} else {
+						// Fallback если Hub не инициализирован
+						_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"connected","delivery_id":`+strconv.Itoa(delivery.ID)+`}`))
+						for {
+							_, _, err := conn.ReadMessage()
+							if err != nil {
+								break
+							}
+						}
+					}
+				} else {
+					// Если tracking module не инициализирован
+					_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","message":"Tracking service unavailable"}`))
+					_ = conn.Close()
 				}
 			}, websocket.Config{
 				HandshakeTimeout:  10 * time.Second,
@@ -483,14 +532,15 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 // registerProjectRoutes регистрирует роуты проектов через новую систему
 func (s *Server) registerProjectRoutes() {
 	// Создаем слайс всех проектов, которые реализуют RouteRegistrar
-	var registrars []RouteRegistrar
+	var registrars []interfaces.RouteRegistrar
 
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// config регистрируется отдельно до этого метода для публичных роутов
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin)
+	// tracking должен быть раньше marketplace, чтобы его публичные роуты не перехватывались auth middleware
+	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {
@@ -499,6 +549,11 @@ func (s *Server) registerProjectRoutes() {
 
 	registrars = append(registrars, s.marketplace, s.balance, s.orders, s.storefront,
 		s.geocode, s.gis, s.contacts, s.payments, s.postexpress)
+
+	// Добавляем Delivery если он инициализирован
+	if s.delivery != nil {
+		registrars = append(registrars, s.delivery)
+	}
 
 	// Добавляем BEX Express если он инициализирован
 	if s.bexexpress != nil {
@@ -510,7 +565,7 @@ func (s *Server) registerProjectRoutes() {
 		registrars = append(registrars, s.adminLogistics)
 	}
 
-	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.tracking, s.viber)
+	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.viber)
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

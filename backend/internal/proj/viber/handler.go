@@ -1,7 +1,7 @@
 package viber
 
 import (
-	"strconv"
+	"fmt"
 
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
@@ -45,6 +45,7 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 		services.Marketplace(),
 		services.Storefront(),
 		cfg.UseInfobip,
+		cfg,
 	)
 
 	webhookHandler := handler.NewWebhookHandler(
@@ -52,6 +53,7 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 		sessionManager,
 		messageHandler,
 		cfg.AuthToken,
+		cfg,
 	)
 
 	return &ViberHandler{
@@ -173,10 +175,10 @@ func (h *ViberHandler) SendTrackingNotification(c *fiber.Ctx) error {
 	//nolint:gocritic // if-else chain is appropriate here for service selection
 	if h.config.UseInfobip && h.infobipService != nil {
 		// err = h.infobipService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
-		err = h.infobipService.SendTextMessage(c.Context(), req.ViberID, "🚚 Ваш заказ в пути! Отследить: https://svetu.rs/track/"+strconv.Itoa(req.DeliveryID))
+		err = h.infobipService.SendTextMessage(c.Context(), req.ViberID, fmt.Sprintf("🚚 Ваш заказ в пути! Отследить: %s/track/%d", h.config.FrontendURL, req.DeliveryID))
 	} else if h.botService != nil {
 		// err = h.botService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
-		err = h.botService.SendTextMessage(c.Context(), req.ViberID, "🚚 Ваш заказ в пути! Отследить: https://svetu.rs/track/"+strconv.Itoa(req.DeliveryID))
+		err = h.botService.SendTextMessage(c.Context(), req.ViberID, fmt.Sprintf("🚚 Ваш заказ в пути! Отследить: %s/track/%d", h.config.FrontendURL, req.DeliveryID))
 	} else {
 		return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "viber.error.serviceNotAvailable")
 	}

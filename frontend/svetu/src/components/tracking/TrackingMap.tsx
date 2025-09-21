@@ -53,6 +53,21 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    // Validate coordinates
+    if (
+      !delivery.pickup_latitude ||
+      !delivery.pickup_longitude ||
+      !delivery.delivery_latitude ||
+      !delivery.delivery_longitude ||
+      isNaN(delivery.pickup_latitude) ||
+      isNaN(delivery.pickup_longitude) ||
+      isNaN(delivery.delivery_latitude) ||
+      isNaN(delivery.delivery_longitude)
+    ) {
+      console.warn('Invalid coordinates for delivery:', delivery);
+      return;
+    }
+
     try {
       // Центр между точками получения и доставки
       const centerLat =
@@ -192,7 +207,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         `);
       }
     }
-  }, [delivery.courier_location, mapLoaded]);
+  }, [delivery.courier_location, mapLoaded, t]);
 
   // Отображение товаров поблизости
   useEffect(() => {
@@ -231,7 +246,7 @@ export function TrackingMap({ delivery, onRequestETA }: TrackingMapProps) {
         )
         .addTo(map.current!);
     });
-  }, [delivery.nearby_items, mapLoaded]);
+  }, [delivery.nearby_items, mapLoaded, t]);
 
   // Подгонка границ карты
   const fitBounds = () => {

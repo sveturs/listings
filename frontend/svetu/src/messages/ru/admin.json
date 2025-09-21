@@ -400,6 +400,8 @@
     "system": "Система",
     "search": "Поиск",
     "logistics": "Логистика",
+    "delivery": "Доставка",
+    "deliveryDescription": "Управление провайдерами и правилами доставки",
     "content": "Контент",
     "listings": "Объявления",
     "storefronts": "Витрины",
@@ -1399,5 +1401,259 @@
     "delivered": "Доставлено",
     "cancelled": "Отменено",
     "returned": "Возвращено"
+  },
+  "delivery": {
+    "title": "Управление доставкой",
+    "subtitle": "Комплексная система управления доставкой и логистикой",
+    "description": "Настройки провайдеров доставки и правил расчета",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "shipments": "Отправления",
+      "providers": "Провайдеры",
+      "pricingRules": "Правила расчета",
+      "problemShipments": "Проблемные доставки",
+      "analytics": "Аналитика"
+    },
+    "dashboard": {
+      "todayStats": "Статистика за сегодня",
+      "providerStats": "Производительность провайдеров",
+      "costAnalysis": "Анализ стоимости",
+      "avgCost": "Средняя стоимость",
+      "totalCost": "Общая стоимость",
+      "savings": "Экономия"
+    },
+    "providers": {
+      "title": "Провайдеры доставки",
+      "description": "Управление курьерскими службами",
+      "table": {
+        "code": "Код",
+        "name": "Название",
+        "logo": "Логотип",
+        "status": "Статус",
+        "capabilities": "Возможности",
+        "actions": "Действия"
+      },
+      "status": {
+        "active": "Активен",
+        "inactive": "Неактивен",
+        "testing": "Тестирование"
+      },
+      "capabilities": {
+        "cod": "Наложенный платеж",
+        "insurance": "Страхование",
+        "tracking": "Отслеживание",
+        "express": "Экспресс доставка",
+        "international": "Международная доставка"
+      },
+      "actions": {
+        "edit": "Редактировать",
+        "configure": "Настроить API",
+        "activate": "Активировать",
+        "deactivate": "Деактивировать",
+        "test": "Тестировать"
+      },
+      "configModal": {
+        "title": "Настройка провайдера",
+        "apiUrl": "API URL",
+        "apiKey": "API ключ",
+        "apiSecret": "API секрет",
+        "testMode": "Тестовый режим",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "testConnection": "Проверить подключение"
+      }
+    },
+    "pricingRules": {
+      "title": "Правила расчета стоимости",
+      "description": "Настройка тарифов и наценок",
+      "addRule": "Добавить правило",
+      "table": {
+        "provider": "Провайдер",
+        "ruleType": "Тип правила",
+        "priority": "Приоритет",
+        "status": "Статус",
+        "minPrice": "Мин. цена",
+        "maxPrice": "Макс. цена",
+        "actions": "Действия"
+      },
+      "ruleTypes": {
+        "weight_based": "По весу",
+        "volume_based": "По объему",
+        "zone_based": "По зонам",
+        "combined": "Комбинированный"
+      },
+      "editModal": {
+        "title": "Редактирование правила",
+        "weightRanges": "Весовые диапазоны",
+        "volumeRanges": "Объемные диапазоны",
+        "zones": "Зоны доставки",
+        "surcharges": "Дополнительные сборы",
+        "fragile": "За хрупкий товар",
+        "oversized": "За негабарит",
+        "specialHandling": "За специальную обработку",
+        "formula": "Формула расчета",
+        "addRange": "Добавить диапазон",
+        "from": "От",
+        "to": "До",
+        "price": "Цена",
+        "pricePerKg": "Цена за кг",
+        "pricePerM3": "Цена за м³"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard доставки",
+      "todayStats": "Статистика за сегодня",
+      "shipments": "Отправлений",
+      "delivered": "Доставлено",
+      "inTransit": "В пути",
+      "problems": "Проблемные",
+      "avgTime": "Среднее время",
+      "successRate": "Успешность",
+      "providerStats": "Статистика по провайдерам",
+      "costAnalysis": "Анализ стоимости",
+      "avgCost": "Средняя стоимость",
+      "totalCost": "Общая стоимость",
+      "savings": "Экономия"
+    },
+    "problemShipments": {
+      "title": "Проблемные доставки",
+      "filters": {
+        "allTypes": "Все типы проблем",
+        "delayed": "Задержка",
+        "lost": "Потеряно",
+        "damaged": "Повреждено",
+        "wrongAddress": "Неверный адрес",
+        "refused": "Отказ получателя"
+      },
+      "table": {
+        "tracking": "Трек-номер",
+        "provider": "Провайдер",
+        "problemType": "Тип проблемы",
+        "status": "Статус",
+        "priority": "Приоритет",
+        "assignedTo": "Назначено",
+        "createdAt": "Создано",
+        "actions": "Действия"
+      },
+      "priority": {
+        "low": "Низкий",
+        "medium": "Средний",
+        "high": "Высокий",
+        "critical": "Критический"
+      },
+      "status": {
+        "open": "Открыто",
+        "investigating": "Расследуется",
+        "resolved": "Решено",
+        "closed": "Закрыто"
+      },
+      "actions": {
+        "view": "Просмотр",
+        "assign": "Назначить",
+        "resolve": "Решить",
+        "escalate": "Эскалировать",
+        "contact": "Связаться с клиентом"
+      }
+    },
+    "analytics": {
+      "title": "Аналитика доставки",
+      "timeRange": "Период",
+      "export": "Экспорт отчета",
+      "metrics": {
+        "totalShipments": "Всего отправлений",
+        "deliveryRate": "Процент доставки",
+        "avgDeliveryTime": "Среднее время доставки",
+        "customerSatisfaction": "Удовлетворенность клиентов",
+        "costPerShipment": "Средняя стоимость отправки",
+        "problemRate": "Процент проблем"
+      },
+      "charts": {
+        "deliveryTrends": "Тренды доставок",
+        "providerComparison": "Сравнение провайдеров",
+        "costAnalysis": "Анализ затрат",
+        "geographicDistribution": "География доставок"
+      }
+    },
+    "settings": {
+      "title": "Настройки доставки",
+      "defaultProvider": "Провайдер по умолчанию",
+      "autoSelection": "Автоматический выбор оптимального провайдера",
+      "notifications": "Уведомления о проблемах",
+      "webhookUrl": "Webhook URL для статусов",
+      "cacheDuration": "Время кэширования расчетов (минуты)",
+      "maxRetries": "Максимум попыток при ошибке",
+      "save": "Сохранить настройки"
+    },
+    "problemShipments": {
+      "title": "Проблемные отправления",
+      "filters": {
+        "allTypes": "Все типы",
+        "allStatuses": "Все статусы",
+        "delayed": "Задержка",
+        "lost": "Потеряно",
+        "damaged": "Повреждено",
+        "wrongAddress": "Неверный адрес",
+        "refused": "Отказ"
+      },
+      "table": {
+        "tracking": "Трекинг",
+        "provider": "Провайдер",
+        "problemType": "Тип проблемы",
+        "priority": "Приоритет",
+        "status": "Статус",
+        "assignedTo": "Ответственный",
+        "createdAt": "Создано",
+        "actions": "Действия"
+      },
+      "priority": {
+        "low": "Низкий",
+        "medium": "Средний",
+        "high": "Высокий",
+        "critical": "Критический"
+      },
+      "status": {
+        "open": "Открытые",
+        "investigating": "В работе",
+        "resolved": "Решенные",
+        "closed": "Закрытые"
+      },
+      "types": {
+        "delayed": "Задержка",
+        "lost": "Потеряно",
+        "damaged": "Повреждено",
+        "wrongAddress": "Неверный адрес",
+        "refused": "Отказ",
+        "returnRequested": "Запрос на возврат"
+      },
+      "stats": {
+        "open": "Открытые",
+        "inProgress": "В работе",
+        "resolved": "Решенные",
+        "critical": "Критические"
+      },
+      "actions": {
+        "view": "Просмотр",
+        "assign": "Назначить",
+        "resolve": "Решить",
+        "comment": "Комментарий",
+        "escalate": "Эскалировать",
+        "contact": "Связаться с клиентом"
+      },
+      "assignModal": {
+        "title": "Назначить проблему",
+        "selectAdmin": "Выберите администратора",
+        "assign": "Назначить",
+        "cancel": "Отмена"
+      },
+      "resolveModal": {
+        "title": "Решить проблему",
+        "description": "Описание проблемы",
+        "resolution": "Решение",
+        "resolutionPlaceholder": "Опишите как была решена проблема...",
+        "resolve": "Решить",
+        "cancel": "Отмена"
+      },
+      "noProblems": "Проблемные отправления не найдены"
+    }
   }
 }

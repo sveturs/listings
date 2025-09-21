@@ -39,7 +39,7 @@ type BEXShipment struct {
 	Status             int             `json:"status"`
 	StatusText         string          `json:"status_text"`
 	CODAmount          float64         `json:"cod_amount"`
-	WeightKg           float64         `json:"weight_kg"`
+	Weight             float64         `json:"weight"`
 	RegisteredAt       *time.Time      `json:"registered_at"`
 	DeliveredAt        *time.Time      `json:"delivered_at"`
 	FailedReason       *string         `json:"failed_reason"`
@@ -59,7 +59,7 @@ type PostExpressShipment struct {
 	Status             string          `json:"status"`
 	DeliveryStatus     *string         `json:"delivery_status"`
 	CODAmount          float64         `json:"cod_amount"`
-	WeightKg           float64         `json:"weight_kg"`
+	Weight             float64         `json:"weight"`
 	TotalPrice         float64         `json:"total_price"`
 	RegisteredAt       *time.Time      `json:"registered_at"`
 	DeliveredAt        *time.Time      `json:"delivered_at"`
@@ -195,7 +195,7 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 		SELECT 
 			id, marketplace_order_id, storefront_order_id, tracking_number,
 			recipient_name, recipient_city, recipient_phone,
-			status, status_text, cod_amount, weight_kg,
+			status, status_text, cod_amount, weight,
 			registered_at, delivered_at, failed_reason,
 			status_history, created_at, updated_at
 		FROM bex_shipments
@@ -214,7 +214,7 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 		err := rows.Scan(
 			&s.ID, &s.MarketplaceOrderID, &s.StorefrontOrderID, &s.TrackingNumber,
 			&s.RecipientName, &s.RecipientCity, &s.RecipientPhone,
-			&s.Status, &s.StatusText, &s.CODAmount, &s.WeightKg,
+			&s.Status, &s.StatusText, &s.CODAmount, &s.Weight,
 			&s.RegisteredAt, &s.DeliveredAt, &s.FailedReason,
 			&s.StatusHistory, &s.CreatedAt, &s.UpdatedAt,
 		)
@@ -235,7 +235,7 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 		SELECT 
 			id, marketplace_order_id, storefront_order_id, tracking_number,
 			recipient_name, recipient_city, recipient_phone,
-			status, delivery_status, cod_amount, weight_kg, total_price,
+			status, delivery_status, cod_amount, weight, total_price,
 			registered_at, delivered_at, failed_reason,
 			status_history, created_at, updated_at
 		FROM post_express_shipments
@@ -258,7 +258,7 @@ func (r *ShipmentsRepository) GetRecentShipments(limit int) ([]interface{}, erro
 		err := rows2.Scan(
 			&s.ID, &s.MarketplaceOrderID, &s.StorefrontOrderID, &s.TrackingNumber,
 			&s.RecipientName, &s.RecipientCity, &s.RecipientPhone,
-			&s.Status, &s.DeliveryStatus, &s.CODAmount, &s.WeightKg, &s.TotalPrice,
+			&s.Status, &s.DeliveryStatus, &s.CODAmount, &s.Weight, &s.TotalPrice,
 			&s.RegisteredAt, &s.DeliveredAt, &s.FailedReason,
 			&s.StatusHistory, &s.CreatedAt, &s.UpdatedAt,
 		)
@@ -296,7 +296,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			id, tracking_number, status,
 			recipient_name, recipient_city, recipient_phone,
 			sender_name, sender_city,
-			cod_amount, weight_kg,
+			cod_amount, weight,
 			created_at, delivered_at
 		FROM bex_shipments
 		WHERE 1=1
@@ -359,7 +359,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			SenderName     string
 			SenderCity     string
 			CODAmount      float64
-			WeightKg       float64
+			Weight         float64
 			CreatedAt      time.Time
 			DeliveredAt    *time.Time
 		}
@@ -368,7 +368,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			&s.Provider, &s.ID, &s.TrackingNumber, &s.Status,
 			&s.RecipientName, &s.RecipientCity, &s.RecipientPhone,
 			&s.SenderName, &s.SenderCity,
-			&s.CODAmount, &s.WeightKg,
+			&s.CODAmount, &s.Weight,
 			&s.CreatedAt, &s.DeliveredAt,
 		)
 		if err != nil {
@@ -386,7 +386,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			"sender_name":     s.SenderName,
 			"sender_city":     s.SenderCity,
 			"cod_amount":      s.CODAmount,
-			"weight_kg":       s.WeightKg,
+			"weight":          s.Weight,
 			"created_at":      s.CreatedAt,
 			"delivered_at":    s.DeliveredAt,
 		})
@@ -402,7 +402,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 			id, tracking_number, status,
 			recipient_name, recipient_city, recipient_phone,
 			sender_name, sender_city,
-			cod_amount, weight_kg,
+			cod_amount, weight,
 			created_at, delivered_at
 		FROM post_express_shipments
 		WHERE 1=1
@@ -470,7 +470,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 				SenderName     string
 				SenderCity     string
 				CODAmount      float64
-				WeightKg       float64
+				Weight         float64
 				CreatedAt      time.Time
 				DeliveredAt    *time.Time
 			}
@@ -479,7 +479,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 				&s.Provider, &s.ID, &s.TrackingNumber, &s.Status,
 				&s.RecipientName, &s.RecipientCity, &s.RecipientPhone,
 				&s.SenderName, &s.SenderCity,
-				&s.CODAmount, &s.WeightKg,
+				&s.CODAmount, &s.Weight,
 				&s.CreatedAt, &s.DeliveredAt,
 			)
 			if err != nil {
@@ -497,7 +497,7 @@ func (r *ShipmentsRepository) GetShipmentsList(page, limit int, filters map[stri
 				"sender_name":     s.SenderName,
 				"sender_city":     s.SenderCity,
 				"cod_amount":      s.CODAmount,
-				"weight_kg":       s.WeightKg,
+				"weight":          s.Weight,
 				"created_at":      s.CreatedAt,
 				"delivered_at":    s.DeliveredAt,
 			})
@@ -553,7 +553,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 				recipient_phone, recipient_email,
 				sender_name, sender_address, sender_city, sender_postal_code,
 				sender_phone, sender_email,
-				status, status_text, cod_amount, weight_kg,
+				status, status_text, cod_amount, weight,
 				shipment_contents, comment_public,
 				registered_at, delivered_at, failed_reason,
 				status_history, created_at, updated_at
@@ -581,7 +581,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			Status             int
 			StatusText         string
 			CODAmount          float64
-			WeightKg           float64
+			Weight             float64
 			PackageContents    *int
 			CommentPublic      *string
 			RegisteredAt       *time.Time
@@ -598,7 +598,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			&s.RecipientPhone, &s.RecipientEmail,
 			&s.SenderName, &s.SenderAddress, &s.SenderCity, &s.SenderZip,
 			&s.SenderPhone, &s.SenderEmail,
-			&s.Status, &s.StatusText, &s.CODAmount, &s.WeightKg,
+			&s.Status, &s.StatusText, &s.CODAmount, &s.Weight,
 			&s.PackageContents, &s.CommentPublic,
 			&s.RegisteredAt, &s.DeliveredAt, &s.FailedReason,
 			&s.StatusHistory, &s.CreatedAt, &s.UpdatedAt,
@@ -641,7 +641,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			"status":           getStatusString(s.Status),
 			"status_text":      s.StatusText,
 			"cod_amount":       s.CODAmount,
-			"weight_kg":        s.WeightKg,
+			"weight":           s.Weight,
 			"package_contents": s.PackageContents,
 			"reference_number": s.CommentPublic,
 			"registered_at":    s.RegisteredAt,
@@ -660,7 +660,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 				recipient_phone, recipient_email,
 				sender_name, sender_address, sender_city, sender_postal_code,
 				sender_phone, sender_email,
-				status, delivery_status, cod_amount, weight_kg, total_price,
+				status, delivery_status, cod_amount, weight, total_price,
 				notes, delivery_instructions,
 				registered_at, delivered_at, failed_reason,
 				status_history, created_at, updated_at
@@ -688,7 +688,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			Status               string
 			DeliveryStatus       *string
 			CODAmount            float64
-			WeightKg             float64
+			Weight               float64
 			TotalPrice           float64
 			Notes                *string
 			DeliveryInstructions *string
@@ -706,7 +706,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			&s.RecipientPhone, &s.RecipientEmail,
 			&s.SenderName, &s.SenderAddress, &s.SenderCity, &s.SenderZip,
 			&s.SenderPhone, &s.SenderEmail,
-			&s.Status, &s.DeliveryStatus, &s.CODAmount, &s.WeightKg, &s.TotalPrice,
+			&s.Status, &s.DeliveryStatus, &s.CODAmount, &s.Weight, &s.TotalPrice,
 			&s.Notes, &s.DeliveryInstructions,
 			&s.RegisteredAt, &s.DeliveredAt, &s.FailedReason,
 			&s.StatusHistory, &s.CreatedAt, &s.UpdatedAt,
@@ -749,7 +749,7 @@ func (r *ShipmentsRepository) GetShipmentDetails(provider string, id int) (map[s
 			"status":                s.Status,
 			"delivery_status":       s.DeliveryStatus,
 			"cod_amount":            s.CODAmount,
-			"weight_kg":             s.WeightKg,
+			"weight":                s.Weight,
 			"total_price":           s.TotalPrice,
 			"notes":                 s.Notes,
 			"delivery_instructions": s.DeliveryInstructions,

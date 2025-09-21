@@ -3,218 +3,237 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
-import { VariantAttribute } from '@/services/admin';
+import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
+
+interface VariantAttribute {
+  id?: number;
+  name: string;
+  display_name: string;
+  type: string;
+  is_required: boolean;
+  sort_order: number;
+  affects_stock: boolean;
+}
 
 interface VariantAttributeFormProps {
-  attribute?: VariantAttribute | null;
-  onSave: (data: Partial<VariantAttribute>) => void;
-  onCancel: () => void;
+  attribute?: VariantAttribute;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export default function VariantAttributeForm({
   attribute,
-  onSave,
+  onSuccess,
   onCancel,
 }: VariantAttributeFormProps) {
-  const t = useTranslations('admin');
-  const tCommon = useTranslations('admin');
-
-  const [formData, setFormData] = useState<Partial<VariantAttribute>>({
+  const _t = useTranslations('admin');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<VariantAttribute>({
     name: '',
     display_name: '',
     type: 'text',
     is_required: false,
     sort_order: 0,
     affects_stock: false,
+    ...attribute,
   });
 
   useEffect(() => {
     if (attribute) {
-      setFormData({
-        name: attribute.name || '',
-        display_name: attribute.display_name || '',
-        type: attribute.type || 'text',
-        is_required: attribute.is_required || false,
-        sort_order: attribute.sort_order || 0,
-        affects_stock: attribute.affects_stock || false,
-      });
+      setFormData(attribute);
     }
   }, [attribute]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value, type } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === 'checkbox'
-          ? (e.target as HTMLInputElement).checked
-          : type === 'number'
-            ? value
-              ? Number(value)
-              : 0
-            : value,
-    }));
-
-    // Auto-generate system name from display name
-    if (name === 'display_name' && !attribute) {
-      const systemName = value
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, '_')
-        .replace(/_+/g, '_')
-        .replace(/^_|_$/g, '');
-      setFormData((prev) => ({ ...prev, name: systemName }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (!formData.name || !formData.display_name || !formData.type) {
-      toast.error(t('variantAttributes.validationError'));
-      return;
+    try {
+      const token = tokenManager.getAccessToken();
+      const apiUrl = configManager.getApiUrl();
+      const isEdit = !!formData.id;
+
+      const url = isEdit
+        ? `${apiUrl}/api/v1/admin/variant-attributes/${formData.id}`
+        : `${apiUrl}/api/v1/admin/variant-attributes`;
+
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast.success(
+          isEdit ? 'Вариативный атрибут обновлен' : 'Вариативный атрибут создан'
+        );
+        onSuccess?.();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Ошибка сохранения атрибута');
+      }
+    } catch (error) {
+      console.error('Error saving variant attribute:', error);
+      toast.error('Ошибка сохранения атрибута');
+    } finally {
+      setLoading(false);
     }
-
-    onSave(formData);
   };
+
+  const attributeTypes = [
+    { value: 'text', label: 'Текст' },
+    { value: 'select', label: 'Выбор из списка' },
+    { value: 'multiselect', label: 'Множественный выбор' },
+    { value: 'number', label: 'Число' },
+    { value: 'boolean', label: 'Да/Нет' },
+    { value: 'color', label: 'Цвет' },
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">
-            {t('variantAttributes.displayName')} *
-          </span>
+          <span className="label-text">Системное имя*</span>
         </label>
         <input
           type="text"
-          name="display_name"
-          value={formData.display_name}
-          onChange={handleChange}
-          className="input input-bordered"
-          required
-          placeholder={t('variantAttributes.displayNamePlaceholder')}
-        />
-      </div>
-
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text">
-            {t('variantAttributes.systemName')} *
-          </span>
-        </label>
-        <input
-          type="text"
-          name="name"
           value={formData.name}
-          onChange={handleChange}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="input input-bordered"
-          pattern="[a-z0-9_]+"
           required
-          placeholder={t('variantAttributes.systemNamePlaceholder')}
+          placeholder="например: color, size, memory"
+          disabled={!!formData.id} // Не позволяем менять системное имя
         />
         <label className="label">
           <span className="label-text-alt">
-            {t('variantAttributes.systemNameHint')}
+            Используется в коде, только латинские буквы и подчеркивания
           </span>
         </label>
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('variantAttributes.type')} *</span>
+          <span className="label-text">Отображаемое имя*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.display_name}
+          onChange={(e) =>
+            setFormData({ ...formData, display_name: e.target.value })
+          }
+          className="input input-bordered"
+          required
+          placeholder="например: Цвет, Размер, Объем памяти"
+        />
+        <label className="label">
+          <span className="label-text-alt">
+            Название, которое увидят пользователи
+          </span>
+        </label>
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Тип атрибута*</span>
         </label>
         <select
-          name="type"
           value={formData.type}
-          onChange={handleChange}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
           className="select select-bordered"
-          disabled={!!attribute}
+          required
         >
-          <option value="text">{t('types.text')}</option>
-          <option value="number">{t('types.number')}</option>
-          <option value="select">{t('types.select')}</option>
-          <option value="multiselect">{t('types.multiselect')}</option>
-          <option value="boolean">{t('types.boolean')}</option>
-          <option value="date">{t('types.date')}</option>
-          <option value="range">{t('types.range')}</option>
+          {attributeTypes.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
         </select>
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text">{t('variantAttributes.sortOrder')}</span>
+          <span className="label-text">Порядок сортировки</span>
         </label>
         <input
           type="number"
-          name="sort_order"
           value={formData.sort_order}
-          onChange={handleChange}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              sort_order: parseInt(e.target.value) || 0,
+            })
+          }
           className="input input-bordered"
-          min="0"
           placeholder="0"
         />
         <label className="label">
           <span className="label-text-alt">
-            {t('variantAttributes.sortOrderHint')}
+            Порядок отображения в списках (меньше = выше)
           </span>
         </label>
       </div>
 
-      <div className="divider">{t('variantAttributes.settings')}</div>
+      <div className="divider">Настройки</div>
 
-      <div className="space-y-2">
-        <div className="form-control">
-          <label className="label cursor-pointer">
-            <span className="label-text">
-              {t('variantAttributes.isRequired')}
-            </span>
-            <input
-              type="checkbox"
-              name="is_required"
-              checked={formData.is_required}
-              onChange={handleChange}
-              className="checkbox checkbox-primary"
-            />
-          </label>
-          <label className="label">
-            <span className="label-text-alt">
-              {t('variantAttributes.isRequiredHint')}
-            </span>
-          </label>
-        </div>
-
-        <div className="form-control">
-          <label className="label cursor-pointer">
-            <span className="label-text flex items-center gap-2">
-              📦 {t('variantAttributes.affectsStock')}
-            </span>
-            <input
-              type="checkbox"
-              name="affects_stock"
-              checked={formData.affects_stock}
-              onChange={handleChange}
-              className="checkbox checkbox-warning"
-            />
-          </label>
-          <label className="label">
-            <span className="label-text-alt">
-              {t('variantAttributes.affectsStockHint')}
-            </span>
-          </label>
-        </div>
+      <div className="form-control">
+        <label className="label cursor-pointer">
+          <span className="label-text">Обязательный атрибут</span>
+          <input
+            type="checkbox"
+            checked={formData.is_required}
+            onChange={(e) =>
+              setFormData({ ...formData, is_required: e.target.checked })
+            }
+            className="checkbox checkbox-primary"
+          />
+        </label>
+        <label className="label">
+          <span className="label-text-alt">
+            Обязателен для заполнения при создании варианта
+          </span>
+        </label>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <button type="submit" className="btn btn-primary">
-          {tCommon('common.save')}
+      <div className="form-control">
+        <label className="label cursor-pointer">
+          <span className="label-text">Влияет на учет остатков</span>
+          <input
+            type="checkbox"
+            checked={formData.affects_stock}
+            onChange={(e) =>
+              setFormData({ ...formData, affects_stock: e.target.checked })
+            }
+            className="checkbox checkbox-warning"
+          />
+        </label>
+        <label className="label">
+          <span className="label-text-alt">
+            Каждая комбинация значений будет иметь отдельный учет остатков
+          </span>
+        </label>
+      </div>
+
+      <div className="modal-action">
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={onCancel}
+          disabled={loading}
+        >
+          Отмена
         </button>
-        <button type="button" onClick={onCancel} className="btn btn-ghost">
-          {tCommon('common.cancel')}
+        <button
+          type="submit"
+          className={`btn btn-primary ${loading ? 'loading' : ''}`}
+          disabled={loading}
+        >
+          {loading ? 'Сохранение...' : formData.id ? 'Обновить' : 'Создать'}
         </button>
       </div>
     </form>

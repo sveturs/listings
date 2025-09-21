@@ -44,7 +44,19 @@
   },
   "info": {
     "status": {
-      "title": "Status dostave"
+      "title": "Status dostave",
+      "undefined": "Nepoznato",
+      "created": "Kreirano",
+      "pending": "Čeka",
+      "picked_up": "Pokupljeno",
+      "in_transit": "U tranzitu",
+      "delivered": "Dostavljeno",
+      "failed": "Neuspelo",
+      "cancelled": "Otkazano",
+      "processing": "Obrada",
+      "awaiting_pickup": "Čeka preuzimanje",
+      "out_for_delivery": "Na dostavi",
+      "returned": "Vraćeno"
     },
     "orderNumber": "Narudžbina #{number}",
     "eta": {

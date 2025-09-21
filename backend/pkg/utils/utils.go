@@ -82,6 +82,41 @@ func SuccessResponse(c *fiber.Ctx, data interface{}) error {
 	})
 }
 
+// SendErrorResponse отправляет ответ об ошибке с дополнительными данными
+func SendErrorResponse(c *fiber.Ctx, status int, message string, data fiber.Map) error {
+	// Логируем ошибку для отладки
+	if status == 500 {
+		logger.Error().
+			Str("path", c.Path()).
+			Str("error_message", message).
+			Str("method", c.Method()).
+			Any("data", data).
+			Msg("SendErrorResponse 500 called")
+	}
+
+	response := fiber.Map{
+		"error": message,
+	}
+
+	// Добавляем дополнительные данные если они есть
+	if data != nil {
+		for k, v := range data {
+			response[k] = v
+		}
+	}
+
+	return c.Status(status).JSON(response)
+}
+
+// SendSuccessResponse отправляет успешный ответ с данными и сообщением
+func SendSuccessResponse(c *fiber.Ctx, data interface{}, message string) error {
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    data,
+		"message": message,
+	})
+}
+
 func StringToInt(str string, defaultValue int) int {
 	if str == "" {
 		return defaultValue

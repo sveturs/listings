@@ -147,7 +147,7 @@ func (s *BotService) SendTrackingNotification(ctx context.Context, viberID strin
 				Columns:    6,
 				Rows:       2,
 				ActionType: "open-url",
-				ActionBody: fmt.Sprintf("https://svetu.rs/track/%s?viber=true", delivery.TrackingToken),
+				ActionBody: fmt.Sprintf("%s/track/%s?viber=true", s.config.FrontendURL, delivery.TrackingToken),
 				Text:       "🗺️ Отследить курьера",
 				TextSize:   "large",
 				TextVAlign: "middle",
@@ -236,7 +236,7 @@ func (s *BotService) GetMainMenuKeyboard() *models.Keyboard {
 				Columns:    6,
 				Rows:       1,
 				ActionType: "open-url",
-				ActionBody: "https://svetu.rs",
+				ActionBody: s.config.FrontendURL,
 				Text:       "🌐 Открыть сайт",
 				TextSize:   "regular",
 				TextHAlign: "center",
@@ -327,9 +327,11 @@ func (s *BotService) makeRequest(method, url string, payload interface{}) ([]byt
 
 // generateStaticMapURL генерирует URL для статической карты
 func (s *BotService) generateStaticMapURL(delivery *DeliveryInfo) string {
-	mapboxToken := os.Getenv("MAPBOX_TOKEN")
+	mapboxToken := os.Getenv("MAPBOX_ACCESS_TOKEN")
 	if mapboxToken == "" {
-		mapboxToken = "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA" //nolint:gosec // TODO: move to config
+		// Mapbox токен требуется для создания статичных карт
+		// Установите MAPBOX_ACCESS_TOKEN в переменных окружения
+		return ""
 	}
 
 	// Маркеры и путь

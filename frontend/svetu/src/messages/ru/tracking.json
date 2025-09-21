@@ -44,7 +44,19 @@
   },
   "info": {
     "status": {
-      "title": "Статус доставки"
+      "title": "Статус доставки",
+      "undefined": "Неизвестно",
+      "created": "Создана",
+      "pending": "Ожидание",
+      "picked_up": "Забрана",
+      "in_transit": "В пути",
+      "delivered": "Доставлена",
+      "failed": "Не удалось",
+      "cancelled": "Отменена",
+      "processing": "Обработка",
+      "awaiting_pickup": "Ожидает забора",
+      "out_for_delivery": "На доставке",
+      "returned": "Возвращена"
     },
     "orderNumber": "Заказ №{number}",
     "eta": {

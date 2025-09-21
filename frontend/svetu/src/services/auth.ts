@@ -342,8 +342,20 @@ export class AuthService {
       sessionStorage.setItem('oauth_return_to', returnTo);
     }
 
-    // Build OAuth URL without redirect_uri parameter - backend handles it internally
-    const url = `${API_BASE}/api/v1/auth/google`;
+    // Get current URL to redirect back to after OAuth
+    let redirectUrl = '';
+    if (typeof window !== 'undefined') {
+      // Use the full current URL including protocol and host
+      redirectUrl = window.location.origin;
+    }
+
+    // Build OAuth URL with redirect URL as state parameter
+    const params = new URLSearchParams();
+    if (redirectUrl) {
+      params.append('returnTo', redirectUrl);
+    }
+
+    const url = `${API_BASE}/api/v1/auth/google${params.toString() ? '?' + params.toString() : ''}`;
 
     if (redirect && typeof window !== 'undefined') {
       window.location.href = url;

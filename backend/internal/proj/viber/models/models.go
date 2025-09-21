@@ -10,10 +10,10 @@ type ViberUser struct {
 	ID                    int        `json:"id" db:"id"`
 	ViberID               string     `json:"viber_id" db:"viber_id"`
 	UserID                *int       `json:"user_id" db:"user_id"`
-	Name                  string     `json:"name" db:"name"`
-	AvatarURL             string     `json:"avatar_url" db:"avatar_url"`
+	Name                  *string    `json:"name" db:"name"`
+	AvatarURL             *string    `json:"avatar_url" db:"avatar_url"`
 	Language              string     `json:"language" db:"language"`
-	CountryCode           string     `json:"country_code" db:"country_code"`
+	CountryCode           *string    `json:"country_code" db:"country_code"`
 	APIVersion            int        `json:"api_version" db:"api_version"`
 	Subscribed            bool       `json:"subscribed" db:"subscribed"`
 	SubscribedAt          *time.Time `json:"subscribed_at" db:"subscribed_at"`

@@ -1389,6 +1389,25 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 	return deletedIDs, errors
 }
 
+// IncrementProductViews increments the view count for a product
+func (s *Database) IncrementProductViews(ctx context.Context, productID int) error {
+	query := `
+		UPDATE storefront_products
+		SET view_count = view_count + 1
+		WHERE id = $1`
+
+	result, err := s.pool.Exec(ctx, query, productID)
+	if err != nil {
+		return fmt.Errorf("failed to increment product views: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("product not found")
+	}
+
+	return nil
+}
+
 // BulkUpdateStatus updates the status of multiple products
 func (s *Database) BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error) {
 	var updatedIDs []int

@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -5,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+
 	"backend/internal/proj/viber/infobip"
 
 	"github.com/joho/godotenv"

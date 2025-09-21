@@ -1142,3 +1142,75 @@ func (h *ListingsHandler) updateCategoryDetectionStats(ctx context.Context, stat
 			Msg("Category detection stats updated successfully")
 	}
 }
+
+// AdminStatisticsResponse represents statistics for admin dashboard
+type AdminStatisticsResponse struct {
+	Total   int `json:"total"`
+	Active  int `json:"active"`
+	Pending int `json:"pending"`
+	Views   int `json:"views"`
+}
+
+// GetAdminStatistics возвращает статистику для админ панели
+// @Summary Get admin statistics
+// @Description Returns listing statistics for admin dashboard
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} utils.SuccessResponseSwag{data=handler.AdminStatisticsResponse} "Statistics"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/admin/listings/statistics [get]
+func (h *ListingsHandler) GetAdminStatistics(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	// Проверяем, что пользователь администратор
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	if !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.unauthorized")
+	}
+
+	// Получаем общую статистику
+	db, ok := h.services.Storage().(*postgres.Database)
+	if !ok {
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.internal")
+	}
+
+	var stats AdminStatisticsResponse
+
+	// Получаем общее количество объявлений
+	err := db.GetPool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM marketplace_listings
+	`).Scan(&stats.Total)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get total listings count")
+	}
+
+	// Получаем количество активных объявлений
+	err = db.GetPool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'active'
+	`).Scan(&stats.Active)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get active listings count")
+	}
+
+	// Получаем количество ожидающих модерации
+	err = db.GetPool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'pending'
+	`).Scan(&stats.Pending)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get pending listings count")
+	}
+
+	// Получаем количество просмотров за последние 30 дней
+	err = db.GetPool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM listing_views
+		WHERE view_time > NOW() - INTERVAL '30 days'
+	`).Scan(&stats.Views)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get views count")
+	}
+
+	return utils.SuccessResponse(c, stats)
+}

@@ -12,7 +12,7 @@ func (m *Middleware) CORS() fiber.Handler {
 	// Используем стандартный CORS middleware от Fiber
 	// с конкретными origins для работы с credentials
 	// Добавляем VPN адрес из конфигурации
-	allowedOrigins := "https://svetu.rs,https://www.svetu.rs,https://preprod.svetu.rs,https://dev.svetu.rs,https://auth.svetu.net,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://100.88.44.15:3001"
+	allowedOrigins := "https://svetu.rs,https://www.svetu.rs,https://preprod.svetu.rs,https://dev.svetu.rs,https://devapi.svetu.rs,https://auth.svetu.net,http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://100.88.44.15:3001"
 
 	// Если есть FRONTEND_URL в конфигурации, добавляем его тоже
 	if m.config != nil && m.config.FrontendURL != "" && m.config.FrontendURL != "http://100.88.44.15:3001" {

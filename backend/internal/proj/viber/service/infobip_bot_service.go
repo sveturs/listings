@@ -178,15 +178,26 @@ func (s *InfobipBotService) SendTrackingNotification(ctx context.Context, viberI
 			TextHAlign: "center",
 		},
 		{
-			Columns:    6,
+			Columns:    3,
 			Rows:       2,
 			ActionType: "open-url",
-			ActionBody: fmt.Sprintf("https://svetu.rs/track/%s?viber=true", delivery.TrackingToken),
-			Text:       "🗺️ Отследить курьера",
-			TextSize:   "large",
+			ActionBody: fmt.Sprintf("%s/track/%s?viber=true&embedded=true", s.config.FrontendURL, delivery.TrackingToken),
+			Text:       "🗺️ Открыть карту",
+			TextSize:   "medium",
 			TextVAlign: "middle",
 			TextHAlign: "center",
 			BgColor:    "#1976d2",
+		},
+		{
+			Columns:    3,
+			Rows:       2,
+			ActionType: "reply",
+			ActionBody: fmt.Sprintf("update_track_%s", delivery.TrackingToken),
+			Text:       "🔄 Обновить",
+			TextSize:   "medium",
+			TextVAlign: "middle",
+			TextHAlign: "center",
+			BgColor:    "#4caf50",
 		},
 	}
 
@@ -337,9 +348,11 @@ func (s *InfobipBotService) richMediaToMap(rm *models.RichMedia) map[string]inte
 
 // generateStaticMapURL генерирует URL для статической карты
 func (s *InfobipBotService) generateStaticMapURL(delivery *DeliveryInfo) string {
-	mapboxToken := os.Getenv("MAPBOX_TOKEN")
+	mapboxToken := os.Getenv("MAPBOX_ACCESS_TOKEN")
 	if mapboxToken == "" {
-		mapboxToken = "pk.eyJ1Ijoidm9yb3NoaWxvdmRvIiwiYSI6ImNtMDh2dWZsaTBkbXIycXNic3dnNHc1d24ifQ.Hi_TADnAexi4KMHkHxOZFA" //nolint:gosec // TODO: move to config
+		// Mapbox токен требуется для создания статичных карт
+		// Установите MAPBOX_ACCESS_TOKEN в переменных окружения
+		return ""
 	}
 
 	// Маркеры и путь

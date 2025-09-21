@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	globalService "backend/internal/proj/global/service"
 	marketplaceService "backend/internal/proj/marketplace/service"
 	storefrontService "backend/internal/proj/storefronts/service"
+	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/service"
 )
 
@@ -21,6 +23,7 @@ type MessageHandler struct {
 	marketplaceService marketplaceService.MarketplaceServiceInterface
 	storefrontService  storefrontService.StorefrontService
 	useInfobip         bool
+	config             *config.ViberConfig
 }
 
 // NewMessageHandler создаёт новый обработчик сообщений
@@ -31,6 +34,7 @@ func NewMessageHandler(
 	marketplaceService marketplaceService.MarketplaceServiceInterface,
 	storefrontService storefrontService.StorefrontService,
 	useInfobip bool,
+	cfg *config.ViberConfig,
 ) *MessageHandler {
 	return &MessageHandler{
 		botService:         botService,
@@ -39,6 +43,7 @@ func NewMessageHandler(
 		marketplaceService: marketplaceService,
 		storefrontService:  storefrontService,
 		useInfobip:         useInfobip,
+		config:             cfg,
 	}
 }
 
@@ -126,6 +131,36 @@ func (m *MessageHandler) HandleCart(ctx context.Context, viberID string) error {
 	return m.sendMessage(ctx, viberID, msg)
 }
 
+// HandleTrackDelivery обрабатывает запрос на отслеживание доставки
+func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, trackingToken string) error {
+	// TODO: Получить реальные данные из БД через сервис
+	// Пока используем тестовые данные
+
+	// Генерируем динамическую карту для Viber
+	delivery := &service.DeliveryInfo{
+		TrackingToken:     trackingToken,
+		CourierLatitude:   44.95, // Между Белградом и Нови-Садом
+		CourierLongitude:  20.10,
+		DeliveryLatitude:  45.2671, // Нови-Сад
+		DeliveryLongitude: 19.8335,
+		EstimatedTime:     time.Now().Add(2 * time.Hour),
+	}
+
+	// Используем InfobipService для отправки Rich Media с картой
+	if m.useInfobip {
+		return m.infobipService.SendTrackingNotification(ctx, viberID, delivery)
+	}
+
+	// Для обычного бота отправляем ссылку
+	msg := fmt.Sprintf("📦 Отслеживание посылки: %s\n\n", trackingToken)
+	msg += "📍 Статус: В пути\n"
+	msg += "🚴 Курьер движется к вам\n\n"
+	msg += fmt.Sprintf("🔗 Отследить на карте:\nhttps://svetu.rs/track/%s\n\n", trackingToken)
+	msg += "💡 Совет: Откройте ссылку для просмотра карты с текущим положением курьера в реальном времени!"
+
+	return m.sendMessage(ctx, viberID, msg)
+}
+
 // HandleStorefronts обрабатывает запрос "Витрины"
 func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) error {
 	// Ищем популярные витрины
@@ -190,31 +225,6 @@ func (m *MessageHandler) HandleHelp(ctx context.Context, viberID string) error {
 		"• помощь\n\n" +
 		"🌐 Сайт: https://svetu.rs\n" +
 		"📞 Поддержка: support@svetu.rs"
-
-	return m.sendMessage(ctx, viberID, msg)
-}
-
-// HandleTrackDelivery обрабатывает отслеживание доставки
-func (m *MessageHandler) HandleTrackDelivery(ctx context.Context, viberID, token string) error {
-	if token == "" {
-		msg := "Для отслеживания доставки отправьте:\n" +
-			"\"отследить НОМЕР\" или \"track_НОМЕР\"\n\n" +
-			"Например: отследить ABC123"
-		return m.sendMessage(ctx, viberID, msg)
-	}
-
-	// Создаём ссылку на трекинг
-	trackingURL := fmt.Sprintf("https://svetu.rs/track/%s", token)
-
-	msg := fmt.Sprintf("🚚 Отслеживание доставки\n\n"+
-		"Номер: %s\n\n"+
-		"Для просмотра подробной информации и карты с местоположением курьера перейдите по ссылке:\n\n"+
-		"🔗 %s\n\n"+
-		"На карте вы увидите:\n"+
-		"📍 Текущее местоположение курьера\n"+
-		"🕐 Примерное время прибытия\n"+
-		"📦 Статус доставки\n"+
-		"🛒 Ближайшие товары", token, trackingURL)
 
 	return m.sendMessage(ctx, viberID, msg)
 }

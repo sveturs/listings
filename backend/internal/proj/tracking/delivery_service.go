@@ -391,14 +391,14 @@ func (s *DeliveryService) getLastCourierLocation(courierID int) *CourierLocation
 // GetActiveDeliveries получает активные доставки курьера
 func (s *DeliveryService) GetActiveDeliveries(courierID int) ([]*Delivery, error) {
 	query := `
-		SELECT 
+		SELECT
 			d.id, d.order_id, d.tracking_token, d.status,
 			d.pickup_address, d.delivery_address,
 			d.pickup_latitude, d.pickup_longitude,
 			d.delivery_latitude, d.delivery_longitude,
 			d.estimated_delivery_time
 		FROM deliveries d
-		WHERE d.courier_id = $1 
+		WHERE d.courier_id = $1
 		  AND d.status IN ('pending', 'picked_up', 'in_transit')
 		ORDER BY d.created_at DESC
 	`
@@ -433,4 +433,86 @@ func (s *DeliveryService) GetActiveDeliveries(courierID int) ([]*Delivery, error
 	}
 
 	return deliveries, nil
+}
+
+// GetPostExpressShipment получает информацию о Post Express доставке
+func (s *DeliveryService) GetPostExpressShipment(trackingNumber string) (map[string]interface{}, error) {
+	query := `
+		SELECT
+			id, tracking_number, status, status_description,
+			sender_name, sender_address, sender_city, sender_postal_code, sender_phone,
+			recipient_name, recipient_address, recipient_city, recipient_postal_code, recipient_phone,
+			pickup_date, delivery_date, created_at, updated_at
+		FROM post_express_shipments
+		WHERE tracking_number = $1
+	`
+
+	var shipment struct {
+		ID                  int
+		TrackingNumber      string
+		Status              string
+		StatusDescription   sql.NullString
+		SenderName          string
+		SenderAddress       string
+		SenderCity          string
+		SenderPostalCode    string
+		SenderPhone         string
+		RecipientName       string
+		RecipientAddress    string
+		RecipientCity       string
+		RecipientPostalCode string
+		RecipientPhone      string
+		PickupDate          sql.NullTime
+		DeliveryDate        sql.NullTime
+		CreatedAt           time.Time
+		UpdatedAt           time.Time
+	}
+
+	err := s.db.GetSQLXDB().QueryRow(query, trackingNumber).Scan(
+		&shipment.ID, &shipment.TrackingNumber, &shipment.Status, &shipment.StatusDescription,
+		&shipment.SenderName, &shipment.SenderAddress, &shipment.SenderCity, &shipment.SenderPostalCode, &shipment.SenderPhone,
+		&shipment.RecipientName, &shipment.RecipientAddress, &shipment.RecipientCity, &shipment.RecipientPostalCode, &shipment.RecipientPhone,
+		&shipment.PickupDate, &shipment.DeliveryDate, &shipment.CreatedAt, &shipment.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("shipment not found")
+		}
+		return nil, err
+	}
+
+	// Convert to map for flexible response
+	result := map[string]interface{}{
+		"id":               shipment.ID,
+		"tracking_token":   shipment.TrackingNumber, // Use tracking_token for frontend compatibility
+		"status":           shipment.Status,
+		"courier_name":     "Post Express Courier", // Mock data for now
+		"courier_phone":    "+381601234567",
+		"pickup_address":   fmt.Sprintf("%s, %s %s", shipment.SenderAddress, shipment.SenderCity, shipment.SenderPostalCode),
+		"delivery_address": fmt.Sprintf("%s, %s %s", shipment.RecipientAddress, shipment.RecipientCity, shipment.RecipientPostalCode),
+		// Mock coordinates for Belgrade and Novi Sad
+		"pickup_latitude":         44.8176,
+		"pickup_longitude":        20.4633,
+		"delivery_latitude":       45.2671,
+		"delivery_longitude":      19.8335,
+		"estimated_delivery_time": time.Now().Add(2 * time.Hour),
+		"order_id":                shipment.ID,
+	}
+
+	if shipment.StatusDescription.Valid {
+		result["status_description"] = shipment.StatusDescription.String
+	}
+
+	// Add mock courier location if in transit
+	if shipment.Status == "in_transit" {
+		result["courier_location"] = map[string]interface{}{
+			"latitude":   44.95, // Between Belgrade and Novi Sad
+			"longitude":  20.10,
+			"speed":      15.5,
+			"heading":    315,
+			"updated_at": time.Now().Format(time.RFC3339),
+		}
+	}
+
+	return result, nil
 }

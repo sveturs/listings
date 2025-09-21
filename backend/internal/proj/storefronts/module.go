@@ -872,6 +872,11 @@ func (s *storageAdapter) GetProductStats(ctx context.Context, storefrontID int) 
 	return s.db.GetProductStats(ctx, storefrontID)
 }
 
+// IncrementProductViews delegates to database
+func (s *storageAdapter) IncrementProductViews(ctx context.Context, productID int) error {
+	return s.db.IncrementProductViews(ctx, productID)
+}
+
 // BulkCreateProducts delegates to database
 func (s *storageAdapter) BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error) {
 	return s.db.BulkCreateProducts(ctx, storefrontID, products)

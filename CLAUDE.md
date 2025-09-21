@@ -1,5 +1,47 @@
 # CLAUDE.md
 
+## 🚀 Развертывание на dev.svetu.rs
+
+### Быстрое развертывание (рекомендуется)
+```bash
+# Из корня проекта запустите:
+./deploy-to-dev.sh
+```
+
+Этот скрипт автоматически:
+1. Закоммитит и запушит ваши изменения
+2. Создаст дамп локальной БД
+3. Загрузит код и БД на dev сервер
+4. Перезапустит backend и frontend
+
+### Ручное развертывание (если нужно)
+```bash
+# 1. Закоммитить и запушить изменения
+git add -A && git commit -m "ваше сообщение" && git push
+
+# 2. Создать дамп БД
+PGPASSWORD=mX3g1XGhMRUZEX3l pg_dump -h localhost -U postgres -d svetubd --no-owner --no-acl --column-inserts --inserts -f /tmp/dump.sql
+
+# 3. На сервере
+ssh svetu@svetu.rs
+cd /opt/svetu-dev
+git pull
+# Загрузить БД в Docker контейнер
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db < /tmp/dump.sql
+
+# 4. Перезапустить сервисы
+cd backend && make dev-restart
+cd ../frontend/svetu && make dev-restart
+```
+
+### Важно помнить
+- **Сервер**: https://dev.svetu.rs (frontend), https://devapi.svetu.rs (backend)
+- **SSH доступ**: `ssh svetu@svetu.rs` (без пароля)
+- **Директория проекта**: `/opt/svetu-dev`
+- **БД в Docker**: контейнер `svetu-dev_db_1`, база `svetu_dev_db`
+- **Порты**: backend - 3002, frontend - 3003
+
 ## 🔐 JWT Token Generator
 
 В директории `backend/scripts` есть утилита для создания JWT токенов для тестирования:

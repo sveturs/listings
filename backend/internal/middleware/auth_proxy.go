@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,14 +17,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// ServiceProvider предоставляет доступ к сервисам
+// Используем интерфейс для избежания циклических зависимостей
+type ServiceProvider interface {
+	User() interface {
+		IsUserAdmin(ctx context.Context, email string) (bool, error)
+	}
+}
+
 type AuthProxyMiddleware struct {
 	authClient *authclient.Client
 	httpClient *http.Client
 	enabled    bool
 	baseURL    string
+	services   ServiceProvider
 }
 
-func NewAuthProxyMiddleware() *AuthProxyMiddleware {
+func NewAuthProxyMiddleware(services ServiceProvider) *AuthProxyMiddleware {
 	authServiceURL := os.Getenv("AUTH_SERVICE_URL")
 	if authServiceURL == "" {
 		authServiceURL = "http://localhost:28080"
@@ -41,8 +52,9 @@ func NewAuthProxyMiddleware() *AuthProxyMiddleware {
 				return http.ErrUseLastResponse
 			},
 		},
-		enabled: enabled,
-		baseURL: authServiceURL,
+		enabled:  enabled,
+		baseURL:  authServiceURL,
+		services: services,
 	}
 }
 
@@ -125,6 +137,18 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		req.Header.Set("X-Forwarded-Host", c.Hostname())
 		req.Header.Set("X-Forwarded-Proto", c.Protocol())
 
+		// Добавляем информацию о frontend URL для правильного редиректа после OAuth
+		// Сначала проверяем query параметр returnTo
+		if returnTo := c.Query("returnTo"); returnTo != "" {
+			req.Header.Set("X-Frontend-URL", returnTo)
+		} else {
+			// Если returnTo не указан, используем FRONTEND_URL из конфигурации
+			frontendURL := os.Getenv("FRONTEND_URL")
+			if frontendURL != "" {
+				req.Header.Set("X-Frontend-URL", frontendURL)
+			}
+		}
+
 		// Выполняем запрос
 		resp, err := m.httpClient.Do(req)
 		if err != nil {
@@ -179,6 +203,34 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 				// Возвращаем редирект напрямую для браузера
 				// Fiber.Redirect должен работать для любых URL
 				return c.Status(resp.StatusCode).Redirect(location)
+			}
+		}
+
+		// Если это запрос /auth/session, добавляем поле is_admin
+		if path == "/api/v1/auth/session" && resp.StatusCode == 200 && m.services != nil {
+			var sessionData map[string]interface{}
+			if err := json.Unmarshal(respBody, &sessionData); err == nil {
+				// Получаем данные пользователя из ответа
+				if userData, ok := sessionData["user"].(map[string]interface{}); ok {
+					// Проверяем email пользователя
+					if email, ok := userData["email"].(string); ok && email != "" {
+						// Проверяем, является ли пользователь администратором в локальной БД
+						ctx := c.Context()
+						isAdmin, err := m.services.User().IsUserAdmin(ctx, email)
+						if err == nil {
+							userData["is_admin"] = isAdmin
+
+							logger.Info().
+								Str("email", email).
+								Bool("is_admin", isAdmin).
+								Msg("[AUTH_PROXY] Added is_admin field from local DB")
+						}
+					}
+				}
+
+				// Перекодируем ответ обратно в JSON
+				modifiedBody, _ := json.Marshal(sessionData)
+				respBody = modifiedBody
 			}
 		}
 
