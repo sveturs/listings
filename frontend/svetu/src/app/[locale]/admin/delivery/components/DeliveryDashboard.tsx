@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
 
 interface DashboardStats {
   todayShipments: number;
@@ -44,7 +45,7 @@ export default function DeliveryDashboard() {
       setLoading(true);
 
       // Получаем данные с реального API
-      const response = await fetch('/api/v1/admin/delivery/dashboard', {
+      const response = await fetch(`${configManager.getApiUrl()}/admin/delivery/dashboard`, {
         headers: {
           Authorization: `Bearer ${tokenManager.getAccessToken()}`,
         },

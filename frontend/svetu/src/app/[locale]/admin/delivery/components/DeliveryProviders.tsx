@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
+import configManager from '@/config';
 
 interface Provider {
   id: number;
@@ -40,7 +41,7 @@ export default function DeliveryProviders() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/v1/admin/delivery/providers', {
+      const response = await fetch(`${configManager.getApiUrl()}/admin/delivery/providers`, {
         credentials: 'include',
         headers,
       });
