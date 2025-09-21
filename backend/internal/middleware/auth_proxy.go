@@ -137,6 +137,18 @@ func (m *AuthProxyMiddleware) ProxyToAuthService() fiber.Handler {
 		req.Header.Set("X-Forwarded-Host", c.Hostname())
 		req.Header.Set("X-Forwarded-Proto", c.Protocol())
 
+		// Добавляем информацию о frontend URL для правильного редиректа после OAuth
+		// Сначала проверяем query параметр returnTo
+		if returnTo := c.Query("returnTo"); returnTo != "" {
+			req.Header.Set("X-Frontend-URL", returnTo)
+		} else {
+			// Если returnTo не указан, используем FRONTEND_URL из конфигурации
+			frontendURL := os.Getenv("FRONTEND_URL")
+			if frontendURL != "" {
+				req.Header.Set("X-Frontend-URL", frontendURL)
+			}
+		}
+
 		// Выполняем запрос
 		resp, err := m.httpClient.Do(req)
 		if err != nil {
