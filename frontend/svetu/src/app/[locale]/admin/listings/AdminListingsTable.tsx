@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import configManager from '@/config';
-import { tokenManager } from '@/services/tokenManager';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface Listing {
   id: number;

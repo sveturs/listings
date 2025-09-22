@@ -9,20 +9,25 @@ interface CategoryHints {
 interface CategoryDetectionRequest {
   keywords?: string[];
   attributes?: Record<string, any>;
-  domain?: string;
-  productType?: string;
-  language?: string;
   title?: string;
   description?: string;
-  include_debug_info?: boolean;
+  language?: string;
+  categoryHints?: {
+    domain: string;
+    productType: string;
+    keywords: string[];
+  };
 }
 
 interface CategoryDetectionResponse {
-  category_id: number;
-  category_name: string;
-  category_slug: string;
-  confidence_score: number;
-  method: string;
+  categoryId: number;
+  categoryName: string;
+  categoryPath: string;
+  confidenceScore: number;
+  algorithm: string;
+  processingTimeMs: number;
+  keywords: string[];
+  feedbackId?: number;
   stats_id?: number;
   alternative_categories?: {
     category_id: number;
@@ -30,11 +35,13 @@ interface CategoryDetectionResponse {
     category_slug: string;
     confidence_score: number;
   }[];
-  processing_time_ms: number;
+  alternativeCategories?: {
+    categoryId: number;
+    categoryName: string;
+    confidenceScore: number;
+  }[];
   debug_info?: {
-    keyword_score: number;
-    similarity_score: number;
-    matched_keywords: string[];
+    matched_keywords?: string[];
   };
 }
 
@@ -47,6 +54,7 @@ export class CategoryDetectorService {
 
   /**
    * Определяет категорию на основе семантической информации из AI анализа
+   * Использует новую улучшенную AI систему с многоуровневым определением
    */
   async detectCategory(
     categoryHints: CategoryHints,
@@ -56,17 +64,20 @@ export class CategoryDetectorService {
   ): Promise<CategoryDetectionResponse> {
     try {
       const request: CategoryDetectionRequest = {
-        keywords: categoryHints.keywords,
-        domain: categoryHints.domain,
-        productType: categoryHints.productType,
         title,
         description,
+        keywords: categoryHints.keywords,
         language,
-        include_debug_info: true,
+        categoryHints: {
+          domain: categoryHints.domain,
+          productType: categoryHints.productType,
+          keywords: categoryHints.keywords,
+        },
       };
 
+      // Используем новый AI эндпоинт с многоуровневой системой определения
       const response = await fetch(
-        `${this.baseUrl}/api/v1/marketplace/categories/detect`,
+        `${this.baseUrl}/api/v1/marketplace/ai/detect-category`,
         {
           method: 'POST',
           headers: {
@@ -94,6 +105,7 @@ export class CategoryDetectorService {
 
   /**
    * Подтверждает выбор категории пользователем для улучшения алгоритма
+   * Используется для обучения AI системы на основе обратной связи
    */
   async confirmCategorySelection(
     statsId: number,
@@ -102,7 +114,7 @@ export class CategoryDetectorService {
   ): Promise<boolean> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/api/v1/marketplace/categories/detect/${statsId}/confirm`,
+        `${this.baseUrl}/api/v1/marketplace/ai/detect-category/${statsId}/confirm`,
         {
           method: 'PUT',
           headers: {

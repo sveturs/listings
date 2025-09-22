@@ -56,7 +56,7 @@ import LocationPrivacySettingsWithAddress, {
   LocationPrivacyLevel,
 } from '@/components/GIS/LocationPrivacySettingsWithAddress';
 import { CarSelectorCompact } from '@/components/cars';
-import { Car } from 'lucide-react';
+import { Car, Copy } from 'lucide-react';
 
 export default function AIPoweredListingCreationPage() {
   const router = useRouter();
@@ -405,31 +405,118 @@ export default function AIPoweredListingCreationPage() {
 
   // Convert image to base64
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
+    console.log('=== convertToBase64 START ===');
+    console.log('Input imageUrl:', imageUrl);
+    console.log('imageUrl type:', typeof imageUrl);
+    console.log('imageUrl length:', imageUrl?.length);
+
     return new Promise((resolve, reject) => {
       const img = new window.Image();
+      console.log('Created new Image element');
+
       // Don't set crossOrigin for blob URLs
       if (!imageUrl.startsWith('blob:')) {
         img.crossOrigin = 'anonymous';
+        console.log('Set crossOrigin to anonymous');
+      } else {
+        console.log('Using blob URL, no crossOrigin needed');
       }
+
       img.onload = () => {
+        console.log('Image loaded successfully');
+        console.log('Image dimensions:', img.width, 'x', img.height);
+
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0);
+
+        if (!ctx) {
+          console.error('Failed to get canvas context');
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0);
         const base64 = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(base64.split(',')[1]); // Remove data:image/jpeg;base64, prefix
+        const result = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+
+        console.log('Base64 conversion successful');
+        console.log('Full base64 length:', base64.length);
+        console.log('Result base64 length:', result.length);
+        console.log('Result preview:', result.substring(0, 50) + '...');
+
+        resolve(result);
       };
+
       img.onerror = (error) => {
-        console.error('Error loading image:', error);
+        console.error('Error loading image in convertToBase64:', error);
+        console.error('Failed imageUrl:', imageUrl);
         reject(error);
       };
+
+      console.log('Setting img.src...');
       img.src = imageUrl;
     });
   };
 
+  // Generate social media share links
+  const generateSocialShareLink = (platform: string, text: string) => {
+    const encodedText = encodeURIComponent(text);
+    const listingUrl = `${window.location.origin}${window.location.pathname}`; // TODO: Replace with actual listing URL after creation
+    const encodedUrl = encodeURIComponent(listingUrl);
+
+    switch (platform) {
+      case 'facebook':
+        // Facebook share dialog
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+
+      case 'instagram':
+        // Instagram doesn't have direct share URL, copy to clipboard instead
+        return null;
+
+      case 'twitter':
+        // Twitter/X share
+        return `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+
+      case 'whatsapp':
+        // WhatsApp share (works on mobile and desktop)
+        return `https://wa.me/?text=${encodedText}`;
+
+      case 'telegram':
+        // Telegram share
+        return `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+
+      case 'viber':
+        // Viber share (works best on mobile)
+        return `viber://forward?text=${encodedText}`;
+
+      default:
+        return null;
+    }
+  };
+
+  // Copy text to clipboard
+  const copyToClipboard = async (text: string, platform: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(t('ai.social.copied', { platform }));
+    } catch (err) {
+      toast.error(t('ai.social.copyError'));
+    }
+  };
+
   // Simulate AI processing
   const processImages = async () => {
+    console.log('=== processImages START ===');
+    console.log('Images array:', images);
+    console.log('Images length:', images.length);
+    if (images.length > 0) {
+      console.log('First image URL:', images[0]);
+      console.log('First image URL type:', typeof images[0]);
+      console.log('First image URL length:', images[0]?.length);
+    }
+
     setIsProcessing(true);
     setCurrentView('process');
     setError(null);
@@ -490,7 +577,25 @@ export default function AIPoweredListingCreationPage() {
       }
 
       // Convert first image to base64
+      console.log('Converting image to base64:', images[0]);
+      console.log('Total images:', images.length);
+
+      if (!images[0]) {
+        throw new Error('No image to process');
+      }
+
       const base64Image = await convertToBase64(images[0]);
+      console.log('Base64 conversion result length:', base64Image.length);
+
+      if (!base64Image || base64Image.length === 0) {
+        throw new Error('Failed to convert image to base64 - empty result');
+      }
+
+      if (base64Image.length < 100) {
+        throw new Error(`Base64 result too short: ${base64Image.length} characters`);
+      }
+
+      console.log('Base64 image ready, calling Claude AI...');
 
       // Call Claude AI service with user's language
       const analysis = await claudeAI.analyzeProduct(base64Image, locale);
@@ -542,6 +647,10 @@ export default function AIPoweredListingCreationPage() {
         suggestedPhotos: Array.isArray(analysis.suggestedPhotos)
           ? analysis.suggestedPhotos
           : [],
+        // Валидация socialPosts
+        socialPosts: analysis.socialPosts && typeof analysis.socialPosts === 'object'
+          ? analysis.socialPosts
+          : {},
         // Извлекаем только число из цены, убираем валюту
         price: (() => {
           const priceValue = analysis.price as string | number | undefined;
@@ -574,10 +683,10 @@ export default function AIPoweredListingCreationPage() {
             locale
           );
 
-          if (detectionResult.category_id) {
+          if (detectionResult.categoryId) {
             // Находим категорию по ID
             const detectedCategory = categories.find(
-              (cat) => cat.id === detectionResult.category_id
+              (cat) => cat.id === detectionResult.categoryId
             );
             if (detectedCategory) {
               // Обновляем категорию в aiData
@@ -599,10 +708,12 @@ export default function AIPoweredListingCreationPage() {
               setCarSelection({});
 
               // Загружаем атрибуты для определенной категории
-              await loadCategoryAttributes(detectionResult.category_id);
+              if (detectionResult.categoryId) {
+                await loadCategoryAttributes(detectionResult.categoryId);
+              }
 
               // Показываем пользователю уровень уверенности
-              if (detectionResult.confidence_score < 0.7) {
+              if (detectionResult.confidenceScore < 0.7) {
                 toast.info(t('ai.category_detection.low_confidence'));
               } else {
                 toast.success(
@@ -630,11 +741,13 @@ export default function AIPoweredListingCreationPage() {
       }
 
       // Perform A/B testing on title variants
-      if (analysis.titleVariants.length > 1) {
-        const abTestResult = await claudeAI.performABTesting(
-          analysis.titleVariants
-        );
-        const bestIndex = analysis.titleVariants.findIndex(
+      const titleVariants = Array.isArray(analysis.titleVariants)
+        ? analysis.titleVariants
+        : [analysis.title || ''];
+
+      if (titleVariants.length > 1) {
+        const abTestResult = await claudeAI.performABTesting(titleVariants);
+        const bestIndex = titleVariants.findIndex(
           (t) => t === abTestResult.bestVariant
         );
         setSelectedVariant(bestIndex >= 0 ? bestIndex : 0);
@@ -642,9 +755,25 @@ export default function AIPoweredListingCreationPage() {
 
       setIsProcessing(false);
       setCurrentView('enhance');
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI processing error:', err);
-      setError(t('ai.errors.ai_processing'));
+
+      // Улучшенная обработка ошибок
+      let errorMessage = t('ai.errors.ai_processing');
+
+      if (err.message?.includes('Network')) {
+        errorMessage = t('errors.networkError.description');
+      } else if (err.message?.includes('timeout')) {
+        errorMessage = t('errors.timeoutError.description');
+      } else if (err.message?.includes('401')) {
+        errorMessage = t('errors.authError.description');
+      } else if (err.message?.includes('413')) {
+        errorMessage = t('errors.fileTooLarge.description');
+      } else if (err.message?.includes('Claude') || err.message?.includes('500')) {
+        errorMessage = t('errors.aiServiceError.description');
+      }
+
+      setError(errorMessage);
       setIsProcessing(false);
       // Не переходим к следующему шагу при ошибке
     }
@@ -1499,6 +1628,10 @@ export default function AIPoweredListingCreationPage() {
               </div>
 
               {/* Price range visualization */}
+              {/* TODO: Fetch real market prices from similar listings
+                  - Query database for listings in same category
+                  - Filter by condition (new/used)
+                  - Calculate percentiles for min/max range */}
               <div className="mt-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span>
@@ -1602,7 +1735,7 @@ export default function AIPoweredListingCreationPage() {
                       <input
                         type="text"
                         className="input input-bordered input-sm"
-                        value={value}
+                        value={value || ''}
                         onChange={(e) =>
                           setAiData({
                             ...aiData,
@@ -1832,30 +1965,75 @@ export default function AIPoweredListingCreationPage() {
                 {t('ai.social.title')}
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {Object.entries(aiData.socialPosts).map(([platform, post]) => (
-                  <div key={platform} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      {platform === 'whatsapp' && (
-                        <MessageCircle className="w-4 h-4 text-green-500" />
-                      )}
-                      {platform === 'telegram' && (
-                        <Send className="w-4 h-4 text-blue-500" />
-                      )}
-                      {platform === 'instagram' && (
-                        <Instagram className="w-4 h-4 text-pink-500" />
-                      )}
-                      <span className="font-semibold capitalize">
-                        {platform}
-                      </span>
+                {Object.entries(aiData.socialPosts).map(([platform, post]) => {
+                  const shareLink = generateSocialShareLink(platform, post);
+                  return (
+                    <div key={platform} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {platform === 'whatsapp' && (
+                            <MessageCircle className="w-4 h-4 text-green-500" />
+                          )}
+                          {platform === 'telegram' && (
+                            <Send className="w-4 h-4 text-blue-500" />
+                          )}
+                          {platform === 'instagram' && (
+                            <Instagram className="w-4 h-4 text-pink-500" />
+                          )}
+                          {platform === 'facebook' && (
+                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">f</span>
+                            </div>
+                          )}
+                          {platform === 'twitter' && (
+                            <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">X</span>
+                            </div>
+                          )}
+                          {platform === 'viber' && (
+                            <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">V</span>
+                            </div>
+                          )}
+                          <span className="font-semibold capitalize">
+                            {platform}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          {shareLink ? (
+                            <a
+                              href={shareLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-xs btn-primary"
+                              title={t('ai.social.share')}
+                            >
+                              <Share2 className="w-3 h-3" />
+                            </a>
+                          ) : null}
+                          <button
+                            onClick={() => copyToClipboard(post, platform)}
+                            className="btn btn-xs btn-ghost"
+                            title={t('ai.social.copy')}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{post}</p>
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">{post}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Effectiveness prediction */}
+          {/* TODO: Implement real market analysis for effectiveness prediction
+              - Analyze similar listings in the same category
+              - Calculate average views based on category and price
+              - Predict time to sell based on historical data
+              - Calculate real sell probability based on market demand */}
           <div className="card bg-gradient-to-r from-success/10 to-success/5 border-2 border-success/20 mb-6">
             <div className="card-body">
               <h3 className="card-title">

@@ -56,6 +56,16 @@ export class ClaudeAIService {
       console.log('Sending product analysis request via API route...');
       console.log('Image data length:', imageBase64.length);
       console.log('User language:', userLanguage);
+      console.log('Image data preview:', imageBase64.substring(0, 50) + '...');
+
+      const requestBody = {
+        imageData: imageBase64,
+        userLang: userLanguage,
+      };
+      console.log('Request body:', {
+        imageData: imageBase64.length + ' chars',
+        userLang: userLanguage,
+      });
 
       // Use our API route instead of calling Claude directly
       const apiUrl = configManager.getApiUrl();
@@ -64,11 +74,11 @@ export class ClaudeAIService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          imageData: imageBase64,
-          userLang: userLanguage,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log('Fetch request sent to:', `${apiUrl}/api/ai/analyze`);
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -76,9 +86,15 @@ export class ClaudeAIService {
         throw new Error(`Claude API error: ${response.status} - ${errorData}`);
       }
 
-      const result = await response.json();
-      const analysis = result.data; // Extract data from success envelope
+      const responseData = await response.json();
+      console.log('Full response from backend:', JSON.stringify(responseData, null, 2));
+
+      // Backend возвращает данные в обёртке { success, message, data }
+      const analysis = responseData.data || responseData;
+
+      console.log('Extracted analysis data:', JSON.stringify(analysis, null, 2));
       console.log('Product analysis completed:', analysis.title);
+      console.log('Social posts available:', Object.keys(analysis.socialPosts || {}));
 
       return analysis;
     } catch (error) {
@@ -113,7 +129,9 @@ export class ClaudeAIService {
         throw new Error(`Description API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const responseData = await response.json();
+      // Backend возвращает данные в обёртке { success, message, data }
+      const data = responseData.data || responseData;
       return data.description || '';
     } catch (error) {
       console.error('Claude description generation error:', error);
@@ -144,7 +162,9 @@ export class ClaudeAIService {
         throw new Error(`A/B testing API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const responseData = await response.json();
+      // Backend возвращает данные в обёртке { success, message, data }
+      const data = responseData.data || responseData;
       return data;
     } catch (error) {
       console.error('Claude A/B testing error:', error);
@@ -185,7 +205,9 @@ export class ClaudeAIService {
         throw new Error(`Translation API error: ${response.status}`);
       }
 
-      const translations = await response.json();
+      const responseData = await response.json();
+      // Backend возвращает данные в обёртке { success, message, data }
+      const translations = responseData.data || responseData;
       console.log('Translations completed');
 
       return translations;

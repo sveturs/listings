@@ -358,7 +358,10 @@
   "errors": {
     "image_upload_failed": "Неуспешно отпремање слика",
     "publish_failed": "Неуспешно објављивање огласа",
-    "draft_save_failed": "Неуспешно чување нацрта"
+    "draft_save_failed": "Неуспешно чување нацрта",
+    "aiServiceError": {
+      "description": "Грешка АИ сервиса. Покушајте поново или креирајте ручно."
+    }
   },
 
   "cars": {
