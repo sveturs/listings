@@ -66,20 +66,20 @@ type AnalyzeProductRequest struct {
 
 // AnalyzeProductResponse represents the AI analysis response
 type AnalyzeProductResponse struct {
-	Title                 string                        `json:"title"`
-	TitleVariants         []string                      `json:"titleVariants"`
-	Description           string                        `json:"description"`
-	Category              string                        `json:"category"`
-	CategoryHints         *CategoryHints                `json:"categoryHints,omitempty"`
-	CategoryProbabilities []CategoryProbability         `json:"categoryProbabilities"`
-	Price                 float64                       `json:"price"`
-	Currency              string                        `json:"currency"`
-	Condition             string                        `json:"condition"`
-	Attributes            map[string]interface{}        `json:"attributes"`
-	Keywords              []string                      `json:"keywords"`
-	Tags                  []string                      `json:"tags"`
-	SuggestedLocation     string                        `json:"suggestedLocation,omitempty"`
-	SocialPosts           map[string]string             `json:"socialPosts,omitempty"`
+	Title                 string                 `json:"title"`
+	TitleVariants         []string               `json:"titleVariants"`
+	Description           string                 `json:"description"`
+	Category              string                 `json:"category"`
+	CategoryHints         *CategoryHints         `json:"categoryHints,omitempty"`
+	CategoryProbabilities []CategoryProbability  `json:"categoryProbabilities"`
+	Price                 float64                `json:"price"`
+	Currency              string                 `json:"currency"`
+	Condition             string                 `json:"condition"`
+	Attributes            map[string]interface{} `json:"attributes"`
+	Keywords              []string               `json:"keywords"`
+	Tags                  []string               `json:"tags"`
+	SuggestedLocation     string                 `json:"suggestedLocation,omitempty"`
+	SocialPosts           map[string]string      `json:"socialPosts,omitempty"`
 }
 
 // CategoryHints provides hints for category detection

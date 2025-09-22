@@ -7,19 +7,20 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/proj/marketplace/repository"
+
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"backend/internal/proj/marketplace/repository"
 )
 
 // AILearningSystem implements self-improving AI categorization
 type AILearningSystem struct {
-	logger         *zap.Logger
-	redisClient    *redis.Client
-	keywordRepo    *repository.KeywordRepository
-	validator      *AICategoryValidator
-	generator      *AIKeywordGenerator
-	feedbackRepo   FeedbackRepository // Interface for feedback storage
+	logger       *zap.Logger
+	redisClient  *redis.Client
+	keywordRepo  *repository.KeywordRepository
+	validator    *AICategoryValidator
+	generator    *AIKeywordGenerator
+	feedbackRepo FeedbackRepository // Interface for feedback storage
 }
 
 // FeedbackRepository interface for dependency injection
@@ -47,14 +48,14 @@ type FeedbackRecord struct {
 
 // LearningMetrics represents learning system performance
 type LearningMetrics struct {
-	TotalFeedbacks           int     `json:"totalFeedbacks"`
-	IncorrectDetections      int     `json:"incorrectDetections"`
-	ImprovementsApplied      int     `json:"improvementsApplied"`
-	KeywordsLearned          int     `json:"keywordsLearned"`
-	AccuracyImprovement      float64 `json:"accuracyImprovement"`
-	LastLearningSession      string  `json:"lastLearningSession"`
-	AvgProcessingTimeMs      int64   `json:"avgProcessingTimeMs"`
-	RecommendedActions       []string `json:"recommendedActions"`
+	TotalFeedbacks      int      `json:"totalFeedbacks"`
+	IncorrectDetections int      `json:"incorrectDetections"`
+	ImprovementsApplied int      `json:"improvementsApplied"`
+	KeywordsLearned     int      `json:"keywordsLearned"`
+	AccuracyImprovement float64  `json:"accuracyImprovement"`
+	LastLearningSession string   `json:"lastLearningSession"`
+	AvgProcessingTimeMs int64    `json:"avgProcessingTimeMs"`
+	RecommendedActions  []string `json:"recommendedActions"`
 }
 
 // NewAILearningSystem creates a new self-learning AI system
@@ -196,7 +197,12 @@ func (als *AILearningSystem) processFeedback(ctx context.Context, feedback Feedb
 						if newWeight < 0.1 {
 							newWeight = 0.1
 						}
-						als.keywordRepo.UpdateKeywordWeight(ctx, kw.ID, newWeight)
+						if err := als.keywordRepo.UpdateKeywordWeight(ctx, kw.ID, newWeight); err != nil {
+							als.logger.Warn("Failed to update keyword weight",
+								zap.Int32("keywordId", kw.ID),
+								zap.Float64("newWeight", newWeight),
+								zap.Error(err))
+						}
 						improvements++
 						break
 					}

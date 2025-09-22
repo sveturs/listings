@@ -109,7 +109,8 @@ export default function CheckoutPage() {
   const [storefrontDeliveryProviders, setStorefrontDeliveryProviders] =
     useState<any[]>([]);
   const [loadingProviders, setLoadingProviders] = useState(true);
-  const [selectedDeliveryQuote, setSelectedDeliveryQuote] = useState<any>(null);
+  const [selectedDeliveryQuote, _setSelectedDeliveryQuote] =
+    useState<any>(null);
   const [formData, setFormData] = useState<{
     customer?: CustomerInfo;
     shipping?: ShippingAddress;

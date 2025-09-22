@@ -2,14 +2,13 @@ package services
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -59,7 +58,7 @@ type AICategoryDetector struct {
 	httpClient *HTTPClient
 	aiEndpoint string
 	// Fallback на in-memory кэш если Redis недоступен
-	memCache   map[string]*cacheEntry
+	memCache map[string]*cacheEntry
 }
 
 type cacheEntry struct {
@@ -67,7 +66,7 @@ type cacheEntry struct {
 	expiresAt time.Time
 }
 
-func NewAICategoryDetector(db *sqlx.DB, logger *zap.Logger) *AICategoryDetector {
+func NewAICategoryDetector(ctx context.Context, db *sqlx.DB, logger *zap.Logger) *AICategoryDetector {
 	detector := &AICategoryDetector{
 		db:         db,
 		logger:     logger,
@@ -78,7 +77,7 @@ func NewAICategoryDetector(db *sqlx.DB, logger *zap.Logger) *AICategoryDetector 
 	}
 
 	// Пытаемся подключиться к Redis
-	redisCache, err := NewRedisCache("localhost:6379", logger)
+	redisCache, err := NewRedisCache(ctx, "localhost:6379", logger)
 	if err != nil {
 		logger.Warn("Failed to connect to Redis, using in-memory cache", zap.Error(err))
 	} else {
@@ -218,7 +217,6 @@ func (d *AICategoryDetector) detectByAIHints(ctx context.Context, hints *AIHints
 		&successCount,
 		&failureCount,
 	)
-
 	if err != nil {
 		if err != sql.ErrNoRows {
 			d.logger.Warn("Failed to detect by exact AI hints",
@@ -253,7 +251,6 @@ func (d *AICategoryDetector) detectByAIHints(ctx context.Context, hints *AIHints
 			&result.CategoryPath,
 			&result.ConfidenceScore,
 		)
-
 		if err != nil {
 			// ПРИОРИТЕТ 3: Интеллектуальный fallback на основе domain
 			result = d.getDomainBasedFallback(ctx, hints.Domain)
@@ -414,7 +411,7 @@ func (d *AICategoryDetector) weightedVoting(results []weightedResult) *AIDetecti
 	for catID, data := range categoryData {
 		// Новая формула: берем максимальную уверенность из источников
 		// и увеличиваем её пропорционально весу источников
-		finalScore := data.maxConfidence * (1.0 + (data.totalWeight - 0.5) * 0.5)
+		finalScore := data.maxConfidence * (1.0 + (data.totalWeight-0.5)*0.5)
 
 		// Ограничиваем максимальный confidence до 0.99
 		finalScore = math.Min(finalScore, 0.99)
@@ -432,20 +429,20 @@ func (d *AICategoryDetector) weightedVoting(results []weightedResult) *AIDetecti
 
 	// Создаем итоговый результат
 	result := &AIDetectionResult{
-		CategoryID:      bestResult.CategoryID,
-		CategoryName:    bestResult.CategoryName,
-		CategoryPath:    bestResult.CategoryPath,
-		ConfidenceScore: bestFinalScore,
-		Algorithm:       "weighted_voting_v2",
+		CategoryID:       bestResult.CategoryID,
+		CategoryName:     bestResult.CategoryName,
+		CategoryPath:     bestResult.CategoryPath,
+		ConfidenceScore:  bestFinalScore,
+		Algorithm:        "weighted_voting_v2",
 		ProcessingTimeMs: bestResult.ProcessingTimeMs,
-		Keywords:        bestResult.Keywords,
+		Keywords:         bestResult.Keywords,
 	}
 
 	// Добавляем альтернативные категории (confidence > 70% от лучшего)
 	alternatives := []int32{}
 	for catID, data := range categoryData {
 		if catID != bestCategoryID {
-			altScore := data.maxConfidence * (1.0 + (data.totalWeight - 0.5) * 0.5)
+			altScore := data.maxConfidence * (1.0 + (data.totalWeight-0.5)*0.5)
 			if altScore > bestFinalScore*0.7 {
 				alternatives = append(alternatives, catID)
 			}
@@ -518,7 +515,6 @@ func (d *AICategoryDetector) getFallbackCategory(ctx context.Context) *AIDetecti
 	var catID int32
 	var catName, catSlug string
 	err := d.db.QueryRowContext(ctx, query).Scan(&catID, &catName, &catSlug)
-
 	if err != nil {
 		// Если не нашли "Другое", берем первую активную категорию
 		query = `
@@ -528,7 +524,9 @@ func (d *AICategoryDetector) getFallbackCategory(ctx context.Context) *AIDetecti
 			ORDER BY sort_order, name
 			LIMIT 1
 		`
-		d.db.QueryRowContext(ctx, query).Scan(&catID, &catName, &catSlug)
+		if err := d.db.QueryRowContext(ctx, query).Scan(&catID, &catName, &catSlug); err != nil {
+			d.logger.Warn("Failed to scan fallback category", zap.Error(err))
+		}
 	}
 
 	if catID == 0 {
@@ -551,19 +549,19 @@ func (d *AICategoryDetector) getFallbackCategory(ctx context.Context) *AIDetecti
 func (d *AICategoryDetector) getDomainBasedFallback(ctx context.Context, domain string) AIDetectionResult {
 	// Маппинг доменов на fallback категории
 	domainFallbacks := map[string]string{
-		"electronics":      "electronics",
-		"fashion":          "clothing",
-		"automotive":       "auto",
-		"real-estate":      "real-estate",
-		"home-garden":      "home",
-		"food-beverages":   "food",
+		"electronics":       "electronics",
+		"fashion":           "clothing",
+		"automotive":        "auto",
+		"real-estate":       "real-estate",
+		"home-garden":       "home",
+		"food-beverages":    "food",
 		"sports-recreation": "sports",
-		"entertainment":    "hobbies",
-		"construction":     "construction",
-		"nature":           "garden",
-		"antiques":         "collectibles",
-		"aviation":         "transport",
-		"military":         "collectibles",
+		"entertainment":     "hobbies",
+		"construction":      "construction",
+		"nature":            "garden",
+		"antiques":          "collectibles",
+		"aviation":          "transport",
+		"military":          "collectibles",
 	}
 
 	fallbackSlug, exists := domainFallbacks[domain]
@@ -584,7 +582,6 @@ func (d *AICategoryDetector) getDomainBasedFallback(ctx context.Context, domain 
 		&result.CategoryName,
 		&result.CategoryPath,
 	)
-
 	if err != nil {
 		// Возвращаем пустой результат если не нашли
 		return AIDetectionResult{}
@@ -622,21 +619,6 @@ func (d *AICategoryDetector) updateMappingStats(ctx context.Context, domain, pro
 	}
 }
 
-// shouldUseExperimentalAlgorithm - A/B тестирование
-func (d *AICategoryDetector) shouldUseExperimentalAlgorithm() bool {
-	var trafficSplit float64
-	query := `
-		SELECT traffic_split
-		FROM category_detection_experiments
-		WHERE is_active = TRUE
-		ORDER BY started_at DESC
-		LIMIT 1
-	`
-	d.db.Get(&trafficSplit, query)
-
-	return rand.Float64() < trafficSplit
-}
-
 // logDetection - логирование результата для обучения
 func (d *AICategoryDetector) logDetection(ctx context.Context, input AIDetectionInput, result *AIDetectionResult) {
 	aiHintsJSON, _ := json.Marshal(input.AIHints)
@@ -657,7 +639,6 @@ func (d *AICategoryDetector) logDetection(ctx context.Context, input AIDetection
 		result.Algorithm,
 		result.ProcessingTimeMs,
 	)
-
 	if err != nil {
 		d.logger.Error("Failed to log detection", zap.Error(err))
 	}
@@ -690,7 +671,6 @@ func (d *AICategoryDetector) updateStats(ctx context.Context, result *AIDetectio
 		result.ConfidenceScore,
 		result.ProcessingTimeMs,
 	)
-
 	if err != nil {
 		d.logger.Error("Failed to update stats", zap.Error(err))
 	}
@@ -715,13 +695,17 @@ func (d *AICategoryDetector) LearnFromFeedback(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			d.logger.Warn("Failed to close rows in LearnFromFeedback", zap.Error(err))
+		}
+	}()
 
 	for rows.Next() {
 		var (
-			aiHintsJSON      []byte
-			keywords         []string
-			correctCategoryID int32
+			aiHintsJSON        []byte
+			keywords           []string
+			correctCategoryID  int32
 			detectedCategoryID int32
 		)
 
@@ -741,6 +725,10 @@ func (d *AICategoryDetector) LearnFromFeedback(ctx context.Context) error {
 					detectedCategoryID == correctCategoryID)
 			}
 		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return nil
@@ -771,7 +759,12 @@ func (d *AICategoryDetector) updateKeywordWeights(ctx context.Context, keywords 
 			successRate = 1.0
 		}
 
-		d.db.ExecContext(ctx, query, keyword, categoryID, successRate, multiplier)
+		if _, err := d.db.ExecContext(ctx, query, keyword, categoryID, successRate, multiplier); err != nil {
+			d.logger.Warn("Failed to update keyword weight",
+				zap.String("keyword", keyword),
+				zap.Int32("categoryID", categoryID),
+				zap.Error(err))
+		}
 	}
 }
 
@@ -792,7 +785,13 @@ func (d *AICategoryDetector) updateAIMappingStats(ctx context.Context, domain, p
 		query = fmt.Sprintf(query, "failure_count", "failure_count", "GREATEST(weight * 0.99, 0.1)")
 	}
 
-	d.db.ExecContext(ctx, query, domain, productType, categoryID)
+	if _, err := d.db.ExecContext(ctx, query, domain, productType, categoryID); err != nil {
+		d.logger.Warn("Failed to update AI mapping stats",
+			zap.String("domain", domain),
+			zap.String("productType", productType),
+			zap.Int32("categoryID", categoryID),
+			zap.Error(err))
+	}
 }
 
 // ConfirmDetection - подтверждение правильности определения
@@ -838,18 +837,18 @@ func (d *AICategoryDetector) GetAccuracyMetrics(ctx context.Context, days int) (
 	}
 
 	return map[string]interface{}{
-		"totalDetections":   metrics.Total,
+		"totalDetections":     metrics.Total,
 		"confirmedDetections": metrics.Confirmed,
-		"accuracyPercent":   accuracy,
-		"avgConfidence":     metrics.AvgConfidence,
-		"medianTimeMs":      metrics.MedianTime,
+		"accuracyPercent":     accuracy,
+		"avgConfidence":       metrics.AvgConfidence,
+		"medianTimeMs":        metrics.MedianTime,
 	}, nil
 }
 
 // Cache methods
 func (d *AICategoryDetector) getCacheKey(input AIDetectionInput) string {
 	data := fmt.Sprintf("%s|%s|%v", input.Title, input.Description, input.AIHints)
-	hash := md5.Sum([]byte(data))
+	hash := sha256.Sum256([]byte(data))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -930,9 +929,9 @@ type CategoryOption struct {
 
 // AIFallbackRequest структура запроса к AI для выбора категории
 type AIFallbackRequest struct {
-	Model    string            `json:"model"`
-	MaxTokens int              `json:"max_tokens"`
-	Messages []AIMessage      `json:"messages"`
+	Model     string      `json:"model"`
+	MaxTokens int         `json:"max_tokens"`
+	Messages  []AIMessage `json:"messages"`
 }
 
 // AIMessage представляет сообщение для AI
@@ -954,12 +953,12 @@ type AIFallbackResponse struct {
 
 // AISelectionResult результат AI выбора категории
 type AISelectionResult struct {
-	CategoryID      int32   `json:"categoryId"`
-	CategoryName    string  `json:"categoryName"`
-	CategorySlug    string  `json:"categorySlug"`
-	Confidence      float64 `json:"confidence"`
-	Reasoning       string  `json:"reasoning"`
-	AlternativeIDs  []int32 `json:"alternativeIds,omitempty"`
+	CategoryID     int32   `json:"categoryId"`
+	CategoryName   string  `json:"categoryName"`
+	CategorySlug   string  `json:"categorySlug"`
+	Confidence     float64 `json:"confidence"`
+	Reasoning      string  `json:"reasoning"`
+	AlternativeIDs []int32 `json:"alternativeIds,omitempty"`
 }
 
 // DetectWithAIFallback главный метод с AI Fallback для 99% точности
@@ -1080,7 +1079,11 @@ func (d *AICategoryDetector) getAllActiveCategories(ctx context.Context) ([]Cate
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			d.logger.Warn("Failed to close rows in getAllActiveCategories", zap.Error(err))
+		}
+	}()
 
 	var categories []CategoryOption
 	for rows.Next() {
@@ -1090,6 +1093,10 @@ func (d *AICategoryDetector) getAllActiveCategories(ctx context.Context) ([]Cate
 			continue
 		}
 		categories = append(categories, cat)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	if len(categories) == 0 {
@@ -1187,7 +1194,11 @@ func (d *AICategoryDetector) sendAIRequest(ctx context.Context, prompt string) (
 	if err != nil {
 		return "", fmt.Errorf("AI request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			d.logger.Warn("Failed to close response body", zap.Error(err))
+		}
+	}()
 
 	// Читаем ответ
 	body, err := io.ReadAll(resp.Body)
@@ -1241,7 +1252,7 @@ func (d *AICategoryDetector) parseAIResponse(response string, categories []Categ
 
 	// Нормализуем confidence score (0-1)
 	if result.Confidence > 1.0 {
-		result.Confidence = result.Confidence / 100.0
+		result.Confidence /= 100.0
 	}
 
 	d.logger.Debug("Successfully parsed AI response",

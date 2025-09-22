@@ -45,11 +45,14 @@ export default function DeliveryDashboard() {
       setLoading(true);
 
       // Получаем данные с реального API
-      const response = await fetch(`${configManager.getApiUrl()}/api/v1/admin/delivery/dashboard`, {
-        headers: {
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
-      });
+      const response = await fetch(
+        `${configManager.getApiUrl()}/api/v1/admin/delivery/dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();

@@ -123,8 +123,8 @@ func (v *AICategoryValidator) createValidationPrompt(req ValidationRequest) stri
 func (v *AICategoryValidator) callAIValidation(ctx context.Context, prompt string) (string, error) {
 	// Use the existing AI analyze endpoint
 	requestBody := map[string]interface{}{
-		"prompt":     prompt,
-		"maxTokens":  500,
+		"prompt":      prompt,
+		"maxTokens":   500,
 		"temperature": 0.1, // Low temperature for consistent validation
 	}
 
@@ -174,8 +174,8 @@ func (v *AICategoryValidator) parseValidationResponse(response string) (*Validat
 // createFallbackResult creates a fallback result when AI validation fails
 func (v *AICategoryValidator) createFallbackResult() *ValidationResult {
 	return &ValidationResult{
-		IsCorrect:         true,  // Assume correct to not block user
-		Confidence:        0.5,   // Medium confidence
+		IsCorrect:         true, // Assume correct to not block user
+		Confidence:        0.5,  // Medium confidence
 		Reasoning:         "AI validation unavailable, assuming correct",
 		SuggestedCategory: "",
 		Keywords:          []string{},
@@ -226,9 +226,10 @@ func findJSONStart(text string) int {
 func findJSONEnd(text string) int {
 	braceCount := 0
 	for i, char := range text {
-		if char == '{' {
+		switch char {
+		case '{':
 			braceCount++
-		} else if char == '}' {
+		case '}':
 			braceCount--
 			if braceCount == 0 {
 				return i

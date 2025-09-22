@@ -26,18 +26,18 @@ func NewKeywordRepository(db *sqlx.DB, logger *zap.Logger) *KeywordRepository {
 
 // KeywordRecord represents a keyword record in database
 type KeywordRecord struct {
-	ID           int32     `db:"id"`
-	CategoryID   int32     `db:"category_id"`
-	Keyword      string    `db:"keyword"`
-	Language     string    `db:"language"`
-	Weight       float64   `db:"weight"`
-	KeywordType  string    `db:"keyword_type"`
-	IsNegative   bool      `db:"is_negative"`
-	Source       string    `db:"source"`
-	UsageCount   int32     `db:"usage_count"`
-	SuccessRate  float64   `db:"success_rate"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	ID          int32     `db:"id"`
+	CategoryID  int32     `db:"category_id"`
+	Keyword     string    `db:"keyword"`
+	Language    string    `db:"language"`
+	Weight      float64   `db:"weight"`
+	KeywordType string    `db:"keyword_type"`
+	IsNegative  bool      `db:"is_negative"`
+	Source      string    `db:"source"`
+	UsageCount  int32     `db:"usage_count"`
+	SuccessRate float64   `db:"success_rate"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 // BulkInsertKeywords inserts multiple keywords for a category
@@ -137,7 +137,11 @@ func (r *KeywordRepository) GetKeywordCountByCategory(ctx context.Context) (map[
 	if err != nil {
 		return nil, fmt.Errorf("failed to get keyword counts: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			r.logger.Warn("Failed to close rows", zap.Error(err))
+		}
+	}()
 
 	counts := make(map[int32]int)
 	for rows.Next() {
@@ -147,6 +151,10 @@ func (r *KeywordRepository) GetKeywordCountByCategory(ctx context.Context) (map[
 			continue
 		}
 		counts[categoryID] = count
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return counts, nil
@@ -280,7 +288,11 @@ func (r *KeywordRepository) GetKeywordsByTypes(ctx context.Context, categoryID i
 	if err != nil {
 		return nil, fmt.Errorf("failed to get keywords by type: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			r.logger.Warn("Failed to close rows", zap.Error(err))
+		}
+	}()
 
 	keywordsByType := make(map[string][]string)
 	for rows.Next() {
@@ -293,6 +305,10 @@ func (r *KeywordRepository) GetKeywordsByTypes(ctx context.Context, categoryID i
 			keywordsByType[keywordType] = make([]string, 0)
 		}
 		keywordsByType[keywordType] = append(keywordsByType[keywordType], keyword)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
 	return keywordsByType, nil

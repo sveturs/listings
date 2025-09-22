@@ -3,12 +3,18 @@ package handler
 import (
 	"strconv"
 
+	"backend/internal/proj/marketplace/repository"
+	"backend/internal/proj/marketplace/services"
+	"backend/pkg/utils"
+
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
-	"backend/internal/proj/marketplace/services"
-	"backend/internal/proj/marketplace/repository"
-	"backend/pkg/utils"
 )
+
+// ConfirmDetectionRequest represents request for confirming category detection
+type ConfirmDetectionRequest struct {
+	CorrectCategoryID int32 `json:"correctCategoryId"`
+}
 
 type AICategoryHandler struct {
 	detector         *services.AICategoryDetector
@@ -73,7 +79,7 @@ func (h *AICategoryHandler) DetectCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param feedbackId path int true "ID записи обратной связи"
-// @Param request body struct{CorrectCategoryID int32 `json:"correctCategoryId"`} true "Правильная категория"
+// @Param request body ConfirmDetectionRequest true "Правильная категория"
 // @Success 200 {object} utils.SuccessResponseSwag "Обратная связь сохранена"
 // @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
 // @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
@@ -86,9 +92,7 @@ func (h *AICategoryHandler) ConfirmDetection(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.invalidFeedbackId")
 	}
 
-	var req struct {
-		CorrectCategoryID int32 `json:"correctCategoryId"`
-	}
+	var req ConfirmDetectionRequest
 	if err := c.BodyParser(&req); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.invalidRequest")
 	}
@@ -295,8 +299,8 @@ func (h *AICategoryHandler) GenerateKeywordsForAllCategories(c *fiber.Ctx) error
 
 	if len(categories) == 0 {
 		return utils.SuccessResponse(c, map[string]interface{}{
-			"message":          "Все категории уже имеют достаточно ключевых слов",
-			"categoriesFound":  0,
+			"message":           "Все категории уже имеют достаточно ключевых слов",
+			"categoriesFound":   0,
 			"keywordsGenerated": 0,
 		})
 	}
@@ -391,9 +395,9 @@ func (h *AICategoryHandler) GetKeywordStats(c *fiber.Ctx) error {
 	}
 
 	stats := map[string]interface{}{
-		"totalCategories":     len(counts),
+		"totalCategories":        len(counts),
 		"keywordCountByCategory": counts,
-		"topKeywords":        topKeywords,
+		"topKeywords":            topKeywords,
 	}
 
 	// Если указана конкретная категория, добавляем детальную информацию

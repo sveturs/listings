@@ -501,7 +501,7 @@ export default function AIPoweredListingCreationPage() {
     try {
       await navigator.clipboard.writeText(text);
       toast.success(t('ai.social.copied', { platform }));
-    } catch (err) {
+    } catch {
       toast.error(t('ai.social.copyError'));
     }
   };
@@ -592,7 +592,9 @@ export default function AIPoweredListingCreationPage() {
       }
 
       if (base64Image.length < 100) {
-        throw new Error(`Base64 result too short: ${base64Image.length} characters`);
+        throw new Error(
+          `Base64 result too short: ${base64Image.length} characters`
+        );
       }
 
       console.log('Base64 image ready, calling Claude AI...');
@@ -648,9 +650,10 @@ export default function AIPoweredListingCreationPage() {
           ? analysis.suggestedPhotos
           : [],
         // Валидация socialPosts
-        socialPosts: analysis.socialPosts && typeof analysis.socialPosts === 'object'
-          ? analysis.socialPosts
-          : {},
+        socialPosts:
+          analysis.socialPosts && typeof analysis.socialPosts === 'object'
+            ? analysis.socialPosts
+            : {},
         // Извлекаем только число из цены, убираем валюту
         price: (() => {
           const priceValue = analysis.price as string | number | undefined;
@@ -769,7 +772,10 @@ export default function AIPoweredListingCreationPage() {
         errorMessage = t('errors.authError.description');
       } else if (err.message?.includes('413')) {
         errorMessage = t('errors.fileTooLarge.description');
-      } else if (err.message?.includes('Claude') || err.message?.includes('500')) {
+      } else if (
+        err.message?.includes('Claude') ||
+        err.message?.includes('500')
+      ) {
         errorMessage = t('errors.aiServiceError.description');
       }
 
@@ -1982,17 +1988,23 @@ export default function AIPoweredListingCreationPage() {
                           )}
                           {platform === 'facebook' && (
                             <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">f</span>
+                              <span className="text-white text-xs font-bold">
+                                f
+                              </span>
                             </div>
                           )}
                           {platform === 'twitter' && (
                             <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">X</span>
+                              <span className="text-white text-xs font-bold">
+                                X
+                              </span>
                             </div>
                           )}
                           {platform === 'viber' && (
                             <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">V</span>
+                              <span className="text-white text-xs font-bold">
+                                V
+                              </span>
                             </div>
                           )}
                           <span className="font-semibold capitalize">

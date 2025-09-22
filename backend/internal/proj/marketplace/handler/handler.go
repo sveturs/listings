@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -15,8 +16,8 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
-	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/repository"
+	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
@@ -60,7 +61,7 @@ func (h *Handler) GetPrefix() string {
 }
 
 // NewHandler creates a new marketplace handler
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(ctx context.Context, services globalService.ServicesInterface) *Handler {
 	// Сначала создаем базовые обработчики
 	categoriesHandler := NewCategoriesHandler(services)
 	// Получаем storage из services и создаем хранилище для кастомных компонентов
@@ -106,7 +107,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 				// Создаём AI Category Detector независимо от OpenSearch
 				// так как он использует только PostgreSQL
-				aiDetector := marketplaceServices.NewAICategoryDetector(db.GetSQLXDB(), zap.L())
+				aiDetector := marketplaceServices.NewAICategoryDetector(ctx, db.GetSQLXDB(), zap.L())
 
 				// Создаём остальные AI сервисы для полной интеграции
 				redisClient := redis.NewClient(&redis.Options{

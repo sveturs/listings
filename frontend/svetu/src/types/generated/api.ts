@@ -35141,6 +35141,724 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/marketplace/ai/auto-improve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Автоматическое улучшение ключевых слов
+     * @description Автоматически улучшает покрытие ключевых слов для плохо работающих категорий
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Процесс улучшения запущен */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/confirm/{feedbackId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Подтверждение правильности определения категории
+     * @description Пользователь подтверждает или исправляет результат AI определения для улучшения модели
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description ID записи обратной связи */
+          feedbackId: number;
+        };
+        cookie?: never;
+      };
+      /** @description Правильная категория */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.ConfirmDetectionRequest'];
+        };
+      };
+      responses: {
+        /** @description Обратная связь сохранена */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/detect-category': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Определение категории товара с помощью AI (с AI Fallback для 99% точности)
+     * @description Определяет наиболее подходящую категорию для товара используя многоуровневый AI анализ с Fallback механизмом
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['backend_internal_proj_marketplace_services.AIDetectionInput'];
+      responses: {
+        /** @description Результат определения категории */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.AIDetectionResult'];
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/detect-category-standard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Определение категории только стандартными алгоритмами (без AI Fallback)
+     * @description Определяет категорию используя только keyword matching и similarity без AI Fallback для сравнения
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['backend_internal_proj_marketplace_services.AIDetectionInput'];
+      responses: {
+        /** @description Результат определения категории */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.AIDetectionResult'];
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/generate-keywords': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Генерация ключевых слов для категории
+     * @description Генерирует полный набор ключевых слов для указанной категории через AI
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для генерации ключевых слов */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_marketplace_services.KeywordGenerationRequest'];
+        };
+      };
+      responses: {
+        /** @description Результат генерации ключевых слов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.KeywordGenerationResult'];
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/generate-keywords-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Массовая генерация ключевых слов для всех категорий
+     * @description Генерирует ключевые слова для всех категорий, которым не хватает ключевых слов
+     */
+    post: {
+      parameters: {
+        query?: {
+          /** @description Минимальное количество ключевых слов на категорию */
+          minKeywords?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Результат массовой генерации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.KeywordGenerationResult'];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/keyword-stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Статистика ключевых слов
+     * @description Возвращает статистику по ключевым словам и их эффективности
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description ID категории для фильтрации */
+          categoryId?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Статистика ключевых слов */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/learn': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Запуск процесса обучения модели
+     * @description Запускает процесс обучения на основе накопленной обратной связи
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Обучение запущено */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/learn-from-feedback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Запуск обучения системы на основе обратной связи
+     * @description Анализирует обратную связь от AI валидации и улучшает систему категоризации
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Результаты обучения */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.LearningMetrics'];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/learning-stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Статистика обучения AI системы
+     * @description Возвращает статистику и метрики обучения саморазвивающейся системы
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Статистика обучения */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.LearningMetrics'];
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/metrics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получение метрик точности AI детекции
+     * @description Возвращает статистику точности определения категорий за указанный период
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Количество дней для анализа */
+          days?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Метрики точности */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/scheduled-learning': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Запуск планового обучения системы
+     * @description Выполняет все плановые задачи обучения: анализ обратной связи, улучшение ключевых слов
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Плановое обучение запущено */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/marketplace/ai/validate-category': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Валидация выбора категории через AI
+     * @description Проверяет правильность выбора категории для товара используя AI анализ
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Данные для валидации категории */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_marketplace_services.ValidationRequest'];
+        };
+      };
+      responses: {
+        /** @description Результат валидации */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.ValidationResult'];
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/payments/{id}/capture': {
     parameters: {
       query?: never;
@@ -39048,6 +39766,82 @@ export interface components {
       category_slug?: string;
       similarity_score?: number;
     };
+    'backend_internal_proj_marketplace_services.AIDetectionInput': {
+      aiHints?: components['schemas']['backend_internal_proj_marketplace_services.AIHints'];
+      description?: string;
+      listingId?: number;
+      title?: string;
+      userId?: number;
+    };
+    'backend_internal_proj_marketplace_services.AIDetectionResult': {
+      aiHints?: components['schemas']['backend_internal_proj_marketplace_services.AIHints'];
+      algorithm?: string;
+      alternativeIds?: number[];
+      categoryId?: number;
+      categoryName?: string;
+      categoryPath?: string;
+      confidenceScore?: number;
+      keywords?: string[];
+      processingTimeMs?: number;
+    };
+    'backend_internal_proj_marketplace_services.AIHints': {
+      categoryPath?: string;
+      domain?: string;
+      keywords?: string[];
+      productType?: string;
+    };
+    'backend_internal_proj_marketplace_services.CategoryKeywordMapping': {
+      categoryId?: number;
+      keywords?: components['schemas']['backend_internal_proj_marketplace_services.GeneratedKeyword'][];
+    };
+    'backend_internal_proj_marketplace_services.GeneratedKeyword': {
+      /** @description AI confidence in this keyword */
+      confidence?: number;
+      /** @description Why this keyword is relevant */
+      description?: string;
+      keyword?: string;
+      /** @description main, synonym, brand, attribute, context */
+      type?: string;
+      /** @description 0.1-2.0 */
+      weight?: number;
+    };
+    'backend_internal_proj_marketplace_services.KeywordGenerationRequest': {
+      categoryId: number;
+      categoryName: string;
+      language?: string;
+      minKeywords?: number;
+    };
+    'backend_internal_proj_marketplace_services.KeywordGenerationResult': {
+      categories?: components['schemas']['backend_internal_proj_marketplace_services.CategoryKeywordMapping'][];
+      categoryId?: number;
+      generatedCount?: number;
+      keywords?: components['schemas']['backend_internal_proj_marketplace_services.GeneratedKeyword'][];
+      processingTimeMs?: number;
+    };
+    'backend_internal_proj_marketplace_services.LearningMetrics': {
+      accuracyImprovement?: number;
+      avgProcessingTimeMs?: number;
+      improvementsApplied?: number;
+      incorrectDetections?: number;
+      keywordsLearned?: number;
+      lastLearningSession?: string;
+      recommendedActions?: string[];
+      totalFeedbacks?: number;
+    };
+    'backend_internal_proj_marketplace_services.ValidationRequest': {
+      categoryName: string;
+      description?: string;
+      language?: string;
+      title: string;
+    };
+    'backend_internal_proj_marketplace_services.ValidationResult': {
+      confidence?: number;
+      isCorrect?: boolean;
+      keywords?: string[];
+      processingTimeMs?: number;
+      reasoning?: string;
+      suggestedCategory?: string;
+    };
     'backend_internal_proj_postexpress_models.CalculateRateRequest': {
       cod_amount?: number;
       declared_value?: number;
@@ -39661,6 +40455,9 @@ export interface components {
       description?: string;
       keywords?: string[];
       price?: number;
+      socialPosts?: {
+        [key: string]: string;
+      };
       suggestedLocation?: string;
       tags?: string[];
       title?: string;
@@ -40021,6 +40818,9 @@ export interface components {
       messages?: components['schemas']['backend_internal_domain_models.MarketplaceMessage'][];
       page?: number;
       total?: number;
+    };
+    'internal_proj_marketplace_handler.ConfirmDetectionRequest': {
+      correctCategoryId?: number;
     };
     'internal_proj_marketplace_handler.ConfirmPaymentRequest': {
       session_id: string;
@@ -41256,6 +42056,12 @@ export interface components {
     Payload: {
       content: {
         'application/json': Record<string, never>;
+      };
+    };
+    /** @description Входные данные для определения категории */
+    'backend_internal_proj_marketplace_services.AIDetectionInput': {
+      content: {
+        'application/json': components['schemas']['backend_internal_proj_marketplace_services.AIDetectionInput'];
       };
     };
   };

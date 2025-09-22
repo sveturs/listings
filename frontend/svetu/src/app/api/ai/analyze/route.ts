@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
 
     // Validate base64 format
     if (imageBase64.length < 100) {
-      console.error('Image data too short, likely invalid:', imageBase64.length);
+      console.error(
+        'Image data too short, likely invalid:',
+        imageBase64.length
+      );
       return NextResponse.json(
         { error: 'ai.invalidImageData', success: false },
         { status: 400 }

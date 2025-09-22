@@ -3,12 +3,16 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
+
+// ErrCacheKeyNotFound возвращается когда ключ не найден в кеше
+var ErrCacheKeyNotFound = errors.New("cache key not found")
 
 type RedisCache struct {
 	client *redis.Client
@@ -17,7 +21,7 @@ type RedisCache struct {
 	ttl    time.Duration
 }
 
-func NewRedisCache(addr string, logger *zap.Logger) (*RedisCache, error) {
+func NewRedisCache(ctx context.Context, addr string, logger *zap.Logger) (*RedisCache, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:         addr,
 		Password:     "", // no password set
@@ -27,7 +31,6 @@ func NewRedisCache(addr string, logger *zap.Logger) (*RedisCache, error) {
 		MaxRetries:   3,
 	})
 
-	ctx := context.Background()
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
@@ -46,8 +49,8 @@ func (r *RedisCache) Get(ctx context.Context, key string) (*AIDetectionResult, e
 
 	data, err := r.client.Get(ctx, fullKey).Bytes()
 	if err != nil {
-		if err == redis.Nil {
-			return nil, nil // Ключ не найден
+		if errors.Is(err, redis.Nil) {
+			return nil, ErrCacheKeyNotFound
 		}
 		r.logger.Warn("Failed to get from Redis cache",
 			zap.String("key", fullKey),
@@ -158,7 +161,7 @@ func (r *RedisCache) SetWithTTL(ctx context.Context, key string, result *AIDetec
 // BatchGet получает множество результатов за один запрос
 func (r *RedisCache) BatchGet(ctx context.Context, keys []string) (map[string]*AIDetectionResult, error) {
 	if len(keys) == 0 {
-		return nil, nil
+		return make(map[string]*AIDetectionResult), nil
 	}
 
 	// Подготавливаем полные ключи

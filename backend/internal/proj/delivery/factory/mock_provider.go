@@ -2,13 +2,30 @@ package factory
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"backend/internal/proj/delivery/interfaces"
 )
+
+// cryptoRandIntn возвращает случайное число от 0 до n-1 используя crypto/rand
+func cryptoRandIntn(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	var bytes [4]byte
+	_, err := rand.Read(bytes[:])
+	if err != nil {
+		// Fallback в случае ошибки - возвращаем фиксированное значение
+		return 0
+	}
+	// Используем 32-битное значение для безопасности
+	randomValue := binary.BigEndian.Uint32(bytes[:])
+	return int(randomValue) % n
+}
 
 // MockProvider - мок-провайдер для тестирования
 type MockProvider struct {
@@ -58,7 +75,7 @@ func (m *MockProvider) IsActive() bool {
 // CalculateRate рассчитывает стоимость доставки
 func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRequest) (*interfaces.RateResponse, error) {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(500)))
 
 	// Рассчитываем общий вес
 	totalWeight := 0.0
@@ -108,7 +125,7 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 		Type:          "standard",
 		Name:          "Стандартная доставка",
 		TotalCost:     standardCost,
-		EstimatedDays: 3 + rand.Intn(3),
+		EstimatedDays: 3 + cryptoRandIntn(3),
 		CostBreakdown: &interfaces.CostBreakdown{
 			BasePrice:       basePrice,
 			WeightSurcharge: weightPrice,
@@ -129,7 +146,7 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 		Type:          "express",
 		Name:          "Экспресс доставка",
 		TotalCost:     expressCost,
-		EstimatedDays: 1 + rand.Intn(2),
+		EstimatedDays: 1 + cryptoRandIntn(2),
 		CostBreakdown: &interfaces.CostBreakdown{
 			BasePrice:       basePrice * 1.5,
 			WeightSurcharge: weightPrice * 1.5,
@@ -156,10 +173,10 @@ func (m *MockProvider) CalculateRate(ctx context.Context, req *interfaces.RateRe
 // CreateShipment создает отправление
 func (m *MockProvider) CreateShipment(ctx context.Context, req *interfaces.ShipmentRequest) (*interfaces.ShipmentResponse, error) {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(1000)))
 
 	// Генерируем случайный tracking number
-	trackingNumber := fmt.Sprintf("%s-%d-%d", m.code, time.Now().Unix(), rand.Intn(10000))
+	trackingNumber := fmt.Sprintf("%s-%d-%d", m.code, time.Now().Unix(), cryptoRandIntn(10000))
 
 	// Рассчитываем стоимость
 	rateReq := &interfaces.RateRequest{
@@ -192,9 +209,9 @@ func (m *MockProvider) CreateShipment(ctx context.Context, req *interfaces.Shipm
 	estimatedDate := time.Now().AddDate(0, 0, selectedOption.EstimatedDays)
 
 	return &interfaces.ShipmentResponse{
-		ShipmentID:     fmt.Sprintf("%d", rand.Intn(1000000)),
+		ShipmentID:     fmt.Sprintf("%d", cryptoRandIntn(1000000)),
 		TrackingNumber: trackingNumber,
-		ExternalID:     fmt.Sprintf("EXT-%s-%d", m.code, rand.Intn(100000)),
+		ExternalID:     fmt.Sprintf("EXT-%s-%d", m.code, cryptoRandIntn(100000)),
 		Status:         interfaces.StatusConfirmed,
 		TotalCost:      selectedOption.TotalCost,
 		CostBreakdown:  selectedOption.CostBreakdown,
@@ -213,7 +230,7 @@ func (m *MockProvider) CreateShipment(ctx context.Context, req *interfaces.Shipm
 // TrackShipment отслеживает отправление
 func (m *MockProvider) TrackShipment(ctx context.Context, trackingNumber string) (*interfaces.TrackingResponse, error) {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(500)))
 
 	// Генерируем случайную историю событий
 	events := []interfaces.TrackingEvent{
@@ -249,7 +266,7 @@ func (m *MockProvider) TrackShipment(ctx context.Context, trackingNumber string)
 		interfaces.StatusOutForDelivery,
 		interfaces.StatusDelivered,
 	}
-	currentStatus := statuses[rand.Intn(len(statuses))]
+	currentStatus := statuses[cryptoRandIntn(len(statuses))]
 
 	response := &interfaces.TrackingResponse{
 		TrackingNumber:  trackingNumber,
@@ -288,11 +305,11 @@ func (m *MockProvider) TrackShipment(ctx context.Context, trackingNumber string)
 // CancelShipment отменяет отправление
 func (m *MockProvider) CancelShipment(ctx context.Context, shipmentID string) error {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(500)))
 
 	// Случайно возвращаем ошибку (10% вероятность)
-	if rand.Intn(10) == 0 {
-		return fmt.Errorf("shipment %s cannot be cancelled: already in transit", shipmentID)
+	if cryptoRandIntn(10) == 0 {
+		return fmt.Errorf("shipment %s cannot be canceled: already in transit", shipmentID)
 	}
 
 	return nil
@@ -301,7 +318,7 @@ func (m *MockProvider) CancelShipment(ctx context.Context, shipmentID string) er
 // GetLabel получает этикетку
 func (m *MockProvider) GetLabel(ctx context.Context, shipmentID string) (*interfaces.LabelResponse, error) {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(500)))
 
 	return &interfaces.LabelResponse{
 		Labels: []interfaces.LabelInfo{
@@ -323,7 +340,7 @@ func (m *MockProvider) GetLabel(ctx context.Context, shipmentID string) (*interf
 // ValidateAddress проверяет адрес
 func (m *MockProvider) ValidateAddress(ctx context.Context, address *interfaces.Address) (*interfaces.AddressValidationResponse, error) {
 	// Симулируем задержку API
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(200)))
+	time.Sleep(time.Millisecond * time.Duration(cryptoRandIntn(200)))
 
 	// Список поддерживаемых городов
 	supportedCities := map[string]bool{
@@ -364,11 +381,12 @@ func (m *MockProvider) ValidateAddress(ctx context.Context, address *interfaces.
 	}
 
 	// Определяем зону
-	if address.City == "Белград" || address.City == "Belgrade" {
+	switch {
+	case address.City == "Белград" || address.City == "Belgrade":
 		response.Zone = "local"
-	} else if isValid {
+	case isValid:
 		response.Zone = "national"
-	} else {
+	default:
 		response.Zone = "unavailable"
 	}
 

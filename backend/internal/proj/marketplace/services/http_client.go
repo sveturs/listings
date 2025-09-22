@@ -67,7 +67,13 @@ func (h *HTTPClient) PostJSON(ctx context.Context, url string, jsonBody interfac
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// In this context we don't have a logger, so we ignore the error
+			// since it's a cleanup operation in a utility function
+			_ = err
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

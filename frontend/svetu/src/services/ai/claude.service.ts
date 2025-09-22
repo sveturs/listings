@@ -87,14 +87,23 @@ export class ClaudeAIService {
       }
 
       const responseData = await response.json();
-      console.log('Full response from backend:', JSON.stringify(responseData, null, 2));
+      console.log(
+        'Full response from backend:',
+        JSON.stringify(responseData, null, 2)
+      );
 
       // Backend возвращает данные в обёртке { success, message, data }
       const analysis = responseData.data || responseData;
 
-      console.log('Extracted analysis data:', JSON.stringify(analysis, null, 2));
+      console.log(
+        'Extracted analysis data:',
+        JSON.stringify(analysis, null, 2)
+      );
       console.log('Product analysis completed:', analysis.title);
-      console.log('Social posts available:', Object.keys(analysis.socialPosts || {}));
+      console.log(
+        'Social posts available:',
+        Object.keys(analysis.socialPosts || {})
+      );
 
       return analysis;
     } catch (error) {

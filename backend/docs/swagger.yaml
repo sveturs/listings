@@ -7053,6 +7053,166 @@ definitions:
       similarity_score:
         type: number
     type: object
+  backend_internal_proj_marketplace_services.AIDetectionInput:
+    properties:
+      aiHints:
+        $ref: '#/definitions/backend_internal_proj_marketplace_services.AIHints'
+      description:
+        type: string
+      listingId:
+        type: integer
+      title:
+        type: string
+      userId:
+        type: integer
+    type: object
+  backend_internal_proj_marketplace_services.AIDetectionResult:
+    properties:
+      aiHints:
+        $ref: '#/definitions/backend_internal_proj_marketplace_services.AIHints'
+      algorithm:
+        type: string
+      alternativeIds:
+        items:
+          type: integer
+        type: array
+      categoryId:
+        type: integer
+      categoryName:
+        type: string
+      categoryPath:
+        type: string
+      confidenceScore:
+        type: number
+      keywords:
+        items:
+          type: string
+        type: array
+      processingTimeMs:
+        type: integer
+    type: object
+  backend_internal_proj_marketplace_services.AIHints:
+    properties:
+      categoryPath:
+        type: string
+      domain:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      productType:
+        type: string
+    type: object
+  backend_internal_proj_marketplace_services.CategoryKeywordMapping:
+    properties:
+      categoryId:
+        type: integer
+      keywords:
+        items:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.GeneratedKeyword'
+        type: array
+    type: object
+  backend_internal_proj_marketplace_services.GeneratedKeyword:
+    properties:
+      confidence:
+        description: AI confidence in this keyword
+        type: number
+      description:
+        description: Why this keyword is relevant
+        type: string
+      keyword:
+        type: string
+      type:
+        description: main, synonym, brand, attribute, context
+        type: string
+      weight:
+        description: 0.1-2.0
+        type: number
+    type: object
+  backend_internal_proj_marketplace_services.KeywordGenerationRequest:
+    properties:
+      categoryId:
+        type: integer
+      categoryName:
+        type: string
+      language:
+        type: string
+      minKeywords:
+        type: integer
+    required:
+    - categoryId
+    - categoryName
+    type: object
+  backend_internal_proj_marketplace_services.KeywordGenerationResult:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.CategoryKeywordMapping'
+        type: array
+      categoryId:
+        type: integer
+      generatedCount:
+        type: integer
+      keywords:
+        items:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.GeneratedKeyword'
+        type: array
+      processingTimeMs:
+        type: integer
+    type: object
+  backend_internal_proj_marketplace_services.LearningMetrics:
+    properties:
+      accuracyImprovement:
+        type: number
+      avgProcessingTimeMs:
+        type: integer
+      improvementsApplied:
+        type: integer
+      incorrectDetections:
+        type: integer
+      keywordsLearned:
+        type: integer
+      lastLearningSession:
+        type: string
+      recommendedActions:
+        items:
+          type: string
+        type: array
+      totalFeedbacks:
+        type: integer
+    type: object
+  backend_internal_proj_marketplace_services.ValidationRequest:
+    properties:
+      categoryName:
+        type: string
+      description:
+        type: string
+      language:
+        type: string
+      title:
+        type: string
+    required:
+    - categoryName
+    - title
+    type: object
+  backend_internal_proj_marketplace_services.ValidationResult:
+    properties:
+      confidence:
+        type: number
+      isCorrect:
+        type: boolean
+      keywords:
+        items:
+          type: string
+        type: array
+      processingTimeMs:
+        type: integer
+      reasoning:
+        type: string
+      suggestedCategory:
+        type: string
+    type: object
   backend_internal_proj_postexpress_models.CalculateRateRequest:
     properties:
       cod_amount:
@@ -8212,6 +8372,10 @@ definitions:
         type: array
       price:
         type: number
+      socialPosts:
+        additionalProperties:
+          type: string
+        type: object
       suggestedLocation:
         type: string
       tags:
@@ -8810,6 +8974,11 @@ definitions:
       page:
         type: integer
       total:
+        type: integer
+    type: object
+  internal_proj_marketplace_handler.ConfirmDetectionRequest:
+    properties:
+      correctCategoryId:
         type: integer
     type: object
   internal_proj_marketplace_handler.ConfirmPaymentRequest:
@@ -32111,6 +32280,412 @@ paths:
       summary: Readiness probe
       tags:
       - health
+  /marketplace/ai/auto-improve:
+    post:
+      consumes:
+      - application/json
+      description: Автоматически улучшает покрытие ключевых слов для плохо работающих
+        категорий
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Процесс улучшения запущен
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Автоматическое улучшение ключевых слов
+      tags:
+      - marketplace-ai
+  /marketplace/ai/confirm/{feedbackId}:
+    post:
+      consumes:
+      - application/json
+      description: Пользователь подтверждает или исправляет результат AI определения
+        для улучшения модели
+      parameters:
+      - description: ID записи обратной связи
+        in: path
+        name: feedbackId
+        required: true
+        type: integer
+      - description: Правильная категория
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_marketplace_handler.ConfirmDetectionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обратная связь сохранена
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Подтверждение правильности определения категории
+      tags:
+      - marketplace-ai
+  /marketplace/ai/detect-category:
+    post:
+      consumes:
+      - application/json
+      description: Определяет наиболее подходящую категорию для товара используя многоуровневый
+        AI анализ с Fallback механизмом
+      parameters:
+      - description: Входные данные для определения категории
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат определения категории
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Определение категории товара с помощью AI (с AI Fallback для 99% точности)
+      tags:
+      - marketplace-ai
+  /marketplace/ai/detect-category-standard:
+    post:
+      consumes:
+      - application/json
+      description: Определяет категорию используя только keyword matching и similarity
+        без AI Fallback для сравнения
+      parameters:
+      - description: Входные данные для определения категории
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат определения категории
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Определение категории только стандартными алгоритмами (без AI Fallback)
+      tags:
+      - marketplace-ai
+  /marketplace/ai/generate-keywords:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует полный набор ключевых слов для указанной категории через
+        AI
+      parameters:
+      - description: Данные для генерации ключевых слов
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат генерации ключевых слов
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationResult'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Генерация ключевых слов для категории
+      tags:
+      - marketplace-ai
+  /marketplace/ai/generate-keywords-all:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует ключевые слова для всех категорий, которым не хватает
+        ключевых слов
+      parameters:
+      - default: 50
+        description: Минимальное количество ключевых слов на категорию
+        in: query
+        name: minKeywords
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат массовой генерации
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationResult'
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Массовая генерация ключевых слов для всех категорий
+      tags:
+      - marketplace-ai
+  /marketplace/ai/keyword-stats:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику по ключевым словам и их эффективности
+      parameters:
+      - description: ID категории для фильтрации
+        in: query
+        name: categoryId
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статистика ключевых слов
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Статистика ключевых слов
+      tags:
+      - marketplace-ai
+  /marketplace/ai/learn:
+    post:
+      consumes:
+      - application/json
+      description: Запускает процесс обучения на основе накопленной обратной связи
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обучение запущено
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Запуск процесса обучения модели
+      tags:
+      - marketplace-ai
+  /marketplace/ai/learn-from-feedback:
+    post:
+      consumes:
+      - application/json
+      description: Анализирует обратную связь от AI валидации и улучшает систему категоризации
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результаты обучения
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.LearningMetrics'
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Запуск обучения системы на основе обратной связи
+      tags:
+      - marketplace-ai
+  /marketplace/ai/learning-stats:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику и метрики обучения саморазвивающейся системы
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статистика обучения
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.LearningMetrics'
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Статистика обучения AI системы
+      tags:
+      - marketplace-ai
+  /marketplace/ai/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику точности определения категорий за указанный
+        период
+      parameters:
+      - default: 7
+        description: Количество дней для анализа
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Метрики точности
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получение метрик точности AI детекции
+      tags:
+      - marketplace-ai
+  /marketplace/ai/scheduled-learning:
+    post:
+      consumes:
+      - application/json
+      description: 'Выполняет все плановые задачи обучения: анализ обратной связи,
+        улучшение ключевых слов'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Плановое обучение запущено
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Запуск планового обучения системы
+      tags:
+      - marketplace-ai
+  /marketplace/ai/validate-category:
+    post:
+      consumes:
+      - application/json
+      description: Проверяет правильность выбора категории для товара используя AI
+        анализ
+      parameters:
+      - description: Данные для валидации категории
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.ValidationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат валидации
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.ValidationResult'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Валидация выбора категории через AI
+      tags:
+      - marketplace-ai
   /payments/{id}/capture:
     post:
       consumes:

@@ -13,6 +13,10 @@ import (
 	"backend/internal/proj/delivery/models"
 )
 
+const (
+	ProductTypeListing = "listing"
+)
+
 // Service - сервис управления атрибутами доставки
 type Service struct {
 	db *sqlx.DB
@@ -31,7 +35,7 @@ func (s *Service) GetProductAttributes(ctx context.Context, productID int, produ
 	var query string
 	var jsonData json.RawMessage
 
-	if productType == "listing" {
+	if productType == ProductTypeListing {
 		query = `
 			SELECT
 				COALESCE(
@@ -121,7 +125,7 @@ func (s *Service) UpdateProductAttributes(ctx context.Context, productID int, pr
 	}
 
 	var query string
-	if productType == "listing" {
+	if productType == ProductTypeListing {
 		query = `
 			UPDATE marketplace_listings
 			SET metadata = jsonb_set(
@@ -310,7 +314,7 @@ func (s *Service) updateProductAttributesTx(ctx context.Context, tx *sqlx.Tx, pr
 	}
 
 	var query string
-	if productType == "listing" {
+	if productType == ProductTypeListing {
 		query = `
 			UPDATE marketplace_listings
 			SET metadata = jsonb_set(
