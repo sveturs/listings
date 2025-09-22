@@ -71,6 +71,7 @@ export function getLocalizedAddress(
 
 /**
  * Получает полный локализованный адрес из компонентов
+ * Для адресов в Сербии всегда возвращаем сербскую версию
  */
 export function getFullLocalizedAddress(
   item: {
@@ -85,27 +86,31 @@ export function getFullLocalizedAddress(
   let city = item.city || '';
   let country = item.country || '';
 
+  // Для адресов в Сербии всегда используем сербскую версию
+  // так как мы находимся в Сербии и адреса должны быть на местном языке
+  const addressLocale = 'sr';
+
   if (item.translations) {
     // Проверяем формат 1: { [locale]: { location, city, country } }
     if (
-      item.translations[locale] &&
-      typeof item.translations[locale] === 'object' &&
-      'location' in item.translations[locale]
+      item.translations[addressLocale] &&
+      typeof item.translations[addressLocale] === 'object' &&
+      'location' in item.translations[addressLocale]
     ) {
-      location = item.translations[locale].location || location;
-      city = item.translations[locale].city || city;
-      country = item.translations[locale].country || country;
+      location = item.translations[addressLocale].location || location;
+      city = item.translations[addressLocale].city || city;
+      country = item.translations[addressLocale].country || country;
     }
     // Проверяем формат 2: { location: { [locale]: string }, ... }
     else {
-      if (item.translations.location && item.translations.location[locale]) {
-        location = item.translations.location[locale] || location;
+      if (item.translations.location && item.translations.location[addressLocale]) {
+        location = item.translations.location[addressLocale] || location;
       }
-      if (item.translations.city && item.translations.city[locale]) {
-        city = item.translations.city[locale] || city;
+      if (item.translations.city && item.translations.city[addressLocale]) {
+        city = item.translations.city[addressLocale] || city;
       }
-      if (item.translations.country && item.translations.country[locale]) {
-        country = item.translations.country[locale] || country;
+      if (item.translations.country && item.translations.country[addressLocale]) {
+        country = item.translations.country[addressLocale] || country;
       }
     }
   }

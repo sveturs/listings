@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useEditProduct } from '@/contexts/EditProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
@@ -17,6 +18,7 @@ interface EditCategoryStepProps {
 export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const { state, setCategory, setError, clearError } = useEditProduct();
   const [allCategories, setAllCategories] = useState<MarketplaceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
   const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/v1/marketplace/category-tree');
+      const response = await apiClient.get(`/api/v1/marketplace/categories?lang=${locale}`);
 
       if (response.data) {
         const responseData = response.data.data || response.data;
@@ -112,7 +114,7 @@ export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
     } finally {
       setLoading(false);
     }
-  }, [state.category, t, setError, setAllCategories, buildBreadcrumbs]);
+  }, [state.category, t, setError, setAllCategories, buildBreadcrumbs, locale]);
 
   useEffect(() => {
     loadCategories();

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -160,6 +161,12 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 		}
 	} else {
 		base64Data = req.ImageData
+	}
+
+	// Detect actual image format from base64 data
+	actualMediaType := detectImageFormat(base64Data)
+	if actualMediaType != "" {
+		mediaType = actualMediaType
 	}
 
 	// Log the data for debugging
@@ -796,4 +803,35 @@ Return ONLY valid JSON without markdown or explanations:
     "viber": "🎯 Selling [product name]\n✅ [Brief description]\n💰 Price: [price] RSD\n📱 Call or message on Viber!"
   }
 }`
+}
+
+// detectImageFormat detects the actual image format from base64 data
+func detectImageFormat(base64Data string) string {
+	// Decode first few bytes to check signature
+	data, err := base64.StdEncoding.DecodeString(base64Data[:min(100, len(base64Data))])
+	if err != nil {
+		return ""
+	}
+
+	// Check for image signatures
+	if len(data) >= 4 {
+		// WebP: RIFF....WEBP
+		if string(data[0:4]) == "RIFF" && len(data) >= 12 && string(data[8:12]) == "WEBP" {
+			return "image/webp"
+		}
+		// PNG: 89 50 4E 47
+		if data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+			return "image/png"
+		}
+		// JPEG: FF D8 FF
+		if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+			return "image/jpeg"
+		}
+		// GIF: GIF87a or GIF89a
+		if string(data[0:3]) == "GIF" {
+			return "image/gif"
+		}
+	}
+
+	return ""
 }

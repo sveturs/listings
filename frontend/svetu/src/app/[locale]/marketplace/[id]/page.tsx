@@ -221,7 +221,7 @@ export default function ListingPage({ params }: Props) {
     try {
       // Сначала пробуем загрузить как обычное объявление
       let response = await fetch(
-        `${config.getApiUrl()}/api/v1/marketplace/listings/${id}`
+        `${config.getApiUrl()}/api/v1/marketplace/listings/${id}?lang=${locale}`
       );
 
       let isStorefrontProduct = false;

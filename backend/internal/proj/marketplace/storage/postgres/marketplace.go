@@ -3151,6 +3151,13 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Достаем информацию о пути категории
 	if listing.CategoryID > 0 {
+		// Получаем язык из контекста
+		lang := "en" // значение по умолчанию
+		if ctxLang, ok := ctx.Value("locale").(string); ok && ctxLang != "" {
+			lang = ctxLang
+		}
+
+		// Запрос с поддержкой переводов категорий
 		query := `
         WITH RECURSIVE category_path AS (
             SELECT id, name, slug, parent_id, 1 as level
@@ -3163,11 +3170,19 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             FROM marketplace_categories c
             JOIN category_path cp ON c.id = cp.parent_id
         )
-        SELECT id, name, slug
-        FROM category_path
-        ORDER BY level DESC
+        SELECT
+            cp.id,
+            COALESCE(t.translated_text, cp.name) as name,
+            cp.slug
+        FROM category_path cp
+        LEFT JOIN translations t ON
+            t.entity_type = 'category' AND
+            t.entity_id = cp.id AND
+            t.field_name = 'name' AND
+            t.language = $2
+        ORDER BY cp.level DESC
     `
-		rows, err := s.pool.Query(ctx, query, listing.CategoryID)
+		rows, err := s.pool.Query(ctx, query, listing.CategoryID, lang)
 		if err == nil {
 			defer rows.Close()
 			var categoryIds []int
