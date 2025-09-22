@@ -410,17 +410,40 @@ export default function AIPoweredListingCreationPage() {
     console.log('imageUrl type:', typeof imageUrl);
     console.log('imageUrl length:', imageUrl?.length);
 
+    // If it's a blob URL, fetch it and convert to base64
+    if (imageUrl.startsWith('blob:')) {
+      try {
+        console.log('Fetching blob URL...');
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        console.log('Blob fetched, type:', blob.type, 'size:', blob.size);
+
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            console.log('Blob converted to base64, length:', base64String.length);
+            resolve(base64String);
+          };
+          reader.onerror = () => {
+            console.error('FileReader error');
+            reject(new Error('Failed to read blob'));
+          };
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.error('Error fetching blob:', error);
+        throw error;
+      }
+    }
+
+    // For regular URLs, use canvas method
     return new Promise((resolve, reject) => {
       const img = new window.Image();
       console.log('Created new Image element');
 
-      // Don't set crossOrigin for blob URLs
-      if (!imageUrl.startsWith('blob:')) {
-        img.crossOrigin = 'anonymous';
-        console.log('Set crossOrigin to anonymous');
-      } else {
-        console.log('Using blob URL, no crossOrigin needed');
-      }
+      img.crossOrigin = 'anonymous';
+      console.log('Set crossOrigin to anonymous');
 
       img.onload = () => {
         console.log('Image loaded successfully');
@@ -614,7 +637,8 @@ export default function AIPoweredListingCreationPage() {
             title: analysis.title,
             description: analysis.description,
           },
-          targetLanguages
+          targetLanguages,
+          locale // Pass source language
         );
         // Извлекаем только данные переводов из ответа
         translations = translationResponse.data || translationResponse;
@@ -1972,71 +1996,74 @@ export default function AIPoweredListingCreationPage() {
                   {t('ai.social.title')}
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {Object.entries(aiData.socialPosts).map(([platform, post]) => {
-                  const shareLink = generateSocialShareLink(platform, post);
-                  return (
-                    <div key={platform} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {platform === 'whatsapp' && (
-                            <MessageCircle className="w-4 h-4 text-green-500" />
-                          )}
-                          {platform === 'telegram' && (
-                            <Send className="w-4 h-4 text-blue-500" />
-                          )}
-                          {platform === 'instagram' && (
-                            <Instagram className="w-4 h-4 text-pink-500" />
-                          )}
-                          {platform === 'facebook' && (
-                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                f
+                  {Object.entries(aiData.socialPosts).map(
+                    ([platform, post]) => {
+                      const shareLink = generateSocialShareLink(platform, post);
+                      return (
+                        <div key={platform} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {platform === 'whatsapp' && (
+                                <MessageCircle className="w-4 h-4 text-green-500" />
+                              )}
+                              {platform === 'telegram' && (
+                                <Send className="w-4 h-4 text-blue-500" />
+                              )}
+                              {platform === 'instagram' && (
+                                <Instagram className="w-4 h-4 text-pink-500" />
+                              )}
+                              {platform === 'facebook' && (
+                                <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    f
+                                  </span>
+                                </div>
+                              )}
+                              {platform === 'twitter' && (
+                                <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    X
+                                  </span>
+                                </div>
+                              )}
+                              {platform === 'viber' && (
+                                <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    V
+                                  </span>
+                                </div>
+                              )}
+                              <span className="font-semibold capitalize">
+                                {platform}
                               </span>
                             </div>
-                          )}
-                          {platform === 'twitter' && (
-                            <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                X
-                              </span>
+                            <div className="flex gap-1">
+                              {shareLink ? (
+                                <a
+                                  href={shareLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-xs btn-primary"
+                                  title={t('ai.social.share')}
+                                >
+                                  <Share2 className="w-3 h-3" />
+                                </a>
+                              ) : null}
+                              <button
+                                onClick={() => copyToClipboard(post, platform)}
+                                className="btn btn-xs btn-ghost"
+                                title={t('ai.social.copy')}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </button>
                             </div>
-                          )}
-                          {platform === 'viber' && (
-                            <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                V
-                              </span>
-                            </div>
-                          )}
-                          <span className="font-semibold capitalize">
-                            {platform}
-                          </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{post}</p>
                         </div>
-                        <div className="flex gap-1">
-                          {shareLink ? (
-                            <a
-                              href={shareLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-xs btn-primary"
-                              title={t('ai.social.share')}
-                            >
-                              <Share2 className="w-3 h-3" />
-                            </a>
-                          ) : null}
-                          <button
-                            onClick={() => copyToClipboard(post, platform)}
-                            className="btn btn-xs btn-ghost"
-                            title={t('ai.social.copy')}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{post}</p>
-                    </div>
-                  );
-                })}
+                      );
+                    }
+                  )}
+                </div>
               </div>
             </div>
           )}

@@ -190,10 +190,12 @@ export class ClaudeAIService {
 
   async translateContent(
     content: { title: string; description: string },
-    targetLanguages: string[] = ['en', 'ru', 'sr']
+    targetLanguages: string[] = ['en', 'ru', 'sr'],
+    sourceLanguage?: string
   ): Promise<Record<string, { title: string; description: string }>> {
     try {
       console.log('Translating content to languages:', targetLanguages);
+      console.log('Source language:', sourceLanguage || 'not specified');
 
       // Use our API route for translation
       const apiUrl = configManager.getApiUrl();
@@ -205,6 +207,7 @@ export class ClaudeAIService {
         body: JSON.stringify({
           content,
           targetLanguages,
+          sourceLanguage,
         }),
       });
 
