@@ -175,7 +175,11 @@
     },
 
     "social": {
-      "title": "Social media posts"
+      "title": "Social media posts",
+      "share": "Share",
+      "copy": "Copy",
+      "copied": "Copied to clipboard!",
+      "copyError": "Failed to copy to clipboard"
     },
 
     "prediction": {

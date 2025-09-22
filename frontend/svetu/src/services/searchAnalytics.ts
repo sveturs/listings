@@ -1,5 +1,4 @@
 import { config } from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 
 // Типы для аналитических данных
 export interface SearchMetrics {
@@ -47,10 +46,8 @@ export interface ItemPerformance {
 
 export interface AnalyticsFilters {
   period?: 'day' | 'week' | 'month' | 'custom';
-  start_date?: string;
-  end_date?: string;
-  period_start?: string;
-  period_end?: string;
+  date_from?: string;
+  date_to?: string;
   query?: string;
   limit?: number;
   offset?: number;
@@ -67,17 +64,27 @@ class SearchAnalyticsService {
     url: string,
     options: RequestInit = {}
   ): Promise<T> {
-    // Получаем токен из tokenManager
-    const accessToken = tokenManager.getAccessToken();
-
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    // Добавляем токен авторизации если он есть
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+    // Получаем токен из tokenManager асинхронно
+    if (typeof window !== 'undefined') {
+      try {
+        const { tokenManager } = await import('@/utils/tokenManager');
+        // Инициализируем tokenManager из localStorage
+        tokenManager.initializeFromStorage();
+        const accessToken = tokenManager.getAccessToken();
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+          console.log('[SearchAnalytics] Auth token added');
+        } else {
+          console.log('[SearchAnalytics] No auth token available');
+        }
+      } catch (error) {
+        console.log('[SearchAnalytics] Error getting auth token:', error);
+      }
     }
 
     const response = await fetch(`${this.baseUrl}${url}`, {
