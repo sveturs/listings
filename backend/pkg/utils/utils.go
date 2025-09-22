@@ -99,10 +99,8 @@ func SendErrorResponse(c *fiber.Ctx, status int, message string, data fiber.Map)
 	}
 
 	// Добавляем дополнительные данные если они есть
-	if data != nil {
-		for k, v := range data {
-			response[k] = v
-		}
+	for k, v := range data {
+		response[k] = v
 	}
 
 	return c.Status(status).JSON(response)

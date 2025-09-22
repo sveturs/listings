@@ -248,7 +248,7 @@ func (s *Service) CancelShipment(ctx context.Context, shipmentID int, reason str
 		return fmt.Errorf("cannot cancel delivered shipment")
 	}
 	if shipment.Status == models.ShipmentStatusCancelled {
-		return fmt.Errorf("shipment already cancelled")
+		return fmt.Errorf("shipment already canceled")
 	}
 
 	// Получаем провайдера
@@ -341,6 +341,7 @@ func (s *Service) sendStatusNotification(ctx context.Context, shipment *models.S
 		// if err == nil && order.UserID != nil {
 		//     userID = *order.UserID
 		// }
+		userID = 0 // Временно устанавливаем 0 до реализации
 	}
 
 	if userID == 0 {

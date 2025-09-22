@@ -156,7 +156,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	usersHandler := userHandler.NewHandler(services)
 	reviewHandler := reviewHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(services)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontModule := storefronts.NewModule(services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{

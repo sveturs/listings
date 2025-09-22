@@ -11,6 +11,10 @@ import (
 	"backend/internal/proj/delivery/models"
 )
 
+const (
+	NotAvailable = "N/A"
+)
+
 // GetAllProviders retrieves all delivery providers
 func (s *Storage) GetAllProviders(ctx context.Context) ([]models.Provider, error) {
 	query := `
@@ -189,7 +193,7 @@ func (s *Storage) GetProblemShipments(ctx context.Context, problemType, status s
 		       COALESCE(ds.provider_response->>'error_message', 'Problem detected') as description
 		FROM delivery_shipments ds
 		JOIN delivery_providers dp ON ds.provider_id = dp.id
-		WHERE ds.status IN ('failed', 'cancelled', 'returned')
+		WHERE ds.status IN ('failed', 'canceled', 'returned')
 	`
 
 	args := []interface{}{}
@@ -238,7 +242,7 @@ func (s *Storage) GetProblemShipments(ctx context.Context, problemType, status s
 		case "failed":
 			p.ProblemType = "delayed"
 			p.Priority = "high"
-		case "cancelled":
+		case "canceled":
 			p.ProblemType = "refused"
 			p.Priority = "medium"
 		case "returned":
@@ -325,7 +329,7 @@ func (s *Storage) GetDashboardStats(ctx context.Context) (*models.DashboardStats
 	// Problems
 	err = s.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM delivery_shipments
-		WHERE status IN ('failed', 'cancelled', 'returned')
+		WHERE status IN ('failed', 'canceled', 'returned')
 	`).Scan(&stats.Problems)
 	if err != nil {
 		return nil, err
@@ -361,7 +365,7 @@ func (s *Storage) GetDashboardStats(ctx context.Context) (*models.DashboardStats
 	if avgTime.Valid {
 		stats.AvgDeliveryTime = fmt.Sprintf("%.1f дня", avgTime.Float64)
 	} else {
-		stats.AvgDeliveryTime = "N/A"
+		stats.AvgDeliveryTime = NotAvailable
 	}
 
 	// Provider stats
@@ -403,7 +407,7 @@ func (s *Storage) GetDashboardStats(ctx context.Context) (*models.DashboardStats
 		if avgTime.Valid {
 			ps.AvgTime = fmt.Sprintf("%.1f дня", avgTime.Float64)
 		} else {
-			ps.AvgTime = "N/A"
+			ps.AvgTime = NotAvailable
 		}
 
 		stats.ProviderStats = append(stats.ProviderStats, ps)
@@ -487,7 +491,7 @@ func (s *Storage) GetAnalytics(ctx context.Context, period string) (*models.Anal
 	if avgTime.Valid {
 		analytics.AvgDeliveryTime = fmt.Sprintf("%.1f дня", avgTime.Float64)
 	} else {
-		analytics.AvgDeliveryTime = "N/A"
+		analytics.AvgDeliveryTime = NotAvailable
 	}
 
 	// Customer satisfaction (mock data for now)
@@ -508,7 +512,7 @@ func (s *Storage) GetAnalytics(ctx context.Context, period string) (*models.Anal
 	err = s.db.QueryRowContext(ctx, `
 		SELECT COUNT(*)
 		FROM delivery_shipments
-		WHERE status IN ('failed', 'cancelled', 'returned')
+		WHERE status IN ('failed', 'canceled', 'returned')
 		AND created_at >= CURRENT_DATE - INTERVAL '`+interval+`'
 	`).Scan(&problems)
 	if err == nil && analytics.TotalShipments > 0 {

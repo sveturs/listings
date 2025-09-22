@@ -80,7 +80,7 @@ func (i *DeliveryNotificationIntegration) formatDeliveryMessage(event *StatusCha
 	case "returned":
 		emoji = "↩️"
 		statusText = "возвращен отправителю"
-	case "cancelled":
+	case "canceled":
 		emoji = "🚫"
 		statusText = "отменен"
 	default:

@@ -15,7 +15,7 @@ const (
 	ShipmentStatusShipped    = "shipped"
 	ShipmentStatusInTransit  = "in_transit"
 	ShipmentStatusDelivered  = "delivered"
-	ShipmentStatusCancelled  = "cancelled"
+	ShipmentStatusCancelled  = "canceled"
 	ShipmentStatusFailed     = "failed"
 )
 

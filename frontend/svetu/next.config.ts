@@ -6,6 +6,16 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Увеличиваем лимит размера тела запроса для загрузки изображений в AI
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
+  // Настройки для API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Увеличиваем лимит до 10MB для base64 изображений
+    },
+  },
   eslint: {
     // During production builds, do not run ESLint
     ignoreDuringBuilds: true,

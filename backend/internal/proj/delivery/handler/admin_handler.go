@@ -14,6 +14,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	Period30Days = "30d"
+)
+
 // AdminHandler handles admin endpoints for delivery management
 type AdminHandler struct {
 	service *service.Service
@@ -403,6 +407,7 @@ func (h *AdminHandler) ResolveProblem(c *fiber.Ctx) error {
 	// Send notification if requested
 	if resolution.NotifyCustomer {
 		// TODO: Send notification to customer
+		logger.GetLogger().Info("Notification would be sent to customer for problem %d", problemID)
 	}
 
 	return c.JSON(fiber.Map{
@@ -445,7 +450,7 @@ func (h *AdminHandler) GetDashboard(c *fiber.Ctx) error {
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/analytics [get]
 func (h *AdminHandler) GetAnalytics(c *fiber.Ctx) error {
-	period := c.Query("period", "30d")
+	period := c.Query("period", Period30Days)
 
 	analytics, err := h.service.GetAnalytics(c.Context(), period)
 	if err != nil {
@@ -913,7 +918,7 @@ func (h *AdminHandler) GetProblemHistory(c *fiber.Ctx) error {
 
 // GetConsolidatedAnalytics возвращает объединенную аналитику
 func (h *AdminHandler) GetConsolidatedAnalytics(c *fiber.Ctx) error {
-	period := c.Query("period", "30d")
+	period := c.Query("period", Period30Days)
 
 	// Получаем аналитику из delivery сервиса
 	deliveryAnalytics, _ := h.service.GetAnalytics(c.Context(), period)
@@ -936,7 +941,7 @@ func (h *AdminHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 	}
 
 	// Получаем период и вычисляем даты
-	period := c.Query("period", "30d")
+	period := c.Query("period", Period30Days)
 	groupBy := c.Query("groupBy", "day")
 
 	// Вычисляем даты на основе периода
@@ -946,7 +951,7 @@ func (h *AdminHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 	switch period {
 	case "7d":
 		startDate = endDate.AddDate(0, 0, -7)
-	case "30d":
+	case Period30Days:
 		startDate = endDate.AddDate(0, 0, -30)
 	case "90d":
 		startDate = endDate.AddDate(0, 0, -90)
@@ -978,14 +983,14 @@ func (h *AdminHandler) GetFinancialReport(c *fiber.Ctx) error {
 	}
 
 	// Получаем период и вычисляем даты
-	period := c.Query("period", "30d")
+	period := c.Query("period", Period30Days)
 	endDate := time.Now()
 	var startDate time.Time
 
 	switch period {
 	case "7d":
 		startDate = endDate.AddDate(0, 0, -7)
-	case "30d":
+	case Period30Days:
 		startDate = endDate.AddDate(0, 0, -30)
 	case "90d":
 		startDate = endDate.AddDate(0, 0, -90)
@@ -1031,14 +1036,14 @@ func (h *AdminHandler) GetCourierComparison(c *fiber.Ctx) error {
 	}
 
 	// Получаем период и вычисляем даты
-	period := c.Query("period", "30d")
+	period := c.Query("period", Period30Days)
 	endDate := time.Now()
 	var startDate time.Time
 
 	switch period {
 	case "7d":
 		startDate = endDate.AddDate(0, 0, -7)
-	case "30d":
+	case Period30Days:
 		startDate = endDate.AddDate(0, 0, -30)
 	default:
 		startDate = endDate.AddDate(0, 0, -30)

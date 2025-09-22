@@ -244,7 +244,7 @@ const (
 	StatusDeliveryAttempted = "delivery_attempted" // попытка доставки
 	StatusReturning         = "returning"          // возвращается
 	StatusReturned          = "returned"           // возвращено
-	StatusCancelled         = "cancelled"          // отменено
+	StatusCancelled         = "canceled"           // отменено
 	StatusLost              = "lost"               // потеряно
 	StatusDamaged           = "damaged"            // повреждено
 )

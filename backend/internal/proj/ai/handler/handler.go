@@ -79,6 +79,7 @@ type AnalyzeProductResponse struct {
 	Keywords              []string               `json:"keywords"`
 	Tags                  []string               `json:"tags"`
 	SuggestedLocation     string                 `json:"suggestedLocation,omitempty"`
+	SocialPosts           map[string]string      `json:"socialPosts,omitempty"`
 }
 
 // CategoryHints provides hints for category detection
@@ -593,6 +594,7 @@ func (h *Handler) getPromptForLanguage(lang string) string {
 ВАЖНО:
 1. Категория должна быть на АНГЛИЙСКОМ языке (Electronics, Clothing, Furniture, etc.)
 2. ВСЕ тексты (title, description, attributes) должны быть на РУССКОМ языке!
+3. ОБЯЗАТЕЛЬНО создай посты для социальных сетей НА РУССКОМ языке!
 
 Верни ТОЛЬКО валидный JSON без markdown или объяснений:
 {
@@ -621,7 +623,15 @@ func (h *Handler) getPromptForLanguage(lang string) string {
   },
   "keywords": ["ключевое слово 1", "ключевое слово 2"],
   "tags": ["тег 1", "тег 2", "тег 3"],
-  "suggestedLocation": "предположительное местоположение если есть подсказки"
+  "suggestedLocation": "предположительное местоположение если есть подсказки",
+  "socialPosts": {
+    "instagram": "🔥 Продаю [название товара]! ✨ [краткое описание] 💰 Цена: [цена] динаров 📱 Пишите в директ! #продажа #товары #сербия",
+    "facebook": "Продается [название товара]. [Описание состояния и особенностей]. Цена: [цена] динаров. Интересно? Пишите в комментарии или личные сообщения!",
+    "twitter": "🔥 [Название товара] за [цена] динаров! [Краткое описание] #продажа #маркетплейс",
+    "whatsapp": "Привет! Продаю [название товара]. [Описание]. Цена: [цена] динаров. Интересно? Могу отправить дополнительные фото!",
+    "telegram": "💰 Продается: [название товара]\n📝 Описание: [краткое описание]\n💵 Цена: [цена] динаров\n📞 Связаться со мной можно здесь!",
+    "viber": "🎯 Продаю [название товара]\n✅ [Краткое описание]\n💰 Цена: [цена] динаров\n📱 Звоните или пишите в Viber!"
+  }
 }`
 	}
 
@@ -660,7 +670,15 @@ Vrati SAMO valjan JSON bez markdown ili objašnjenja:
   },
   "keywords": ["ključna reč 1", "ključna reč 2"],
   "tags": ["tag 1", "tag 2", "tag 3"],
-  "suggestedLocation": "pretpostavljena lokacija ako postoje naznake"
+  "suggestedLocation": "pretpostavljena lokacija ako postoje naznake",
+  "socialPosts": {
+    "instagram": "🔥 Prodajem [naziv proizvoda]! ✨ [kratak opis] 💰 Cena: [cena] dinara 📱 Pišite u DM! #prodaja #proizvodi #srbija",
+    "facebook": "Prodaje se [naziv proizvoda]. [Opis stanja i karakteristika]. Cena: [cena] dinara. Zainteresovani? Pišite u komentarima ili privatnim porukama!",
+    "twitter": "🔥 [Naziv proizvoda] za [cena] dinara! [Kratak opis] #prodaja #marketplace",
+    "whatsapp": "Zdravo! Prodajem [naziv proizvoda]. [Opis]. Cena: [cena] dinara. Zainteresovani? Mogu poslati dodatne fotografije!",
+    "telegram": "💰 Prodaje se: [naziv proizvoda]\n📝 Opis: [kratak opis]\n💵 Cena: [cena] dinara\n📞 Kontaktirajte me ovde!",
+    "viber": "🎯 Prodajem [naziv proizvoda]\n✅ [Kratak opis]\n💰 Cena: [cena] dinara\n📱 Pozovite ili pišite na Viber!"
+  }
 }`
 	}
 
@@ -697,6 +715,14 @@ Return ONLY valid JSON without markdown or explanations:
   },
   "keywords": ["keyword 1", "keyword 2"],
   "tags": ["tag 1", "tag 2", "tag 3"],
-  "suggestedLocation": "suggested location if there are hints"
+  "suggestedLocation": "suggested location if there are hints",
+  "socialPosts": {
+    "instagram": "🔥 Selling [product name]! ✨ [brief description] 💰 Price: [price] RSD 📱 DM for details! #forsale #marketplace #serbia",
+    "facebook": "For sale: [product name]. [Description of condition and features]. Price: [price] RSD. Interested? Comment below or send me a message!",
+    "twitter": "🔥 [Product name] for [price] RSD! [Brief description] #forsale #marketplace",
+    "whatsapp": "Hi! I'm selling [product name]. [Description]. Price: [price] RSD. Interested? I can send more photos!",
+    "telegram": "💰 For sale: [product name]\n📝 Description: [brief description]\n💵 Price: [price] RSD\n📞 Contact me here!",
+    "viber": "🎯 Selling [product name]\n✅ [Brief description]\n💰 Price: [price] RSD\n📱 Call or message on Viber!"
+  }
 }`
 }

@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import configManager from '@/config';
+import { tokenManager } from '@/utils/tokenManager';
 
 interface Listing {
   id: number;
@@ -95,10 +97,18 @@ export default function AdminListingsTable() {
       params.append('offset', ((page - 1) * limit).toString());
       params.append('sort_by', sortBy);
 
+      const token = tokenManager.getAccessToken();
+      const headers: HeadersInit = {};
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
-        `http://localhost:3000/api/v1/marketplace/listings?${params}`,
+        `${configManager.getApiUrl()}/api/v1/marketplace/listings?${params}`,
         {
-          credentials: 'include', // Включаем cookies для авторизации
+          headers,
+          credentials: 'include',
         }
       );
       const data = await response.json();
@@ -135,14 +145,21 @@ export default function AdminListingsTable() {
   // Обработчики действий
   const handleDelete = async (id: number) => {
     try {
+      const token = tokenManager.getAccessToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
-        `http://localhost:3000/api/v1/marketplace/listings/${id}`,
+        `${configManager.getApiUrl()}/api/v1/marketplace/listings/${id}`,
         {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Включаем cookies для авторизации через сессию
+          headers,
+          credentials: 'include',
         }
       );
 
@@ -176,12 +193,17 @@ export default function AdminListingsTable() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
+      const token = tokenManager.getAccessToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
 
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
-        `http://localhost:3000/api/v1/marketplace/listings/${id}`,
+        `${configManager.getApiUrl()}/api/v1/marketplace/listings/${id}`,
         {
           method: 'PUT',
           headers,

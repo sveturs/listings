@@ -358,7 +358,10 @@
   "errors": {
     "image_upload_failed": "Image upload failed",
     "publish_failed": "Failed to publish listing",
-    "draft_save_failed": "Failed to save draft"
+    "draft_save_failed": "Failed to save draft",
+    "aiServiceError": {
+      "description": "AI service error. Please try again or use manual creation."
+    }
   },
 
   "cars": {

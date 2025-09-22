@@ -34314,6 +34314,676 @@ const docTemplate = `{
                 }
             }
         },
+        "/marketplace/ai/auto-improve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Автоматически улучшает покрытие ключевых слов для плохо работающих категорий",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Автоматическое улучшение ключевых слов",
+                "responses": {
+                    "200": {
+                        "description": "Процесс улучшения запущен",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/confirm/{feedbackId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Пользователь подтверждает или исправляет результат AI определения для улучшения модели",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Подтверждение правильности определения категории",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID записи обратной связи",
+                        "name": "feedbackId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Правильная категория",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.ConfirmDetectionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Обратная связь сохранена",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/detect-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Определяет наиболее подходящую категорию для товара используя многоуровневый AI анализ с Fallback механизмом",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Определение категории товара с помощью AI (с AI Fallback для 99% точности)",
+                "parameters": [
+                    {
+                        "description": "Входные данные для определения категории",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат определения категории",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/detect-category-standard": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Определяет категорию используя только keyword matching и similarity без AI Fallback для сравнения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Определение категории только стандартными алгоритмами (без AI Fallback)",
+                "parameters": [
+                    {
+                        "description": "Входные данные для определения категории",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат определения категории",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/generate-keywords": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Генерирует полный набор ключевых слов для указанной категории через AI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Генерация ключевых слов для категории",
+                "parameters": [
+                    {
+                        "description": "Данные для генерации ключевых слов",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат генерации ключевых слов",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/generate-keywords-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Генерирует ключевые слова для всех категорий, которым не хватает ключевых слов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Массовая генерация ключевых слов для всех категорий",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Минимальное количество ключевых слов на категорию",
+                        "name": "minKeywords",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат массовой генерации",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.KeywordGenerationResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/keyword-stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает статистику по ключевым словам и их эффективности",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Статистика ключевых слов",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID категории для фильтрации",
+                        "name": "categoryId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статистика ключевых слов",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/learn": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Запускает процесс обучения на основе накопленной обратной связи",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Запуск процесса обучения модели",
+                "responses": {
+                    "200": {
+                        "description": "Обучение запущено",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/learn-from-feedback": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Анализирует обратную связь от AI валидации и улучшает систему категоризации",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Запуск обучения системы на основе обратной связи",
+                "responses": {
+                    "200": {
+                        "description": "Результаты обучения",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.LearningMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/learning-stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает статистику и метрики обучения саморазвивающейся системы",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Статистика обучения AI системы",
+                "responses": {
+                    "200": {
+                        "description": "Статистика обучения",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.LearningMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает статистику точности определения категорий за указанный период",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Получение метрик точности AI детекции",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 7,
+                        "description": "Количество дней для анализа",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Метрики точности",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/scheduled-learning": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Выполняет все плановые задачи обучения: анализ обратной связи, улучшение ключевых слов",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Запуск планового обучения системы",
+                "responses": {
+                    "200": {
+                        "description": "Плановое обучение запущено",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/marketplace/ai/validate-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Проверяет правильность выбора категории для товара используя AI анализ",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Валидация выбора категории через AI",
+                "parameters": [
+                    {
+                        "description": "Данные для валидации категории",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.ValidationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат валидации",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.ValidationResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/payments/create": {
             "post": {
                 "security": [
@@ -45145,6 +45815,248 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_proj_marketplace_services.AIDetectionInput": {
+            "type": "object",
+            "properties": {
+                "aiHints": {
+                    "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "listingId": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.AIDetectionResult": {
+            "type": "object",
+            "properties": {
+                "aiHints": {
+                    "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
+                },
+                "algorithm": {
+                    "type": "string"
+                },
+                "alternativeIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "categoryId": {
+                    "type": "integer"
+                },
+                "categoryName": {
+                    "type": "string"
+                },
+                "categoryPath": {
+                    "type": "string"
+                },
+                "confidenceScore": {
+                    "type": "number"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "processingTimeMs": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.AIHints": {
+            "type": "object",
+            "properties": {
+                "categoryPath": {
+                    "type": "string"
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "productType": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.CategoryKeywordMapping": {
+            "type": "object",
+            "properties": {
+                "categoryId": {
+                    "type": "integer"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_marketplace_services.GeneratedKeyword"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.GeneratedKeyword": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "description": "AI confidence in this keyword",
+                    "type": "number"
+                },
+                "description": {
+                    "description": "Why this keyword is relevant",
+                    "type": "string"
+                },
+                "keyword": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "main, synonym, brand, attribute, context",
+                    "type": "string"
+                },
+                "weight": {
+                    "description": "0.1-2.0",
+                    "type": "number"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.KeywordGenerationRequest": {
+            "type": "object",
+            "required": [
+                "categoryId",
+                "categoryName"
+            ],
+            "properties": {
+                "categoryId": {
+                    "type": "integer"
+                },
+                "categoryName": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "minKeywords": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.KeywordGenerationResult": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_marketplace_services.CategoryKeywordMapping"
+                    }
+                },
+                "categoryId": {
+                    "type": "integer"
+                },
+                "generatedCount": {
+                    "type": "integer"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_marketplace_services.GeneratedKeyword"
+                    }
+                },
+                "processingTimeMs": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.LearningMetrics": {
+            "type": "object",
+            "properties": {
+                "accuracyImprovement": {
+                    "type": "number"
+                },
+                "avgProcessingTimeMs": {
+                    "type": "integer"
+                },
+                "improvementsApplied": {
+                    "type": "integer"
+                },
+                "incorrectDetections": {
+                    "type": "integer"
+                },
+                "keywordsLearned": {
+                    "type": "integer"
+                },
+                "lastLearningSession": {
+                    "type": "string"
+                },
+                "recommendedActions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "totalFeedbacks": {
+                    "type": "integer"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.ValidationRequest": {
+            "type": "object",
+            "required": [
+                "categoryName",
+                "title"
+            ],
+            "properties": {
+                "categoryName": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_marketplace_services.ValidationResult": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number"
+                },
+                "isCorrect": {
+                    "type": "boolean"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "processingTimeMs": {
+                    "type": "integer"
+                },
+                "reasoning": {
+                    "type": "string"
+                },
+                "suggestedCategory": {
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_proj_postexpress_models.CalculateRateRequest": {
             "type": "object",
             "required": [
@@ -46866,6 +47778,12 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
+                "socialPosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "suggestedLocation": {
                     "type": "string"
                 },
@@ -47751,6 +48669,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.ConfirmDetectionRequest": {
+            "type": "object",
+            "properties": {
+                "correctCategoryId": {
                     "type": "integer"
                 }
             }

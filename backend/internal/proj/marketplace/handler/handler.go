@@ -3,10 +3,12 @@
 package handler
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"backend/internal/config"
@@ -14,6 +16,7 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/repository"
 	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/storage/postgres"
@@ -49,6 +52,7 @@ type Handler struct {
 	VariantMappings        *VariantMappingsHandler
 	Cars                   *CarsHandler
 	UnifiedAttributes      *UnifiedAttributesHandler
+	AICategoryHandler      *AICategoryHandler
 	service                globalService.ServicesInterface
 }
 
@@ -57,7 +61,7 @@ func (h *Handler) GetPrefix() string {
 }
 
 // NewHandler creates a new marketplace handler
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(ctx context.Context, services globalService.ServicesInterface) *Handler {
 	// Сначала создаем базовые обработчики
 	categoriesHandler := NewCategoriesHandler(services)
 	// Получаем storage из services и создаем хранилище для кастомных компонентов
@@ -94,11 +98,34 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 
 		// Создаём CategoryDetector и CategoryDetectorHandler
 		var categoryDetectorHandler *CategoryDetectorHandler
+		var aiCategoryHandler *AICategoryHandler
 		if storage := services.Storage(); storage != nil {
 			logger.Info().Msg("Storage is available, checking for OpenSearch...")
 			// Пытаемся получить OpenSearch репозиторий
 			if db, ok := storage.(*postgres.Database); ok {
 				logger.Info().Msg("Storage is postgres.Database")
+
+				// Создаём AI Category Detector независимо от OpenSearch
+				// так как он использует только PostgreSQL
+				aiDetector := marketplaceServices.NewAICategoryDetector(ctx, db.GetSQLXDB(), zap.L())
+
+				// Создаём остальные AI сервисы для полной интеграции
+				redisClient := redis.NewClient(&redis.Options{
+					Addr: "localhost:6379",
+					DB:   0,
+				})
+
+				// Создаём все необходимые сервисы
+				validator := marketplaceServices.NewAICategoryValidator(zap.L(), redisClient)
+				keywordRepo := repository.NewKeywordRepository(db.GetSQLXDB(), zap.L())
+				keywordGenerator := marketplaceServices.NewAIKeywordGenerator(zap.L(), redisClient, validator)
+
+				// TODO: Создать FeedbackRepository - пока используем nil
+				learningSystem := marketplaceServices.NewAILearningSystem(zap.L(), redisClient, keywordRepo, validator, keywordGenerator, nil)
+
+				aiCategoryHandler = NewAICategoryHandler(aiDetector, validator, keywordGenerator, keywordRepo, learningSystem, zap.L())
+				logger.Info().Msg("Created AICategoryHandler successfully")
+
 				if osRepo := db.GetOpenSearchRepository(); osRepo != nil {
 					logger.Info().Msg("OpenSearch repository exists")
 					// Проверяем, что это именно *opensearch.Repository
@@ -147,6 +174,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 			VariantMappings:        NewVariantMappingsHandler(services, unifiedAttrStorage, featureFlags),
 			Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
 			UnifiedAttributes:      unifiedAttributesHandler,
+			AICategoryHandler:      aiCategoryHandler,
 			service:                services,
 		}
 	}
@@ -178,6 +206,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 		CategoryDetector:       nil,
 		Cars:                   NewCarsHandler(services.Marketplace(), services.UnifiedCar()),
 		UnifiedAttributes:      nil, // В fallback случае не создаем
+		AICategoryHandler:      nil, // В fallback случае нет AI handler
 		service:                services,
 	}
 }
@@ -240,6 +269,17 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		marketplace.Get("/categories/:category_id/keywords", h.CategoryDetector.GetCategoryKeywords)
 	} else {
 		logger.Error().Msg("CategoryDetector is nil, routes not registered")
+	}
+
+	// AI Category Detection routes (enhanced)
+	if h.AICategoryHandler != nil {
+		logger.Info().Msg("Registering AI category detection routes")
+		aiGroup := marketplace.Group("/ai")
+		aiGroup.Post("/detect-category", h.AICategoryHandler.DetectCategory)
+		aiGroup.Post("/validate-category", h.AICategoryHandler.ValidateCategory) // ДОБАВЛЕН НЕДОСТАЮЩИЙ РОУТ
+		aiGroup.Post("/confirm/:feedbackId", h.AICategoryHandler.ConfirmDetection)
+		aiGroup.Get("/metrics", h.AICategoryHandler.GetAccuracyMetrics)
+		aiGroup.Post("/learn", mw.AuthRequiredJWT, h.AICategoryHandler.TriggerLearning) // Защищено для админов
 	}
 
 	// Карта - геопространственные маршруты

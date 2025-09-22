@@ -141,7 +141,7 @@ func (s *NotificationService) shouldNotifyForStatus(status string) bool {
 		"delivered":        true,
 		"failed":           true,
 		"returned":         true,
-		"cancelled":        true,
+		"canceled":         true,
 	}
 	return notifiableStatuses[status]
 }
@@ -167,7 +167,7 @@ func (s *NotificationService) getTemplateForStatus(status string) string {
 		"delivered":        "delivery_delivered",
 		"failed":           "delivery_failed",
 		"returned":         "delivery_returned",
-		"cancelled":        "delivery_cancelled",
+		"canceled":         "delivery_canceled",
 	}
 	return templates[status]
 }
@@ -241,7 +241,7 @@ func (s *NotificationService) getEmailSubject(status, trackingNumber string) str
 		"delivered":        "Заказ #%s доставлен",
 		"failed":           "Проблема с доставкой заказа #%s",
 		"returned":         "Заказ #%s возвращен отправителю",
-		"cancelled":        "Заказ #%s отменен",
+		"canceled":         "Заказ #%s отменен",
 	}
 
 	format, ok := subjects[status]
@@ -341,7 +341,7 @@ func (s *NotificationService) getStatusText(status string) string {
 		"delivered":        "Доставлен",
 		"failed":           "Доставка не удалась",
 		"returned":         "Возвращен отправителю",
-		"cancelled":        "Отменен",
+		"canceled":         "Отменен",
 	}
 
 	if text, ok := statusTexts[status]; ok {

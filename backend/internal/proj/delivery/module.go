@@ -1,8 +1,6 @@
 package delivery
 
 import (
-	"database/sql"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 
@@ -43,7 +41,7 @@ func NewModule(db *sqlx.DB, cfg *config.Config, log *logger.Logger) (*Module, er
 	adminHandler := h.GetAdminHandler()
 
 	// Создаем сервисы из admin/logistics для полной функциональности
-	var sqlDB *sql.DB = db.DB // sqlx.DB содержит *sql.DB
+	sqlDB := db.DB // sqlx.DB содержит *sql.DB
 	monitoringService := adminLogistics.NewMonitoringService(sqlDB)
 	problemService := adminLogistics.NewProblemService(sqlDB)
 	analyticsService := adminLogistics.NewAnalyticsService(sqlDB)
