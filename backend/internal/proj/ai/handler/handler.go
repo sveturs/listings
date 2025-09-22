@@ -595,6 +595,12 @@ func (h *Handler) getPromptForLanguage(lang string) string {
 1. Категория должна быть на АНГЛИЙСКОМ языке (Electronics, Clothing, Furniture, etc.)
 2. ВСЕ тексты (title, description, attributes) должны быть на РУССКОМ языке!
 3. ОБЯЗАТЕЛЬНО создай посты для социальных сетей НА РУССКОМ языке!
+4. ПРАВИЛЬНОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИЙ:
+   - Канцелярские товары (канцелярские ножи, резаки, степлеры, дыроколы, скотч) = "Office Supplies"
+   - Строительные инструменты (строительные ножи, резаки по гипсокартону, пилы) = "Tools & Hardware"
+   - Кухонные ножи и принадлежности = "Kitchen & Dining"
+   - Электроника = "Electronics"
+   - ВАЖНО: канцелярский нож это НЕ еда! Категория "Office Supplies", а не "Food & Beverages"!
 
 Верни ТОЛЬКО валидный JSON без markdown или объяснений:
 {
@@ -642,6 +648,13 @@ Identifikuj šta je proizvod, njegovo stanje, moguću cenu i kategoriju.
 VAŽNO:
 1. Kategorija mora biti na ENGLESKOM jeziku (Electronics, Clothing, Furniture, itd.)
 2. SVI tekstovi (title, description, attributes) moraju biti na SRPSKOM jeziku!
+3. OBAVEZNO kreiraj postove za društvene mreže NA SRPSKOM jeziku!
+4. PRAVILNO ODREĐIVANJE KATEGORIJA:
+   - Kancelarijski materijal (kancelarijski noževi, rezači, heftalice, bušilice, selotejp) = "Office Supplies"
+   - Građevinski alati (građevinski noževi, rezači gipsanih ploča, testere) = "Tools & Hardware"
+   - Kuhinjski noževi i pribor = "Kitchen & Dining"
+   - Elektronika = "Electronics"
+   - VAŽNO: kancelarijski nož NIJE hrana! Kategorija "Office Supplies", a ne "Food & Beverages"!
 
 Vrati SAMO valjan JSON bez markdown ili objašnjenja:
 {
@@ -686,7 +699,15 @@ Vrati SAMO valjan JSON bez markdown ili objašnjenja:
 	return `Analyze this product image and return information in JSON format.
 Identify what the product is, its condition, possible price, and category.
 
-IMPORTANT: Category must be in ENGLISH (Electronics, Clothing, Furniture, etc.)
+IMPORTANT:
+1. Category must be in ENGLISH (Electronics, Clothing, Furniture, etc.)
+2. MUST create social media posts!
+3. CORRECT CATEGORY CLASSIFICATION:
+   - Office supplies (utility knives, cutters, staplers, hole punches, tape) = "Office Supplies"
+   - Construction tools (construction knives, drywall cutters, saws) = "Tools & Hardware"
+   - Kitchen knives and utensils = "Kitchen & Dining"
+   - Electronics = "Electronics"
+   - IMPORTANT: utility knife is NOT food! Category is "Office Supplies", not "Food & Beverages"!
 
 Return ONLY valid JSON without markdown or explanations:
 {

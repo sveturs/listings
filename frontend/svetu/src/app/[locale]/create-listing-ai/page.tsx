@@ -1964,14 +1964,15 @@ export default function AIPoweredListingCreationPage() {
           </div>
 
           {/* Social posts */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <Share2 className="w-5 h-5" />
-                {t('ai.social.title')}
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {Object.entries(aiData.socialPosts).map(([platform, post]) => {
+          {aiData.socialPosts && Object.keys(aiData.socialPosts).length > 0 && (
+            <div className="card bg-base-200 mb-6">
+              <div className="card-body">
+                <h3 className="card-title">
+                  <Share2 className="w-5 h-5" />
+                  {t('ai.social.title')}
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {Object.entries(aiData.socialPosts).map(([platform, post]) => {
                   const shareLink = generateSocialShareLink(platform, post);
                   return (
                     <div key={platform} className="border rounded-lg p-4">
@@ -2038,7 +2039,7 @@ export default function AIPoweredListingCreationPage() {
                 })}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Effectiveness prediction */}
           {/* TODO: Implement real market analysis for effectiveness prediction
