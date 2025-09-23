@@ -111,6 +111,10 @@ go run ./cmd/api/main.go
 - [Отображение категорий](DISPLAY_CATEGORIES_INSTRUCTION.md)
 - [Фильтры на карте](MAP_CATEGORIES_FILTERS_INSTRUCTION.md)
 
+### Презентации и примеры
+- [📊 Интерактивная презентация платформы](docs/ru/examples/presentation_multilang_vertical.html)
+- [📚 Каталог примеров](docs/ru/examples/README.md)
+
 ### API документация
 - Swagger UI: http://localhost:3000/swagger/index.html (при запущенном backend)
 
