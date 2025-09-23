@@ -24099,6 +24099,48 @@ paths:
       summary: Запуск планового обучения системы
       tags:
         - marketplace-ai
+  /marketplace/ai/select-category:
+    post:
+      description: AI анализирует товар и выбирает наиболее подходящую категорию из
+        всех доступных (метод максимальной точности)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/backend_internal_proj_marketplace_services.AIDetect\
+                ionInput"
+        description: Входные данные товара
+        required: true
+      responses:
+        "200":
+          description: Результат выбора категории с обоснованием
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/backend_internal_proj_marketplace_services.AIDetect\
+                          ionResult"
+                    type: object
+        "400":
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Прямой выбор категории через AI из полного списка
+      tags:
+        - marketplace-ai
   /marketplace/ai/validate-category:
     post:
       description: Проверяет правильность выбора категории для товара используя AI анализ
@@ -26824,6 +26866,10 @@ components:
       type: object
     backend_internal_domain_models.MarketplaceListing:
       properties:
+        address_multilingual:
+          additionalProperties:
+            type: string
+          type: object
         attributes:
           items:
             $ref: "#/components/schemas/backend_internal_domain_models.ListingAttributeValu\
@@ -32906,6 +32952,9 @@ components:
             title:
               type: string
           type: object
+        sourceLanguage:
+          description: Added source language
+          type: string
         targetLanguages:
           items:
             type: string

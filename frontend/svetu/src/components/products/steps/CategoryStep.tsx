@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
@@ -29,11 +29,7 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
   const [currentParentId, setCurrentParentId] = useState<number | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<MarketplaceCategory[]>([]);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get(
@@ -109,7 +105,11 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [locale]);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   // Получить текущие категории для отображения
   const getCurrentCategories = () => {

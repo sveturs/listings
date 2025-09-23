@@ -276,7 +276,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		logger.Info().Msg("Registering AI category detection routes")
 		aiGroup := marketplace.Group("/ai")
 		aiGroup.Post("/detect-category", h.AICategoryHandler.DetectCategory)
-		aiGroup.Post("/select-category", h.AICategoryHandler.SelectCategory) // НОВЫЙ МЕТОД: прямой выбор через AI
+		aiGroup.Post("/select-category", h.AICategoryHandler.SelectCategory)     // НОВЫЙ МЕТОД: прямой выбор через AI
 		aiGroup.Post("/validate-category", h.AICategoryHandler.ValidateCategory) // ДОБАВЛЕН НЕДОСТАЮЩИЙ РОУТ
 		aiGroup.Post("/confirm/:feedbackId", h.AICategoryHandler.ConfirmDetection)
 		aiGroup.Get("/metrics", h.AICategoryHandler.GetAccuracyMetrics)

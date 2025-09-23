@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -17,6 +18,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
+
+// ErrNoCachedResult is returned when no cached result is found
+var ErrNoCachedResult = errors.New("no cached result found")
+
+// ErrNoResultsFound is returned when no detection results are found
+var ErrNoResultsFound = errors.New("no detection results found")
 
 type AIHints struct {
 	Domain       string   `json:"domain" db:"domain"`
@@ -1010,7 +1017,7 @@ func (d *AICategoryDetector) DetectWithAIFallback(ctx context.Context, input AID
 		// Крайний случай - используем DetectCategory
 		standardResult, stdErr := d.DetectCategory(ctx, input)
 		if stdErr != nil {
-			return nil, fmt.Errorf("all detection methods failed: AI: %w, standard: %v", err, stdErr)
+			return nil, fmt.Errorf("all detection methods failed: AI: %w, standard: %w", err, stdErr)
 		}
 		standardResult.Algorithm = "standard_fallback_all_failed"
 		standardResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
@@ -1416,21 +1423,21 @@ func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input A
 	`
 
 	var result struct {
-		CategoryID      int32    `db:"category_id"`
-		CategoryName    string   `db:"category_name"`
-		CategoryPath    string   `db:"category_path"`
-		Confidence      float64  `db:"confidence"`
-		Reasoning       *string  `db:"reasoning"`
-		AlternativeIDs  []int32  `db:"alternative_category_ids"`
-		AIKeywords      []string `db:"ai_keywords"`
-		AIDomain        *string  `db:"ai_domain"`
-		AIProductType   *string  `db:"ai_product_type"`
+		CategoryID     int32    `db:"category_id"`
+		CategoryName   string   `db:"category_name"`
+		CategoryPath   string   `db:"category_path"`
+		Confidence     float64  `db:"confidence"`
+		Reasoning      *string  `db:"reasoning"`
+		AlternativeIDs []int32  `db:"alternative_category_ids"`
+		AIKeywords     []string `db:"ai_keywords"`
+		AIDomain       *string  `db:"ai_domain"`
+		AIProductType  *string  `db:"ai_product_type"`
 	}
 
 	err := d.db.GetContext(ctx, &result, query, titleHash)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Не найдено в кеше
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoCachedResult // Не найдено в кеше
 		}
 		return nil, fmt.Errorf("failed to get cached AI decision: %w", err)
 	}
@@ -1449,13 +1456,13 @@ func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input A
 	}
 
 	return &AIDetectionResult{
-		CategoryID:       result.CategoryID,
-		CategoryName:     result.CategoryName,
-		CategoryPath:     result.CategoryPath,
-		ConfidenceScore:  result.Confidence,
-		AlternativeIDs:   result.AlternativeIDs,
-		Keywords:         result.AIKeywords,
-		AIHints:          aiHints,
+		CategoryID:      result.CategoryID,
+		CategoryName:    result.CategoryName,
+		CategoryPath:    result.CategoryPath,
+		ConfidenceScore: result.Confidence,
+		AlternativeIDs:  result.AlternativeIDs,
+		Keywords:        result.AIKeywords,
+		AIHints:         aiHints,
 	}, nil
 }
 
@@ -1563,7 +1570,7 @@ func (d *AICategoryDetector) quickLocalSearch(ctx context.Context, input AIDetec
 	}
 
 	if len(results) == 0 {
-		return nil, nil
+		return nil, ErrNoResultsFound
 	}
 
 	// Взвешенное голосование

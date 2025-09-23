@@ -26,6 +26,7 @@ type contextKey string
 const (
 	contextKeyUserID    contextKey = "user_id"
 	contextKeyIPAddress contextKey = "ip_address"
+	contextKeyLocale    contextKey = "locale"
 )
 
 // ListingsHandler обрабатывает запросы, связанные с объявлениями
@@ -153,7 +154,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	lang := c.Query("lang", "en")
 
 	// Создаем контекст с языком
-	ctx := context.WithValue(c.Context(), "locale", lang)
+	ctx := context.WithValue(c.Context(), contextKeyLocale, lang)
 
 	// Получаем детали объявления
 	listing, err := h.marketplaceService.GetListingByID(ctx, id)
@@ -235,7 +236,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 	lang := c.Query("lang", "en")
 
 	// Создаем контекст с языком
-	ctx := context.WithValue(c.Context(), "locale", lang)
+	ctx := context.WithValue(c.Context(), contextKeyLocale, lang)
 
 	// Получаем детали объявления по slug
 	listing, err := h.marketplaceService.GetListingBySlug(ctx, slug)

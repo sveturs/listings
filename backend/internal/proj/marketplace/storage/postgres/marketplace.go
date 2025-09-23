@@ -157,7 +157,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 
 	// Конвертируем мультиязычные адреса в JSON
 	var addressMultilingualJSON []byte
-	if listing.AddressMultilingual != nil && len(listing.AddressMultilingual) > 0 {
+	if len(listing.AddressMultilingual) > 0 {
 		var err error
 		addressMultilingualJSON, err = json.Marshal(listing.AddressMultilingual)
 		if err != nil {
@@ -2971,8 +2971,8 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Получаем основные данные объявления с original_language
 	var (
-		description          sql.NullString
-		condition            sql.NullString
+		description         sql.NullString
+		condition           sql.NullString
 		status              sql.NullString
 		location            sql.NullString
 		latitude            sql.NullFloat64

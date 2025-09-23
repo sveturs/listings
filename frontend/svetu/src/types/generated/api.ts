@@ -35795,6 +35795,70 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/marketplace/ai/select-category': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Прямой выбор категории через AI из полного списка
+     * @description AI анализирует товар и выбирает наиболее подходящую категорию из всех доступных (метод максимальной точности)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Входные данные товара */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_marketplace_services.AIDetectionInput'];
+        };
+      };
+      responses: {
+        /** @description Результат выбора категории с обоснованием */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.AIDetectionResult'];
+            };
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/marketplace/ai/validate-category': {
     parameters: {
       query?: never;
@@ -37393,6 +37457,9 @@ export interface components {
       thumbnail_url?: string;
     };
     'backend_internal_domain_models.MarketplaceListing': {
+      address_multilingual?: {
+        [key: string]: string;
+      };
       attributes?: components['schemas']['backend_internal_domain_models.ListingAttributeValue'][];
       average_rating?: number;
       category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -40477,6 +40544,8 @@ export interface components {
         description?: string;
         title?: string;
       };
+      /** @description Added source language */
+      sourceLanguage?: string;
       targetLanguages?: string[];
     };
     'internal_proj_ai_handler.TranslateContentResponse': {

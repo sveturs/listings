@@ -621,7 +621,7 @@ func (h *AICategoryHandler) SelectCategory(c *fiber.Ctx) error {
 			zap.String("errorDetails", err.Error()))
 		// Возвращаем подробную ошибку в режиме разработки
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "AI selection failed",
+			"error":   "AI selection failed",
 			"details": err.Error(),
 		})
 	}

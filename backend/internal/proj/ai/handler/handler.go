@@ -25,7 +25,6 @@ type Handler struct {
 	services globalService.ServicesInterface
 }
 
-
 // NewHandler creates a new AI handler
 func NewHandler(cfg *config.Config, services globalService.ServicesInterface) *Handler {
 	return &Handler{

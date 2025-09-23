@@ -204,6 +204,7 @@ export default function AIPoweredListingCreationPage() {
                 city: profileData.data.city,
                 region: profileData.data.country,
                 suggestedLocation: `${profileData.data.city}, ${profileData.data.country}`,
+                addressMultilingual: null,
               },
             }));
 
@@ -612,7 +613,13 @@ export default function AIPoweredListingCreationPage() {
                 geocodedAddress.address_components.district ||
                 'Сербия',
               suggestedLocation: privateAddress,
-              addressMultilingual: multilingualAddresses || undefined,
+              addressMultilingual: multilingualAddresses
+                ? {
+                    sr: multilingualAddresses.address_sr,
+                    en: multilingualAddresses.address_en,
+                    ru: multilingualAddresses.address_ru,
+                  }
+                : null,
             };
           }
         }
@@ -901,7 +908,13 @@ export default function AIPoweredListingCreationPage() {
                   geocodedAddress.address_components.district ||
                   'Сербия',
                 suggestedLocation: privateAddress,
-                addressMultilingual: multilingualAddresses,
+                addressMultilingual: multilingualAddresses
+                  ? {
+                      sr: multilingualAddresses.address_sr,
+                      en: multilingualAddresses.address_en,
+                      ru: multilingualAddresses.address_ru,
+                    }
+                  : null,
               },
             }));
 
@@ -2855,7 +2868,7 @@ export default function AIPoweredListingCreationPage() {
                       region: location.region,
                       suggestedLocation: privateAddress,
                       // Добавляем мультиязычные адреса
-                      addressMultilingual: location.addressMultilingual,
+                      addressMultilingual: location.addressMultilingual || null,
                     },
                   }));
 

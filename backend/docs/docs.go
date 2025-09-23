@@ -34921,6 +34921,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/marketplace/ai/select-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "AI анализирует товар и выбирает наиболее подходящую категорию из всех доступных (метод максимальной точности)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Прямой выбор категории через AI из полного списка",
+                "parameters": [
+                    {
+                        "description": "Входные данные товара",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Результат выбора категории с обоснованием",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/marketplace/ai/validate-category": {
             "post": {
                 "security": [
@@ -38821,6 +38884,12 @@ const docTemplate = `{
         "backend_internal_domain_models.MarketplaceListing": {
             "type": "object",
             "properties": {
+                "address_multilingual": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "attributes": {
                     "type": "array",
                     "items": {
@@ -47845,6 +47914,10 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                },
+                "sourceLanguage": {
+                    "description": "Added source language",
+                    "type": "string"
                 },
                 "targetLanguages": {
                     "type": "array",
