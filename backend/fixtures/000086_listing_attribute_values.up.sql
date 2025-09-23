@@ -1,0 +1,16 @@
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (1, 313, 144, NULL, NULL, NULL, NULL, '["белый"]', '2025-09-15 10:11:51.192887', '2025-09-15 10:11:51.192887', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (2, 315, 144, NULL, NULL, NULL, NULL, '["White"]', '2025-09-15 19:10:57.692884', '2025-09-15 19:10:57.692884', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (3, 317, 144, NULL, NULL, NULL, NULL, '["white"]', '2025-09-22 00:33:11.24223', '2025-09-22 00:33:11.24223', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (4, 318, 144, NULL, NULL, NULL, NULL, '["Green"]', '2025-09-22 13:06:47.606969', '2025-09-22 13:06:47.606969', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (5, 319, 144, NULL, NULL, NULL, NULL, '["Серый"]', '2025-09-22 13:38:05.126901', '2025-09-22 13:38:05.126901', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (6, 320, 144, NULL, NULL, NULL, NULL, '["серый"]', '2025-09-22 17:31:07.601195', '2025-09-22 17:31:07.601195', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (7, 321, 144, NULL, NULL, NULL, NULL, '["синий"]', '2025-09-22 17:38:34.85354', '2025-09-22 17:38:34.85354', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (8, 322, 144, NULL, NULL, NULL, NULL, '["crna"]', '2025-09-23 09:45:32.175963', '2025-09-23 09:45:32.175963', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (9, 325, 144, NULL, NULL, NULL, NULL, '["light grey"]', '2025-09-23 12:35:15.739662', '2025-09-23 12:35:15.739662', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (10, 326, 144, NULL, NULL, NULL, NULL, '["light gray"]', '2025-09-23 13:07:51.382915', '2025-09-23 13:07:51.382915', '');
+INSERT INTO public.listing_attribute_values (id, listing_id, attribute_id, text_value, numeric_value, boolean_value, date_value, json_value, created_at, updated_at, unit) VALUES (11, 327, 144, NULL, NULL, NULL, NULL, '["Beige"]', '2025-09-23 13:38:23.674285', '2025-09-23 13:38:23.674285', '');
+
+
+--
+-- Data for Name: listing_views; Type: TABLE DATA; Schema: public; Owner: -
+--

@@ -162,6 +162,13 @@ CREATE SEQUENCE public.admin_users_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.ai_category_decisions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.attribute_group_items_id_seq
     AS integer
     START WITH 1
@@ -742,12 +749,6 @@ CREATE SEQUENCE public.search_weights_history_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.search_weights_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.shopping_cart_items_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
