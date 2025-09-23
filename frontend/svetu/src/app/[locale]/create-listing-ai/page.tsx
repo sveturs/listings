@@ -121,6 +121,11 @@ export default function AIPoweredListingCreationPage() {
       city: '',
       region: '',
       suggestedLocation: '',
+      addressMultilingual: null as {
+        sr: string;
+        en: string;
+        ru: string;
+      } | null,
     },
     condition: 'used' as 'new' | 'used' | 'refurbished',
     insights: {} as Record<
@@ -141,10 +146,10 @@ export default function AIPoweredListingCreationPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Геокодирование
+  // Геокодирование - используем текущую локаль
   const geocoding = useAddressGeocoding({
     country: ['rs'], // Сербия
-    language: 'sr',
+    language: locale, // Используем текущий язык интерфейса
   });
 
   // Флаг для предотвращения повторной загрузки профиля
@@ -565,6 +570,18 @@ export default function AIPoweredListingCreationPage() {
             exifLocation.longitude
           );
 
+          // Получаем мультиязычные адреса
+          let multilingualAddresses = null;
+          try {
+            multilingualAddresses = await geocoding.getMultilingualAddress(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+            console.log('Multilingual addresses:', multilingualAddresses);
+          } catch (error) {
+            console.error('Failed to get multilingual addresses:', error);
+          }
+
           if (geocodedAddress) {
             console.log('Geocoded address during processing:', geocodedAddress);
 
@@ -592,6 +609,7 @@ export default function AIPoweredListingCreationPage() {
                 geocodedAddress.address_components.district ||
                 'Сербия',
               suggestedLocation: privateAddress,
+              addressMultilingual: multilingualAddresses || undefined,
             };
           }
         }
@@ -694,6 +712,7 @@ export default function AIPoweredListingCreationPage() {
           city: analysis.location?.city || 'Белград',
           region: analysis.location?.region || 'Сербия',
           suggestedLocation: analysis.location?.suggestedLocation || '',
+          addressMultilingual: null,
         },
         condition: analysis.condition || 'used',
         insights: analysis.insights || {},
@@ -838,6 +857,18 @@ export default function AIPoweredListingCreationPage() {
             exifLocation.longitude
           );
 
+          // Получаем мультиязычные адреса
+          let multilingualAddresses = null;
+          try {
+            multilingualAddresses = await geocoding.getMultilingualAddress(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+            console.log('Multilingual addresses:', multilingualAddresses);
+          } catch (error) {
+            console.error('Failed to get multilingual addresses:', error);
+          }
+
           if (geocodedAddress) {
             console.log('Geocoded address:', geocodedAddress);
 
@@ -867,6 +898,7 @@ export default function AIPoweredListingCreationPage() {
                   geocodedAddress.address_components.district ||
                   'Сербия',
                 suggestedLocation: privateAddress,
+                addressMultilingual: multilingualAddresses,
               },
             }));
 
@@ -2210,6 +2242,8 @@ export default function AIPoweredListingCreationPage() {
           city: aiData.location.city || 'Белград',
           region: aiData.location.region || 'Сербия',
           country: 'Сербия',
+          // Добавляем мультиязычные адреса если есть
+          addressMultilingual: aiData.location.addressMultilingual || undefined,
         },
 
         // Региональная система доверия
