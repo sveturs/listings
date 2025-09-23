@@ -121,6 +121,11 @@ export default function AIPoweredListingCreationPage() {
       city: '',
       region: '',
       suggestedLocation: '',
+      addressMultilingual: null as {
+        sr: string;
+        en: string;
+        ru: string;
+      } | null,
     },
     condition: 'used' as 'new' | 'used' | 'refurbished',
     insights: {} as Record<
@@ -141,10 +146,10 @@ export default function AIPoweredListingCreationPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Геокодирование
+  // Геокодирование - используем текущую локаль
   const geocoding = useAddressGeocoding({
     country: ['rs'], // Сербия
-    language: 'sr',
+    language: locale, // Используем текущий язык интерфейса
   });
 
   // Флаг для предотвращения повторной загрузки профиля
@@ -199,6 +204,7 @@ export default function AIPoweredListingCreationPage() {
                 city: profileData.data.city,
                 region: profileData.data.country,
                 suggestedLocation: `${profileData.data.city}, ${profileData.data.country}`,
+                addressMultilingual: null,
               },
             }));
 
@@ -410,17 +416,43 @@ export default function AIPoweredListingCreationPage() {
     console.log('imageUrl type:', typeof imageUrl);
     console.log('imageUrl length:', imageUrl?.length);
 
+    // If it's a blob URL, fetch it and convert to base64
+    if (imageUrl.startsWith('blob:')) {
+      try {
+        console.log('Fetching blob URL...');
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        console.log('Blob fetched, type:', blob.type, 'size:', blob.size);
+
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            console.log(
+              'Blob converted to base64, length:',
+              base64String.length
+            );
+            resolve(base64String);
+          };
+          reader.onerror = () => {
+            console.error('FileReader error');
+            reject(new Error('Failed to read blob'));
+          };
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.error('Error fetching blob:', error);
+        throw error;
+      }
+    }
+
+    // For regular URLs, use canvas method
     return new Promise((resolve, reject) => {
       const img = new window.Image();
       console.log('Created new Image element');
 
-      // Don't set crossOrigin for blob URLs
-      if (!imageUrl.startsWith('blob:')) {
-        img.crossOrigin = 'anonymous';
-        console.log('Set crossOrigin to anonymous');
-      } else {
-        console.log('Using blob URL, no crossOrigin needed');
-      }
+      img.crossOrigin = 'anonymous';
+      console.log('Set crossOrigin to anonymous');
 
       img.onload = () => {
         console.log('Image loaded successfully');
@@ -542,6 +574,18 @@ export default function AIPoweredListingCreationPage() {
             exifLocation.longitude
           );
 
+          // Получаем мультиязычные адреса
+          let multilingualAddresses = null;
+          try {
+            multilingualAddresses = await geocoding.getMultilingualAddress(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+            console.log('Multilingual addresses:', multilingualAddresses);
+          } catch (error) {
+            console.error('Failed to get multilingual addresses:', error);
+          }
+
           if (geocodedAddress) {
             console.log('Geocoded address during processing:', geocodedAddress);
 
@@ -569,6 +613,13 @@ export default function AIPoweredListingCreationPage() {
                 geocodedAddress.address_components.district ||
                 'Сербия',
               suggestedLocation: privateAddress,
+              addressMultilingual: multilingualAddresses
+                ? {
+                    sr: multilingualAddresses.address_sr,
+                    en: multilingualAddresses.address_en,
+                    ru: multilingualAddresses.address_ru,
+                  }
+                : null,
             };
           }
         }
@@ -614,7 +665,8 @@ export default function AIPoweredListingCreationPage() {
             title: analysis.title,
             description: analysis.description,
           },
-          targetLanguages
+          targetLanguages,
+          locale // Pass source language
         );
         // Извлекаем только данные переводов из ответа
         translations = translationResponse.data || translationResponse;
@@ -670,6 +722,7 @@ export default function AIPoweredListingCreationPage() {
           city: analysis.location?.city || 'Белград',
           region: analysis.location?.region || 'Сербия',
           suggestedLocation: analysis.location?.suggestedLocation || '',
+          addressMultilingual: null,
         },
         condition: analysis.condition || 'used',
         insights: analysis.insights || {},
@@ -814,6 +867,18 @@ export default function AIPoweredListingCreationPage() {
             exifLocation.longitude
           );
 
+          // Получаем мультиязычные адреса
+          let multilingualAddresses = null;
+          try {
+            multilingualAddresses = await geocoding.getMultilingualAddress(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+            console.log('Multilingual addresses:', multilingualAddresses);
+          } catch (error) {
+            console.error('Failed to get multilingual addresses:', error);
+          }
+
           if (geocodedAddress) {
             console.log('Geocoded address:', geocodedAddress);
 
@@ -843,6 +908,13 @@ export default function AIPoweredListingCreationPage() {
                   geocodedAddress.address_components.district ||
                   'Сербия',
                 suggestedLocation: privateAddress,
+                addressMultilingual: multilingualAddresses
+                  ? {
+                      sr: multilingualAddresses.address_sr,
+                      en: multilingualAddresses.address_en,
+                      ru: multilingualAddresses.address_ru,
+                    }
+                  : null,
               },
             }));
 
@@ -1964,81 +2036,85 @@ export default function AIPoweredListingCreationPage() {
           </div>
 
           {/* Social posts */}
-          <div className="card bg-base-200 mb-6">
-            <div className="card-body">
-              <h3 className="card-title">
-                <Share2 className="w-5 h-5" />
-                {t('ai.social.title')}
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {Object.entries(aiData.socialPosts).map(([platform, post]) => {
-                  const shareLink = generateSocialShareLink(platform, post);
-                  return (
-                    <div key={platform} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {platform === 'whatsapp' && (
-                            <MessageCircle className="w-4 h-4 text-green-500" />
-                          )}
-                          {platform === 'telegram' && (
-                            <Send className="w-4 h-4 text-blue-500" />
-                          )}
-                          {platform === 'instagram' && (
-                            <Instagram className="w-4 h-4 text-pink-500" />
-                          )}
-                          {platform === 'facebook' && (
-                            <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                f
+          {aiData.socialPosts && Object.keys(aiData.socialPosts).length > 0 && (
+            <div className="card bg-base-200 mb-6">
+              <div className="card-body">
+                <h3 className="card-title">
+                  <Share2 className="w-5 h-5" />
+                  {t('ai.social.title')}
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {Object.entries(aiData.socialPosts).map(
+                    ([platform, post]) => {
+                      const shareLink = generateSocialShareLink(platform, post);
+                      return (
+                        <div key={platform} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {platform === 'whatsapp' && (
+                                <MessageCircle className="w-4 h-4 text-green-500" />
+                              )}
+                              {platform === 'telegram' && (
+                                <Send className="w-4 h-4 text-blue-500" />
+                              )}
+                              {platform === 'instagram' && (
+                                <Instagram className="w-4 h-4 text-pink-500" />
+                              )}
+                              {platform === 'facebook' && (
+                                <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    f
+                                  </span>
+                                </div>
+                              )}
+                              {platform === 'twitter' && (
+                                <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    X
+                                  </span>
+                                </div>
+                              )}
+                              {platform === 'viber' && (
+                                <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">
+                                    V
+                                  </span>
+                                </div>
+                              )}
+                              <span className="font-semibold capitalize">
+                                {platform}
                               </span>
                             </div>
-                          )}
-                          {platform === 'twitter' && (
-                            <div className="w-4 h-4 bg-black rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                X
-                              </span>
+                            <div className="flex gap-1">
+                              {shareLink ? (
+                                <a
+                                  href={shareLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-xs btn-primary"
+                                  title={t('ai.social.share')}
+                                >
+                                  <Share2 className="w-3 h-3" />
+                                </a>
+                              ) : null}
+                              <button
+                                onClick={() => copyToClipboard(post, platform)}
+                                className="btn btn-xs btn-ghost"
+                                title={t('ai.social.copy')}
+                              >
+                                <Copy className="w-3 h-3" />
+                              </button>
                             </div>
-                          )}
-                          {platform === 'viber' && (
-                            <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs font-bold">
-                                V
-                              </span>
-                            </div>
-                          )}
-                          <span className="font-semibold capitalize">
-                            {platform}
-                          </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{post}</p>
                         </div>
-                        <div className="flex gap-1">
-                          {shareLink ? (
-                            <a
-                              href={shareLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-xs btn-primary"
-                              title={t('ai.social.share')}
-                            >
-                              <Share2 className="w-3 h-3" />
-                            </a>
-                          ) : null}
-                          <button
-                            onClick={() => copyToClipboard(post, platform)}
-                            className="btn btn-xs btn-ghost"
-                            title={t('ai.social.copy')}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{post}</p>
-                    </div>
-                  );
-                })}
+                      );
+                    }
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Effectiveness prediction */}
           {/* TODO: Implement real market analysis for effectiveness prediction
@@ -2182,6 +2258,8 @@ export default function AIPoweredListingCreationPage() {
           city: aiData.location.city || 'Белград',
           region: aiData.location.region || 'Сербия',
           country: 'Сербия',
+          // Добавляем мультиязычные адреса если есть
+          addressMultilingual: aiData.location.addressMultilingual || undefined,
         },
 
         // Региональная система доверия
@@ -2789,6 +2867,8 @@ export default function AIPoweredListingCreationPage() {
                       city: location.city,
                       region: location.region,
                       suggestedLocation: privateAddress,
+                      // Добавляем мультиязычные адреса
+                      addressMultilingual: location.addressMultilingual || null,
                     },
                   }));
 

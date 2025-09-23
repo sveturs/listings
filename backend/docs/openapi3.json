@@ -40569,6 +40569,75 @@
                 }
             }
         },
+        "/marketplace/ai/select-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "AI анализирует товар и выбирает наиболее подходящую категорию из всех доступных (метод максимальной точности)",
+                "tags": [
+                    "marketplace-ai"
+                ],
+                "summary": "Прямой выбор категории через AI из полного списка",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_proj_marketplace_services.AIDetectionInput"
+                            }
+                        }
+                    },
+                    "description": "Входные данные товара",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Результат выбора категории с обоснованием",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/marketplace/ai/validate-category": {
             "post": {
                 "security": [
@@ -44659,6 +44728,12 @@
             "backend_internal_domain_models.MarketplaceListing": {
                 "type": "object",
                 "properties": {
+                    "address_multilingual": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
                     "attributes": {
                         "type": "array",
                         "items": {
@@ -53683,6 +53758,10 @@
                                 "type": "string"
                             }
                         }
+                    },
+                    "sourceLanguage": {
+                        "description": "Added source language",
+                        "type": "string"
                     },
                     "targetLanguages": {
                         "type": "array",

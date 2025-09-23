@@ -155,21 +155,32 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 		}
 	}
 
+	// Конвертируем мультиязычные адреса в JSON
+	var addressMultilingualJSON []byte
+	if len(listing.AddressMultilingual) > 0 {
+		var err error
+		addressMultilingualJSON, err = json.Marshal(listing.AddressMultilingual)
+		if err != nil {
+			log.Printf("Error marshaling multilingual addresses: %v", err)
+			// Не прерываем процесс, продолжаем без мультиязычных адресов
+		}
+	}
+
 	// Вставляем основные данные объявления
 	err := s.pool.QueryRow(ctx, `
         INSERT INTO marketplace_listings (
             user_id, category_id, title, description, price,
             condition, status, location, latitude, longitude,
             address_city, address_country, show_on_map, original_language,
-            storefront_id, external_id, metadata
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            storefront_id, external_id, metadata, address_multilingual
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         RETURNING id
     `,
 		listing.UserID, listing.CategoryID, listing.Title, listing.Description,
 		listing.Price, listing.Condition, listing.Status, listing.Location,
 		listing.Latitude, listing.Longitude, listing.City, listing.Country,
 		listing.ShowOnMap, listing.OriginalLanguage, listing.StorefrontID, listing.ExternalID,
-		metadataJSON,
+		metadataJSON, addressMultilingualJSON,
 	).Scan(&listingID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to insert listing: %w", err)
@@ -2960,23 +2971,24 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Получаем основные данные объявления с original_language
 	var (
-		description     sql.NullString
-		condition       sql.NullString
-		status          sql.NullString
-		location        sql.NullString
-		latitude        sql.NullFloat64
-		longitude       sql.NullFloat64
-		city            sql.NullString
-		country         sql.NullString
-		originalLang    sql.NullString
-		userName        sql.NullString
-		userEmail       sql.NullString
-		userPictureURL  sql.NullString
-		userPhone       sql.NullString
-		categoryName    sql.NullString
-		categorySlug    sql.NullString
-		storefrontID    sql.NullInt32
-		locationPrivacy sql.NullString
+		description         sql.NullString
+		condition           sql.NullString
+		status              sql.NullString
+		location            sql.NullString
+		latitude            sql.NullFloat64
+		longitude           sql.NullFloat64
+		city                sql.NullString
+		country             sql.NullString
+		originalLang        sql.NullString
+		userName            sql.NullString
+		userEmail           sql.NullString
+		userPictureURL      sql.NullString
+		userPhone           sql.NullString
+		categoryName        sql.NullString
+		categorySlug        sql.NullString
+		storefrontID        sql.NullInt32
+		locationPrivacy     sql.NullString
+		addressMultilingual []byte
 	)
 
 	err := s.pool.QueryRow(ctx, `
@@ -2988,7 +3000,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             u.name, u.email, u.created_at as user_created_at,
             u.picture_url, u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id,
-            COALESCE(ug.privacy_level::text, 'exact') as location_privacy
+            COALESCE(ug.privacy_level::text, 'exact') as location_privacy, l.address_multilingual
         FROM marketplace_listings l
         LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
@@ -3002,7 +3014,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &originalLang,
 		&userName, &userEmail, &listing.User.CreatedAt,
 		&userPictureURL, &userPhone,
-		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy,
+		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy, &addressMultilingual,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
 	log.Printf("DEBUG: err after query = %v", err)
@@ -3042,6 +3054,15 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	}
 	if originalLang.Valid {
 		listing.OriginalLanguage = originalLang.String
+	}
+	// Парсим мультиязычные адреса из JSON
+	if len(addressMultilingual) > 0 {
+		var multilingualMap map[string]string
+		if err := json.Unmarshal(addressMultilingual, &multilingualMap); err != nil {
+			log.Printf("Error unmarshaling multilingual addresses for listing %d: %v", listing.ID, err)
+		} else {
+			listing.AddressMultilingual = multilingualMap
+		}
 	}
 	if userName.Valid {
 		listing.User.Name = userName.String
@@ -3151,6 +3172,13 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Достаем информацию о пути категории
 	if listing.CategoryID > 0 {
+		// Получаем язык из контекста
+		lang := "en" // значение по умолчанию
+		if ctxLang, ok := ctx.Value("locale").(string); ok && ctxLang != "" {
+			lang = ctxLang
+		}
+
+		// Запрос с поддержкой переводов категорий
 		query := `
         WITH RECURSIVE category_path AS (
             SELECT id, name, slug, parent_id, 1 as level
@@ -3163,11 +3191,19 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             FROM marketplace_categories c
             JOIN category_path cp ON c.id = cp.parent_id
         )
-        SELECT id, name, slug
-        FROM category_path
-        ORDER BY level DESC
+        SELECT
+            cp.id,
+            COALESCE(t.translated_text, cp.name) as name,
+            cp.slug
+        FROM category_path cp
+        LEFT JOIN translations t ON
+            t.entity_type = 'category' AND
+            t.entity_id = cp.id AND
+            t.field_name = 'name' AND
+            t.language = $2
+        ORDER BY cp.level DESC
     `
-		rows, err := s.pool.Query(ctx, query, listing.CategoryID)
+		rows, err := s.pool.Query(ctx, query, listing.CategoryID, lang)
 		if err == nil {
 			defer rows.Close()
 			var categoryIds []int

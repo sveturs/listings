@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
 import { apiClient } from '@/services/api-client';
 import { toast } from '@/utils/toast';
@@ -17,6 +18,7 @@ interface CategoryStepProps {
 export default function CategoryStep({ onNext }: CategoryStepProps) {
   const t = useTranslations('storefronts');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const { state, setCategory, setError, clearError } = useCreateProduct();
   const [allCategories, setAllCategories] = useState<MarketplaceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,14 +29,12 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
   const [currentParentId, setCurrentParentId] = useState<number | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<MarketplaceCategory[]>([]);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/v1/marketplace/category-tree');
+      const response = await apiClient.get(
+        `/api/v1/marketplace/categories?lang=${locale}`
+      );
 
       if (response.data) {
         const responseData = response.data.data || response.data;
@@ -105,7 +105,11 @@ export default function CategoryStep({ onNext }: CategoryStepProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [locale]);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
   // Получить текущие категории для отображения
   const getCurrentCategories = () => {

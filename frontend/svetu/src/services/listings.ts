@@ -15,6 +15,7 @@ export interface CreateListingRequest {
   country: string;
   show_on_map: boolean;
   location_privacy?: string;
+  address_multilingual?: Record<string, string>;
   attributes?: Array<{
     attribute_id: number;
     text_value?: string;
@@ -79,14 +80,22 @@ export class ListingsService {
       description: data.description,
       price: data.price,
       condition: data.condition,
-      location: data.location?.address || '',
+      // Используем сербскую версию как основную (мы в Сербии)
+      location:
+        data.location?.addressMultilingual?.sr || data.location?.address || '',
       latitude: data.location?.latitude,
       longitude: data.location?.longitude,
-      city: data.location?.city || '',
-      country: data.location?.country || 'Србија',
+      // Извлекаем город из сербского адреса или используем то что есть
+      city:
+        data.location?.addressMultilingual?.sr?.split(',')[0]?.trim() ||
+        data.location?.city ||
+        '',
+      country: 'Србија',
       show_on_map:
         data.location?.latitude && data.location?.longitude ? true : false,
       location_privacy: locationPrivacy,
+      // Добавляем мультиязычные адреса
+      address_multilingual: data.location?.addressMultilingual,
 
       // Региональные поля сохраняем в атрибутах
       payment_methods: data.payment.methods,
@@ -99,16 +108,54 @@ export class ListingsService {
       bundle_deals: data.payment.bundleDeals,
     };
 
+    // Добавляем мультиязычные адреса в переводы
+    const addressTranslations: Record<string, Record<string, string>> = {};
+
+    if (data.location?.addressMultilingual) {
+      // Добавляем переводы адресов для каждого языка
+      if (data.location.addressMultilingual.en) {
+        addressTranslations.en = {
+          location: data.location.addressMultilingual.en,
+          city:
+            data.location.addressMultilingual.en.split(',')[0]?.trim() ||
+            'Belgrade',
+          country: 'Serbia',
+        };
+      }
+
+      if (data.location.addressMultilingual.ru) {
+        addressTranslations.ru = {
+          location: data.location.addressMultilingual.ru,
+          city:
+            data.location.addressMultilingual.ru.split(',')[0]?.trim() ||
+            'Белград',
+          country: 'Сербия',
+        };
+      }
+
+      if (data.location.addressMultilingual.sr) {
+        addressTranslations.sr = {
+          location: data.location.addressMultilingual.sr,
+          city:
+            data.location.addressMultilingual.sr.split(',')[0]?.trim() ||
+            'Београд',
+          country: 'Србија',
+        };
+      }
+    }
+
     // Добавляем переводы, если они есть
+    let finalTranslations: Record<string, Record<string, string>> = {};
+
+    // Сначала обрабатываем существующие переводы
     if (data.translations) {
-      // Извлекаем только данные переводов из ответа API
       const translationsObj = data.translations as any;
       if (
         'data' in translationsObj &&
         typeof translationsObj.data === 'object'
       ) {
         // Это ответ от API с полями data, message, success
-        request.translations = translationsObj.data as Record<
+        finalTranslations = translationsObj.data as Record<
           string,
           Record<string, string>
         >;
@@ -117,13 +164,30 @@ export class ListingsService {
         !('message' in translationsObj)
       ) {
         // Если это уже чистый объект переводов (без полей success/message)
-        request.translations = translationsObj as Record<
+        finalTranslations = translationsObj as Record<
           string,
           Record<string, string>
         >;
       }
-      // Дополнительная проверка для отладки
-      console.log('Translations being sent:', request.translations);
+    }
+
+    // Добавляем или перезаписываем переводы адресов
+    if (Object.keys(addressTranslations).length > 0) {
+      for (const lang of Object.keys(addressTranslations)) {
+        finalTranslations[lang] = {
+          ...finalTranslations[lang],
+          ...addressTranslations[lang],
+        };
+      }
+    }
+
+    // Добавляем переводы в запрос, если есть
+    if (Object.keys(finalTranslations).length > 0) {
+      request.translations = finalTranslations;
+      console.log(
+        'Translations being sent (including addresses):',
+        request.translations
+      );
     }
 
     // Добавляем язык оригинала, если он указан

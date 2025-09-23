@@ -106,7 +106,7 @@ func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 	}
 
 	// Hardcoded admin users (как в других админских модулях)
-	adminUsers := []int{1, 2, 3, 4, 5}
+	adminUsers := []int{1, 2, 3, 4, 5, 6}
 	isAdmin := false
 	for _, adminID := range adminUsers {
 		if userID == adminID {
@@ -154,7 +154,7 @@ func (h *AnalyticsHandler) GetItemsPerformance(c *fiber.Ctx) error {
 	}
 
 	// Hardcoded admin users (как в других админских модулях)
-	adminUsers := []int{1, 2, 3, 4, 5}
+	adminUsers := []int{1, 2, 3, 4, 5, 6}
 	isAdmin := false
 	for _, adminID := range adminUsers {
 		if userID == adminID {

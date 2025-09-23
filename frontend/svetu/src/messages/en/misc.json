@@ -39,6 +39,12 @@
     "withinRadius": "Within {radius} km",
     "statsLoadError": "Unable to load statistics"
   },
+  "ai": {
+    "serviceUnavailable": "AI service is temporarily unavailable",
+    "authenticationError": "AI service authentication error. Please contact administrator",
+    "tryAgainLater": "Please try again later or fill in the data manually",
+    "fallbackMode": "Using simplified mode due to AI unavailability"
+  },
   "users": {
     "register": {
       "error": {

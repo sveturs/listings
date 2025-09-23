@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -17,6 +18,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
+
+// ErrNoCachedResult is returned when no cached result is found
+var ErrNoCachedResult = errors.New("no cached result found")
+
+// ErrNoResultsFound is returned when no detection results are found
+var ErrNoResultsFound = errors.New("no detection results found")
 
 type AIHints struct {
 	Domain       string   `json:"domain" db:"domain"`
@@ -961,53 +968,58 @@ type AISelectionResult struct {
 	AlternativeIDs []int32 `json:"alternativeIds,omitempty"`
 }
 
-// DetectWithAIFallback главный метод с AI Fallback для 99% точности
+// DetectWithAIFallback главный метод с AI как основным механизмом для 99% точности
 func (d *AICategoryDetector) DetectWithAIFallback(ctx context.Context, input AIDetectionInput) (*AIDetectionResult, error) {
 	startTime := time.Now()
-	d.logger.Info("Starting category detection with AI fallback",
+	d.logger.Info("Starting category detection with AI-first approach",
 		zap.String("title", input.Title),
 		zap.String("description", input.Description[:min(100, len(input.Description))]))
 
-	// Фаза 1: Попытка определения через существующие алгоритмы
-	standardResult, err := d.DetectCategory(ctx, input)
-	if err != nil {
-		d.logger.Error("Standard detection failed", zap.Error(err))
-		return nil, err
+	// Фаза 1: Проверяем кеш AI решений в новой таблице
+	cachedResult, err := d.getAIDecisionFromCache(ctx, input)
+	if err == nil && cachedResult != nil {
+		d.logger.Info("Found cached AI decision",
+			zap.Int32("categoryId", cachedResult.CategoryID),
+			zap.String("categoryName", cachedResult.CategoryName),
+			zap.Float64("confidence", cachedResult.ConfidenceScore))
+		cachedResult.Algorithm = "ai_cached_decision"
+		cachedResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
+		return cachedResult, nil
 	}
 
-	// Проверяем уверенность результата и семантическую корректность
-	confidenceThreshold := 0.80
-
-	if standardResult.ConfidenceScore >= confidenceThreshold {
-		// Дополнительная проверка: семантическая валидация результата
-		if d.isSemanticallySensible(ctx, input, standardResult) {
-			d.logger.Info("Standard detection successful with high confidence and semantic validation",
-				zap.Float64("confidence", standardResult.ConfidenceScore),
-				zap.Int32("categoryId", standardResult.CategoryID),
-				zap.String("categoryName", standardResult.CategoryName))
-
-			standardResult.Algorithm = "standard_high_confidence_validated"
-			standardResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
-			return standardResult, nil
-		} else {
-			d.logger.Warn("Standard detection has high confidence but failed semantic validation, using AI fallback",
-				zap.Float64("confidence", standardResult.ConfidenceScore),
-				zap.Int32("categoryId", standardResult.CategoryID),
-				zap.String("categoryName", standardResult.CategoryName),
-				zap.String("title", input.Title))
+	// Фаза 2: Быстрый локальный поиск (если confidence > 90%)
+	localResult, err := d.quickLocalSearch(ctx, input)
+	if err == nil && localResult != nil && localResult.ConfidenceScore > 0.90 {
+		// Семантическая валидация
+		if d.isSemanticallySensible(ctx, input, localResult) {
+			d.logger.Info("Quick local search successful with high confidence",
+				zap.Float64("confidence", localResult.ConfidenceScore),
+				zap.Int32("categoryId", localResult.CategoryID))
+			localResult.Algorithm = "quick_local_high_confidence"
+			localResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
+			// Сохраняем в кеш как подтвержденное решение
+			d.saveAIDecisionToCache(ctx, input, localResult, "", false)
+			return localResult, nil
 		}
 	}
 
-	// Фаза 2: AI Fallback для случаев низкой уверенности
-	d.logger.Warn("Standard detection has low confidence, using AI fallback",
-		zap.Float64("confidence", standardResult.ConfidenceScore),
-		zap.Float64("threshold", confidenceThreshold))
-
+	// Фаза 3: AI выбирает из полного списка категорий (основной метод)
+	d.logger.Info("Using AI to select category from full list")
 	aiResult, err := d.selectCategoryWithAI(ctx, input)
 	if err != nil {
-		d.logger.Error("AI fallback failed, returning standard result", zap.Error(err))
-		// Возвращаем стандартный результат с предупреждением
-		standardResult.Algorithm = "standard_fallback_ai_failed"
+		d.logger.Error("AI category selection failed", zap.Error(err))
+		// Fallback на стандартные методы
+		if localResult != nil {
+			localResult.Algorithm = "local_fallback_ai_failed"
+			localResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
+			return localResult, nil
+		}
+		// Крайний случай - используем DetectCategory
+		standardResult, stdErr := d.DetectCategory(ctx, input)
+		if stdErr != nil {
+			return nil, fmt.Errorf("all detection methods failed: AI: %w, standard: %w", err, stdErr)
+		}
+		standardResult.Algorithm = "standard_fallback_all_failed"
 		standardResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
 		return standardResult, nil
 	}
@@ -1018,18 +1030,21 @@ func (d *AICategoryDetector) DetectWithAIFallback(ctx context.Context, input AID
 		CategoryName:     aiResult.CategoryName,
 		CategoryPath:     aiResult.CategorySlug,
 		ConfidenceScore:  aiResult.Confidence,
-		Algorithm:        "ai_fallback_v1",
+		Algorithm:        "ai_direct_selection_v2",
 		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
 		Keywords:         d.extractKeywords(input),
 		AIHints:          input.AIHints,
 		AlternativeIDs:   aiResult.AlternativeIDs,
 	}
 
-	d.logger.Info("AI fallback successful",
+	d.logger.Info("AI category selection successful",
 		zap.Float64("aiConfidence", aiResult.Confidence),
 		zap.Int32("aiCategoryId", aiResult.CategoryID),
 		zap.String("aiCategoryName", aiResult.CategoryName),
 		zap.String("reasoning", aiResult.Reasoning[:min(200, len(aiResult.Reasoning))]))
+
+	// Сохраняем решение AI в кеш для будущего использования
+	d.saveAIDecisionToCache(ctx, input, finalResult, aiResult.Reasoning, true)
 
 	// Логируем для обучения
 	d.logDetection(ctx, input, finalResult)
@@ -1155,9 +1170,9 @@ func (d *AICategoryDetector) buildCategorySelectionPrompt(input AIDetectionInput
 
 // sendAIRequest отправляет запрос к AI API
 func (d *AICategoryDetector) sendAIRequest(ctx context.Context, prompt string) (string, error) {
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	apiKey := os.Getenv("CLAUDE_API_KEY")
 	if apiKey == "" {
-		return "", fmt.Errorf("ANTHROPIC_API_KEY not set")
+		return "", fmt.Errorf("CLAUDE_API_KEY not set")
 	}
 
 	request := AIFallbackRequest{
@@ -1380,4 +1395,237 @@ func (d *AICategoryDetector) containsAnyKeyword(text string, keywords []string) 
 		}
 	}
 	return false
+}
+
+// getAIDecisionFromCache получает закешированное решение AI из новой таблицы
+func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input AIDetectionInput) (*AIDetectionResult, error) {
+	// Вычисляем хеш заголовка
+	hash := sha256.Sum256([]byte(strings.ToLower(input.Title)))
+	titleHash := hex.EncodeToString(hash[:])
+
+	query := `
+		SELECT
+			acd.category_id,
+			c.name as category_name,
+			c.slug as category_path,
+			acd.confidence,
+			acd.reasoning,
+			acd.alternative_category_ids,
+			acd.ai_keywords,
+			acd.ai_domain,
+			acd.ai_product_type
+		FROM ai_category_decisions acd
+		JOIN marketplace_categories c ON c.id = acd.category_id
+		WHERE acd.title_hash = $1
+			AND acd.created_at > NOW() - INTERVAL '30 days'
+		ORDER BY acd.confidence DESC, acd.created_at DESC
+		LIMIT 1
+	`
+
+	var result struct {
+		CategoryID     int32    `db:"category_id"`
+		CategoryName   string   `db:"category_name"`
+		CategoryPath   string   `db:"category_path"`
+		Confidence     float64  `db:"confidence"`
+		Reasoning      *string  `db:"reasoning"`
+		AlternativeIDs []int32  `db:"alternative_category_ids"`
+		AIKeywords     []string `db:"ai_keywords"`
+		AIDomain       *string  `db:"ai_domain"`
+		AIProductType  *string  `db:"ai_product_type"`
+	}
+
+	err := d.db.GetContext(ctx, &result, query, titleHash)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoCachedResult // Не найдено в кеше
+		}
+		return nil, fmt.Errorf("failed to get cached AI decision: %w", err)
+	}
+
+	// Собираем AIHints если есть
+	var aiHints *AIHints
+	if result.AIDomain != nil || result.AIProductType != nil || len(result.AIKeywords) > 0 {
+		aiHints = &AIHints{}
+		if result.AIDomain != nil {
+			aiHints.Domain = *result.AIDomain
+		}
+		if result.AIProductType != nil {
+			aiHints.ProductType = *result.AIProductType
+		}
+		aiHints.Keywords = result.AIKeywords
+	}
+
+	return &AIDetectionResult{
+		CategoryID:      result.CategoryID,
+		CategoryName:    result.CategoryName,
+		CategoryPath:    result.CategoryPath,
+		ConfidenceScore: result.Confidence,
+		AlternativeIDs:  result.AlternativeIDs,
+		Keywords:        result.AIKeywords,
+		AIHints:         aiHints,
+	}, nil
+}
+
+// saveAIDecisionToCache сохраняет решение AI в таблицу для будущего использования
+func (d *AICategoryDetector) saveAIDecisionToCache(ctx context.Context, input AIDetectionInput, result *AIDetectionResult, reasoning string, fromAI bool) {
+	// Вычисляем хеш заголовка
+	hash := sha256.Sum256([]byte(strings.ToLower(input.Title)))
+	titleHash := hex.EncodeToString(hash[:])
+
+	// Определяем модель
+	aiModel := "local_algorithms"
+	if fromAI {
+		aiModel = "claude-3-haiku-20240307"
+	}
+
+	// Подготавливаем AI hints
+	var aiDomain, aiProductType *string
+	var aiKeywords []string
+
+	if input.AIHints != nil {
+		if input.AIHints.Domain != "" {
+			aiDomain = &input.AIHints.Domain
+		}
+		if input.AIHints.ProductType != "" {
+			aiProductType = &input.AIHints.ProductType
+		}
+		aiKeywords = input.AIHints.Keywords
+	}
+
+	query := `
+		INSERT INTO ai_category_decisions (
+			title_hash, title, description, category_id, confidence,
+			reasoning, alternative_category_ids, ai_model, processing_time_ms,
+			ai_domain, ai_product_type, ai_keywords
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		ON CONFLICT (title_hash) DO UPDATE SET
+			category_id = EXCLUDED.category_id,
+			confidence = EXCLUDED.confidence,
+			reasoning = EXCLUDED.reasoning,
+			alternative_category_ids = EXCLUDED.alternative_category_ids,
+			ai_model = EXCLUDED.ai_model,
+			processing_time_ms = EXCLUDED.processing_time_ms,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE ai_category_decisions.confidence < EXCLUDED.confidence
+	`
+
+	_, err := d.db.ExecContext(ctx, query,
+		titleHash,
+		input.Title,
+		input.Description,
+		result.CategoryID,
+		result.ConfidenceScore,
+		reasoning,
+		result.AlternativeIDs,
+		aiModel,
+		result.ProcessingTimeMs,
+		aiDomain,
+		aiProductType,
+		aiKeywords,
+	)
+
+	if err != nil {
+		d.logger.Error("Failed to save AI decision to cache",
+			zap.String("titleHash", titleHash),
+			zap.Int32("categoryId", result.CategoryID),
+			zap.Error(err))
+	} else {
+		d.logger.Debug("AI decision saved to cache",
+			zap.String("titleHash", titleHash),
+			zap.Int32("categoryId", result.CategoryID),
+			zap.Float64("confidence", result.ConfidenceScore))
+	}
+}
+
+// quickLocalSearch выполняет быстрый локальный поиск по ключевым словам и похожести
+func (d *AICategoryDetector) quickLocalSearch(ctx context.Context, input AIDetectionInput) (*AIDetectionResult, error) {
+	// Используем комбинацию методов для быстрого поиска
+	results := []weightedResult{}
+
+	// Ключевые слова
+	keywords := d.extractKeywords(input)
+	if kwResult := d.detectByKeywords(ctx, keywords); kwResult != nil {
+		results = append(results, weightedResult{
+			Result: kwResult,
+			Weight: 0.8,
+		})
+	}
+
+	// AI hints если есть
+	if input.AIHints != nil && input.AIHints.Domain != "" {
+		if aiResult := d.detectByAIHints(ctx, input.AIHints); aiResult != nil {
+			results = append(results, weightedResult{
+				Result: aiResult,
+				Weight: 0.9,
+			})
+		}
+	}
+
+	// Похожие товары
+	if simResult := d.detectBySimilarity(ctx, input); simResult != nil {
+		results = append(results, weightedResult{
+			Result: simResult,
+			Weight: 0.6,
+		})
+	}
+
+	if len(results) == 0 {
+		return nil, ErrNoResultsFound
+	}
+
+	// Взвешенное голосование
+	return d.weightedVoting(results), nil
+}
+
+// SelectCategoryDirectly - метод прямого выбора категории через AI без fallback
+// Всегда использует AI для выбора категории из полного списка
+func (d *AICategoryDetector) SelectCategoryDirectly(ctx context.Context, input AIDetectionInput) (*AIDetectionResult, error) {
+	startTime := time.Now()
+
+	// Сначала проверяем кеш
+	cachedResult, err := d.getAIDecisionFromCache(ctx, input)
+	if err == nil && cachedResult != nil {
+		d.logger.Info("Found cached AI decision for direct selection",
+			zap.Int32("categoryId", cachedResult.CategoryID),
+			zap.String("categoryName", cachedResult.CategoryName))
+		cachedResult.Algorithm = "ai_direct_cached"
+		cachedResult.ProcessingTimeMs = time.Since(startTime).Milliseconds()
+		return cachedResult, nil
+	}
+
+	d.logger.Info("Using AI for direct category selection",
+		zap.String("title", input.Title))
+
+	// Напрямую вызываем AI для выбора категории
+	aiResult, err := d.selectCategoryWithAI(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("AI category selection failed: %w", err)
+	}
+
+	// Конвертируем результат
+	finalResult := &AIDetectionResult{
+		CategoryID:       aiResult.CategoryID,
+		CategoryName:     aiResult.CategoryName,
+		CategoryPath:     aiResult.CategorySlug,
+		ConfidenceScore:  aiResult.Confidence,
+		Algorithm:        "ai_direct_selection",
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+		Keywords:         d.extractKeywords(input),
+		AIHints:          input.AIHints,
+		AlternativeIDs:   aiResult.AlternativeIDs,
+	}
+
+	d.logger.Info("AI direct selection completed",
+		zap.Int32("categoryId", finalResult.CategoryID),
+		zap.String("categoryName", finalResult.CategoryName),
+		zap.Float64("confidence", finalResult.ConfidenceScore),
+		zap.String("reasoning", aiResult.Reasoning[:min(200, len(aiResult.Reasoning))]))
+
+	// Сохраняем в кеш
+	d.saveAIDecisionToCache(ctx, input, finalResult, aiResult.Reasoning, true)
+
+	// Логируем для статистики
+	d.logDetection(ctx, input, finalResult)
+
+	return finalResult, nil
 }

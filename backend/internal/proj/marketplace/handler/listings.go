@@ -26,6 +26,7 @@ type contextKey string
 const (
 	contextKeyUserID    contextKey = "user_id"
 	contextKeyIPAddress contextKey = "ip_address"
+	contextKeyLocale    contextKey = "locale"
 )
 
 // ListingsHandler обрабатывает запросы, связанные с объявлениями
@@ -149,8 +150,14 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidId")
 	}
 
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.Context(), contextKeyLocale, lang)
+
 	// Получаем детали объявления
-	listing, err := h.marketplaceService.GetListingByID(c.Context(), id)
+	listing, err := h.marketplaceService.GetListingByID(ctx, id)
 	if err != nil {
 		logger.Error().Err(err).Int("listingId", id).Msg("Failed to get listing")
 		if err.Error() == "listing not found" {
@@ -225,8 +232,14 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidSlug")
 	}
 
+	// Получаем язык из query параметра
+	lang := c.Query("lang", "en")
+
+	// Создаем контекст с языком
+	ctx := context.WithValue(c.Context(), contextKeyLocale, lang)
+
 	// Получаем детали объявления по slug
-	listing, err := h.marketplaceService.GetListingBySlug(c.Context(), slug)
+	listing, err := h.marketplaceService.GetListingBySlug(ctx, slug)
 	if err != nil {
 		logger.Error().Err(err).Str("slug", slug).Msg("Failed to get listing by slug")
 		if strings.Contains(err.Error(), "not found") {

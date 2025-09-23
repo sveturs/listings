@@ -75,14 +75,27 @@ export class CategoryDetectorService {
         },
       };
 
+      // Получаем токен авторизации из localStorage
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('svetu_access_token')
+          : null;
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Добавляем токен авторизации, если он есть
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       // Используем новый AI эндпоинт с многоуровневой системой определения
       const response = await fetch(
         `${this.baseUrl}/api/v1/marketplace/ai/detect-category`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify(request),
         }
       );
@@ -113,13 +126,26 @@ export class CategoryDetectorService {
     selectedCategoryId?: number
   ): Promise<boolean> {
     try {
+      // Получаем токен авторизации из localStorage
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('svetu_access_token')
+          : null;
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Добавляем токен авторизации, если он есть
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(
         `${this.baseUrl}/api/v1/marketplace/ai/detect-category/${statsId}/confirm`,
         {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             confirmed,
             selected_category_id: selectedCategoryId,

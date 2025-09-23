@@ -38,45 +38,46 @@ type User struct {
 type (
 	TranslationMap     map[string]map[string]string
 	MarketplaceListing struct {
-		ID                 int                     `json:"id"`
-		UserID             int                     `json:"user_id"`
-		CategoryID         int                     `json:"category_id"`
-		Title              string                  `json:"title"`
-		Description        string                  `json:"description"`
-		Price              float64                 `json:"price"`
-		Condition          string                  `json:"condition"`
-		Status             string                  `json:"status"`
-		Location           string                  `json:"location"`
-		Latitude           *float64                `json:"latitude,omitempty"`
-		Longitude          *float64                `json:"longitude,omitempty"`
-		City               string                  `json:"city" db:"address_city"`
-		Country            string                  `json:"country" db:"address_country"`
-		ViewsCount         int                     `json:"views_count"`
-		CreatedAt          time.Time               `json:"created_at"`
-		UpdatedAt          time.Time               `json:"updated_at"`
-		Images             []MarketplaceImage      `json:"images,omitempty"`
-		User               *User                   `json:"user,omitempty"`
-		Category           *MarketplaceCategory    `json:"category,omitempty"`
-		HelpfulVotes       int                     `json:"helpful_votes"`
-		NotHelpfulVotes    int                     `json:"not_helpful_votes"`
-		IsFavorite         bool                    `json:"is_favorite"`
-		ShowOnMap          bool                    `json:"show_on_map"`
-		LocationPrivacy    string                  `json:"location_privacy,omitempty"`
-		OriginalLanguage   string                  `json:"original_language,omitempty"`
-		RawTranslations    interface{}             `json:"-"` // Для хранения "сырых" данных
-		Translations       TranslationMap          `json:"translations,omitempty"`
-		CategoryPathNames  []string                `json:"category_path_names,omitempty"`
-		CategoryPathIds    []int                   `json:"category_path_ids,omitempty"`
-		CategoryPathSlugs  []string                `json:"category_path_slugs,omitempty"`
-		CategoryPath       []string                `json:"category_path,omitempty"`
-		StorefrontID       *int                    `json:"storefront_id,omitempty"` // связь с витриной
-		Storefront         *Storefront             `json:"storefront,omitempty"`    // данные витрины
-		ExternalID         string                  `json:"external_id,omitempty"`
-		Attributes         []ListingAttributeValue `json:"attributes,omitempty"`
-		OldPrice           *float64                `json:"old_price,omitempty"`
-		HasDiscount        bool                    `json:"has_discount"`
-		DiscountPercentage *int                    `json:"discount_percentage,omitempty"`
-		Metadata           map[string]interface{}  `json:"metadata,omitempty"` // Для хранения дополнительной информации, включая данные о скидке
+		ID                  int                     `json:"id"`
+		UserID              int                     `json:"user_id"`
+		CategoryID          int                     `json:"category_id"`
+		Title               string                  `json:"title"`
+		Description         string                  `json:"description"`
+		Price               float64                 `json:"price"`
+		Condition           string                  `json:"condition"`
+		Status              string                  `json:"status"`
+		Location            string                  `json:"location"`
+		Latitude            *float64                `json:"latitude,omitempty"`
+		Longitude           *float64                `json:"longitude,omitempty"`
+		City                string                  `json:"city" db:"address_city"`
+		Country             string                  `json:"country" db:"address_country"`
+		AddressMultilingual map[string]string       `json:"address_multilingual,omitempty" db:"address_multilingual"`
+		ViewsCount          int                     `json:"views_count"`
+		CreatedAt           time.Time               `json:"created_at"`
+		UpdatedAt           time.Time               `json:"updated_at"`
+		Images              []MarketplaceImage      `json:"images,omitempty"`
+		User                *User                   `json:"user,omitempty"`
+		Category            *MarketplaceCategory    `json:"category,omitempty"`
+		HelpfulVotes        int                     `json:"helpful_votes"`
+		NotHelpfulVotes     int                     `json:"not_helpful_votes"`
+		IsFavorite          bool                    `json:"is_favorite"`
+		ShowOnMap           bool                    `json:"show_on_map"`
+		LocationPrivacy     string                  `json:"location_privacy,omitempty"`
+		OriginalLanguage    string                  `json:"original_language,omitempty"`
+		RawTranslations     interface{}             `json:"-"` // Для хранения "сырых" данных
+		Translations        TranslationMap          `json:"translations,omitempty"`
+		CategoryPathNames   []string                `json:"category_path_names,omitempty"`
+		CategoryPathIds     []int                   `json:"category_path_ids,omitempty"`
+		CategoryPathSlugs   []string                `json:"category_path_slugs,omitempty"`
+		CategoryPath        []string                `json:"category_path,omitempty"`
+		StorefrontID        *int                    `json:"storefront_id,omitempty"` // связь с витриной
+		Storefront          *Storefront             `json:"storefront,omitempty"`    // данные витрины
+		ExternalID          string                  `json:"external_id,omitempty"`
+		Attributes          []ListingAttributeValue `json:"attributes,omitempty"`
+		OldPrice            *float64                `json:"old_price,omitempty"`
+		HasDiscount         bool                    `json:"has_discount"`
+		DiscountPercentage  *int                    `json:"discount_percentage,omitempty"`
+		Metadata            map[string]interface{}  `json:"metadata,omitempty"` // Для хранения дополнительной информации, включая данные о скидке
 
 		AverageRating float64 `json:"average_rating,omitempty"`
 		ReviewCount   int     `json:"review_count,omitempty"`

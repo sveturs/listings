@@ -577,3 +577,59 @@ func (h *AICategoryHandler) DetectCategoryStandard(c *fiber.Ctx) error {
 
 	return utils.SuccessResponse(c, result)
 }
+
+// SelectCategory godoc
+// @Summary Прямой выбор категории через AI из полного списка
+// @Description AI анализирует товар и выбирает наиболее подходящую категорию из всех доступных (метод максимальной точности)
+// @Tags marketplace-ai
+// @Accept json
+// @Produce json
+// @Param request body services.AIDetectionInput true "Входные данные товара"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат выбора категории с обоснованием"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Security BearerAuth
+// @Router /marketplace/ai/select-category [post]
+func (h *AICategoryHandler) SelectCategory(c *fiber.Ctx) error {
+	var input services.AIDetectionInput
+	if err := c.BodyParser(&input); err != nil {
+		h.logger.Error("Failed to parse request", zap.Error(err))
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.invalidRequest")
+	}
+
+	// Проверяем обязательные поля
+	if input.Title == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "errors.titleRequired")
+	}
+
+	// Добавляем UserID из контекста если авторизован
+	if user, ok := c.Locals("user").(map[string]interface{}); ok {
+		if userID, ok := user["user_id"].(float64); ok {
+			input.UserID = int32(userID)
+		}
+	}
+
+	h.logger.Info("Direct AI category selection requested",
+		zap.String("title", input.Title),
+		zap.Int("descriptionLength", len(input.Description)))
+
+	// Используем метод прямого выбора категории через AI
+	result, err := h.detector.SelectCategoryDirectly(c.Context(), input)
+	if err != nil {
+		h.logger.Error("Failed to select category via AI",
+			zap.Error(err),
+			zap.String("errorDetails", err.Error()))
+		// Возвращаем подробную ошибку в режиме разработки
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "AI selection failed",
+			"details": err.Error(),
+		})
+	}
+
+	h.logger.Info("AI category selection successful",
+		zap.Int32("categoryId", result.CategoryID),
+		zap.String("categoryName", result.CategoryName),
+		zap.Float64("confidence", result.ConfidenceScore))
+
+	return utils.SuccessResponse(c, result)
+}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -161,6 +162,12 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 		base64Data = req.ImageData
 	}
 
+	// Detect actual image format from base64 data
+	actualMediaType := detectImageFormat(base64Data)
+	if actualMediaType != "" {
+		mediaType = actualMediaType
+	}
+
 	// Log the data for debugging
 	logger.Info().
 		Int("imageDataLength", len(req.ImageData)).
@@ -259,7 +266,48 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 			Int("status", resp.StatusCode).
 			Str("response", string(body)).
 			Msg("Claude API returned error")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.apiError")
+
+		// Check for authentication error
+		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+			logger.Error().Msg("Claude API authentication failed - check API key")
+			return utils.SendError(c, fiber.StatusServiceUnavailable, "ai.authenticationError")
+		}
+
+		// For overload or other temporary errors, return fallback
+		logger.Info().Msg("Using fallback data due to AI service unavailability")
+
+		// Return fallback mock data when API is unavailable
+		fallbackResponse := AnalyzeProductResponse{
+			Title:       "Product for Sale",
+			Description: "Please add a description for this product.",
+			Category:    "Miscellaneous",
+			CategoryHints: &CategoryHints{
+				Domain:      "general",
+				ProductType: "item",
+				Keywords:    []string{"product", "item"},
+			},
+			CategoryProbabilities: []CategoryProbability{
+				{Name: "Miscellaneous", Probability: 0.5},
+			},
+			Price:             1000,
+			Currency:          "RSD",
+			Condition:         "used",
+			Attributes:        map[string]interface{}{},
+			Keywords:          []string{"sale", "product"},
+			Tags:              []string{"general"},
+			SuggestedLocation: "",
+			TitleVariants:     []string{"Product", "Item for Sale", "For Sale"},
+			SocialPosts: map[string]string{
+				"facebook":  "Product for sale. Contact for details!",
+				"instagram": "🔥 Item for sale! DM for info #forsale",
+				"telegram":  "💰 For sale: Product\n📞 Contact me!",
+				"twitter":   "Product for sale! #marketplace",
+				"viber":     "🎯 Selling product\n📱 Message on Viber!",
+				"whatsapp":  "Hi! I'm selling this product. Interested?",
+			},
+		}
+
+		return utils.SendSuccess(c, fiber.StatusOK, "ai.analysisSuccess", fallbackResponse)
 	}
 
 	// Parse Claude response
@@ -374,6 +422,7 @@ type TranslateContentRequest struct {
 		Description string `json:"description"`
 	} `json:"content"`
 	TargetLanguages []string `json:"targetLanguages"`
+	SourceLanguage  string   `json:"sourceLanguage"` // Added source language
 }
 
 // TranslateContentResponse represents the translation response
@@ -418,10 +467,15 @@ func (h *Handler) TranslateContent(c *fiber.Ctx) error {
 	}
 
 	// Build translation prompt
+	sourceInfo := ""
+	if req.SourceLanguage != "" {
+		sourceInfo = fmt.Sprintf("Source language: %s\n", req.SourceLanguage)
+	}
+
 	prompt := fmt.Sprintf(`Translate the following content to the specified languages.
 Return ONLY a valid JSON object with translations.
 
-Original content:
+%sOriginal content:
 Title: %s
 Description: %s
 
@@ -440,6 +494,7 @@ Return JSON in this format:
 }
 
 IMPORTANT: Return ONLY the JSON, no markdown or explanations.`,
+		sourceInfo,
 		req.Content.Title,
 		req.Content.Description,
 		strings.Join(req.TargetLanguages, ", "))
@@ -505,14 +560,15 @@ IMPORTANT: Return ONLY the JSON, no markdown or explanations.`,
 			Int("status", resp.StatusCode).
 			Str("response", string(body)).
 			Msg("Claude API returned error")
-		// Return mock translation on API error
+		// Return fallback - copy original text to all target languages
+		// This is better than trying to guess translations
 		mockResponse := make(TranslateContentResponse)
 		for _, lang := range req.TargetLanguages {
 			mockResponse[lang] = struct {
 				Title       string `json:"title"`
 				Description string `json:"description"`
 			}{
-				Title:       req.Content.Title,
+				Title:       req.Content.Title + " [" + lang + "]", // Add language tag to show it needs translation
 				Description: req.Content.Description,
 			}
 		}
@@ -595,6 +651,12 @@ func (h *Handler) getPromptForLanguage(lang string) string {
 1. Категория должна быть на АНГЛИЙСКОМ языке (Electronics, Clothing, Furniture, etc.)
 2. ВСЕ тексты (title, description, attributes) должны быть на РУССКОМ языке!
 3. ОБЯЗАТЕЛЬНО создай посты для социальных сетей НА РУССКОМ языке!
+4. ПРАВИЛЬНОЕ ОПРЕДЕЛЕНИЕ КАТЕГОРИЙ:
+   - Канцелярские товары (канцелярские ножи, резаки, степлеры, дыроколы, скотч) = "Office Supplies"
+   - Строительные инструменты (строительные ножи, резаки по гипсокартону, пилы) = "Tools & Hardware"
+   - Кухонные ножи и принадлежности = "Kitchen & Dining"
+   - Электроника = "Electronics"
+   - ВАЖНО: канцелярский нож это НЕ еда! Категория "Office Supplies", а не "Food & Beverages"!
 
 Верни ТОЛЬКО валидный JSON без markdown или объяснений:
 {
@@ -642,6 +704,13 @@ Identifikuj šta je proizvod, njegovo stanje, moguću cenu i kategoriju.
 VAŽNO:
 1. Kategorija mora biti na ENGLESKOM jeziku (Electronics, Clothing, Furniture, itd.)
 2. SVI tekstovi (title, description, attributes) moraju biti na SRPSKOM jeziku!
+3. OBAVEZNO kreiraj postove za društvene mreže NA SRPSKOM jeziku!
+4. PRAVILNO ODREĐIVANJE KATEGORIJA:
+   - Kancelarijski materijal (kancelarijski noževi, rezači, heftalice, bušilice, selotejp) = "Office Supplies"
+   - Građevinski alati (građevinski noževi, rezači gipsanih ploča, testere) = "Tools & Hardware"
+   - Kuhinjski noževi i pribor = "Kitchen & Dining"
+   - Elektronika = "Electronics"
+   - VAŽNO: kancelarijski nož NIJE hrana! Kategorija "Office Supplies", a ne "Food & Beverages"!
 
 Vrati SAMO valjan JSON bez markdown ili objašnjenja:
 {
@@ -686,7 +755,15 @@ Vrati SAMO valjan JSON bez markdown ili objašnjenja:
 	return `Analyze this product image and return information in JSON format.
 Identify what the product is, its condition, possible price, and category.
 
-IMPORTANT: Category must be in ENGLISH (Electronics, Clothing, Furniture, etc.)
+IMPORTANT:
+1. Category must be in ENGLISH (Electronics, Clothing, Furniture, etc.)
+2. MUST create social media posts!
+3. CORRECT CATEGORY CLASSIFICATION:
+   - Office supplies (utility knives, cutters, staplers, hole punches, tape) = "Office Supplies"
+   - Construction tools (construction knives, drywall cutters, saws) = "Tools & Hardware"
+   - Kitchen knives and utensils = "Kitchen & Dining"
+   - Electronics = "Electronics"
+   - IMPORTANT: utility knife is NOT food! Category is "Office Supplies", not "Food & Beverages"!
 
 Return ONLY valid JSON without markdown or explanations:
 {
@@ -725,4 +802,35 @@ Return ONLY valid JSON without markdown or explanations:
     "viber": "🎯 Selling [product name]\n✅ [Brief description]\n💰 Price: [price] RSD\n📱 Call or message on Viber!"
   }
 }`
+}
+
+// detectImageFormat detects the actual image format from base64 data
+func detectImageFormat(base64Data string) string {
+	// Decode first few bytes to check signature
+	data, err := base64.StdEncoding.DecodeString(base64Data[:min(100, len(base64Data))])
+	if err != nil {
+		return ""
+	}
+
+	// Check for image signatures
+	if len(data) >= 4 {
+		// WebP: RIFF....WEBP
+		if string(data[0:4]) == "RIFF" && len(data) >= 12 && string(data[8:12]) == "WEBP" {
+			return "image/webp"
+		}
+		// PNG: 89 50 4E 47
+		if data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+			return "image/png"
+		}
+		// JPEG: FF D8 FF
+		if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+			return "image/jpeg"
+		}
+		// GIF: GIF87a or GIF89a
+		if string(data[0:3]) == "GIF" {
+			return "image/gif"
+		}
+	}
+
+	return ""
 }

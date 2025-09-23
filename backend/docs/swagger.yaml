@@ -2375,6 +2375,10 @@ definitions:
     type: object
   backend_internal_domain_models.MarketplaceListing:
     properties:
+      address_multilingual:
+        additionalProperties:
+          type: string
+        type: object
       attributes:
         items:
           $ref: '#/definitions/backend_internal_domain_models.ListingAttributeValue'
@@ -8416,6 +8420,9 @@ definitions:
           title:
             type: string
         type: object
+      sourceLanguage:
+        description: Added source language
+        type: string
       targetLanguages:
         items:
           type: string
@@ -32646,6 +32653,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Запуск планового обучения системы
+      tags:
+      - marketplace-ai
+  /marketplace/ai/select-category:
+    post:
+      consumes:
+      - application/json
+      description: AI анализирует товар и выбирает наиболее подходящую категорию из
+        всех доступных (метод максимальной точности)
+      parameters:
+      - description: Входные данные товара
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат выбора категории с обоснованием
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Прямой выбор категории через AI из полного списка
       tags:
       - marketplace-ai
   /marketplace/ai/validate-category:
