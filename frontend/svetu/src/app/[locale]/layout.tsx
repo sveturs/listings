@@ -13,7 +13,7 @@ import AuthStateManager from '@/components/AuthStateManager';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
 import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
 import { CartSyncProvider } from '@/components/CartSyncProvider';
-import { themeInitScript } from '@/scripts/theme-init';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import '@/utils/forceTokenCleanup'; // Автоматическая очистка старых HS256 токенов
@@ -96,32 +96,33 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <head>
         <PublicEnvScript />
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ModularIntlProvider locale={locale} messages={messages}>
-          <ReduxProvider>
-            <AuthProvider>
-              <VisibleCitiesProvider>
-                <CartSyncProvider>
-                  <ErrorBoundaryClass name="RootLayout">
-                    <AuthStateManager />
-                    <WebSocketManager />
-                    <HeaderWrapper />
-                    <Toaster position="top-right" />
-                    <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                      {children}
-                    </main>
-                    <SmartMobileBottomNav />
-                  </ErrorBoundaryClass>
-                </CartSyncProvider>
-              </VisibleCitiesProvider>
-            </AuthProvider>
-          </ReduxProvider>
-        </ModularIntlProvider>
+        <ThemeProvider>
+          <ModularIntlProvider locale={locale} messages={messages}>
+            <ReduxProvider>
+              <AuthProvider>
+                <VisibleCitiesProvider>
+                  <CartSyncProvider>
+                    <ErrorBoundaryClass name="RootLayout">
+                      <AuthStateManager />
+                      <WebSocketManager />
+                      <HeaderWrapper />
+                      <Toaster position="top-right" />
+                      <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                        {children}
+                      </main>
+                      <SmartMobileBottomNav />
+                    </ErrorBoundaryClass>
+                  </CartSyncProvider>
+                </VisibleCitiesProvider>
+              </AuthProvider>
+            </ReduxProvider>
+          </ModularIntlProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

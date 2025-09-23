@@ -23,6 +23,7 @@ import ChatIcon from './ChatIcon';
 // Иконки
 import { FiMapPin, FiHeart, FiMenu, FiX } from 'react-icons/fi';
 import { BsHandbag } from 'react-icons/bs';
+import { FaCar } from 'react-icons/fa';
 
 interface HeaderProps {
   locale?: string;
@@ -256,6 +257,18 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   <FiMapPin className="w-5 h-5" />
                 </Link>
 
+                {/* Ссылка на автомобильный раздел */}
+                <Link
+                  href="/cars"
+                  className="btn btn-ghost tooltip tooltip-bottom hidden md:inline-flex"
+                  data-tip={t('header.nav.cars')}
+                >
+                  <FaCar className="w-5 h-5" />
+                  <span className="ml-2 hidden lg:inline">
+                    {t('header.nav.cars')}
+                  </span>
+                </Link>
+
                 {/* Чат - показываем только для авторизованных */}
                 {mounted && user && <ChatIcon />}
 
@@ -342,6 +355,12 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                     <Link href="/map">
                       <FiMapPin className="w-5 h-5" />
                       {t('header.nav.map')}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/cars">
+                      <FaCar className="w-5 h-5" />
+                      {t('header.nav.cars')}
                     </Link>
                   </li>
                   {user && (

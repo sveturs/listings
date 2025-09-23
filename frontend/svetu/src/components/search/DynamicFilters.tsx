@@ -26,8 +26,10 @@ const CATEGORY_IDS = {
 // Проверяем, является ли категория автомобильной (10100-10199)
 const isAutomotiveCategory = (categoryId?: number) => {
   if (!categoryId) return false;
-  return categoryId === CATEGORY_IDS.AUTOMOTIVE ||
-         (categoryId >= 10100 && categoryId <= 10199);
+  return (
+    categoryId === CATEGORY_IDS.AUTOMOTIVE ||
+    (categoryId >= 10100 && categoryId <= 10199)
+  );
 };
 
 export const DynamicFilters: React.FC<DynamicFiltersProps> = ({

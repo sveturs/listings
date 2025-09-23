@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useTranslations } from "next-intl";
-import type { components } from "@/types/generated/api";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import type { components } from '@/types/generated/api';
 import {
   Car,
   Calendar,
@@ -14,9 +14,10 @@ import {
   Heart,
   Share2,
   Eye,
-} from "lucide-react";
+} from 'lucide-react';
 
-type MarketplaceListing = components["schemas"]["handler.MarketplaceListingWithLocation"];
+type MarketplaceListing =
+  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
 
 interface CarListingCardProps {
   listing: MarketplaceListing;
@@ -33,8 +34,7 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
   onShare,
   isGrid = true,
 }) => {
-  const t = useTranslations("cars");
-  const tCommon = useTranslations("common");
+  const t = useTranslations('cars');
 
   // Извлекаем автомобильные атрибуты из listing.attributes
   const extractCarAttributes = () => {
@@ -43,23 +43,23 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
 
     // Ищем атрибуты по ключам
     Object.entries(attrs).forEach(([key, value]) => {
-      if (key.includes("car_make") || key.includes("make")) {
+      if (key.includes('car_make') || key.includes('make')) {
         result.make = value;
-      } else if (key.includes("car_model") || key.includes("model")) {
+      } else if (key.includes('car_model') || key.includes('model')) {
         result.model = value;
-      } else if (key.includes("year")) {
+      } else if (key.includes('year')) {
         result.year = value;
-      } else if (key.includes("mileage") || key.includes("kilometers")) {
+      } else if (key.includes('mileage') || key.includes('kilometers')) {
         result.mileage = value;
-      } else if (key.includes("fuel") || key.includes("fuel_type")) {
+      } else if (key.includes('fuel') || key.includes('fuel_type')) {
         result.fuelType = value;
-      } else if (key.includes("transmission") || key.includes("gearbox")) {
+      } else if (key.includes('transmission') || key.includes('gearbox')) {
         result.transmission = value;
-      } else if (key.includes("engine") || key.includes("displacement")) {
+      } else if (key.includes('engine') || key.includes('displacement')) {
         result.engineSize = value;
-      } else if (key.includes("color") || key.includes("colour")) {
+      } else if (key.includes('color') || key.includes('colour')) {
         result.color = value;
-      } else if (key.includes("body") || key.includes("body_type")) {
+      } else if (key.includes('body') || key.includes('body_type')) {
         result.bodyType = value;
       }
     });
@@ -74,18 +74,18 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
     if (!mileage) return null;
     const num = parseInt(mileage);
     if (isNaN(num)) return mileage;
-    return num.toLocaleString() + " km";
+    return num.toLocaleString() + ' km';
   };
 
   // Форматирование топлива
   const formatFuel = (fuel: string) => {
     if (!fuel) return null;
     const fuelTypes: Record<string, string> = {
-      petrol: t("filters.petrol"),
-      diesel: t("filters.diesel"),
-      electric: t("filters.electric"),
-      hybrid: t("filters.hybrid"),
-      lpg: t("filters.lpg"),
+      petrol: t('filters.petrol'),
+      diesel: t('filters.diesel'),
+      electric: t('filters.electric'),
+      hybrid: t('filters.hybrid'),
+      lpg: t('filters.lpg'),
     };
     return fuelTypes[fuel.toLowerCase()] || fuel;
   };
@@ -94,16 +94,16 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
   const formatTransmission = (transmission: string) => {
     if (!transmission) return null;
     const types: Record<string, string> = {
-      manual: t("filters.manual"),
-      automatic: t("filters.automatic"),
-      semiAutomatic: t("filters.semiAutomatic"),
+      manual: t('filters.manual'),
+      automatic: t('filters.automatic'),
+      semiAutomatic: t('filters.semiAutomatic'),
     };
     return types[transmission.toLowerCase()] || transmission;
   };
 
   // Определяем изображение
   const mainImage = listing.images?.[0];
-  const imageUrl = mainImage?.thumbnail_url || mainImage?.url;
+  const imageUrl = mainImage?.thumbnail_url;
 
   // Создаем заголовок с маркой и моделью
   const carTitle =
@@ -113,26 +113,30 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    onFavorite?.(listing.id);
+    if (listing.id !== undefined) {
+      onFavorite?.(listing.id);
+    }
   };
 
   const handleShareClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    onShare?.(listing.id);
+    if (listing.id !== undefined) {
+      onShare?.(listing.id);
+    }
   };
 
   if (!isGrid) {
     // Горизонтальная карточка для списка
     return (
       <Link
-        href={`/${locale}/listing/${listing.id}`}
+        href={`/${locale}/listing/${listing.id || 0}`}
         className="card card-side bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300"
       >
         <figure className="relative w-72 h-48 flex-shrink-0">
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={carTitle}
+              alt={carTitle || ''}
               fill
               className="object-cover"
               sizes="288px"
@@ -140,11 +144,6 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
           ) : (
             <div className="w-full h-full bg-base-200 flex items-center justify-center">
               <Car className="w-12 h-12 text-base-content/30" />
-            </div>
-          )}
-          {listing.promoted && (
-            <div className="absolute top-2 left-2 badge badge-primary">
-              {tCommon("promoted")}
             </div>
           )}
         </figure>
@@ -207,18 +206,16 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
                   €{listing.price.toLocaleString()}
                 </div>
               )}
-              {listing.location && (
+              {(listing.city || listing.country) && (
                 <div className="flex items-center gap-1 text-sm text-base-content/60">
                   <MapPin className="w-3 h-3" />
-                  <span>
-                    {listing.location.city || listing.location.country}
-                  </span>
+                  <span>{listing.city || listing.country}</span>
                 </div>
               )}
             </div>
             <div className="flex items-center gap-1 text-sm text-base-content/60">
               <Eye className="w-4 h-4" />
-              <span>{listing.views || 0}</span>
+              <span>{listing.views_count || 0}</span>
             </div>
           </div>
         </div>
@@ -229,14 +226,14 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
   // Вертикальная карточка для сетки
   return (
     <Link
-      href={`/${locale}/listing/${listing.id}`}
+      href={`/${locale}/listing/${listing.id || 0}`}
       className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300"
     >
       <figure className="relative aspect-[4/3]">
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={carTitle}
+            alt={carTitle || ''}
             fill
             className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -244,11 +241,6 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
         ) : (
           <div className="w-full h-full bg-base-200 flex items-center justify-center">
             <Car className="w-12 h-12 text-base-content/30" />
-          </div>
-        )}
-        {listing.promoted && (
-          <div className="absolute top-2 left-2 badge badge-primary">
-            {tCommon("promoted")}
           </div>
         )}
         <div className="absolute top-2 right-2 flex gap-1">
@@ -301,16 +293,16 @@ export const CarListingCard: React.FC<CarListingCardProps> = ({
                 €{listing.price.toLocaleString()}
               </div>
             )}
-            {listing.location && (
+            {(listing.city || listing.country) && (
               <div className="flex items-center gap-1 text-xs text-base-content/60">
                 <MapPin className="w-3 h-3" />
-                <span>{listing.location.city || listing.location.country}</span>
+                <span>{listing.city || listing.country}</span>
               </div>
             )}
           </div>
           <div className="flex items-center gap-1 text-xs text-base-content/60">
             <Eye className="w-3 h-3" />
-            <span>{listing.views || 0}</span>
+            <span>{listing.views_count || 0}</span>
           </div>
         </div>
       </div>

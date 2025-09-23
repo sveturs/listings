@@ -87,7 +87,8 @@
       "map": "Map",
       "contacts": "Contacts",
       "userContacts": "My Contacts",
-      "createListing": "Create Listing"
+      "createListing": "Create Listing",
+      "cars": "Cars"
     },
     "theme": {
       "light": "Light theme",

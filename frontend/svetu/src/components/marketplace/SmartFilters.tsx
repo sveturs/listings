@@ -34,8 +34,12 @@ export function SmartFilters({
   // Сброс фильтров при смене категории
   useEffect(() => {
     setFilterValues({});
-    onChange({});
-  }, [categoryId, onChange]);
+    // Вызываем onChange только если есть активные фильтры
+    if (Object.keys(filterValues).length > 0) {
+      onChange({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId]); // onChange не включаем чтобы избежать бесконечного цикла
 
   const handleFilterChange = (attributeId: string, value: any) => {
     const newFilters = {
