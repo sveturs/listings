@@ -96,5 +96,35 @@
   "generation": "Generacija",
   "selectGeneration": "Izaberi generaciju",
   "loadingGenerations": "Učitavanje generacija...",
-  "noGenerationsFound": "Generacije nisu pronađene"
+  "noGenerationsFound": "Generacije nisu pronađene",
+  "pageTitle": "Automobili - Kupite i prodajte vozila",
+  "pageDescription": "Pronađite savršen automobil ili prodajte svoje vozilo na našoj platformi",
+  "heroTitle": "Auto pijaca",
+  "heroDescription": "Pregledajte hiljade vozila ili brzo i lako prodajte svoj automobil",
+  "searchPlaceholder": "Pretraži po marki, modelu ili ključnoj reči...",
+  "popularMakes": "Popularne marke",
+  "viewAllMakes": "Sve marke",
+  "carCategories": "Kategorije vozila",
+  "categories": {
+    "passenger": "Putnička vozila",
+    "suv": "SUV i krosoveri",
+    "commercial": "Komercijalna vozila",
+    "motorcycle": "Motocikli"
+  },
+  "latestListings": "Najnoviji oglasi",
+  "viewAllListings": "Svi automobili",
+  "stats": {
+    "listings": "Aktivnih oglasa",
+    "makes": "Marki",
+    "models": "Modela"
+  },
+  "quickLinks": "Brzi linkovi",
+  "sellYourCar": "Prodaj automobil",
+  "sellYourCarDescription": "Postavite oglas i dosegnite hiljade potencijalnih kupaca",
+  "createListing": "Kreiraj oglas",
+  "priceAnalysis": "Analiza cena",
+  "priceAnalysisDescription": "Dobijte uvide u tržište i preporuke za cene",
+  "vinDecoder": "VIN dekoder",
+  "vinDecoderDescription": "Dekodujte informacije o vozilu preko VIN broja",
+  "comingSoon": "Uskoro"
 }

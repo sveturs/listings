@@ -96,5 +96,35 @@
   "generation": "Generation",
   "selectGeneration": "Select Generation",
   "loadingGenerations": "Loading Generations",
-  "noGenerationsFound": "No Generations Found"
+  "noGenerationsFound": "No Generations Found",
+  "pageTitle": "Cars - Buy and Sell Vehicles",
+  "pageDescription": "Find your perfect car or sell your vehicle on our marketplace",
+  "heroTitle": "Car Marketplace",
+  "heroDescription": "Browse thousands of vehicles or sell your car quickly and easily",
+  "searchPlaceholder": "Search by make, model, or keyword...",
+  "popularMakes": "Popular Brands",
+  "viewAllMakes": "View All Brands",
+  "carCategories": "Vehicle Categories",
+  "categories": {
+    "passenger": "Passenger Cars",
+    "suv": "SUVs & Crossovers",
+    "commercial": "Commercial Vehicles",
+    "motorcycle": "Motorcycles"
+  },
+  "latestListings": "Latest Listings",
+  "viewAllListings": "View All Cars",
+  "stats": {
+    "listings": "Active Listings",
+    "makes": "Brands",
+    "models": "Models"
+  },
+  "quickLinks": "Quick Links",
+  "sellYourCar": "Sell Your Car",
+  "sellYourCarDescription": "List your vehicle and reach thousands of potential buyers",
+  "createListing": "Create Listing",
+  "priceAnalysis": "Price Analysis",
+  "priceAnalysisDescription": "Get market insights and pricing recommendations",
+  "vinDecoder": "VIN Decoder",
+  "vinDecoderDescription": "Decode vehicle information from VIN number",
+  "comingSoon": "Coming Soon"
 }

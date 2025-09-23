@@ -96,5 +96,35 @@
   "generation": "Поколение",
   "selectGeneration": "Выберите поколение",
   "loadingGenerations": "Загрузка поколений...",
-  "noGenerationsFound": "Поколения не найдены"
+  "noGenerationsFound": "Поколения не найдены",
+  "pageTitle": "Автомобили - Купить и продать транспорт",
+  "pageDescription": "Найдите идеальный автомобиль или продайте свой транспорт на нашей площадке",
+  "heroTitle": "Автомаркет",
+  "heroDescription": "Просматривайте тысячи автомобилей или быстро продайте свой транспорт",
+  "searchPlaceholder": "Поиск по марке, модели или ключевому слову...",
+  "popularMakes": "Популярные марки",
+  "viewAllMakes": "Все марки",
+  "carCategories": "Категории транспорта",
+  "categories": {
+    "passenger": "Легковые",
+    "suv": "Внедорожники",
+    "commercial": "Коммерческий транспорт",
+    "motorcycle": "Мотоциклы"
+  },
+  "latestListings": "Последние объявления",
+  "viewAllListings": "Все автомобили",
+  "stats": {
+    "listings": "Активных объявлений",
+    "makes": "Марок",
+    "models": "Моделей"
+  },
+  "quickLinks": "Быстрые ссылки",
+  "sellYourCar": "Продать автомобиль",
+  "sellYourCarDescription": "Разместите объявление и найдите тысячи покупателей",
+  "createListing": "Создать объявление",
+  "priceAnalysis": "Анализ цен",
+  "priceAnalysisDescription": "Получите аналитику рынка и рекомендации по ценам",
+  "vinDecoder": "VIN декодер",
+  "vinDecoderDescription": "Декодируйте информацию о транспорте по VIN номеру",
+  "comingSoon": "Скоро"
 }
