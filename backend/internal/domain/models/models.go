@@ -51,6 +51,7 @@ type (
 		Longitude          *float64                `json:"longitude,omitempty"`
 		City               string                  `json:"city" db:"address_city"`
 		Country            string                  `json:"country" db:"address_country"`
+		AddressMultilingual map[string]string      `json:"address_multilingual,omitempty" db:"address_multilingual"`
 		ViewsCount         int                     `json:"views_count"`
 		CreatedAt          time.Time               `json:"created_at"`
 		UpdatedAt          time.Time               `json:"updated_at"`

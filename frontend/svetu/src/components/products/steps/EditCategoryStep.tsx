@@ -53,7 +53,9 @@ export default function EditCategoryStep({ onNext }: EditCategoryStepProps) {
   const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/v1/marketplace/categories?lang=${locale}`);
+      const response = await apiClient.get(
+        `/api/v1/marketplace/categories?lang=${locale}`
+      );
 
       if (response.data) {
         const responseData = response.data.data || response.data;

@@ -78,10 +78,25 @@ export function getFullLocalizedAddress(
     location?: string;
     city?: string;
     country?: string;
+    address_multilingual?: Record<string, string>; // Новое поле для мультиязычных адресов
     translations?: any; // Принимаем любой формат translations
   },
   locale: string
 ): string {
+  // Сначала проверяем новое поле address_multilingual
+  if (item.address_multilingual) {
+    // Пробуем оба формата: с префиксом address_ и без
+    const addressWithPrefix = item.address_multilingual[`address_${locale}`];
+    const addressWithoutPrefix = item.address_multilingual[locale];
+
+    if (addressWithPrefix) {
+      return addressWithPrefix;
+    }
+    if (addressWithoutPrefix) {
+      return addressWithoutPrefix;
+    }
+  }
+
   let location = item.location || '';
   let city = item.city || '';
   let country = item.country || '';

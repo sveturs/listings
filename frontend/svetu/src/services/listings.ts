@@ -15,6 +15,7 @@ export interface CreateListingRequest {
   country: string;
   show_on_map: boolean;
   location_privacy?: string;
+  address_multilingual?: Record<string, string>;
   attributes?: Array<{
     attribute_id: number;
     text_value?: string;
@@ -80,15 +81,21 @@ export class ListingsService {
       price: data.price,
       condition: data.condition,
       // Используем сербскую версию как основную (мы в Сербии)
-      location: data.location?.addressMultilingual?.sr || data.location?.address || '',
+      location:
+        data.location?.addressMultilingual?.sr || data.location?.address || '',
       latitude: data.location?.latitude,
       longitude: data.location?.longitude,
       // Извлекаем город из сербского адреса или используем то что есть
-      city: data.location?.addressMultilingual?.sr?.split(',')[0]?.trim() || data.location?.city || '',
+      city:
+        data.location?.addressMultilingual?.sr?.split(',')[0]?.trim() ||
+        data.location?.city ||
+        '',
       country: 'Србија',
       show_on_map:
         data.location?.latitude && data.location?.longitude ? true : false,
       location_privacy: locationPrivacy,
+      // Добавляем мультиязычные адреса
+      address_multilingual: data.location?.addressMultilingual,
 
       // Региональные поля сохраняем в атрибутах
       payment_methods: data.payment.methods,
@@ -109,24 +116,30 @@ export class ListingsService {
       if (data.location.addressMultilingual.en) {
         addressTranslations.en = {
           location: data.location.addressMultilingual.en,
-          city: data.location.addressMultilingual.en.split(',')[0]?.trim() || 'Belgrade',
-          country: 'Serbia'
+          city:
+            data.location.addressMultilingual.en.split(',')[0]?.trim() ||
+            'Belgrade',
+          country: 'Serbia',
         };
       }
 
       if (data.location.addressMultilingual.ru) {
         addressTranslations.ru = {
           location: data.location.addressMultilingual.ru,
-          city: data.location.addressMultilingual.ru.split(',')[0]?.trim() || 'Белград',
-          country: 'Сербия'
+          city:
+            data.location.addressMultilingual.ru.split(',')[0]?.trim() ||
+            'Белград',
+          country: 'Сербия',
         };
       }
 
       if (data.location.addressMultilingual.sr) {
         addressTranslations.sr = {
           location: data.location.addressMultilingual.sr,
-          city: data.location.addressMultilingual.sr.split(',')[0]?.trim() || 'Београд',
-          country: 'Србија'
+          city:
+            data.location.addressMultilingual.sr.split(',')[0]?.trim() ||
+            'Београд',
+          country: 'Србија',
         };
       }
     }
@@ -163,7 +176,7 @@ export class ListingsService {
       for (const lang of Object.keys(addressTranslations)) {
         finalTranslations[lang] = {
           ...finalTranslations[lang],
-          ...addressTranslations[lang]
+          ...addressTranslations[lang],
         };
       }
     }
@@ -171,7 +184,10 @@ export class ListingsService {
     // Добавляем переводы в запрос, если есть
     if (Object.keys(finalTranslations).length > 0) {
       request.translations = finalTranslations;
-      console.log('Translations being sent (including addresses):', request.translations);
+      console.log(
+        'Translations being sent (including addresses):',
+        request.translations
+      );
     }
 
     // Добавляем язык оригинала, если он указан

@@ -353,16 +353,24 @@ export function useAddressGeocoding(
         setLoading(true);
         setError(null);
 
-        const data = await apiClient.post('/api/v1/gis/geocode/multilingual', {
-          latitude: lat,
-          longitude: lng,
-        });
+        const response = await apiClient.post(
+          '/api/v1/gis/geocode/multilingual',
+          {
+            latitude: lat,
+            longitude: lng,
+          }
+        );
 
-        if (data && (data as any).success && (data as any).data) {
+        // apiClient возвращает ApiResponse с полями data, error, status
+        if (
+          response.data &&
+          (response.data as any).success &&
+          (response.data as any).data
+        ) {
           return {
-            address_sr: (data as any).data.address_sr,
-            address_en: (data as any).data.address_en,
-            address_ru: (data as any).data.address_ru,
+            address_sr: (response.data as any).data.address_sr,
+            address_en: (response.data as any).data.address_en,
+            address_ru: (response.data as any).data.address_ru,
           };
         }
 

@@ -71,24 +71,24 @@ export default function SearchAnalytics() {
 
     switch (range) {
       case '24h':
-        filters.date_from = new Date(
-          now.getTime() - 24 * 60 * 60 * 1000
-        ).toISOString().split('T')[0];
+        filters.date_from = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
         break;
       case '7d':
-        filters.date_from = new Date(
-          now.getTime() - 7 * 24 * 60 * 60 * 1000
-        ).toISOString().split('T')[0];
+        filters.date_from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
         break;
       case '30d':
-        filters.date_from = new Date(
-          now.getTime() - 30 * 24 * 60 * 60 * 1000
-        ).toISOString().split('T')[0];
+        filters.date_from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
         break;
       case '90d':
-        filters.date_from = new Date(
-          now.getTime() - 90 * 24 * 60 * 60 * 1000
-        ).toISOString().split('T')[0];
+        filters.date_from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
         break;
     }
 

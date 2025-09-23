@@ -76,7 +76,10 @@ export class CategoryDetectorService {
       };
 
       // Получаем токен авторизации из localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('svetu_access_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('svetu_access_token')
+          : null;
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -124,7 +127,10 @@ export class CategoryDetectorService {
   ): Promise<boolean> {
     try {
       // Получаем токен авторизации из localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('svetu_access_token') : null;
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('svetu_access_token')
+          : null;
 
       const headers: HeadersInit = {
         'Content-Type': 'application/json',

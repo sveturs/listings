@@ -83,6 +83,7 @@ interface Listing {
   longitude?: number;
   city?: string;
   country?: string;
+  address_multilingual?: Record<string, string>; // Мультиязычные адреса
   // Переводы всех полей
   translations?: {
     [locale: string]: {
@@ -199,7 +200,8 @@ export default function ListingPage({ params }: Props) {
   const fetchLocalizedAddress = useCallback(
     async (lat: number, lng: number) => {
       try {
-        const language = locale === 'ru' ? 'ru' : 'sr'; // Используем сербский для всех языков кроме русского
+        // Используем соответствующий язык для геокодирования
+        const language = locale === 'ru' ? 'ru' : locale === 'en' ? 'en' : 'sr';
         const response = await fetch(
           `${config.getApiUrl()}/api/v1/gis/geocode/reverse?lat=${lat}&lng=${lng}&language=${language}`
         );
@@ -287,10 +289,16 @@ export default function ListingPage({ params }: Props) {
       }
       setListing(listingData);
 
-      // Проверяем есть ли переводы адресов из backend
+      // Проверяем есть ли мультиязычные адреса или переводы адресов из backend
+      const hasMultilingualAddress = listingData.address_multilingual &&
+        (listingData.address_multilingual[`address_${locale}`] ||
+         listingData.address_multilingual[locale]);
       const hasTranslations = listingData.translations?.[locale]?.location;
 
-      if (!hasTranslations && listingData.latitude && listingData.longitude) {
+      if (hasMultilingualAddress || hasTranslations) {
+        // Используем готовые адреса из backend
+        setLocalizedAddress(getFullLocalizedAddress(listingData, locale));
+      } else if (listingData.latitude && listingData.longitude) {
         // Получаем локализованный адрес через геокодирование только если нет переводов
         const localAddr = await fetchLocalizedAddress(
           listingData.latitude,
@@ -299,9 +307,6 @@ export default function ListingPage({ params }: Props) {
         if (localAddr) {
           setLocalizedAddress(localAddr);
         }
-      } else if (hasTranslations) {
-        // Используем готовые переводы из backend
-        setLocalizedAddress(getFullLocalizedAddress(listingData, locale));
       }
 
       // Проверяем, является ли это товаром витрины

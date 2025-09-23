@@ -427,7 +427,10 @@ export default function AIPoweredListingCreationPage() {
           const reader = new FileReader();
           reader.onloadend = () => {
             const base64String = reader.result as string;
-            console.log('Blob converted to base64, length:', base64String.length);
+            console.log(
+              'Blob converted to base64, length:',
+              base64String.length
+            );
             resolve(base64String);
           };
           reader.onerror = () => {
@@ -2851,6 +2854,8 @@ export default function AIPoweredListingCreationPage() {
                       city: location.city,
                       region: location.region,
                       suggestedLocation: privateAddress,
+                      // Добавляем мультиязычные адреса
+                      addressMultilingual: location.addressMultilingual,
                     },
                   }));
 
