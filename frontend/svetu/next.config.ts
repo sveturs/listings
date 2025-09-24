@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
   },
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+  },
   // Настройки для API routes
   api: {
     bodyParser: {
