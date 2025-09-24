@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import Image from 'next/image';
 import { useChat } from '@/hooks/useChat';
 import { useAppDispatch } from '@/store/hooks';
@@ -20,10 +20,10 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
     isLoading,
     isLoggingOut,
     error,
-    login,
     logout,
     clearError,
   } = useAuth();
+  const router = useRouter();
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
   const [imageError, setImageError] = useState(false);
@@ -414,7 +414,9 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
 
   return (
     <button
-      onClick={() => (onLoginClick ? onLoginClick() : login())}
+      onClick={() =>
+        onLoginClick ? onLoginClick() : router.push('/auth/login')
+      }
       className="btn btn-primary btn-sm"
       aria-label={t('login.enter')}
     >

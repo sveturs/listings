@@ -4,7 +4,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAuthForm, FormMode, FormData } from '@/hooks/useAuthForm';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { useAuth } from '@/contexts/AuthContext';
-import { AuthService } from '@/services/auth';
 import {
   VALIDATION_MESSAGES,
   ValidationErrorKey,
@@ -51,7 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   initialMode = 'login',
 }) => {
   const t = useTranslations('auth');
-  const { updateUser, refreshSession } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   // Form state management
   const {
@@ -175,67 +174,13 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
       try {
         if (mode === 'login') {
-          const loginResponse = await AuthService.login({
-            email: formData.email,
-            password: formData.password,
-          });
-
-          // Update user state with login response
-          if (
-            loginResponse.user &&
-            loginResponse.user.id &&
-            loginResponse.user.name &&
-            loginResponse.user.email
-          ) {
-            updateUser({
-              id: loginResponse.user.id,
-              name: loginResponse.user.name,
-              email: loginResponse.user.email,
-              provider: 'email', // Email login always uses 'email' provider
-              picture_url: loginResponse.user.picture_url,
-            });
-          }
-
-          // Small delay to ensure cookies are set
-          setTimeout(async () => {
-            // Refresh session to ensure UI updates
-            await refreshSession();
-            // Login successful, close modal
-            toast.success(t('loginForm.successMessage'));
-            onClose();
-          }, 100);
+          await login(formData.email, formData.password);
+          toast.success(t('loginForm.successMessage'));
+          onClose();
         } else {
-          const registerResponse = await AuthService.register({
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-            phone: formData.phone || undefined,
-          });
-
-          // Update user state with register response
-          if (
-            registerResponse.user &&
-            registerResponse.user.id &&
-            registerResponse.user.name &&
-            registerResponse.user.email
-          ) {
-            updateUser({
-              id: registerResponse.user.id,
-              name: registerResponse.user.name,
-              email: registerResponse.user.email,
-              provider: 'email', // Email registration always uses 'email' provider
-              picture_url: registerResponse.user.picture_url,
-            });
-          }
-
+          await register(formData.email, formData.password, formData.name);
           toast.success(t('registerForm.successMessage'));
-
-          // Close modal after successful registration
-          setTimeout(async () => {
-            // Refresh session to ensure UI updates
-            await refreshSession();
-            onClose();
-          }, 1500);
+          onClose();
         }
       } catch (error) {
         if (error instanceof Error) {
@@ -283,8 +228,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
       setErrors,
       onClose,
       t,
-      updateUser,
-      refreshSession,
+      login,
+      register,
     ]
   );
 
@@ -293,11 +238,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
     if (isLoading) return;
 
     try {
-      await AuthService.loginWithGoogle();
+      loginWithGoogle();
     } catch {
       toast.error(t(VALIDATION_MESSAGES.LOGIN_FAILED));
     }
-  }, [isLoading, t]);
+  }, [isLoading, t, loginWithGoogle]);
 
   // Handle field changes
   const handleFieldChange = useCallback(

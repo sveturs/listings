@@ -132,6 +132,10 @@ docker_buildx_migrator:
 #		--build-arg BUILD_TIME=$$(date +%Y%m%d_%H%M%S) \
 #		.
 
+.PHONY: watch
+watch:
+	go tool github.com/air-verse/air
+
 docker_run_migrator_up:
 	docker run --rm --network host \
 		-e DATABASE_URL="${DATABASE_URL}" \

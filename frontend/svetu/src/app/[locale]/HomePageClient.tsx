@@ -1957,7 +1957,9 @@ export default function HomePageClient({
             <div className="divider my-8"></div>
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-base-content/60">
-              <p>{tFooter('copyright')}</p>
+              <p>
+                {tFooter('copyright')} • v{process.env.NEXT_PUBLIC_APP_VERSION}
+              </p>
               <div className="flex gap-4">
                 <Link href="/terms" className="hover:text-primary">
                   {tFooter('termsOfUse')}

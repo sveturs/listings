@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import { version } from './package.json';
 // import configManager from './src/config';
 
 const withNextIntl = createNextIntlPlugin();
@@ -8,6 +9,15 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // Moved from experimental to top-level in Next.js 15
   serverExternalPackages: [],
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+  },
+  // Настройки для API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Увеличиваем лимит до 10MB для base64 изображений
+    },
+  },
   eslint: {
     // During production builds, do not run ESLint
     ignoreDuringBuilds: true,
@@ -127,14 +137,15 @@ const nextConfig: NextConfig = {
           destination: `${apiUrl}/api/:path*`,
         },
         // Проксируем auth запросы (не API) с учетом локали
-        // Исключаем OAuth callback который обрабатывается на frontend
+        // Исключаем callback страницы которые обрабатываются на frontend
         {
-          source: '/:locale/auth/:path((?!oauth/google/callback).*)',
+          source: '/:locale/auth/:path((?!callback|oauth/google/callback).*)',
           destination: `${apiUrl}/auth/:path*`,
         },
         // Проксируем auth запросы (не API) без локали
+        // Исключаем callback страницы
         {
-          source: '/auth/:path*',
+          source: '/auth/:path((?!callback).*)',
           destination: `${apiUrl}/auth/:path*`,
         },
         // Проксируем WebSocket для чата

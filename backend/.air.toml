@@ -1,0 +1,92 @@
+# Air configuration for hot-reload development
+# Documentation: https://github.com/air-verse/air
+
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+# Команда сборки
+cmd = "go build -o ./tmp/main ./cmd/api/main.go"
+# Полная команда для запуска (загрузка .env через envsubst)
+full_bin = "source .env 2>/dev/null && ./tmp/main 2>&1 | tee ./tmp/app.log"
+# Бинарник для запуска
+bin = "./tmp/main"
+# Аргументы для запуска
+args_bin = []
+# Задержка перед перезапуском (миллисекунды)
+delay = 1000
+# Исключаемые директории
+exclude_dir = [
+    "assets",
+    "tmp",
+    "vendor",
+    "testdata",
+    "docs",
+    "scripts",
+    "migrations",
+    "fixtures",
+    "deployments",
+    ".git",
+    "node_modules",
+    "bin",
+    "monitoring",
+    "opensearch",
+    "public",
+    "uploads",
+    "keys",
+    "credentials",
+    "testreports"
+]
+# Исключаемые файлы
+exclude_file = []
+# Регулярные выражения для исключения
+exclude_regex = ["_test\\.go", ".*\\.log", ".*\\.md", ".*\\.txt"]
+# Не перезапускать, если файлы не изменились
+exclude_unchanged = true
+# Следовать символическим ссылкам
+follow_symlink = false
+# Директории для включения (пустой = все)
+include_dir = []
+# Расширения файлов для отслеживания
+include_ext = ["go", "tpl", "tmpl", "html"]
+# Отслеживать также следующие файлы
+include_file = [".env"]
+# Время ожидания перед убийством процесса
+kill_delay = "0s"
+# Файл логов для ошибок сборки
+log = "build-errors.log"
+# Послать SIGINT вместо SIGKILL для graceful shutdown
+send_interrupt = true
+# Останавливать при ошибке сборки
+stop_on_error = true
+# Переиспользовать бинарник если нет изменений
+rerun = false
+# Команда которая запускается после каждой сборки
+# post_cmd = ["echo 'Build completed'"]
+# Команда которая запускается перед каждой сборкой
+# pre_cmd = ["echo 'Building...'"]
+
+[color]
+# Цвета для вывода
+app = ""
+build = "yellow"
+main = "magenta"
+runner = "green"
+watcher = "cyan"
+
+[log]
+# Формат времени в логах
+time = false
+# Формат главного лога
+main_only = false
+
+[misc]
+# Очищать tmp директорию при выходе
+clean_on_exit = false
+
+[screen]
+# Очищать экран при перезапуске
+clear_on_rebuild = true
+# Сохранять скролл
+keep_scroll = true

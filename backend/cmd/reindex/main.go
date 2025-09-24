@@ -8,17 +8,34 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"backend/internal/config"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"backend/internal/version"
+)
+
+// Build information set by ldflags
+var (
+	gitCommit = "unknown"
+	buildTime = "unknown"
 )
 
 func main() {
 	log.Println("Запуск переиндексации OpenSearch...")
 	startTime := time.Now()
 
-	// Загружаем конфигурацию
+	if err := godotenv.Load(envFile); err != nil {
+		logger.Info().Msgf("Warning: Could not load .env file: %s", err)
+	}
+	// Initialize logger
+	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL"), version.GetVersion()); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to initialize logger")
+	}
+
+	// Чтение конфигурации
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)

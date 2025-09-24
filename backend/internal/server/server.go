@@ -3,6 +3,7 @@
 package server
 
 import (
+	version "backend/internal/version"
 	"context"
 	"database/sql"
 	"errors"
@@ -10,10 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	globalService "backend/internal/proj/global/service"
-	postexpressService "backend/internal/proj/postexpress/service"
-	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
-	pkglogger "backend/pkg/logger"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -21,6 +19,9 @@ import (
 	pkgErrors "github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+
+	authclient "github.com/sveturs/auth/pkg/http/client"
+	authService "github.com/sveturs/auth/pkg/http/service"
 
 	_ "backend/docs"
 	"backend/internal/cache"
@@ -42,6 +43,7 @@ import (
 	geocodeHandler "backend/internal/proj/geocode/handler"
 	gisHandler "backend/internal/proj/gis/handler"
 	globalHandler "backend/internal/proj/global/handler"
+	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
 	marketplaceHandler "backend/internal/proj/marketplace/handler"
 	marketplaceService "backend/internal/proj/marketplace/service"
@@ -50,6 +52,8 @@ import (
 	paymentHandler "backend/internal/proj/payments/handler"
 	postexpressHandler "backend/internal/proj/postexpress/handler"
 	recommendationsHandler "backend/internal/proj/recommendations"
+	postexpressService "backend/internal/proj/postexpress/service"
+	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
@@ -63,6 +67,7 @@ import (
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
+	pkglogger "backend/pkg/logger"
 )
 
 type Server struct {
@@ -72,6 +77,7 @@ type Server struct {
 	ai                 *aiHandler.Handler
 	users              *userHandler.Handler
 	middleware         *middleware.Middleware
+	authService        *authService.AuthService
 	review             *reviewHandler.Handler
 	marketplace        *marketplaceHandler.Handler
 	notifications      *notificationHandler.Handler
@@ -102,17 +108,6 @@ type Server struct {
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
-}
-
-// serviceProviderWrapper обертка для service.Service чтобы реализовать middleware.ServiceProvider
-type serviceProviderWrapper struct {
-	services *globalService.Service
-}
-
-func (s *serviceProviderWrapper) User() interface {
-	IsUserAdmin(ctx context.Context, email string) (bool, error)
-} {
-	return s.services.User()
 }
 
 func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
@@ -164,9 +159,24 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	services := globalService.NewService(ctx, db, cfg, translationService)
 
+	// Create auth service client
+	authClient, err := authclient.NewClientWithResponses(cfg.AuthServiceURL)
+	if err != nil {
+		return nil, pkgErrors.Wrap(err, "failed to create auth client")
+	}
+
+	// Create auth service with client and logger
+	zerologLogger := *logger.Get()
+	authServiceInstance := authService.NewAuthService(authClient, zerologLogger)
+	oauthServiceInstance := authService.NewOAuthService(authClient)
+
 	configModule := configHandler.NewModule(cfg)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
-	usersHandler := userHandler.NewHandler(services)
+
+	authHandler := userHandler.NewAuthHandler(authServiceInstance, oauthServiceInstance, cfg.BackendURL, cfg.FrontendURL, zerologLogger)
+	jwtParserMW := authMiddleware.JWTParser(authServiceInstance)
+	usersHandler := userHandler.NewHandler(services, authHandler, jwtParserMW)
+
 	reviewHandler := reviewHandler.NewHandler(services)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services)
@@ -248,7 +258,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		sqlDB = db.GetSQLDB()
 	}
 	healthHandlerInstance := healthHandler.NewHandler(sqlDB, redisClient)
-	middleware := middleware.NewMiddleware(cfg, services)
+	middleware := middleware.NewMiddleware(cfg, services, authServiceInstance, jwtParserMW)
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db, osClient)
@@ -313,6 +323,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		ai:                 aiHandlerInstance,
 		users:              usersHandler,
 		middleware:         middleware,
+		authService:        authServiceInstance,
 		review:             reviewHandler,
 		marketplace:        marketplaceHandlerInstance,
 		notifications:      notificationsHandler,
@@ -347,10 +358,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	notificationsHandler.ConnectTelegramWebhook()
 
-	// Создаем обертку для services чтобы удовлетворить интерфейс middleware.ServiceProvider
-	serviceWrapper := &serviceProviderWrapper{services: services}
-	server.setupMiddleware(serviceWrapper) //nolint:contextcheck
-	server.setupRoutes()                   //nolint:contextcheck
+	server.setupMiddleware() //nolint:contextcheck
+	server.setupRoutes()     //nolint:contextcheck
 
 	return server, nil
 }
@@ -420,18 +429,14 @@ func initializeOpenSearch(cfg *config.Config) (*opensearch.OpenSearchClient, err
 	return osClient, nil
 }
 
-func (s *Server) setupMiddleware(services middleware.ServiceProvider) {
+func (s *Server) setupMiddleware() {
 	// Общие middleware для observability
 	// Security headers должны быть первыми
 	s.app.Use(s.middleware.SecurityHeaders())
 
-	// Auth Proxy middleware - должен быть рано для перехвата /api/v1/auth/* запросов
 	// CORS должен быть первым для обработки preflight запросов
 	s.app.Use(s.middleware.CORS())
 	s.app.Use(s.middleware.Logger())
-
-	authProxy := middleware.NewAuthProxyMiddleware(services)
-	s.app.Use(authProxy.ProxyToAuthService())
 
 	// Middleware для определения языка из запроса
 	s.app.Use(s.middleware.LocaleMiddleware())
@@ -453,7 +458,7 @@ func (s *Server) setupMiddleware(services middleware.ServiceProvider) {
 
 func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние маршруты
 	s.app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Svetu API")
+		return c.SendString("Svetu API " + version.GetVersion())
 	})
 
 	// Health checks и metrics
@@ -544,6 +549,11 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 
 	// Регистрируем роуты через новую систему
 	s.registerProjectRoutes()
+
+	// Test route - direct registration without any middleware AFTER project routes
+	s.app.Post("/api/v1/auth/test", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"message": "Test route works, registered AFTER project routes"})
+	})
 
 	// Проксирование статических файлов MinIO
 	// Эти маршруты должны быть после всех API маршрутов

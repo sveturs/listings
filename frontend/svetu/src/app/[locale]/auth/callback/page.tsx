@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import CallbackClient from './CallbackClient';
 
-export default async function CallbackPage() {
+export default function CallbackPage() {
   return (
     <Suspense
       fallback={

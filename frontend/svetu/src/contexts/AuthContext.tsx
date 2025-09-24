@@ -7,17 +7,10 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
 } from 'react';
 import { useRouter } from '@/i18n/routing';
-import { AuthService } from '@/services/auth';
-import { AuthErrorBoundaryWrapper } from '@/components/AuthErrorBoundaryWrapper';
+import authService from '@/services/auth';
 import type { User, UpdateProfileRequest } from '@/types/auth';
-import { tokenManager } from '@/utils/tokenManager';
-import { TokenMigration } from '@/utils/tokenMigration';
-// import { forceTokenCleanup } from '@/utils/forceTokenCleanup'; // Отключено - удалял валидные OAuth токены
-import { logger } from '@/utils/logger';
-import { decodeUserFromToken } from '@/utils/jwtDecode';
 
 interface AuthContextType {
   user: User | null;
@@ -25,13 +18,13 @@ interface AuthContextType {
   isLoading: boolean;
   isLoggingOut: boolean;
   isUpdatingProfile: boolean;
-  isRefreshingSession: boolean;
   error: string | null;
-  login: (returnTo?: string) => void;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => void;
+  register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   updateProfile: (data: UpdateProfileRequest) => Promise<boolean>;
-  updateUser: (userData: User | null) => void;
   clearError: () => void;
 }
 
@@ -39,517 +32,122 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-
-  // Безопасная инициализация с кешированным состоянием из localStorage
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('svetu_user');
-        if (cached) {
-          const parsedUser = JSON.parse(cached);
-          // Проверяем, что объект пользователя имеет минимально необходимые поля
-          if (
-            parsedUser &&
-            typeof parsedUser === 'object' &&
-            parsedUser.id &&
-            parsedUser.email
-          ) {
-            return parsedUser;
-          }
-        }
-      } catch (error) {
-        logger.auth.warn(
-          'Failed to parse cached user data, clearing cache:',
-          error
-        );
-        // Очищаем поврежденный кеш
-        try {
-          localStorage.removeItem('svetu_user');
-        } catch {
-          // Игнорируем ошибки очистки
-        }
-      }
-    }
-    return null;
-  });
-
-  // Если есть валидный кешированный пользователь, начинаем с false, иначе с true
-  const [isLoading, setIsLoading] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('svetu_user');
-        if (cached) {
-          const parsedUser = JSON.parse(cached);
-          // Проверяем валидность кешированных данных
-          if (
-            parsedUser &&
-            typeof parsedUser === 'object' &&
-            parsedUser.id &&
-            parsedUser.email
-          ) {
-            return false; // Данные валидны, начинаем без загрузки
-          }
-        }
-      } catch {
-        // Если не можем прочитать/парсить - требуется загрузка
-      }
-    }
-    return true; // По умолчанию показываем загрузку
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Cooldown для предотвращения частых вызовов refreshSession
-  const lastRefreshAttempt = useRef<number>(0);
-  const REFRESH_COOLDOWN = 5000; // 5 секунд
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  // Безопасная работа с localStorage с fallback механизмами
-  const storageUtils = useMemo(() => {
-    // Проверяем доступность localStorage
-    const isStorageAvailable = (() => {
-      if (typeof window === 'undefined') return false;
-      try {
-        const testKey = '__storage_test__';
-        localStorage.setItem(testKey, 'test');
-        localStorage.removeItem(testKey);
-        return true;
-      } catch {
-        return false;
+  // Load session on mount
+  const refreshSession = useCallback(async () => {
+    try {
+      const user = await authService.getSession();
+      if (user) {
+        // Add default provider if missing
+        const userWithProvider: User = {
+          id: user.id,
+          email: user.email,
+          name: user.name || user.email,
+          provider: 'email', // Default provider since backend doesn't send it
+          is_admin: user.is_admin,
+        };
+        setUser(userWithProvider);
+      } else {
+        setUser(null);
       }
-    })();
-
-    return {
-      isAvailable: isStorageAvailable,
-
-      getItem: (key: string): string | null => {
-        if (!isStorageAvailable) return null;
-        try {
-          return localStorage.getItem(key);
-        } catch (error) {
-          console.warn(`Failed to read from localStorage (${key}):`, error);
-          return null;
-        }
-      },
-
-      setItem: (key: string, value: string): boolean => {
-        if (!isStorageAvailable) {
-          console.warn('SessionStorage is not available, skipping cache');
-          return false;
-        }
-        try {
-          localStorage.setItem(key, value);
-          return true;
-        } catch (error) {
-          console.warn(`Failed to write to localStorage (${key}):`, error);
-          // Попытка очистить место, если ошибка связана с переполнением
-          if (error instanceof Error && error.name === 'QuotaExceededError') {
-            try {
-              localStorage.clear();
-              localStorage.setItem(key, value);
-              console.info('Cleared localStorage and retried');
-              return true;
-            } catch {
-              console.error('Failed to clear and retry localStorage');
-            }
-          }
-          return false;
-        }
-      },
-
-      removeItem: (key: string): boolean => {
-        if (!isStorageAvailable) return false;
-        try {
-          localStorage.removeItem(key);
-          return true;
-        } catch (error) {
-          console.warn(`Failed to remove from localStorage (${key}):`, error);
-          return false;
-        }
-      },
-    };
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Функция для кеширования пользователя в localStorage
-  const cacheUser = useCallback(
-    (userData: User | null) => {
-      if (userData) {
-        const success = storageUtils.setItem(
-          'svetu_user',
-          JSON.stringify(userData)
-        );
-        if (!success) {
-          console.warn('User data was not cached due to storage issues');
-        }
-      } else {
-        storageUtils.removeItem('svetu_user');
-      }
-    },
-    [storageUtils]
-  );
-
-  // Обертка для setUser с кешированием
-  const updateUser = useCallback(
-    (userData: User | null) => {
-      setUser(userData);
-      cacheUser(userData);
-    },
-    [cacheUser]
-  );
-
-  const refreshSession = useCallback(
-    async (retries = 3, skipLoadingState = false) => {
-      // Если уже идет обновление сессии, не запускаем новое
-      if (isRefreshingSession) {
-        logger.auth.debug('Session refresh already in progress, skipping');
-        return;
-      }
-
-      const now = Date.now();
-      if (now - lastRefreshAttempt.current < REFRESH_COOLDOWN) {
-        if (process.env.NODE_ENV === 'development') {
-          logger.auth.debug('RefreshSession skipped due to cooldown');
-        }
-        return;
-      }
-      lastRefreshAttempt.current = now;
-
-      // Устанавливаем состояние загрузки только если это не фоновое обновление
-      if (!skipLoadingState) {
-        setIsRefreshingSession(true);
-      } else {
-        // Даже для фоновых обновлений устанавливаем флаг, чтобы предотвратить параллельные вызовы
-        setIsRefreshingSession(true);
-      }
-
-      try {
-        for (let i = 0; i < retries; i++) {
-          try {
-            // Сначала пытаемся восстановить сессию через JWT
-            logger.auth.debug(
-              '[AuthContext] Attempting to restore session via JWT...'
-            );
-            const session = await AuthService.restoreSession();
-            if (session && session.authenticated && session.user) {
-              logger.auth.debug('JWT session restored successfully');
-              updateUser(session.user);
-              setError(null);
-            } else {
-              // Если восстановление не удалось, значит нет валидной сессии
-              logger.auth.debug('[AuthContext] No valid session to restore');
-              updateUser(null);
-            }
-            setIsLoading(false);
-            return;
-          } catch (error) {
-            console.error(
-              `Session refresh error (attempt ${i + 1}/${retries}):`,
-              error
-            );
-            if (i === retries - 1) {
-              setError(
-                'Failed to load session. Please try refreshing the page.'
-              );
-              updateUser(null);
-              setIsLoading(false);
-            } else {
-              // Exponential backoff
-              await new Promise((resolve) =>
-                setTimeout(resolve, 1000 * Math.pow(2, i))
-              );
-            }
-          }
-        }
-      } finally {
-        setIsRefreshingSession(false);
-      }
-    },
-    [updateUser, REFRESH_COOLDOWN, isRefreshingSession]
-  );
-
-  // Обработка OAuth токена из URL
   useEffect(() => {
-    const handleOAuthToken = async () => {
-      logger.auth.debug('Checking for OAuth token in URL...');
+    refreshSession();
+  }, [refreshSession]);
 
-      // Проверяем наличие токена в URL (для OAuth callback)
-      if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search);
-        logger.auth.debug(
-          '[AuthContext] Current URL search:',
-          window.location.search
-        );
-
-        // Backend отправляет токен как auth_token
-        const authToken = urlParams.get('auth_token') || urlParams.get('token');
-
-        if (authToken) {
-          logger.auth.debug(
-            '[AuthContext] Found OAuth token in URL:',
-            authToken.substring(0, 30) + '...'
-          );
-          logger.auth.debug('Token length:', authToken.length);
-
-          // Сохраняем токен
-          tokenManager.setAccessToken(authToken);
-          logger.auth.debug('Token saved to tokenManager');
-
-          // Проверяем что токен действительно сохранен
-          const savedToken = tokenManager.getAccessToken();
-          logger.auth.debug(
-            '[AuthContext] Verification - token retrieved:',
-            savedToken ? 'Success' : 'Failed'
-          );
-
-          // Удаляем токен из URL для безопасности
-          urlParams.delete('auth_token');
-          urlParams.delete('token');
-          const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
-          window.history.replaceState({}, document.title, newUrl);
-          logger.auth.debug('Token removed from URL for security');
-
-          // Сразу обновляем сессию после получения токена
-          logger.auth.debug(
-            '[AuthContext] Starting session refresh with new token...'
-          );
-          await refreshSession(1, false);
-        } else {
-          logger.auth.debug('No OAuth token found in URL');
-        }
-      }
-    };
-
-    handleOAuthToken();
-  }, [refreshSession]); // Выполняется только при монтировании
-
-  useEffect(() => {
-    // ОТКЛЮЧЕНО: forceTokenCleanup удалял валидные токены после OAuth
-    // const forceCleaned = forceTokenCleanup();
-    // if (forceCleaned) {
-    //   logger.auth.debug('Forced token cleanup performed');
-    //   updateUser(null);
-    //   tokenManager.clearTokens();
-    // }
-
-    // Проверяем и мигрируем старые токены
-    const migrated = TokenMigration.runMigration();
-    if (migrated) {
-      logger.auth.debug(
-        'Token migration performed, user needs to re-authenticate'
-      );
-      updateUser(null);
-      setIsLoading(false);
-      return;
-    }
-
-    // Инициализируем TokenManager
-    AuthService.initializeTokenManager();
-
-    // Проверяем флаг logout
-    const logoutFlag = localStorage.getItem('svetu_logout_flag');
-    if (logoutFlag === 'true') {
-      // Пользователь вышел из системы, очищаем флаг и не восстанавливаем сессию
-      localStorage.removeItem('svetu_logout_flag');
-      storageUtils.removeItem('svetu_user');
-      setIsLoading(false);
-      return;
-    }
-
-    // Проверяем наличие валидного кешированного пользователя при первой загрузке
-    const cachedData = storageUtils.getItem('svetu_user');
-    let hasValidCache = false;
-    let cachedUser = null;
-
-    if (cachedData) {
-      try {
-        const parsedUser = JSON.parse(cachedData);
-        hasValidCache =
-          parsedUser &&
-          typeof parsedUser === 'object' &&
-          parsedUser.id &&
-          parsedUser.email;
-
-        if (hasValidCache) {
-          cachedUser = parsedUser;
-          // Немедленно устанавливаем пользователя из кеша
-          updateUser(cachedUser);
-          logger.auth.debug(
-            '[AuthContext] Restored user from cache immediately'
-          );
-        }
-      } catch {
-        // Поврежденный кеш, очищаем его
-        storageUtils.removeItem('svetu_user');
-      }
-    }
-
-    // Проверяем наличие access token (может быть после OAuth)
-    const currentToken = tokenManager.getAccessToken();
-
-    if (currentToken && !tokenManager.isTokenExpired(currentToken)) {
-      logger.auth.debug(
-        '[AuthContext] Valid access token found, checking for user data'
-      );
-
-      // Если нет кешированного пользователя, пытаемся декодировать токен
-      if (!hasValidCache) {
-        const decodedUser = decodeUserFromToken(currentToken);
-        if (decodedUser) {
-          logger.auth.debug(
-            '[AuthContext] Decoded user from existing token:',
-            decodedUser
-          );
-          updateUser(decodedUser);
-          setIsLoading(false);
-        }
-      }
-
-      // В любом случае обновляем сессию чтобы получить полные данные пользователя
-      refreshSession();
-    } else if (hasValidCache) {
-      // Есть кешированный пользователь, но нужно проверить/обновить токен
-      logger.auth.debug(
-        '[AuthContext] User cache found, checking token validity'
-      );
-      setTimeout(() => refreshSession(3, true), 100);
-    } else {
-      // Нет ни токена, ни кеша - пытаемся восстановить через refresh token
-      logger.auth.debug(
-        '[AuthContext] No cache or token, attempting full session restore'
-      );
-      refreshSession();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      AuthService.cleanup();
-    };
-  }, [refreshSession, storageUtils, updateUser]);
-
-  // Listen for token changes from TokenManager
-  useEffect(() => {
-    const handleTokenChange = async (event: Event) => {
-      const customEvent = event as CustomEvent;
-      logger.auth.debug('Token changed event:', customEvent.detail);
-
-      if (customEvent.detail.action === 'set') {
-        // New token was set, refresh session to get user data
-        logger.auth.debug('New token detected, refreshing session...');
-
-        // Проверяем, есть ли уже пользователь в localStorage (например, после OAuth)
-        const cachedUser = storageUtils.getItem('svetu_user');
-        if (cachedUser) {
-          try {
-            const parsedUser = JSON.parse(cachedUser);
-            if (parsedUser && parsedUser.id) {
-              // Немедленно обновляем пользователя
-              logger.auth.debug(
-                '[AuthContext] Found cached user data:',
-                parsedUser
-              );
-              updateUser(parsedUser);
-              setIsLoading(false);
-              // Если есть кешированные данные, не нужно сразу делать запрос
-              // Делаем его с задержкой для обновления данных
-              setTimeout(() => refreshSession(3, true), 1000);
-              return;
-            }
-          } catch (e) {
-            logger.auth.error('Failed to parse cached user:', e);
-          }
-        }
-
-        // Если нет кешированных данных, пытаемся декодировать токен
-        logger.auth.debug(
-          '[AuthContext] No cached user, trying to decode token...'
-        );
-
-        const token = tokenManager.getAccessToken();
-        if (token) {
-          const decodedUser = decodeUserFromToken(token);
-          if (decodedUser) {
-            logger.auth.debug(
-              '[AuthContext] Decoded user from token:',
-              decodedUser
-            );
-            // Сохраняем в кеш и обновляем состояние
-            updateUser(decodedUser);
-            setIsLoading(false);
-            // Запрашиваем полные данные с сервера с задержкой
-            setTimeout(() => refreshSession(3, true), 500);
-            return;
-          }
-        }
-
-        // Если не удалось декодировать, запрашиваем сессию
-        logger.auth.debug(
-          '[AuthContext] Could not decode token, fetching session...'
-        );
-        await refreshSession(3, false); // Don't skip loading state
-      } else if (customEvent.detail.action === 'cleared') {
-        // Token was cleared, clear user state
-        logger.auth.debug('Token cleared, clearing user state...');
-        updateUser(null);
-      }
-    };
-
-    // Add event listener
-    if (typeof window !== 'undefined') {
-      window.addEventListener('tokenChanged', handleTokenChange);
-    }
-
-    // Cleanup
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('tokenChanged', handleTokenChange);
-      }
-    };
-  }, [refreshSession, updateUser, storageUtils]);
-
-  // Redirect to login page (matches the interface)
   const login = useCallback(
-    (returnTo?: string) => {
-      const returnPath = returnTo || window.location.pathname;
-      router.push(`/auth/login?returnTo=${encodeURIComponent(returnPath)}`);
+    async (email: string, password: string) => {
+      setError(null);
+      try {
+        const response = await authService.login({ email, password });
+        if (response && response.user) {
+          // Add default provider if missing
+          const userWithProvider: User = {
+            id: response.user.id,
+            email: response.user.email,
+            name: response.user.name || response.user.email,
+            provider: 'email', // Default provider since backend doesn't send it
+            is_admin: response.user.is_admin,
+          };
+          setUser(userWithProvider);
+          router.push('/');
+        } else {
+          const errorMessage = response?.error || 'Login failed';
+          setError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      } catch (error: any) {
+        console.error('Login error:', error);
+        const errorMessage = error.message || 'Login failed';
+        setError(errorMessage);
+        throw error;
+      }
     },
     [router]
   );
 
-  const _loginWithGoogle = useCallback((returnTo?: string) => {
-    try {
-      AuthService.loginWithGoogle(returnTo);
-    } catch (error) {
-      console.error('Google login error:', error);
-      setError('Failed to initiate Google login. Please try again.');
-    }
+  const loginWithGoogle = useCallback(() => {
+    // Redirect to backend OAuth endpoint
+    window.location.href = 'http://localhost:3000/api/v1/auth/google';
   }, []);
+
+  const register = useCallback(
+    async (email: string, password: string, name?: string) => {
+      setError(null);
+      try {
+        const response = await authService.register({
+          email,
+          password,
+          name: name || '',
+        });
+        if (response && response.user) {
+          // Add default provider if missing
+          const userWithProvider: User = {
+            id: response.user.id,
+            email: response.user.email,
+            name: response.user.name || name || response.user.email,
+            provider: 'email', // Default provider since backend doesn't send it
+            is_admin: response.user.is_admin,
+          };
+          setUser(userWithProvider);
+          router.push('/');
+        } else {
+          const errorMessage = response?.error || 'Registration failed';
+          setError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        const errorMessage = error.message || 'Registration failed';
+        setError(errorMessage);
+        throw error;
+      }
+    },
+    [router]
+  );
 
   const logout = useCallback(async () => {
     setIsLoggingOut(true);
     setError(null);
     try {
-      await AuthService.logout();
-      updateUser(null);
-
-      // Очищаем только auth-related данные, сохраняем важные настройки
-      const _locale = localStorage.getItem('NEXT_LOCALE');
-      const _appVersion = localStorage.getItem('__APP_VERSION__');
-      const _theme = localStorage.getItem('theme');
-
-      // Очищаем токены и данные пользователя
-      tokenManager.clearTokens();
-      localStorage.removeItem('svetu_user');
-      localStorage.removeItem('svetu_access_token');
-      localStorage.removeItem('svetu_refresh_token');
-
-      // Устанавливаем флаг в localStorage чтобы предотвратить автоматическое восстановление
-      localStorage.setItem('svetu_logout_flag', 'true');
-
+      await authService.logout();
+      setUser(null);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -557,39 +155,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoggingOut(false);
     }
-  }, [router, updateUser]);
+  }, [router]);
 
   const updateProfile = useCallback(
     async (data: UpdateProfileRequest): Promise<boolean> => {
       setIsUpdatingProfile(true);
       setError(null);
       try {
-        const updatedProfile = await AuthService.updateProfile(data);
+        // TODO: Implement profile update with new auth service
+        // const updatedProfile = await AuthService.updateProfile(data);
+        const updatedProfile = false;
         if (updatedProfile) {
-          logger.auth.debug('Profile update response:', updatedProfile);
-
-          // Обновляем пользователя с новыми данными от сервера
-          const updatedUser = user ? { ...user, ...updatedProfile } : null;
-          logger.auth.debug('Updated user data:', updatedUser);
-          updateUser(updatedUser);
-
-          // Принудительно получаем свежие данные пользователя с сервера
-          // Сбрасываем cooldown для принудительного обновления
-          lastRefreshAttempt.current = 0;
-          try {
-            const session = await AuthService.getSession();
-            logger.auth.debug('Fresh session data:', session);
-            if (session.authenticated && session.user) {
-              updateUser(session.user);
-            }
-          } catch (error) {
-            console.warn(
-              'Failed to refresh session after profile update:',
-              error
-            );
-            // Не показываем ошибку пользователю, так как основное обновление прошло успешно
-          }
-
+          // Refresh session to get updated user data
+          await refreshSession();
           return true;
         }
         setError('Failed to update profile');
@@ -602,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsUpdatingProfile(false);
       }
     },
-    [updateUser, user]
+    [refreshSession]
   );
 
   const value = useMemo<AuthContextType>(
@@ -612,13 +190,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isLoggingOut,
       isUpdatingProfile,
-      isRefreshingSession,
       error,
       login,
+      loginWithGoogle,
+      register,
       logout,
       refreshSession,
       updateProfile,
-      updateUser,
       clearError,
     }),
     [
@@ -626,30 +204,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isLoggingOut,
       isUpdatingProfile,
-      isRefreshingSession,
       error,
       login,
+      loginWithGoogle,
+      register,
       logout,
       refreshSession,
       updateProfile,
-      updateUser,
       clearError,
     ]
   );
 
-  return (
-    <AuthErrorBoundaryWrapper>
-      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-    </AuthErrorBoundaryWrapper>
-  );
-}
-
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -658,4 +224,8 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+export function useAuthContext() {
+  return useAuth();
 }

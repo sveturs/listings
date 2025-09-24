@@ -46,7 +46,7 @@ export default function AuthModal({
     try {
       // For now, just redirect to login page
       // This component needs to be refactored to work with new auth flow
-      login();
+      await login(email, password);
       onClose();
     } catch {
       setError(t('errors.unexpectedError'));
@@ -59,18 +59,17 @@ export default function AuthModal({
     try {
       setError(null);
 
-      // Construct the OAuth redirect URL with proper callback
-      const currentUrl = window.location.href;
-      const callbackUrl = `${window.location.origin}/${locale}/auth/oauth/google/callback`;
-      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-      const oauthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google?redirect_uri=${encodedCallbackUrl}`;
+      // Construct the OAuth redirect URL with locale
+      const currentPath = window.location.pathname;
+      const returnUrl = encodeURIComponent(currentPath);
+
+      // Pass locale and returnUrl as query parameters to backend
+      const oauthUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/google?locale=${locale}&return_url=${returnUrl}`;
 
       console.log('[AuthModal] === GOOGLE LOGIN INITIATED ===');
-      console.log('[AuthModal] Current URL:', currentUrl);
-      console.log('[AuthModal] Callback URL:', callbackUrl);
-      console.log('[AuthModal] Encoded Callback URL:', encodedCallbackUrl);
+      console.log('[AuthModal] Current locale:', locale);
+      console.log('[AuthModal] Return URL:', currentPath);
       console.log('[AuthModal] OAuth URL:', oauthUrl);
-      console.log('[AuthModal] OAuth URL length:', oauthUrl.length);
       console.log('[AuthModal] === END GOOGLE LOGIN INITIATED ===');
 
       // Redirect to Google OAuth

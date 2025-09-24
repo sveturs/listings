@@ -217,9 +217,12 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                     height={32}
                   />
                 </div>
-                <span className="text-xl font-bold hidden md:inline">
-                  SveTu
-                </span>
+                <div className="hidden md:flex flex-col">
+                  <span className="text-xl font-bold leading-none">SveTu</span>
+                  <span className="text-[10px] text-base-content/60 leading-none">
+                    v{process.env.NEXT_PUBLIC_APP_VERSION}
+                  </span>
+                </div>
               </Link>
 
               {/* Поисковая строка - скрываем на мобильных */}

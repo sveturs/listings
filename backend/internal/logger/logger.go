@@ -14,7 +14,7 @@ func init() {
 	log = zerolog.New(os.Stdout).With().Timestamp().Logger()
 }
 
-func Init(env string, level string) error {
+func Init(env, level, version string) error {
 	if level == "" {
 		level = "info"
 	}
@@ -23,7 +23,15 @@ func Init(env string, level string) error {
 		return err
 	}
 	if env == "dev" || env == "development" {
-		log = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
+		log = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().
+			Timestamp().
+			Str("version", version).
+			Logger()
+	} else {
+		log = zerolog.New(os.Stdout).With().
+			Timestamp().
+			Str("version", version).
+			Logger()
 	}
 
 	zerolog.SetGlobalLevel(l)

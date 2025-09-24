@@ -1,12 +1,9 @@
 import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 import { logger } from '@/utils/logger';
 
 export interface ApiClientOptions extends RequestInit {
   // Использовать внутренний URL для серверных запросов
   internal?: boolean;
-  // Автоматически добавлять токен авторизации
-  includeAuth?: boolean;
   // Timeout в миллисекундах
   timeout?: number;
   // Повторные попытки при ошибках сети
@@ -110,12 +107,10 @@ class ApiClient {
    */
   async request<T = any>(
     endpoint: string,
-    options: ApiClientOptions = {},
-    isRetryAfter401: boolean = false
+    options: ApiClientOptions = {}
   ): Promise<ApiResponse<T>> {
     const {
       internal = false,
-      includeAuth = true,
       timeout = this.defaultTimeout,
       retries = this.defaultRetries,
       ...fetchOptions
@@ -143,28 +138,7 @@ class ApiClient {
       headers.set('Accept-Language', locale);
     }
 
-    // Добавляем токен авторизации если нужно
-    if (includeAuth && typeof window !== 'undefined') {
-      let token = tokenManager.getAccessToken();
-
-      // Если токен истек, пытаемся обновить его
-      if (token && tokenManager.isTokenExpired(token)) {
-        logger.api.debug(' Token expired, attempting to refresh...');
-        try {
-          token = await tokenManager.refreshAccessToken();
-        } catch (error) {
-          console.error('[ApiClient] Failed to refresh token:', error);
-          token = null;
-        }
-      }
-
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-        logger.api.debug(' Added auth header for', endpoint);
-      } else {
-        logger.api.debug(' No token available for', endpoint);
-      }
-    }
+    // Cookies are sent automatically with credentials: 'include'
 
     // Добавляем CSRF токен для небезопасных методов
     const method = fetchOptions.method?.toUpperCase();
@@ -217,39 +191,6 @@ class ApiClient {
 
       // Обрабатываем ошибки
       if (!response.ok) {
-        // Если получили 401 и это не повторный запрос после обновления токена
-        if (
-          response.status === 401 &&
-          typeof window !== 'undefined' &&
-          !isRetryAfter401
-        ) {
-          logger.api.debug(
-            '[ApiClient] Got 401, attempting to refresh token and retry...'
-          );
-
-          try {
-            // Пытаемся обновить токен
-            const newToken = await tokenManager.refreshAccessToken();
-
-            if (newToken) {
-              logger.api.debug(
-                '[ApiClient] Token refreshed successfully, retrying request...'
-              );
-              // Повторяем запрос с новым токеном
-              return this.request<T>(endpoint, options, true);
-            }
-          } catch (refreshError) {
-            console.error('[ApiClient] Token refresh failed:', refreshError);
-            // Очищаем токены если обновление не удалось
-            tokenManager.clearTokens();
-          }
-        }
-
-        // Если это повторная 401 после обновления токена или обновление не удалось
-        if (response.status === 401 && typeof window !== 'undefined') {
-          tokenManager.clearTokens();
-        }
-
         return {
           error: {
             message:

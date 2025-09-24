@@ -142,7 +142,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:            userService.NewService(storage, cfg.GoogleClientID, cfg.GoogleClientSecret, cfg.GoogleRedirectURL, cfg.JWTSecret, cfg.JWTExpirationHours),
+		users:            userService.NewService(storage),
 		marketplace:      marketplaceSvc,
 		review:           reviewService.NewService(storage),
 		chat:             marketplaceSvc, // Reuse the same service for chat
@@ -209,9 +209,6 @@ func (s *Service) FileStorage() filestorage.FileStorageInterface {
 }
 
 // Остальные методы интерфейса ServicesInterface
-func (s *Service) Auth() userService.AuthServiceInterface {
-	return s.users.Auth
-}
 
 func (s *Service) User() userService.UserServiceInterface {
 	return s.users.User

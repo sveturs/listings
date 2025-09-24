@@ -1,6 +1,7 @@
 import { config } from '@/config';
 import { apiClient } from './api-client';
 import { tokenManager } from '@/utils/tokenManager';
+import { AuthService } from './auth';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
@@ -104,9 +105,14 @@ class StorefrontApiService {
     endpoint: string,
     options?: RequestInit
   ): Promise<T> {
+    // Добавляем авторизационные заголовки
+    const authHeaders = AuthService.getAuthHeaders();
     const response = await apiClient.request<T>(endpoint, {
       ...options,
-      includeAuth: true, // Всегда включаем авторизацию для storefrontApi
+      headers: {
+        ...authHeaders,
+        ...options?.headers,
+      },
     });
 
     if (response.error) {

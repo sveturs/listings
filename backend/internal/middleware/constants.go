@@ -9,9 +9,6 @@ const (
 	httpMethodPut     = "PUT"
 	httpMethodPatch   = "PATCH"
 
-	// Authentication
-	bearerScheme = "Bearer"
-
 	// Environment
 	envDevelopment = "development"
 	envDev         = "dev"
