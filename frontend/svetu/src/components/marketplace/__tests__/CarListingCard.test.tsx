@@ -36,16 +36,30 @@ describe('CarListingCard', () => {
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
     views_count: 100,
-    images: [
-      { id: 1, url: '/test-image.jpg', is_main: true }
-    ],
+    images: [{ id: 1, url: '/test-image.jpg', is_main: true }],
     attributes: [
       { attribute_name: 'car_make', string_value: 'BMW', display_name: 'Make' },
-      { attribute_name: 'car_model', string_value: '3 Series', display_name: 'Model' },
+      {
+        attribute_name: 'car_model',
+        string_value: '3 Series',
+        display_name: 'Model',
+      },
       { attribute_name: 'year', string_value: '2020', display_name: 'Year' },
-      { attribute_name: 'mileage', string_value: '50000', display_name: 'Mileage' },
-      { attribute_name: 'fuel_type', string_value: 'Gasoline', display_name: 'Fuel Type' },
-      { attribute_name: 'transmission', string_value: 'Automatic', display_name: 'Transmission' },
+      {
+        attribute_name: 'mileage',
+        string_value: '50000',
+        display_name: 'Mileage',
+      },
+      {
+        attribute_name: 'fuel_type',
+        string_value: 'Gasoline',
+        display_name: 'Fuel Type',
+      },
+      {
+        attribute_name: 'transmission',
+        string_value: 'Automatic',
+        display_name: 'Transmission',
+      },
     ],
     city: 'Belgrade',
     country: 'Serbia',
@@ -70,14 +84,18 @@ describe('CarListingCard', () => {
   });
 
   it('renders in grid view mode', () => {
-    render(<CarListingCard listing={mockListing} locale="en" viewMode="grid" />);
+    render(
+      <CarListingCard listing={mockListing} locale="en" viewMode="grid" />
+    );
 
     const card = screen.getByRole('article');
     expect(card).toHaveClass('card');
   });
 
   it('renders in list view mode', () => {
-    render(<CarListingCard listing={mockListing} locale="en" viewMode="list" />);
+    render(
+      <CarListingCard listing={mockListing} locale="en" viewMode="list" />
+    );
 
     const card = screen.getByRole('article');
     expect(card).toHaveClass('flex-row');
@@ -139,8 +157,12 @@ describe('CarListingCard', () => {
     const listingWithHighMileage = {
       ...mockListing,
       attributes: [
-        ...mockListing.attributes.filter(a => a.attribute_name !== 'mileage'),
-        { attribute_name: 'mileage', string_value: '150000', display_name: 'Mileage' },
+        ...mockListing.attributes.filter((a) => a.attribute_name !== 'mileage'),
+        {
+          attribute_name: 'mileage',
+          string_value: '150000',
+          display_name: 'Mileage',
+        },
       ],
     };
 

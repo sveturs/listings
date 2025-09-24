@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PublicEnvScript } from 'next-runtime-env';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,8 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
-      <body>{children}</body>
+    <html suppressHydrationWarning>
+      <head>
+        <PublicEnvScript />
+      </head>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

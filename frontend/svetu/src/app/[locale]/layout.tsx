@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
 import { getMessages } from '@/i18n/messages';
@@ -22,11 +21,13 @@ import '../globals.css';
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 export function generateStaticParams() {
@@ -93,13 +94,20 @@ export default async function RootLayout({
   const messages = getMessages(locale as 'en' | 'ru' | 'sr');
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        <PublicEnvScript />
-      </head>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         suppressHydrationWarning
+        style={
+          {
+            fontFamily:
+              'var(--font-geist-sans), system-ui, -apple-system, sans-serif',
+          } as React.CSSProperties
+        }
       >
         <ThemeProvider>
           <ModularIntlProvider locale={locale} messages={messages}>

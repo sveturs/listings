@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import {
   Car,
   Calendar,
@@ -24,23 +26,58 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   className = '',
 }) => {
   const t = useTranslations('cars');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const locale = useLocale();
+
+  // Инициализация значений из URL параметров
+  const getInitialValue = (param: string, defaultValue: string = '') => {
+    return searchParams?.get(param) || defaultValue;
+  };
+
+  const getInitialArray = (param: string): string[] => {
+    const value = searchParams?.get(param);
+    return value ? value.split(',') : [];
+  };
 
   // Состояния для фильтров
-  const [selectedMake, setSelectedMake] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('');
-  const [yearFrom, setYearFrom] = useState<string>('');
-  const [yearTo, setYearTo] = useState<string>('');
+  const [selectedMake, setSelectedMake] = useState<string>(
+    getInitialValue('car_make')
+  );
+  const [selectedModel, setSelectedModel] = useState<string>(
+    getInitialValue('car_model')
+  );
+  const [yearFrom, setYearFrom] = useState<string>(
+    getInitialValue('car_year_from')
+  );
+  const [yearTo, setYearTo] = useState<string>(getInitialValue('car_year_to'));
   const [yearRange, setYearRange] = useState<[number, number]>([
-    1990,
-    new Date().getFullYear(),
+    searchParams?.get('car_year_from')
+      ? parseInt(searchParams.get('car_year_from')!)
+      : 1990,
+    searchParams?.get('car_year_to')
+      ? parseInt(searchParams.get('car_year_to')!)
+      : new Date().getFullYear(),
   ]);
-  const [priceFrom, setPriceFrom] = useState<string>('');
-  const [priceTo, setPriceTo] = useState<string>('');
-  const [mileageMax, setMileageMax] = useState<string>('');
-  const [fuelType, setFuelType] = useState<string>('');
-  const [transmission, setTransmission] = useState<string>('');
-  const [condition, setCondition] = useState<string>('');
-  const [selectedBodyTypes, setSelectedBodyTypes] = useState<string[]>([]);
+  const [priceFrom, setPriceFrom] = useState<string>(
+    getInitialValue('price_min')
+  );
+  const [priceTo, setPriceTo] = useState<string>(getInitialValue('price_max'));
+  const [mileageMax, setMileageMax] = useState<string>(
+    getInitialValue('car_mileage_max')
+  );
+  const [fuelType, setFuelType] = useState<string>(
+    getInitialValue('car_fuel_type')
+  );
+  const [transmission, setTransmission] = useState<string>(
+    getInitialValue('car_transmission')
+  );
+  const [condition, setCondition] = useState<string>(
+    getInitialValue('condition')
+  );
+  const [selectedBodyTypes, setSelectedBodyTypes] = useState<string[]>(
+    getInitialArray('car_body_type')
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Данные для селекторов
@@ -68,21 +105,64 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   useEffect(() => {
     const filters: Record<string, any> = {};
 
-    if (selectedMake) filters.make = selectedMake;
-    if (selectedModel) filters.model = selectedModel;
+    if (selectedMake) filters.car_make = selectedMake;
+    if (selectedModel) filters.car_model = selectedModel;
     if (yearFrom || yearRange[0] !== 1990)
-      filters.yearFrom = yearFrom ? parseInt(yearFrom) : yearRange[0];
+      filters.car_year_from = yearFrom ? parseInt(yearFrom) : yearRange[0];
     if (yearTo || yearRange[1] !== new Date().getFullYear())
-      filters.yearTo = yearTo ? parseInt(yearTo) : yearRange[1];
-    if (priceFrom) filters.priceMin = parseInt(priceFrom);
-    if (priceTo) filters.priceMax = parseInt(priceTo);
-    if (mileageMax) filters.mileageMax = parseInt(mileageMax);
-    if (fuelType) filters.fuelType = fuelType;
-    if (transmission) filters.transmission = transmission;
+      filters.car_year_to = yearTo ? parseInt(yearTo) : yearRange[1];
+    if (priceFrom) filters.price_min = parseInt(priceFrom);
+    if (priceTo) filters.price_max = parseInt(priceTo);
+    if (mileageMax) filters.car_mileage_max = parseInt(mileageMax);
+    if (fuelType) filters.car_fuel_type = fuelType;
+    if (transmission) filters.car_transmission = transmission;
     if (condition) filters.condition = condition;
-    if (selectedBodyTypes.length > 0) filters.bodyTypes = selectedBodyTypes;
+    if (selectedBodyTypes.length > 0) filters.car_body_type = selectedBodyTypes;
 
     onFiltersChange(filters);
+
+    // Обновляем URL со всеми параметрами
+    const params = new URLSearchParams(searchParams?.toString() || '');
+
+    // Удаляем старые параметры
+    params.delete('car_make');
+    params.delete('car_model');
+    params.delete('car_year_from');
+    params.delete('car_year_to');
+    params.delete('price_min');
+    params.delete('price_max');
+    params.delete('car_mileage_max');
+    params.delete('car_fuel_type');
+    params.delete('car_transmission');
+    params.delete('car_body_type');
+
+    // Добавляем новые параметры
+    if (selectedMake) params.set('car_make', selectedMake);
+    if (selectedModel) params.set('car_model', selectedModel);
+    if (yearFrom || yearRange[0] !== 1990) {
+      params.set(
+        'car_year_from',
+        yearFrom ? yearFrom : yearRange[0].toString()
+      );
+    }
+    if (yearTo || yearRange[1] !== new Date().getFullYear()) {
+      params.set('car_year_to', yearTo ? yearTo : yearRange[1].toString());
+    }
+    if (priceFrom) params.set('price_min', priceFrom);
+    if (priceTo) params.set('price_max', priceTo);
+    if (mileageMax) params.set('car_mileage_max', mileageMax);
+    if (fuelType) params.set('car_fuel_type', fuelType);
+    if (transmission) params.set('car_transmission', transmission);
+    if (condition) params.set('condition', condition);
+    if (selectedBodyTypes.length > 0) {
+      params.set('car_body_type', selectedBodyTypes.join(','));
+    }
+
+    // Обновляем URL без перезагрузки страницы
+    const newUrl = `/${locale}/search?${params.toString()}`;
+    if (window.location.pathname === `/${locale}/search`) {
+      router.replace(newUrl, { scroll: false });
+    }
   }, [
     selectedMake,
     selectedModel,
@@ -97,7 +177,6 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     condition,
     selectedBodyTypes,
     // Исключаем onFiltersChange из зависимостей чтобы избежать бесконечного цикла
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   const loadMakes = async () => {

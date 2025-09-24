@@ -13,6 +13,7 @@ import CarSortingOptions, {
 } from '@/components/marketplace/CarSortingOptions';
 import CarQuickFilters from '@/components/marketplace/CarQuickFilters';
 import { CarFilters } from '@/components/marketplace/CarFilters';
+import CarBrandIcon from '@/components/marketplace/CarBrandIcon';
 
 type CarMake = components['schemas']['backend_internal_domain_models.CarMake'];
 type MarketplaceListing =
@@ -93,13 +94,13 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   const handleSearch = () => {
     if (searchQuery) {
       router.push(
-        `/${locale}?q=${encodeURIComponent(searchQuery)}&category=10101`
+        `/${locale}/search?q=${encodeURIComponent(searchQuery)}&category=10101`
       );
     }
   };
 
   const handleMakeClick = (makeSlug: string) => {
-    router.push(`/${locale}?category=10101&car_make=${makeSlug}`);
+    router.push(`/${locale}/search?category=10101&car_make=${makeSlug}`);
   };
 
   const handleQuickFilterToggle = (
@@ -280,26 +281,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
               onClick={() => make.slug && handleMakeClick(make.slug)}
             >
               <div className="card-body items-center text-center p-4">
-                {make.logo_url ? (
-                  <div className="avatar">
-                    <div className="w-16 rounded-full">
-                      <Image
-                        src={make.logo_url}
-                        alt={make.name || ''}
-                        width={64}
-                        height={64}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="avatar placeholder">
-                    <div className="bg-neutral text-neutral-content rounded-full w-16">
-                      <span className="text-2xl">
-                        {(make.name || '').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                <CarBrandIcon brand={make.name || ''} className="w-16 h-16" />
                 <h3 className="card-title text-sm">{make.name || ''}</h3>
               </div>
             </div>
@@ -307,7 +289,10 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         </div>
 
         <div className="text-center mt-8">
-          <Link href={`/${locale}?category=10101`} className="btn btn-primary">
+          <Link
+            href={`/${locale}/search?category=10101`}
+            className="btn btn-primary"
+          >
             {t('viewAllMakes')}
           </Link>
         </div>
@@ -319,25 +304,25 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
           <h2 className="text-3xl font-bold mb-8">{t('carCategories')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
-              href={`/${locale}?category=10101`}
+              href={`/${locale}/search?category=10101`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.passenger')}
             </Link>
             <Link
-              href={`/${locale}?category=10102`}
+              href={`/${locale}/search?category=10102`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.suv')}
             </Link>
             <Link
-              href={`/${locale}?category=10103`}
+              href={`/${locale}/search?category=10103`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.commercial')}
             </Link>
             <Link
-              href={`/${locale}?category=10104`}
+              href={`/${locale}/search?category=10104`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.motorcycle')}
@@ -496,7 +481,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
           <div className="text-center mt-8">
             <Link
-              href={`/${locale}?category=10101,10102,10103,10104`}
+              href={`/${locale}/search?categories=10101,10102,10103,10104`}
               className="btn btn-primary btn-lg"
             >
               {t('viewAllListings')}

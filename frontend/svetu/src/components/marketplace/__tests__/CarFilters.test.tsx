@@ -24,8 +24,12 @@ describe('CarFilters', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (CarsService.prototype.getMakes as jest.Mock).mockResolvedValue(mockCarMakes);
-    (CarsService.prototype.getModels as jest.Mock).mockResolvedValue(mockCarModels);
+    (CarsService.prototype.getMakes as jest.Mock).mockResolvedValue(
+      mockCarMakes
+    );
+    (CarsService.prototype.getModels as jest.Mock).mockResolvedValue(
+      mockCarModels
+    );
   });
 
   it('renders without crashing', () => {
@@ -92,7 +96,7 @@ describe('CarFilters', () => {
     await waitFor(() => {
       expect(mockOnFiltersChange).toHaveBeenCalledWith(
         expect.objectContaining({
-          body_types: ['sedan']
+          body_types: ['sedan'],
         })
       );
     });
