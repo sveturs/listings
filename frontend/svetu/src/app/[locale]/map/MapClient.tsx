@@ -1313,12 +1313,12 @@ const MapPage: React.FC = () => {
 
   // Быстрые категории
   const quickCategories = [
-    { icon: '🏠', name: t('categories.realEstate'), id: 1 },
-    { icon: '🚗', name: t('categories.vehicles'), id: 2 },
-    { icon: '📱', name: t('categories.electronics'), id: 3 },
-    { icon: '👕', name: t('categories.clothing'), id: 4 },
-    { icon: '🔧', name: t('categories.services'), id: 5 },
-    { icon: '💼', name: t('categories.jobs'), id: 6 },
+    { icon: '🏠', name: t('categories.realEstate'), id: 1004 }, // real-estate
+    { icon: '🚗', name: t('categories.vehicles'), id: 1003 }, // automotive
+    { icon: '📱', name: t('categories.electronics'), id: 1001 }, // electronics
+    { icon: '👕', name: t('categories.clothing'), id: 1002 }, // fashion
+    { icon: '🔧', name: t('categories.services'), id: 1009 }, // services
+    { icon: '💼', name: t('categories.jobs'), id: 1018 }, // jobs
   ];
 
   return (

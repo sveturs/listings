@@ -1,9 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCategoryFilters } from '@/hooks/useCategoryFilters';
 import type { components } from '@/types/generated/api';
+
+// Lazy load CarFilters для автомобильных категорий
+const CarFilters = lazy(() =>
+  import('./CarFilters').then((module) => ({ default: module.CarFilters }))
+);
 
 type CategoryAttribute =
   components['schemas']['backend_internal_domain_models.CategoryAttribute'];
@@ -19,6 +24,35 @@ interface SmartFiltersProps {
   className?: string;
 }
 
+// Функция для проверки автомобильной категории
+const isAutomotiveCategory = (categoryId: number | null): boolean => {
+  if (!categoryId) return false;
+
+  // Проверяем основные автомобильные категории
+  const automotiveCategories = [
+    1003, // automotive - основная категория автомобилей
+    1301, // cars - легковые автомобили
+    1303, // auto-parts - автозапчасти
+  ];
+
+  // Проверяем основные категории
+  if (automotiveCategories.includes(categoryId)) {
+    return true;
+  }
+
+  // Также проверяем диапазон специальных категорий (домашнее производство и т.д.)
+  if (categoryId >= 10100 && categoryId <= 10199) {
+    return true;
+  }
+
+  // Проверяем специальные подкатегории автомобилей
+  if (categoryId >= 10170 && categoryId <= 10179) {
+    return true;
+  }
+
+  return false;
+};
+
 export function SmartFilters({
   categoryId,
   onChange,
@@ -33,9 +67,11 @@ export function SmartFilters({
 
   // Сброс фильтров при смене категории
   useEffect(() => {
+    // Сохраняем предыдущее состояние перед сбросом
+    const hadFilters = Object.keys(filterValues).length > 0;
     setFilterValues({});
-    // Вызываем onChange только если есть активные фильтры
-    if (Object.keys(filterValues).length > 0) {
+    // Вызываем onChange только если были активные фильтры
+    if (hadFilters) {
       onChange({});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -251,6 +287,23 @@ export function SmartFilters({
       <div className={`p-4 text-center text-base-content/60 ${className}`}>
         <p>{t('filters.selectCategory')}</p>
       </div>
+    );
+  }
+
+  // Для автомобильных категорий используем специальный компонент CarFilters
+  if (isAutomotiveCategory(categoryId)) {
+    return (
+      <Suspense
+        fallback={
+          <div className={`p-4 ${className}`}>
+            <div className="flex justify-center">
+              <span className="loading loading-spinner loading-sm"></span>
+            </div>
+          </div>
+        }
+      >
+        <CarFilters onFiltersChange={onChange} className={className} />
+      </Suspense>
     );
   }
 

@@ -96,7 +96,8 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     transmission,
     condition,
     selectedBodyTypes,
-    onFiltersChange,
+    // Исключаем onFiltersChange из зависимостей чтобы избежать бесконечного цикла
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   const loadMakes = async () => {
