@@ -282,8 +282,8 @@ export default function AIPoweredListingCreationPage() {
         });
 
         if (matchedMake) {
-          // Загружаем модели для найденной марки
-          const modelsResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/models/${matchedMake.id}`, {
+          // Загружаем модели для найденной марки (используем slug вместо id)
+          const modelsResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/models/${matchedMake.slug}`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           });
           if (!modelsResponse.ok) return;
