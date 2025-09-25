@@ -538,12 +538,50 @@ export default function AIPoweredListingCreationPage() {
     return false;
   };
 
-  // Convert image to base64
+  // Convert image to base64 with compression
   const convertToBase64 = async (imageUrl: string): Promise<string> => {
     console.log('=== convertToBase64 START ===');
     console.log('Input imageUrl:', imageUrl);
     console.log('imageUrl type:', typeof imageUrl);
     console.log('imageUrl length:', imageUrl?.length);
+
+    // Helper function to compress image using canvas
+    const compressImage = (img: HTMLImageElement, quality: number = 0.8, maxWidth: number = 1920, maxHeight: number = 1920): string => {
+      const canvas = document.createElement('canvas');
+
+      // Calculate new dimensions while maintaining aspect ratio
+      let { width, height } = img;
+
+      if (width > maxWidth || height > maxHeight) {
+        const aspectRatio = width / height;
+
+        if (width > height) {
+          width = Math.min(width, maxWidth);
+          height = width / aspectRatio;
+        } else {
+          height = Math.min(height, maxHeight);
+          width = height * aspectRatio;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Failed to get canvas context');
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to base64 with specified quality
+      const base64 = canvas.toDataURL('image/jpeg', quality);
+
+      console.log(`Image compressed: ${img.width}x${img.height} -> ${width}x${height}, quality: ${quality}`);
+      console.log(`Base64 length: ${base64.length} characters (approx ${Math.round(base64.length * 0.75 / 1024)} KB)`);
+
+      return base64;
+    };
 
     // If it's a blob URL, fetch it and convert to base64
     if (imageUrl.startsWith('blob:')) {
@@ -553,21 +591,42 @@ export default function AIPoweredListingCreationPage() {
         const blob = await response.blob();
         console.log('Blob fetched, type:', blob.type, 'size:', blob.size);
 
+        // Load image into HTML Image element for compression
         return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64String = reader.result as string;
-            console.log(
-              'Blob converted to base64, length:',
-              base64String.length
-            );
-            resolve(base64String);
+          const img = new window.Image();
+          const blobUrl = URL.createObjectURL(blob);
+
+          img.onload = () => {
+            console.log('Blob image loaded, dimensions:', img.width, 'x', img.height);
+
+            // Try different quality settings to stay under 5MB
+            let quality = 0.9;
+            let base64Result = '';
+            const maxSizeBytes = 4.5 * 1024 * 1024; // 4.5MB to be safe (leaving room for request overhead)
+
+            while (quality > 0.1) {
+              base64Result = compressImage(img, quality);
+              const estimatedSize = base64Result.length * 0.75; // Approximate bytes from base64 length
+
+              if (estimatedSize < maxSizeBytes) {
+                console.log(`✅ Image compressed successfully with quality ${quality}`);
+                break;
+              }
+
+              console.log(`Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`);
+              quality -= 0.1;
+            }
+
+            URL.revokeObjectURL(blobUrl);
+            resolve(base64Result);
           };
-          reader.onerror = () => {
-            console.error('FileReader error');
-            reject(new Error('Failed to read blob'));
+
+          img.onerror = () => {
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error('Failed to load blob as image'));
           };
-          reader.readAsDataURL(blob);
+
+          img.src = blobUrl;
         });
       } catch (error) {
         console.error('Error fetching blob:', error);
@@ -575,7 +634,7 @@ export default function AIPoweredListingCreationPage() {
       }
     }
 
-    // For regular URLs, use canvas method
+    // For regular URLs, use canvas method with compression
     return new Promise((resolve, reject) => {
       const img = new window.Image();
       console.log('Created new Image element');
@@ -587,27 +646,37 @@ export default function AIPoweredListingCreationPage() {
         console.log('Image loaded successfully');
         console.log('Image dimensions:', img.width, 'x', img.height);
 
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        try {
+          // Try different quality settings to stay under 5MB
+          let quality = 0.9;
+          let base64Result = '';
+          const maxSizeBytes = 4.5 * 1024 * 1024; // 4.5MB to be safe
 
-        if (!ctx) {
-          console.error('Failed to get canvas context');
-          reject(new Error('Failed to get canvas context'));
-          return;
+          while (quality > 0.1) {
+            base64Result = compressImage(img, quality);
+            const estimatedSize = base64Result.length * 0.75; // Approximate bytes from base64 length
+
+            if (estimatedSize < maxSizeBytes) {
+              console.log(`✅ Image compressed successfully with quality ${quality}`);
+              break;
+            }
+
+            console.log(`Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`);
+            quality -= 0.1;
+          }
+
+          // Remove data:image/jpeg;base64, prefix if present
+          const result = base64Result.includes(',') ? base64Result.split(',')[1] : base64Result;
+
+          console.log('Base64 conversion successful');
+          console.log('Result base64 length:', result.length);
+          console.log('Result preview:', result.substring(0, 50) + '...');
+
+          resolve(result);
+        } catch (error) {
+          console.error('Error compressing image:', error);
+          reject(error);
         }
-
-        ctx.drawImage(img, 0, 0);
-        const base64 = canvas.toDataURL('image/jpeg', 0.8);
-        const result = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
-
-        console.log('Base64 conversion successful');
-        console.log('Full base64 length:', base64.length);
-        console.log('Result base64 length:', result.length);
-        console.log('Result preview:', result.substring(0, 50) + '...');
-
-        resolve(result);
       };
 
       img.onerror = (error) => {
