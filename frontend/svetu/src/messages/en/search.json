@@ -233,5 +233,47 @@
     "windows": "Windows",
     "macos": "macOS",
     "linux": "Linux"
+  },
+  "resultsFound": "results found",
+  "contexts": {
+    "automotive": {
+      "heroTitle": "Car Marketplace",
+      "heroDescription": "Find your perfect car",
+      "bannerTitle": "Special Offers",
+      "bannerSubtitle": "Up to 30% off on selected vehicles",
+      "bannerCta": "View Offers",
+      "filters": {
+        "new": "New Cars",
+        "under5000": "Under €5000",
+        "diesel": "Diesel",
+        "automatic": "Automatic"
+      }
+    },
+    "realEstate": {
+      "heroTitle": "Real Estate",
+      "heroDescription": "Apartments, houses and commercial properties",
+      "bannerTitle": "New Listings",
+      "bannerSubtitle": "Daily catalog updates",
+      "bannerCta": "View New"
+    },
+    "electronics": {
+      "heroTitle": "Electronics & Tech",
+      "heroDescription": "Smartphones, laptops and gadgets",
+      "bannerTitle": "Hot Deals",
+      "bannerSubtitle": "Electronics sale",
+      "bannerCta": "To Sale"
+    },
+    "services": {
+      "heroTitle": "Services & Support",
+      "heroDescription": "Professional services in your city"
+    },
+    "fashion": {
+      "heroTitle": "Fashion & Style",
+      "heroDescription": "Clothing, shoes and accessories"
+    },
+    "jobs": {
+      "heroTitle": "Jobs & Career",
+      "heroDescription": "Find your dream job"
+    }
   }
 }

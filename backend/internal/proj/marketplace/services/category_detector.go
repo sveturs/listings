@@ -454,8 +454,32 @@ func (cd *CategoryDetector) combineResults(keyword *keywordSearchResult, similar
 
 // extractKeywords извлекает ключевые слова из текста
 func (cd *CategoryDetector) extractKeywords(text string) []string {
-	// Простая реализация - разбиваем на слова и фильтруем
-	words := strings.Fields(strings.ToLower(text))
+	// Приводим к нижнему регистру
+	text = strings.ToLower(text)
+
+	// Заменяем знаки препинания на пробелы, включая дефисы
+	// Это позволит "Mercedes-Benz" стать "mercedes benz"
+	replacer := strings.NewReplacer(
+		"-", " ",  // Дефис заменяем на пробел для правильной токенизации брендов
+		".", " ",
+		",", " ",
+		"!", " ",
+		"?", " ",
+		";", " ",
+		":", " ",
+		"(", " ",
+		")", " ",
+		"[", " ",
+		"]", " ",
+		"{", " ",
+		"}", " ",
+		"/", " ",
+		"\\", " ",
+	)
+	text = replacer.Replace(text)
+
+	// Разбиваем на слова
+	words := strings.Fields(text)
 
 	// Убираем короткие слова и стоп-слова
 	keywords := make([]string, 0)

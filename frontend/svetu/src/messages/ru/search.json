@@ -236,5 +236,47 @@
     "windows": "Windows",
     "macos": "macOS",
     "linux": "Linux"
+  },
+  "resultsFound": "результатов найдено",
+  "contexts": {
+    "automotive": {
+      "heroTitle": "Автомобильный рынок",
+      "heroDescription": "Найдите идеальный автомобиль для вас",
+      "bannerTitle": "Специальные предложения",
+      "bannerSubtitle": "Скидки до 30% на избранные автомобили",
+      "bannerCta": "Смотреть предложения",
+      "filters": {
+        "new": "Новые авто",
+        "under5000": "До €5000",
+        "diesel": "Дизель",
+        "automatic": "Автомат"
+      }
+    },
+    "realEstate": {
+      "heroTitle": "Недвижимость",
+      "heroDescription": "Квартиры, дома и коммерческая недвижимость",
+      "bannerTitle": "Новые объекты",
+      "bannerSubtitle": "Ежедневное обновление каталога",
+      "bannerCta": "Смотреть новинки"
+    },
+    "electronics": {
+      "heroTitle": "Электроника и техника",
+      "heroDescription": "Смартфоны, ноутбуки и гаджеты",
+      "bannerTitle": "Горячие предложения",
+      "bannerSubtitle": "Распродажа электроники",
+      "bannerCta": "К распродаже"
+    },
+    "services": {
+      "heroTitle": "Услуги и сервис",
+      "heroDescription": "Профессиональные услуги в вашем городе"
+    },
+    "fashion": {
+      "heroTitle": "Мода и стиль",
+      "heroDescription": "Одежда, обувь и аксессуары"
+    },
+    "jobs": {
+      "heroTitle": "Работа и карьера",
+      "heroDescription": "Найдите работу мечты"
+    }
   }
 }

@@ -158,6 +158,12 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
       params.set('car_body_type', selectedBodyTypes.join(','));
     }
 
+    // Сохраняем контекст если он есть
+    const currentContext = searchParams?.get('context');
+    if (currentContext) {
+      params.set('context', currentContext);
+    }
+
     // Обновляем URL без перезагрузки страницы
     const newUrl = `/${locale}/search?${params.toString()}`;
     if (window.location.pathname === `/${locale}/search`) {

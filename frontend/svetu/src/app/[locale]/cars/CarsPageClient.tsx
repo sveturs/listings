@@ -94,13 +94,15 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   const handleSearch = () => {
     if (searchQuery) {
       router.push(
-        `/${locale}/search?q=${encodeURIComponent(searchQuery)}&category=10101`
+        `/${locale}/search?q=${encodeURIComponent(searchQuery)}&category=10101&context=automotive`
       );
     }
   };
 
   const handleMakeClick = (makeSlug: string) => {
-    router.push(`/${locale}/search?category=10101&car_make=${makeSlug}`);
+    router.push(
+      `/${locale}/search?category=10101&car_make=${makeSlug}&context=automotive`
+    );
   };
 
   const handleQuickFilterToggle = (
@@ -290,7 +292,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
         <div className="text-center mt-8">
           <Link
-            href={`/${locale}/search?category=10101`}
+            href={`/${locale}/search?category=10101&context=automotive`}
             className="btn btn-primary"
           >
             {t('viewAllMakes')}
@@ -304,25 +306,25 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
           <h2 className="text-3xl font-bold mb-8">{t('carCategories')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
-              href={`/${locale}/search?category=10101`}
+              href={`/${locale}/search?category=10101&context=automotive`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.passenger')}
             </Link>
             <Link
-              href={`/${locale}/search?category=10102`}
+              href={`/${locale}/search?category=10102&context=automotive`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.suv')}
             </Link>
             <Link
-              href={`/${locale}/search?category=10103`}
+              href={`/${locale}/search?category=10103&context=automotive`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.commercial')}
             </Link>
             <Link
-              href={`/${locale}/search?category=10104`}
+              href={`/${locale}/search?category=10104&context=automotive`}
               className="btn btn-outline btn-lg"
             >
               {t('categories.motorcycle')}
@@ -481,7 +483,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
           <div className="text-center mt-8">
             <Link
-              href={`/${locale}/search?categories=10101,10102,10103,10104`}
+              href={`/${locale}/search?categories=10101,10102,10103,10104&context=automotive`}
               className="btn btn-primary btn-lg"
             >
               {t('viewAllListings')}

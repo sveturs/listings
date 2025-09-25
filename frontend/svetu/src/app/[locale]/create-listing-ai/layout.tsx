@@ -10,8 +10,8 @@ export default async function CreateListingAILayout({
 }) {
   const { locale } = await params;
 
-  // Загружаем дополнительный модуль create_listing
-  const messages = await loadMessages(locale as any, ['create_listing']);
+  // Загружаем дополнительные модули для создания объявления и работы с автомобилями
+  const messages = await loadMessages(locale as any, ['create_listing', 'cars']);
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>

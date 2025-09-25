@@ -39,6 +39,7 @@ import {
   ImageIcon,
   MapPin as MapPinIcon,
   Shield,
+  Info,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -243,6 +244,105 @@ export default function AIPoweredListingCreationPage() {
     loadCategories();
   }, []);
 
+  // Автозаполнение марки и модели автомобиля из AI атрибутов
+  useEffect(() => {
+    const autoFillCarSelection = async () => {
+      // Проверяем, что это категория автомобилей и есть атрибуты от AI
+      if (!aiData.category || !isCarCategory(aiData.category)) return;
+      if (!aiData.attributes.brand && !aiData.attributes.model) return;
+      if (carSelection.make) return; // Уже заполнено
+
+      try {
+        // Загружаем список марок
+        const apiUrl = configManager.getApiUrl();
+
+        // Получаем токен авторизации
+        const { tokenManager } = await import('@/utils/tokenManager');
+        const token = tokenManager.getAccessToken();
+
+        const makesResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/makes`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!makesResponse.ok) return;
+
+        const makesData = await makesResponse.json();
+        const makes = makesData.data || [];
+
+        // Ищем марку по названию из AI атрибутов
+        const brandName = aiData.attributes.brand?.toLowerCase() || '';
+        const matchedMake = makes.find((make: any) => {
+          const makeName = make.name?.toLowerCase() || '';
+          // Проверяем полное совпадение или частичное
+          return makeName === brandName ||
+                 makeName.includes(brandName) ||
+                 brandName.includes(makeName) ||
+                 // Проверяем альтернативные названия (например, VW = Volkswagen)
+                 (brandName === 'vw' && makeName === 'volkswagen') ||
+                 (brandName === 'volkswagen' && makeName === 'vw');
+        });
+
+        if (matchedMake) {
+          // Загружаем модели для найденной марки
+          const modelsResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/models/${matchedMake.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          if (!modelsResponse.ok) return;
+
+          const modelsData = await modelsResponse.json();
+          const models = modelsData.data || [];
+
+          // Ищем модель по названию из AI атрибутов
+          const modelName = aiData.attributes.model?.toLowerCase() || '';
+          const matchedModel = models.find((model: any) => {
+            const mName = model.name?.toLowerCase() || '';
+            return mName === modelName ||
+                   mName.includes(modelName) ||
+                   modelName.includes(mName);
+          });
+
+          // Устанавливаем найденные марку и модель
+          if (matchedModel) {
+            setCarSelection({
+              make: matchedMake,
+              model: matchedModel
+            });
+
+            // Обновляем атрибуты с правильными названиями
+            setAiData((prev) => ({
+              ...prev,
+              attributes: {
+                ...prev.attributes,
+                brand: matchedMake.name,
+                model: matchedModel.name,
+                make: matchedMake.name, // Добавляем для совместимости
+                car_make_id: matchedMake.id,
+                car_model_id: matchedModel.id
+              }
+            }));
+          } else if (matchedMake) {
+            // Если нашли только марку, устанавливаем её
+            setCarSelection({ make: matchedMake });
+
+            // Обновляем атрибуты
+            setAiData((prev) => ({
+              ...prev,
+              attributes: {
+                ...prev.attributes,
+                brand: matchedMake.name,
+                make: matchedMake.name,
+                car_make_id: matchedMake.id
+              }
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to auto-fill car selection:', error);
+      }
+    };
+
+    autoFillCarSelection();
+  }, [aiData.category, aiData.attributes.brand, aiData.attributes.model]);
+
   // Загружаем атрибуты при изменении категории
   const loadCategoryAttributes = async (categoryId: number) => {
     try {
@@ -350,6 +450,7 @@ export default function AIPoweredListingCreationPage() {
       electronics: 1001,
       fashion: 1002,
       automotive: 1003,
+      cars: 1002, // Автомобили
       'real-estate': 1004,
       'home-garden': 1005,
       agriculture: 1006,
@@ -357,6 +458,9 @@ export default function AIPoweredListingCreationPage() {
       'food-beverages': 1008,
       services: 1009,
       'sports-recreation': 1010,
+      miscellaneous: 1011, // Разное
+      'books & magazines': 1012,
+      'books-magazines': 1012,
     };
 
     const mappedId = categoryMap[normalizedName];
@@ -371,9 +475,34 @@ export default function AIPoweredListingCreationPage() {
       }
     }
 
+    // Проверка для категорий Cars и Vehicles
+    if (normalizedName === 'cars' || normalizedName === 'vehicles' || normalizedName.includes('car')) {
+      // Ищем категорию автомобилей
+      const carCategory = categories.find(
+        (cat) => cat.id === 1301 || cat.slug === 'cars' || cat.slug === 'automobili'
+      );
+      if (carCategory) {
+        return { id: carCategory.id, name: carCategory.name, slug: carCategory.slug };
+      }
+      // Fallback для автомобилей
+      return { id: 1301, name: 'Lični automobili', slug: 'cars' };
+    }
+
     // Возвращаем автомобильную категорию по умолчанию для automotive
     if (normalizedName.includes('automotive')) {
       return { id: 1003, name: 'Automobili', slug: 'automotive' };
+    }
+
+    // Для категории Miscellaneous возвращаем Разное
+    if (normalizedName === 'miscellaneous' || normalizedName.includes('misc')) {
+      const miscCategory = categories.find(
+        (cat) => cat.id === 1011 || cat.slug === 'miscellaneous' || cat.name.toLowerCase().includes('razno')
+      );
+      if (miscCategory) {
+        return { id: miscCategory.id, name: miscCategory.name, slug: miscCategory.slug };
+      }
+      // Fallback для разного
+      return { id: 1011, name: 'Razno', slug: 'miscellaneous' };
     }
 
     return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
@@ -1748,6 +1877,20 @@ export default function AIPoweredListingCreationPage() {
                   <Car className="w-5 h-5" />
                   {t('cars.selectCar')}
                 </h3>
+                {/* Показываем сообщение если AI определил марку и модель */}
+                {aiData.attributes.brand && !carSelection.make && (
+                  <div className="alert alert-info mb-4">
+                    <Info className="w-4 h-4" />
+                    <div>
+                      <p className="text-sm">
+                        AI определил: {aiData.attributes.brand} {aiData.attributes.model}
+                      </p>
+                      <p className="text-xs mt-1">
+                        Выберите из списка ниже для подтверждения или измените вручную
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <CarSelectorCompact
                   value={carSelection}
                   onChange={(selection) => {

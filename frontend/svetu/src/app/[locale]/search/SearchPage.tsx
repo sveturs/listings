@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { getSearchContext } from '@/types/searchContext';
+import { SearchContextHeader } from '@/components/search/SearchContextHeader';
+import { SearchContextFilters } from '@/components/search/SearchContextFilters';
 import { SearchBar } from '@/components/SearchBar';
 import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
 import { adaptMarketplaceItem } from '@/utils/product-adapters';
@@ -109,10 +112,13 @@ export default function SearchPage() {
       car_body_type: params.get('car_body_type')
         ? params.get('car_body_type')!.split(',')
         : undefined,
+      // Контекст поиска
+      context: params.get('context') || undefined,
     };
   };
 
   const initialParams = parseSearchParams();
+  const searchContext = getSearchContext(initialParams.context);
 
   const [query, setQuery] = useState(initialParams.query);
   const [fuzzy, setFuzzy] = useState(initialParams.fuzzy);
@@ -142,6 +148,7 @@ export default function SearchPage() {
     car_body_type: initialParams.car_body_type,
   });
   const [page, setPage] = useState(1);
+  const [_currentContext, _setCurrentContext] = useState(initialParams.context);
   const [allItems, setAllItems] = useState<any[]>([]);
   const [hasInitialSearchRun, setHasInitialSearchRun] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -644,6 +651,14 @@ export default function SearchPage() {
   return (
     <PageTransition mode="fade">
       <div className="min-h-screen bg-base-100">
+        {/* Контекстный заголовок для тематических разделов */}
+        {searchContext.id !== 'default' && (
+          <SearchContextHeader
+            context={searchContext}
+            totalResults={results?.total}
+          />
+        )}
+
         {/* Компактный хедер с поиском */}
         <div className="bg-base-100 border-b border-base-200 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
@@ -1027,12 +1042,20 @@ export default function SearchPage() {
                         </div>
                       )}
 
-                      {/* Динамические фильтры */}
-                      <DynamicFilters
-                        categoryId={selectedCategoryId}
-                        onFiltersChange={handleDynamicFiltersChange}
-                        activeFilters={dynamicFilters}
-                      />
+                      {/* Контекстные или динамические фильтры */}
+                      {searchContext.id !== 'default' ? (
+                        <SearchContextFilters
+                          context={searchContext}
+                          onFiltersChange={handleDynamicFiltersChange}
+                          className="w-full"
+                        />
+                      ) : (
+                        <DynamicFilters
+                          categoryId={selectedCategoryId}
+                          onFiltersChange={handleDynamicFiltersChange}
+                          activeFilters={dynamicFilters}
+                        />
+                      )}
                       <div>
                         <label className="label">
                           <span className="label-text font-medium">

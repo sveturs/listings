@@ -197,81 +197,176 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 	// Prepare prompt based on user language
 	prompt := h.getPromptForLanguage(req.UserLang)
 
-	// Create Claude API request
-	claudeReq := ClaudeRequest{
-		Model:     "claude-3-5-sonnet-20241022",
-		MaxTokens: 1024,
-		Messages: []Message{
-			{
-				Role: "user",
-				Content: []Content{
-					{
-						Type: "image",
-						Source: &ImageSource{
-							Type:      "base64",
-							MediaType: mediaType,
-							Data:      base64Data,
+	// Try with primary model first, then fallback to older models
+	models := []string{
+		"claude-3-5-sonnet-20241022",  // Latest Sonnet 3.5 - best for vision
+		"claude-3-5-haiku-20241022",   // Latest Haiku 3.5 - fast and good for vision
+		"claude-3-5-sonnet-20240620",  // Previous Sonnet 3.5
+		"claude-3-haiku-20240307",     // Haiku 3 - fastest, cheapest fallback
+	}
+
+	var lastError error
+	var lastStatusCode int
+	var lastResponse []byte
+
+	for _, model := range models {
+		// Create Claude API request with current model
+		claudeReq := ClaudeRequest{
+			Model:     model,
+			MaxTokens: 1024,
+			Messages: []Message{
+				{
+					Role: "user",
+					Content: []Content{
+						{
+							Type: "image",
+							Source: &ImageSource{
+								Type:      "base64",
+								MediaType: mediaType,
+								Data:      base64Data,
+							},
 						},
-					},
-					{
-						Type: "text",
-						Text: prompt,
+						{
+							Type: "text",
+							Text: prompt,
+						},
 					},
 				},
 			},
-		},
-	}
+		}
 
-	// Marshal request to JSON
-	jsonData, err := json.Marshal(claudeReq)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to marshal Claude request")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
+		// Marshal request to JSON
+		jsonData, err := json.Marshal(claudeReq)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to marshal Claude request")
+			return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
+		}
 
-	// Create HTTP request to Claude API
-	claudeURL := "https://api.anthropic.com/v1/messages"
-	req2, err := http.NewRequest("POST", claudeURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to create Claude request")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
+		// Create HTTP request to Claude API
+		claudeURL := "https://api.anthropic.com/v1/messages"
+		req2, err := http.NewRequest("POST", claudeURL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to create Claude request")
+			return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
+		}
 
-	// Set headers
-	req2.Header.Set("Content-Type", "application/json")
-	req2.Header.Set("x-api-key", apiKey)
-	req2.Header.Set("anthropic-version", "2023-06-01")
+		// Set headers
+		req2.Header.Set("Content-Type", "application/json")
+		req2.Header.Set("x-api-key", apiKey)
+		req2.Header.Set("anthropic-version", "2023-06-01")
 
-	// Make request
-	client := &http.Client{}
-	resp, err := client.Do(req2)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to call Claude API")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.apiError")
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+		// Make request
+		client := &http.Client{}
+		resp, err := client.Do(req2)
+		if err != nil {
+			lastError = err
+			logger.Warn().Err(err).Str("model", model).Msg("Failed to call Claude API, trying next model")
+			continue
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to read Claude response")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
+		// Read response
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			lastError = err
+			logger.Warn().Err(err).Str("model", model).Msg("Failed to read Claude response")
+			continue
+		}
 
-	// Check status code
-	if resp.StatusCode != http.StatusOK {
-		logger.Error().
-			Int("status", resp.StatusCode).
-			Str("response", string(body)).
-			Msg("Claude API returned error")
+		lastStatusCode = resp.StatusCode
+		lastResponse = body
 
-		// Check for authentication error
-		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+		// Check status code
+		if resp.StatusCode == http.StatusOK {
+			// Success! Process the response
+			logger.Info().Str("model", model).Msg("Successfully used Claude model")
+
+			// Parse Claude response
+			var claudeResp struct {
+				Content []struct {
+					Type string `json:"type"`
+					Text string `json:"text"`
+				} `json:"content"`
+			}
+
+			if err := json.Unmarshal(body, &claudeResp); err != nil {
+				logger.Error().Err(err).Msg("Failed to parse Claude response")
+				return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
+			}
+
+			// Extract text from response
+			var responseText string
+			for _, content := range claudeResp.Content {
+				if content.Type == "text" {
+					responseText = content.Text
+					break
+				}
+			}
+
+			if responseText == "" {
+				logger.Error().Msg("No text in Claude response")
+				return utils.SendError(c, fiber.StatusInternalServerError, "ai.noResponse")
+			}
+
+			// Clean the response text before parsing
+			// Replace problematic escape sequences
+			cleanedResponse := strings.ReplaceAll(responseText, "\\n", "\n")
+			cleanedResponse = strings.ReplaceAll(cleanedResponse, "\\t", "\t")
+			cleanedResponse = strings.ReplaceAll(cleanedResponse, "\\r", "\r")
+
+			// Parse the structured response from Claude
+			var analysisResult AnalyzeProductResponse
+			if err := json.Unmarshal([]byte(cleanedResponse), &analysisResult); err != nil {
+				// Try with original response if cleaning didn't help
+				if err2 := json.Unmarshal([]byte(responseText), &analysisResult); err2 != nil {
+					logger.Error().
+						Err(err).
+						Err(err2).
+						Str("response", responseText[:min(500, len(responseText))]).
+						Msg("Failed to parse Claude analysis result")
+					return utils.SendError(c, fiber.StatusInternalServerError, "ai.invalidResponse")
+				}
+			}
+
+			logger.Info().
+				Str("title", analysisResult.Title).
+				Str("category", analysisResult.Category).
+				Float64("price", analysisResult.Price).
+				Str("model", model).
+				Msg("Product analyzed successfully")
+
+			return utils.SendSuccess(c, fiber.StatusOK, "ai.analysisSuccess", analysisResult)
+		}
+
+		// Check for specific error codes
+		if resp.StatusCode == 529 { // Overloaded
+			logger.Warn().
+				Int("status", resp.StatusCode).
+				Str("model", model).
+				Str("response", string(body)).
+				Msg("Claude model overloaded, trying next model")
+			continue
+		} else if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+			// Authentication error - no point trying other models
 			logger.Error().Msg("Claude API authentication failed - check API key")
 			return utils.SendError(c, fiber.StatusServiceUnavailable, "ai.authenticationError")
+		} else if resp.StatusCode == 400 && strings.Contains(string(body), "model") {
+			// Model not available, try next
+			logger.Warn().
+				Str("model", model).
+				Msg("Model not available, trying next model")
+			continue
 		}
+	}
+
+	// All models failed, return fallback
+	if lastStatusCode != 0 {
+		logger.Error().
+			Int("status", lastStatusCode).
+			Str("response", string(lastResponse)).
+			Msg("All Claude models failed, using fallback")
 
 		// For overload or other temporary errors, return fallback
 		logger.Info().Msg("Using fallback data due to AI service unavailability")
@@ -300,60 +395,22 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 			SocialPosts: map[string]string{
 				"facebook":  "Product for sale. Contact for details!",
 				"instagram": "🔥 Item for sale! DM for info #forsale",
-				"telegram":  "💰 For sale: Product\n📞 Contact me!",
+				"telegram":  "For sale: Product. Contact me!",
 				"twitter":   "Product for sale! #marketplace",
-				"viber":     "🎯 Selling product\n📱 Message on Viber!",
+				"viber":     "Selling product. Message on Viber!",
 				"whatsapp":  "Hi! I'm selling this product. Interested?",
 			},
 		}
 
 		return utils.SendSuccess(c, fiber.StatusOK, "ai.analysisSuccess", fallbackResponse)
+	} else if lastError != nil {
+		// Network or other error
+		logger.Error().Err(lastError).Msg("Failed to call any Claude model")
+		return utils.SendError(c, fiber.StatusInternalServerError, "ai.apiError")
 	}
 
-	// Parse Claude response
-	var claudeResp struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-
-	if err := json.Unmarshal(body, &claudeResp); err != nil {
-		logger.Error().Err(err).Msg("Failed to parse Claude response")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
-
-	// Extract text from response
-	var responseText string
-	for _, content := range claudeResp.Content {
-		if content.Type == "text" {
-			responseText = content.Text
-			break
-		}
-	}
-
-	if responseText == "" {
-		logger.Error().Msg("No text in Claude response")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.noResponse")
-	}
-
-	// Parse the structured response from Claude
-	var analysisResult AnalyzeProductResponse
-	if err := json.Unmarshal([]byte(responseText), &analysisResult); err != nil {
-		logger.Error().
-			Err(err).
-			Str("response", responseText).
-			Msg("Failed to parse Claude analysis result")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.invalidResponse")
-	}
-
-	logger.Info().
-		Str("title", analysisResult.Title).
-		Str("category", analysisResult.Category).
-		Float64("price", analysisResult.Price).
-		Msg("Product analyzed successfully")
-
-	return utils.SendSuccess(c, fiber.StatusOK, "ai.analysisSuccess", analysisResult)
+	// Should not reach here
+	return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
 }
 
 // ABTestRequest represents the request for A/B testing
@@ -691,7 +748,7 @@ func (h *Handler) getPromptForLanguage(lang string) string {
     "facebook": "Продается [название товара]. [Описание состояния и особенностей]. Цена: [цена] динаров. Интересно? Пишите в комментарии или личные сообщения!",
     "twitter": "🔥 [Название товара] за [цена] динаров! [Краткое описание] #продажа #маркетплейс",
     "whatsapp": "Привет! Продаю [название товара]. [Описание]. Цена: [цена] динаров. Интересно? Могу отправить дополнительные фото!",
-    "telegram": "💰 Продается: [название товара]\n📝 Описание: [краткое описание]\n💵 Цена: [цена] динаров\n📞 Связаться со мной можно здесь!",
+    "telegram": "💰 Продается: [название товара]. 📝 Описание: [краткое описание]. 💵 Цена: [цена] динаров. 📞 Связаться со мной можно здесь!",
     "viber": "🎯 Продаю [название товара]\n✅ [Краткое описание]\n💰 Цена: [цена] динаров\n📱 Звоните или пишите в Viber!"
   }
 }`
@@ -745,7 +802,7 @@ Vrati SAMO valjan JSON bez markdown ili objašnjenja:
     "facebook": "Prodaje se [naziv proizvoda]. [Opis stanja i karakteristika]. Cena: [cena] dinara. Zainteresovani? Pišite u komentarima ili privatnim porukama!",
     "twitter": "🔥 [Naziv proizvoda] za [cena] dinara! [Kratak opis] #prodaja #marketplace",
     "whatsapp": "Zdravo! Prodajem [naziv proizvoda]. [Opis]. Cena: [cena] dinara. Zainteresovani? Mogu poslati dodatne fotografije!",
-    "telegram": "💰 Prodaje se: [naziv proizvoda]\n📝 Opis: [kratak opis]\n💵 Cena: [cena] dinara\n📞 Kontaktirajte me ovde!",
+    "telegram": "💰 Prodaje se: [naziv proizvoda]. 📝 Opis: [kratak opis]. 💵 Cena: [cena] dinara. 📞 Kontaktirajte me ovde!",
     "viber": "🎯 Prodajem [naziv proizvoda]\n✅ [Kratak opis]\n💰 Cena: [cena] dinara\n📱 Pozovite ili pišite na Viber!"
   }
 }`
@@ -798,7 +855,7 @@ Return ONLY valid JSON without markdown or explanations:
     "facebook": "For sale: [product name]. [Description of condition and features]. Price: [price] RSD. Interested? Comment below or send me a message!",
     "twitter": "🔥 [Product name] for [price] RSD! [Brief description] #forsale #marketplace",
     "whatsapp": "Hi! I'm selling [product name]. [Description]. Price: [price] RSD. Interested? I can send more photos!",
-    "telegram": "💰 For sale: [product name]\n📝 Description: [brief description]\n💵 Price: [price] RSD\n📞 Contact me here!",
+    "telegram": "💰 For sale: [product name]. 📝 Description: [brief description]. 💵 Price: [price] RSD. 📞 Contact me here!",
     "viber": "🎯 Selling [product name]\n✅ [Brief description]\n💰 Price: [price] RSD\n📱 Call or message on Viber!"
   }
 }`
