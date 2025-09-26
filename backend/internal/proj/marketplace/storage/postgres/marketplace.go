@@ -2630,13 +2630,24 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
             WHERE t.entity_type = 'category'
             AND t.field_name = 'name'
             GROUP BY t.entity_id
+        ),
+        category_counts AS (
+            SELECT
+                c.id as category_id,
+                COUNT(DISTINCT l.id) + COUNT(DISTINCT sp.id) as total_count
+            FROM marketplace_categories c
+            LEFT JOIN marketplace_listings l ON l.category_id = c.id AND l.status = 'active'
+            LEFT JOIN storefront_products sp ON sp.category_id = c.id AND sp.is_active = true
+            GROUP BY c.id
         )
         SELECT
             c.id, c.name, c.slug, c.parent_id, c.icon, c.description, c.is_active, c.created_at,
             c.seo_title, c.seo_description, c.seo_keywords,
-            COALESCE(ct.translations, '{}'::jsonb) as translations
+            COALESCE(ct.translations, '{}'::jsonb) as translations,
+            COALESCE(cc.total_count, 0) as listing_count
         FROM marketplace_categories c
         LEFT JOIN category_translations ct ON c.id = ct.entity_id
+        LEFT JOIN category_counts cc ON cc.category_id = c.id
         WHERE c.is_active = true
     `
 
@@ -2654,6 +2665,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 		var translationsJson []byte
 		var icon, description, seoTitle, seoDescription, seoKeywords sql.NullString
 
+		var listingCount int
 		err := rows.Scan(
 			&cat.ID,
 			&cat.Name,
@@ -2667,6 +2679,7 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 			&seoDescription,
 			&seoKeywords,
 			&translationsJson,
+			&listingCount,
 		)
 		if err != nil {
 			log.Printf("GetCategories: Error scanning category: %v", err)
@@ -2689,6 +2702,9 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 		if seoKeywords.Valid {
 			cat.SEOKeywords = seoKeywords.String
 		}
+
+		// Добавляем количество объявлений
+		cat.Count = listingCount
 
 		//    log.Printf("Raw translations for category %d: %s", cat.ID, string(translationsJson))
 

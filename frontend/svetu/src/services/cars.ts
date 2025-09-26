@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 
 export class CarsService {
   private static get baseUrl() {
-    return `${configManager.getApiUrl()}/api/v1/marketplace/cars`;
+    return `${configManager.getApiUrl()}/api/v1/cars`;
   }
 
   /**

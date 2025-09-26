@@ -56,7 +56,7 @@ import LocationPicker from '@/components/GIS/LocationPicker';
 import LocationPrivacySettingsWithAddress, {
   LocationPrivacyLevel,
 } from '@/components/GIS/LocationPrivacySettingsWithAddress';
-import { CarSelectorCompact } from '@/components/cars';
+import { CarSelectorCompact, CarAttributesForm } from '@/components/cars';
 import { Car, Copy } from 'lucide-react';
 
 export default function AIPoweredListingCreationPage() {
@@ -260,7 +260,7 @@ export default function AIPoweredListingCreationPage() {
         const { tokenManager } = await import('@/utils/tokenManager');
         const token = tokenManager.getAccessToken();
 
-        const makesResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/makes`, {
+        const makesResponse = await fetch(`${apiUrl}/api/v1/cars/makes`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!makesResponse.ok) return;
@@ -273,19 +273,24 @@ export default function AIPoweredListingCreationPage() {
         const matchedMake = makes.find((make: any) => {
           const makeName = make.name?.toLowerCase() || '';
           // Проверяем полное совпадение или частичное
-          return makeName === brandName ||
-                 makeName.includes(brandName) ||
-                 brandName.includes(makeName) ||
-                 // Проверяем альтернативные названия (например, VW = Volkswagen)
-                 (brandName === 'vw' && makeName === 'volkswagen') ||
-                 (brandName === 'volkswagen' && makeName === 'vw');
+          return (
+            makeName === brandName ||
+            makeName.includes(brandName) ||
+            brandName.includes(makeName) ||
+            // Проверяем альтернативные названия (например, VW = Volkswagen)
+            (brandName === 'vw' && makeName === 'volkswagen') ||
+            (brandName === 'volkswagen' && makeName === 'vw')
+          );
         });
 
         if (matchedMake) {
           // Загружаем модели для найденной марки (используем slug вместо id)
-          const modelsResponse = await fetch(`${apiUrl}/api/v1/marketplace/cars/models/${matchedMake.slug}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          });
+          const modelsResponse = await fetch(
+            `${apiUrl}/api/v1/cars/makes/${matchedMake.slug}/models`,
+            {
+              headers: token ? { Authorization: `Bearer ${token}` } : {},
+            }
+          );
           if (!modelsResponse.ok) return;
 
           const modelsData = await modelsResponse.json();
@@ -295,16 +300,18 @@ export default function AIPoweredListingCreationPage() {
           const modelName = aiData.attributes.model?.toLowerCase() || '';
           const matchedModel = models.find((model: any) => {
             const mName = model.name?.toLowerCase() || '';
-            return mName === modelName ||
-                   mName.includes(modelName) ||
-                   modelName.includes(mName);
+            return (
+              mName === modelName ||
+              mName.includes(modelName) ||
+              modelName.includes(mName)
+            );
           });
 
           // Устанавливаем найденные марку и модель
           if (matchedModel) {
             setCarSelection({
               make: matchedMake,
-              model: matchedModel
+              model: matchedModel,
             });
 
             // Обновляем атрибуты с правильными названиями
@@ -316,8 +323,8 @@ export default function AIPoweredListingCreationPage() {
                 model: matchedModel.name,
                 make: matchedMake.name, // Добавляем для совместимости
                 car_make_id: matchedMake.id,
-                car_model_id: matchedModel.id
-              }
+                car_model_id: matchedModel.id,
+              },
             }));
           } else if (matchedMake) {
             // Если нашли только марку, устанавливаем её
@@ -330,8 +337,8 @@ export default function AIPoweredListingCreationPage() {
                 ...prev.attributes,
                 brand: matchedMake.name,
                 make: matchedMake.name,
-                car_make_id: matchedMake.id
-              }
+                car_make_id: matchedMake.id,
+              },
             }));
           }
         }
@@ -476,13 +483,22 @@ export default function AIPoweredListingCreationPage() {
     }
 
     // Проверка для категорий Cars и Vehicles
-    if (normalizedName === 'cars' || normalizedName === 'vehicles' || normalizedName.includes('car')) {
+    if (
+      normalizedName === 'cars' ||
+      normalizedName === 'vehicles' ||
+      normalizedName.includes('car')
+    ) {
       // Ищем категорию автомобилей
       const carCategory = categories.find(
-        (cat) => cat.id === 1301 || cat.slug === 'cars' || cat.slug === 'automobili'
+        (cat) =>
+          cat.id === 1301 || cat.slug === 'cars' || cat.slug === 'automobili'
       );
       if (carCategory) {
-        return { id: carCategory.id, name: carCategory.name, slug: carCategory.slug };
+        return {
+          id: carCategory.id,
+          name: carCategory.name,
+          slug: carCategory.slug,
+        };
       }
       // Fallback для автомобилей
       return { id: 1301, name: 'Lični automobili', slug: 'cars' };
@@ -496,10 +512,17 @@ export default function AIPoweredListingCreationPage() {
     // Для категории Miscellaneous возвращаем Разное
     if (normalizedName === 'miscellaneous' || normalizedName.includes('misc')) {
       const miscCategory = categories.find(
-        (cat) => cat.id === 1011 || cat.slug === 'miscellaneous' || cat.name.toLowerCase().includes('razno')
+        (cat) =>
+          cat.id === 1011 ||
+          cat.slug === 'miscellaneous' ||
+          cat.name.toLowerCase().includes('razno')
       );
       if (miscCategory) {
-        return { id: miscCategory.id, name: miscCategory.name, slug: miscCategory.slug };
+        return {
+          id: miscCategory.id,
+          name: miscCategory.name,
+          slug: miscCategory.slug,
+        };
       }
       // Fallback для разного
       return { id: 1011, name: 'Razno', slug: 'miscellaneous' };
@@ -546,7 +569,12 @@ export default function AIPoweredListingCreationPage() {
     console.log('imageUrl length:', imageUrl?.length);
 
     // Helper function to compress image using canvas
-    const compressImage = (img: HTMLImageElement, quality: number = 0.8, maxWidth: number = 1920, maxHeight: number = 1920): string => {
+    const compressImage = (
+      img: HTMLImageElement,
+      quality: number = 0.8,
+      maxWidth: number = 1920,
+      maxHeight: number = 1920
+    ): string => {
       const canvas = document.createElement('canvas');
 
       // Calculate new dimensions while maintaining aspect ratio
@@ -577,8 +605,12 @@ export default function AIPoweredListingCreationPage() {
       // Convert to base64 with specified quality
       const base64 = canvas.toDataURL('image/jpeg', quality);
 
-      console.log(`Image compressed: ${img.width}x${img.height} -> ${width}x${height}, quality: ${quality}`);
-      console.log(`Base64 length: ${base64.length} characters (approx ${Math.round(base64.length * 0.75 / 1024)} KB)`);
+      console.log(
+        `Image compressed: ${img.width}x${img.height} -> ${width}x${height}, quality: ${quality}`
+      );
+      console.log(
+        `Base64 length: ${base64.length} characters (approx ${Math.round((base64.length * 0.75) / 1024)} KB)`
+      );
 
       return base64;
     };
@@ -597,7 +629,12 @@ export default function AIPoweredListingCreationPage() {
           const blobUrl = URL.createObjectURL(blob);
 
           img.onload = () => {
-            console.log('Blob image loaded, dimensions:', img.width, 'x', img.height);
+            console.log(
+              'Blob image loaded, dimensions:',
+              img.width,
+              'x',
+              img.height
+            );
 
             // Try different quality settings to stay under 5MB
             let quality = 0.9;
@@ -609,11 +646,15 @@ export default function AIPoweredListingCreationPage() {
               const estimatedSize = base64Result.length * 0.75; // Approximate bytes from base64 length
 
               if (estimatedSize < maxSizeBytes) {
-                console.log(`✅ Image compressed successfully with quality ${quality}`);
+                console.log(
+                  `✅ Image compressed successfully with quality ${quality}`
+                );
                 break;
               }
 
-              console.log(`Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`);
+              console.log(
+                `Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`
+              );
               quality -= 0.1;
             }
 
@@ -657,16 +698,22 @@ export default function AIPoweredListingCreationPage() {
             const estimatedSize = base64Result.length * 0.75; // Approximate bytes from base64 length
 
             if (estimatedSize < maxSizeBytes) {
-              console.log(`✅ Image compressed successfully with quality ${quality}`);
+              console.log(
+                `✅ Image compressed successfully with quality ${quality}`
+              );
               break;
             }
 
-            console.log(`Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`);
+            console.log(
+              `Image too large at quality ${quality} (${Math.round(estimatedSize / 1024 / 1024)}MB), reducing quality...`
+            );
             quality -= 0.1;
           }
 
           // Remove data:image/jpeg;base64, prefix if present
-          const result = base64Result.includes(',') ? base64Result.split(',')[1] : base64Result;
+          const result = base64Result.includes(',')
+            ? base64Result.split(',')[1]
+            : base64Result;
 
           console.log('Base64 conversion successful');
           console.log('Result base64 length:', result.length);
@@ -1952,10 +1999,12 @@ export default function AIPoweredListingCreationPage() {
                     <Info className="w-4 h-4" />
                     <div>
                       <p className="text-sm">
-                        AI определил: {aiData.attributes.brand} {aiData.attributes.model}
+                        AI определил: {aiData.attributes.brand}{' '}
+                        {aiData.attributes.model}
                       </p>
                       <p className="text-xs mt-1">
-                        Выберите из списка ниже для подтверждения или измените вручную
+                        Выберите из списка ниже для подтверждения или измените
+                        вручную
                       </p>
                     </div>
                   </div>
@@ -2003,132 +2052,155 @@ export default function AIPoweredListingCreationPage() {
             </div>
           )}
 
-          {/* Attributes */}
-          {(Object.keys(aiData.attributes).length > 0 ||
-            categoryAttributes.length > 0) && (
+          {/* Attributes - используем новый компонент для автомобилей */}
+          {isCarCategory(aiData.category) ? (
             <div className="card bg-base-200 mb-6">
               <div className="card-body">
-                <h3 className="card-title">
+                <h3 className="card-title mb-4">
                   <Package className="w-5 h-5" />
-                  {t('ai.attributes.title')}{' '}
-                  {Object.keys(aiData.attributes).length > 0
-                    ? t('ai.attributes.ai_detected')
-                    : t('ai.attributes.category_based')}
+                  {t('ai.attributes.title')}
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Отображаем атрибуты от AI */}
-                  {Object.entries(aiData.attributes).map(([key, value]) => (
-                    <div key={key} className="form-control">
-                      <label className="label">
-                        <span className="label-text capitalize">{key}</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="input input-bordered input-sm"
-                        value={value || ''}
-                        onChange={(e) =>
-                          setAiData({
-                            ...aiData,
-                            attributes: {
-                              ...aiData.attributes,
-                              [key]: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
-
-                  {/* Отображаем атрибуты категории, которых нет в AI данных */}
-                  {categoryAttributes
-                    .filter((attr) => !aiData.attributes[attr.name])
-                    .map((attr) => (
-                      <div key={attr.id} className="form-control">
-                        <label className="label">
-                          <span className="label-text">
-                            {attr.display_name || attr.name}
-                            {attr.is_required && (
-                              <span className="text-error">*</span>
-                            )}
-                          </span>
-                        </label>
-                        {attr.attribute_type === 'select' &&
-                        attr.options &&
-                        Array.isArray(attr.options) ? (
-                          <select
-                            className="select select-bordered select-sm"
-                            onChange={(e) =>
-                              setAiData({
-                                ...aiData,
-                                attributes: {
-                                  ...aiData.attributes,
-                                  [attr.name]: e.target.value,
-                                },
-                              })
-                            }
-                          >
-                            <option value="">
-                              {t('ai.attributes.choose')}
-                            </option>
-                            {attr.options.map((opt: any) => (
-                              <option
-                                key={opt.id || opt.value}
-                                value={opt.value}
-                              >
-                                {opt.display_value || opt.value}
-                              </option>
-                            ))}
-                          </select>
-                        ) : attr.attribute_type === 'boolean' ? (
-                          <input
-                            type="checkbox"
-                            className="checkbox"
-                            onChange={(e) =>
-                              setAiData({
-                                ...aiData,
-                                attributes: {
-                                  ...aiData.attributes,
-                                  [attr.name]: e.target.checked.toString(),
-                                },
-                              })
-                            }
-                          />
-                        ) : attr.attribute_type === 'number' ? (
-                          <input
-                            type="number"
-                            className="input input-bordered input-sm"
-                            placeholder={attr.placeholder}
-                            onChange={(e) =>
-                              setAiData({
-                                ...aiData,
-                                attributes: {
-                                  ...aiData.attributes,
-                                  [attr.name]: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            className="input input-bordered input-sm"
-                            placeholder={attr.placeholder}
-                            onChange={(e) =>
-                              setAiData({
-                                ...aiData,
-                                attributes: {
-                                  ...aiData.attributes,
-                                  [attr.name]: e.target.value,
-                                },
-                              })
-                            }
-                          />
-                        )}
-                      </div>
-                    ))}
-                </div>
+                <CarAttributesForm
+                  attributes={aiData.attributes}
+                  onChange={(attrs) =>
+                    setAiData({
+                      ...aiData,
+                      attributes: attrs,
+                    })
+                  }
+                  aiSuggestions={aiData.attributes} // Передаем все AI атрибуты как предложения
+                  categoryAttributes={categoryAttributes}
+                />
               </div>
             </div>
+          ) : (
+            /* Старый блок атрибутов для других категорий */
+            (Object.keys(aiData.attributes).length > 0 ||
+              categoryAttributes.length > 0) && (
+              <div className="card bg-base-200 mb-6">
+                <div className="card-body">
+                  <h3 className="card-title">
+                    <Package className="w-5 h-5" />
+                    {t('ai.attributes.title')}{' '}
+                    {Object.keys(aiData.attributes).length > 0
+                      ? t('ai.attributes.ai_detected')
+                      : t('ai.attributes.category_based')}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Отображаем атрибуты от AI */}
+                    {Object.entries(aiData.attributes).map(([key, value]) => (
+                      <div key={key} className="form-control">
+                        <label className="label">
+                          <span className="label-text capitalize">{key}</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="input input-bordered input-sm"
+                          value={value || ''}
+                          onChange={(e) =>
+                            setAiData({
+                              ...aiData,
+                              attributes: {
+                                ...aiData.attributes,
+                                [key]: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+
+                    {/* Отображаем атрибуты категории, которых нет в AI данных */}
+                    {categoryAttributes
+                      .filter((attr) => !aiData.attributes[attr.name])
+                      .map((attr) => (
+                        <div key={attr.id} className="form-control">
+                          <label className="label">
+                            <span className="label-text">
+                              {attr.display_name || attr.name}
+                              {attr.is_required && (
+                                <span className="text-error">*</span>
+                              )}
+                            </span>
+                          </label>
+                          {attr.attribute_type === 'select' &&
+                          attr.options &&
+                          Array.isArray(attr.options) ? (
+                            <select
+                              className="select select-bordered select-sm"
+                              onChange={(e) =>
+                                setAiData({
+                                  ...aiData,
+                                  attributes: {
+                                    ...aiData.attributes,
+                                    [attr.name]: e.target.value,
+                                  },
+                                })
+                              }
+                            >
+                              <option value="">
+                                {t('ai.attributes.choose')}
+                              </option>
+                              {attr.options.map((opt: any) => (
+                                <option
+                                  key={opt.id || opt.value}
+                                  value={opt.value}
+                                >
+                                  {opt.display_value || opt.value}
+                                </option>
+                              ))}
+                            </select>
+                          ) : attr.attribute_type === 'boolean' ? (
+                            <input
+                              type="checkbox"
+                              className="checkbox"
+                              onChange={(e) =>
+                                setAiData({
+                                  ...aiData,
+                                  attributes: {
+                                    ...aiData.attributes,
+                                    [attr.name]: e.target.checked.toString(),
+                                  },
+                                })
+                              }
+                            />
+                          ) : attr.attribute_type === 'number' ? (
+                            <input
+                              type="number"
+                              className="input input-bordered input-sm"
+                              placeholder={attr.placeholder}
+                              onChange={(e) =>
+                                setAiData({
+                                  ...aiData,
+                                  attributes: {
+                                    ...aiData.attributes,
+                                    [attr.name]: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              className="input input-bordered input-sm"
+                              placeholder={attr.placeholder}
+                              onChange={(e) =>
+                                setAiData({
+                                  ...aiData,
+                                  attributes: {
+                                    ...aiData.attributes,
+                                    [attr.name]: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            )
           )}
 
           {/* Translations */}

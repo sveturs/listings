@@ -85,15 +85,15 @@ export function getFullLocalizedAddress(
 ): string {
   // Сначала проверяем новое поле address_multilingual
   if (item.address_multilingual) {
-    // Пробуем оба формата: с префиксом address_ и без
-    const addressWithPrefix = item.address_multilingual[`address_${locale}`];
+    // Пробуем сначала без префикса (как в нашей БД), потом с префиксом
     const addressWithoutPrefix = item.address_multilingual[locale];
+    const addressWithPrefix = item.address_multilingual[`address_${locale}`];
 
-    if (addressWithPrefix) {
-      return addressWithPrefix;
-    }
     if (addressWithoutPrefix) {
       return addressWithoutPrefix;
+    }
+    if (addressWithPrefix) {
+      return addressWithPrefix;
     }
   }
 

@@ -20,6 +20,9 @@ export interface FavoriteItem {
 class FavoritesService {
   private favoriteIds: Set<number> = new Set();
   private isInitialized = false;
+  private lastFetchTime: number = 0;
+  private cachedFavorites: FavoriteItem[] | null = null;
+  private readonly CACHE_DURATION = 60000; // 60 секунд кеш
 
   // Инициализация сервиса - загрузка списка избранных
   async initialize() {
@@ -32,6 +35,9 @@ class FavoritesService {
           response.data.data.map((item: any) => item.id)
         );
         this.isInitialized = true;
+        // Сбрасываем кеш при инициализации
+        this.cachedFavorites = null;
+        this.lastFetchTime = 0;
       }
     } catch (error) {
       console.error('Failed to initialize favorites:', error);
@@ -41,6 +47,16 @@ class FavoritesService {
 
   // Получить список всех избранных объявлений
   async getFavorites(): Promise<FavoriteItem[]> {
+    // Проверяем кеш
+    const now = Date.now();
+    if (
+      this.cachedFavorites &&
+      this.lastFetchTime &&
+      now - this.lastFetchTime < this.CACHE_DURATION
+    ) {
+      return this.cachedFavorites;
+    }
+
     try {
       // Получаем избранные объявления (включая товары витрин)
       const response = await api.get('/api/v1/marketplace/favorites');
@@ -92,6 +108,11 @@ class FavoritesService {
             this.favoriteIds.add(item.id as number);
           }
         });
+
+        // Сохраняем в кеш
+        this.cachedFavorites = favorites;
+        this.lastFetchTime = Date.now();
+
         return favorites;
       }
       return [];
@@ -124,6 +145,8 @@ class FavoritesService {
           ? parseInt(String(listingId).replace('sp_', ''))
           : Number(listingId);
         this.favoriteIds.add(numericId);
+        // Сбрасываем кеш при изменении
+        this.cachedFavorites = null;
         toast.success('Добавлено в избранное');
         // Отправляем событие об изменении избранного
         window.dispatchEvent(new Event('favoritesChanged'));
@@ -158,6 +181,8 @@ class FavoritesService {
           ? parseInt(String(listingId).replace('sp_', ''))
           : Number(listingId);
         this.favoriteIds.delete(numericId);
+        // Сбрасываем кеш при изменении
+        this.cachedFavorites = null;
         toast.success('Удалено из избранного');
         // Отправляем событие об изменении избранного
         window.dispatchEvent(new Event('favoritesChanged'));

@@ -19,7 +19,7 @@ export const CarSelectorCompact: React.FC<CarSelectorCompactProps> = ({
   disabled = false,
   className = '',
 }) => {
-  const t = useTranslations();
+  const t = useTranslations('cars');
 
   const [makes, setMakes] = useState<CarMake[]>([]);
   const [models, setModels] = useState<CarModel[]>([]);
@@ -101,7 +101,7 @@ export const CarSelectorCompact: React.FC<CarSelectorCompactProps> = ({
               <>
                 <Car className="w-4 h-4 text-base-content/50 flex-shrink-0" />
                 <span className="text-base-content/50 truncate">
-                  {loadingMakes ? t('cars.loading') : t('cars.selectMake')}
+                  {loadingMakes ? t('loading') : t('selectMake')}
                 </span>
               </>
             )}
@@ -139,7 +139,7 @@ export const CarSelectorCompact: React.FC<CarSelectorCompactProps> = ({
                     </div>
                     {make.is_domestic && (
                       <span className="badge badge-primary badge-xs">
-                        {t('cars.domestic')}
+                        {t('domestic')}
                       </span>
                     )}
                   </div>
@@ -167,12 +167,12 @@ export const CarSelectorCompact: React.FC<CarSelectorCompactProps> = ({
             ) : (
               <span className="text-base-content/50 truncate">
                 {!value.make
-                  ? t('cars.selectMakeFirst')
+                  ? t('selectMakeFirst')
                   : loadingModels
-                    ? t('cars.loading')
+                    ? t('loading')
                     : models.length === 0
-                      ? t('cars.noModels')
-                      : t('cars.selectModel')}
+                      ? t('noModels')
+                      : t('selectModel')}
               </span>
             )}
           </div>

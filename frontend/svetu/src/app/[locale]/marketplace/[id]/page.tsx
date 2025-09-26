@@ -292,8 +292,8 @@ export default function ListingPage({ params }: Props) {
       // Проверяем есть ли мультиязычные адреса или переводы адресов из backend
       const hasMultilingualAddress =
         listingData.address_multilingual &&
-        (listingData.address_multilingual[`address_${locale}`] ||
-          listingData.address_multilingual[locale]);
+        (listingData.address_multilingual[locale] ||
+          listingData.address_multilingual[`address_${locale}`]);
       const hasTranslations = listingData.translations?.[locale]?.location;
 
       if (hasMultilingualAddress || hasTranslations) {

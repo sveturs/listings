@@ -88,7 +88,14 @@
       "contacts": "Contacts",
       "userContacts": "My Contacts",
       "createListing": "Create Listing",
-      "cars": "Cars"
+      "cars": "Cars",
+      "favorites": "Favorites"
+    },
+    "mobile": {
+      "menu": "Menu",
+      "categories": "Categories",
+      "allCategories": "All Categories",
+      "hideCategories": "Hide Categories"
     },
     "theme": {
       "light": "Light theme",

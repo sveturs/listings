@@ -755,6 +755,7 @@ func (r *Repository) listingToDoc(ctx context.Context, listing *models.Marketpla
 		"location":          listing.Location,
 		"city":              listing.City,
 		"country":           listing.Country,
+		"address_multilingual": listing.AddressMultilingual,
 		"views_count":       listing.ViewsCount,
 		fieldNameCreatedAt:  listing.CreatedAt.Format(time.RFC3339),
 		"updated_at":        listing.UpdatedAt.Format(time.RFC3339),

@@ -15,9 +15,13 @@ import api from '@/services/api';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
 import { useTranslations } from 'next-intl';
 import configManager, { buildImageUrl } from '@/config';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '@/store/slices/cartSlice';
-import type { AppDispatch } from '@/store';
+import {
+  fetchCategories,
+  fetchPopularCategories,
+} from '@/store/slices/categoriesSlice';
+import type { AppDispatch, RootState } from '@/store';
 import { toast } from 'react-hot-toast';
 import { favoritesService } from '@/services/favorites';
 
@@ -57,19 +61,11 @@ import {
   FiList,
   FiShoppingBag,
 } from 'react-icons/fi';
-import {
-  BsHouseDoor,
-  BsLaptop,
-  BsBriefcase,
-  BsPalette,
-  BsTools,
-  BsPhone,
-  BsGem,
-  BsHandbag,
-} from 'react-icons/bs';
-import { FaCar, FaTshirt } from 'react-icons/fa';
+// Некоторые иконки используются на странице отдельно от категорий
+import { BsGem, BsPhone } from 'react-icons/bs';
 import { AiOutlineEye } from 'react-icons/ai';
 import { HiOutlineSparkles } from 'react-icons/hi';
+import { getCategoryIcon } from '@/utils/categoryIcons';
 import NearbyStats from '@/components/home/NearbyStats';
 
 interface HomePageClientProps {
@@ -268,8 +264,6 @@ export default function HomePageClient({
   // Устанавливаем mounted после гидрации для предотвращения hydration mismatch
   useEffect(() => {
     setMounted(true);
-    // Инициализируем сервис избранного
-    initializeFavorites();
 
     // Check for OAuth token in URL
     const token = searchParams.get('token');
@@ -291,7 +285,12 @@ export default function HomePageClient({
         toast.success(t('loginSuccessful') || 'Successfully logged in!');
       });
     }
-  }, [searchParams, refreshSession, t, initializeFavorites]);
+  }, [searchParams, refreshSession, t]);
+
+  // Отдельный эффект для инициализации избранного при смене пользователя
+  useEffect(() => {
+    initializeFavorites();
+  }, [initializeFavorites]);
 
   // Обработчик добавления/удаления из избранного
   const handleToggleFavorite = async (
@@ -416,80 +415,37 @@ export default function HomePageClient({
     'Велосипед',
   ];
 
-  // Загрузка категорий и популярных категорий
+  // Загружаем категории из Redux
+  const {
+    categories: reduxCategories,
+    popularCategories: reduxPopularCategories,
+    isLoadingCategories: reduxIsLoadingCategories,
+    isLoadingPopular: reduxIsLoadingPopular,
+  } = useSelector((state: RootState) => state.categories);
+
+  // Обновляем локальное состояние из Redux
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        // Загружаем обычные категории для выпадающего списка
-        const [categoriesResponse, popularResponse] = await Promise.all([
-          api.get('/api/v1/marketplace/categories'),
-          api.get(
-            `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
-          ),
-        ]);
+    if (reduxCategories.length > 0) {
+      setCategories(reduxCategories);
+    }
+    if (reduxPopularCategories.length > 0) {
+      setPopularCategories(reduxPopularCategories);
+    }
+    setIsLoadingCategories(reduxIsLoadingCategories || reduxIsLoadingPopular);
+  }, [
+    reduxCategories,
+    reduxPopularCategories,
+    reduxIsLoadingCategories,
+    reduxIsLoadingPopular,
+  ]);
 
-        if (categoriesResponse.data.success && categoriesResponse.data.data) {
-          setCategories(categoriesResponse.data.data);
-        } else {
-          console.warn(
-            'Categories API returned no data:',
-            categoriesResponse.data
-          );
-          setCategories([]);
-        }
-
-        if (popularResponse.data.success && popularResponse.data.data) {
-          // Добавляем иконки для популярных категорий на основе их slug
-          const iconMap: { [key: string]: any } = {
-            'real-estate': BsHouseDoor,
-            automotive: FaCar,
-            electronics: BsLaptop,
-            fashion: FaTshirt,
-            jobs: BsBriefcase,
-            services: BsTools,
-            'hobbies-entertainment': BsPalette,
-            'home-garden': BsHandbag,
-            industrial: BsTools,
-            'food-beverages': BsPhone,
-            'books-stationery': BsGem,
-            'antiques-art': BsPalette,
-          };
-
-          const colorMap: { [key: string]: string } = {
-            'real-estate': 'text-blue-600',
-            automotive: 'text-red-600',
-            electronics: 'text-purple-600',
-            fashion: 'text-pink-600',
-            jobs: 'text-green-600',
-            services: 'text-orange-600',
-            'hobbies-entertainment': 'text-indigo-600',
-            'home-garden': 'text-yellow-600',
-            industrial: 'text-gray-600',
-            'food-beverages': 'text-teal-600',
-            'books-stationery': 'text-cyan-600',
-            'antiques-art': 'text-rose-600',
-          };
-
-          const categoriesWithIcons = popularResponse.data.data.map(
-            (cat: any) => ({
-              ...cat,
-              icon: iconMap[cat.slug] || BsHandbag,
-              color: colorMap[cat.slug] || 'text-gray-600',
-              count: cat.count ? `${cat.count}+` : '0',
-            })
-          );
-
-          setPopularCategories(categoriesWithIcons);
-          logger.debug('Popular categories loaded:', categoriesWithIcons);
-        }
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-    loadCategories();
-  }, [locale]);
+  // Загрузка категорий через Redux
+  useEffect(() => {
+    // Загружаем обычные категории
+    dispatch(fetchCategories());
+    // Загружаем популярные категории с учетом локали
+    dispatch(fetchPopularCategories({ locale: locale as string }));
+  }, [dispatch, locale]);
 
   // Загрузка витрин (официальных магазинов)
   useEffect(() => {
@@ -538,7 +494,7 @@ export default function HomePageClient({
               return {
                 id: store.id,
                 name: store.name,
-                category: store.category_name || 'Магазин',
+                category: store.category_name || t('defaultStoreCategory'),
                 logo:
                   store.logo_url ||
                   `https://ui-avatars.com/api/?name=${initials}&background=${bgColor}&color=fff&size=128`,
@@ -757,11 +713,27 @@ export default function HomePageClient({
               price: `${listing.price} ${listing.currency || 'РСД'}`,
               oldPrice,
               discount,
+              // Сохраняем все данные для локализации
+              // Обрабатываем разные форматы location из search API и marketplace API
               location:
-                listing.address_city ||
-                listing.city ||
-                listing.location?.city ||
-                'Сербия',
+                typeof listing.location === 'object' && listing.location
+                  ? `${listing.location.city || ''}, ${listing.location.country || ''}`
+                      .trim()
+                      .replace(/^,\s*|\s*,$/, '')
+                  : listing.location ||
+                    listing.address_city ||
+                    listing.city ||
+                    'Сербия',
+              city:
+                typeof listing.location === 'object' && listing.location
+                  ? listing.location.city
+                  : listing.city || listing.address_city,
+              country:
+                typeof listing.location === 'object' && listing.location
+                  ? listing.location.country
+                  : listing.country || listing.address_country,
+              address_multilingual: listing.address_multilingual,
+              translations: listing.translations,
               image: (() => {
                 // Проверяем наличие изображений
                 if (listing.images && listing.images.length > 0) {
@@ -1026,7 +998,7 @@ export default function HomePageClient({
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 {popularCategories.map((cat) => {
-                  const Icon = cat.icon;
+                  const Icon = getCategoryIcon(cat.iconName);
                   return (
                     <Link
                       key={cat.id}
@@ -1207,7 +1179,53 @@ export default function HomePageClient({
                       <div className="flex items-center gap-2 text-sm">
                         <FiMapPin className="w-3 h-3" />
                         <span className="text-base-content/60">
-                          {deal.location}
+                          {(() => {
+                            // Try to get translated location from various possible structures
+                            if (deal.translations?.[locale]?.location) {
+                              return deal.translations[locale].location;
+                            }
+                            if (deal.address_multilingual?.[locale]) {
+                              return deal.address_multilingual[locale];
+                            }
+
+                            // Temporary hardcoded translations for known addresses
+                            const city = deal.city || '';
+                            const country = deal.country || '';
+
+                            // Handle known Serbian addresses with translations
+                            if (city.includes('Васе Стајића')) {
+                              if (locale === 'en') {
+                                return 'Vase Stajica 20, Novi Sad, Serbia';
+                              } else if (locale === 'ru') {
+                                return 'Васе Стаича 20, Нови-Сад, Сербия';
+                              }
+                            } else if (
+                              city === 'Novi Sad' ||
+                              city === 'Нови Сад'
+                            ) {
+                              const translations = {
+                                en: `Novi Sad, Serbia`,
+                                ru: `Нови-Сад, Сербия`,
+                                sr: `Нови Сад, Србија`,
+                              };
+                              return (
+                                translations[
+                                  locale as keyof typeof translations
+                                ] || `${city}, ${country}`
+                              );
+                            }
+
+                            // Fallback to default location
+                            if (typeof deal.location === 'string') {
+                              return deal.location;
+                            }
+
+                            // Build from city and country
+                            return (
+                              `${city}${city && country ? ', ' : ''}${country}`.trim() ||
+                              'Location not specified'
+                            );
+                          })()}
                         </span>
                       </div>
                       <div className="flex items-center justify-between mt-1">

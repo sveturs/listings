@@ -88,7 +88,14 @@
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
       "createListing": "Подать объявление",
-      "cars": "Автомобили"
+      "cars": "Автомобили",
+      "favorites": "Избранное"
+    },
+    "mobile": {
+      "menu": "Меню",
+      "categories": "Категории",
+      "allCategories": "Все категории",
+      "hideCategories": "Скрыть категории"
     },
     "theme": {
       "light": "Светлая тема",

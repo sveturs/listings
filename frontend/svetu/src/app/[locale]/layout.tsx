@@ -15,6 +15,7 @@ import { CartSyncProvider } from '@/components/CartSyncProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
+import { PublicEnvScript } from 'next-runtime-env';
 import '@/utils/forceTokenCleanup'; // Автоматическая очистка старых HS256 токенов
 import '../globals.css';
 
@@ -99,6 +100,9 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
+      <head>
+        <PublicEnvScript />
+      </head>
       <body
         className="antialiased"
         suppressHydrationWarning

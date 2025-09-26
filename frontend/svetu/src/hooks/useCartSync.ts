@@ -102,16 +102,15 @@ export function useCartSync() {
           // Очищаем локальную корзину только после миграции
           if (migrationSuccess) {
             dispatch(clearLocalCart());
+            // Загружаем обновленные корзины с сервера только после миграции
+            // чтобы синхронизировать состояние с новыми товарами
+            await dispatch(fetchUserCarts(user.id)).unwrap();
           } else {
             console.warn(
               `[CartSync] Some items failed to migrate, keeping local cart`
             );
           }
         }
-
-        // Загружаем обновленные корзины с сервера еще раз
-        // чтобы синхронизировать состояние после миграции
-        await dispatch(fetchUserCarts(user.id)).unwrap();
       } catch (error) {
         console.error('[CartSync] Failed to sync carts:', error);
 

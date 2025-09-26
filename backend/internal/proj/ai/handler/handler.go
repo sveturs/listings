@@ -213,7 +213,7 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 		// Create Claude API request with current model
 		claudeReq := ClaudeRequest{
 			Model:     model,
-			MaxTokens: 1024,
+			MaxTokens: 4096,
 			Messages: []Message{
 				{
 					Role: "user",
@@ -556,128 +556,151 @@ IMPORTANT: Return ONLY the JSON, no markdown or explanations.`,
 		req.Content.Description,
 		strings.Join(req.TargetLanguages, ", "))
 
-	// Create Claude API request
-	claudeReq := ClaudeRequest{
-		Model:     "claude-3-5-sonnet-20241022",
-		MaxTokens: 1024,
-		Messages: []Message{
-			{
-				Role: "user",
-				Content: []Content{
-					{
-						Type: "text",
-						Text: prompt,
+	// Try different models in order of preference
+	models := []string{
+		"claude-3-5-sonnet-20241022",
+		"claude-3-5-haiku-20241022",
+		"claude-3-haiku-20240307",
+	}
+
+	var lastStatusCode int
+	var lastResponse []byte
+	var translationResult TranslateContentResponse
+	success := false
+
+	for _, model := range models {
+		// Create Claude API request with current model
+		claudeReq := ClaudeRequest{
+			Model:     model,
+			MaxTokens: 4096,
+			Messages: []Message{
+				{
+					Role: "user",
+					Content: []Content{
+						{
+							Type: "text",
+							Text: prompt,
+						},
 					},
 				},
 			},
-		},
-	}
-
-	// Marshal request to JSON
-	jsonData, err := json.Marshal(claudeReq)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to marshal Claude request")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
-
-	// Create HTTP request to Claude API
-	claudeURL := "https://api.anthropic.com/v1/messages"
-	req2, err := http.NewRequest("POST", claudeURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to create Claude request")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
-
-	// Set headers
-	req2.Header.Set("Content-Type", "application/json")
-	req2.Header.Set("x-api-key", apiKey)
-	req2.Header.Set("anthropic-version", "2023-06-01")
-
-	// Make request
-	client := &http.Client{}
-	resp, err := client.Do(req2)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to call Claude API")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.apiError")
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to read Claude response")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
-
-	// Check status code
-	if resp.StatusCode != http.StatusOK {
-		logger.Error().
-			Int("status", resp.StatusCode).
-			Str("response", string(body)).
-			Msg("Claude API returned error")
-		// Return fallback - copy original text to all target languages
-		// This is better than trying to guess translations
-		mockResponse := make(TranslateContentResponse)
-		for _, lang := range req.TargetLanguages {
-			mockResponse[lang] = struct {
-				Title       string `json:"title"`
-				Description string `json:"description"`
-			}{
-				Title:       req.Content.Title + " [" + lang + "]", // Add language tag to show it needs translation
-				Description: req.Content.Description,
-			}
 		}
-		return utils.SendSuccess(c, fiber.StatusOK, "ai.translationSuccess", mockResponse)
-	}
 
-	// Parse Claude response
-	var claudeResp struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
+		// Marshal request to JSON
+		jsonData, err := json.Marshal(claudeReq)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to marshal Claude request")
+			continue
+		}
 
-	if err := json.Unmarshal(body, &claudeResp); err != nil {
-		logger.Error().Err(err).Msg("Failed to parse Claude response")
-		return utils.SendError(c, fiber.StatusInternalServerError, "ai.processingError")
-	}
+		// Create HTTP request to Claude API
+		claudeURL := "https://api.anthropic.com/v1/messages"
+		req2, err := http.NewRequest("POST", claudeURL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to create Claude request")
+			continue
+		}
 
-	// Extract text from response
-	var responseText string
-	for _, content := range claudeResp.Content {
-		if content.Type == "text" {
-			responseText = content.Text
+		// Set headers
+		req2.Header.Set("Content-Type", "application/json")
+		req2.Header.Set("x-api-key", apiKey)
+		req2.Header.Set("anthropic-version", "2023-06-01")
+
+		// Make request
+		client := &http.Client{}
+		resp, err := client.Do(req2)
+		if err != nil {
+			logger.Error().Err(err).Str("model", model).Msg("Failed to call Claude API")
+			continue
+		}
+		defer func() {
+			_ = resp.Body.Close()
+		}()
+
+		// Read response
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			logger.Error().Err(err).Str("model", model).Msg("Failed to read Claude response")
+			continue
+		}
+
+		lastStatusCode = resp.StatusCode
+		lastResponse = body
+
+		// Check status code
+		if resp.StatusCode == http.StatusOK {
+			// Success! Process the response
+			logger.Info().Str("model", model).Msg("Successfully used Claude model for translation")
+
+			// Parse Claude response
+			var claudeResp struct {
+				Content []struct {
+					Type string `json:"type"`
+					Text string `json:"text"`
+				} `json:"content"`
+			}
+
+			if err := json.Unmarshal(body, &claudeResp); err != nil {
+				logger.Error().Err(err).Msg("Failed to parse Claude response")
+				continue
+			}
+
+			// Extract text from response
+			var responseText string
+			for _, content := range claudeResp.Content {
+				if content.Type == "text" {
+					responseText = content.Text
+					break
+				}
+			}
+
+			if responseText == "" {
+				logger.Error().Msg("No text in Claude response")
+				continue
+			}
+
+			// Parse the translation response
+			if err := json.Unmarshal([]byte(responseText), &translationResult); err != nil {
+				logger.Error().
+					Err(err).
+					Str("response", responseText).
+					Msg("Failed to parse Claude translation result")
+				continue
+			}
+
+			success = true
 			break
 		}
-	}
 
-	if responseText == "" {
-		logger.Error().Msg("No text in Claude response")
-		// Return mock translation
-		mockResponse := make(TranslateContentResponse)
-		for _, lang := range req.TargetLanguages {
-			mockResponse[lang] = struct {
-				Title       string `json:"title"`
-				Description string `json:"description"`
-			}{
-				Title:       req.Content.Title,
-				Description: req.Content.Description,
-			}
+		// Check for specific error codes
+		if resp.StatusCode == 529 { // Overloaded
+			logger.Warn().
+				Int("status", resp.StatusCode).
+				Str("model", model).
+				Str("response", string(body)).
+				Msg("Claude model overloaded for translation, trying next model")
+			continue
+		} else if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+			// Authentication error - no point trying other models
+			logger.Error().Msg("Claude API authentication failed - check API key")
+			break
+		} else if resp.StatusCode == 400 && strings.Contains(string(body), "model") {
+			// Model not available, try next
+			logger.Warn().
+				Str("model", model).
+				Msg("Model not available, trying next model")
+			continue
 		}
-		return utils.SendSuccess(c, fiber.StatusOK, "ai.translationSuccess", mockResponse)
 	}
 
-	// Parse the translation response
-	var translationResult TranslateContentResponse
-	if err := json.Unmarshal([]byte(responseText), &translationResult); err != nil {
+	// Check if we succeeded
+	if !success {
 		logger.Error().
-			Err(err).
-			Str("response", responseText).
-			Msg("Failed to parse Claude translation result")
-		// Return mock translation on parse error
+			Int("status", lastStatusCode).
+			Str("response", string(lastResponse)).
+			Msg("All Claude models failed for translation, using fallback")
+
+		// Return fallback - copy original text to all target languages
 		mockResponse := make(TranslateContentResponse)
 		for _, lang := range req.TargetLanguages {
 			mockResponse[lang] = struct {
