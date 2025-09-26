@@ -113,9 +113,7 @@ export const CarFiltersDrawer: React.FC<CarFiltersDrawerProps> = ({
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <CarFilters
-              {...tempFilters}
-              onChange={handleFilterChange}
-              compact={true}
+              onFiltersChange={handleFilterChange}
             />
           </div>
 
