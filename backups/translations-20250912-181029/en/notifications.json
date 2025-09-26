@@ -1,8 +1,0 @@
-{
-  "newOrder": "New Order",
-  "newOrderMessage": "You have a new order! Check details and confirm.",
-  "lowStock": "Low Stock Alert",
-  "lowStockMessage": "Some products are running low. Restock inventory.",
-  "newMessage": "New Message",
-  "newMessageFromCustomer": "Customer sent you a message"
-}
