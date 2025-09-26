@@ -205,7 +205,7 @@ func (h *AdvancedFiltersHandler) GetDensityHeatmap(c *fiber.Ctx) error {
 // @Tags gis-advanced
 // @Accept json
 // @Produce json
-// @Param request body backend_internal_proj_gis_types.ApplyAdvancedFiltersRequest true "Advanced filters request"
+// @Param request body types.ApplyAdvancedFiltersRequest true "Advanced filters request"
 // @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}}
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
 // @Failure 500 {object} utils.ErrorResponseSwag "gis.filterError"

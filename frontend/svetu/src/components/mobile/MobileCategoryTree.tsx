@@ -59,14 +59,19 @@ export const MobileCategoryTree: React.FC<MobileCategoryTreeProps> = ({
   const hierarchy = buildHierarchy(categories);
 
   // Рекурсивный рендер категории
-  const renderCategory = (category: Category, level: number = 0): React.ReactElement => {
+  const renderCategory = (
+    category: Category,
+    level: number = 0
+  ): React.ReactElement => {
     const children = hierarchy.get(category.id) || [];
     const hasChildren = children.length > 0;
     const isExpanded = expandedCategories.has(category.id);
     const Icon = getCategoryIcon(category.iconName);
 
     // Получаем правильное имя категории в зависимости от локали
-    const categoryName = category.translations?.[locale as keyof typeof category.translations] || category.name;
+    const categoryName =
+      category.translations?.[locale as keyof typeof category.translations] ||
+      category.name;
 
     // Используем count или listing_count для отображения количества
     const itemCount = category.count || category.listing_count || 0;

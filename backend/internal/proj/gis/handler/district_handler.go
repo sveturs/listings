@@ -85,7 +85,7 @@ func (h *DistrictHandler) GetDistricts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "District ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_gis_types.District} "District details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.District} "District details"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 404 {object} utils.ErrorResponseSwag "District not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -139,7 +139,7 @@ func (h *DistrictHandler) GetDistrictBoundary(c *fiber.Ctx) error {
 // @Param country_code query string false "Country code (e.g., RS)"
 // @Param district_id query string false "District ID"
 // @Param name query string false "Municipality name (partial match)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.Municipality} "List of municipalities"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.Municipality} "List of municipalities"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/municipalities [get]
@@ -173,7 +173,7 @@ func (h *DistrictHandler) GetMunicipalities(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "Municipality ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_gis_types.Municipality} "Municipality details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.Municipality} "Municipality details"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 404 {object} utils.ErrorResponseSwag "Municipality not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -204,7 +204,7 @@ func (h *DistrictHandler) GetMunicipalityByID(c *fiber.Ctx) error {
 // @Param max_price query number false "Maximum price"
 // @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.GeoListing} "Search results"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 404 {object} utils.ErrorResponseSwag "District not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -275,7 +275,7 @@ func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 // @Param max_price query number false "Maximum price"
 // @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_gis_types.GeoListing} "Search results"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 404 {object} utils.ErrorResponseSwag "Municipality not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"

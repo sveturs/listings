@@ -8,7 +8,10 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPopularCategories, fetchCategories } from '@/store/slices/categoriesSlice';
+import {
+  fetchPopularCategories,
+  fetchCategories,
+} from '@/store/slices/categoriesSlice';
 import type { AppDispatch, RootState } from '@/store';
 
 // Компоненты
@@ -24,8 +27,15 @@ import ChatIcon from './ChatIcon';
 import { MobileCategoryTree } from './mobile/MobileCategoryTree';
 
 // Иконки
-import { FiMapPin, FiHeart, FiMenu, FiX, FiChevronRight, FiChevronDown, FiGrid } from 'react-icons/fi';
-import { BsHandbag } from 'react-icons/bs';
+import {
+  FiMapPin,
+  FiHeart,
+  FiMenu,
+  FiX,
+  FiChevronRight,
+  FiChevronDown,
+  FiGrid,
+} from 'react-icons/fi';
 import { FaCar } from 'react-icons/fa';
 import { getCategoryIcon } from '@/utils/categoryIcons';
 
@@ -52,7 +62,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   const [mounted, setMounted] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [selectedCategory] = useState<string | number>('all');
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set()
+  );
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Получаем категории из Redux
@@ -315,7 +327,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">{t('header.mobile.menu')}</h2>
+                  <h2 className="text-xl font-bold">
+                    {t('header.mobile.menu')}
+                  </h2>
                   <button
                     className="btn btn-ghost btn-circle btn-sm"
                     onClick={() => setShowMobileMenu(false)}
@@ -357,28 +371,30 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
 
                 {/* Популярные категории */}
                 <ul className="menu menu-sm">
-                  {popularCategories.slice(0, showAllCategories ? 0 : 5).map((cat) => {
-                    const Icon = getCategoryIcon(cat.iconName);
-                    return (
-                      <li key={cat.id}>
-                        <Link
-                          href={`/search?category=${cat.id}`}
-                          onClick={() => setShowMobileMenu(false)}
-                          className="flex justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className={`w-4 h-4 ${cat.color}`} />
-                            {cat.name}
-                          </div>
-                          {cat.count !== undefined && cat.count > 0 && (
-                            <span className="text-xs text-base-content/40">
-                              {cat.count}
-                            </span>
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
+                  {popularCategories
+                    .slice(0, showAllCategories ? 0 : 5)
+                    .map((cat) => {
+                      const Icon = getCategoryIcon(cat.iconName);
+                      return (
+                        <li key={cat.id}>
+                          <Link
+                            href={`/search?category=${cat.id}`}
+                            onClick={() => setShowMobileMenu(false)}
+                            className="flex justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className={`w-4 h-4 ${cat.color}`} />
+                              {cat.name}
+                            </div>
+                            {cat.count !== undefined && cat.count > 0 && (
+                              <span className="text-xs text-base-content/40">
+                                {cat.count}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
 
                 {/* Кнопка "Все категории" */}
@@ -388,7 +404,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                     className="btn btn-primary btn-sm btn-block gap-2"
                   >
                     <FiGrid className="w-4 h-4" />
-                    {showAllCategories ? t('header.mobile.hideCategories') : t('header.mobile.allCategories')}
+                    {showAllCategories
+                      ? t('header.mobile.hideCategories')
+                      : t('header.mobile.allCategories')}
                     {showAllCategories ? (
                       <FiChevronDown className="w-4 h-4 ml-auto" />
                     ) : (

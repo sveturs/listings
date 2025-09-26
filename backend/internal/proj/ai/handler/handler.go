@@ -199,10 +199,10 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 
 	// Try with primary model first, then fallback to older models
 	models := []string{
-		"claude-3-5-sonnet-20241022",  // Latest Sonnet 3.5 - best for vision
-		"claude-3-5-haiku-20241022",   // Latest Haiku 3.5 - fast and good for vision
-		"claude-3-5-sonnet-20240620",  // Previous Sonnet 3.5
-		"claude-3-haiku-20240307",     // Haiku 3 - fastest, cheapest fallback
+		"claude-3-5-sonnet-20241022", // Latest Sonnet 3.5 - best for vision
+		"claude-3-5-haiku-20241022",  // Latest Haiku 3.5 - fast and good for vision
+		"claude-3-5-sonnet-20240620", // Previous Sonnet 3.5
+		"claude-3-haiku-20240307",    // Haiku 3 - fastest, cheapest fallback
 	}
 
 	var lastError error
@@ -341,23 +341,26 @@ func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 		}
 
 		// Check for specific error codes
-		if resp.StatusCode == 529 { // Overloaded
+		switch resp.StatusCode {
+		case 529: // Overloaded
 			logger.Warn().
 				Int("status", resp.StatusCode).
 				Str("model", model).
 				Str("response", string(body)).
 				Msg("Claude model overloaded, trying next model")
 			continue
-		} else if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+		case http.StatusUnauthorized:
 			// Authentication error - no point trying other models
 			logger.Error().Msg("Claude API authentication failed - check API key")
 			return utils.SendError(c, fiber.StatusServiceUnavailable, "ai.authenticationError")
-		} else if resp.StatusCode == 400 && strings.Contains(string(body), "model") {
-			// Model not available, try next
-			logger.Warn().
-				Str("model", model).
-				Msg("Model not available, trying next model")
-			continue
+		case 400:
+			if strings.Contains(string(body), "model") {
+				// Model not available, try next
+				logger.Warn().
+					Str("model", model).
+					Msg("Model not available, trying next model")
+				continue
+			}
 		}
 	}
 
@@ -673,26 +676,30 @@ IMPORTANT: Return ONLY the JSON, no markdown or explanations.`,
 		}
 
 		// Check for specific error codes
-		if resp.StatusCode == 529 { // Overloaded
+		switch resp.StatusCode {
+		case 529: // Overloaded
 			logger.Warn().
 				Int("status", resp.StatusCode).
 				Str("model", model).
 				Str("response", string(body)).
 				Msg("Claude model overloaded for translation, trying next model")
 			continue
-		} else if resp.StatusCode == http.StatusUnauthorized || strings.Contains(string(body), "authentication_error") {
+		case http.StatusUnauthorized:
 			// Authentication error - no point trying other models
 			logger.Error().Msg("Claude API authentication failed - check API key")
-			break
-		} else if resp.StatusCode == 400 && strings.Contains(string(body), "model") {
-			// Model not available, try next
-			logger.Warn().
-				Str("model", model).
-				Msg("Model not available, trying next model")
-			continue
+			success = false
+			goto exitLoop
+		case 400:
+			if strings.Contains(string(body), "model") {
+				// Model not available, try next
+				logger.Warn().
+					Str("model", model).
+					Msg("Model not available, trying next model")
+				continue
+			}
 		}
 	}
-
+exitLoop:
 	// Check if we succeeded
 	if !success {
 		logger.Error().
