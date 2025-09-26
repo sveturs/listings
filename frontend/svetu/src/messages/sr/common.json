@@ -88,7 +88,15 @@
       "contacts": "Kontakti",
       "userContacts": "My Contacts",
       "createListing": "Kreiraj oglas",
-      "map": "Mapa"
+      "map": "Mapa",
+      "cars": "Automobili",
+      "favorites": "Omiljeno"
+    },
+    "mobile": {
+      "menu": "Meni",
+      "categories": "Kategorije",
+      "allCategories": "Sve kategorije",
+      "hideCategories": "Sakrij kategorije"
     },
     "theme": {
       "light": "Svetla tema",

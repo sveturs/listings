@@ -6,10 +6,10 @@ Thank you for your prompt response. We are ready to provide the necessary inform
 
 ## Company Information:
 
-**Company Name:** SveTu d.o.o.
-**Address:** Bulevar Arsenija Čarnojevića 54, 11070 Novi Beograd, Serbia
+**Company Name:** SVE TU PLATFORMA DOO
+**Address:** Vase Stajića 18, apartment 18, 21000 Novi Sad, Serbia
 **Website:** https://svetu.rs
-**Business License:** PIB: 112345678 (placeholder - needs to be confirmed with actual number)
+**Business License:** PIB: 113569408, MB: 21891975
 
 ## Use Case Description:
 
@@ -25,7 +25,34 @@ SveTu is an online marketplace connecting sellers and buyers in Serbia. We plan 
 
 ## Message Types:
 
-### Transactional Messages (examples):
+### 🎯 PRIMARY USE CASE - Real-Time Courier Tracking:
+
+**User Query:** "Where is my package?" / "Где моя посылка?"
+
+**Bot Response with Rich Media:**
+```
+📦 Your order #12345 - LIVE TRACKING
+
+[INTERACTIVE MAP IMAGE showing route]
+🚴 Courier: Petar Petrovic
+📍 Current location: Bulevar Kralja Aleksandra
+⏱️ ETA: 15:30 (in 23 minutes)
+🚀 Speed: 18 km/h
+
+[Button: 🗺️ OPEN LIVE MAP]
+↑ Click to see courier moving in REAL-TIME
+   directly inside Viber!
+
+[Button: 🔄 REFRESH STATUS]
+```
+
+**When user clicks "OPEN LIVE MAP":**
+- Opens interactive map INSIDE Viber's embedded browser
+- Shows courier as animated icon moving in REAL-TIME
+- Updates every 5-10 seconds via WebSocket
+- No app switching, no external apps needed!
+
+### Other Transactional Messages:
 
 **Order Confirmation:**
 ```
@@ -33,15 +60,7 @@ SveTu is an online marketplace connecting sellers and buyers in Serbia. We plan 
 Product: iPhone 14 Pro
 Price: €999
 Delivery: tomorrow, 2:00 PM - 6:00 PM
-Track: https://svetu.rs/track/12345
-```
-
-**Delivery Status Update:**
-```
-🚚 Your order #12345 is on the way!
-Courier: Petar Petrovic
-Expected time: 3:30 PM
-📍 View on map: https://svetu.rs/track/12345
+Track: [Button: Track Delivery]
 ```
 
 **Seller Notification:**
@@ -85,21 +104,21 @@ We guarantee that we will only send messages to users who:
 Please let us know what additional documents or information we need to provide to complete the registration process.
 
 Best regards,
-[Your Name]
-[Position]
-SveTu d.o.o.
-Email: support@svetu.rs
-Phone: +381 XX XXX XXXX
+Dmitrii Voroshilov
+Director
+SVE TU PLATFORMA DOO
+Email: docs@svetu.rs
+Phone: +381 62 931 6318
 
 ---
 
 ## Notes for Document Completion:
 
 ### For "BM Warranties General Template":
-- **Legal Name of Company:** SveTu d.o.o.
+- **Legal Name of Company:** SVE TU PLATFORMA DOO
 - **NAME OF BRAND:** SveTu Marketplace
-- **Beneficial Owner:** [Specify the actual company owner]
-- **Full Address of Headquarters:** Bulevar Arsenija Čarnojevića 54, 11070 Novi Beograd, Serbia
+- **Beneficial Owner:** Dmitrii Voroshilov (50%) and Azamat Salakhov (50%)
+- **Full Address of Headquarters:** Vase Stajića 18, apartment 18, 21000 Novi Sad, Serbia
 
 ### For "Chatbot Qualification Form":
 - **Bot name:** SveTu Marketplace
@@ -108,8 +127,8 @@ Phone: +381 XX XXX XXXX
 - **Bot Description:** Serbian marketplace platform
 - **Bot Language:** Serbian, English, Russian
 - **Website Address:** https://svetu.rs
-- **Bot owner's email:** support@svetu.rs
-- **Admin's phone number:** [Administrator's phone number in Viber]
-- **Launch date estimation:** December 2024
+- **Bot owner's email:** docs@svetu.rs
+- **Admin's phone number:** 381629316318 (Dmitrii Voroshilov)
+- **Launch date estimation:** January 2025
 - **Bot location:** Serbia, Belgrade
 - **Account content restriction:** No restrictions

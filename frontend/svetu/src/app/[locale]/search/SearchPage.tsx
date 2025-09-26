@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { getSearchContext } from '@/types/searchContext';
+import { SearchContextHeader } from '@/components/search/SearchContextHeader';
+import { SearchContextFilters } from '@/components/search/SearchContextFilters';
 import { SearchBar } from '@/components/SearchBar';
 import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
 import { adaptMarketplaceItem } from '@/utils/product-adapters';
@@ -40,6 +43,15 @@ interface SearchFilters {
   city?: string;
   condition?: string;
   distance?: number;
+  // Автомобильные фильтры
+  car_make?: string;
+  car_model?: string;
+  car_year_from?: number;
+  car_year_to?: number;
+  car_mileage_max?: number;
+  car_fuel_type?: string;
+  car_transmission?: string;
+  car_body_type?: string[];
 }
 
 export default function SearchPage() {
@@ -83,10 +95,30 @@ export default function SearchPage() {
       sort_order: params.get('order') || 'desc',
       city: params.get('city') || undefined,
       condition: params.get('condition') || undefined,
+      // Автомобильные параметры
+      car_make: params.get('car_make') || undefined,
+      car_model: params.get('car_model') || undefined,
+      car_year_from: params.get('car_year_from')
+        ? Number(params.get('car_year_from'))
+        : undefined,
+      car_year_to: params.get('car_year_to')
+        ? Number(params.get('car_year_to'))
+        : undefined,
+      car_mileage_max: params.get('car_mileage_max')
+        ? Number(params.get('car_mileage_max'))
+        : undefined,
+      car_fuel_type: params.get('car_fuel_type') || undefined,
+      car_transmission: params.get('car_transmission') || undefined,
+      car_body_type: params.get('car_body_type')
+        ? params.get('car_body_type')!.split(',')
+        : undefined,
+      // Контекст поиска
+      context: params.get('context') || undefined,
     };
   };
 
   const initialParams = parseSearchParams();
+  const searchContext = getSearchContext(initialParams.context);
 
   const [query, setQuery] = useState(initialParams.query);
   const [fuzzy, setFuzzy] = useState(initialParams.fuzzy);
@@ -105,8 +137,18 @@ export default function SearchPage() {
     city: initialParams.city,
     condition: initialParams.condition,
     distance: initialParams.distance,
+    // Автомобильные фильтры
+    car_make: initialParams.car_make,
+    car_model: initialParams.car_model,
+    car_year_from: initialParams.car_year_from,
+    car_year_to: initialParams.car_year_to,
+    car_mileage_max: initialParams.car_mileage_max,
+    car_fuel_type: initialParams.car_fuel_type,
+    car_transmission: initialParams.car_transmission,
+    car_body_type: initialParams.car_body_type,
   });
   const [page, setPage] = useState(1);
+  const [_currentContext, _setCurrentContext] = useState(initialParams.context);
   const [allItems, setAllItems] = useState<any[]>([]);
   const [hasInitialSearchRun, setHasInitialSearchRun] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -262,6 +304,15 @@ export default function SearchPage() {
           city: params.city,
           condition: params.condition,
           distance: params.distance,
+          // Автомобильные параметры
+          car_make: params.car_make,
+          car_model: params.car_model,
+          car_year_from: params.car_year_from,
+          car_year_to: params.car_year_to,
+          car_mileage_max: params.car_mileage_max,
+          car_fuel_type: params.car_fuel_type,
+          car_transmission: params.car_transmission,
+          car_body_type: params.car_body_type,
         },
         params.fuzzy
       );
@@ -309,6 +360,14 @@ export default function SearchPage() {
     filters.city,
     filters.condition,
     filters.distance,
+    filters.car_make,
+    filters.car_model,
+    filters.car_year_from,
+    filters.car_year_to,
+    filters.car_mileage_max,
+    filters.car_fuel_type,
+    filters.car_transmission,
+    filters.car_body_type?.join(','),
   ]);
 
   const performSearch = async (
@@ -362,6 +421,15 @@ export default function SearchPage() {
         longitude: geoParams.longitude,
         distance:
           currentFilters.distance?.toString() || geoParams.distance?.toString(),
+        // Автомобильные параметры
+        car_make: currentFilters.car_make,
+        car_model: currentFilters.car_model,
+        car_year_from: currentFilters.car_year_from,
+        car_year_to: currentFilters.car_year_to,
+        car_mileage_max: currentFilters.car_mileage_max,
+        car_fuel_type: currentFilters.car_fuel_type,
+        car_transmission: currentFilters.car_transmission,
+        car_body_type: currentFilters.car_body_type,
       };
 
       // Debug logging
@@ -583,6 +651,14 @@ export default function SearchPage() {
   return (
     <PageTransition mode="fade">
       <div className="min-h-screen bg-base-100">
+        {/* Контекстный заголовок для тематических разделов */}
+        {searchContext.id !== 'default' && (
+          <SearchContextHeader
+            context={searchContext}
+            totalResults={results?.total}
+          />
+        )}
+
         {/* Компактный хедер с поиском */}
         <div className="bg-base-100 border-b border-base-200 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
@@ -966,12 +1042,20 @@ export default function SearchPage() {
                         </div>
                       )}
 
-                      {/* Динамические фильтры */}
-                      <DynamicFilters
-                        categoryId={selectedCategoryId}
-                        onFiltersChange={handleDynamicFiltersChange}
-                        activeFilters={dynamicFilters}
-                      />
+                      {/* Контекстные или динамические фильтры */}
+                      {searchContext.id !== 'default' ? (
+                        <SearchContextFilters
+                          context={searchContext}
+                          onFiltersChange={handleDynamicFiltersChange}
+                          className="w-full"
+                        />
+                      ) : (
+                        <DynamicFilters
+                          categoryId={selectedCategoryId}
+                          onFiltersChange={handleDynamicFiltersChange}
+                          activeFilters={dynamicFilters}
+                        />
+                      )}
                       <div>
                         <label className="label">
                           <span className="label-text font-medium">

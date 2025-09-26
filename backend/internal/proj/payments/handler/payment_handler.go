@@ -231,7 +231,7 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentTransaction} "Payment status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentTransaction} "Payment status"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid transaction ID"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Transaction not found"

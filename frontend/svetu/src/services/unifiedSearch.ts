@@ -21,6 +21,15 @@ export interface UnifiedSearchParams {
   latitude?: number; // Широта для геопоиска
   longitude?: number; // Долгота для геопоиска
   distance?: string; // Радиус поиска (например, "10km", "5000m")
+  // Автомобильные параметры
+  car_make?: string;
+  car_model?: string;
+  car_year_from?: number;
+  car_year_to?: number;
+  car_mileage_max?: number;
+  car_fuel_type?: string;
+  car_transmission?: string;
+  car_body_type?: string[];
   advanced_geo_filters?: {
     travel_time?: {
       center_lat: number;

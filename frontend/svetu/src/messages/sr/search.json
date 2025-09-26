@@ -219,5 +219,47 @@
     "windows": "Windows",
     "macos": "macOS",
     "linux": "Linux"
+  },
+  "resultsFound": "rezultata pronađeno",
+  "contexts": {
+    "automotive": {
+      "heroTitle": "Auto berza",
+      "heroDescription": "Pronađite savršen automobil za vas",
+      "bannerTitle": "Specijalne ponude",
+      "bannerSubtitle": "Do 30% popusta na izabrana vozila",
+      "bannerCta": "Pogledaj ponude",
+      "filters": {
+        "new": "Novi automobili",
+        "under5000": "Do €5000",
+        "diesel": "Dizel",
+        "automatic": "Automatik"
+      }
+    },
+    "realEstate": {
+      "heroTitle": "Nekretnine",
+      "heroDescription": "Stanovi, kuće i poslovni prostori",
+      "bannerTitle": "Novi oglasi",
+      "bannerSubtitle": "Dnevno ažuriranje kataloga",
+      "bannerCta": "Pogledaj novo"
+    },
+    "electronics": {
+      "heroTitle": "Elektronika i tehnika",
+      "heroDescription": "Telefoni, laptopovi i gadžeti",
+      "bannerTitle": "Vrele ponude",
+      "bannerSubtitle": "Rasprodaja elektronike",
+      "bannerCta": "Na rasprodaju"
+    },
+    "services": {
+      "heroTitle": "Usluge i servis",
+      "heroDescription": "Profesionalne usluge u vašem gradu"
+    },
+    "fashion": {
+      "heroTitle": "Moda i stil",
+      "heroDescription": "Odeća, obuća i aksesoari"
+    },
+    "jobs": {
+      "heroTitle": "Poslovi i karijera",
+      "heroDescription": "Pronađite posao svojih snova"
+    }
   }
 }

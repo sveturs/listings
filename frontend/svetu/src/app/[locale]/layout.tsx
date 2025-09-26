@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { PublicEnvScript } from 'next-runtime-env';
 import { routing } from '@/i18n/routing';
 import { ModularIntlProvider } from '@/providers/ModularIntlProvider';
 import { getMessages } from '@/i18n/messages';
@@ -13,20 +12,23 @@ import AuthStateManager from '@/components/AuthStateManager';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
 import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
 import { CartSyncProvider } from '@/components/CartSyncProvider';
-import { themeInitScript } from '@/scripts/theme-init';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
+import { PublicEnvScript } from 'next-runtime-env';
 import '@/utils/forceTokenCleanup'; // Автоматическая очистка старых HS256 токенов
 import '../globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 export function generateStaticParams() {
@@ -93,35 +95,46 @@ export default async function RootLayout({
   const messages = getMessages(locale as 'en' | 'ru' | 'sr');
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable}`}
+    >
       <head>
         <PublicEnvScript />
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         suppressHydrationWarning
+        style={
+          {
+            fontFamily:
+              'var(--font-geist-sans), system-ui, -apple-system, sans-serif',
+          } as React.CSSProperties
+        }
       >
-        <ModularIntlProvider locale={locale} messages={messages}>
-          <ReduxProvider>
-            <AuthProvider>
-              <VisibleCitiesProvider>
-                <CartSyncProvider>
-                  <ErrorBoundaryClass name="RootLayout">
-                    <AuthStateManager />
-                    <WebSocketManager />
-                    <HeaderWrapper />
-                    <Toaster position="top-right" />
-                    <main className="min-h-screen pt-16 pb-16 md:pb-0">
-                      {children}
-                    </main>
-                    <SmartMobileBottomNav />
-                  </ErrorBoundaryClass>
-                </CartSyncProvider>
-              </VisibleCitiesProvider>
-            </AuthProvider>
-          </ReduxProvider>
-        </ModularIntlProvider>
+        <ThemeProvider>
+          <ModularIntlProvider locale={locale} messages={messages}>
+            <ReduxProvider>
+              <AuthProvider>
+                <VisibleCitiesProvider>
+                  <CartSyncProvider>
+                    <ErrorBoundaryClass name="RootLayout">
+                      <AuthStateManager />
+                      <WebSocketManager />
+                      <HeaderWrapper />
+                      <Toaster position="top-right" />
+                      <main className="min-h-screen pt-16 pb-16 md:pb-0">
+                        {children}
+                      </main>
+                      <SmartMobileBottomNav />
+                    </ErrorBoundaryClass>
+                  </CartSyncProvider>
+                </VisibleCitiesProvider>
+              </AuthProvider>
+            </ReduxProvider>
+          </ModularIntlProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

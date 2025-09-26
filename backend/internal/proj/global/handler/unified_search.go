@@ -115,10 +115,11 @@ type UnifiedCategoryInfo struct {
 
 // UnifiedLocationInfo информация о местоположении
 type UnifiedLocationInfo struct {
-	City    string  `json:"city,omitempty"`
-	Country string  `json:"country,omitempty"`
-	Lat     float64 `json:"lat,omitempty"`
-	Lng     float64 `json:"lng,omitempty"`
+	City                string            `json:"city,omitempty"`
+	Country             string            `json:"country,omitempty"`
+	Lat                 float64           `json:"lat,omitempty"`
+	Lng                 float64           `json:"lng,omitempty"`
+	AddressMultilingual map[string]string `json:"address_multilingual,omitempty"` // Multilingual addresses
 }
 
 // UnifiedStorefrontInfo информация о витрине
@@ -924,8 +925,9 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	}
 
 	location := &UnifiedLocationInfo{
-		City:    listing.City,
-		Country: listing.Country,
+		City:                listing.City,
+		Country:             listing.Country,
+		AddressMultilingual: listing.AddressMultilingual,
 	}
 
 	if listing.Latitude != nil {

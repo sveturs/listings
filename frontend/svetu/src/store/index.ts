@@ -7,6 +7,7 @@ import productReducer from './slices/productSlice';
 import paymentReducer from './slices/paymentSlice';
 import cartReducer from './slices/cartSlice';
 import localCartReducer from './slices/localCartSlice';
+import categoriesReducer from './slices/categoriesSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -19,6 +20,7 @@ export const store = configureStore({
     payment: paymentReducer,
     cart: cartReducer,
     localCart: localCartReducer,
+    categories: categoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

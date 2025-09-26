@@ -1228,6 +1228,14 @@ const MapPage: React.FC = () => {
     [handleFiltersChange]
   );
 
+  // Обработчик для SmartFilters
+  const handleSmartFiltersChange = useCallback(
+    (attributeFilters: Record<string, any>) => {
+      handleFiltersChange({ attributes: attributeFilters });
+    },
+    [handleFiltersChange]
+  );
+
   // Обработчик для быстрых фильтров
   const handleQuickFilterSelect = useCallback(
     (quickFilters: Record<string, any>) => {
@@ -1305,12 +1313,12 @@ const MapPage: React.FC = () => {
 
   // Быстрые категории
   const quickCategories = [
-    { icon: '🏠', name: t('categories.realEstate'), id: 1 },
-    { icon: '🚗', name: t('categories.vehicles'), id: 2 },
-    { icon: '📱', name: t('categories.electronics'), id: 3 },
-    { icon: '👕', name: t('categories.clothing'), id: 4 },
-    { icon: '🔧', name: t('categories.services'), id: 5 },
-    { icon: '💼', name: t('categories.jobs'), id: 6 },
+    { icon: '🏠', name: t('categories.realEstate'), id: 1004 }, // real-estate
+    { icon: '🚗', name: t('categories.vehicles'), id: 1003 }, // automotive
+    { icon: '📱', name: t('categories.electronics'), id: 1001 }, // electronics
+    { icon: '👕', name: t('categories.clothing'), id: 1002 }, // fashion
+    { icon: '🔧', name: t('categories.services'), id: 1009 }, // services
+    { icon: '💼', name: t('categories.jobs'), id: 1018 }, // jobs
   ];
 
   return (
@@ -1662,9 +1670,7 @@ const MapPage: React.FC = () => {
                   <div>
                     <SmartFilters
                       categoryId={filters.categories[0]}
-                      onChange={(attributeFilters) =>
-                        handleFiltersChange({ attributes: attributeFilters })
-                      }
+                      onChange={handleSmartFiltersChange}
                       lang={currentLang}
                       className="space-y-3"
                     />

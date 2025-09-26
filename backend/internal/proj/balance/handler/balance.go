@@ -84,7 +84,7 @@ type DepositRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body DepositRequest true "Deposit details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentSession} "Payment session created"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentSession} "Payment session created"
 // @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.createDepositError"

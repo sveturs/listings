@@ -1,19 +1,11 @@
-import type { Metadata } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'SveTu - Marketplace',
-  description: 'Your local marketplace',
-};
-
+// Корневой layout просто передает children
+// Все HTML теги и компоненты определены в /app/[locale]/layout.tsx
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html>
-      <body>{children}</body>
-    </html>
-  );
+  return children;
 }

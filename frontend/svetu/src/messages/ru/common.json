@@ -87,7 +87,15 @@
       "map": "Карта",
       "contacts": "Контакты",
       "userContacts": "Мои контакты",
-      "createListing": "Подать объявление"
+      "createListing": "Подать объявление",
+      "cars": "Автомобили",
+      "favorites": "Избранное"
+    },
+    "mobile": {
+      "menu": "Меню",
+      "categories": "Категории",
+      "allCategories": "Все категории",
+      "hideCategories": "Скрыть категории"
     },
     "theme": {
       "light": "Светлая тема",

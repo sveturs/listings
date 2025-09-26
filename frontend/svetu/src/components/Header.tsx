@@ -7,7 +7,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '@/services/api';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchPopularCategories,
+  fetchCategories,
+} from '@/store/slices/categoriesSlice';
+import type { AppDispatch, RootState } from '@/store';
 
 // Компоненты
 import LanguageSwitcher from './LanguageSwitcher';
@@ -19,10 +24,20 @@ import CartIcon from './cart/CartIcon';
 import ShoppingCartModal from './cart/ShoppingCartModal';
 import { ThemeToggle } from './ThemeToggle';
 import ChatIcon from './ChatIcon';
+import { MobileCategoryTree } from './mobile/MobileCategoryTree';
 
 // Иконки
-import { FiMapPin, FiHeart, FiMenu, FiX } from 'react-icons/fi';
-import { BsHandbag } from 'react-icons/bs';
+import {
+  FiMapPin,
+  FiHeart,
+  FiMenu,
+  FiX,
+  FiChevronRight,
+  FiChevronDown,
+  FiGrid,
+} from 'react-icons/fi';
+import { FaCar } from 'react-icons/fa';
+import { getCategoryIcon } from '@/utils/categoryIcons';
 
 interface HeaderProps {
   locale?: string;
@@ -39,14 +54,23 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
 
   // Получаем locale из params или props
   const locale = propsLocale || params?.locale || 'en';
+  const dispatch = useDispatch<AppDispatch>();
 
   // Состояния
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [popularCategories, setPopularCategories] = useState<any[]>([]);
   const [selectedCategory] = useState<string | number>('all');
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set()
+  );
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Получаем категории из Redux
+  const { popularCategories, categories } = useSelector(
+    (state: RootState) => state.categories
+  );
   const [isVisible, setIsVisible] = useState(true);
   const [_lastScrollY, setLastScrollY] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -134,63 +158,26 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
     }
   }, [isAuthenticated, isLoginModalOpen]);
 
-  // Загрузка популярных категорий для мобильного меню
+  // Загружаем категории через Redux если их еще нет
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const popularResponse = await api.get(
-          `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
-        );
+    // Категории загружаются в HomePageClient, но если пользователь на другой странице,
+    // нужно загрузить их здесь для мобильного меню
+    const isHomePage = pathname === '/' || pathname === `/${locale}`;
 
-        if (popularResponse.data.success && popularResponse.data.data) {
-          // Добавляем иконки для популярных категорий на основе их slug
-          const iconMap: { [key: string]: any } = {
-            'real-estate': BsHandbag,
-            automotive: BsHandbag,
-            electronics: BsHandbag,
-            fashion: BsHandbag,
-            jobs: BsHandbag,
-            services: BsHandbag,
-            'hobbies-entertainment': BsHandbag,
-            'home-garden': BsHandbag,
-            industrial: BsHandbag,
-            'food-beverages': BsHandbag,
-            'books-stationery': BsHandbag,
-            'antiques-art': BsHandbag,
-          };
+    if (!isHomePage && popularCategories.length === 0) {
+      dispatch(fetchPopularCategories({ locale: locale as string }));
+    }
 
-          const colorMap: { [key: string]: string } = {
-            'real-estate': 'text-blue-600',
-            automotive: 'text-red-600',
-            electronics: 'text-purple-600',
-            fashion: 'text-pink-600',
-            jobs: 'text-green-600',
-            services: 'text-orange-600',
-            'hobbies-entertainment': 'text-indigo-600',
-            'home-garden': 'text-yellow-600',
-            industrial: 'text-gray-600',
-            'food-beverages': 'text-teal-600',
-            'books-stationery': 'text-cyan-600',
-            'antiques-art': 'text-rose-600',
-          };
+    // Загружаем все категории для полного списка
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, locale, pathname, popularCategories.length, categories.length]);
 
-          const categoriesWithIcons = popularResponse.data.data.map(
-            (cat: any) => ({
-              ...cat,
-              icon: iconMap[cat.slug] || BsHandbag,
-              color: colorMap[cat.slug] || 'text-gray-600',
-              count: cat.count ? `${cat.count}+` : '0',
-            })
-          );
-
-          setPopularCategories(categoriesWithIcons);
-        }
-      } catch (error) {
-        console.error('Failed to load popular categories:', error);
-      }
-    };
-    loadCategories();
-  }, [locale]);
+  // Обновляем категории при смене языка
+  useEffect(() => {
+    dispatch(fetchPopularCategories({ locale: locale as string }));
+  }, [dispatch, locale]);
 
   const handleCheckout = () => {
     if (currentStorefrontId) {
@@ -254,6 +241,18 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                   data-tip={t('header.nav.map')}
                 >
                   <FiMapPin className="w-5 h-5" />
+                </Link>
+
+                {/* Ссылка на автомобильный раздел */}
+                <Link
+                  href="/cars"
+                  className="btn btn-ghost tooltip tooltip-bottom hidden md:inline-flex"
+                  data-tip={t('header.nav.cars')}
+                >
+                  <FaCar className="w-5 h-5" />
+                  <span className="ml-2 hidden lg:inline">
+                    {t('header.nav.cars')}
+                  </span>
                 </Link>
 
                 {/* Чат - показываем только для авторизованных */}
@@ -328,7 +327,9 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
             >
               <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Меню</h2>
+                  <h2 className="text-xl font-bold">
+                    {t('header.mobile.menu')}
+                  </h2>
                   <button
                     className="btn btn-ghost btn-circle btn-sm"
                     onClick={() => setShowMobileMenu(false)}
@@ -344,39 +345,97 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
                       {t('header.nav.map')}
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/cars">
+                      <FaCar className="w-5 h-5" />
+                      {t('header.nav.cars')}
+                    </Link>
+                  </li>
                   {user && (
                     <li>
                       <Link href="/favorites">
                         <FiHeart className="w-5 h-5" />
-                        Избранное
+                        {t('header.nav.favorites')}
                       </Link>
                     </li>
                   )}
                   <li>
                     <Link href="/create-listing-choice">
-                      Создать объявление
+                      {t('header.nav.createListing')}
                     </Link>
                   </li>
                 </ul>
 
                 {/* Категории в мобильном меню */}
-                <div className="divider">Категории</div>
-                <ul className="menu menu-sm max-h-96 overflow-y-auto">
-                  {popularCategories.map((cat) => {
-                    const Icon = cat.icon || BsHandbag;
-                    return (
-                      <li key={cat.id}>
-                        <Link
-                          href={`/search?category=${cat.id}`}
-                          onClick={() => setShowMobileMenu(false)}
-                        >
-                          <Icon className={`w-4 h-4 ${cat.color}`} />
-                          {cat.name}
-                        </Link>
-                      </li>
-                    );
-                  })}
+                <div className="divider">{t('header.mobile.categories')}</div>
+
+                {/* Популярные категории */}
+                <ul className="menu menu-sm">
+                  {popularCategories
+                    .slice(0, showAllCategories ? 0 : 5)
+                    .map((cat) => {
+                      const Icon = getCategoryIcon(cat.iconName);
+                      return (
+                        <li key={cat.id}>
+                          <Link
+                            href={`/search?category=${cat.id}`}
+                            onClick={() => setShowMobileMenu(false)}
+                            className="flex justify-between"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className={`w-4 h-4 ${cat.color}`} />
+                              {cat.name}
+                            </div>
+                            {cat.count !== undefined && cat.count > 0 && (
+                              <span className="text-xs text-base-content/40">
+                                {cat.count}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
                 </ul>
+
+                {/* Кнопка "Все категории" */}
+                <div className="px-3 py-2">
+                  <button
+                    onClick={() => setShowAllCategories(!showAllCategories)}
+                    className="btn btn-primary btn-sm btn-block gap-2"
+                  >
+                    <FiGrid className="w-4 h-4" />
+                    {showAllCategories
+                      ? t('header.mobile.hideCategories')
+                      : t('header.mobile.allCategories')}
+                    {showAllCategories ? (
+                      <FiChevronDown className="w-4 h-4 ml-auto" />
+                    ) : (
+                      <FiChevronRight className="w-4 h-4 ml-auto" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Полный список категорий с иерархией */}
+                {showAllCategories && (
+                  <MobileCategoryTree
+                    categories={categories}
+                    expandedCategories={expandedCategories}
+                    locale={locale as string}
+                    onToggleExpand={(categoryId) => {
+                      const newExpanded = new Set(expandedCategories);
+                      if (newExpanded.has(categoryId)) {
+                        newExpanded.delete(categoryId);
+                      } else {
+                        newExpanded.add(categoryId);
+                      }
+                      setExpandedCategories(newExpanded);
+                    }}
+                    onSelectCategory={(categoryId) => {
+                      router.push(`/search?category=${categoryId}`);
+                      setShowMobileMenu(false);
+                    }}
+                  />
+                )}
               </div>
             </motion.div>
           </>

@@ -25,8 +25,8 @@ type NeighborhoodStatsResponse struct {
 // @Param lat query number false "Center latitude"
 // @Param lon query number false "Center longitude"
 // @Param radius query number false "Radius in kilometers (default 5)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=handler.NeighborhoodStatsResponse} "Statistics"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.statsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=handler.NeighborhoodStatsResponse} "Statistics"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.statsError"
 // @Router /api/v1/marketplace/neighborhood-stats [get]
 func (h *MarketplaceHandler) GetNeighborhoodStats(c *fiber.Ctx) error {
 	lat := c.QueryFloat("lat", 44.8176) // Default Belgrade coordinates

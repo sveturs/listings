@@ -23,6 +23,15 @@ const CATEGORY_IDS = {
   ELECTRONICS: 1002,
 };
 
+// Проверяем, является ли категория автомобильной (10100-10199)
+const isAutomotiveCategory = (categoryId?: number) => {
+  if (!categoryId) return false;
+  return (
+    categoryId === CATEGORY_IDS.AUTOMOTIVE ||
+    (categoryId >= 10100 && categoryId <= 10199)
+  );
+};
+
 export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
   categoryId,
   onFiltersChange,
@@ -102,14 +111,17 @@ export const DynamicFilters: React.FC<DynamicFiltersProps> = ({
   const renderCategoryFilters = () => {
     if (!categoryId) return null;
 
+    // Проверяем автомобильные категории
+    if (isAutomotiveCategory(categoryId)) {
+      return (
+        <CarFilters
+          onFiltersChange={handleCategoryFiltersChange}
+          className="space-y-4"
+        />
+      );
+    }
+
     switch (categoryId) {
-      case CATEGORY_IDS.AUTOMOTIVE:
-        return (
-          <CarFilters
-            onFiltersChange={handleCategoryFiltersChange}
-            className="space-y-4"
-          />
-        );
       case CATEGORY_IDS.REAL_ESTATE:
         return (
           <RealEstateFilters

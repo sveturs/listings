@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Car, Calendar, Gauge, Fuel, Settings } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import {
+  Car,
+  Calendar,
+  Gauge,
+  Fuel,
+  Settings,
+  Sliders,
+  Package,
+} from 'lucide-react';
 import { CarsService } from '@/services/cars';
 import type { CarMake, CarModel } from '@/types/cars';
 
@@ -16,18 +26,59 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   className = '',
 }) => {
   const t = useTranslations('cars');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const locale = useLocale();
+
+  // Инициализация значений из URL параметров
+  const getInitialValue = (param: string, defaultValue: string = '') => {
+    return searchParams?.get(param) || defaultValue;
+  };
+
+  const getInitialArray = (param: string): string[] => {
+    const value = searchParams?.get(param);
+    return value ? value.split(',') : [];
+  };
 
   // Состояния для фильтров
-  const [selectedMake, setSelectedMake] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('');
-  const [yearFrom, setYearFrom] = useState<string>('');
-  const [yearTo, setYearTo] = useState<string>('');
-  const [priceFrom, setPriceFrom] = useState<string>('');
-  const [priceTo, setPriceTo] = useState<string>('');
-  const [mileageMax, setMileageMax] = useState<string>('');
-  const [fuelType, setFuelType] = useState<string>('');
-  const [transmission, setTransmission] = useState<string>('');
-  const [condition, setCondition] = useState<string>('');
+  const [selectedMake, setSelectedMake] = useState<string>(
+    getInitialValue('car_make')
+  );
+  const [selectedModel, setSelectedModel] = useState<string>(
+    getInitialValue('car_model')
+  );
+  const [yearFrom, setYearFrom] = useState<string>(
+    getInitialValue('car_year_from')
+  );
+  const [yearTo, setYearTo] = useState<string>(getInitialValue('car_year_to'));
+  const [yearRange, setYearRange] = useState<[number, number]>([
+    searchParams?.get('car_year_from')
+      ? parseInt(searchParams.get('car_year_from')!)
+      : 1990,
+    searchParams?.get('car_year_to')
+      ? parseInt(searchParams.get('car_year_to')!)
+      : new Date().getFullYear(),
+  ]);
+  const [priceFrom, setPriceFrom] = useState<string>(
+    getInitialValue('price_min')
+  );
+  const [priceTo, setPriceTo] = useState<string>(getInitialValue('price_max'));
+  const [mileageMax, setMileageMax] = useState<string>(
+    getInitialValue('car_mileage_max')
+  );
+  const [fuelType, setFuelType] = useState<string>(
+    getInitialValue('car_fuel_type')
+  );
+  const [transmission, setTransmission] = useState<string>(
+    getInitialValue('car_transmission')
+  );
+  const [condition, setCondition] = useState<string>(
+    getInitialValue('condition')
+  );
+  const [selectedBodyTypes, setSelectedBodyTypes] = useState<string[]>(
+    getInitialArray('car_body_type')
+  );
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Данные для селекторов
   const [makes, setMakes] = useState<CarMake[]>([]);
@@ -54,30 +105,84 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   useEffect(() => {
     const filters: Record<string, any> = {};
 
-    if (selectedMake) filters.make = selectedMake;
-    if (selectedModel) filters.model = selectedModel;
-    if (yearFrom) filters.yearFrom = parseInt(yearFrom);
-    if (yearTo) filters.yearTo = parseInt(yearTo);
-    if (priceFrom) filters.priceMin = parseInt(priceFrom);
-    if (priceTo) filters.priceMax = parseInt(priceTo);
-    if (mileageMax) filters.mileageMax = parseInt(mileageMax);
-    if (fuelType) filters.fuelType = fuelType;
-    if (transmission) filters.transmission = transmission;
+    if (selectedMake) filters.car_make = selectedMake;
+    if (selectedModel) filters.car_model = selectedModel;
+    if (yearFrom || yearRange[0] !== 1990)
+      filters.car_year_from = yearFrom ? parseInt(yearFrom) : yearRange[0];
+    if (yearTo || yearRange[1] !== new Date().getFullYear())
+      filters.car_year_to = yearTo ? parseInt(yearTo) : yearRange[1];
+    if (priceFrom) filters.price_min = parseInt(priceFrom);
+    if (priceTo) filters.price_max = parseInt(priceTo);
+    if (mileageMax) filters.car_mileage_max = parseInt(mileageMax);
+    if (fuelType) filters.car_fuel_type = fuelType;
+    if (transmission) filters.car_transmission = transmission;
     if (condition) filters.condition = condition;
+    if (selectedBodyTypes.length > 0) filters.car_body_type = selectedBodyTypes;
 
     onFiltersChange(filters);
+
+    // Обновляем URL со всеми параметрами
+    const params = new URLSearchParams(searchParams?.toString() || '');
+
+    // Удаляем старые параметры
+    params.delete('car_make');
+    params.delete('car_model');
+    params.delete('car_year_from');
+    params.delete('car_year_to');
+    params.delete('price_min');
+    params.delete('price_max');
+    params.delete('car_mileage_max');
+    params.delete('car_fuel_type');
+    params.delete('car_transmission');
+    params.delete('car_body_type');
+
+    // Добавляем новые параметры
+    if (selectedMake) params.set('car_make', selectedMake);
+    if (selectedModel) params.set('car_model', selectedModel);
+    if (yearFrom || yearRange[0] !== 1990) {
+      params.set(
+        'car_year_from',
+        yearFrom ? yearFrom : yearRange[0].toString()
+      );
+    }
+    if (yearTo || yearRange[1] !== new Date().getFullYear()) {
+      params.set('car_year_to', yearTo ? yearTo : yearRange[1].toString());
+    }
+    if (priceFrom) params.set('price_min', priceFrom);
+    if (priceTo) params.set('price_max', priceTo);
+    if (mileageMax) params.set('car_mileage_max', mileageMax);
+    if (fuelType) params.set('car_fuel_type', fuelType);
+    if (transmission) params.set('car_transmission', transmission);
+    if (condition) params.set('condition', condition);
+    if (selectedBodyTypes.length > 0) {
+      params.set('car_body_type', selectedBodyTypes.join(','));
+    }
+
+    // Сохраняем контекст если он есть
+    const currentContext = searchParams?.get('context');
+    if (currentContext) {
+      params.set('context', currentContext);
+    }
+
+    // Обновляем URL без перезагрузки страницы
+    const newUrl = `/${locale}/search?${params.toString()}`;
+    if (window.location.pathname === `/${locale}/search`) {
+      router.replace(newUrl, { scroll: false });
+    }
   }, [
     selectedMake,
     selectedModel,
     yearFrom,
     yearTo,
+    yearRange,
     priceFrom,
     priceTo,
     mileageMax,
     fuelType,
     transmission,
     condition,
-    onFiltersChange,
+    selectedBodyTypes,
+    // Исключаем onFiltersChange из зависимостей чтобы избежать бесконечного цикла
   ]);
 
   const loadMakes = async () => {
@@ -113,12 +218,42 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     setSelectedModel('');
     setYearFrom('');
     setYearTo('');
+    setYearRange([1990, currentYear]);
     setPriceFrom('');
     setPriceTo('');
     setMileageMax('');
     setFuelType('');
     setTransmission('');
     setCondition('');
+    setSelectedBodyTypes([]);
+  };
+
+  // Предустановки для пробега
+  const mileagePresets = [
+    { label: t('filters.mileagePresets.50k'), value: 50000 },
+    { label: t('filters.mileagePresets.100k'), value: 100000 },
+    { label: t('filters.mileagePresets.150k'), value: 150000 },
+    { label: t('filters.mileagePresets.200k'), value: 200000 },
+  ];
+
+  // Типы кузова
+  const bodyTypes = [
+    { id: 'sedan', label: t('filters.bodyTypes.sedan') },
+    { id: 'suv', label: t('filters.bodyTypes.suv') },
+    { id: 'hatchback', label: t('filters.bodyTypes.hatchback') },
+    { id: 'wagon', label: t('filters.bodyTypes.wagon') },
+    { id: 'coupe', label: t('filters.bodyTypes.coupe') },
+    { id: 'minivan', label: t('filters.bodyTypes.minivan') },
+    { id: 'pickup', label: t('filters.bodyTypes.pickup') },
+    { id: 'convertible', label: t('filters.bodyTypes.convertible') },
+  ];
+
+  const handleBodyTypeToggle = (bodyType: string) => {
+    setSelectedBodyTypes((prev) =>
+      prev.includes(bodyType)
+        ? prev.filter((bt) => bt !== bodyType)
+        : [...prev, bodyType]
+    );
   };
 
   // Генерация списка годов
@@ -191,15 +326,40 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             )}
           </div>
 
-          {/* Год выпуска */}
+          {/* Год выпуска с range slider */}
           <div>
             <label className="label">
               <span className="label-text font-medium">
                 <Calendar className="w-4 h-4 inline mr-1" />
                 {t('filters.year')}
               </span>
+              <span className="label-text-alt">
+                {yearRange[0]} - {yearRange[1]}
+              </span>
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="px-2">
+              <input
+                type="range"
+                min="1990"
+                max={currentYear}
+                value={yearRange[0]}
+                onChange={(e) =>
+                  setYearRange([parseInt(e.target.value), yearRange[1]])
+                }
+                className="range range-primary range-xs mb-2"
+              />
+              <input
+                type="range"
+                min="1990"
+                max={currentYear}
+                value={yearRange[1]}
+                onChange={(e) =>
+                  setYearRange([yearRange[0], parseInt(e.target.value)])
+                }
+                className="range range-primary range-xs"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
               <select
                 value={yearFrom}
                 onChange={(e) => setYearFrom(e.target.value)}
@@ -252,7 +412,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
             </div>
           </div>
 
-          {/* Пробег */}
+          {/* Пробег с предустановками */}
           <div>
             <label className="label">
               <span className="label-text font-medium">
@@ -260,6 +420,21 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
                 {t('filters.mileage')}
               </span>
             </label>
+            <div className="grid grid-cols-2 gap-1 mb-2">
+              {mileagePresets.map((preset) => (
+                <button
+                  key={preset.value}
+                  onClick={() => setMileageMax(preset.value.toString())}
+                  className={`btn btn-xs ${
+                    mileageMax === preset.value.toString()
+                      ? 'btn-primary'
+                      : 'btn-ghost'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
             <input
               type="number"
               value={mileageMax}
@@ -330,6 +505,48 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
               <option value="used">{t('filters.used')}</option>
               <option value="damaged">{t('filters.damaged')}</option>
             </select>
+          </div>
+
+          {/* Расширенные фильтры (свернутые по умолчанию) */}
+          <div className="collapse collapse-arrow bg-base-200">
+            <input
+              type="checkbox"
+              checked={showAdvanced}
+              onChange={() => setShowAdvanced(!showAdvanced)}
+            />
+            <div className="collapse-title text-sm font-medium flex items-center">
+              <Sliders className="w-4 h-4 mr-2" />
+              {t('filters.advancedFilters')}
+            </div>
+            <div className="collapse-content">
+              {/* Тип кузова */}
+              <div className="mt-4">
+                <label className="label">
+                  <span className="label-text font-medium">
+                    <Package className="w-4 h-4 inline mr-1" />
+                    {t('filters.bodyType')}
+                  </span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {bodyTypes.map((bodyType) => (
+                    <label
+                      key={bodyType.id}
+                      className="label cursor-pointer justify-start"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBodyTypes.includes(bodyType.id)}
+                        onChange={() => handleBodyTypeToggle(bodyType.id)}
+                        className="checkbox checkbox-sm checkbox-primary"
+                      />
+                      <span className="label-text ml-2 text-sm">
+                        {bodyType.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
