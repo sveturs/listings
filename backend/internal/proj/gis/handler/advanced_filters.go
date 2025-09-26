@@ -39,9 +39,9 @@ func NewAdvancedFiltersHandler(
 // @Accept json
 // @Produce json
 // @Param filter body types.TravelTimeFilter true "Travel time filter parameters"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.IsohronResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "gis.isochroneError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.IsohronResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "gis.isochroneError"
 // @Router /api/v1/gis/advanced/isochrone [post]
 func (h *AdvancedFiltersHandler) GetIsochrone(c *fiber.Ctx) error {
 	var filter types.TravelTimeFilter
@@ -72,9 +72,9 @@ func (h *AdvancedFiltersHandler) GetIsochrone(c *fiber.Ctx) error {
 // @Query lat number true "Latitude"
 // @Query lng number true "Longitude"
 // @Query radius number false "Search radius in km" default(2)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.POISearchResult}
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "gis.poiSearchError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.POISearchResult}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "gis.poiSearchError"
 // @Router /api/v1/gis/advanced/poi/search [get]
 func (h *AdvancedFiltersHandler) SearchPOI(c *fiber.Ctx) error {
 	poiTypeStr := c.Query("poi_type")
@@ -127,9 +127,9 @@ func (h *AdvancedFiltersHandler) SearchPOI(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param bbox body types.BoundingBox true "Bounding box for analysis"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.DensityAnalysisResult}
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "gis.densityAnalysisError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.DensityAnalysisResult}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "gis.densityAnalysisError"
 // @Router /api/v1/gis/advanced/density/analyze [post]
 func (h *AdvancedFiltersHandler) AnalyzeDensity(c *fiber.Ctx) error {
 	var bbox types.BoundingBox
@@ -166,9 +166,9 @@ func (h *AdvancedFiltersHandler) AnalyzeDensity(c *fiber.Ctx) error {
 // @Query min_lng number true "Minimum longitude"
 // @Query max_lat number true "Maximum latitude"
 // @Query max_lng number true "Maximum longitude"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}}
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "gis.heatmapError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]map[string]interface{}}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "gis.heatmapError"
 // @Router /api/v1/gis/advanced/density/heatmap [get]
 func (h *AdvancedFiltersHandler) GetDensityHeatmap(c *fiber.Ctx) error {
 	minLatStr := c.Query("min_lat")
@@ -206,9 +206,9 @@ func (h *AdvancedFiltersHandler) GetDensityHeatmap(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body types.ApplyAdvancedFiltersRequest true "Advanced filters request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}}
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "gis.filterError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "gis.filterError"
 // @Router /api/v1/gis/advanced/apply-filters [post]
 func (h *AdvancedFiltersHandler) ApplyAdvancedFilters(c *fiber.Ctx) error {
 	var request struct {

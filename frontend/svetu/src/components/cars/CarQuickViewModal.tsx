@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import configManager from '@/config';
 import type { components } from '@/types/generated/api';
 import {
   X,
@@ -154,7 +155,9 @@ export const CarQuickViewModal: React.FC<CarQuickViewModalProps> = ({
   const carAttrs = extractCarAttributes();
   const images = listing.images || [];
   const currentImage = images[currentImageIndex];
-  const imageUrl = currentImage?.thumbnail_url;
+  const imageUrl = currentImage?.public_url
+    ? configManager.buildImageUrl(currentImage.public_url)
+    : null;
 
   const carTitle =
     carAttrs.make && carAttrs.model
@@ -279,9 +282,9 @@ export const CarQuickViewModal: React.FC<CarQuickViewModalProps> = ({
                         : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
-                    {img.thumbnail_url && !imageError[index] ? (
+                    {img.public_url && !imageError[index] ? (
                       <Image
-                        src={img.thumbnail_url || ''}
+                        src={configManager.buildImageUrl(img.public_url)}
                         alt={`Thumbnail ${index + 1}`}
                         fill
                         className="object-cover"

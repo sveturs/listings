@@ -45,9 +45,9 @@ func NewSpatialHandler(service *service.SpatialService) *SpatialHandler {
 // @Param sort_order query string false "Порядок сортировки (asc, desc)"
 // @Param limit query int false "Количество результатов"
 // @Param offset query int false "Смещение"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.SearchResponse} "Результаты поиска"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.SearchResponse} "Результаты поиска"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/search [get]
 func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 	// Парсим параметры запроса
@@ -159,9 +159,9 @@ func (h *SpatialHandler) SearchListings(c *fiber.Ctx) error {
 // @Param lng query number true "Долгота"
 // @Param radius_km query number false "Радиус поиска в километрах (по умолчанию 5)"
 // @Param limit query int false "Количество результатов (по умолчанию 200, максимум 5000)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.SearchResponse} "Ближайшие объявления"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.SearchResponse} "Ближайшие объявления"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/nearby [get]
 func (h *SpatialHandler) GetNearbyListings(c *fiber.Ctx) error {
 	// Парсим координаты
@@ -197,10 +197,10 @@ func (h *SpatialHandler) GetNearbyListings(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "ID объявления"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.GeoListing} "Геоданные объявления"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Объявление не найдено"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.GeoListing} "Геоданные объявления"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Объявление не найдено"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/listings/{id}/location [get]
 func (h *SpatialHandler) GetListingLocation(c *fiber.Ctx) error {
 	// Парсим ID
@@ -230,11 +230,11 @@ func (h *SpatialHandler) GetListingLocation(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path string true "ID объявления"
 // @Param body body types.UpdateLocationRequest true "Новые координаты и адрес"
-// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Успешное обновление"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные данные"
-// @Failure 403 {object} utils.ErrorResponseSwag "Нет прав на изменение"
-// @Failure 404 {object} utils.ErrorResponseSwag "Объявление не найдено"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Успешное обновление"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные данные"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Нет прав на изменение"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Объявление не найдено"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/listings/{id}/location [put]
 // @Security BearerAuth
 func (h *SpatialHandler) UpdateListingLocation(c *fiber.Ctx) error {
@@ -275,11 +275,11 @@ func (h *SpatialHandler) UpdateListingLocation(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "ID объявления"
 // @Param request body types.UpdateAddressRequest true "Данные для обновления"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.EnhancedListingGeo} "Обновленные геоданные"
-// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
-// @Failure 403 {object} utils.ErrorResponseSwag "Нет прав доступа"
-// @Failure 404 {object} utils.ErrorResponseSwag "Объявление не найдено"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.EnhancedListingGeo} "Обновленные геоданные"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Нет прав доступа"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Объявление не найдено"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/listings/{id}/address [put]
 // @Security BearerAuth
 func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
@@ -362,9 +362,9 @@ func (h *SpatialHandler) UpdateListingAddress(c *fiber.Ctx) error {
 // @Param sort_order query string false "Порядок сортировки (asc, desc)"
 // @Param limit query int false "Количество результатов (по умолчанию 1000, максимум 5000)"
 // @Param offset query int false "Смещение"
-// @Success 200 {object} utils.SuccessResponseSwag{data=types.RadiusSearchResponse} "Результаты радиусного поиска"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.RadiusSearchResponse} "Результаты радиусного поиска"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/search/radius [get]
 func (h *SpatialHandler) RadiusSearch(c *fiber.Ctx) error {
 	// ВРЕМЕННАЯ БЛОКИРОВКА: Проверяем Referer для блокировки радиусного поиска на странице районов

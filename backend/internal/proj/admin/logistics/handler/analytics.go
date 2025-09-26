@@ -37,10 +37,10 @@ func NewAnalyticsHandler(analyticsService *service.AnalyticsService) *AnalyticsH
 // @Param date_from query string false "Дата начала периода (YYYY-MM-DD)"
 // @Param date_to query string false "Дата окончания периода (YYYY-MM-DD)"
 // @Param group_by query string false "Группировка (day, week, month)" default(day)
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Performance metrics"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Performance metrics"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/analytics/performance [get]
 func (h *AnalyticsHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -95,11 +95,11 @@ func (h *AnalyticsHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param date_from query string false "Дата начала периода (YYYY-MM-DD)"
 // @Param date_to query string false "Дата окончания периода (YYYY-MM-DD)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Financial report"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - insufficient permissions"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Financial report"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden - insufficient permissions"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/analytics/financial [get]
 func (h *AnalyticsHandler) GetFinancialReport(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -158,9 +158,9 @@ func (h *AnalyticsHandler) GetFinancialReport(c *fiber.Ctx) error {
 // @Param date_from query string false "Дата начала периода (YYYY-MM-DD)"
 // @Param date_to query string false "Дата окончания периода (YYYY-MM-DD)"
 // @Success 200 {file} binary "Report file"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/analytics/export [get]
 func (h *AnalyticsHandler) ExportReport(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -440,9 +440,9 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 // @Security ApiKeyAuth
 // @Param date_from query string false "Дата начала периода (YYYY-MM-DD)"
 // @Param date_to query string false "Дата окончания периода (YYYY-MM-DD)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.CourierStats} "Courier comparison"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.CourierStats} "Courier comparison"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/analytics/couriers [get]
 func (h *AnalyticsHandler) GetCourierComparison(c *fiber.Ctx) error {
 	// Проверка прав доступа

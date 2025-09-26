@@ -42,12 +42,12 @@ func NewTranslationsHandler(services globalService.ServicesInterface) *Translati
 // @Param id path int true "Listing ID"
 // @Param translation_provider query string false "Translation provider (google, openai)" default(google)
 // @Param translations body TranslationUpdateRequest true "Translation data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Translations updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateTranslationError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Translations updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateTranslationError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/translations/{id} [put]
 func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
@@ -162,9 +162,9 @@ func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param language query string false "Language filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Translation} "Translations retrieved successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getTranslationsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.Translation} "Translations retrieved successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getTranslationsError"
 // @Router /api/v1/marketplace/translations/{id} [get]
 func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
@@ -209,9 +209,9 @@ func (h *TranslationsHandler) GetTranslations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param translation body TranslateTextRequest true "Translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=TranslatedTextData} "Text translated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.translateError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TranslatedTextData} "Text translated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.translateError"
 // @Router /api/v1/marketplace/translations/translate [post]
 func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 	// Парсим данные запроса
@@ -296,9 +296,9 @@ func (h *TranslationsHandler) TranslateText(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param detection body DetectLanguageRequest true "Text for language detection"
-// @Success 200 {object} utils.SuccessResponseSwag{data=DetectedLanguageData} "Language detected successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detectLanguageError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=DetectedLanguageData} "Language detected successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.detectLanguageError"
 // @Router /api/v1/marketplace/translations/detect-language [post]
 func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 	// Парсим данные запроса
@@ -334,7 +334,7 @@ func (h *TranslationsHandler) DetectLanguage(c *fiber.Ctx) error {
 // @Tags marketplace-translations
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=TranslationLimitsData} "Translation limits retrieved successfully"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TranslationLimitsData} "Translation limits retrieved successfully"
 // @Router /api/v1/translation/limits [get]
 func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 	// Пример реализации - обычно это получается от API сервиса перевода
@@ -353,8 +353,8 @@ func (h *TranslationsHandler) GetTranslationLimits(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param provider body SetProviderRequest true "Provider configuration (google, openai)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=SetProviderResponse} "Translation provider set successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SetProviderResponse} "Translation provider set successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
 // @Router /api/v1/translation/provider [post]
 func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 	// Парсим данные запроса
@@ -390,8 +390,8 @@ func (h *TranslationsHandler) SetTranslationProvider(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param batch body BatchTranslateRequest true "Batch translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=BatchTranslateData} "Batch translation started successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=BatchTranslateData} "Batch translation started successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/translations/batch-translate [post]
 func (h *TranslationsHandler) BatchTranslateListings(c *fiber.Ctx) error {

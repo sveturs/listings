@@ -21,10 +21,10 @@ import (
 // @Param id path int true "Storefront ID"
 // @Param staff body AddStaffRequest true "Staff data"
 // @Success 200 {object} map[string]string "Staff added"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions or staff limit reached"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions or staff limit reached"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff [post]
 func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
@@ -77,11 +77,11 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 // @Param staffId path int true "Staff ID"
 // @Param permissions body models.JSONB true "Permissions map"
 // @Success 200 {object} map[string]string "Permissions updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 404 {object} utils.ErrorResponseSwag "Staff not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Staff not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{staffId}/permissions [put]
 func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
@@ -123,11 +123,11 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param userId path int true "User ID of staff member"
 // @Success 200 {object} map[string]string "Staff removed"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 404 {object} utils.ErrorResponseSwag "Staff not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Staff not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{userId} [delete]
 func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
@@ -168,8 +168,8 @@ func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} StaffListResponse "Staff list"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id}/staff [get]
 func (h *StorefrontHandler) GetStaff(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))

@@ -43,9 +43,9 @@ func NewClusterHandler(db *sqlx.DB) *ClusterHandler {
 // @Param category_id query integer false "ID категории для фильтрации"
 // @Param min_price query number false "Минимальная цена"
 // @Param max_price query number false "Максимальная цена"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]ClusterPoint} "Массив кластеров"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]ClusterPoint} "Массив кластеров"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/clusters [get]
 func (h *ClusterHandler) GetClusters(c *fiber.Ctx) error {
 	// Получаем параметры запроса
@@ -199,9 +199,9 @@ func (h *ClusterHandler) GetClusters(c *fiber.Ctx) error {
 // @Produce json
 // @Param bounds query string true "Границы видимой области (south,west,north,east)"
 // @Param metric query string false "Метрика для веса (price, views, density)" default(density)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}} "Данные для тепловой карты"
-// @Failure 400 {object} utils.ErrorResponseSwag "Некорректные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]map[string]interface{}} "Данные для тепловой карты"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/gis/heatmap [get]
 func (h *ClusterHandler) GetHeatmap(c *fiber.Ctx) error {
 	bounds := c.Query("bounds")

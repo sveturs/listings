@@ -82,9 +82,9 @@ func (h *Handler) RegisterWebhookRoutes(router fiber.Router) {
 // @Accept json
 // @Produce json
 // @Param request body calculator.CalculationRequest true "Calculation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/delivery/calculate-universal [post]
 func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
 	var req calculator.CalculationRequest
@@ -113,9 +113,9 @@ func (h *Handler) CalculateUniversal(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body CartCalculationRequest true "Cart calculation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=calculator.CalculationResponse} "Calculation results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/delivery/calculate-cart [post]
 func (h *Handler) CalculateCart(c *fiber.Ctx) error {
 	var req CartCalculationRequest
@@ -151,8 +151,8 @@ func (h *Handler) CalculateCart(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param active query bool false "Only active providers"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Provider} "List of providers"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.Provider} "List of providers"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/delivery/providers [get]
 func (h *Handler) GetProviders(c *fiber.Ctx) error {
 	activeOnly := c.QueryBool("active", true)
@@ -174,9 +174,9 @@ func (h *Handler) GetProviders(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Product ID"
 // @Param type query string false "Product type (listing or storefront_product)" default(listing)
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.DeliveryAttributes} "Product attributes"
-// @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.DeliveryAttributes} "Product attributes"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Product not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/products/{id}/delivery-attributes [get]
 func (h *Handler) GetProductAttributes(c *fiber.Ctx) error {
 	productID, err := strconv.Atoi(c.Params("id"))
@@ -205,10 +205,10 @@ func (h *Handler) GetProductAttributes(c *fiber.Ctx) error {
 // @Param id path int true "Product ID"
 // @Param type query string false "Product type (listing or storefront_product)" default(listing)
 // @Param attributes body models.DeliveryAttributes true "Delivery attributes"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Product not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/products/{id}/delivery-attributes [put]
 func (h *Handler) UpdateProductAttributes(c *fiber.Ctx) error {
 	productID, err := strconv.Atoi(c.Params("id"))
@@ -240,9 +240,9 @@ func (h *Handler) UpdateProductAttributes(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CategoryDefaults} "Category defaults"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.CategoryDefaults} "Category defaults"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/categories/{id}/delivery-defaults [get]
 func (h *Handler) GetCategoryDefaults(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(c.Params("id"))
@@ -268,9 +268,9 @@ func (h *Handler) GetCategoryDefaults(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param defaults body models.CategoryDefaults true "Category defaults"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/categories/{id}/delivery-defaults [put]
 func (h *Handler) UpdateCategoryDefaults(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(c.Params("id"))
@@ -302,9 +302,9 @@ func (h *Handler) UpdateCategoryDefaults(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]int} "Number of updated products"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]int} "Number of updated products"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/categories/{id}/apply-defaults [post]
 func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(c.Params("id"))
@@ -331,9 +331,9 @@ func (h *Handler) ApplyCategoryDefaults(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param shipment body service.CreateShipmentRequest true "Shipment request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.Shipment} "Created shipment"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.Shipment} "Created shipment"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/shipments [post]
 func (h *Handler) CreateShipment(c *fiber.Ctx) error {
 	var req service.CreateShipmentRequest
@@ -359,9 +359,9 @@ func (h *Handler) CreateShipment(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param id path int true "Shipment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.Shipment} "Shipment info"
-// @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.Shipment} "Shipment info"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Shipment not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/shipments/{id} [get]
 func (h *Handler) GetShipment(c *fiber.Ctx) error {
 	shipmentID, err := strconv.Atoi(c.Params("id"))
@@ -386,10 +386,10 @@ func (h *Handler) GetShipment(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Shipment ID"
 // @Param reason body CancelRequest false "Cancel reason"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 400 {object} utils.ErrorResponseSwag "Cannot cancel"
-// @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Cannot cancel"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Shipment not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/shipments/{id} [delete]
 func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 	shipmentID, err := strconv.Atoi(c.Params("id"))
@@ -417,9 +417,9 @@ func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 // @Tags delivery
 // @Produce json
 // @Param tracking path string true "Tracking number"
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.TrackingInfo} "Tracking info"
-// @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=service.TrackingInfo} "Tracking info"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Shipment not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/shipments/track/{tracking} [get]
 func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 	trackingNumber := c.Params("tracking")
@@ -442,8 +442,8 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 // @Description Get detailed list of all providers for admin panel
 // @Tags admin-delivery
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Provider} "List of providers"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.Provider} "List of providers"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/admin/delivery/providers [get]
 func (h *Handler) GetProvidersAdmin(c *fiber.Ctx) error {
 	providers, err := h.service.GetProviders(c.Context(), false)
@@ -464,9 +464,9 @@ func (h *Handler) GetProvidersAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Provider ID"
 // @Param provider body models.Provider true "Provider data"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/admin/delivery/providers/{id} [put]
 func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
@@ -497,9 +497,9 @@ func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param rule body models.PricingRule true "Pricing rule"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PricingRule} "Created rule"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_delivery_models.PricingRule} "Created rule"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/admin/delivery/pricing-rules [post]
 func (h *Handler) CreatePricingRule(c *fiber.Ctx) error {
 	var rule models.PricingRule
@@ -527,8 +527,8 @@ func (h *Handler) CreatePricingRule(c *fiber.Ctx) error {
 // @Param from query string false "From date (YYYY-MM-DD)"
 // @Param to query string false "To date (YYYY-MM-DD)"
 // @Param provider_id query int false "Provider ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.DeliveryAnalytics} "Analytics data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=service.DeliveryAnalytics} "Analytics data"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/admin/delivery/analytics [get]
 func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 	// Парсим даты
@@ -592,10 +592,10 @@ func (h *Handler) GetAnalytics(c *fiber.Ctx) error {
 // @Produce json
 // @Param provider path string true "Provider code (post_express, bex_express, etc.)"
 // @Param payload body object true "Webhook payload from provider"
-// @Success 200 {object} utils.SuccessResponseSwag{data=object} "Webhook processed successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Provider not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=object} "Webhook processed successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Provider not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/delivery/webhooks/{provider}/tracking [post]
 func (h *Handler) HandleTrackingWebhook(c *fiber.Ctx) error {
 	providerCode := c.Params("provider")

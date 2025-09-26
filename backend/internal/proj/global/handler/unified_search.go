@@ -159,8 +159,8 @@ type UnifiedUserInfo struct {
 // @Param city query string false "City filter"
 // @Param language query string false "Language" default(ru)
 // @Success 200 {object} UnifiedSearchResult "Search results"
-// @Failure 400 {object} utils.ErrorResponseSwag "search.invalidParams"
-// @Failure 500 {object} utils.ErrorResponseSwag "search.searchError"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "search.invalidParams"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "search.searchError"
 // @Router /api/v1/search [get]
 func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 	ctx := c.Context()

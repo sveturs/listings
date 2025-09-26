@@ -35,9 +35,9 @@ func NewTrackingHandler(
 // @Accept json
 // @Produce json
 // @Param token path string true "Tracking token"
-// @Success 200 {object} utils.SuccessResponseSwag{data=tracking.Delivery} "Delivery information"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid token"
-// @Failure 404 {object} utils.ErrorResponseSwag "Delivery not found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=tracking.Delivery} "Delivery information"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid token"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Delivery not found"
 // @Router /api/v1/tracking/{token} [get]
 func (h *TrackingHandler) GetDeliveryByToken(c *fiber.Ctx) error {
 	token := c.Params("token")
@@ -62,9 +62,9 @@ func (h *TrackingHandler) GetDeliveryByToken(c *fiber.Ctx) error {
 // @Produce json
 // @Param courier_id path int true "Courier ID"
 // @Param location body CourierLocationUpdate true "Location data"
-// @Success 200 {object} utils.SuccessResponseSwag "Location updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Courier not found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Location updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Courier not found"
 // @Router /api/v1/courier/{courier_id}/location [post]
 func (h *TrackingHandler) UpdateCourierLocation(c *fiber.Ctx) error {
 	courierIDStr := c.Params("courier_id")
@@ -117,9 +117,9 @@ func (h *TrackingHandler) UpdateCourierLocation(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param courier_id path int true "Courier ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]tracking.Delivery} "Active deliveries"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid courier ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Courier not found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]tracking.Delivery} "Active deliveries"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid courier ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Courier not found"
 // @Router /api/v1/courier/{courier_id}/deliveries [get]
 func (h *TrackingHandler) GetActiveDeliveries(c *fiber.Ctx) error {
 	courierIDStr := c.Params("courier_id")
@@ -144,9 +144,9 @@ func (h *TrackingHandler) GetActiveDeliveries(c *fiber.Ctx) error {
 // @Produce json
 // @Param delivery_id path int true "Delivery ID"
 // @Param status body DeliveryStatusUpdate true "Status update"
-// @Success 200 {object} utils.SuccessResponseSwag "Status updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Delivery not found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Status updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Delivery not found"
 // @Router /api/v1/delivery/{delivery_id}/status [put]
 func (h *TrackingHandler) UpdateDeliveryStatus(c *fiber.Ctx) error {
 	deliveryIDStr := c.Params("delivery_id")
@@ -188,7 +188,7 @@ func (h *TrackingHandler) UpdateDeliveryStatus(c *fiber.Ctx) error {
 // @Tags tracking
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]int} "Active connections"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]int} "Active connections"
 // @Router /api/v1/tracking/connections [get]
 func (h *TrackingHandler) GetWebSocketConnections(c *fiber.Ctx) error {
 	stats := h.hub.GetActiveConnections()
@@ -202,8 +202,8 @@ func (h *TrackingHandler) GetWebSocketConnections(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param delivery body CreateDeliveryRequest true "Delivery data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=tracking.Delivery} "Delivery created"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=tracking.Delivery} "Delivery created"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
 // @Router /api/v1/delivery [post]
 func (h *TrackingHandler) CreateDelivery(c *fiber.Ctx) error {
 	var req CreateDeliveryRequest

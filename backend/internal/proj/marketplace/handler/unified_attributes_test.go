@@ -184,7 +184,7 @@ func (s *UnifiedAttributesTestSuite) TestGetCategoryAttributes() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
-	var result utils.SuccessResponseSwag
+	var result backend_pkg_utils.SuccessResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	s.Require().NoError(err)
 
@@ -236,7 +236,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationRequired() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
-	var errorResp utils.ErrorResponseSwag
+	var errorResp backend_pkg_utils.ErrorResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&errorResp)
 	s.Require().NoError(err)
 	s.Contains(errorResp.Error, "required")
@@ -260,7 +260,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationSelectOptions() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
-	var errorResp utils.ErrorResponseSwag
+	var errorResp backend_pkg_utils.ErrorResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&errorResp)
 	s.Require().NoError(err)
 	s.Contains(errorResp.Error, "not in allowed options")
@@ -284,7 +284,7 @@ func (s *UnifiedAttributesTestSuite) TestValidationNumberRange() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusBadRequest, resp.StatusCode)
 
-	var errorResp utils.ErrorResponseSwag
+	var errorResp backend_pkg_utils.ErrorResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&errorResp)
 	s.Require().NoError(err)
 	s.Contains(errorResp.Error, "must not exceed")
@@ -310,7 +310,7 @@ func (s *UnifiedAttributesTestSuite) TestCreateUpdateDeleteAttribute() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
-	var createResp utils.SuccessResponseSwag
+	var createResp backend_pkg_utils.SuccessResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&createResp)
 	s.Require().NoError(err)
 
@@ -457,7 +457,7 @@ func (s *UnifiedAttributesTestSuite) TestGetAttributeRanges() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
-	var result utils.SuccessResponseSwag
+	var result backend_pkg_utils.SuccessResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	s.Require().NoError(err)
 
@@ -483,7 +483,7 @@ func (s *UnifiedAttributesTestSuite) TestMigrationEndpoints() {
 	defer func() { _ = resp.Body.Close() }()
 	s.Equal(http.StatusOK, resp.StatusCode)
 
-	var statusResp utils.SuccessResponseSwag
+	var statusResp backend_pkg_utils.SuccessResponseSwag
 	err = json.NewDecoder(resp.Body).Decode(&statusResp)
 	s.Require().NoError(err)
 

@@ -3076,7 +3076,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_delivery_models.DashboardStats'];
+              data?: components['schemas']['backend_internal_domain_logistics.DashboardStats'];
             };
           };
         };
@@ -3302,7 +3302,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_delivery_models.ProblemShipment'][];
+              data?: components['schemas']['backend_internal_domain_logistics.ProblemShipment'][];
             };
           };
         };
@@ -12704,6 +12704,58 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/cars/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get car statistics
+     * @description Get statistics about cars in the marketplace (total listings, makes, models)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Car statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
           };
         };
         /** @description Internal server error */
@@ -39294,11 +39346,6 @@ export interface components {
       is_typically_fragile?: boolean;
       updated_at?: string;
     };
-    'backend_internal_proj_delivery_models.CostAnalysis': {
-      avg_cost?: number;
-      savings?: number;
-      total_cost?: number;
-    };
     'backend_internal_proj_delivery_models.CostBreakdown': {
       base_price?: number;
       cod_fee?: number;
@@ -39311,16 +39358,6 @@ export interface components {
       tax?: number;
       total?: number;
       weight_surcharge?: number;
-    };
-    'backend_internal_proj_delivery_models.DashboardStats': {
-      avg_delivery_time?: string;
-      cost_analysis?: components['schemas']['backend_internal_proj_delivery_models.CostAnalysis'];
-      in_transit?: number;
-      problems?: number;
-      provider_stats?: components['schemas']['backend_internal_proj_delivery_models.ProviderStats'][];
-      success_rate?: number;
-      today_delivered?: number;
-      today_shipments?: number;
     };
     'backend_internal_proj_delivery_models.DeliveryAttributes': {
       dimensions?: components['schemas']['backend_internal_proj_delivery_models.Dimensions'];
@@ -39370,19 +39407,6 @@ export interface components {
     'backend_internal_proj_delivery_models.ProblemResolution': {
       notify_customer?: boolean;
       resolution?: string;
-    };
-    'backend_internal_proj_delivery_models.ProblemShipment': {
-      assigned_to?: string;
-      created_at?: string;
-      customer_name?: string;
-      customer_phone?: string;
-      description?: string;
-      id?: number;
-      priority?: string;
-      problem_type?: string;
-      provider_name?: string;
-      status?: string;
-      tracking_number?: string;
     };
     'backend_internal_proj_delivery_models.Provider': {
       api_config?: number[];
@@ -40671,6 +40695,10 @@ export interface components {
       slug?: string;
     };
     'internal_proj_global_handler.UnifiedLocationInfo': {
+      /** @description Multilingual addresses */
+      address_multilingual?: {
+        [key: string]: string;
+      };
       city?: string;
       country?: string;
       lat?: number;

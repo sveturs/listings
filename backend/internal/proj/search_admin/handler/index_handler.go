@@ -15,10 +15,10 @@ import (
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} utils.SuccessResponseSwag{data=service.IndexInfo}
-// @Failure      401 {object} utils.ErrorResponseSwag
-// @Failure      403 {object} utils.ErrorResponseSwag
-// @Failure      500 {object} utils.ErrorResponseSwag
+// @Success      200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_search_admin_service.IndexInfo}
+// @Failure      401 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      403 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router       /api/v1/admin/search/index/info [get]
 func (h *Handler) GetIndexInfo(c *fiber.Ctx) error {
 	info, err := h.service.GetIndexInfo(c.Context())
@@ -36,10 +36,10 @@ func (h *Handler) GetIndexInfo(c *fiber.Ctx) error {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} utils.SuccessResponseSwag{data=service.IndexStatistics}
-// @Failure      401 {object} utils.ErrorResponseSwag
-// @Failure      403 {object} utils.ErrorResponseSwag
-// @Failure      500 {object} utils.ErrorResponseSwag
+// @Success      200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_search_admin_service.IndexStatistics}
+// @Failure      401 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      403 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router       /api/v1/admin/search/index/statistics [get]
 func (h *Handler) GetIndexStatistics(c *fiber.Ctx) error {
 	stats, err := h.service.GetIndexStatistics(c.Context())
@@ -62,10 +62,10 @@ func (h *Handler) GetIndexStatistics(c *fiber.Ctx) error {
 // @Param        category_id  query    int    false "Category ID"
 // @Param        page         query    int    false "Page number" default(1)
 // @Param        limit        query    int    false "Items per page" default(20)
-// @Success      200 {object} utils.SuccessResponseSwag{data=[]service.IndexedDocument}
-// @Failure      401 {object} utils.ErrorResponseSwag
-// @Failure      403 {object} utils.ErrorResponseSwag
-// @Failure      500 {object} utils.ErrorResponseSwag
+// @Success      200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_search_admin_service.IndexedDocument}
+// @Failure      401 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      403 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router       /api/v1/admin/search/index/documents [get]
 func (h *Handler) SearchIndexedDocuments(c *fiber.Ctx) error {
 	// Параметры запроса
@@ -88,10 +88,10 @@ func (h *Handler) SearchIndexedDocuments(c *fiber.Ctx) error {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} utils.SuccessResponseSwag
-// @Failure      401 {object} utils.ErrorResponseSwag
-// @Failure      403 {object} utils.ErrorResponseSwag
-// @Failure      500 {object} utils.ErrorResponseSwag
+// @Success      200 {object} backend_pkg_utils.SuccessResponseSwag
+// @Failure      401 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      403 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure      500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router       /api/v1/admin/search/index/reindex [post]
 func (h *Handler) ReindexDocuments(c *fiber.Ctx) error {
 	// Получаем тип документов для переиндексации

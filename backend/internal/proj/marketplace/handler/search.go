@@ -41,7 +41,7 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 // @Produce json
 // @Param body body search.ServiceParams true "Search parameters"
 // @Success 200 {object} handler.SearchResponse "Search results with metadata"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.searchError"
 // @Router /api/v1/marketplace/search [get]
 // @Router /api/v1/marketplace/search [post]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
@@ -401,9 +401,9 @@ func parseIntOrDefault(str string, defaultValue int) int {
 // @Produce json
 // @Param prefix query string true "Search prefix"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]string} "Suggestions list"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]string} "Suggestions list"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.prefixRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/suggestions [get]
 func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	// Засекаем время начала для измерения производительности
@@ -496,8 +496,8 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 // @Param query query string true "Search query"
 // @Param limit query int false "Number of suggestions" default(10)
 // @Security ApiKeyAuth
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Enhanced suggestions"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Enhanced suggestions"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Router /api/v1/marketplace/enhanced-suggestions [get]
 func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	query := c.Query("query")
@@ -623,9 +623,9 @@ func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language 
 // @Produce json
 // @Param query query string true "Search query"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions list"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions list"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
 // @Router /api/v1/marketplace/category-suggestions [get]
 func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	// Получаем строку запроса
@@ -661,9 +661,9 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param limit query int false "Number of similar listings" default(5)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings list"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.similarListingsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings list"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.similarListingsError"
 // @Router /api/v1/marketplace/listings/{id}/similar [get]
 func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL

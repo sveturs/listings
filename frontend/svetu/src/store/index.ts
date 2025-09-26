@@ -9,6 +9,8 @@ import cartReducer from './slices/cartSlice';
 import localCartReducer from './slices/localCartSlice';
 import categoriesReducer from './slices/categoriesSlice';
 import compareReducer from './slices/compareSlice';
+import favoritesReducer from './slices/favoritesSlice';
+import savedSearchesReducer from './slices/savedSearchesSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -23,6 +25,8 @@ export const store = configureStore({
     localCart: localCartReducer,
     categories: categoriesReducer,
     compare: compareReducer,
+    favorites: favoritesReducer,
+    savedSearches: savedSearchesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -43,6 +47,7 @@ export const store = configureStore({
           'chat.typingUsers',
           'import.selectedFiles',
           'products.selectedIds',
+          'favorites.itemIds',
         ],
       },
     }).concat(websocketMiddleware),

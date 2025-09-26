@@ -33,8 +33,8 @@ type Handler struct {
 // @Tags docs
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=DocFilesResponse} "List of documentation files"
-// @Failure 500 {object} utils.ErrorResponseSwag "docs.scanError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=DocFilesResponse} "List of documentation files"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "docs.scanError"
 // @Router /api/v1/docs/files [get]
 func (h *Handler) GetDocFiles(c *fiber.Ctx) error {
 	files, err := h.scanDirectory("")
@@ -58,10 +58,10 @@ func (h *Handler) GetDocFiles(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param path query string true "File path relative to docs root"
-// @Success 200 {object} utils.SuccessResponseSwag{data=DocContentResponse} "File content"
-// @Failure 400 {object} utils.ErrorResponseSwag "docs.pathRequired or docs.invalidPath or docs.onlyMarkdownAllowed"
-// @Failure 404 {object} utils.ErrorResponseSwag "docs.fileNotFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "docs.readError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=DocContentResponse} "File content"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "docs.pathRequired or docs.invalidPath or docs.onlyMarkdownAllowed"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "docs.fileNotFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "docs.readError"
 // @Router /api/v1/docs/content [get]
 func (h *Handler) GetFileContent(c *fiber.Ctx) error {
 	filePath := c.Query("path")

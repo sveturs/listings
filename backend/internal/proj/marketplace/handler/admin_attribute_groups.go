@@ -19,10 +19,10 @@ import (
 // @Accept json
 // @Produce json
 // @Param body body models.CreateAttributeGroupRequest true "Attribute group data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group created successfully"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Group created successfully"
 
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.groupNameRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createGroupError"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.groupNameRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.createGroupError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups [post]
 func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
@@ -61,8 +61,8 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 // @Tags marketplace-admin-attribute-groups
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeGroupsResponse} "List of attribute groups"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.listGroupsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeGroupsResponse} "List of attribute groups"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.listGroupsError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups [get]
 func (h *MarketplaceHandler) ListAttributeGroups(c *fiber.Ctx) error {
@@ -84,9 +84,9 @@ func (h *MarketplaceHandler) ListAttributeGroups(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Group ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeGroupResponse} "Attribute group information"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.groupNotFound"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeGroupResponse} "Attribute group information"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.groupNotFound"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id} [get]
 func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
@@ -115,9 +115,9 @@ func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Group ID"
 // @Param body body models.UpdateAttributeGroupRequest true "Updated group data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupUpdated"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateGroupError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupUpdated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateGroupError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id} [put]
 func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
@@ -167,9 +167,9 @@ func (h *MarketplaceHandler) UpdateAttributeGroup(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Group ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupDeleted"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteGroupError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupDeleted"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteGroupError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id} [delete]
 func (h *MarketplaceHandler) DeleteAttributeGroup(c *fiber.Ctx) error {
@@ -197,10 +197,10 @@ func (h *MarketplaceHandler) DeleteAttributeGroup(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Group ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeGroupWithItemsData} "Group with items"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.groupNotFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getGroupItemsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeGroupWithItemsData} "Group with items"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.groupNotFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getGroupItemsError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id}/items [get]
 func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
@@ -236,9 +236,9 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Group ID"
 // @Param body body models.AddItemToGroupRequest true "Attribute data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Item added successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addItemError"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Item added successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.addItemError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id}/items [post]
 func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
@@ -283,9 +283,9 @@ func (h *MarketplaceHandler) AddItemToGroup(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Group ID"
 // @Param attributeId path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.itemRemoved"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidAttributeId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeItemError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "marketplace.itemRemoved"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidAttributeId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.removeItemError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/attribute-groups/{id}/items/{attributeId} [delete]
 func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
@@ -320,9 +320,9 @@ func (h *MarketplaceHandler) RemoveItemFromGroup(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeGroupsResponse} "Category groups"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeGroupsResponse} "Category groups"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/categories/{id}/groups [get]
 func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
@@ -359,9 +359,9 @@ func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body models.AttachGroupToCategoryRequest true "Group attachment data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidRequest"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attachGroupError"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidRequest"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.attachGroupError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/categories/{id}/groups [post]
 func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
@@ -403,9 +403,9 @@ func (h *MarketplaceHandler) AttachGroupToCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param groupId path int true "Group ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupDetached"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidGroupId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detachGroupError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupDetached"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidGroupId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.detachGroupError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/admin/categories/{id}/groups/{groupId} [delete]
 func (h *MarketplaceHandler) DetachGroupFromCategory(c *fiber.Ctx) error {

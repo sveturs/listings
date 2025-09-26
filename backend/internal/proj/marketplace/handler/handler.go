@@ -38,6 +38,7 @@ type Handler struct {
 	Search                 *SearchHandler
 	Translations           *TranslationsHandler
 	Favorites              *FavoritesHandler
+	SavedSearches          *SavedSearchesHandler
 	Indexing               *IndexingHandler
 	Chat                   *ChatHandler
 	AdminCategories        *AdminCategoriesHandler
@@ -160,6 +161,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 			Search:                 NewSearchHandler(services),
 			Translations:           NewTranslationsHandler(services),
 			Favorites:              NewFavoritesHandler(services),
+			SavedSearches:          NewSavedSearchesHandler(services),
 			Indexing:               NewIndexingHandler(services),
 			Chat:                   NewChatHandler(services, services.Config()),
 			AdminCategories:        adminCategoriesHandler,
@@ -194,6 +196,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		Search:                 NewSearchHandler(services),
 		Translations:           NewTranslationsHandler(services),
 		Favorites:              NewFavoritesHandler(services),
+		SavedSearches:          NewSavedSearchesHandler(services),
 		Indexing:               NewIndexingHandler(services),
 		Chat:                   NewChatHandler(services, services.Config()),
 		AdminCategories:        adminCategoriesHandler,
@@ -363,6 +366,14 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Get("/favorites/count", h.Favorites.GetFavoritesCount)
 	marketplaceProtected.Post("/favorites/:id", h.Favorites.AddToFavorites)
 	marketplaceProtected.Delete("/favorites/:id", h.Favorites.RemoveFromFavorites)
+
+	// Saved searches routes
+	marketplaceProtected.Post("/saved-searches", h.SavedSearches.CreateSavedSearch)
+	marketplaceProtected.Get("/saved-searches", h.SavedSearches.GetSavedSearches)
+	marketplaceProtected.Get("/saved-searches/:id", h.SavedSearches.GetSavedSearch)
+	marketplaceProtected.Put("/saved-searches/:id", h.SavedSearches.UpdateSavedSearch)
+	marketplaceProtected.Delete("/saved-searches/:id", h.SavedSearches.DeleteSavedSearch)
+	marketplaceProtected.Get("/saved-searches/:id/execute", h.SavedSearches.ExecuteSavedSearch)
 	marketplaceProtected.Get("/favorites/:id/check", h.Favorites.IsInFavorites)
 	marketplaceProtected.Put("/translations/:id", h.Translations.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", h.Translations.TranslateText) // Предполагается, что этот метод переименован

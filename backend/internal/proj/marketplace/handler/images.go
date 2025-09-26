@@ -42,12 +42,12 @@ func NewImagesHandler(services globalService.ServicesInterface) *ImagesHandler {
 // @Param id path int true "Listing ID"
 // @Param file formData file true "Image files to upload"
 // @Param main_image_index formData int false "Index of the main image"
-// @Success 200 {object} utils.SuccessResponseSwag{data=ImagesUploadResponse} "Images uploaded successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.invalidId"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.uploadError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ImagesUploadResponse} "Images uploaded successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData or marketplace.invalidId"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.uploadError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings/{id}/images [post]
 func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
@@ -206,12 +206,12 @@ func getMapKeys(m map[string][]*multipart.FileHeader) []string {
 // @Accept json
 // @Produce json
 // @Param id path int true "Image ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Image deleted successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Image deleted successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/images/{id} [delete]
 func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
@@ -268,11 +268,11 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "Image file to moderate"
-// @Success 200 {object} utils.SuccessResponseSwag{data=ImageModerationResponse} "Moderation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidFile or marketplace.fileTooLarge"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.moderationError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ImageModerationResponse} "Moderation results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidFile or marketplace.fileTooLarge"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.moderationError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/moderate-image [post]
 func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
@@ -351,12 +351,12 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 // @Produce json
 // @Param image_id formData int true "Image ID to enhance"
 // @Param enhancement_type formData string false "Enhancement type" default(quality)
-// @Success 200 {object} utils.SuccessResponseSwag{data=EnhancePreviewResponse} "Enhancement preview"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.enhanceError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=EnhancePreviewResponse} "Enhancement preview"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.enhanceError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/enhance-preview [post]
 func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
@@ -418,12 +418,12 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 // @Produce json
 // @Param listing_id formData int true "Listing ID"
 // @Param enhancement_type formData string false "Enhancement type" default(quality)
-// @Success 200 {object} utils.SuccessResponseSwag{data=EnhanceImagesResponse} "Enhancement job started"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId or marketplace.invalidRequest"
-// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound or marketplace.imageNotFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.enhanceError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=EnhanceImagesResponse} "Enhancement job started"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId or marketplace.invalidRequest"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound or marketplace.imageNotFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.enhanceError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/enhance-images [post]
 func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {

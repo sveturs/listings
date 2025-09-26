@@ -30,8 +30,8 @@ func NewVariantAttributesHandler(services globalService.ServicesInterface) *Vari
 // @Tags marketplace-variant-attributes
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ProductVariantAttribute} "List of variant attributes"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.ProductVariantAttribute} "List of variant attributes"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/product-variant-attributes [get]
 func (h *VariantAttributesHandler) GetProductVariantAttributes(c *fiber.Ctx) error {
 	attributes, err := h.marketplaceService.GetProductVariantAttributes(c.Context())
@@ -55,9 +55,9 @@ func (h *VariantAttributesHandler) GetProductVariantAttributes(c *fiber.Ctx) err
 // @Accept json
 // @Produce json
 // @Param slug path string true "Category slug"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ProductVariantAttribute} "Variant attributes for category"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.ProductVariantAttribute} "Variant attributes for category"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/categories/{slug}/variant-attributes [get]
 func (h *VariantAttributesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) error {
 	slug := c.Params("slug")

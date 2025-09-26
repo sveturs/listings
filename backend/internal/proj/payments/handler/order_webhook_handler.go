@@ -30,9 +30,9 @@ func NewOrderWebhookHandler(service service.PaymentServiceInterface, logger logg
 // @Produce json
 // @Param signature header string false "Webhook signature"
 // @Param payload body object true "Webhook payload"
-// @Success 200 {object} utils.SuccessResponseSwag "Webhook processed successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid webhook payload"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Webhook processed successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid webhook payload"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/webhooks/orders/payment [post]
 func (h *OrderWebhookHandler) HandleOrderPaymentWebhook(c *fiber.Ctx) error {
 	// Получаем сигнатуру из заголовков

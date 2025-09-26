@@ -130,9 +130,9 @@ type ImageSource struct {
 // @Accept json
 // @Produce json
 // @Param request body AnalyzeProductRequest true "Analysis request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AnalyzeProductResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AnalyzeProductResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/ai/analyze [post]
 func (h *Handler) AnalyzeProduct(c *fiber.Ctx) error {
 	var req AnalyzeProductRequest
@@ -498,9 +498,9 @@ type TranslateContentResponse map[string]struct {
 // @Accept json
 // @Produce json
 // @Param request body TranslateContentRequest true "Translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=TranslateContentResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TranslateContentResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/ai/translate [post]
 func (h *Handler) TranslateContent(c *fiber.Ctx) error {
 	var req TranslateContentRequest

@@ -27,7 +27,7 @@ func NewPublicVariantHandler(variantRepo *repository.VariantRepository) *PublicV
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {array} ProductVariant
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -63,7 +63,7 @@ func (h *PublicVariantHandler) GetProductVariantsPublic(c *fiber.Ctx) error {
 // @Tags public-variants
 // @Accept json
 // @Produce json
-// @Success 200 {array} ProductVariantAttribute
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttribute
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes [get]
 func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
@@ -84,7 +84,7 @@ func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attribute_id path int true "Attribute ID"
-// @Success 200 {array} ProductVariantAttributeValue
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttributeValue
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes/{attribute_id}/values [get]
@@ -146,7 +146,7 @@ func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param variant_id path int true "Variant ID"
-// @Success 200 {object} ProductVariant
+// @Success 200 {object} backend_internal_proj_storefront_types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string

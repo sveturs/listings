@@ -20,8 +20,8 @@ import (
 // @Produce json
 // @Param query query string true "Search query"
 // @Param lang query string false "Language" default(ru)
-// @Success 200 {object} utils.SuccessResponseSwag{data=handler.FuzzySearchTestResponse} "Test results"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=handler.FuzzySearchTestResponse} "Test results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Router /api/v1/marketplace/test-fuzzy-search [get]
 func (h *SearchHandler) TestFuzzySearch(c *fiber.Ctx) error {
 	query := c.Query("query")
@@ -75,7 +75,7 @@ type FuzzySearchTestResponse struct {
 // @Param category_id query string false "Category ID"
 // @Param limit query int false "Limit" default(20)
 // @Success 200 {object} handler.SearchResponse "Search results"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Router /api/v1/marketplace/fuzzy-search [get]
 func (h *SearchHandler) SearchWithFuzzyParams(c *fiber.Ctx) error {
 	query := c.Query("query")

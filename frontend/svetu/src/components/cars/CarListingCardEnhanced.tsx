@@ -104,8 +104,9 @@ export const CarListingCardEnhanced: React.FC<CarListingCardEnhancedProps> = ({
     }
   };
 
-  const mainImage = listing.images?.[0];
-  const imageUrl = mainImage?.thumbnail_url;
+  const mainImage =
+    listing.images?.find((img) => img.is_main) || listing.images?.[0];
+  const imageUrl = mainImage?.public_url || mainImage?.thumbnail_url;
   const hasMultipleImages = (listing.images?.length || 0) > 1;
 
   const carTitle =

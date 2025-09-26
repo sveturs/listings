@@ -99,8 +99,12 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         searchParams
       );
 
-      if (listingsResponse.data?.data?.items) {
-        setLatestListings(listingsResponse.data.data.items);
+      // API возвращает массив напрямую в data, не в data.items
+      if (listingsResponse.data?.data) {
+        const listings = Array.isArray(listingsResponse.data.data)
+          ? listingsResponse.data.data
+          : listingsResponse.data.data.items || [];
+        setLatestListings(listings);
       }
     } catch (error) {
       console.error('Error loading cars data:', error);
@@ -199,8 +203,12 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         searchParams
       );
 
-      if (response.data?.data?.items) {
-        setSearchResults(response.data.data.items);
+      // API возвращает массив напрямую в data, не в data.items
+      if (response.data?.data) {
+        const results = Array.isArray(response.data.data)
+          ? response.data.data
+          : response.data.data.items || [];
+        setSearchResults(results);
       }
     } catch (error) {
       console.error('Error searching cars:', error);
@@ -209,16 +217,14 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
     }
   };
 
-  // Trigger search when filters or sort changes
+  // Trigger search when filters or sort changes, or on initial load
   useEffect(() => {
-    if (
-      Object.keys(activeFilters).length > 0 ||
-      sortOption !== 'created_at_desc'
-    ) {
+    // Всегда выполняем поиск - либо с фильтрами, либо без них для показа всех автомобилей
+    if (!loading) {
       searchCars();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilters, sortOption]);
+  }, [activeFilters, sortOption, loading]);
 
   // Handle favorite toggle
   const handleFavorite = (listingId: number) => {
@@ -300,7 +306,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
   // Prepare active filters for Breadcrumbs
   const breadcrumbFilters = Object.entries(activeFilters)
-    .filter(([key, value]) => value && value !== '')
+    .filter(([_, value]) => value && value !== '')
     .map(([key, value]) => ({
       key,
       value: String(value),
@@ -490,7 +496,13 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
                     />
                     <div className="badge badge-lg">
                       {searchResults.length > 0
-                        ? `${searchResults.length} ${t('results')}`
+                        ? `${
+                            searchResults.filter((listing) =>
+                              [1003, 1301, 1303].includes(
+                                listing.category_id || 0
+                              )
+                            ).length
+                          } ${t('results')}`
                         : `${stats.totalListings} ${t('totalListings')}`}
                     </div>
                   </div>
@@ -501,23 +513,30 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
                   <div className="flex justify-center py-12">
                     <div className="loading loading-spinner loading-lg"></div>
                   </div>
-                ) : searchResults.length > 0 ? (
+                ) : searchResults.filter((listing) =>
+                    [1003, 1301, 1303].includes(listing.category_id || 0)
+                  ).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {searchResults.map((listing) => (
-                      <CarListingCardEnhanced
-                        key={listing.id}
-                        listing={listing}
-                        locale={locale}
-                        onFavorite={() => handleFavorite(listing.id || 0)}
-                        onShare={() => handleShare(listing.id || 0)}
-                        onCompare={() => handleCompare(listing)}
-                        onQuickView={setQuickViewListing}
-                        isFavorited={favoriteIds.has(listing.id || 0)}
-                        isComparing={compareItems.some(
-                          (item) => item.id === listing.id
-                        )}
-                      />
-                    ))}
+                    {searchResults
+                      .filter((listing) =>
+                        // Показываем только автомобили (категории 1003, 1301, 1303)
+                        [1003, 1301, 1303].includes(listing.category_id || 0)
+                      )
+                      .map((listing) => (
+                        <CarListingCardEnhanced
+                          key={listing.id}
+                          listing={listing}
+                          locale={locale}
+                          onFavorite={() => handleFavorite(listing.id || 0)}
+                          onShare={() => handleShare(listing.id || 0)}
+                          onCompare={() => handleCompare(listing)}
+                          onQuickView={setQuickViewListing}
+                          isFavorited={favoriteIds.has(listing.id || 0)}
+                          isComparing={compareItems.some(
+                            (item) => item.id === listing.id
+                          )}
+                        />
+                      ))}
                   </div>
                 ) : (
                   <div className="alert">

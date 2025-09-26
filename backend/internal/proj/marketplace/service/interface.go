@@ -112,6 +112,14 @@ type MarketplaceServiceInterface interface {
 	SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error)
 	GetCarListingsCount(ctx context.Context) (int, error)
 	GetTotalCarModelsCount(ctx context.Context) (int, error)
+
+	// Методы для сохраненных поисков
+	CreateSavedSearch(ctx context.Context, userID int, name string, filters map[string]interface{}, searchType string, notifyEnabled bool, notifyFrequency string) (interface{}, error)
+	GetUserSavedSearches(ctx context.Context, userID int, searchType string) ([]interface{}, error)
+	GetSavedSearchByID(ctx context.Context, userID int, searchID int) (interface{}, error)
+	UpdateSavedSearch(ctx context.Context, userID int, searchID int, name string, filters map[string]interface{}, notifyEnabled *bool, notifyFrequency string) (interface{}, error)
+	DeleteSavedSearch(ctx context.Context, userID int, searchID int) error
+	ExecuteSavedSearch(ctx context.Context, savedSearch interface{}) (interface{}, error)
 }
 
 type ContactsServiceInterface interface {
