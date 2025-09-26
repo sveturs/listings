@@ -31,7 +31,8 @@ CREATE VIEW public.category_attributes AS
     unified_attributes.updated_at,
     ''::text AS custom_component,
     unified_attributes.is_variant_compatible,
-    unified_attributes.affects_stock
+    unified_attributes.affects_stock,
+    unified_attributes.show_in_card
    FROM public.unified_attributes
   WHERE (unified_attributes.is_active = true);
 CREATE VIEW public.category_detection_accuracy AS

@@ -1389,6 +1389,7 @@ CREATE TABLE public.unified_attributes (
     search_vector tsvector,
     is_variant_compatible boolean DEFAULT false,
     icon character varying(255) DEFAULT ''::character varying,
+    show_in_card boolean DEFAULT false,
     CONSTRAINT unified_attributes_attribute_type_check CHECK (((attribute_type)::text = ANY (ARRAY[('text'::character varying)::text, ('textarea'::character varying)::text, ('number'::character varying)::text, ('boolean'::character varying)::text, ('select'::character varying)::text, ('multiselect'::character varying)::text, ('date'::character varying)::text, ('color'::character varying)::text, ('size'::character varying)::text]))),
     CONSTRAINT unified_attributes_purpose_check CHECK (((purpose)::text = ANY (ARRAY[('regular'::character varying)::text, ('variant'::character varying)::text, ('both'::character varying)::text])))
 )
@@ -1920,7 +1921,8 @@ CREATE TABLE public.listing_attribute_values (
     json_value jsonb,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    unit character varying(50)
+    unit character varying(50),
+    value_type character varying(50) NOT NULL
 );
 CREATE TABLE public.listing_views (
     id integer NOT NULL,

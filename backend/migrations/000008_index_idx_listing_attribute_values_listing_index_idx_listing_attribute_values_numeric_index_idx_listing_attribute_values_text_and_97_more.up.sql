@@ -2,6 +2,7 @@ CREATE INDEX idx_listing_attribute_values_listing ON public.listing_attribute_va
 CREATE INDEX idx_listing_attribute_values_numeric ON public.listing_attribute_values USING btree (numeric_value) WHERE (numeric_value IS NOT NULL);
 CREATE INDEX idx_listing_attribute_values_text ON public.listing_attribute_values USING btree (text_value) WHERE (text_value IS NOT NULL);
 CREATE INDEX idx_listing_attribute_values_unit ON public.listing_attribute_values USING btree (unit) WHERE (unit IS NOT NULL);
+CREATE INDEX idx_listing_attribute_values_value_type ON public.listing_attribute_values USING btree (value_type);
 CREATE INDEX idx_listing_views_listing_ip ON public.listing_views USING btree (listing_id, ip_hash);
 CREATE INDEX idx_listing_views_listing_user ON public.listing_views USING btree (listing_id, user_id);
 CREATE INDEX idx_listing_views_time ON public.listing_views USING btree (view_time);
@@ -97,4 +98,3 @@ CREATE INDEX idx_notifications_user_unread ON public.notifications USING btree (
 CREATE INDEX idx_payment_is_enabled ON public.storefront_payment_methods USING btree (is_enabled);
 CREATE INDEX idx_payment_storefront_id ON public.storefront_payment_methods USING btree (storefront_id);
 CREATE INDEX idx_payment_transactions_auto_capture ON public.payment_transactions USING btree (auto_capture_at, status) WHERE (((status)::text = 'authorized'::text) AND ((capture_mode)::text = 'auto'::text));
-CREATE INDEX idx_payment_transactions_created_at ON public.payment_transactions USING btree (created_at);
