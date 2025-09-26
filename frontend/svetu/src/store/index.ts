@@ -8,6 +8,7 @@ import paymentReducer from './slices/paymentSlice';
 import cartReducer from './slices/cartSlice';
 import localCartReducer from './slices/localCartSlice';
 import categoriesReducer from './slices/categoriesSlice';
+import compareReducer from './slices/compareSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -21,6 +22,7 @@ export const store = configureStore({
     cart: cartReducer,
     localCart: localCartReducer,
     categories: categoriesReducer,
+    compare: compareReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

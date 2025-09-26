@@ -24,6 +24,49 @@ func NewCarsHandler(service service.Interface, carService *service.UnifiedCarSer
 	}
 }
 
+// GetCarStatistics godoc
+// @Summary Get car statistics
+// @Description Get statistics about cars in the marketplace (total listings, makes, models)
+// @Tags marketplace-cars
+// @Accept json
+// @Produce json
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Car statistics"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/cars/stats [get]
+func (h *CarsHandler) GetCarStatistics(c *fiber.Ctx) error {
+	logger.Info().Msg("GetCarStatistics handler called")
+
+	// Get total car listings count from OpenSearch
+	totalListings, err := h.service.GetCarListingsCount(c.Context())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get car listings count")
+		totalListings = 0
+	}
+
+	// Get total makes count
+	makes, err := h.service.GetCarMakes(c.Context(), "", false, false, true)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get car makes for stats")
+		makes = nil
+	}
+
+	// Get total models count
+	totalModels, err := h.service.GetTotalCarModelsCount(c.Context())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get total models count")
+		totalModels = 0
+	}
+
+	stats := map[string]interface{}{
+		"totalListings": totalListings,
+		"totalMakes":    len(makes),
+		"totalModels":   totalModels,
+		"lastUpdated":   c.Context().Value("timestamp"),
+	}
+
+	return utils.SuccessResponse(c, stats)
+}
+
 // GetCarMakes godoc
 // @Summary Get all car makes
 // @Description Get all available car makes from the database
@@ -201,6 +244,7 @@ func (h *CarsHandler) RegisterRoutes(router fiber.Router) {
 	cars := router.Group("/cars")
 
 	// Public routes
+	cars.Get("/stats", h.GetCarStatistics)
 	cars.Get("/makes", h.GetCarMakes)
 	cars.Get("/makes/search", h.SearchCarMakes)
 	cars.Get("/makes/:make_slug/models", h.GetCarModels)

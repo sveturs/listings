@@ -367,15 +367,10 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 		Sort: "date_desc",
 	}
 
-	// Категория - расширяем поиск на последней попытке
-	if tryNumber < 3 {
-		// Первые 3 попытки - ищем в той же категории
-		params.CategoryID = strconv.Itoa(listing.CategoryID)
-		log.Printf("Попытка %d: поиск в категории %d", tryNumber, listing.CategoryID)
-	} else {
-		// Последняя попытка - поиск во всех категориях
-		log.Printf("Попытка %d: поиск во всех категориях", tryNumber)
-	}
+	// Всегда ищем в той же категории
+	// Это обеспечивает релевантность результатов
+	params.CategoryID = strconv.Itoa(listing.CategoryID)
+	log.Printf("Попытка %d: поиск в категории %d", tryNumber, listing.CategoryID)
 
 	// Добавляем локацию в зависимости от попытки
 	switch {
@@ -411,8 +406,10 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 			params.PriceMax = listing.Price * 3.0
 			log.Printf("Попытка %d: диапазон цен %.2f - %.2f (±200%%)", tryNumber, params.PriceMin, params.PriceMax)
 		default:
-			// Последняя попытка: без ограничений по цене
-			log.Printf("Попытка %d: без ограничений по цене", tryNumber)
+			// Последняя попытка: очень широкий диапазон ±400%
+			params.PriceMin = listing.Price * 0.05
+			params.PriceMax = listing.Price * 5.0
+			log.Printf("Попытка %d: диапазон цен %.2f - %.2f (±400%%)", tryNumber, params.PriceMin, params.PriceMax)
 		}
 	}
 

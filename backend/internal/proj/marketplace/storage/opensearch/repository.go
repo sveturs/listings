@@ -2569,6 +2569,12 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		case "created_at":
 			sortField = fieldNameCreatedAt
 			// sortOrder уже установлен из params.SortDirection выше
+		case "created_at_desc":
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderDesc
+		case "created_at_asc":
+			sortField = fieldNameCreatedAt
+			sortOrder = sortOrderAsc
 		case fieldNamePrice:
 			sortField = fieldNamePrice
 			// sortOrder уже установлен из params.SortDirection выше
@@ -2578,6 +2584,102 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		case "price_asc":
 			sortField = fieldNamePrice
 			sortOrder = sortOrderAsc
+		// Сортировка для автомобилей
+		case "year_desc":
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"attributes.numeric_value": map[string]interface{}{
+						"order": "desc",
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"filter": map[string]interface{}{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "year",
+								},
+							},
+						},
+					},
+				},
+			}
+			return query
+		case "year_asc":
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"attributes.numeric_value": map[string]interface{}{
+						"order": "asc",
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"filter": map[string]interface{}{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "year",
+								},
+							},
+						},
+					},
+				},
+			}
+			return query
+		case "mileage_asc":
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"attributes.numeric_value": map[string]interface{}{
+						"order": "asc",
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"filter": map[string]interface{}{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "mileage",
+								},
+							},
+						},
+					},
+				},
+			}
+			return query
+		case "mileage_desc":
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"attributes.numeric_value": map[string]interface{}{
+						"order": "desc",
+						"nested": map[string]interface{}{
+							"path": "attributes",
+							"filter": map[string]interface{}{
+								"term": map[string]interface{}{
+									"attributes.attribute_name": "mileage",
+								},
+							},
+						},
+					},
+				},
+			}
+			return query
+		case "price_year_ratio":
+			// Сортировка по соотношению цена/год (лучшая цена за новизну)
+			query["sort"] = []interface{}{
+				map[string]interface{}{
+					"_script": map[string]interface{}{
+						"type": "number",
+						"script": map[string]interface{}{
+							"source": `
+								double year = 2000;
+								for (def attr : params._source.attributes) {
+									if (attr.attribute_name == 'year' && attr.numeric_value != null) {
+										year = attr.numeric_value;
+										break;
+									}
+								}
+								double price = doc.containsKey('price') && doc['price'].size() > 0 ? doc['price'].value : 100000;
+								double age = 2025 - year;
+								if (age < 1) age = 1;
+								return price / (2025 - age);
+							`,
+							"lang": "painless",
+						},
+						"order": "asc",
+					},
+				},
+			}
+			return query
 		case "rating_desc":
 			logger.Info().Msgf("Применяем сортировку рейтинга по УБЫВАНИЮ")
 			query["sort"] = []interface{}{

@@ -171,7 +171,7 @@ export const CarSelectorCompact: React.FC<CarSelectorCompactProps> = ({
                   : loadingModels
                     ? t('loading')
                     : models.length === 0
-                      ? t('noModels')
+                      ? t('cars.noModels')
                       : t('selectModel')}
               </span>
             )}

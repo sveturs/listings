@@ -181,3 +181,40 @@ func (d *Database) SearchCarMakes(ctx context.Context, query string, limit int) 
 
 	return makes, nil
 }
+
+// GetCarListingsCount возвращает количество автомобильных объявлений
+func (d *Database) GetCarListingsCount(ctx context.Context) (int, error) {
+	var count int
+
+	query := `
+		SELECT COUNT(*)
+		FROM marketplace_listings ml
+		WHERE ml.category_id IN (1003, 1301, 1303, 1302, 10174)
+		  AND ml.status = 'active'
+	`
+
+	err := d.sqlxDB.GetContext(ctx, &count, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// GetTotalCarModelsCount возвращает общее количество моделей автомобилей
+func (d *Database) GetTotalCarModelsCount(ctx context.Context) (int, error) {
+	var count int
+
+	query := `
+		SELECT COUNT(*)
+		FROM car_models
+		WHERE is_active = true
+	`
+
+	err := d.sqlxDB.GetContext(ctx, &count, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

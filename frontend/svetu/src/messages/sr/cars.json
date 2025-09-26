@@ -102,7 +102,10 @@
       "100k": "Do 100.000 km",
       "150k": "Do 150.000 km",
       "200k": "Do 200.000 km"
-    }
+    },
+    "gas": "Gas",
+    "apply": "Primeni filtere",
+    "showFilters": "Prikaži filtere"
   },
   "pageTitle": "Automobili - Kupite i prodajte vozila",
   "pageDescription": "Pronađite savršen automobil ili prodajte svoje vozilo na našoj platformi",
@@ -315,5 +318,103 @@
   "hideFilters": "Sakrij filtere",
   "results": "rezultata",
   "totalListings": "ukupno oglasa",
-  "noResultsFound": "Nisu pronađeni automobili po vašim kriterijumima"
+  "noResultsFound": "Nisu pronađeni automobili po vašim kriterijumima",
+  "badges": {
+    "new": "NOVO",
+    "top": "TOP",
+    "featured": "ISTAKNUTO",
+    "reduced": "SNIŽENO"
+  },
+  "info": {
+    "year": "Godina",
+    "mileage": "Kilometraža",
+    "fuel": "Gorivo",
+    "transmission": "Menjač",
+    "engine": "Motor",
+    "color": "Boja",
+    "bodyType": "Karoserija",
+    "seats": "Sedišta"
+  },
+  "time": {
+    "justNow": "Upravo sada",
+    "hoursAgo": "pre {hours}h",
+    "daysAgo": "pre {days}d",
+    "weeksAgo": "pre {weeks}n",
+    "monthsAgo": "pre {months}m"
+  },
+  "actions": {
+    "favorite": "Dodaj u omiljene",
+    "share": "Podeli",
+    "compare": "Uporedi",
+    "quickView": "Brzi pregled",
+    "viewDetails": "Detaljnije",
+    "viewFullDetails": "Svi detalji",
+    "call": "Pozovi",
+    "message": "Poruka"
+  },
+  "common": {
+    "photos": "fotografija",
+    "noPhoto": "Nema fotografije",
+    "views": "pregleda",
+    "new": "novo",
+    "noLocation": "Lokacija nije navedena"
+  },
+  "quickView": {
+    "description": "Opis",
+    "seller": "Prodavac",
+    "contactSeller": "Kontaktiraj prodavca"
+  },
+  "shareTitle": "Podeli ovaj automobil",
+  "compare": {
+    "title": "Uporedi automobile",
+    "compareNow": "Uporedi sada",
+    "clearAll": "Obriši sve",
+    "addMore": "Dodajte još {{count}} automobil za poređenje",
+    "minRequired": "Izaberite najmanje 2 automobila za poređenje",
+    "minRequiredForTable": "Morate izabrati najmanje 2 automobila za poređenje",
+    "backToCars": "Nazad na automobile",
+    "pageTitle": "Poređenje automobila",
+    "specification": "Specifikacija",
+    "different": "Razlikuje se",
+    "print": "Štampaj poređenje"
+  },
+  "specs": {
+    "price": "Cena",
+    "year": "Godina",
+    "mileage": "Kilometraža",
+    "fuelType": "Tip goriva",
+    "transmission": "Menjač",
+    "engineSize": "Zapremina motora",
+    "power": "Snaga",
+    "bodyType": "Tip karoserije",
+    "color": "Boja",
+    "driveType": "Pogon",
+    "doors": "Vrata",
+    "seats": "Sedišta",
+    "condition": "Stanje",
+    "previousOwners": "Prethodni vlasnici",
+    "warranty": "Garancija",
+    "firstRegistration": "Prva registracija",
+    "technicalInspection": "Tehnički pregled",
+    "vin": "VIN",
+    "features": "Karakteristike"
+  },
+  "navigation": {
+    "previous": "Prethodni",
+    "next": "Sledeći"
+  },
+  "search": {
+    "placeholder": "Pretražite po marki, modelu ili gradu...",
+    "recent": "Nedavne pretrage",
+    "popular": "Popularne pretrage",
+    "clearRecent": "Obriši"
+  },
+  "breadcrumbs": {
+    "filters": "Aktivni filteri",
+    "removeFilter": "Ukloni filter",
+    "cars": "Automobili",
+    "search": "Pretraga",
+    "favorites": "Omiljeno",
+    "compare": "Uporedi"
+  }
 }

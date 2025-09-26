@@ -110,6 +110,8 @@ type MarketplaceServiceInterface interface {
 	GetCarModelsByMake(ctx context.Context, makeSlug string, activeOnly bool) ([]models.CarModel, error)
 	GetCarGenerationsByModel(ctx context.Context, modelID int, activeOnly bool) ([]models.CarGeneration, error)
 	SearchCarMakes(ctx context.Context, query string, limit int) ([]models.CarMake, error)
+	GetCarListingsCount(ctx context.Context) (int, error)
+	GetTotalCarModelsCount(ctx context.Context) (int, error)
 }
 
 type ContactsServiceInterface interface {
