@@ -136,7 +136,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	carServiceConfig := &marketplaceService.CarServiceConfig{
 		CacheTTL:          24 * time.Hour,
 		CacheEnabled:      redisClient != nil,
-		VINDecoderEnabled: false, // TODO: включить когда будет готово
+		VINDecoderEnabled: true, // Включаем VIN декодер
 	}
 	unifiedCarSvc := marketplaceService.NewUnifiedCarService(storage, redisClient, carServiceConfig)
 

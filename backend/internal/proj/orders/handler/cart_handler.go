@@ -18,11 +18,11 @@ import (
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param item body models.AddToCartRequest true "Item to add"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Product not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/cart/items [post]
 func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
@@ -80,11 +80,11 @@ func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
 // @Param storefront_id path int true "Storefront ID"
 // @Param item_id path int true "Cart item ID"
 // @Param update body models.UpdateCartItemRequest true "Updated quantity"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Item not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/cart/items/{item_id} [put]
 func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
@@ -137,11 +137,11 @@ func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param item_id path int true "Cart item ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Item not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/cart/items/{item_id} [delete]
 func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
@@ -187,10 +187,10 @@ func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
 // @Tags cart
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.ShoppingCart} "Cart contents"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Cart contents"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/cart [get]
 func (h *OrdersHandler) GetCart(c *fiber.Ctx) error {
@@ -231,10 +231,10 @@ func (h *OrdersHandler) GetCart(c *fiber.Ctx) error {
 // @Tags cart
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Cart cleared"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Cart cleared"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/cart [delete]
 func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
@@ -273,9 +273,9 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 // @Description Gets all shopping carts for the authenticated user across all storefronts
 // @Tags cart
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.ShoppingCart} "User's carts"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ShoppingCart} "User's carts"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/user/carts [get]
 func (h *OrdersHandler) GetUserCarts(c *fiber.Ctx) error {

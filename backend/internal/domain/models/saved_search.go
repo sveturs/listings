@@ -8,17 +8,17 @@ import (
 
 // SavedSearch представляет сохраненный поиск пользователя
 type SavedSearch struct {
-	ID              int             `json:"id" db:"id"`
-	UserID          int             `json:"user_id" db:"user_id"`
-	Name            string          `json:"name" db:"name"`
-	Filters         FiltersJSON     `json:"filters" db:"filters"`
-	SearchType      string          `json:"search_type" db:"search_type"`
-	NotifyEnabled   bool            `json:"notify_enabled" db:"notify_enabled"`
-	NotifyFrequency string          `json:"notify_frequency" db:"notify_frequency"`
-	LastNotifiedAt  *time.Time      `json:"last_notified_at,omitempty" db:"last_notified_at"`
-	ResultsCount    int             `json:"results_count" db:"results_count"`
-	CreatedAt       time.Time       `json:"created_at" db:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at" db:"updated_at"`
+	ID              int         `json:"id" db:"id"`
+	UserID          int         `json:"user_id" db:"user_id"`
+	Name            string      `json:"name" db:"name"`
+	Filters         FiltersJSON `json:"filters" db:"filters"`
+	SearchType      string      `json:"search_type" db:"search_type"`
+	NotifyEnabled   bool        `json:"notify_enabled" db:"notify_enabled"`
+	NotifyFrequency string      `json:"notify_frequency" db:"notify_frequency"`
+	LastNotifiedAt  *time.Time  `json:"last_notified_at,omitempty" db:"last_notified_at"`
+	ResultsCount    int         `json:"results_count" db:"results_count"`
+	CreatedAt       time.Time   `json:"created_at" db:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at" db:"updated_at"`
 }
 
 // FiltersJSON для хранения JSON фильтров в базе данных
@@ -52,10 +52,10 @@ func (f FiltersJSON) Value() (driver.Value, error) {
 
 // SavedSearchNotification представляет уведомление о новых результатах поиска
 type SavedSearchNotification struct {
-	ID               int       `json:"id" db:"id"`
-	SavedSearchID    int       `json:"saved_search_id" db:"saved_search_id"`
-	NewListingsCount int       `json:"new_listings_count" db:"new_listings_count"`
-	NotificationSent bool      `json:"notification_sent" db:"notification_sent"`
+	ID               int        `json:"id" db:"id"`
+	SavedSearchID    int        `json:"saved_search_id" db:"saved_search_id"`
+	NewListingsCount int        `json:"new_listings_count" db:"new_listings_count"`
+	NotificationSent bool       `json:"notification_sent" db:"notification_sent"`
 	SentAt           *time.Time `json:"sent_at,omitempty" db:"sent_at"`
 	ErrorMessage     *string    `json:"error_message,omitempty" db:"error_message"`
 	CreatedAt        time.Time  `json:"created_at" db:"created_at"`

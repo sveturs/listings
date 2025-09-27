@@ -65,10 +65,10 @@ type SavedSearchResponse struct {
 // @Accept json
 // @Produce json
 // @Param body body CreateSavedSearchRequest true "Saved search data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SavedSearchResponse} "Created saved search"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidRequest"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.createSavedSearchError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SavedSearchResponse} "Created saved search"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createSavedSearchError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches [post]
 func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
@@ -108,9 +108,9 @@ func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
 // @Tags marketplace-saved-searches
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]SavedSearchResponse} "List of saved searches"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getSavedSearchesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]SavedSearchResponse} "List of saved searches"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getSavedSearchesError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches [get]
 func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
@@ -143,11 +143,11 @@ func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Saved search ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SavedSearchResponse} "Saved search details"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getSavedSearchError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SavedSearchResponse} "Saved search details"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getSavedSearchError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [get]
 func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
@@ -182,11 +182,11 @@ func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Saved search ID"
 // @Param body body UpdateSavedSearchRequest true "Update data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SavedSearchResponse} "Updated saved search"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidRequest"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateSavedSearchError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SavedSearchResponse} "Updated saved search"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateSavedSearchError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [put]
 func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
@@ -227,11 +227,11 @@ func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Saved search ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Deleted successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteSavedSearchError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Deleted successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteSavedSearchError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [delete]
 func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
@@ -267,11 +267,11 @@ func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Saved search ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Search results"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.executeSavedSearchError"
+// @Success 200 {object} utils.SuccessResponseSwag "Search results"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.savedSearchNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.executeSavedSearchError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id}/execute [get]
 func (h *SavedSearchesHandler) ExecuteSavedSearch(c *fiber.Ctx) error {

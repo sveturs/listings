@@ -51,10 +51,10 @@ type CreatePaymentResponse struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body CreatePaymentRequest true "Payment details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=CreatePaymentResponse} "Payment created successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=CreatePaymentResponse} "Payment created successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /payments/create [post]
 func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
@@ -128,11 +128,11 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Payment captured successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid transaction ID"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Transaction not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Payment captured successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid transaction ID"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Transaction not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /payments/{id}/capture [post]
 func (h *PaymentHandler) CapturePayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
@@ -175,11 +175,11 @@ type RefundPaymentRequest struct {
 // @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
 // @Param request body RefundPaymentRequest true "Refund details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Refund processed successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Transaction not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Refund processed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Transaction not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /payments/{id}/refund [post]
 func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
@@ -231,10 +231,10 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.PaymentTransaction} "Payment status"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid transaction ID"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Transaction not found"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentTransaction} "Payment status"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid transaction ID"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Transaction not found"
 // @Router /payments/{id}/status [get]
 func (h *PaymentHandler) GetPaymentStatus(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста

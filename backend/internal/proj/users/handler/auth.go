@@ -65,7 +65,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Produce json
 // @Param code query string true "Authorization code from Google"
 // @Success 302 {string} string "Redirect to frontend with session"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.google_callback.error.authentication_failed"
+// @Failure 500 {object} utils.ErrorResponseSwag "auth.google_callback.error.authentication_failed"
 // @Router /auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
@@ -135,7 +135,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SessionResponse} "Session information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=SessionResponse} "Session information"
 // @Router /auth/session [get]
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 	// Check if user is authenticated via JWT middleware
@@ -180,7 +180,7 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Logout successful"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Logout successful"
 // @Router /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	// This handler should never be called - all auth requests are proxied to Auth Service
@@ -198,10 +198,10 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body LoginRequest true "Login credentials"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AuthResponse} "Authentication successful"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.invalid_request_body or auth.login.error.email_password_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.invalid_credentials"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AuthResponse} "Authentication successful"
+// @Failure 400 {object} utils.ErrorResponseSwag "auth.login.error.invalid_request_body or auth.login.error.email_password_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.login.error.invalid_credentials"
+// @Failure 500 {object} utils.ErrorResponseSwag "auth.login.error.failed"
 // @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	// This handler should never be called - all auth requests are proxied to Auth Service
@@ -219,10 +219,10 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body RegisterRequest true "Registration data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AuthResponse} "Registration successful"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.invalid_request_body or auth.register.error.fields_required"
-// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.email_exists"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AuthResponse} "Registration successful"
+// @Failure 400 {object} utils.ErrorResponseSwag "auth.register.error.invalid_request_body or auth.register.error.fields_required"
+// @Failure 409 {object} utils.ErrorResponseSwag "auth.register.error.email_exists"
+// @Failure 500 {object} utils.ErrorResponseSwag "auth.register.error.failed"
 // @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	// This handler should never be called - all auth requests are proxied to Auth Service
@@ -239,8 +239,8 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TokenResponse} "New access token"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TokenResponse} "New access token"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	// This handler should never be called - all auth requests are proxied to Auth Service

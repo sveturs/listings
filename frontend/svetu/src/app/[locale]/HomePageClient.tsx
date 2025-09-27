@@ -24,6 +24,7 @@ import {
 import type { AppDispatch, RootState } from '@/store';
 import { toast } from 'react-hot-toast';
 import { favoritesService } from '@/services/favorites';
+import SafeImage from '@/components/SafeImage';
 
 // Динамический импорт карты для избежания SSR проблем
 const EnhancedMapSection = dynamic(
@@ -754,7 +755,9 @@ export default function HomePageClient({
                     'Building image URL for listing',
                     listing.id,
                     ':',
-                    imageUrl
+                    imageUrl,
+                    'firstImage:',
+                    firstImage
                   );
 
                   // Если у нас есть валидный URL
@@ -1081,10 +1084,12 @@ export default function HomePageClient({
                     className="card bg-base-100 hover:shadow-xl transition-all"
                   >
                     <figure className="relative h-48 overflow-hidden">
-                      <img
+                      <SafeImage
                         src={deal.image}
                         alt={deal.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
                       />
 
                       {/* Значок витрины для B2C объявлений */}
@@ -1544,10 +1549,13 @@ export default function HomePageClient({
                   <div className="flex items-start justify-between -mt-8">
                     <div className="flex items-center gap-3">
                       <div className="avatar">
-                        <div className="w-16 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2">
-                          <img
+                        <div className="w-16 h-16 rounded-full ring ring-base-100 ring-offset-base-100 ring-offset-2 relative overflow-hidden">
+                          <SafeImage
                             src={buildImageUrl(store.logo)}
                             alt={store.name}
+                            fill
+                            className="object-cover"
+                            sizes="64px"
                           />
                         </div>
                       </div>
@@ -1627,10 +1635,12 @@ export default function HomePageClient({
                   <Link href={getListingUrl(deal)} className="block">
                     <div className="card bg-base-100 w-64 hover:shadow-xl transition-all flex-shrink-0">
                       <figure className="h-40 overflow-hidden relative">
-                        <img
+                        <SafeImage
                           src={deal.image}
                           alt={deal.title}
-                          className="h-full w-full object-cover hover:scale-110 transition-transform duration-300"
+                          fill
+                          className="object-cover hover:scale-110 transition-transform duration-300"
+                          sizes="280px"
                         />
                         {/* Кнопка избранного */}
                         <button

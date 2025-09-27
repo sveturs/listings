@@ -32,9 +32,9 @@ func NewCategoryDetectorHandler(detector *services.CategoryDetector, logger *zap
 // @Accept json
 // @Produce json
 // @Param body body DetectCategoryRequest true "Данные для определения категории"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=DetectCategoryResponse} "Результат определения категории"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Недостаточно данных"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=DetectCategoryResponse} "Результат определения категории"
+// @Failure 400 {object} utils.ErrorResponseSwag "Недостаточно данных"
+// @Failure 500 {object} utils.ErrorResponseSwag "Ошибка сервера"
 // @Router /api/v1/marketplace/categories/detect [post]
 func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 	// Используем fmt для гарантированного вывода
@@ -229,9 +229,9 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param stats_id path int true "ID записи статистики"
 // @Param body body UpdateConfirmationRequest true "Данные подтверждения"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]bool} "Успешное обновление"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]bool} "Успешное обновление"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Ошибка сервера"
 // @Router /api/v1/marketplace/categories/detect/{stats_id}/confirm [put]
 func (h *CategoryDetectorHandler) UpdateCategoryConfirmation(c *fiber.Ctx) error {
 	// Получаем ID статистики
@@ -261,9 +261,9 @@ func (h *CategoryDetectorHandler) UpdateCategoryConfirmation(c *fiber.Ctx) error
 // @Produce json
 // @Param category_id path int true "ID категории"
 // @Param language query string false "Язык (ru, en, sr)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]CategoryKeywordResponse} "Список ключевых слов"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Категория не найдена"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]CategoryKeywordResponse} "Список ключевых слов"
+// @Failure 404 {object} utils.ErrorResponseSwag "Категория не найдена"
+// @Failure 500 {object} utils.ErrorResponseSwag "Ошибка сервера"
 // @Router /api/v1/marketplace/categories/{category_id}/keywords [get]
 func (h *CategoryDetectorHandler) GetCategoryKeywords(c *fiber.Ctx) error {
 	// Получаем ID категории

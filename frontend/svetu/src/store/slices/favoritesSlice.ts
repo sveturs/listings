@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '@/lib/api';
 import { components } from '@/types/generated/api';
 
-type MarketplaceListing = components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+type MarketplaceListing =
+  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
 
 interface FavoritesState {
   items: MarketplaceListing[];
@@ -75,7 +76,11 @@ const favoritesSlice = createSlice({
     },
     setFavorites: (state, action: PayloadAction<MarketplaceListing[]>) => {
       state.items = action.payload;
-      state.itemIds = new Set(action.payload.map((item) => item.id).filter((id): id is number => id !== undefined));
+      state.itemIds = new Set(
+        action.payload
+          .map((item) => item.id)
+          .filter((id): id is number => id !== undefined)
+      );
       state.count = action.payload.length;
       state.error = null;
     },
@@ -83,7 +88,9 @@ const favoritesSlice = createSlice({
       const id = action.payload;
       if (state.itemIds.has(id)) {
         state.itemIds.delete(id);
-        state.items = state.items.filter((item) => item.id !== undefined && item.id !== id);
+        state.items = state.items.filter(
+          (item) => item.id !== undefined && item.id !== id
+        );
         state.count = Math.max(0, state.count - 1);
       } else {
         state.itemIds.add(id);

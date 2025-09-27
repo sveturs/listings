@@ -3142,6 +3142,10 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 					image.FilePath = filePath
 				}
 
+				if fileName, ok := img["file_name"].(string); ok {
+					image.FileName = fileName
+				}
+
 				if isMain, ok := img["is_main"].(bool); ok {
 					image.IsMain = isMain
 				}
@@ -3154,7 +3158,10 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 					image.StorageType = "minio"
 				}
 
-				if publicURL, ok := img["public_url"].(string); ok {
+				// Поддерживаем оба варианта: url и public_url (для обратной совместимости)
+				if url, ok := img["url"].(string); ok {
+					image.PublicURL = url
+				} else if publicURL, ok := img["public_url"].(string); ok {
 					image.PublicURL = publicURL
 				} else if image.StorageType == "minio" && image.FilePath != "" {
 					// Если это MinIO, но public_url не указан, формируем его

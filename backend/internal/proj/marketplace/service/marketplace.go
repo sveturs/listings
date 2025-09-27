@@ -288,7 +288,7 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 
 	for triesCount < maxTries && len(similarListings) < limit {
 		// Формируем параметры поиска для получения кандидатов
-		params := s.buildAdvancedSearchParams(listing, limit*5, triesCount) // Получаем больше для фильтрации
+		params := s.buildAdvancedSearchParams(ctx, listing, limit*5, triesCount) // Получаем больше для фильтрации
 
 		// Выполняем поиск похожих объявлений
 		results, err := s.SearchListingsAdvanced(ctx, params)
@@ -360,17 +360,33 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 
 // buildAdvancedSearchParams формирует параметры для поиска похожих объявлений
 // tryNumber определяет уровень строгости поиска: 0 - самый строгий, 3 - самый широкий
-func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.MarketplaceListing, size int, tryNumber int) *search.ServiceParams {
+func (s *MarketplaceService) buildAdvancedSearchParams(ctx context.Context, listing *models.MarketplaceListing, size int, tryNumber int) *search.ServiceParams {
 	params := &search.ServiceParams{
-		Size: size,
-		Page: 1,
-		Sort: "date_desc",
+		Size:             size,
+		Page:             1,
+		Sort:             "date_desc",
+		StorefrontFilter: "include_b2c", // ИСПРАВЛЕНИЕ: включаем товары витрин для поиска похожих товаров
 	}
 
-	// Всегда ищем в той же категории
-	// Это обеспечивает релевантность результатов
-	params.CategoryID = strconv.Itoa(listing.CategoryID)
-	log.Printf("Попытка %d: поиск в категории %d", tryNumber, listing.CategoryID)
+	// ИСПРАВЛЕНИЕ: Расширяем поиск по категориям в зависимости от попытки
+	switch tryNumber {
+	case 0, 1:
+		// Первые 2 попытки - ищем в той же категории
+		params.CategoryID = strconv.Itoa(listing.CategoryID)
+		log.Printf("Попытка %d: поиск в категории %d", tryNumber, listing.CategoryID)
+	case 2:
+		// Третья попытка - ищем в родительской категории (если есть)
+		if categoryID, err := s.getParentCategoryID(ctx, listing.CategoryID); err == nil && categoryID > 0 {
+			params.CategoryID = strconv.Itoa(categoryID)
+			log.Printf("Попытка %d: поиск в родительской категории %d (исходная %d)", tryNumber, categoryID, listing.CategoryID)
+		} else {
+			params.CategoryID = strconv.Itoa(listing.CategoryID)
+			log.Printf("Попытка %d: родительская категория не найдена, поиск в исходной категории %d", tryNumber, listing.CategoryID)
+		}
+	default:
+		// Последние попытки - ищем без ограничения по категориям
+		log.Printf("Попытка %d: поиск без ограничения по категориям", tryNumber)
+	}
 
 	// Добавляем локацию в зависимости от попытки
 	switch {
@@ -455,6 +471,22 @@ func (s *MarketplaceService) buildAdvancedSearchParams(listing *models.Marketpla
 	}
 
 	return params
+}
+
+// getParentCategoryID получает ID родительской категории
+func (s *MarketplaceService) getParentCategoryID(ctx context.Context, categoryID int) (int, error) {
+	// ВРЕМЕННОЕ РЕШЕНИЕ: хардкод для известных категорий
+	// TODO: сделать полноценную функцию через storage
+	parentMap := map[int]int{
+		10176: 1301, // Градски automobili -> Lični automobili
+		1301:  1003, // Lični automobili -> Automobili
+	}
+
+	if parentID, exists := parentMap[categoryID]; exists {
+		return parentID, nil
+	}
+
+	return 0, fmt.Errorf("parent category not found for category %d", categoryID)
 }
 
 func (s *MarketplaceService) GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error) {
@@ -2279,6 +2311,18 @@ func (s *MarketplaceService) getSimilarStorefrontProducts(ctx context.Context, l
 		return s.getFallbackSimilarListings(ctx, listingID, limit)
 	}
 
+	// ИСПРАВЛЕНИЕ: Если найдено мало похожих товаров витрин, дополняем обычными листингами
+	if len(similarListings) < limit/2 {
+		log.Printf("Найдено только %d похожих товаров витрин, дополняем обычными листингами", len(similarListings))
+		fallbackListings, fallbackErr := s.getFallbackSimilarListings(ctx, listingID, limit-len(similarListings))
+		if fallbackErr == nil {
+			log.Printf("Добавляем %d обычных похожих листингов", len(fallbackListings))
+			similarListings = append(similarListings, fallbackListings...)
+		} else {
+			log.Printf("Ошибка получения дополнительных листингов: %v", fallbackErr)
+		}
+	}
+
 	// ИСПРАВЛЕНИЕ: Дозагружаем полные данные объявлений с изображениями
 	var enrichedListings []*models.MarketplaceListing
 	for _, partialListing := range similarListings {
@@ -2337,7 +2381,7 @@ func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, lis
 
 	for triesCount < maxTries && len(similarListings) < limit {
 		// Формируем параметры поиска для получения кандидатов
-		params := s.buildAdvancedSearchParams(listing, limit*5, triesCount) // Получаем больше для фильтрации
+		params := s.buildAdvancedSearchParams(ctx, listing, limit*5, triesCount) // Получаем больше для фильтрации
 
 		// Выполняем поиск похожих объявлений
 		results, err := s.SearchListingsAdvanced(ctx, params)

@@ -3,6 +3,9 @@ package handler
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -12,6 +15,7 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/cache"
 	"backend/internal/proj/marketplace/service"
 	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	"backend/pkg/utils"
@@ -23,13 +27,15 @@ import (
 type SearchHandler struct {
 	services           globalService.ServicesInterface
 	marketplaceService service.MarketplaceServiceInterface
+	cache              *cache.UniversalCache
 }
 
 // NewSearchHandler создает новый обработчик поиска
-func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
+func NewSearchHandler(services globalService.ServicesInterface, cache *cache.UniversalCache) *SearchHandler {
 	return &SearchHandler{
 		services:           services,
 		marketplaceService: services.Marketplace(),
+		cache:              cache,
 	}
 }
 
@@ -41,7 +47,7 @@ func NewSearchHandler(services globalService.ServicesInterface) *SearchHandler {
 // @Produce json
 // @Param body body search.ServiceParams true "Search parameters"
 // @Success 200 {object} handler.SearchResponse "Search results with metadata"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.searchError"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.searchError"
 // @Router /api/v1/marketplace/search [get]
 // @Router /api/v1/marketplace/search [post]
 func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
@@ -232,11 +238,42 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 	ctx := c.Context()
 	ctx.SetUserValue("language", params.Language)
 
-	// Выполняем поиск
-	results, err := h.marketplaceService.SearchListingsAdvanced(ctx, &params)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to perform advanced search")
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.searchError")
+	// Генерируем ключ кеша для запроса
+	cacheKey := h.generateSearchCacheKey(&params)
+
+	// Пробуем получить из кеша, если включен кеш
+	var results *search.ServiceResult
+	var fromCache bool
+
+	if h.cache != nil {
+		if cachedData, err := h.cache.GetSearchResults(ctx, cacheKey); err == nil {
+			// Преобразуем данные из кеша
+			if jsonData, err := json.Marshal(cachedData); err == nil {
+				if err := json.Unmarshal(jsonData, &results); err == nil {
+					fromCache = true
+					logger.Debug().Str("cacheKey", cacheKey).Msg("Search results retrieved from cache")
+				}
+			}
+		}
+	}
+
+	// Если не нашли в кеше, выполняем поиск
+	if !fromCache {
+		var err error
+		results, err = h.marketplaceService.SearchListingsAdvanced(ctx, &params)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to perform advanced search")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.searchError")
+		}
+
+		// Сохраняем в кеш для будущих запросов
+		if h.cache != nil && results != nil {
+			if err := h.cache.SetSearchResults(ctx, cacheKey, results); err != nil {
+				logger.Warn().Err(err).Str("cacheKey", cacheKey).Msg("Failed to cache search results")
+			} else {
+				logger.Debug().Str("cacheKey", cacheKey).Msg("Search results cached successfully")
+			}
+		}
 	}
 
 	// Проверяем, что results.Items не nil
@@ -401,9 +438,9 @@ func parseIntOrDefault(str string, defaultValue int) int {
 // @Produce json
 // @Param prefix query string true "Search prefix"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]string} "Suggestions list"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.prefixRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]string} "Suggestions list"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/marketplace/suggestions [get]
 func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	// Засекаем время начала для измерения производительности
@@ -496,8 +533,8 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 // @Param query query string true "Search query"
 // @Param limit query int false "Number of suggestions" default(10)
 // @Security ApiKeyAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Enhanced suggestions"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Enhanced suggestions"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Router /api/v1/marketplace/enhanced-suggestions [get]
 func (h *SearchHandler) GetEnhancedSuggestions(c *fiber.Ctx) error {
 	query := c.Query("query")
@@ -623,9 +660,9 @@ func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language 
 // @Produce json
 // @Param query query string true "Search query"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions list"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.queryRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions list"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
 // @Router /api/v1/marketplace/category-suggestions [get]
 func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 	// Получаем строку запроса
@@ -661,9 +698,9 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param limit query int false "Number of similar listings" default(5)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings list"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.similarListingsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings list"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.similarListingsError"
 // @Router /api/v1/marketplace/listings/{id}/similar [get]
 func (h *SearchHandler) GetSimilarListings(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
@@ -729,4 +766,38 @@ func detectDeviceTypeSearch(userAgent string) string {
 
 	// По умолчанию - десктоп
 	return "desktop"
+}
+
+// generateSearchCacheKey генерирует уникальный ключ кеша для поискового запроса
+func (h *SearchHandler) generateSearchCacheKey(params *search.ServiceParams) string {
+	// Создаем структуру для хеширования
+	keyData := map[string]interface{}{
+		"query":            params.Query,
+		"page":             params.Page,
+		"size":             params.Size,
+		"categoryID":       params.CategoryID,
+		"sort":             params.Sort,
+		"sortDirection":    params.SortDirection,
+		"priceMin":         params.PriceMin,
+		"priceMax":         params.PriceMax,
+		"language":         params.Language,
+		"storefrontFilter": params.StorefrontFilter,
+		"fuzziness":        params.Fuzziness,
+		"useSynonyms":      params.UseSynonyms,
+	}
+
+	// Добавляем фильтры атрибутов
+	if len(params.AttributeFilters) > 0 {
+		keyData["attributeFilters"] = params.AttributeFilters
+	}
+
+	// Добавляем гео фильтры, если есть
+	if params.AdvancedGeoFilters != nil {
+		keyData["geoFilters"] = params.AdvancedGeoFilters
+	}
+
+	// Сериализуем в JSON и хешируем
+	jsonData, _ := json.Marshal(keyData)
+	hash := md5.Sum(jsonData)
+	return fmt.Sprintf("%x", hash)
 }

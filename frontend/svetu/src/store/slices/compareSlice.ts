@@ -1,12 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+// Универсальный интерфейс для обратной совместимости
 interface CarComparison {
   id: number;
   title: string;
   price: number;
-  year: number;
-  make: string;
-  model: string;
+  year?: number;
+  make?: string;
+  model?: string;
   mileage?: number;
   fuelType?: string;
   transmission?: string;
@@ -16,6 +17,7 @@ interface CarComparison {
   color?: string;
   location?: string;
   imageUrl?: string;
+  image?: string; // Добавлено для совместимости с универсальным интерфейсом
   vin?: string;
   driveType?: string;
   doors?: number;
@@ -26,6 +28,9 @@ interface CarComparison {
   firstRegistration?: string;
   technicalInspection?: string;
   features?: string[];
+  // Добавляем универсальные поля
+  category?: string;
+  attributes?: Record<string, any>;
 }
 
 interface CompareState {

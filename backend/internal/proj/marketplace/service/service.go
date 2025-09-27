@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"backend/internal/config"
 	"backend/internal/proj/marketplace/repository"
@@ -15,6 +16,7 @@ type Service struct {
 	Chat           ChatServiceInterface
 	ChatAttachment ChatAttachmentServiceInterface
 	Order          *OrderService
+	UnifiedCar     *UnifiedCarService
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface, searchWeights *config.SearchWeights, cache CacheInterface) *Service {
@@ -42,11 +44,20 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 		)
 	}
 
+	// Создаем UnifiedCarService с включенным VIN декодером
+	carServiceConfig := &CarServiceConfig{
+		VINDecoderEnabled: true,
+		CacheEnabled:      true,
+		CacheTTL:          24 * time.Duration(time.Hour),
+	}
+	unifiedCarService := NewUnifiedCarService(storage, nil, carServiceConfig)
+
 	return &Service{
 		Marketplace:    NewMarketplaceService(storage, dummyTranslation, searchWeights, cache),
 		Chat:           NewChatService(storage, notifService),
 		ChatAttachment: nil, // Will be set by global service
 		Order:          orderService,
+		UnifiedCar:     unifiedCarService,
 	}
 }
 

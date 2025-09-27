@@ -16,6 +16,7 @@ import (
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/cache"
 	"backend/internal/proj/marketplace/repository"
 	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/storage/opensearch"
@@ -97,6 +98,21 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		unifiedAttrStorage := postgres.NewUnifiedAttributeStorage(postgresDB.GetPool(), featureFlags.UnifiedAttributesFallback)
 		unifiedAttributesHandler := NewUnifiedAttributesHandler(unifiedAttrStorage, featureFlags)
 
+		// Создаем универсальный кеш для маркетплейса
+		var universalCache *cache.UniversalCache
+		redisAddr := "localhost:6379" // TODO: взять из конфига
+		if cfg := services.Config(); cfg != nil && cfg.Redis.URL != "" {
+			redisAddr = cfg.Redis.URL
+		}
+
+		universalCache, err := cache.NewUniversalCache(ctx, redisAddr, zap.L(), cache.DefaultCacheConfig())
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to create universal cache, continuing without cache")
+			universalCache = nil
+		} else {
+			logger.Info().Msg("Universal cache created successfully")
+		}
+
 		// Создаём CategoryDetector и CategoryDetectorHandler
 		var categoryDetectorHandler *CategoryDetectorHandler
 		var aiCategoryHandler *AICategoryHandler
@@ -155,10 +171,10 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		}
 
 		return &Handler{
-			Listings:               NewListingsHandler(services),
+			Listings:               NewListingsHandler(services, universalCache),
 			Images:                 NewImagesHandler(services),
 			Categories:             categoriesHandler,
-			Search:                 NewSearchHandler(services),
+			Search:                 NewSearchHandler(services, universalCache),
 			Translations:           NewTranslationsHandler(services),
 			Favorites:              NewFavoritesHandler(services),
 			SavedSearches:          NewSavedSearchesHandler(services),
@@ -190,10 +206,10 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 	// (используем nil для storage - будет работать только fallback)
 
 	return &Handler{
-		Listings:               NewListingsHandler(services),
+		Listings:               NewListingsHandler(services, nil), // В fallback случае используем nil для кеша
 		Images:                 NewImagesHandler(services),
 		Categories:             categoriesHandler,
-		Search:                 NewSearchHandler(services),
+		Search:                 NewSearchHandler(services, nil), // В fallback случае используем nil для кеша
 		Translations:           NewTranslationsHandler(services),
 		Favorites:              NewFavoritesHandler(services),
 		SavedSearches:          NewSavedSearchesHandler(services),
@@ -232,6 +248,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
+
+	// Public recommendations endpoint
+	marketplace.Get("/recommendations", h.MarketplaceHandler.GetPublicRecommendations)
 
 	// Cars routes (public endpoints)
 	if h.Cars != nil {

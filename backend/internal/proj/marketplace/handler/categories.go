@@ -43,8 +43,8 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Accept json
 // @Produce json
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categoriesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 	// Получаем язык из query параметра
@@ -69,8 +69,8 @@ func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.CategoryTreeNode}
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categoryTreeError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryTreeNode}
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoryTreeError"
 // @Router /api/v1/marketplace/category-tree [get]
 func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 	// Получаем язык из query параметра
@@ -114,9 +114,9 @@ func (h *CategoriesHandler) GetCategoryTree(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.CategoryAttribute}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.attributesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attributesError"
 // @Router /api/v1/marketplace/categories/{id}/attributes [get]
 func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
@@ -145,9 +145,9 @@ func (h *CategoriesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeRangesResponse}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.rangesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AttributeRangesResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.rangesError"
 // @Router /api/v1/marketplace/categories/{id}/attribute-ranges [get]
 func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 	// Получаем ID категории из параметров URL
@@ -174,8 +174,8 @@ func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 // @Produce json
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
 // @Param limit query int false "Limit of categories to return (default: 7)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categoriesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory}
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/popular-categories [get]
 func (h *CategoriesHandler) GetPopularCategories(c *fiber.Ctx) error {
 	// Получаем язык из query параметра

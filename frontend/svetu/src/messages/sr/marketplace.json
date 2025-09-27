@@ -487,6 +487,8 @@
   "rooms": "Sobe",
   "type": "Tip",
   "year": "Godina",
+  "mileage": "Kilometraža",
+  "fuelType": "Gorivo",
   "addToFavorites": "Dodaj u omiljene",
   "share": "Podeli",
   "newSeller": "Novi",
@@ -832,5 +834,17 @@
     "loading": "Učitavanje...",
     "save": "Sačuvaj",
     "cancel": "Otkaži"
-  }
+  },
+  "priceOnRequest": "Cena na upit",
+  "justNow": "Upravo sada",
+  "hoursAgo": "{hours, plural, =1 {pre # sata} other {pre # sati}}",
+  "yesterday": "Juče",
+  "daysAgo": "{days, plural, =1 {pre # dana} other {pre # dana}}",
+  "noImage": "Nema slike",
+  "removeFromFavorites": "Ukloni iz omiljenih",
+  "removeFromCompare": "Ukloni iz poređenja",
+  "addToCompare": "Dodaj za poređenje",
+  "quickView": "Brzi pregled",
+  "inFavorites": "U omiljenim",
+  "calls": "Pozivi"
 }

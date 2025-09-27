@@ -9,6 +9,7 @@ import cartReducer from './slices/cartSlice';
 import localCartReducer from './slices/localCartSlice';
 import categoriesReducer from './slices/categoriesSlice';
 import compareReducer from './slices/compareSlice';
+import universalCompareReducer from './slices/universalCompareSlice';
 import favoritesReducer from './slices/favoritesSlice';
 import savedSearchesReducer from './slices/savedSearchesSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
@@ -25,6 +26,7 @@ export const store = configureStore({
     localCart: localCartReducer,
     categories: categoriesReducer,
     compare: compareReducer,
+    universalCompare: universalCompareReducer,
     favorites: favoritesReducer,
     savedSearches: savedSearchesReducer,
   },

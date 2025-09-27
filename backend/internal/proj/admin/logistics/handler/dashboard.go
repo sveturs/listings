@@ -26,10 +26,10 @@ func NewDashboardHandler(monitoringService *service.MonitoringService) *Dashboar
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_logistics.DashboardStats} "Dashboard statistics"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden - insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_logistics.DashboardStats} "Dashboard statistics"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/dashboard [get]
 func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -56,9 +56,9 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.DailyStats} "Weekly chart data"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.DailyStats} "Weekly chart data"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/dashboard/chart [get]
 func (h *DashboardHandler) GetWeeklyChart(c *fiber.Ctx) error {
 	// Проверка прав доступа

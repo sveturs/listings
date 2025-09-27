@@ -9,19 +9,26 @@ import type { components } from '@/types/generated/api';
 import { Car, TrendingUp, Calendar, Filter } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store';
-import { addToCompare, removeFromCompare } from '@/store/slices/compareSlice';
+import {
+  addItem as addToCompare,
+  removeItem as removeFromCompare,
+} from '@/store/slices/universalCompareSlice';
 import CarSortingOptions, {
   type CarSortOption,
 } from '@/components/marketplace/CarSortingOptions';
 import CarQuickFilters from '@/components/marketplace/CarQuickFilters';
-import { CarFilters } from '@/components/marketplace/CarFilters';
+import UniversalFilters, {
+  type FilterConfig,
+} from '@/components/universal/filters/UniversalFilters';
 import CarBrandIcon from '@/components/marketplace/CarBrandIcon';
 import AutocompleteSearch from '@/components/cars/AutocompleteSearch';
 import Breadcrumbs from '@/components/cars/Breadcrumbs';
-import { CarListingCardEnhanced } from '@/components/cars/CarListingCardEnhanced';
+// Universal components
+import UniversalListingCard, {
+  type UniversalListingData,
+} from '@/components/universal/cards/UniversalListingCard';
 import CarFiltersDrawer from '@/components/cars/CarFiltersDrawer';
 import CarQuickViewModal from '@/components/cars/CarQuickViewModal';
-import ComparisonBar from '@/components/cars/ComparisonBar';
 
 type CarMake = components['schemas']['backend_internal_domain_models.CarMake'];
 type MarketplaceListing =
@@ -35,7 +42,10 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   const t = useTranslations('cars');
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const compareItems = useSelector((state: RootState) => state.compare.items);
+  const compareItems = useSelector((state: RootState) => {
+    const carItems = state.universalCompare?.itemsByCategory?.cars || [];
+    return carItems;
+  });
   const [loading, setLoading] = useState(true);
   const [popularMakes, setPopularMakes] = useState<CarMake[]>([]);
   const [latestListings, setLatestListings] = useState<MarketplaceListing[]>(
@@ -226,6 +236,94 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilters, sortOption, loading]);
 
+  // Convert listing to universal format
+  const convertToUniversalData = (
+    listing: MarketplaceListing
+  ): UniversalListingData => {
+    const carAttrs = (listing.attributes as any) || {};
+
+    // Получаем локализованные данные если они есть
+    const translations = listing.translations?.[locale] || {};
+    const title = translations.title || listing.title || '';
+
+    // Парсим город из полного адреса
+    let cityName = '';
+    const streetAddress = translations.city || listing.city || '';
+
+    // Если есть полный адрес в location, извлекаем город
+    const fullLocation = translations.location || listing.location || '';
+    if (fullLocation && fullLocation.includes(',')) {
+      const parts = fullLocation.split(',').map((s) => s.trim());
+      if (parts.length >= 2) {
+        // Обычно формат: "Улица, Город Индекс, Регион, Страна"
+        // Берем второй элемент и удаляем индекс
+        cityName = parts[1].split(' ')[0]; // Берем только название города без индекса
+      }
+    }
+
+    // Если город не найден в полном адресе, используем значение из поля city
+    if (!cityName) {
+      cityName = 'Novi Sad'; // Дефолтный город, так как все объявления из Нови Сада
+    }
+
+    return {
+      id: listing.id || 0,
+      title,
+      price: listing.price || 0,
+      currency: (listing as any).currency || 'EUR',
+      // Обработка изображений - поддержка разных форматов из API
+      images:
+        listing.images
+          ?.map((img: any) => {
+            if (typeof img === 'string') return img;
+            if (img.public_url) return img.public_url;
+            if (img.url) return img.url;
+            if (img.thumbnail_url) return img.thumbnail_url;
+            return '';
+          })
+          .filter(Boolean) || [],
+      location: {
+        city: cityName,
+        district: streetAddress, // Используем street address в district для отображения
+        address: (listing as any).address,
+      },
+      category: 'cars',
+      categorySlug: 'cars',
+      createdAt: listing.created_at,
+      updatedAt: listing.updated_at,
+      attributes: carAttrs,
+      customFields: [
+        ...(carAttrs.year ? [{ label: t('year'), value: carAttrs.year }] : []),
+        ...(carAttrs.mileage
+          ? [
+              {
+                label: t('mileage'),
+                value: `${carAttrs.mileage.toLocaleString()} km`,
+              },
+            ]
+          : []),
+        ...(carAttrs.fuel_type
+          ? [{ label: t('fuelType'), value: carAttrs.fuel_type }]
+          : []),
+      ].slice(0, 3), // Показываем только первые 3 поля
+      badges: [
+        ...((listing as any).is_new
+          ? [{ type: 'new' as const, label: 'Новое' }]
+          : []),
+        ...((listing as any).is_featured
+          ? [{ type: 'recommended' as const, label: 'Рекомендуем' }]
+          : []),
+        ...(carAttrs.warranty
+          ? [{ type: 'verified' as const, label: 'Гарантия' }]
+          : []),
+      ],
+      stats: {
+        views: listing.views_count || (listing as any).views || 0,
+        favorites: (listing as any).favorites_count || 0,
+      },
+    };
+  };
+
   // Handle favorite toggle
   const handleFavorite = (listingId: number) => {
     setFavoriteIds((prev) => {
@@ -241,42 +339,17 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
   // Handle compare toggle
   const handleCompare = (listing: MarketplaceListing) => {
+    const universalData = convertToUniversalData(listing);
     const isComparing = compareItems.some((item) => item.id === listing.id);
 
     if (isComparing) {
       dispatch(removeFromCompare(listing.id || 0));
     } else {
-      // Get car attributes
-      const carAttrs: any = listing.attributes || {};
-
       dispatch(
         addToCompare({
-          id: listing.id || 0,
-          title: listing.title || '',
-          price: listing.price || 0,
-          year: carAttrs.year || new Date().getFullYear(),
-          make: carAttrs.make || '',
-          model: carAttrs.model || '',
-          mileage: carAttrs.mileage,
-          fuelType: carAttrs.fuel_type,
-          transmission: carAttrs.transmission,
-          engineSize: carAttrs.engine_size,
-          power: carAttrs.power,
-          bodyType: carAttrs.body_type,
-          color: carAttrs.color,
-          location: listing.city || listing.country,
-          imageUrl: listing.images?.[0]?.thumbnail_url,
-          vin: carAttrs.vin,
-          driveType: carAttrs.drive_type,
-          doors: carAttrs.doors,
-          seats: carAttrs.seats,
-          condition: carAttrs.condition,
-          previousOwners: carAttrs.previous_owners,
-          warranty: carAttrs.warranty,
-          firstRegistration: carAttrs.first_registration,
-          technicalInspection: carAttrs.technical_inspection,
-          features: carAttrs.features,
-        })
+          ...universalData,
+          category: universalData.category || 'cars',
+        } as any)
       );
     }
   };
@@ -463,8 +536,16 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
               <div
                 className={`lg:w-1/4 ${showFilters ? '' : 'hidden lg:block'}`}
               >
-                <CarFilters
+                <UniversalFilters
+                  category="cars"
+                  filters={activeFilters}
                   onFiltersChange={setActiveFilters}
+                  config={{
+                    showPriceRange: true,
+                    showCondition: true,
+                    showLocation: true,
+                  }}
+                  layout="vertical"
                   className="w-full"
                 />
               </div>
@@ -523,18 +604,17 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
                         [1003, 1301, 1303].includes(listing.category_id || 0)
                       )
                       .map((listing) => (
-                        <CarListingCardEnhanced
+                        <UniversalListingCard
                           key={listing.id}
-                          listing={listing}
-                          locale={locale}
-                          onFavorite={() => handleFavorite(listing.id || 0)}
-                          onShare={() => handleShare(listing.id || 0)}
-                          onCompare={() => handleCompare(listing)}
-                          onQuickView={setQuickViewListing}
-                          isFavorited={favoriteIds.has(listing.id || 0)}
-                          isComparing={compareItems.some(
-                            (item) => item.id === listing.id
-                          )}
+                          data={convertToUniversalData(listing)}
+                          type="cars"
+                          layout="grid"
+                          showBadges={true}
+                          showFavorite={true}
+                          showCompare={true}
+                          showStats={true}
+                          onQuickView={() => setQuickViewListing(listing)}
+                          className=""
                         />
                       ))}
                   </div>
@@ -555,18 +635,17 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
           <h2 className="text-3xl font-bold mb-8">{t('latestListings')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {latestListings.map((listing) => (
-              <CarListingCardEnhanced
+              <UniversalListingCard
                 key={listing.id}
-                listing={listing}
-                locale={locale}
-                onFavorite={() => handleFavorite(listing.id || 0)}
-                onShare={() => handleShare(listing.id || 0)}
-                onCompare={() => handleCompare(listing)}
-                onQuickView={setQuickViewListing}
-                isFavorited={favoriteIds.has(listing.id || 0)}
-                isComparing={compareItems.some(
-                  (item) => item.id === listing.id
-                )}
+                data={convertToUniversalData(listing)}
+                type="cars"
+                layout="grid"
+                showBadges={true}
+                showFavorite={true}
+                showCompare={true}
+                showStats={true}
+                onQuickView={() => setQuickViewListing(listing)}
+                className=""
               />
             ))}
           </div>
@@ -677,9 +756,6 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         currentFilters={activeFilters}
         activeFilterCount={Object.keys(activeFilters).length}
       />
-
-      {/* Comparison Bar */}
-      <ComparisonBar />
     </div>
   );
 }

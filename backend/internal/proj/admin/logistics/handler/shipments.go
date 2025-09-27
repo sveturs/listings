@@ -46,10 +46,10 @@ func NewShipmentsHandler(monitoringService *service.MonitoringService, problemSe
 // @Param limit query int false "Количество элементов на странице" default(20)
 // @Param sort_by query string false "Поле для сортировки" default(created_at)
 // @Param sort_order query string false "Порядок сортировки (asc, desc)" default(desc)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "List of shipments with total count"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid filters"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "List of shipments with total count"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid filters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments [get]
 func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -132,11 +132,11 @@ func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param provider path string true "Провайдер (BEX, PostExpress)"
 // @Param id path int true "ID отправления"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Shipment details"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Shipment not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Shipment details"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{provider}/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -177,11 +177,11 @@ func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID отправления"
 // @Param type query string true "Тип отправления (bex, postexpress)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=logistics.ShipmentDetails} "Shipment details"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Shipment not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=logistics.ShipmentDetails} "Shipment details"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 404 {object} utils.ErrorResponseSwag "Shipment not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -219,11 +219,11 @@ func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID отправления"
 // @Param body body map[string]string true "Новый статус"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Status updated successfully"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden - insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Status updated successfully"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{id}/status [put]
 func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -275,11 +275,11 @@ func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID отправления"
 // @Param body body map[string]interface{} true "Действие и параметры"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Action performed successfully"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid parameters"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden - insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Action performed successfully"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid parameters"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{id}/action [post]
 func (h *ShipmentsHandler) PerformShipmentAction(c *fiber.Ctx) error {
 	// Проверка прав доступа

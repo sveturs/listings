@@ -483,6 +483,8 @@
   "rooms": "Rooms",
   "type": "Type",
   "year": "Year",
+  "mileage": "Mileage",
+  "fuelType": "Fuel Type",
   "addToFavorites": "Add to Favorites",
   "share": "Share",
   "newSeller": "New",
@@ -827,5 +829,17 @@
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel"
-  }
+  },
+  "priceOnRequest": "Price on request",
+  "justNow": "Just now",
+  "hoursAgo": "{hours, plural, =1 {# hour ago} other {# hours ago}}",
+  "yesterday": "Yesterday",
+  "daysAgo": "{days, plural, =1 {# day ago} other {# days ago}}",
+  "noImage": "No image",
+  "removeFromFavorites": "Remove from favorites",
+  "removeFromCompare": "Remove from comparison",
+  "addToCompare": "Add to comparison",
+  "quickView": "Quick view",
+  "inFavorites": "In favorites",
+  "calls": "Calls"
 }

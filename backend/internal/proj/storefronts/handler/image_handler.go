@@ -39,11 +39,11 @@ func NewImageHandler(imageService *services.ImageService, productService *servic
 // @Param is_main formData bool false "Set as main image"
 // @Param display_order formData int false "Display order"
 // @Security Bearer
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.UploadImageResponse} "Image uploaded successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 413 {object} backend_pkg_utils.ErrorResponseSwag "File too large"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.UploadImageResponse} "Image uploaded successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 413 {object} utils.ErrorResponseSwag "File too large"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images [post]
 func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	// Логирование для отладки
@@ -142,10 +142,10 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]services.UploadImageResponse} "Product images"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Product not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]services.UploadImageResponse} "Product images"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images [get]
 func (h *ImageHandler) GetProductImages(c *fiber.Ctx) error {
 	// Получение ID товара
@@ -187,11 +187,11 @@ func (h *ImageHandler) GetProductImages(c *fiber.Ctx) error {
 // @Param product_id path int true "Product ID"
 // @Param image_id path int true "Image ID"
 // @Security Bearer
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Image deleted successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Image not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Image deleted successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Image not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id} [delete]
 func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 	// Получение ID товара
@@ -241,11 +241,11 @@ func (h *ImageHandler) DeleteProductImage(c *fiber.Ctx) error {
 // @Param product_id path int true "Product ID"
 // @Param image_id path int true "Image ID"
 // @Security Bearer
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Main image set successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Image not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Main image set successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Image not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}/main [post]
 func (h *ImageHandler) SetMainProductImage(c *fiber.Ctx) error {
 	// Получение ID товара и изображения
@@ -300,10 +300,10 @@ type ImageOrderUpdate struct {
 // @Param product_id path int true "Product ID"
 // @Param request body []handler.ImageOrderUpdate true "Image order updates"
 // @Security Bearer
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Image order updated successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Image order updated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug}/products/{product_id}/images/order [put]
 func (h *ImageHandler) UpdateImageOrder(c *fiber.Ctx) error {
 	var updates []ImageOrderUpdate

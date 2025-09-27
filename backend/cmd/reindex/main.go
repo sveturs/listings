@@ -1,107 +1,113 @@
-// backend/cmd/reindex/main.go
 package main
 
 import (
 	"context"
-	"flag"
+	"fmt"
+	"log"
 	"os"
-	"strings"
 	"time"
 
 	"backend/internal/config"
-	"backend/internal/logger"
-	"backend/internal/storage/filestorage"
-	"backend/internal/storage/opensearch"
-	"backend/internal/storage/postgres"
-
-	"github.com/joho/godotenv"
-)
-
-// Build information set by ldflags
-var (
-	gitCommit = "unknown"
-	buildTime = "unknown"
+	"backend/internal/server"
+	"backend/pkg/utils"
 )
 
 func main() {
-	// Загрузка переменных окружения
-	envFile := os.Getenv("ENV_FILE")
-	if envFile == "" {
-		envFile = ".env"
-	}
+	log.Println("Запуск переиндексации OpenSearch...")
+	startTime := time.Now()
 
-	if err := godotenv.Load(envFile); err != nil {
-		logger.Info().Msgf("Warning: Could not load .env file: %s", err)
-	}
-	// Initialize logger
-	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize logger")
-	}
-
-	// Чтение конфигурации
-	cfg, err := config.NewConfig()
+	// Загружаем конфигурацию
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		logger.Fatal().Err(err).Msgf("Failed to load config: %v", err)
+		log.Fatalf("Failed to load config: %v", err)
 	}
-	logger.Info().
-		Str("gitCommit", gitCommit).
-		Str("buildTime", buildTime).
-		Any("config", cfg).
-		Msg("Config loaded successfully")
 
-	// Парсинг аргументов командной строки
-	entityTypeFlag := flag.String("type", "listings", "Type of entities to reindex (listings, reviews)")
-	batchSizeFlag := flag.Int("batch-size", 500, "Batch size for reindexing")
-	flag.Parse()
+	// Создаем контекст
+	ctx := context.Background()
 
-	// Подключение к OpenSearch
-	var osClient *opensearch.OpenSearchClient
-	if cfg.OpenSearch.URL != "" {
-		osClient, err = opensearch.NewOpenSearchClient(opensearch.Config{
-			URL:      cfg.OpenSearch.URL,
-			Username: cfg.OpenSearch.Username,
-			Password: cfg.OpenSearch.Password,
-		})
+	// Создаем сервер для инициализации всех сервисов
+	srv, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		log.Fatalf("Failed to create server: %v", err)
+	}
+
+	// Получаем доступ к базе данных и сервисам через сервер
+	dbPool := srv.Storage().PostgresPool()
+	marketplaceService := srv.MarketplaceService()
+
+	// Параметр для фильтрации по категориям (автомобили)
+	categoryFilter := ""
+	if len(os.Args) > 1 && os.Args[1] == "cars" {
+		categoryFilter = "AND category_id IN (1301, 1303)"
+		log.Println("Переиндексация только автомобилей...")
+	} else {
+		log.Println("Переиндексация всех объявлений...")
+	}
+
+	// Получаем все активные объявления
+	query := fmt.Sprintf(`
+		SELECT id FROM marketplace_listings
+		WHERE status = 'active'
+		%s
+		ORDER BY id
+	`, categoryFilter)
+
+	rows, err := dbPool.Query(ctx, query)
+	if err != nil {
+		log.Fatalf("Ошибка получения списка объявлений: %v", err)
+	}
+	defer rows.Close()
+
+	var ids []int
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			log.Printf("Ошибка сканирования ID: %v", err)
+			continue
+		}
+		ids = append(ids, id)
+	}
+
+	log.Printf("Найдено %d объявлений для переиндексации", len(ids))
+
+	// Переиндексируем каждое объявление
+	success := 0
+	errors := 0
+
+	for i, id := range ids {
+		// Получаем полное объявление с атрибутами
+		listing, err := marketplaceService.GetListingByID(ctx, id)
 		if err != nil {
-			logger.Info().Msgf("Error connecting to OpenSearch: %v", err)
+			log.Printf("[%d/%d] ❌ Ошибка получения объявления %d: %v", i+1, len(ids), id, err)
+			errors++
+			continue
+		}
+
+		// Проверяем наличие атрибутов
+		if len(listing.Attributes) > 0 {
+			log.Printf("[%d/%d] Объявление %d имеет %d атрибутов", i+1, len(ids), id, len(listing.Attributes))
+			// Выводим первые несколько атрибутов для проверки
+			for j, attr := range listing.Attributes {
+				if j < 3 {
+					log.Printf("  - %s: %s", attr.AttributeName, utils.GetAttributeDisplayValue(attr))
+				}
+			}
+		}
+
+		// Теперь индексируем в OpenSearch
+		if err := srv.MarketplaceService().IndexListing(ctx, id, false); err != nil {
+			log.Printf("[%d/%d] ❌ Ошибка индексации объявления %d: %v", i+1, len(ids), id, err)
+			errors++
+		} else {
+			log.Printf("[%d/%d] ✅ Объявление %d успешно переиндексировано", i+1, len(ids), id)
+			success++
 		}
 	}
 
-	// Инициализация файлового хранилища
-	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
-	if err != nil {
-		logger.Info().Msgf("Warning: Failed to initialize file storage: %v. Proceeding without file storage.", err)
-		// Не прерываем выполнение программы, так как для индексации это не критично
-	}
-
-	// Подключение к базе данных
-	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, osClient,
-		cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
-	if err != nil {
-		logger.Fatal().Err(err).Msgf("Error connecting to database: %v", err)
-	}
-	defer func() {
-		db.Close()
-	}()
-
-	// Проверка подключения к БД
-	if err := db.Ping(context.Background()); err != nil {
-		logger.Fatal().Err(err).Msgf("Error pinging database: %v", err)
-	}
-
-	logger.Info().Msgf("Starting reindexing of %s with batch size %d", *entityTypeFlag, *batchSizeFlag)
-	start := time.Now()
-
-	// Выполнение операции реиндексации в зависимости от типа сущности
-	switch strings.ToLower(*entityTypeFlag) {
-	case "listings", "marketplace":
-		if err := db.ReindexAllListings(context.Background()); err != nil {
-			logger.Fatal().Err(err).Msgf("Error reindexing listings: %v", err)
-		}
-	// Можно добавить другие типы реиндексации здесь
-	default:
-		logger.Fatal().Err(err).Msgf("Unknown entity type: %s", *entityTypeFlag)
-	}
-
-	logger.Info().Msgf("Reindexing completed in %v", time.Since(start))
+	// Закрываем соединения через сервер при завершении
+	duration := time.Since(startTime)
+	log.Printf("\n=== Переиндексация завершена ===")
+	log.Printf("Успешно: %d", success)
+	log.Printf("Ошибки: %d", errors)
+	log.Printf("Время выполнения: %s", duration)
 }

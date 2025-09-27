@@ -29,9 +29,9 @@ func NewGeocodingHandler(geocodingService *service.GeocodingService) *GeocodingH
 // @Accept json
 // @Produce json
 // @Param request body types.GeocodeValidateRequest true "Запрос валидации"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.GeocodeValidateResponse} "Результат валидации"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка валидации"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.GeocodeValidateResponse} "Результат валидации"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/validate [post]
 func (h *GeocodingHandler) ValidateGeocode(c *fiber.Ctx) error {
 	var req types.GeocodeValidateRequest
@@ -68,9 +68,9 @@ func (h *GeocodingHandler) ValidateGeocode(c *fiber.Ctx) error {
 // @Param limit query int false "Лимит результатов" default(5)
 // @Param language query string false "Язык ответа" default("en")
 // @Param country_code query string false "Код страны для фильтрации"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.AddressSuggestion} "Список предложений"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка валидации"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.AddressSuggestion} "Список предложений"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/suggestions [get]
 func (h *GeocodingHandler) SearchAddressSuggestions(c *fiber.Ctx) error {
 	query := c.Query("q")
@@ -106,9 +106,9 @@ func (h *GeocodingHandler) SearchAddressSuggestions(c *fiber.Ctx) error {
 // @Param lat query number true "Широта" minimum(-90) maximum(90)
 // @Param lng query number true "Долгота" minimum(-180) maximum(180)
 // @Param language query string false "Язык ответа" default("en")
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.AddressSuggestion} "Найденный адрес"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка валидации"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.AddressSuggestion} "Найденный адрес"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/reverse [get]
 func (h *GeocodingHandler) ReverseGeocode(c *fiber.Ctx) error {
 	latStr := c.Query("lat")
@@ -147,8 +147,8 @@ func (h *GeocodingHandler) ReverseGeocode(c *fiber.Ctx) error {
 // @Tags gis
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Статистика кэша"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Статистика кэша"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/cache/stats [get]
 func (h *GeocodingHandler) GetCacheStats(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -167,8 +167,8 @@ func (h *GeocodingHandler) GetCacheStats(c *fiber.Ctx) error {
 // @Tags gis
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]int64} "Количество удаленных записей"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]int64} "Количество удаленных записей"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/cache/cleanup [post]
 func (h *GeocodingHandler) CleanupExpiredCache(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -192,9 +192,9 @@ func (h *GeocodingHandler) CleanupExpiredCache(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body types.MultilingualGeocodeRequest true "Координаты"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.MultilingualGeocodeResponse} "Адреса на разных языках"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Ошибка валидации"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.MultilingualGeocodeResponse} "Адреса на разных языках"
+// @Failure 400 {object} utils.ErrorResponseSwag "Ошибка валидации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка"
 // @Router /api/v1/gis/geocode/multilingual [post]
 func (h *GeocodingHandler) MultilingualReverseGeocode(c *fiber.Ctx) error {
 	var req types.MultilingualGeocodeRequest

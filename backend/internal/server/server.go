@@ -36,6 +36,7 @@ import (
 	"backend/internal/proj/bexexpress"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
+	creditHandler "backend/internal/proj/credit"
 	"backend/internal/proj/delivery"
 	docsHandler "backend/internal/proj/docserver/handler"
 	geocodeHandler "backend/internal/proj/geocode/handler"
@@ -48,6 +49,7 @@ import (
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	postexpressHandler "backend/internal/proj/postexpress/handler"
+	recommendationsHandler "backend/internal/proj/recommendations"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
@@ -57,6 +59,7 @@ import (
 	"backend/internal/proj/translation_admin"
 	userHandler "backend/internal/proj/users/handler"
 	"backend/internal/proj/viber"
+	vinModule "backend/internal/proj/vin"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"
@@ -93,6 +96,9 @@ type Server struct {
 	subscriptions      *subscriptions.Module
 	tracking           *tracking.Module
 	viber              *viber.Module
+	vin                *vinModule.Module
+	credit             *creditHandler.Handler
+	recommendations    *recommendationsHandler.Handler
 	fileStorage        filestorage.FileStorageInterface
 	health             *healthHandler.Handler
 	redisClient        *redis.Client
@@ -127,6 +133,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 			logger.Info().Msg("Redis cache initialized successfully")
 		}
 	}
+
+	// Инициализируем универсальный кеш для маркетплейса (будет использован позже)
+	// var universalCache *marketplaceCache.UniversalCache
+	// if cfg.Redis.URL != "" {
+	// 	// Будет интегрирован после полного тестирования
+	// 	logger.Info().Msg("Universal marketplace cache will be integrated later")
+	// }
 
 	osClient, err := initializeOpenSearch(cfg)
 	if err != nil {
@@ -256,6 +269,13 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Инициализация модуля Viber
 	viberModule := viber.NewModule(services)
 
+	// Инициализация модуля VIN декодера
+	vinModule := vinModule.NewModule(db.GetSQLXDB())
+
+	// Инициализация универсальных handlers
+	creditHandlerInstance := creditHandler.NewHandler()
+	recommendationsHandlerInstance := recommendationsHandler.NewHandler(db)
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			// Детальное логирование ошибки
@@ -317,6 +337,9 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		subscriptions:      subscriptionsModule,
 		tracking:           trackingModule,
 		viber:              viberModule,
+		vin:                vinModule,
+		credit:             creditHandlerInstance,
+		recommendations:    recommendationsHandlerInstance,
 		fileStorage:        fileStorage,
 		health:             healthHandlerInstance,
 		redisClient:        redisClient,
@@ -566,6 +589,19 @@ func (s *Server) registerProjectRoutes() {
 	}
 
 	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.viber)
+
+	// Добавляем VIN модуль
+	if s.vin != nil {
+		registrars = append(registrars, s.vin)
+	}
+
+	// Добавляем универсальные handlers
+	if s.credit != nil {
+		registrars = append(registrars, s.credit)
+	}
+	if s.recommendations != nil {
+		registrars = append(registrars, s.recommendations)
+	}
 
 	// Регистрируем роуты каждого проекта
 	for _, registrar := range registrars {

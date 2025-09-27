@@ -57,9 +57,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 // @Param limit query int false "Number of suggestions (alias for size)" default(10)
 // @Param size query int false "Number of suggestions" default(10)
 // @Param types query string false "Comma-separated types: queries,categories,products" default("queries,categories,products")
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]models.UnifiedSuggestion} "Search suggestions list"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.prefixRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.suggestionsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedSuggestion} "Search suggestions list"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.prefixRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.suggestionsError"
 // @Router /api/v1/search/suggestions [get]
 func (h *Handler) GetSuggestions(c *fiber.Ctx) error {
 	// Получаем префикс - поддерживаем оба параметра для совместимости

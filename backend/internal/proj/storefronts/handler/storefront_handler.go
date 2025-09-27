@@ -37,10 +37,10 @@ func NewStorefrontHandler(service service.StorefrontService) *StorefrontHandler 
 // @Produce json
 // @Param storefront body models.StorefrontCreateDTO true "Storefront data"
 // @Success 201 {object} models.Storefront "Created storefront"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Storefront limit reached"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Storefront limit reached"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts [post]
 func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
@@ -74,8 +74,8 @@ func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} models.Storefront "Storefront details"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id} [get]
 func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -102,8 +102,8 @@ func (h *StorefrontHandler) GetStorefront(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug or ID"
 // @Success 200 {object} models.Storefront "Storefront details"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/slug/{slug} [get]
 func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 	slugOrID := c.Params("slug")
@@ -138,11 +138,11 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param storefront body models.StorefrontUpdateDTO true "Update data"
 // @Success 200 {object} map[string]string "Storefront updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [put]
 func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
@@ -186,10 +186,10 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param hard query bool false "Hard delete (permanent removal, admin only). Default: false (soft delete)"
 // @Success 200 {object} map[string]string "Storefront deleted"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Only owner can delete storefront"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Only owner can delete storefront"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [delete]
 func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
@@ -245,7 +245,7 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 // @Param limit query int false "Results per page (max 100)"
 // @Param offset query int false "Results offset"
 // @Success 200 {object} StorefrontsListResponse "List of storefronts"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts [get]
 func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	filter := &models.StorefrontFilter{
@@ -340,8 +340,8 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Success 200 {object} []models.Storefront "List of user's storefronts"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/my [get]
 func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
@@ -377,8 +377,8 @@ func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 // @Param max_lng query float64 true "Maximum longitude"
 // @Param min_rating query float32 false "Minimum rating filter"
 // @Success 200 {object} []models.StorefrontMapData "Map markers data"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid bounds"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid bounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/map [get]
 func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 	// Парсим границы карты
@@ -434,8 +434,8 @@ func (h *StorefrontHandler) GetMapData(c *fiber.Ctx) error {
 // @Param limit query int false "Number of results (max 100)" default(20)
 // @Param offset query int false "Results offset" default(0)
 // @Success 200 {object} opensearch.StorefrontSearchResult "Search results"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid parameters"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/search [get]
 func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 	params := &opensearch.StorefrontSearchParams{
@@ -514,8 +514,8 @@ func (h *StorefrontHandler) SearchOpenSearch(c *fiber.Ctx) error {
 // @Param radius_km query float64 false "Radius in kilometers (default 5)"
 // @Param limit query int false "Maximum results (default 20, max 100)"
 // @Success 200 {object} []models.Storefront "Nearby storefronts"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid coordinates"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid coordinates"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/nearby [get]
 func (h *StorefrontHandler) GetNearbyStorefronts(c *fiber.Ctx) error {
 	lat, err1 := strconv.ParseFloat(c.Query("lat"), 64)
@@ -548,8 +548,8 @@ func (h *StorefrontHandler) GetNearbyStorefronts(c *fiber.Ctx) error {
 // @Param lat query float64 true "Building latitude"
 // @Param lng query float64 true "Building longitude"
 // @Success 200 {object} []models.StorefrontMapData "Businesses in building"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid coordinates"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid coordinates"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/building [get]
 func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 	lat, err1 := strconv.ParseFloat(c.Query("lat"), 64)
@@ -576,10 +576,10 @@ func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param hours body []models.StorefrontHours true "Working hours"
 // @Success 200 {object} map[string]string "Hours updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/hours [put]
 func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
@@ -617,10 +617,10 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param methods body []models.StorefrontPaymentMethod true "Payment methods"
 // @Success 200 {object} map[string]string "Payment methods updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/payment-methods [put]
 func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
@@ -658,10 +658,10 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param options body []models.StorefrontDeliveryOption true "Delivery options"
 // @Success 200 {object} map[string]string "Delivery options updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/delivery-options [put]
 func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
@@ -698,8 +698,8 @@ func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Success 200 {object} map[string]string "View recorded"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts/{id}/view [post]
 func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -727,10 +727,10 @@ func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 // @Param from query string true "Start date (YYYY-MM-DD)"
 // @Param to query string true "End date (YYYY-MM-DD)"
 // @Success 200 {object} []models.StorefrontAnalytics "Analytics data"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
@@ -792,10 +792,10 @@ type StorefrontsListResponse struct {
 // @Param id path int true "Storefront ID"
 // @Param logo formData file true "Logo file"
 // @Success 200 {object} map[string]string "Logo URL"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/logo [post]
 func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
@@ -851,10 +851,10 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 // @Param id path int true "Storefront ID"
 // @Param banner formData file true "Banner file"
 // @Success 200 {object} map[string]string "Banner URL"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/banner [post]
 func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
@@ -911,11 +911,11 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 // @Param from query string false "Start date (RFC3339 format)"
 // @Param to query string false "End date (RFC3339 format)"
 // @Success 200 {object} models.StorefrontAnalytics "Analytics data"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient permissions"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Insufficient permissions"
+// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {

@@ -57,10 +57,10 @@ type CreateMarketplaceOrderRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CreateMarketplaceOrderRequest true "Order details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Order created successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Order created successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/marketplace/orders/create [post]
 func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 	log.Printf("CreateMarketplaceOrder called")
@@ -120,7 +120,7 @@ func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Orders list"
+// @Success 200 {object} utils.SuccessResponseSwag "Orders list"
 // @Router /api/v1/marketplace/orders/my/purchases [get]
 func (h *OrderHandler) GetMyPurchases(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -156,7 +156,7 @@ func (h *OrderHandler) GetMyPurchases(c *fiber.Ctx) error {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Orders list"
+// @Success 200 {object} utils.SuccessResponseSwag "Orders list"
 // @Router /api/v1/marketplace/orders/my/sales [get]
 func (h *OrderHandler) GetMySales(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -191,7 +191,7 @@ func (h *OrderHandler) GetMySales(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=models.MarketplaceOrder} "Order details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceOrder} "Order details"
 // @Router /api/v1/marketplace/orders/{id} [get]
 func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -224,7 +224,7 @@ type ConfirmPaymentRequest struct {
 // @Produce json
 // @Param id path int true "Order ID"
 // @Param request body ConfirmPaymentRequest true "Payment confirmation"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Payment confirmed"
+// @Success 200 {object} utils.SuccessResponseSwag "Payment confirmed"
 // @Router /api/v1/marketplace/orders/{id}/confirm-payment [post]
 func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -274,7 +274,7 @@ type MarkAsShippedRequest struct {
 // @Produce json
 // @Param id path int true "Order ID"
 // @Param request body MarkAsShippedRequest true "Shipping details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Order marked as shipped"
+// @Success 200 {object} utils.SuccessResponseSwag "Order marked as shipped"
 // @Router /api/v1/marketplace/orders/{id}/ship [post]
 func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -315,7 +315,7 @@ func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Delivery confirmed"
+// @Success 200 {object} utils.SuccessResponseSwag "Delivery confirmed"
 // @Router /api/v1/marketplace/orders/{id}/confirm-delivery [post]
 func (h *OrderHandler) ConfirmDelivery(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -352,7 +352,7 @@ type OpenDisputeRequest struct {
 // @Produce json
 // @Param id path int true "Order ID"
 // @Param request body OpenDisputeRequest true "Dispute reason"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Dispute opened"
+// @Success 200 {object} utils.SuccessResponseSwag "Dispute opened"
 // @Router /api/v1/marketplace/orders/{id}/dispute [post]
 func (h *OrderHandler) OpenDispute(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
@@ -392,7 +392,7 @@ type AddMessageRequest struct {
 // @Produce json
 // @Param id path int true "Order ID"
 // @Param request body AddMessageRequest true "Message content"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Message added"
+// @Success 200 {object} utils.SuccessResponseSwag "Message added"
 // @Router /api/v1/marketplace/orders/{id}/message [post]
 func (h *OrderHandler) AddMessage(c *fiber.Ctx) error {
 	// userID := c.Locals("user_id").(int)
