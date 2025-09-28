@@ -35,7 +35,7 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler, keywordRepo
 // @Tags marketplace-admin-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.MarketplaceCategory} "Categories list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory} "Categories list"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
 // @Security BearerAuth
 // @Router /api/admin/categories/all [get]
@@ -184,7 +184,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.MarketplaceCategory} "Category information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceCategory} "Category information"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
@@ -590,7 +590,7 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.AttributeGroup} "Category groups"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.AttributeGroup} "Category groups"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
 // @Security BearerAuth

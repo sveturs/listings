@@ -18,7 +18,7 @@ import (
 // @Tags marketplace-admin-attribute-groups
 // @Accept json
 // @Produce json
-// @Param body body backend_internal_proj_marketplace_models.CreateAttributeGroupRequest true "Attribute group data"
+// @Param body body backend_internal_domain_models.CreateAttributeGroupRequest true "Attribute group data"
 // @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group created successfully"
 
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.groupNameRequired"
@@ -114,7 +114,7 @@ func (h *MarketplaceHandler) GetAttributeGroup(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Group ID"
-// @Param body body backend_internal_proj_marketplace_models.UpdateAttributeGroupRequest true "Updated group data"
+// @Param body body backend_internal_domain_models.UpdateAttributeGroupRequest true "Updated group data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.groupUpdated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateGroupError"
@@ -235,7 +235,7 @@ func (h *MarketplaceHandler) GetAttributeGroupWithItems(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Group ID"
-// @Param body body backend_internal_proj_marketplace_models.AddItemToGroupRequest true "Attribute data"
+// @Param body body backend_internal_domain_models.AddItemToGroupRequest true "Attribute data"
 // @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Item added successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidGroupId or marketplace.invalidRequest"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addItemError"
@@ -358,7 +358,7 @@ func (h *MarketplaceHandler) GetCategoryGroups(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Param body body backend_internal_proj_marketplace_models.AttachGroupToCategoryRequest true "Group attachment data"
+// @Param body body backend_internal_domain_models.AttachGroupToCategoryRequest true "Group attachment data"
 // @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidRequest"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attachGroupError"

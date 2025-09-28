@@ -1437,9 +1437,9 @@ func (r *VariantRepository) GetVariantAttributeValuesPublic(ctx context.Context,
 // GetProductPublic returns basic product information for public viewing
 func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, productID int) (*models.StorefrontProduct, error) {
 	query := `
-		SELECT 
+		SELECT
 			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
-			p.category_id, p.stock_quantity, p.stock_status, p.is_active, 
+			p.category_id, p.stock_quantity, p.stock_status, p.is_active,
 			p.view_count, p.sold_count, p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
@@ -1451,6 +1451,24 @@ func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, p
 	err := r.db.GetContext(ctx, &product, query, productID, slug)
 	if err != nil {
 		return nil, err
+	}
+
+	// Get images for the product
+	imagesQuery := `
+		SELECT
+			id, storefront_product_id, image_url, thumbnail_url,
+			display_order, is_default, created_at
+		FROM storefront_product_images
+		WHERE storefront_product_id = $1
+		ORDER BY is_default DESC, display_order ASC`
+
+	var images []models.StorefrontProductImage
+	err = r.db.SelectContext(ctx, &images, imagesQuery, productID)
+	if err != nil {
+		// Log error but don't fail the request
+		log.Printf("Failed to get images for product %d: %v", productID, err)
+	} else {
+		product.Images = images
 	}
 
 	return &product, nil

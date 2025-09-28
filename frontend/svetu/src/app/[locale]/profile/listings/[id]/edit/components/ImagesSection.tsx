@@ -18,12 +18,14 @@ interface ImagesSectionProps {
   listingId: number;
   images: Image[];
   onImagesChange: (images: Image[]) => void;
+  storefrontId?: number;
 }
 
 export function ImagesSection({
   listingId,
   images,
   onImagesChange,
+  storefrontId,
 }: ImagesSectionProps) {
   const t = useTranslations('profile');
   const [uploading, setUploading] = useState(false);
@@ -45,30 +47,85 @@ export function ImagesSection({
       setUploading(true);
 
       try {
-        const formData = new FormData();
-        Array.from(files).forEach((file) => {
-          formData.append('file', file);
-        });
+        // Если это товар витрины, нужен другой подход
+        if (storefrontId) {
+          // Сначала получаем информацию о витрине
+          const storefrontResponse = await apiClient.get(
+            `/api/v1/storefronts/${storefrontId}`
+          );
 
-        // Если нет изображений, первое будет главным
-        if (images.length === 0) {
-          formData.append('main_image_index', '0');
-        }
+          const storefrontSlug = storefrontResponse.data?.data?.slug || storefrontResponse.data?.slug;
 
-        const response = await apiClient.post(
-          `/api/v1/marketplace/listings/${listingId}/images`,
-          formData
-          // Не устанавливаем Content-Type для FormData - браузер сделает это автоматически с boundary
-        );
+          if (!storefrontSlug) {
+            console.error('Cannot find storefront slug');
+            return;
+          }
 
-        console.log('Upload response:', response.data);
+          // Загружаем изображения по одному для товаров витрин
+          for (let i = 0; i < files.length; i++) {
+            const formData = new FormData();
+            formData.append('image', files[i]);
 
-        if (response.data?.data?.images) {
-          onImagesChange([...images, ...response.data.data.images]);
-        } else if (response.data?.images) {
-          onImagesChange([...images, ...response.data.images]);
+            // Первое изображение делаем главным если нет других
+            if (images.length === 0 && i === 0) {
+              formData.append('is_main', 'true');
+            }
+            formData.append('display_order', String(images.length + i));
+
+            try {
+              const response = await apiClient.post(
+                `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images`,
+                formData
+              );
+
+              console.log(`Storefront image ${i + 1} uploaded:`, response.data);
+            } catch (uploadError) {
+              console.error(`Error uploading image ${i + 1}:`, uploadError);
+            }
+          }
+
+          // После загрузки получаем обновленный список изображений
+          const imagesResponse = await apiClient.get(
+            `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images`
+          );
+
+          if (imagesResponse.data?.data) {
+            // Преобразуем формат изображений из storefront в формат marketplace
+            const storefrontImages = imagesResponse.data.data.map((img: any) => ({
+              id: img.id || img.ID,
+              file_path: img.image_url || img.ImageURL,
+              file_name: '',
+              is_main: img.is_main || img.IsMain || img.is_default || img.IsDefault,
+              public_url: img.image_url || img.ImageURL || img.public_url || img.PublicURL,
+            }));
+            onImagesChange(storefrontImages);
+          }
         } else {
-          console.warn('No images data in response:', response.data);
+          // Обычное объявление - используем старый код
+          const formData = new FormData();
+          Array.from(files).forEach((file) => {
+            formData.append('file', file);
+          });
+
+          // Если нет изображений, первое будет главным
+          if (images.length === 0) {
+            formData.append('main_image_index', '0');
+          }
+
+          const response = await apiClient.post(
+            `/api/v1/marketplace/listings/${listingId}/images`,
+            formData
+          );
+
+          console.log('Upload response:', response.data);
+
+          if (response.data?.data?.images) {
+            onImagesChange([...images, ...response.data.data.images]);
+          } else if (response.data?.images) {
+            onImagesChange([...images, ...response.data.images]);
+          } else {
+            console.warn('No images data in response:', response.data);
+          }
         }
       } catch (error) {
         console.error('Error uploading images:', error);
@@ -77,7 +134,7 @@ export function ImagesSection({
         setUploading(false);
       }
     },
-    [images, listingId, onImagesChange]
+    [images, listingId, onImagesChange, storefrontId]
   );
 
   const handleDrop = useCallback(
@@ -103,9 +160,28 @@ export function ImagesSection({
     if (!confirm(t('images.deleteConfirm'))) return;
 
     try {
-      await apiClient.delete(
-        `/api/v1/marketplace/listings/${listingId}/images/${imageId}`
-      );
+      if (storefrontId) {
+        // Для товаров витрин используем другой эндпоинт
+        const storefrontResponse = await apiClient.get(
+          `/api/v1/storefronts/${storefrontId}`
+        );
+
+        const storefrontSlug = storefrontResponse.data?.data?.slug || storefrontResponse.data?.slug;
+
+        if (!storefrontSlug) {
+          console.error('Cannot find storefront slug');
+          return;
+        }
+
+        await apiClient.delete(
+          `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images/${imageId}`
+        );
+      } else {
+        // Обычное объявление
+        await apiClient.delete(
+          `/api/v1/marketplace/listings/${listingId}/images/${imageId}`
+        );
+      }
 
       onImagesChange(images.filter((img) => img.id !== imageId));
     } catch (error) {

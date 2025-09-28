@@ -440,7 +440,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 // @Security ApiKeyAuth
 // @Param date_from query string false "Дата начала периода (YYYY-MM-DD)"
 // @Param date_to query string false "Дата окончания периода (YYYY-MM-DD)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.CourierStats} "Courier comparison"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]interface{}} "Courier comparison"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/analytics/couriers [get]

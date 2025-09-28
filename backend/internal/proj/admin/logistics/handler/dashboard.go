@@ -26,7 +26,7 @@ func NewDashboardHandler(monitoringService *service.MonitoringService) *Dashboar
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_logistics.DashboardStats} "Dashboard statistics"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Dashboard statistics"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - insufficient permissions"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -56,7 +56,7 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.DailyStats} "Weekly chart data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]interface{}} "Weekly chart data"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/dashboard/chart [get]

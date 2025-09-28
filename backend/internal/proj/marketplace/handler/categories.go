@@ -43,7 +43,7 @@ func NewCategoriesHandler(services globalService.ServicesInterface) *CategoriesH
 // @Accept json
 // @Produce json
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.MarketplaceCategory}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/categories [get]
 func (h *CategoriesHandler) GetCategories(c *fiber.Ctx) error {
@@ -174,7 +174,7 @@ func (h *CategoriesHandler) GetAttributeRanges(c *fiber.Ctx) error {
 // @Produce json
 // @Param lang query string false "Language code (e.g., 'sr', 'en', 'ru')"
 // @Param limit query int false "Limit of categories to return (default: 7)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.MarketplaceCategory}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory}
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categoriesError"
 // @Router /api/v1/marketplace/popular-categories [get]
 func (h *CategoriesHandler) GetPopularCategories(c *fiber.Ctx) error {

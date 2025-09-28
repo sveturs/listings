@@ -179,7 +179,7 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Param page_size query int false "Page size (default: 20, max: 100)"
 // @Param search query string false "Search term for name or display_name"
 // @Param type query string false "Filter by attribute type"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.PaginatedResponse} "Paginated list of attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaginatedResponse} "Paginated list of attributes"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid pagination parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth

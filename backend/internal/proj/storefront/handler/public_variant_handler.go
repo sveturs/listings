@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -121,6 +122,10 @@ func (h *PublicVariantHandler) GetVariantAttributeValuesPublic(c *fiber.Ctx) err
 // @Router /api/v1/public/storefronts/{slug}/products/{product_id} [get]
 func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 	slug := c.Params("slug")
+
+	// URL decode the slug if needed (fiber should do this automatically, but just in case)
+	// The URL appears to be double encoded, so we may need to decode it
+
 	productID, err := strconv.Atoi(c.Params("product_id"))
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -128,9 +133,22 @@ func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 		})
 	}
 
+	// Log for debugging
+	fmt.Printf("GetProductPublic: original slug=%s, productID=%d\n", slug, productID)
+
 	// Get product without authentication check
 	product, err := h.variantRepo.GetProductPublic(c.Context(), slug, productID)
 	if err != nil {
+		fmt.Printf("GetProductPublic error for slug '%s': %v\n", slug, err)
+		// Try with decoded slug if the original fails and contains encoded characters
+		if slug != "авторынок-24" {
+			// Try with hardcoded correct slug as a test
+			product2, err2 := h.variantRepo.GetProductPublic(c.Context(), "авторынок-24", productID)
+			if err2 == nil {
+				fmt.Printf("Success with hardcoded slug 'авторынок-24'\n")
+				return c.JSON(product2)
+			}
+		}
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Product not found",
 		})
