@@ -546,7 +546,7 @@ export default function HomePageClient({
     };
 
     loadStorefronts();
-  }, []);
+  }, [t]);
 
   // Загрузка товаров через API поиска
   useEffect(() => {

@@ -17,9 +17,7 @@ import CarSortingOptions, {
   type CarSortOption,
 } from '@/components/marketplace/CarSortingOptions';
 import CarQuickFilters from '@/components/marketplace/CarQuickFilters';
-import UniversalFilters, {
-  type FilterConfig,
-} from '@/components/universal/filters/UniversalFilters';
+import UniversalFilters from '@/components/universal/filters/UniversalFilters';
 import CarBrandIcon from '@/components/marketplace/CarBrandIcon';
 import AutocompleteSearch from '@/components/cars/AutocompleteSearch';
 import Breadcrumbs from '@/components/cars/Breadcrumbs';
@@ -68,7 +66,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [quickViewListing, setQuickViewListing] =
     useState<MarketplaceListing | null>(null);
-  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [_favoriteIds, _setFavoriteIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -325,8 +323,8 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   };
 
   // Handle favorite toggle
-  const handleFavorite = (listingId: number) => {
-    setFavoriteIds((prev) => {
+  const _handleFavorite = (listingId: number) => {
+    _setFavoriteIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(listingId)) {
         newSet.delete(listingId);
@@ -338,7 +336,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   };
 
   // Handle compare toggle
-  const handleCompare = (listing: MarketplaceListing) => {
+  const _handleCompare = (listing: MarketplaceListing) => {
     const universalData = convertToUniversalData(listing);
     const isComparing = compareItems.some((item) => item.id === listing.id);
 
@@ -355,7 +353,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   };
 
   // Handle share
-  const handleShare = (listingId: number) => {
+  const _handleShare = (listingId: number) => {
     if (navigator.share) {
       navigator.share({
         title: t('shareTitle'),

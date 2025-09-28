@@ -173,10 +173,12 @@ const UniversalListingCard: FC<UniversalListingCardProps> = ({
     e.stopPropagation();
 
     if (isFavorite) {
-      dispatch(removeFromFavorites({
-        id: data.id,
-        type: type === 'storefront' ? 'storefront' : 'marketplace'
-      }));
+      dispatch(
+        removeFromFavorites({
+          id: data.id,
+          type: type === 'storefront' ? 'storefront' : 'marketplace',
+        })
+      );
     } else {
       dispatch(
         addToFavorites({

@@ -335,6 +335,7 @@ export default function SearchPage() {
   // Create stable strings for array dependencies
   const categoryIdsKey = filters.category_ids?.join(',') || '';
   const productTypesKey = filters.product_types?.join(',') || '';
+  const carBodyTypeKey = filters.car_body_type?.join(',') || '';
 
   // Handle filter changes (skip first render and only update on real changes)
   useEffect(() => {
@@ -367,7 +368,7 @@ export default function SearchPage() {
     filters.car_mileage_max,
     filters.car_fuel_type,
     filters.car_transmission,
-    filters.car_body_type?.join(','),
+    carBodyTypeKey,
   ]);
 
   const performSearch = async (

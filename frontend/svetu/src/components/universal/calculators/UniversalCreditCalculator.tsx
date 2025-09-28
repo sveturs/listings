@@ -4,7 +4,6 @@ import { FC, useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   FaCalculator,
-  FaPercent,
   FaCalendarAlt,
   FaMoneyBillWave,
   FaInfoCircle,

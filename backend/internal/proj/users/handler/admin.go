@@ -95,7 +95,7 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserProfile} "User profile"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_users_models.UserProfile} "User profile"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
 // @Failure 404 {object} utils.ErrorResponseSwag "admin.users.error.user_not_found"
 // @Security BearerAuth
@@ -121,7 +121,7 @@ func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param body body models.UserProfileUpdate true "User update data"
+// @Param body body backend_internal_proj_users_models.UserProfileUpdate true "User update data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Profile updated"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.update_failed"
@@ -271,7 +271,7 @@ func (h *UserHandler) UpdateUserRole(c *fiber.Ctx) error {
 // @Tags admin-users
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Role} "List of roles"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_users_models.Role} "List of roles"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_roles_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/roles [get]

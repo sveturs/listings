@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import { usePathname } from 'next/navigation';
 
 export interface ABTest {
@@ -79,12 +85,6 @@ export const ABTestProvider: React.FC<{
   );
   const pathname = usePathname();
 
-  // Инициализация тестов при загрузке
-  useEffect(() => {
-    initializeTests();
-    loadForcedVariants();
-  }, [tests, pathname]);
-
   // Загрузка принудительных вариантов из localStorage
   const loadForcedVariants = () => {
     if (typeof window === 'undefined') return;
@@ -101,7 +101,7 @@ export const ABTestProvider: React.FC<{
   };
 
   // Инициализация активных тестов
-  const initializeTests = () => {
+  const initializeTests = useCallback(() => {
     const assignments = new Map<string, string>();
     const storedAssignments = loadStoredAssignments();
 
@@ -137,66 +137,72 @@ export const ABTestProvider: React.FC<{
 
     setActiveTests(assignments);
     saveAssignments(assignments);
-  };
+  }, [tests, forcedVariants, debug]);
 
   // Проверка, должен ли тест запускаться
-  const shouldRunTest = (test: ABTest): boolean => {
-    // Проверка статуса
-    if (test.status !== 'running') return false;
+  const shouldRunTest = useCallback(
+    (test: ABTest): boolean => {
+      // Проверка статуса
+      if (test.status !== 'running') return false;
 
-    // Проверка дат
-    const now = new Date();
-    if (test.startDate && now < test.startDate) return false;
-    if (test.endDate && now > test.endDate) return false;
+      // Проверка дат
+      const now = new Date();
+      if (test.startDate && now < test.startDate) return false;
+      if (test.endDate && now > test.endDate) return false;
 
-    // Проверка allocation
-    if (test.allocation !== undefined && test.allocation < 100) {
-      const hash = hashCode(userId || getOrCreateUserId());
-      const bucket = Math.abs(hash % 100);
-      if (bucket >= test.allocation) return false;
-    }
-
-    // Проверка targeting
-    if (test.targeting) {
-      // Проверка URL
-      if (
-        test.targeting.urls &&
-        !test.targeting.urls.some((url) => pathname.includes(url))
-      ) {
-        return false;
+      // Проверка allocation
+      if (test.allocation !== undefined && test.allocation < 100) {
+        const hash = hashCode(userId || getOrCreateUserId());
+        const bucket = Math.abs(hash % 100);
+        if (bucket >= test.allocation) return false;
       }
 
-      // Проверка устройства
-      if (test.targeting.devices && typeof window !== 'undefined') {
-        const device = getDeviceType();
-        if (!test.targeting.devices.includes(device)) return false;
-      }
-    }
+      // Проверка targeting
+      if (test.targeting) {
+        // Проверка URL
+        if (
+          test.targeting.urls &&
+          !test.targeting.urls.some((url) => pathname.includes(url))
+        ) {
+          return false;
+        }
 
-    return true;
-  };
+        // Проверка устройства
+        if (test.targeting.devices && typeof window !== 'undefined') {
+          const device = getDeviceType();
+          if (!test.targeting.devices.includes(device)) return false;
+        }
+      }
+
+      return true;
+    },
+    [userId, pathname]
+  );
 
   // Выбор варианта на основе весов
-  const selectVariant = (test: ABTest): ABVariant | null => {
-    const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
-    if (totalWeight === 0) return null;
+  const selectVariant = useCallback(
+    (test: ABTest): ABVariant | null => {
+      const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
+      if (totalWeight === 0) return null;
 
-    const hash = hashCode(userId || getOrCreateUserId() + test.id);
-    const bucket = Math.abs(hash % totalWeight);
+      const hash = hashCode(userId || getOrCreateUserId() + test.id);
+      const bucket = Math.abs(hash % totalWeight);
 
-    let cumWeight = 0;
-    for (const variant of test.variants) {
-      cumWeight += variant.weight;
-      if (bucket < cumWeight) {
-        return variant;
+      let cumWeight = 0;
+      for (const variant of test.variants) {
+        cumWeight += variant.weight;
+        if (bucket < cumWeight) {
+          return variant;
+        }
       }
-    }
 
-    return test.variants[test.variants.length - 1];
-  };
+      return test.variants[test.variants.length - 1];
+    },
+    [userId]
+  );
 
   // Получение или создание ID пользователя
-  const getOrCreateUserId = (): string => {
+  const getOrCreateUserId = useCallback((): string => {
     if (typeof window === 'undefined') return 'server';
 
     let id = localStorage.getItem('ab_user_id');
@@ -205,7 +211,7 @@ export const ABTestProvider: React.FC<{
       localStorage.setItem('ab_user_id', id);
     }
     return id;
-  };
+  }, []);
 
   // Генерация уникального ID пользователя
   const generateUserId = (): string => {
@@ -327,7 +333,7 @@ export const ABTestProvider: React.FC<{
   };
 
   // Отправка события на сервер
-  const sendEventToServer = async (event: ABTestEvent) => {
+  const sendEventToServer = async (_event: ABTestEvent) => {
     // TODO: Реализовать отправку на сервер
     // await fetch('/api/v1/abtest/events', {
     //   method: 'POST',
@@ -371,6 +377,12 @@ export const ABTestProvider: React.FC<{
     // Переинициализируем тесты
     initializeTests();
   };
+
+  // Инициализация тестов при загрузке
+  useEffect(() => {
+    initializeTests();
+    loadForcedVariants();
+  }, [tests, pathname, initializeTests]);
 
   const contextValue: ABTestContextValue = {
     tests,
@@ -418,10 +430,9 @@ export const ABTestComponent: React.FC<{
 
 // Панель отладки для A/B тестов
 const ABTestDebugPanel: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const context = useContext(ABTestContext);
   if (!context) return null;
-
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">

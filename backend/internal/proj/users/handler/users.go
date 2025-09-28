@@ -75,7 +75,7 @@ type AdminCheckResponseWrapper struct {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserProfile} "User profile"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_users_models.UserProfile} "User profile"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.fetch"
 // @Security BearerAuth
@@ -108,7 +108,7 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body models.UserProfileUpdate true "Profile update data"
+// @Param profile body backend_internal_proj_users_models.UserProfileUpdate true "Profile update data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Profile updated successfully"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_data or users.profile.error.validation"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
@@ -230,7 +230,7 @@ func (h *UserHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param settings body models.UpdatePrivacySettingsRequest true "Privacy settings"
+// @Param settings body backend_internal_proj_users_models.UpdatePrivacySettingsRequest true "Privacy settings"
 // @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Settings updated"
 // @Failure 400 {object} utils.ErrorResponseSwag "users.privacy.error.invalid_data"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"

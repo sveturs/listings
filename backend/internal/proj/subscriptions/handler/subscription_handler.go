@@ -31,7 +31,7 @@ func NewSubscriptionHandler(service *service.SubscriptionService, logger *logger
 // @Tags subscriptions
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.SubscriptionPlanDetails} "List of plans"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_subscriptions_models.SubscriptionPlanDetails} "List of plans"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/plans [get]
 func (h *SubscriptionHandler) GetPlans(c *fiber.Ctx) error {
@@ -51,7 +51,7 @@ func (h *SubscriptionHandler) GetPlans(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserSubscriptionInfo} "Current subscription"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserSubscriptionInfo} "Current subscription"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/current [get]
@@ -89,8 +89,8 @@ func (h *SubscriptionHandler) GetCurrentSubscription(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body models.CreateSubscriptionRequest true "Create subscription request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserSubscription} "Created subscription"
+// @Param request body backend_internal_proj_subscriptions_models.CreateSubscriptionRequest true "Create subscription request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserSubscription} "Created subscription"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 409 {object} utils.ErrorResponseSwag "User already has subscription"
@@ -141,8 +141,8 @@ func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body models.UpgradeSubscriptionRequest true "Upgrade subscription request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserSubscription} "Upgraded subscription"
+// @Param request body backend_internal_proj_subscriptions_models.UpgradeSubscriptionRequest true "Upgrade subscription request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserSubscription} "Upgraded subscription"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Subscription not found"
@@ -243,8 +243,8 @@ func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body models.CheckLimitRequest true "Check limit request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CheckLimitResponse} "Limit check result"
+// @Param request body backend_internal_proj_subscriptions_models.CheckLimitRequest true "Check limit request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_subscriptions_models.CheckLimitResponse} "Limit check result"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -350,7 +350,7 @@ type InitiatePaymentRequest struct {
 // @Produce json
 // @Security Bearer
 // @Param payment_intent query string true "Payment intent ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserSubscription} "Payment completed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserSubscription} "Payment completed"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -405,7 +405,7 @@ func (h *SubscriptionHandler) CompletePayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param user_id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserSubscriptionInfo} "User subscription"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserSubscriptionInfo} "User subscription"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
 // @Failure 404 {object} utils.ErrorResponseSwag "User not found"

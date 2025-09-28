@@ -51,7 +51,7 @@ func (h *VINHandler) RegisterRoutes(app *fiber.App) {
 // @Tags vin
 // @Accept json
 // @Produce json
-// @Param request body models.VINDecodeRequest true "VIN для декодирования"
+// @Param request body backend_internal_proj_vin_models.VINDecodeRequest true "VIN для декодирования"
 // @Success 200 {object} utils.SuccessResponse "Успешное декодирование"
 // @Failure 400 {object} utils.ErrorResponse "Некорректный запрос"
 // @Failure 500 {object} utils.ErrorResponse "Внутренняя ошибка сервера"

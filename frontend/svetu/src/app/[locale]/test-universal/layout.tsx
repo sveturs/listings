@@ -16,7 +16,7 @@ export default async function TestUniversalLayout({
   const { locale } = await params;
 
   // Загружаем необходимые модули переводов для универсальных компонентов
-  const messages = await loadMessages(locale as any, [
+  const _messages = await loadMessages(locale as any, [
     'marketplace',
     'misc',
     'filters',

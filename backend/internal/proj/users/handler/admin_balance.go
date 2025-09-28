@@ -16,7 +16,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserBalance} "User balance"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_users_models.UserBalance} "User balance"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_balance_failed"
 // @Security BearerAuth
@@ -44,7 +44,7 @@ func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BalanceTransaction} "Transaction history"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_users_models.BalanceTransaction} "Transaction history"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_transactions_failed"
 // @Security BearerAuth

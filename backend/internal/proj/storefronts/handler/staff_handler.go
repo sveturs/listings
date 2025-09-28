@@ -75,7 +75,7 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Storefront ID"
 // @Param staffId path int true "Staff ID"
-// @Param permissions body models.JSONB true "Permissions map"
+// @Param permissions body backend_internal_proj_storefronts_models.JSONB true "Permissions map"
 // @Success 200 {object} map[string]string "Permissions updated"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"

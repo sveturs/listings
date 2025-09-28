@@ -34,7 +34,7 @@ func NewAdminVariantAttributesHandler(services globalService.ServicesInterface) 
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
 // @Param search query string false "Search by name or display_name"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ProductVariantAttribute} "Variant attributes list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.ProductVariantAttribute} "Variant attributes list"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getVariantAttributesError"
 // @Security BearerAuth
 // @Router /api/admin/variant-attributes [get]
@@ -108,8 +108,8 @@ func (h *AdminVariantAttributesHandler) GetVariantAttributes(c *fiber.Ctx) error
 // @Tags marketplace-admin-variant-attributes
 // @Accept json
 // @Produce json
-// @Param body body models.ProductVariantAttribute true "Variant attribute data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.ProductVariantAttribute} "marketplace.variantAttributeCreated"
+// @Param body body backend_internal_proj_marketplace_models.ProductVariantAttribute true "Variant attribute data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.ProductVariantAttribute} "marketplace.variantAttributeCreated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createVariantAttributeError"
 // @Security BearerAuth
@@ -160,8 +160,8 @@ func (h *AdminVariantAttributesHandler) CreateVariantAttribute(c *fiber.Ctx) err
 // @Accept json
 // @Produce json
 // @Param id path int true "Variant attribute ID"
-// @Param body body models.ProductVariantAttribute true "Updated variant attribute data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ProductVariantAttribute} "marketplace.variantAttributeUpdated"
+// @Param body body backend_internal_proj_marketplace_models.ProductVariantAttribute true "Updated variant attribute data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.ProductVariantAttribute} "marketplace.variantAttributeUpdated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.variantAttributeNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateVariantAttributeError"
@@ -271,7 +271,7 @@ func (h *AdminVariantAttributesHandler) DeleteVariantAttribute(c *fiber.Ctx) err
 // @Tags marketplace-admin-variant-attributes
 // @Produce json
 // @Param id path int true "Variant attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ProductVariantAttribute} "Variant attribute details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.ProductVariantAttribute} "Variant attribute details"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidID"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.variantAttributeNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getVariantAttributeError"
@@ -319,7 +319,7 @@ func (h *AdminVariantAttributesHandler) GetVariantAttributeByID(c *fiber.Ctx) er
 // @Tags marketplace-admin-variant-attributes
 // @Produce json
 // @Param id path int true "Variant attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttribute} "Category attributes linked to this variant attribute"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttribute} "Category attributes linked to this variant attribute"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidID"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getMappingsError"
 // @Security BearerAuth

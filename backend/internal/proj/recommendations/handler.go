@@ -60,7 +60,7 @@ type RecommendationRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body RecommendationRequest true "Recommendation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Recommendations"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Recommendations"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Router /api/v1/recommendations [post]
 func (h *Handler) GetRecommendations(c *fiber.Ctx) error {
@@ -254,7 +254,7 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "View history"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "View history"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [get]
 func (h *Handler) GetViewHistory(c *fiber.Ctx) error {

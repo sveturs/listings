@@ -49,7 +49,7 @@ func NewHandler(service service.NotificationServiceInterface) *Handler {
 // @Produce json
 // @Param limit query int false "Количество записей" default(20)
 // @Param offset query int false "Смещение" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Notification} "Список уведомлений"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.Notification} "Список уведомлений"
 // @Failure 500 {object} utils.ErrorResponseSwag "notifications.getError"
 // @Security BearerAuth
 // @Router /api/v1/notifications [get]

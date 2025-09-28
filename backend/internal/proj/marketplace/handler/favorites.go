@@ -150,7 +150,7 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 // @Tags marketplace-favorites
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "List of favorite listings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "List of favorite listings"
 // @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getFavoritesError"
 // @Security BearerAuth

@@ -35,7 +35,7 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler, keywordRepo
 // @Tags marketplace-admin-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceCategory} "Categories list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.MarketplaceCategory} "Categories list"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
 // @Security BearerAuth
 // @Router /api/admin/categories/all [get]
@@ -184,7 +184,7 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceCategory} "Category information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.MarketplaceCategory} "Category information"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
@@ -590,7 +590,7 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AttributeGroup} "Category groups"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.AttributeGroup} "Category groups"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
 // @Security BearerAuth
@@ -817,7 +817,7 @@ func (h *AdminCategoriesHandler) TranslateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryKeyword} "Keywords list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryKeyword} "Keywords list"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -870,8 +870,8 @@ func (h *AdminCategoriesHandler) GetCategoryKeywords(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Param keyword body models.CategoryKeywordRequest true "Keyword data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.CategoryKeyword} "Created keyword"
+// @Param keyword body backend_internal_domain_models.CategoryKeywordRequest true "Keyword data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Created keyword"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -943,8 +943,8 @@ func (h *AdminCategoriesHandler) AddCategoryKeyword(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param keyword_id path int true "Keyword ID"
-// @Param keyword body models.CategoryKeywordUpdateRequest true "Updated keyword data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CategoryKeyword} "Updated keyword"
+// @Param keyword body backend_internal_domain_models.CategoryKeywordUpdateRequest true "Updated keyword data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Updated keyword"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
 // @Failure 404 {object} utils.ErrorResponseSwag "Keyword not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -1020,7 +1020,7 @@ func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
 // @Tags marketplace-admin-categories
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryVariantAttribute} "Category variant attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryVariantAttribute} "Category variant attributes"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryVariantAttributesError"
 // @Security BearerAuth
@@ -1106,7 +1106,7 @@ func (h *AdminCategoriesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) erro
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Param body body models.CategoryVariantAttributesRequest true "List of variant attributes with their settings"
+// @Param body body backend_internal_domain_models.CategoryVariantAttributesRequest true "List of variant attributes with their settings"
 // @Success 200 {object} utils.SuccessResponseSwag{data=string} "marketplace.categoryVariantAttributesUpdated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryVariantAttributesError"

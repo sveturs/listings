@@ -48,7 +48,7 @@ func NewUnifiedAttributesHandler(
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedAttribute} "List of category attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.UnifiedAttribute} "List of category attributes"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/categories/{category_id}/attributes [get]
@@ -96,7 +96,7 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedCategoryAttribute} "List of category attributes with settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.UnifiedCategoryAttribute} "List of category attributes with settings"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/categories/{category_id}/attributes/detailed [get]
@@ -129,7 +129,7 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributesWithSettings(c *fiber.Ct
 // @Accept json
 // @Produce json
 // @Param listing_id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedAttributeValue} "List of attribute values"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_marketplace_models.UnifiedAttributeValue} "List of attribute values"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid listing ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/listings/{listing_id}/attributes [get]
@@ -219,7 +219,7 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 // @Tags marketplace-attributes-v2-admin
 // @Accept json
 // @Produce json
-// @Param attribute body models.UnifiedAttribute true "Attribute data"
+// @Param attribute body backend_internal_proj_marketplace_models.UnifiedAttribute true "Attribute data"
 // @Success 201 {object} utils.SuccessResponseSwag{data=int} "Created attribute ID"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
@@ -335,7 +335,7 @@ func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Produce json
 // @Param category_id path int true "Category ID"
 // @Param attribute_id path int true "Attribute ID"
-// @Param settings body models.UnifiedCategoryAttribute true "Attachment settings"
+// @Param settings body backend_internal_proj_marketplace_models.UnifiedCategoryAttribute true "Attachment settings"
 // @Success 200 {object} utils.SuccessResponseSwag{data=string} "Attribute attached"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"

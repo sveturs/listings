@@ -13729,6 +13729,61 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/credit/calculate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate credit
+     * @description Calculate credit/loan details including monthly payments and total amounts
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Credit calculation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_credit.CreditCalculationRequest'];
+        };
+      };
+      responses: {
+        /** @description Credit calculation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_credit.CreditCalculationResponse'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/delivery': {
     parameters: {
       query?: never;
@@ -20749,6 +20804,463 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/recommendations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get public recommendations
+     * @description Get recommendations based on type and category without authentication
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Recommendation type (trending, new, similar, recommended) */
+          type?: string;
+          /** @description Category filter */
+          category?: string;
+          /** @description Current item ID (for similar recommendations) */
+          item_id?: number;
+          /** @description Number of results */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Recommendations */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/saved-searches': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user's saved searches
+     * @description Returns all saved searches for the user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of saved searches */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.SavedSearchResponse'][];
+            };
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getSavedSearchesError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create saved search
+     * @description Creates a new saved search for the user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Saved search data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.CreateSavedSearchRequest'];
+        };
+      };
+      responses: {
+        /** @description Created saved search */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.SavedSearchResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidRequest */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.createSavedSearchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/saved-searches/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get saved search by ID
+     * @description Returns a specific saved search
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Saved search ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Saved search details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.SavedSearchResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.savedSearchNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.getSavedSearchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update saved search
+     * @description Updates a saved search
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Saved search ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_marketplace_handler.UpdateSavedSearchRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated saved search */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.SavedSearchResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidRequest */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.savedSearchNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.updateSavedSearchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete saved search
+     * @description Deletes a saved search
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Saved search ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Deleted successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_marketplace_handler.MessageResponse'];
+            };
+          };
+        };
+        /** @description marketplace.invalidId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.savedSearchNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.deleteSavedSearchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/marketplace/saved-searches/{id}/execute': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Execute saved search
+     * @description Executes a saved search and returns the results
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Saved search ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description marketplace.invalidId */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.savedSearchNotFound */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.executeSavedSearchError */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/search': {
     parameters: {
       query?: never;
@@ -24723,6 +25235,197 @@ export interface paths {
           content: {
             'application/json': {
               [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/recommendations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get recommendations
+     * @description Get recommendations based on type and category
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Recommendation request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_recommendations.RecommendationRequest'];
+        };
+      };
+      responses: {
+        /** @description Recommendations */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/recommendations/view-history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get view history
+     * @description Get view history for the current user
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+          /** @description Offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description View history */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.MarketplaceListing'][];
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Add view history
+     * @description Add a view history entry for the current user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description View history request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_recommendations.ViewHistoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Success */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/recommendations/view-statistics/{listing_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get view statistics
+     * @description Get view statistics for a specific listing
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Listing ID */
+          listing_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description View statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_recommendations.ViewStatistics'];
             };
           };
         };
@@ -33923,6 +34626,384 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/vin/auto-fill': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Автозаполнение данных из VIN
+     * @description Декодирует VIN и возвращает данные для автозаполнения формы создания объявления
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description VIN номер */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Данные для автозаполнения */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vin/decode': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Декодировать VIN номер
+     * @description Декодирует VIN номер и возвращает информацию об автомобиле
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description VIN для декодирования */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_vin_models.VINDecodeRequest'];
+        };
+      };
+      responses: {
+        /** @description Успешное декодирование */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Некорректный запрос */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vin/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить историю проверок VIN
+     * @description Возвращает историю проверок VIN для текущего пользователя
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Фильтр по конкретному VIN */
+          vin?: string;
+          /** @description Лимит записей */
+          limit?: number;
+          /** @description Смещение */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description История проверок */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vin/report/{vin}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Экспортировать отчет о VIN
+     * @description Генерирует и возвращает детальный отчет о VIN в JSON формате
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description VIN номер */
+          vin: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Отчет о VIN */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Некорректный VIN */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vin/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Получить статистику использования VIN декодера
+     * @description Возвращает статистику проверок VIN для текущего пользователя
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Статистика */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Не авторизован */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Внутренняя ошибка сервера */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/vin/validate/{vin}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Проверить валидность VIN номера
+     * @description Проверяет корректность VIN номера без полного декодирования
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description VIN номер для проверки */
+          vin: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description VIN валиден */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description VIN невалиден */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/webhooks/orders/payment': {
     parameters: {
       query?: never;
@@ -40490,6 +41571,10 @@ export interface components {
       remaining?: number;
       reset?: string;
     };
+    'backend_internal_proj_vin_models.VINDecodeRequest': {
+      listing_id?: number;
+      vin: string;
+    };
     'backend_internal_services.UploadImageResponse': {
       display_order?: number;
       id?: number;
@@ -40646,6 +41731,32 @@ export interface components {
        * @example contacts.statusUpdated
        */
       message?: string;
+    };
+    'internal_proj_credit.CreditCalculationRequest': {
+      category?: string;
+      down_payment: number;
+      /** @description annual percentage */
+      interest_rate: number;
+      price: number;
+      /** @description months */
+      term: number;
+    };
+    'internal_proj_credit.CreditCalculationResponse': {
+      down_payment?: number;
+      interest_rate?: number;
+      loan_amount?: number;
+      monthly_payment?: number;
+      payment_schedule?: components['schemas']['internal_proj_credit.PaymentScheduleItem'][];
+      term?: number;
+      total_amount?: number;
+      total_interest?: number;
+    };
+    'internal_proj_credit.PaymentScheduleItem': {
+      interest?: number;
+      month?: number;
+      payment?: number;
+      principal?: number;
+      remaining_balance?: number;
     };
     'internal_proj_delivery_handler.CancelRequest': {
       reason?: string;
@@ -40934,6 +42045,15 @@ export interface components {
       /** @enum {string} */
       payment_method: 'card' | 'bank_transfer';
     };
+    'internal_proj_marketplace_handler.CreateSavedSearchRequest': {
+      filters: {
+        [key: string]: unknown;
+      };
+      name: string;
+      notify_enabled?: boolean;
+      notify_frequency?: string;
+      search_type?: string;
+    };
     'internal_proj_marketplace_handler.DebugInfo': {
       keyword_score?: number;
       matched_keywords?: string[];
@@ -41139,6 +42259,21 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
+    'internal_proj_marketplace_handler.SavedSearchResponse': {
+      created_at?: string;
+      filters?: {
+        [key: string]: unknown;
+      };
+      id?: number;
+      last_notified_at?: string;
+      name?: string;
+      notify_enabled?: boolean;
+      notify_frequency?: string;
+      results_count?: number;
+      search_type?: string;
+      updated_at?: string;
+      user_id?: number;
+    };
     'internal_proj_marketplace_handler.SearchMetadata': {
       facets?: {
         [
@@ -41258,6 +42393,14 @@ export interface components {
       translations?: {
         [key: string]: string;
       };
+    };
+    'internal_proj_marketplace_handler.UpdateSavedSearchRequest': {
+      filters?: {
+        [key: string]: unknown;
+      };
+      name?: string;
+      notify_enabled?: boolean;
+      notify_frequency?: string;
     };
     /** @description Ответ при изменении статуса уведомления */
     'internal_proj_notifications_handler.NotificationMarkReadResponse': {
@@ -41386,6 +42529,32 @@ export interface components {
     'internal_proj_payments_handler.WebhookResponse': {
       message?: string;
       status?: string;
+    };
+    'internal_proj_recommendations.RecommendationRequest': {
+      category: string;
+      current_item_id?: number;
+      limit?: number;
+      /** @enum {string} */
+      type:
+        | 'similar'
+        | 'personal'
+        | 'trending'
+        | 'new'
+        | 'discounted'
+        | 'recommended';
+      user_id?: number;
+    };
+    'internal_proj_recommendations.ViewHistoryRequest': {
+      category_id: number;
+      /** @enum {string} */
+      interaction_type: 'view' | 'click_phone' | 'add_favorite';
+      listing_id: number;
+      view_duration_seconds?: number;
+    };
+    'internal_proj_recommendations.ViewStatistics': {
+      avg_duration?: number;
+      unique_users?: number;
+      views_count?: number;
     };
     'internal_proj_reviews_handler.PhotosResponse': {
       /** @example Photos uploaded successfully */

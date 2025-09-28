@@ -28,8 +28,8 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 // @Tags contacts
 // @Accept json
 // @Produce json
-// @Param request body models.AddContactRequest true "Данные для добавления контакта"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserContact} "Контакт успешно добавлен"
+// @Param request body backend_internal_domain_models.AddContactRequest true "Данные для добавления контакта"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserContact} "Контакт успешно добавлен"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidRequest"
 // @Failure 409 {object} utils.ErrorResponseSwag "contacts.alreadyExists"
 // @Failure 403 {object} utils.ErrorResponseSwag "contacts.userNotAllowRequests"
@@ -74,7 +74,7 @@ func (h *Handler) AddContact(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param contact_user_id path int true "ID контакта"
-// @Param request body models.UpdateContactRequest true "Новый статус контакта"
+// @Param request body backend_internal_domain_models.UpdateContactRequest true "Новый статус контакта"
 // @Success 200 {object} utils.SuccessResponseSwag{data=ContactStatusUpdateResponse} "Статус обновлен"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidContactUserId или validation.invalidStatus"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.updateError"
@@ -115,7 +115,7 @@ func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 // @Param status query string false "Фильтр по статусу (pending, accepted, blocked)"
 // @Param page query int false "Номер страницы" default(1)
 // @Param limit query int false "Количество на странице" default(20)
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ContactsListResponse} "Список контактов"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ContactsListResponse} "Список контактов"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidStatusFilter"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.fetchError"
 // @Security BearerAuth
@@ -149,7 +149,7 @@ func (h *Handler) GetContacts(c *fiber.Ctx) error {
 // @Produce json
 // @Param page query int false "Номер страницы" default(1)
 // @Param limit query int false "Количество на странице" default(20)
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ContactsListResponse} "Список входящих запросов"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ContactsListResponse} "Список входящих запросов"
 // @Failure 500 {object} utils.ErrorResponseSwag "contacts.fetchError"
 // @Security BearerAuth
 // @Router /api/v1/contacts/incoming [get]
@@ -201,7 +201,7 @@ func (h *Handler) RemoveContact(c *fiber.Ctx) error {
 // @Tags contacts
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserPrivacySettings} "Настройки приватности"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserPrivacySettings} "Настройки приватности"
 // @Failure 500 {object} utils.ErrorResponseSwag "privacy.fetchError"
 // @Security BearerAuth
 // @Router /api/v1/contacts/privacy [get]
@@ -222,8 +222,8 @@ func (h *Handler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Tags contacts
 // @Accept json
 // @Produce json
-// @Param request body models.UpdatePrivacySettingsRequest true "Новые настройки приватности"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserPrivacySettings} "Обновленные настройки"
+// @Param request body backend_internal_domain_models.UpdatePrivacySettingsRequest true "Новые настройки приватности"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserPrivacySettings} "Обновленные настройки"
 // @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidRequest"
 // @Failure 500 {object} utils.ErrorResponseSwag "privacy.updateError"
 // @Security BearerAuth

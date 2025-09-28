@@ -660,7 +660,7 @@ func (h *SearchHandler) searchPopularItems(ctx context.Context, query, language 
 // @Produce json
 // @Param query query string true "Search query"
 // @Param size query int false "Number of suggestions" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategorySuggestion} "Category suggestions list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategorySuggestion} "Category suggestions list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.queryRequired"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.categorySuggestionsError"
 // @Router /api/v1/marketplace/category-suggestions [get]
@@ -698,7 +698,7 @@ func (h *SearchHandler) GetCategorySuggestions(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param limit query int false "Number of similar listings" default(5)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Similar listings list"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Similar listings list"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.similarListingsError"
 // @Router /api/v1/marketplace/listings/{id}/similar [get]

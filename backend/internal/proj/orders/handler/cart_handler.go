@@ -17,8 +17,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Param item body models.AddToCartRequest true "Item to add"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Param item body backend_internal_proj_orders_models.AddToCartRequest true "Item to add"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.ShoppingCart} "Updated cart"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
@@ -79,8 +79,8 @@ func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param item_id path int true "Cart item ID"
-// @Param update body models.UpdateCartItemRequest true "Updated quantity"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Param update body backend_internal_proj_orders_models.UpdateCartItemRequest true "Updated quantity"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.ShoppingCart} "Updated cart"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
@@ -137,7 +137,7 @@ func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param item_id path int true "Cart item ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Updated cart"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.ShoppingCart} "Updated cart"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
@@ -187,7 +187,7 @@ func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
 // @Tags cart
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ShoppingCart} "Cart contents"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.ShoppingCart} "Cart contents"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -273,7 +273,7 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 // @Description Gets all shopping carts for the authenticated user across all storefronts
 // @Tags cart
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ShoppingCart} "User's carts"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_orders_models.ShoppingCart} "User's carts"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth

@@ -182,7 +182,10 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     transmission,
     condition,
     selectedBodyTypes,
-    // Исключаем onFiltersChange из зависимостей чтобы избежать бесконечного цикла
+    locale,
+    router,
+    searchParams,
+    onFiltersChange,
   ]);
 
   const loadMakes = async () => {

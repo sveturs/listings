@@ -119,7 +119,7 @@ func (h *Handler) Health(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PostExpressSettings}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressSettings}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/settings [get]
 func (h *Handler) GetSettings(c *fiber.Ctx) error {
@@ -138,8 +138,8 @@ func (h *Handler) GetSettings(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Param settings body models.PostExpressSettings true "Настройки Post Express"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PostExpressSettings}
+// @Param settings body backend_internal_proj_postexpress_models.PostExpressSettings true "Настройки Post Express"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressSettings}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/settings [put]
@@ -169,7 +169,7 @@ func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param q query string true "Поисковый запрос"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PostExpressLocation}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_postexpress_models.PostExpressLocation}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/locations/search [get]
@@ -195,7 +195,7 @@ func (h *Handler) SearchLocations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID населенного пункта"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PostExpressLocation}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressLocation}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -245,7 +245,7 @@ func (h *Handler) SyncLocations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param location_id query int true "ID населенного пункта"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PostExpressOffice}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_postexpress_models.PostExpressOffice}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/offices [get]
@@ -271,7 +271,7 @@ func (h *Handler) GetOffices(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param code path string true "Код отделения"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PostExpressOffice}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressOffice}
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/offices/{code} [get]
@@ -323,8 +323,8 @@ func (h *Handler) SyncOffices(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Param request body models.CalculateRateRequest true "Параметры для расчета стоимости"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CalculateRateResponse}
+// @Param request body backend_internal_proj_postexpress_models.CalculateRateRequest true "Параметры для расчета стоимости"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.CalculateRateResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/calculate-rate [post]
@@ -354,7 +354,7 @@ func (h *Handler) CalculateRate(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PostExpressRate}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_postexpress_models.PostExpressRate}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/rates [get]
 func (h *Handler) GetRates(c *fiber.Ctx) error {
@@ -377,8 +377,8 @@ func (h *Handler) GetRates(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Param request body models.CreateShipmentRequest true "Данные для создания отправления"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.PostExpressShipment}
+// @Param request body backend_internal_proj_postexpress_models.CreateShipmentRequest true "Данные для создания отправления"
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressShipment}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/shipments [post]
@@ -474,7 +474,7 @@ func (h *Handler) ListShipments(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID отправления"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PostExpressShipment}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.PostExpressShipment}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -643,7 +643,7 @@ func (h *Handler) GetShipmentInvoice(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param tracking path string true "Трекинг-номер"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TrackingEvent}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_postexpress_models.TrackingEvent}
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/track/{tracking} [get]
@@ -691,7 +691,7 @@ func (h *Handler) SyncAllShipments(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Warehouse}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_postexpress_models.Warehouse}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/warehouse [get]
 func (h *Handler) GetWarehouses(c *fiber.Ctx) error {
@@ -711,7 +711,7 @@ func (h *Handler) GetWarehouses(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param code path string true "Код склада"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.Warehouse}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.Warehouse}
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/warehouse/{code} [get]
@@ -740,8 +740,8 @@ func (h *Handler) GetWarehouse(c *fiber.Ctx) error {
 // @Tags PostExpress
 // @Accept json
 // @Produce json
-// @Param request body models.CreatePickupOrderRequest true "Данные для создания заказа на самовывоз"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.WarehousePickupOrder}
+// @Param request body backend_internal_proj_postexpress_models.CreatePickupOrderRequest true "Данные для создания заказа на самовывоз"
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.WarehousePickupOrder}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/warehouse/pickup-orders [post]
@@ -772,7 +772,7 @@ func (h *Handler) CreatePickupOrder(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID заказа на самовывоз"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.WarehousePickupOrder}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.WarehousePickupOrder}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -803,7 +803,7 @@ func (h *Handler) GetPickupOrder(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param code path string true "Код самовывоза"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.WarehousePickupOrder}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_postexpress_models.WarehousePickupOrder}
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/postexpress/warehouse/pickup-orders/code/{code} [get]

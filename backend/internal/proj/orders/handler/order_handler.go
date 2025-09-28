@@ -22,8 +22,8 @@ const (
 // @Tags orders
 // @Accept json
 // @Produce json
-// @Param order body models.CreateOrderRequest true "Order data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Created order"
+// @Param order body backend_internal_proj_orders_models.CreateOrderRequest true "Order data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.StorefrontOrder} "Created order"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 409 {object} utils.ErrorResponseSwag "Insufficient stock"
@@ -77,7 +77,7 @@ func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
 // @Param limit query int false "Items per page" default(20)
 // @Param status query string false "Filter by status"
 // @Param storefront_id query int false "Filter by storefront"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.StorefrontOrder} "User orders"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_orders_models.StorefrontOrder} "User orders"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -126,7 +126,7 @@ func (h *OrdersHandler) GetMyOrders(c *fiber.Ctx) error {
 // @Tags orders
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Order details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.StorefrontOrder} "Order details"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
@@ -166,8 +166,8 @@ func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
 // @Tags orders
 // @Produce json
 // @Param id path int true "Order ID"
-// @Param cancel body models.CancelOrderRequest true "Cancellation reason"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Canceled order"
+// @Param cancel body backend_internal_proj_orders_models.CancelOrderRequest true "Cancellation reason"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.StorefrontOrder} "Canceled order"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
@@ -219,7 +219,7 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
 // @Param status query string false "Filter by status"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.StorefrontOrder} "Storefront orders"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_orders_models.StorefrontOrder} "Storefront orders"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
@@ -276,8 +276,8 @@ func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param order_id path int true "Order ID"
-// @Param update body models.UpdateOrderStatusRequest true "Status update"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Updated order"
+// @Param update body backend_internal_proj_orders_models.UpdateOrderStatusRequest true "Status update"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_orders_models.StorefrontOrder} "Updated order"
 // @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"

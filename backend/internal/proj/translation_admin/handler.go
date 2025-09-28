@@ -104,7 +104,7 @@ func (h *Handler) RegisterRoutes(router fiber.Router) {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.FrontendModule}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.FrontendModule}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/frontend/modules [get]
 func (h *Handler) GetFrontendModules(c *fiber.Ctx) error {
@@ -126,7 +126,7 @@ func (h *Handler) GetFrontendModules(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param name path string true "Module name"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.FrontendTranslation}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.FrontendTranslation}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/frontend/module/{name} [get]
@@ -154,7 +154,7 @@ func (h *Handler) GetModuleTranslations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param name path string true "Module name"
-// @Param updates body []models.FrontendTranslation true "Translation updates"
+// @Param updates body []backend_internal_domain_models.FrontendTranslation true "Translation updates"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
@@ -198,8 +198,8 @@ func (h *Handler) UpdateModuleTranslations(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.ValidateTranslationsRequest true "Validation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ValidationResult}
+// @Param request body backend_internal_domain_models.ValidateTranslationsRequest true "Validation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.ValidationResult}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/frontend/validate [post]
@@ -253,7 +253,7 @@ func (h *Handler) SyncFrontendToDBOld(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.TranslationStatistics}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.TranslationStatistics}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/stats/overview [get]
 func (h *Handler) GetStatisticsOverview(c *fiber.Ctx) error {
@@ -283,7 +283,7 @@ func (h *Handler) GetStatisticsOverview(c *fiber.Ctx) error {
 // @Param is_verified query bool false "Verified status filter"
 // @Param limit query int false "Limit results"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.Translation}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.Translation}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/database [get]
 func (h *Handler) GetDatabaseTranslations(c *fiber.Ctx) error {
@@ -330,7 +330,7 @@ func (h *Handler) GetDatabaseTranslations(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Translation ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.Translation}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.Translation}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 404 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -363,7 +363,7 @@ func (h *Handler) GetTranslation(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Translation ID"
-// @Param translation body models.TranslationUpdateRequest true "Translation update"
+// @Param translation body backend_internal_domain_models.TranslationUpdateRequest true "Translation update"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
@@ -446,8 +446,8 @@ func (h *Handler) DeleteTranslation(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param operations body models.BatchOperationsRequest true "Batch operations"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BatchOperationsResult}
+// @Param operations body backend_internal_domain_models.BatchOperationsRequest true "Batch operations"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.BatchOperationsResult}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -596,7 +596,7 @@ func (h *Handler) ExportToJSON(c *fiber.Ctx) error {
 // @Tags admin-translations
 // @Accept json
 // @Produce json
-// @Param body body models.ImportTranslationsRequest true "Import request"
+// @Param body body backend_internal_domain_models.ImportTranslationsRequest true "Import request"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -751,8 +751,8 @@ func (h *Handler) ResolveConflict(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param resolutions body models.ConflictResolutionBatch true "Conflict resolutions"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ConflictResolutionResult}
+// @Param resolutions body backend_internal_domain_models.ConflictResolutionBatch true "Conflict resolutions"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ConflictResolutionResult}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/sync/conflicts/resolve [post]
@@ -787,7 +787,7 @@ func (h *Handler) ResolveConflictsBatch(c *fiber.Ctx) error {
 // @Produce json
 // @Param entity path string true "Entity type (translation, category, listing)"
 // @Param id path int true "Entity ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.VersionHistoryResponse}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.VersionHistoryResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/versions/{entity}/{id} [get]
@@ -798,7 +798,7 @@ func (h *Handler) ResolveConflictsBatch(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Translation ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationVersion}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.TranslationVersion}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/versions/translation/{id} [get]
@@ -850,7 +850,7 @@ func (h *Handler) GetVersionHistory(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.RollbackRequest true "Rollback request"
+// @Param request body backend_internal_domain_models.RollbackRequest true "Rollback request"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
@@ -891,7 +891,7 @@ func (h *Handler) RollbackVersion(c *fiber.Ctx) error {
 // @Produce json
 // @Param version1 query int true "First version ID"
 // @Param version2 query int true "Second version ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.VersionDiff}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.VersionDiff}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/versions/diff [get]
@@ -935,7 +935,7 @@ func (h *Handler) GetUsage(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param translations body models.ApplyTranslationsRequest true "Translations to apply"
+// @Param translations body backend_internal_domain_models.ApplyTranslationsRequest true "Translations to apply"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
@@ -972,7 +972,7 @@ func (h *Handler) ApplyAITranslations(c *fiber.Ctx) error {
 // @Param limit query int false "Limit results (default: 100)"
 // @Param user_id query int false "Filter by user ID"
 // @Param action query string false "Filter by action type"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationAuditLog}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.TranslationAuditLog}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/audit/logs [get]
 func (h *Handler) GetAuditLogs(c *fiber.Ctx) error {
@@ -1006,7 +1006,7 @@ func (h *Handler) GetAuditLogs(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AuditStatistics}
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.AuditStatistics}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/audit/statistics [get]
 func (h *Handler) GetAuditStatistics(c *fiber.Ctx) error {
@@ -1027,7 +1027,7 @@ func (h *Handler) GetAuditStatistics(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.ExportRequest true "Export request"
+// @Param request body backend_internal_domain_models.ExportRequest true "Export request"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -1060,8 +1060,8 @@ func (h *Handler) ExportAdvanced(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.TranslationImportRequest true "Import request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.ImportResult}
+// @Param request body backend_internal_domain_models.TranslationImportRequest true "Import request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.ImportResult}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -1100,8 +1100,8 @@ func (h *Handler) ImportAdvanced(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.BulkTranslateRequest true "Bulk translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BatchTranslateResult}
+// @Param request body backend_internal_domain_models.BulkTranslateRequest true "Bulk translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.BatchTranslateResult}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 401 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
@@ -1144,7 +1144,7 @@ func (h *Handler) BulkTranslate(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.TranslationProvider}
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.TranslationProvider}
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/providers [get]
 func (h *Handler) GetTranslationProviders(c *fiber.Ctx) error {
@@ -1171,7 +1171,7 @@ func (h *Handler) GetTranslationProviders(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Provider ID"
-// @Param provider body models.TranslationProvider true "Provider configuration"
+// @Param provider body backend_internal_domain_models.TranslationProvider true "Provider configuration"
 // @Success 200 {object} utils.SuccessResponseSwag
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 404 {object} utils.ErrorResponseSwag

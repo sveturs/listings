@@ -36,8 +36,8 @@ func NewAITranslationHandler(logger zerolog.Logger, service *Service, rateLimite
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.AITranslateRequest true "Translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AITranslateResponse}
+// @Param request body backend_internal_domain_models.AITranslateRequest true "Translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.AITranslateResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate [post]
@@ -140,8 +140,8 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.AITranslateBatchRequest true "Batch translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AITranslateBatchResponse}
+// @Param request body backend_internal_domain_models.AITranslateBatchRequest true "Batch translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.AITranslateBatchResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate-batch [post]
@@ -273,8 +273,8 @@ func (h *AITranslationHandler) GetRateLimitStatus(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.TranslateModuleRequest true "Module translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.TranslateModuleResponse}
+// @Param request body backend_internal_domain_models.TranslateModuleRequest true "Module translation request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.TranslateModuleResponse}
 // @Failure 400 {object} utils.ErrorResponseSwag
 // @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate-module [post]

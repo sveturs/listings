@@ -41,7 +41,7 @@ func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentSe
 // @Tags balance
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserBalance} "User balance information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.UserBalance} "User balance information"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.getError"
 // @Security BearerAuth
@@ -84,7 +84,7 @@ type DepositRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body DepositRequest true "Deposit details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentSession} "Payment session created"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentSession} "Payment session created"
 // @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.createDepositError"
@@ -130,7 +130,7 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 // @Produce json
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BalanceTransaction} "List of transactions"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.BalanceTransaction} "List of transactions"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.getTransactionsError"
 // @Security BearerAuth
@@ -167,7 +167,7 @@ func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
 // @Tags balance
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PaymentMethod} "List of payment methods"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PaymentMethod} "List of payment methods"
 // @Failure 500 {object} utils.ErrorResponseSwag "balance.getPaymentMethodsError"
 // @Router /api/v1/balance/payment-methods [get]
 func (h *BalanceHandler) GetPaymentMethods(c *fiber.Ctx) error {

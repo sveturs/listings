@@ -44,7 +44,7 @@ func NewAdminAttributesHandler(services globalService.ServicesInterface) *AdminA
 // @Tags marketplace-admin-attributes
 // @Accept json
 // @Produce json
-// @Param body body models.CategoryAttribute true "Attribute data"
+// @Param body body backend_internal_domain_models.CategoryAttribute true "Attribute data"
 // @Success 201 {object} utils.SuccessResponseSwag{data=AttributeCreateResponse} "marketplace.attributeCreated"
 // @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
 // @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createAttributeError"
@@ -179,7 +179,7 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Param page_size query int false "Page size (default: 20, max: 100)"
 // @Param search query string false "Search term for name or display_name"
 // @Param type query string false "Filter by attribute type"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaginatedResponse} "Paginated list of attributes"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.PaginatedResponse} "Paginated list of attributes"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid pagination parameters"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -359,7 +359,7 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CategoryAttribute} "Attribute information"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryAttribute} "Attribute information"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
 // @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -435,7 +435,7 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Param attribute body models.CategoryAttribute true "Attribute data"
+// @Param attribute body backend_internal_domain_models.CategoryAttribute true "Attribute data"
 // @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
@@ -611,7 +611,7 @@ func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Tags marketplace-admin-attributes
 // @Accept json
 // @Produce json
-// @Param attributes body object{attributes=[]models.CategoryAttribute} true "List of attributes to update"
+// @Param attributes body object{attributes=[]backend_internal_domain_models.CategoryAttribute} true "List of attributes to update"
 // @Success 200 {object} utils.SuccessResponseSwag{data=BulkUpdateResult} "Update results with success count"
 // @Success 206 {object} PartialOperationResponse{data=BulkUpdateResult} "Partial update with errors"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
@@ -828,7 +828,7 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param categoryId path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CategoryAttributeMapping} "Category attributes with settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttributeMapping} "Category attributes with settings"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
@@ -981,7 +981,7 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 // @Accept json
 // @Produce json
 // @Param categoryId path int true "Category ID"
-// @Param attributes body []models.CategoryAttributeMapping true "List of attribute mappings to import"
+// @Param attributes body []backend_internal_domain_models.CategoryAttributeMapping true "List of attribute mappings to import"
 // @Success 200 {object} utils.SuccessResponseSwag{data=ImportAttributesResult} "Import results with success count"
 // @Success 206 {object} PartialOperationResponse{data=ImportAttributesResult} "Partial import with errors"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"

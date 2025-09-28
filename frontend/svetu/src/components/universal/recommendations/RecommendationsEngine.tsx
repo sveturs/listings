@@ -169,7 +169,7 @@ const RecommendationsEngine: FC<RecommendationsEngineProps> = ({
   layout = 'grid',
   showTitle = true,
   showDescription = false,
-  onItemClick,
+  onItemClick: _onItemClick,
   className = '',
   config: customConfig,
 }) => {
@@ -192,6 +192,48 @@ const RecommendationsEngine: FC<RecommendationsEngineProps> = ({
 
   // Загрузка рекомендаций
   useEffect(() => {
+    // Генерация моковых данных (заменить на реальный API)
+    const generateMockRecommendations = (
+      type: RecommendationType,
+      count: number
+    ): UniversalListingData[] => {
+      const items: UniversalListingData[] = [];
+
+      for (let i = 0; i < count; i++) {
+        items.push({
+          id: Math.floor(Math.random() * 10000),
+          title: `${type} Item ${i + 1}`,
+          price: Math.floor(Math.random() * 50000) + 5000,
+          currency: '€',
+          images: [`https://picsum.photos/400/300?random=${i}`],
+          location: {
+            city: ['Belgrade', 'Novi Sad', 'Niš', 'Kragujevac'][
+              Math.floor(Math.random() * 4)
+            ],
+          },
+          category: category || 'marketplace',
+          createdAt: new Date(
+            Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          badges:
+            Math.random() > 0.7
+              ? [
+                  {
+                    type: Math.random() > 0.5 ? 'new' : 'discount',
+                    label: Math.random() > 0.5 ? 'New' : '-15%',
+                  },
+                ]
+              : [],
+          stats: {
+            views: Math.floor(Math.random() * 1000),
+            favorites: Math.floor(Math.random() * 50),
+          },
+        });
+      }
+
+      return items;
+    };
+
     const fetchRecommendations = async () => {
       setLoading(true);
       setError(null);
@@ -211,48 +253,6 @@ const RecommendationsEngine: FC<RecommendationsEngineProps> = ({
 
     fetchRecommendations();
   }, [configs, limit, category, currentItemId, userId, refreshKey]);
-
-  // Генерация моковых данных (заменить на реальный API)
-  const generateMockRecommendations = (
-    type: RecommendationType,
-    count: number
-  ): UniversalListingData[] => {
-    const items: UniversalListingData[] = [];
-
-    for (let i = 0; i < count; i++) {
-      items.push({
-        id: Math.floor(Math.random() * 10000),
-        title: `${type} Item ${i + 1}`,
-        price: Math.floor(Math.random() * 50000) + 5000,
-        currency: '€',
-        images: [`https://picsum.photos/400/300?random=${i}`],
-        location: {
-          city: ['Belgrade', 'Novi Sad', 'Niš', 'Kragujevac'][
-            Math.floor(Math.random() * 4)
-          ],
-        },
-        category: category || 'marketplace',
-        createdAt: new Date(
-          Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        badges:
-          Math.random() > 0.7
-            ? [
-                {
-                  type: Math.random() > 0.5 ? 'new' : 'discount',
-                  label: Math.random() > 0.5 ? 'New' : '-15%',
-                },
-              ]
-            : [],
-        stats: {
-          views: Math.floor(Math.random() * 1000),
-          favorites: Math.floor(Math.random() * 50),
-        },
-      });
-    }
-
-    return items;
-  };
 
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
@@ -286,7 +286,7 @@ const RecommendationsEngine: FC<RecommendationsEngineProps> = ({
     if (layout === 'carousel') {
       return (
         <div className="carousel carousel-center space-x-4 p-4">
-          {recommendations.map((item, index) => (
+          {recommendations.map((item, _index) => (
             <div key={item.id} className="carousel-item">
               <UniversalListingCard
                 data={item}

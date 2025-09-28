@@ -32,9 +32,13 @@ interface VinDecoderProps {
   showAutoFill?: boolean;
 }
 
-export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }: VinDecoderProps) {
+export default function VinDecoder({
+  onDecode,
+  onAutoFill,
+  showAutoFill = true,
+}: VinDecoderProps) {
   const t = useTranslations('cars');
-  const dispatch = useAppDispatch();
+  const _dispatch = useAppDispatch();
   const [vin, setVin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +79,7 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
       } else {
         setError(data.message || t('vinDecoder.decodeFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('vinDecoder.networkError'));
     } finally {
       setLoading(false);
@@ -117,9 +121,18 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
     <div className="card bg-base-100 shadow-xl">
       <div className="card-body">
         <h3 className="card-title">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
           </svg>
           {t('vinDecoder.title')}
         </h3>
@@ -166,42 +179,62 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.year')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.year')}
+                </div>
                 <div className="font-semibold">{result.year || '-'}</div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.make')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.make')}
+                </div>
                 <div className="font-semibold">{result.make_name || '-'}</div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.model')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.model')}
+                </div>
                 <div className="font-semibold">{result.model_name || '-'}</div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.trim')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.trim')}
+                </div>
                 <div className="font-semibold">{result.trim || '-'}</div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.bodyType')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.bodyType')}
+                </div>
                 <div className="font-semibold">{result.body_type || '-'}</div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.fuelType')}</div>
-                <div className="font-semibold">{getFuelTypeLabel(result.fuel_type)}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.fuelType')}
+                </div>
+                <div className="font-semibold">
+                  {getFuelTypeLabel(result.fuel_type)}
+                </div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.transmission')}</div>
-                <div className="font-semibold">{getTransmissionLabel(result.transmission)}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.transmission')}
+                </div>
+                <div className="font-semibold">
+                  {getTransmissionLabel(result.transmission)}
+                </div>
               </div>
 
               <div>
-                <div className="text-sm text-base-content/60">{t('vinDecoder.driveType')}</div>
+                <div className="text-sm text-base-content/60">
+                  {t('vinDecoder.driveType')}
+                </div>
                 <div className="font-semibold">{result.drive_type || '-'}</div>
               </div>
             </div>
@@ -212,14 +245,22 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
                 <div className="grid grid-cols-2 gap-4">
                   {result.engine.displacement && (
                     <div>
-                      <div className="text-sm text-base-content/60">{t('vinDecoder.displacement')}</div>
-                      <div className="font-semibold">{result.engine.displacement} L</div>
+                      <div className="text-sm text-base-content/60">
+                        {t('vinDecoder.displacement')}
+                      </div>
+                      <div className="font-semibold">
+                        {result.engine.displacement} L
+                      </div>
                     </div>
                   )}
                   {result.engine.cylinders && (
                     <div>
-                      <div className="text-sm text-base-content/60">{t('vinDecoder.cylinders')}</div>
-                      <div className="font-semibold">{result.engine.cylinders}</div>
+                      <div className="text-sm text-base-content/60">
+                        {t('vinDecoder.cylinders')}
+                      </div>
+                      <div className="font-semibold">
+                        {result.engine.cylinders}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -228,18 +269,28 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
 
             {result.manufacturer && (
               <>
-                <div className="divider">{t('vinDecoder.manufacturerInfo')}</div>
+                <div className="divider">
+                  {t('vinDecoder.manufacturerInfo')}
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   {result.manufacturer.name && (
                     <div>
-                      <div className="text-sm text-base-content/60">{t('vinDecoder.manufacturer')}</div>
-                      <div className="font-semibold">{result.manufacturer.name}</div>
+                      <div className="text-sm text-base-content/60">
+                        {t('vinDecoder.manufacturer')}
+                      </div>
+                      <div className="font-semibold">
+                        {result.manufacturer.name}
+                      </div>
                     </div>
                   )}
                   {result.manufacturer.country && (
                     <div>
-                      <div className="text-sm text-base-content/60">{t('vinDecoder.country')}</div>
-                      <div className="font-semibold">{result.manufacturer.country}</div>
+                      <div className="text-sm text-base-content/60">
+                        {t('vinDecoder.country')}
+                      </div>
+                      <div className="font-semibold">
+                        {result.manufacturer.country}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -248,13 +299,19 @@ export default function VinDecoder({ onDecode, onAutoFill, showAutoFill = true }
 
             {showAutoFill && onAutoFill && (
               <div className="card-actions justify-end mt-6">
-                <button
-                  className="btn btn-primary"
-                  onClick={handleAutoFill}
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <button className="btn btn-primary" onClick={handleAutoFill}>
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
                   </svg>
                   {t('vinDecoder.autoFill')}
                 </button>

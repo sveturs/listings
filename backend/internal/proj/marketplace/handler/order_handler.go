@@ -191,7 +191,7 @@ func (h *OrderHandler) GetMySales(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceOrder} "Order details"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_marketplace_models.MarketplaceOrder} "Order details"
 // @Router /api/v1/marketplace/orders/{id} [get]
 func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)

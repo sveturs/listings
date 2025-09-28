@@ -17,7 +17,7 @@ import (
 // @Tags admin-management
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AdminUser} "List of administrators"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_users_models.AdminUser} "List of administrators"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.fetch_failed"
 // @Security BearerAuth
@@ -46,8 +46,8 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 // @Tags admin-management
 // @Accept json
 // @Produce json
-// @Param admin body models.AdminUser true "Administrator data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AdminUser} "Created administrator"
+// @Param admin body backend_internal_proj_users_models.AdminUser true "Administrator data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_users_models.AdminUser} "Created administrator"
 // @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.invalid_format or admin.admins.error.email_required"
 // @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.add_failed"

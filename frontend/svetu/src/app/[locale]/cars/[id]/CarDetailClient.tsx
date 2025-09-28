@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { components } from '@/types/generated/api';
 import {
@@ -45,7 +44,7 @@ interface CarDetailClientProps {
 }
 
 export default function CarDetailClient({ car, locale }: CarDetailClientProps) {
-  const t = useTranslations('cars');
+  const _t = useTranslations('cars');
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
