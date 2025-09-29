@@ -8218,6 +8218,15 @@ definitions:
       reset:
         type: string
     type: object
+  backend_internal_proj_vin_models.VINDecodeRequest:
+    properties:
+      listing_id:
+        type: integer
+      vin:
+        type: string
+    required:
+    - vin
+    type: object
   backend_internal_services.UploadImageResponse:
     properties:
       display_order:
@@ -8474,6 +8483,62 @@ definitions:
         description: Сообщение об успешном обновлении
         example: contacts.statusUpdated
         type: string
+    type: object
+  internal_proj_credit.CreditCalculationRequest:
+    properties:
+      category:
+        type: string
+      down_payment:
+        minimum: 0
+        type: number
+      interest_rate:
+        description: annual percentage
+        minimum: 0
+        type: number
+      price:
+        type: number
+      term:
+        description: months
+        type: integer
+    required:
+    - down_payment
+    - interest_rate
+    - price
+    - term
+    type: object
+  internal_proj_credit.CreditCalculationResponse:
+    properties:
+      down_payment:
+        type: number
+      interest_rate:
+        type: number
+      loan_amount:
+        type: number
+      monthly_payment:
+        type: number
+      payment_schedule:
+        items:
+          $ref: '#/definitions/internal_proj_credit.PaymentScheduleItem'
+        type: array
+      term:
+        type: integer
+      total_amount:
+        type: number
+      total_interest:
+        type: number
+    type: object
+  internal_proj_credit.PaymentScheduleItem:
+    properties:
+      interest:
+        type: number
+      month:
+        type: integer
+      payment:
+        type: number
+      principal:
+        type: number
+      remaining_balance:
+        type: number
     type: object
   internal_proj_delivery_handler.CancelRequest:
     properties:
@@ -8863,6 +8928,21 @@ definitions:
         type: integer
     type: object
   internal_proj_marketplace_handler.BatchTranslateRequest:
+    properties:
+      listing_ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        type: array
+      provider:
+        example: google
+        type: string
+      target_lang:
+        example: en
+        type: string
     type: object
   internal_proj_marketplace_handler.BatchTranslateResponse:
     properties:
@@ -8968,6 +9048,25 @@ definitions:
     required:
     - listing_id
     - payment_method
+    type: object
+  internal_proj_marketplace_handler.CreateSavedSearchRequest:
+    properties:
+      filters:
+        additionalProperties: true
+        type: object
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      notify_enabled:
+        type: boolean
+      notify_frequency:
+        type: string
+      search_type:
+        type: string
+    required:
+    - filters
+    - name
     type: object
   internal_proj_marketplace_handler.DebugInfo:
     properties:
@@ -9316,6 +9415,32 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_proj_marketplace_handler.SavedSearchResponse:
+    properties:
+      created_at:
+        type: string
+      filters:
+        additionalProperties: true
+        type: object
+      id:
+        type: integer
+      last_notified_at:
+        type: string
+      name:
+        type: string
+      notify_enabled:
+        type: boolean
+      notify_frequency:
+        type: string
+      results_count:
+        type: integer
+      search_type:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
   internal_proj_marketplace_handler.SearchMetadata:
     properties:
       facets:
@@ -9498,6 +9623,20 @@ definitions:
           '{"en"': '"Hello"'
         type: object
     type: object
+  internal_proj_marketplace_handler.UpdateSavedSearchRequest:
+    properties:
+      filters:
+        additionalProperties: true
+        type: object
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      notify_enabled:
+        type: boolean
+      notify_frequency:
+        type: string
+    type: object
   internal_proj_notifications_handler.NotificationMarkReadResponse:
     description: Ответ при изменении статуса уведомления
     properties:
@@ -9678,6 +9817,57 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  internal_proj_recommendations.RecommendationRequest:
+    properties:
+      category:
+        type: string
+      current_item_id:
+        type: integer
+      limit:
+        type: integer
+      type:
+        enum:
+        - similar
+        - personal
+        - trending
+        - new
+        - discounted
+        - recommended
+        type: string
+      user_id:
+        type: integer
+    required:
+    - category
+    - type
+    type: object
+  internal_proj_recommendations.ViewHistoryRequest:
+    properties:
+      category_id:
+        type: integer
+      interaction_type:
+        enum:
+        - view
+        - click_phone
+        - add_favorite
+        type: string
+      listing_id:
+        type: integer
+      view_duration_seconds:
+        type: integer
+    required:
+    - category_id
+    - interaction_type
+    - listing_id
+    type: object
+  internal_proj_recommendations.ViewStatistics:
+    properties:
+      avg_duration:
+        type: number
+      unique_users:
+        type: integer
+      views_count:
+        type: integer
     type: object
   internal_proj_reviews_handler.PhotosResponse:
     properties:
@@ -13472,8 +13662,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_logistics.CourierStats'
+                  items: {}
                   type: array
               type: object
         "401":
@@ -13650,7 +13839,8 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  $ref: '#/definitions/backend_internal_domain_logistics.DashboardStats'
+                  additionalProperties: true
+                  type: object
               type: object
         "401":
           description: Unauthorized
@@ -13684,8 +13874,7 @@ paths:
             - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backend_internal_domain_logistics.DailyStats'
+                  items: {}
                   type: array
               type: object
         "401":
@@ -19443,6 +19632,38 @@ paths:
       summary: Update courier location
       tags:
       - tracking
+  /api/v1/credit/calculate:
+    post:
+      consumes:
+      - application/json
+      description: Calculate credit/loan details including monthly payments and total
+        amounts
+      parameters:
+      - description: Credit calculation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_credit.CreditCalculationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Credit calculation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_credit.CreditCalculationResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Calculate credit
+      tags:
+      - credit
   /api/v1/delivery:
     post:
       consumes:
@@ -23745,6 +23966,294 @@ paths:
       summary: Get popular categories
       tags:
       - marketplace-categories
+  /api/v1/marketplace/recommendations:
+    get:
+      consumes:
+      - application/json
+      description: Get recommendations based on type and category without authentication
+      parameters:
+      - default: trending
+        description: Recommendation type (trending, new, similar, recommended)
+        in: query
+        name: type
+        type: string
+      - description: Category filter
+        in: query
+        name: category
+        type: string
+      - description: Current item ID (for similar recommendations)
+        in: query
+        name: item_id
+        type: integer
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recommendations
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+      summary: Get public recommendations
+      tags:
+      - marketplace-search
+  /api/v1/marketplace/saved-searches:
+    get:
+      consumes:
+      - application/json
+      description: Returns all saved searches for the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of saved searches
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_marketplace_handler.SavedSearchResponse'
+                  type: array
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getSavedSearchesError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user's saved searches
+      tags:
+      - marketplace-saved-searches
+    post:
+      consumes:
+      - application/json
+      description: Creates a new saved search for the user
+      parameters:
+      - description: Saved search data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_marketplace_handler.CreateSavedSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created saved search
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.SavedSearchResponse'
+              type: object
+        "400":
+          description: marketplace.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.createSavedSearchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Create saved search
+      tags:
+      - marketplace-saved-searches
+  /api/v1/marketplace/saved-searches/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a saved search
+      parameters:
+      - description: Saved search ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.MessageResponse'
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.savedSearchNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.deleteSavedSearchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Delete saved search
+      tags:
+      - marketplace-saved-searches
+    get:
+      consumes:
+      - application/json
+      description: Returns a specific saved search
+      parameters:
+      - description: Saved search ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Saved search details
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.SavedSearchResponse'
+              type: object
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.savedSearchNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.getSavedSearchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get saved search by ID
+      tags:
+      - marketplace-saved-searches
+    put:
+      consumes:
+      - application/json
+      description: Updates a saved search
+      parameters:
+      - description: Saved search ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_marketplace_handler.UpdateSavedSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated saved search
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_marketplace_handler.SavedSearchResponse'
+              type: object
+        "400":
+          description: marketplace.invalidRequest
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.savedSearchNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.updateSavedSearchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update saved search
+      tags:
+      - marketplace-saved-searches
+  /api/v1/marketplace/saved-searches/{id}/execute:
+    get:
+      consumes:
+      - application/json
+      description: Executes a saved search and returns the results
+      parameters:
+      - description: Saved search ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: marketplace.invalidId
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: marketplace.savedSearchNotFound
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.executeSavedSearchError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Execute saved search
+      tags:
+      - marketplace-saved-searches
   /api/v1/marketplace/search:
     get:
       consumes:
@@ -26047,6 +26556,125 @@ paths:
       summary: Get values for a variant attribute (public endpoint)
       tags:
       - public-variants
+  /api/v1/recommendations:
+    post:
+      consumes:
+      - application/json
+      description: Get recommendations based on type and category
+      parameters:
+      - description: Recommendation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_recommendations.RecommendationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Recommendations
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Get recommendations
+      tags:
+      - recommendations
+  /api/v1/recommendations/view-history:
+    get:
+      description: Get view history for the current user
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: View history
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Get view history
+      tags:
+      - recommendations
+    post:
+      consumes:
+      - application/json
+      description: Add a view history entry for the current user
+      parameters:
+      - description: View history request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_recommendations.ViewHistoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - Bearer: []
+      summary: Add view history
+      tags:
+      - recommendations
+  /api/v1/recommendations/view-statistics/{listing_id}:
+    get:
+      description: Get view statistics for a specific listing
+      parameters:
+      - description: Listing ID
+        in: path
+        name: listing_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: View statistics
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_recommendations.ViewStatistics'
+              type: object
+      summary: Get view statistics
+      tags:
+      - recommendations
   /api/v1/reviews:
     get:
       consumes:
@@ -31568,6 +32196,201 @@ paths:
       summary: Update privacy settings
       tags:
       - users
+  /api/v1/vin/auto-fill:
+    post:
+      consumes:
+      - application/json
+      description: Декодирует VIN и возвращает данные для автозаполнения формы создания
+        объявления
+      parameters:
+      - description: VIN номер
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные для автозаполнения
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Автозаполнение данных из VIN
+      tags:
+      - vin
+  /api/v1/vin/decode:
+    post:
+      consumes:
+      - application/json
+      description: Декодирует VIN номер и возвращает информацию об автомобиле
+      parameters:
+      - description: VIN для декодирования
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_proj_vin_models.VINDecodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное декодирование
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Декодировать VIN номер
+      tags:
+      - vin
+  /api/v1/vin/history:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает историю проверок VIN для текущего пользователя
+      parameters:
+      - description: Фильтр по конкретному VIN
+        in: query
+        name: vin
+        type: string
+      - default: 20
+        description: Лимит записей
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: История проверок
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить историю проверок VIN
+      tags:
+      - vin
+  /api/v1/vin/report/{vin}:
+    get:
+      consumes:
+      - application/json
+      description: Генерирует и возвращает детальный отчет о VIN в JSON формате
+      parameters:
+      - description: VIN номер
+        in: path
+        name: vin
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Отчет о VIN
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Некорректный VIN
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Экспортировать отчет о VIN
+      tags:
+      - vin
+  /api/v1/vin/stats:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает статистику проверок VIN для текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статистика
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Получить статистику использования VIN декодера
+      tags:
+      - vin
+  /api/v1/vin/validate/{vin}:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет корректность VIN номера без полного декодирования
+      parameters:
+      - description: VIN номер для проверки
+        in: path
+        name: vin
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: VIN валиден
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: VIN невалиден
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Проверить валидность VIN номера
+      tags:
+      - vin
   /api/v1/webhooks/orders/payment:
     post:
       consumes:

@@ -23,8 +23,8 @@ import (
 // @Param status query string false "Filter by status (active, inactive, suspended)"
 // @Param sort_by query string false "Sort field (id, name, email, created_at, last_seen, account_status)" default(id)
 // @Param sort_order query string false "Sort order (asc, desc)" default(asc)
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminUserListResponse} "List of users"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminUserListResponse} "List of users"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.fetch_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users [get]
 func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
@@ -95,9 +95,9 @@ func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_users_models.UserProfile} "User profile"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
-// @Failure 404 {object} utils.ErrorResponseSwag "admin.users.error.user_not_found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.UserProfile} "User profile"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.user_not_found"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [get]
 func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
@@ -121,10 +121,10 @@ func (h *UserHandler) GetUserByIDAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Param body body backend_internal_proj_users_models.UserProfileUpdate true "User update data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Profile updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.update_failed"
+// @Param body body backend_internal_domain_models.UserProfileUpdate true "User update data"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminMessageResponse} "Profile updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.validation_failed"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.update_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [put]
 func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
@@ -161,9 +161,9 @@ func (h *UserHandler) UpdateUserAdmin(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body AdminStatusUpdateRequest true "Status update (active, blocked, pending)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Status updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_status"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.status_update_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminMessageResponse} "Status updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_status"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.status_update_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/status [put]
 func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
@@ -201,9 +201,9 @@ func (h *UserHandler) UpdateUserStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "User deleted"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.delete_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminMessageResponse} "User deleted"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.invalid_user_id"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.delete_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
@@ -231,9 +231,9 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "User ID"
 // @Param body body UpdateUserRoleRequest true "Role update request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Role updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_role"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.role_update_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminMessageResponse} "Role updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.invalid_user_id or admin.users.error.invalid_format or admin.users.error.invalid_role"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.role_update_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/role [put]
 func (h *UserHandler) UpdateUserRole(c *fiber.Ctx) error {
@@ -271,8 +271,8 @@ func (h *UserHandler) UpdateUserRole(c *fiber.Ctx) error {
 // @Tags admin-users
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_users_models.Role} "List of roles"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.users.error.fetch_roles_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.Role} "List of roles"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.users.error.fetch_roles_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/roles [get]
 func (h *UserHandler) GetAllRoles(c *fiber.Ctx) error {

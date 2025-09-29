@@ -1,94 +1,34 @@
 #!/bin/bash
 
-echo "Финальное исправление swagger типов..."
+# Финальный скрипт для исправления всех оставшихся ссылок в Swagger аннотациях
 
-# Функция для поиска типа в разных местах
-find_type_location() {
-    local type_name=$1
+echo "🔧 Финальное исправление Swagger аннотаций..."
 
-    # Ищем в domain/models
-    if grep -q "type $type_name " /data/hostel-booking-system/backend/internal/domain/models/*.go 2>/dev/null; then
-        echo "backend_internal_domain_models.$type_name"
-        return
-    fi
+BACKEND_DIR="/data/hostel-booking-system/backend"
 
-    # Ищем в domain/logistics
-    if grep -q "type $type_name " /data/hostel-booking-system/backend/internal/domain/logistics/*.go 2>/dev/null; then
-        echo "backend_internal_domain_logistics.$type_name"
-        return
-    fi
+# Исправить utils.SuccessResponse и utils.ErrorResponse во всех файлах
+echo "🔄 Исправляю utils.SuccessResponse и utils.ErrorResponse..."
+find "$BACKEND_DIR" -name "*.go" -exec sed -i 's|utils\.SuccessResponse|backend_pkg_utils.SuccessResponseSwag|g' {} \;
+find "$BACKEND_DIR" -name "*.go" -exec sed -i 's|utils\.ErrorResponse|backend_pkg_utils.ErrorResponseSwag|g' {} \;
 
-    # Ищем в domain/behavior
-    if grep -q "type $type_name " /data/hostel-booking-system/backend/internal/domain/behavior/*.go 2>/dev/null; then
-        echo "backend_internal_domain_behavior.$type_name"
-        return
-    fi
+echo "✅ Исправления завершены!"
 
-    # Ищем в domain/search
-    if grep -q "type $type_name " /data/hostel-booking-system/backend/internal/domain/search/*.go 2>/dev/null; then
-        echo "backend_internal_domain_search.$type_name"
-        return
-    fi
+# Проверим, что осталось
+echo ""
+echo "🔍 Проверка оставшихся проблем..."
 
-    echo ""
-}
+# Проверить utils ссылки
+utils_issues=$(find "$BACKEND_DIR" -name "*.go" -exec grep -l "utils\..*Response" {} \; 2>/dev/null | wc -l)
+if [[ $utils_issues -gt 0 ]]; then
+    echo "⚠️  Осталось файлов с utils.*Response: $utils_issues"
+    find "$BACKEND_DIR" -name "*.go" -exec grep -l "utils\..*Response" {} \; 2>/dev/null | head -3
+else
+    echo "✅ Все utils.*Response исправлены"
+fi
 
-# Исправление balance module
-sed -i 's/backend_internal_proj_balance_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/balance/handler/*.go
+# Проверить backend_internal_domain_models ссылки
+domain_issues=$(find "$BACKEND_DIR" -name "*.go" -exec grep -l "backend_internal_domain_models\." {} \; 2>/dev/null | wc -l)
+echo "📊 Файлов с backend_internal_domain_models.*: $domain_issues (это нормально для общих типов)"
 
-# Исправление users module - многие типы в domain/models
-sed -i 's/backend_internal_proj_users_models\.User\b/backend_internal_domain_models.User/g' /data/hostel-booking-system/backend/internal/proj/users/handler/*.go
-sed -i 's/backend_internal_proj_users_models\.UpdateUserRequest/backend_internal_domain_models.UpdateUserRequest/g' /data/hostel-booking-system/backend/internal/proj/users/handler/*.go
-
-# Исправление contacts module
-sed -i 's/backend_internal_proj_contacts_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/contacts/handler/*.go
-
-# Исправление payments module
-sed -i 's/backend_internal_proj_payments_models\.Payment\b/backend_internal_domain_models.Payment/g' /data/hostel-booking-system/backend/internal/proj/payments/handler/*.go
-
-# Исправление orders module
-sed -i 's/backend_internal_proj_orders_models\.Order\b/backend_internal_domain_models.Order/g' /data/hostel-booking-system/backend/internal/proj/orders/handler/*.go
-sed -i 's/backend_internal_proj_orders_models\.OrderItem\b/backend_internal_domain_models.OrderItem/g' /data/hostel-booking-system/backend/internal/proj/orders/handler/*.go
-
-# Исправление marketplace module - многие типы находятся в domain/models
-sed -i 's/backend_internal_proj_marketplace_models\.MarketplaceListing/backend_internal_domain_models.MarketplaceListing/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.Category/backend_internal_domain_models.Category/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.CreateListingRequest/backend_internal_domain_models.CreateListingRequest/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.UpdateListingRequest/backend_internal_domain_models.UpdateListingRequest/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-
-# Исправление cars - находятся в domain/models
-sed -i 's/backend_internal_proj_marketplace_models\.CarMake/backend_internal_domain_models.CarMake/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.CarModel/backend_internal_domain_models.CarModel/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.CarGeneration/backend_internal_domain_models.CarGeneration/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-sed -i 's/backend_internal_proj_marketplace_models\.VINDecodeResult/backend_internal_domain_models.VINDecodeResult/g' /data/hostel-booking-system/backend/internal/proj/marketplace/handler/*.go
-
-# Исправление reviews module
-sed -i 's/backend_internal_proj_reviews_models\.Review\b/backend_internal_domain_models.Review/g' /data/hostel-booking-system/backend/internal/proj/reviews/handler/*.go
-sed -i 's/backend_internal_proj_reviews_models\.CreateReviewRequest/backend_internal_domain_models.CreateReviewRequest/g' /data/hostel-booking-system/backend/internal/proj/reviews/handler/*.go
-
-# Исправление storefronts module
-sed -i 's/backend_internal_proj_storefronts_models\.Storefront/backend_internal_domain_models.Storefront/g' /data/hostel-booking-system/backend/internal/proj/storefronts/handler/*.go
-sed -i 's/backend_internal_proj_storefronts_models\.CreateStorefrontRequest/backend_internal_domain_models.CreateStorefrontRequest/g' /data/hostel-booking-system/backend/internal/proj/storefronts/handler/*.go
-
-# Исправление subscriptions module
-sed -i 's/backend_internal_proj_subscriptions_models\.UserSubscription/backend_internal_domain_models.UserSubscription/g' /data/hostel-booking-system/backend/internal/proj/subscriptions/handler/*.go
-
-# Исправление notifications module
-sed -i 's/backend_internal_proj_notifications_models\.Notification/backend_internal_domain_models.Notification/g' /data/hostel-booking-system/backend/internal/proj/notifications/handler/*.go
-
-# Исправление translations module
-sed -i 's/backend_internal_proj_translation_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/translation_admin/*.go
-
-# Исправление gis module - используют domain/models
-sed -i 's/backend_internal_proj_gis_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/gis/handler/*.go
-
-# Исправление geocode module
-sed -i 's/backend_internal_proj_geocode_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/geocode/handler/*.go
-
-# Исправление docserver module
-sed -i 's/backend_internal_proj_docserver_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/docserver/handler/*.go
-
-# Исправление analytics module
-sed -i 's/backend_internal_proj_analytics_models\./backend_internal_domain_models./g' /data/hostel-booking-system/backend/internal/proj/analytics/handler/*.go
-
-echo "Финальные исправления завершены!"
+echo ""
+echo "🚀 Пробуем сгенерировать типы..."

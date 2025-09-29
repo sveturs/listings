@@ -13,6 +13,7 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
+	"backend/pkg/utils"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
@@ -21,7 +22,6 @@ import (
 	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/storage/postgres"
-	"backend/pkg/utils"
 )
 
 // Global variables for caching categories

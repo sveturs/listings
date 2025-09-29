@@ -115,7 +115,7 @@ func (h *PublicVariantHandler) GetVariantAttributeValuesPublic(c *fiber.Ctx) err
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} backend_internal_proj_storefront_models.StorefrontProduct
+// @Success 200 {object} backend_internal_domain_models.StorefrontProduct
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string

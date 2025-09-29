@@ -12,6 +12,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// ViewStatistics represents view statistics for a listing
+type ViewStatistics struct {
+	ViewsCount  int     `json:"views_count"`
+	UniqueUsers int     `json:"unique_users"`
+	AvgDuration float64 `json:"avg_duration"`
+}
+
 // Handler handles recommendations endpoints
 type Handler struct {
 	db      *postgres.Database
@@ -60,8 +67,8 @@ type RecommendationRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body RecommendationRequest true "Recommendation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Recommendations"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Recommendations"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
 // @Router /api/v1/recommendations [post]
 func (h *Handler) GetRecommendations(c *fiber.Ctx) error {
 	var req RecommendationRequest
@@ -208,8 +215,8 @@ type ViewHistoryRequest struct {
 // @Produce json
 // @Security Bearer
 // @Param request body ViewHistoryRequest true "View history request"
-// @Success 200 {object} utils.SuccessResponseSwag "Success"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [post]
 func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 	// Пытаемся получить userID из контекста
@@ -254,8 +261,8 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "View history"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "View history"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [get]
 func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
 	// Пытаемся получить userID из контекста
@@ -291,7 +298,7 @@ func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
 // @Tags recommendations
 // @Produce json
 // @Param listing_id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=ViewStatistics} "View statistics"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=internal_proj_recommendations.ViewStatistics} "View statistics"
 // @Router /api/v1/recommendations/view-statistics/{listing_id} [get]
 func (h *Handler) GetViewStatistics(c *fiber.Ctx) error {
 	listingID, err := strconv.ParseInt(c.Params("listing_id"), 10, 64)
@@ -299,11 +306,7 @@ func (h *Handler) GetViewStatistics(c *fiber.Ctx) error {
 		return utils.SendErrorResponse(c, http.StatusBadRequest, "validation.invalidInput", nil)
 	}
 
-	var stats struct {
-		ViewsCount  int     `json:"views_count"`
-		UniqueUsers int     `json:"unique_users"`
-		AvgDuration float64 `json:"avg_duration"`
-	}
+	var stats ViewStatistics
 
 	err = h.db.GetSQLXDB().Get(&stats, `
 		SELECT

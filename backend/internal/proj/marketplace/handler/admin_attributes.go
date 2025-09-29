@@ -13,8 +13,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
+	globalService "backend/internal/proj/global/service"
 )
 
 const (
@@ -45,9 +45,9 @@ func NewAdminAttributesHandler(services globalService.ServicesInterface) *AdminA
 // @Accept json
 // @Produce json
 // @Param body body backend_internal_domain_models.CategoryAttribute true "Attribute data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=AttributeCreateResponse} "marketplace.attributeCreated"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createAttributeError"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=AttributeCreateResponse} "marketplace.attributeCreated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData or marketplace.requiredFieldsMissing"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.createAttributeError"
 // @Security BearerAuth
 // @Router /api/admin/attributes [post]
 func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
@@ -179,9 +179,9 @@ func (h *AdminAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Param page_size query int false "Page size (default: 20, max: 100)"
 // @Param search query string false "Search term for name or display_name"
 // @Param type query string false "Filter by attribute type"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.PaginatedResponse} "Paginated list of attributes"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid pagination parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.PaginatedResponse} "Paginated list of attributes"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid pagination parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes [get]
 func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
@@ -359,10 +359,10 @@ func (h *AdminAttributesHandler) GetAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryAttribute} "Attribute information"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryAttribute} "Attribute information"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/{id} [get]
 func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
@@ -436,9 +436,9 @@ func (h *AdminAttributesHandler) GetAttributeByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Attribute ID"
 // @Param attribute body backend_internal_domain_models.CategoryAttribute true "Attribute data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Success message"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/{id} [put]
 func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
@@ -581,9 +581,9 @@ func (h *AdminAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "marketplace.attributeDeleted"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "marketplace.attributeDeleted"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/{id} [delete]
 func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
@@ -612,9 +612,9 @@ func (h *AdminAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attributes body object{attributes=[]backend_internal_domain_models.CategoryAttribute} true "List of attributes to update"
-// @Success 200 {object} utils.SuccessResponseSwag{data=BulkUpdateResult} "Update results with success count"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=BulkUpdateResult} "Update results with success count"
 // @Success 206 {object} PartialOperationResponse{data=BulkUpdateResult} "Partial update with errors"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/bulk [put]
 func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
@@ -678,9 +678,9 @@ func (h *AdminAttributesHandler) BulkUpdateAttributes(c *fiber.Ctx) error {
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
 // @Param settings body object{is_required=bool,sort_order=int} false "Attribute settings for category"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Success message"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [post]
 func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
@@ -734,9 +734,9 @@ func (h *AdminAttributesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Success message"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [delete]
 func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error {
@@ -772,9 +772,9 @@ func (h *AdminAttributesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 // @Param categoryId path int true "Category ID"
 // @Param attributeId path int true "Attribute ID"
 // @Param settings body object{is_required=bool,is_enabled=bool,sort_order=int,custom_component=string} true "Attribute category settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Success message"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId} [put]
 func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
@@ -828,9 +828,9 @@ func (h *AdminAttributesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param categoryId path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttributeMapping} "Category attributes with settings"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryAttributeMapping} "Category attributes with settings"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/export [get]
 func (h *AdminAttributesHandler) ExportCategoryAttributes(c *fiber.Ctx) error {
@@ -982,11 +982,11 @@ func (h *AdminAttributesHandler) getCategoryAttributesWithSettings(ctx context.C
 // @Produce json
 // @Param categoryId path int true "Category ID"
 // @Param attributes body []backend_internal_domain_models.CategoryAttributeMapping true "List of attribute mappings to import"
-// @Success 200 {object} utils.SuccessResponseSwag{data=ImportAttributesResult} "Import results with success count"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ImportAttributesResult} "Import results with success count"
 // @Success 206 {object} PartialOperationResponse{data=ImportAttributesResult} "Partial import with errors"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{categoryId}/attributes/import [post]
 func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
@@ -1103,10 +1103,10 @@ func (h *AdminAttributesHandler) ImportCategoryAttributes(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Attribute ID"
 // @Param languages body object{source_language=string,target_languages=[]string} false "Translation settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=TranslationResult} "Translation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid attribute ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Translation error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TranslationResult} "Translation results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid attribute ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Translation error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/attributes/{id}/translate [post]
 func (h *AdminAttributesHandler) TranslateAttribute(c *fiber.Ctx) error {
@@ -1241,10 +1241,10 @@ func (h *AdminAttributesHandler) TranslateAttribute(c *fiber.Ctx) error {
 // @Produce json
 // @Param targetCategoryId path int true "Target category ID"
 // @Param source body object{source_category_id=int} true "Source category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Success message"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid parameters"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Success message"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid parameters"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/marketplace/categories/{targetCategoryId}/attributes/copy [post]
 func (h *AdminAttributesHandler) CopyAttributesSettings(c *fiber.Ctx) error {

@@ -52,11 +52,11 @@ type CreateOrderPaymentResponse struct {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body CreateOrderPaymentRequest true "Order payment details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=CreateOrderPaymentResponse} "Payment session created successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=CreateOrderPaymentResponse} "Payment session created successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/orders/{id}/payment [post]
 func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
@@ -123,10 +123,10 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_payments_models.PaymentSession} "Payment status"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid order ID"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order or payment not found"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentSession} "Payment status"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid order ID"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order or payment not found"
 // @Router /api/v1/orders/{id}/payment/status [get]
 func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
@@ -158,11 +158,11 @@ func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag "Payment canceled successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid order ID"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order or payment not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Payment canceled successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid order ID"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order or payment not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/orders/{id}/payment/cancel [post]
 func (h *OrderPaymentHandler) CancelOrderPayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста

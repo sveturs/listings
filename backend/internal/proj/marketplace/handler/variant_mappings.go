@@ -5,10 +5,10 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
+	"backend/pkg/utils"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/services/attributes"
 	"backend/internal/storage/postgres"
-	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -44,8 +44,8 @@ func NewVariantMappingsHandler(
 // @Tags admin-variant-attributes
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.UnifiedAttribute} "List of variant compatible attributes"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.UnifiedAttribute} "List of variant compatible attributes"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/attributes/variant-compatible [get]
 func (h *VariantMappingsHandler) GetVariantCompatibleAttributes(c *fiber.Ctx) error {
 	attributes, err := h.attributeService.GetVariantAttributes(c.Context())
@@ -63,9 +63,9 @@ func (h *VariantMappingsHandler) GetVariantCompatibleAttributes(c *fiber.Ctx) er
 // @Accept json
 // @Produce json
 // @Param category_id query int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.VariantAttributeMapping} "Category variant mappings"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.VariantAttributeMapping} "Category variant mappings"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/variant-attributes/mappings [get]
 func (h *VariantMappingsHandler) GetCategoryVariantMappings(c *fiber.Ctx) error {
 	categoryIDStr := c.Query("category_id")
@@ -93,9 +93,9 @@ func (h *VariantMappingsHandler) GetCategoryVariantMappings(c *fiber.Ctx) error 
 // @Accept json
 // @Produce json
 // @Param body body backend_internal_domain_models.VariantAttributeMappingCreateRequest true "Mapping data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.VariantAttributeMapping} "Created mapping"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.VariantAttributeMapping} "Created mapping"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/variant-attributes/mappings [post]
 func (h *VariantMappingsHandler) CreateVariantMapping(c *fiber.Ctx) error {
 	var request models.VariantAttributeMappingCreateRequest
@@ -124,10 +124,10 @@ func (h *VariantMappingsHandler) CreateVariantMapping(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Mapping ID"
 // @Param body body backend_internal_domain_models.VariantAttributeMappingUpdateRequest true "Update data"
-// @Success 200 {object} utils.SuccessResponseSwag "Mapping updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
-// @Failure 404 {object} utils.ErrorResponseSwag "Mapping not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Mapping updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Mapping not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/variant-attributes/mappings/{id} [patch]
 func (h *VariantMappingsHandler) UpdateVariantMapping(c *fiber.Ctx) error {
 	idStr := c.Params("id")
@@ -156,10 +156,10 @@ func (h *VariantMappingsHandler) UpdateVariantMapping(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Mapping ID"
-// @Success 200 {object} utils.SuccessResponseSwag "Mapping deleted"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Mapping not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Mapping deleted"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Mapping not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/variant-attributes/mappings/{id} [delete]
 func (h *VariantMappingsHandler) DeleteVariantMapping(c *fiber.Ctx) error {
 	idStr := c.Params("id")
@@ -183,9 +183,9 @@ func (h *VariantMappingsHandler) DeleteVariantMapping(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body backend_internal_domain_models.CategoryVariantAttributesUpdateRequest true "Update request"
-// @Success 200 {object} utils.SuccessResponseSwag "Attributes updated"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Attributes updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid data"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/categories/variant-attributes [put]
 func (h *VariantMappingsHandler) UpdateCategoryVariantAttributes(c *fiber.Ctx) error {
 	var request models.CategoryVariantAttributesUpdateRequest

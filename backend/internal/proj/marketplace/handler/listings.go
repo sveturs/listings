@@ -53,11 +53,11 @@ func NewListingsHandler(services globalService.ServicesInterface, cache *cache.U
 // @Accept json
 // @Produce json
 // @Param body body backend_internal_domain_models.MarketplaceListing true "Listing data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Listing created successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
-// @Failure 409 {object} utils.ErrorResponseSwag "marketplace.duplicateTitle"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Listing created successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.duplicateTitle"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.createError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings [post]
 func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
@@ -141,10 +141,10 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getError"
 // @Router /api/v1/marketplace/listings/{id} [get]
 func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
@@ -254,9 +254,9 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Listing slug"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceListing} "Listing details"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getError"
 // @Router /api/v1/marketplace/listings/slug/{slug} [get]
 func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 	// Получаем slug из параметров URL
@@ -345,8 +345,8 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 // @Param storefront_id query int false "Storefront ID filter"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=ListingsResponse} "Listings list with pagination"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.listError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ListingsResponse} "Listings list with pagination"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.listError"
 // @Router /api/v1/marketplace/listings [get]
 func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	// Засекаем время начала для измерения производительности
@@ -521,12 +521,12 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param body body backend_internal_domain_models.MarketplaceListing true "Updated listing data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Listing updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Listing updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings/{id} [put]
 func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
@@ -632,12 +632,12 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Listing ID"
 // @Param body body map[string]string true "Status update data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Status updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.notFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Status updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.notFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings/{id}/status [patch]
 func (h *ListingsHandler) UpdateListingStatus(c *fiber.Ctx) error {
@@ -714,8 +714,8 @@ func (h *ListingsHandler) UpdateListingStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body map[string]interface{} true "Slug to check"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Slug availability status"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Slug availability status"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
 // @Router /api/v1/marketplace/listings/check-slug [post]
 func (h *ListingsHandler) CheckSlugAvailability(c *fiber.Ctx) error {
 	var request struct {
@@ -764,11 +764,11 @@ func (h *ListingsHandler) CheckSlugAvailability(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Listing deleted successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.forbidden"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Listing deleted successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.forbidden"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/listings/{id} [delete]
 func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
@@ -839,9 +839,9 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Listing ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PriceHistoryEntry} "Price history entries"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.priceHistoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PriceHistoryEntry} "Price history entries"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.priceHistoryError"
 // @Router /api/v1/marketplace/listings/{id}/price-history [get]
 func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 	// Получаем ID объявления из параметров URL
@@ -872,10 +872,10 @@ func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 // @Tags marketplace-admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Discounts synchronized successfully"
-// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} utils.ErrorResponseSwag "admin.required"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.syncError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Discounts synchronized successfully"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "admin.required"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.syncError"
 // @Security BearerAuth
 // @Router /api/v1/admin/sync-discounts [post]
 func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
@@ -1204,9 +1204,9 @@ type AdminStatisticsResponse struct {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} utils.SuccessResponseSwag{data=handler.AdminStatisticsResponse} "Statistics"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=handler.AdminStatisticsResponse} "Statistics"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/listings/statistics [get]
 func (h *ListingsHandler) GetAdminStatistics(c *fiber.Ctx) error {
 	ctx := context.Background()

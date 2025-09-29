@@ -5,10 +5,10 @@ import (
 
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
+	"backend/pkg/utils"
 	"backend/internal/proj/viber/handler"
 	"backend/internal/proj/viber/service"
 	"backend/internal/storage/postgres"
-	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -73,9 +73,9 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 // @Produce json
 // @Param X-Viber-Content-Signature header string true "Viber signature"
 // @Param event body object true "Viber webhook event"
-// @Success 200 {object} utils.SuccessResponseSwag "Event processed"
-// @Failure 401 {object} utils.ErrorResponseSwag "Invalid signature"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid event"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Event processed"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid signature"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid event"
 // @Router /api/viber/webhook [post]
 func (h *ViberHandler) HandleViberWebhook(c *fiber.Ctx) error {
 	return h.webhookHandler.HandleWebhook(c)
@@ -88,8 +88,8 @@ func (h *ViberHandler) HandleViberWebhook(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param webhook body object true "Infobip webhook event"
-// @Success 200 {object} utils.SuccessResponseSwag "Event processed"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid event"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Event processed"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid event"
 // @Router /api/viber/infobip-webhook [post]
 func (h *ViberHandler) HandleInfobipWebhook(c *fiber.Ctx) error {
 	if h.infobipService == nil {
@@ -114,9 +114,9 @@ func (h *ViberHandler) HandleInfobipWebhook(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param message body SendMessageRequest true "Message data"
-// @Success 200 {object} utils.SuccessResponseSwag "Message sent"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Send failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Message sent"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Send failed"
 // @Router /api/viber/send [post]
 func (h *ViberHandler) SendMessage(c *fiber.Ctx) error {
 	var req SendMessageRequest
@@ -153,9 +153,9 @@ func (h *ViberHandler) SendMessage(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param notification body SendTrackingRequest true "Tracking data"
-// @Success 200 {object} utils.SuccessResponseSwag "Notification sent"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Send failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Notification sent"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Send failed"
 // @Router /api/viber/send-tracking [post]
 func (h *ViberHandler) SendTrackingNotification(c *fiber.Ctx) error {
 	var req SendTrackingRequest
@@ -196,8 +196,8 @@ func (h *ViberHandler) SendTrackingNotification(c *fiber.Ctx) error {
 // @Tags viber
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Session statistics"
-// @Failure 500 {object} utils.ErrorResponseSwag "Failed to get statistics"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Session statistics"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Failed to get statistics"
 // @Router /api/viber/stats [get]
 func (h *ViberHandler) GetSessionStats(c *fiber.Ctx) error {
 	stats, err := h.sessionManager.GetSessionStats(c.Context())
@@ -215,9 +215,9 @@ func (h *ViberHandler) GetSessionStats(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param estimate body EstimateCostRequest true "Cost estimation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]float64} "Estimated cost"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Estimation failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]float64} "Estimated cost"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Estimation failed"
 // @Router /api/viber/estimate-cost [post]
 func (h *ViberHandler) EstimateMessageCost(c *fiber.Ctx) error {
 	var req EstimateCostRequest

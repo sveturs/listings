@@ -3746,7 +3746,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_logistics.CourierStats'][];
+              data?: unknown[];
             };
           };
         };
@@ -4041,7 +4041,9 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_logistics.DashboardStats'];
+              data?: {
+                [key: string]: unknown;
+              };
             };
           };
         };
@@ -4109,7 +4111,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_domain_logistics.DailyStats'][];
+              data?: unknown[];
             };
           };
         };
@@ -41985,10 +41987,18 @@ export interface components {
       /** @example 5 */
       total_count?: number;
     };
-    'internal_proj_marketplace_handler.BatchTranslateRequest': Record<
-      string,
-      never
-    >;
+    'internal_proj_marketplace_handler.BatchTranslateRequest': {
+      /** @example [
+       *       1,
+       *       2,
+       *       3
+       *     ] */
+      listing_ids?: number[];
+      /** @example google */
+      provider?: string;
+      /** @example en */
+      target_lang?: string;
+    };
     'internal_proj_marketplace_handler.BatchTranslateResponse': {
       data?: components['schemas']['internal_proj_marketplace_handler.BatchTranslateData'];
       /** @example marketplace.translationProcessStarted */

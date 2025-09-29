@@ -54,7 +54,9 @@ export function ImagesSection({
             `/api/v1/storefronts/${storefrontId}`
           );
 
-          const storefrontSlug = storefrontResponse.data?.data?.slug || storefrontResponse.data?.slug;
+          const storefrontSlug =
+            storefrontResponse.data?.data?.slug ||
+            storefrontResponse.data?.slug;
 
           if (!storefrontSlug) {
             console.error('Cannot find storefront slug');
@@ -91,13 +93,20 @@ export function ImagesSection({
 
           if (imagesResponse.data?.data) {
             // Преобразуем формат изображений из storefront в формат marketplace
-            const storefrontImages = imagesResponse.data.data.map((img: any) => ({
-              id: img.id || img.ID,
-              file_path: img.image_url || img.ImageURL,
-              file_name: '',
-              is_main: img.is_main || img.IsMain || img.is_default || img.IsDefault,
-              public_url: img.image_url || img.ImageURL || img.public_url || img.PublicURL,
-            }));
+            const storefrontImages = imagesResponse.data.data.map(
+              (img: any) => ({
+                id: img.id || img.ID,
+                file_path: img.image_url || img.ImageURL,
+                file_name: '',
+                is_main:
+                  img.is_main || img.IsMain || img.is_default || img.IsDefault,
+                public_url:
+                  img.image_url ||
+                  img.ImageURL ||
+                  img.public_url ||
+                  img.PublicURL,
+              })
+            );
             onImagesChange(storefrontImages);
           }
         } else {
@@ -166,7 +175,8 @@ export function ImagesSection({
           `/api/v1/storefronts/${storefrontId}`
         );
 
-        const storefrontSlug = storefrontResponse.data?.data?.slug || storefrontResponse.data?.slug;
+        const storefrontSlug =
+          storefrontResponse.data?.data?.slug || storefrontResponse.data?.slug;
 
         if (!storefrontSlug) {
           console.error('Cannot find storefront slug');

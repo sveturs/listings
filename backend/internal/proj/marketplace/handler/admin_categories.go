@@ -35,8 +35,8 @@ func NewAdminCategoriesHandler(categoriesHandler *CategoriesHandler, keywordRepo
 // @Tags marketplace-admin-categories
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory} "Categories list"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceCategory} "Categories list"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getCategoriesError"
 // @Security BearerAuth
 // @Router /api/admin/categories/all [get]
 func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
@@ -65,9 +65,9 @@ func (h *AdminCategoriesHandler) GetAllCategories(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param body body object{name=string,slug=string,icon=string,parent_id=int,description=string,is_active=bool,seo_title=string,seo_description=string,seo_keywords=string} true "Category data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Category created successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.categoryNameRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.createCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Category created successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData or marketplace.categoryNameRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.createCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories [post]
 func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
@@ -184,10 +184,10 @@ func (h *AdminCategoriesHandler) CreateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceCategory} "Category information"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.categoryNotFound"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoriesError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceCategory} "Category information"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.categoryNotFound"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getCategoriesError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id} [get]
 func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
@@ -230,9 +230,9 @@ func (h *AdminCategoriesHandler) GetCategoryByID(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body object{name=string,slug=string,icon=string,parent_id=int,description=string,is_active=bool,seo_title=string,seo_description=string,seo_keywords=string} true "Updated category data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.categoryNameRequired"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Category updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.categoryNameRequired"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id} [put]
 func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
@@ -343,9 +343,9 @@ func (h *AdminCategoriesHandler) UpdateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category deleted successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Category deleted successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id} [delete]
 func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
@@ -378,9 +378,9 @@ func (h *AdminCategoriesHandler) DeleteCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Parent category ID"
 // @Param body body object{ordered_ids=[]int} true "List of category IDs in new order"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Categories reordered successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData or marketplace.emptyIdList"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.reorderCategoriesError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Categories reordered successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData or marketplace.emptyIdList"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.reorderCategoriesError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/reorder [post]
 func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
@@ -420,9 +420,9 @@ func (h *AdminCategoriesHandler) ReorderCategories(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID to move"
 // @Param body body object{new_parent_id=int} true "New parent category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Category moved successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.moveCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Category moved successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.moveCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/move [put]
 func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
@@ -464,9 +464,9 @@ func (h *AdminCategoriesHandler) MoveCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body object{attribute_id=int,is_required=bool} true "Attribute data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute added to category successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.addAttributeToCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Attribute added to category successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.addAttributeToCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/attributes [post]
 func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
@@ -506,9 +506,9 @@ func (h *AdminCategoriesHandler) AddAttributeToCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param attr_id path int true "Attribute ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute removed from category successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.removeAttributeFromCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Attribute removed from category successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.removeAttributeFromCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/attributes/{attr_id} [delete]
 func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error {
@@ -544,9 +544,9 @@ func (h *AdminCategoriesHandler) RemoveAttributeFromCategory(c *fiber.Ctx) error
 // @Param id path int true "Category ID"
 // @Param attr_id path int true "Attribute ID"
 // @Param body body object{is_required=bool,is_enabled=bool} true "Attribute settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Attribute category updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId or marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateAttributeCategoryError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Attribute category updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidAttributeId or marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateAttributeCategoryError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/attributes/{attr_id} [put]
 func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
@@ -590,9 +590,9 @@ func (h *AdminCategoriesHandler) UpdateAttributeCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.AttributeGroup} "Category groups"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.AttributeGroup} "Category groups"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getCategoryGroupsError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/groups [get]
 func (h *AdminCategoriesHandler) GetCategoryAttributeGroups(c *fiber.Ctx) error {
@@ -622,9 +622,9 @@ func (h *AdminCategoriesHandler) GetCategoryAttributeGroups(c *fiber.Ctx) error 
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body object{group_id=int,sort_order=int} true "Group attachment data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.attachGroupError"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=IDMessageResponse} "Group attached successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.attachGroupError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/groups [post]
 func (h *AdminCategoriesHandler) AttachAttributeGroupToCategory(c *fiber.Ctx) error {
@@ -665,9 +665,9 @@ func (h *AdminCategoriesHandler) AttachAttributeGroupToCategory(c *fiber.Ctx) er
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param group_id path int true "Group ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Group detached successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidGroupId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.detachGroupError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Group detached successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId or marketplace.invalidGroupId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.detachGroupError"
 // @Security BearerAuth
 // @Router /api/admin/categories/{id}/groups/{group_id} [delete]
 func (h *AdminCategoriesHandler) DetachAttributeGroupFromCategory(c *fiber.Ctx) error {
@@ -702,10 +702,10 @@ func (h *AdminCategoriesHandler) DetachAttributeGroupFromCategory(c *fiber.Ctx) 
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param languages body object{source_language=string,target_languages=[]string} false "Translation settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=CategoryTranslationResult} "Translation results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Translation error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=CategoryTranslationResult} "Translation results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Translation error"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/{id}/translate [post]
 func (h *AdminCategoriesHandler) TranslateCategory(c *fiber.Ctx) error {
@@ -817,10 +817,10 @@ func (h *AdminCategoriesHandler) TranslateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryKeyword} "Keywords list"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Category not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryKeyword} "Keywords list"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Category not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/{category_id}/keywords [get]
 func (h *AdminCategoriesHandler) GetCategoryKeywords(c *fiber.Ctx) error {
@@ -871,9 +871,9 @@ func (h *AdminCategoriesHandler) GetCategoryKeywords(c *fiber.Ctx) error {
 // @Produce json
 // @Param category_id path int true "Category ID"
 // @Param keyword body backend_internal_domain_models.CategoryKeywordRequest true "Keyword data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Created keyword"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Created keyword"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request data"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/{category_id}/keywords [post]
 func (h *AdminCategoriesHandler) AddCategoryKeyword(c *fiber.Ctx) error {
@@ -944,10 +944,10 @@ func (h *AdminCategoriesHandler) AddCategoryKeyword(c *fiber.Ctx) error {
 // @Produce json
 // @Param keyword_id path int true "Keyword ID"
 // @Param keyword body backend_internal_domain_models.CategoryKeywordUpdateRequest true "Updated keyword data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Updated keyword"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request data"
-// @Failure 404 {object} utils.ErrorResponseSwag "Keyword not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.CategoryKeyword} "Updated keyword"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request data"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Keyword not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/keywords/{keyword_id} [put]
 func (h *AdminCategoriesHandler) UpdateCategoryKeyword(c *fiber.Ctx) error {
@@ -987,10 +987,10 @@ func (h *AdminCategoriesHandler) UpdateCategoryKeyword(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param keyword_id path int true "Keyword ID"
-// @Success 200 {object} utils.SuccessResponseSwag "Keyword deleted"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid keyword ID"
-// @Failure 404 {object} utils.ErrorResponseSwag "Keyword not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Keyword deleted"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid keyword ID"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Keyword not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/keywords/{keyword_id} [delete]
 func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
@@ -1020,9 +1020,9 @@ func (h *AdminCategoriesHandler) DeleteCategoryKeyword(c *fiber.Ctx) error {
 // @Tags marketplace-admin-categories
 // @Produce json
 // @Param id path int true "Category ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryVariantAttribute} "Category variant attributes"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidCategoryId"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getCategoryVariantAttributesError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CategoryVariantAttribute} "Category variant attributes"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidCategoryId"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getCategoryVariantAttributesError"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/{id}/variant-attributes [get]
 func (h *AdminCategoriesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) error {
@@ -1107,9 +1107,9 @@ func (h *AdminCategoriesHandler) GetCategoryVariantAttributes(c *fiber.Ctx) erro
 // @Produce json
 // @Param id path int true "Category ID"
 // @Param body body backend_internal_domain_models.CategoryVariantAttributesRequest true "List of variant attributes with their settings"
-// @Success 200 {object} utils.SuccessResponseSwag{data=string} "marketplace.categoryVariantAttributesUpdated"
-// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateCategoryVariantAttributesError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "marketplace.categoryVariantAttributesUpdated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateCategoryVariantAttributesError"
 // @Security BearerAuth
 // @Router /api/v1/admin/categories/{id}/variant-attributes [put]
 func (h *AdminCategoriesHandler) UpdateCategoryVariantAttributes(c *fiber.Ctx) error {

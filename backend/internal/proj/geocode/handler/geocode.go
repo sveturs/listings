@@ -30,9 +30,9 @@ func NewGeocodeHandler(geocodeService service.GeocodeServiceInterface) *GeocodeH
 // @Produce json
 // @Param lat query float64 true "Широта"
 // @Param lon query float64 true "Долгота"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_models.GeoLocation} "Адрес по координатам"
-// @Failure 400 {object} utils.ErrorResponseSwag "validation.invalidLatitude или validation.invalidLongitude"
-// @Failure 500 {object} utils.ErrorResponseSwag "geocode.reverseError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.GeoLocation} "Адрес по координатам"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "validation.invalidLatitude или validation.invalidLongitude"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "geocode.reverseError"
 // @Router /api/v1/geocode/reverse [get]
 func (h *GeocodeHandler) ReverseGeocode(c *fiber.Ctx) error {
 	latStr := c.Query("lat")
@@ -67,8 +67,8 @@ func (h *GeocodeHandler) ReverseGeocode(c *fiber.Ctx) error {
 // @Produce json
 // @Param q query string true "Поисковый запрос (минимум 2 символа)"
 // @Param limit query int false "Максимальное количество результатов" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_models.GeoLocation} "Список городов"
-// @Failure 500 {object} utils.ErrorResponseSwag "geocode.suggestionsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.GeoLocation} "Список городов"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "geocode.suggestionsError"
 // @Router /api/v1/geocode/cities [get]
 func (h *GeocodeHandler) GetCitySuggestions(c *fiber.Ctx) error {
 	query := c.Query("q", "")

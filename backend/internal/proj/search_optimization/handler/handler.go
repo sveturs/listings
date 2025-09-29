@@ -78,10 +78,10 @@ type AnalyzeWeightsRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body StartOptimizationRequest true "Параметры оптимизации"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Оптимизация запущена"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Оптимизация запущена"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimize-weights [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) StartOptimization(c *fiber.Ctx) error {
@@ -147,10 +147,10 @@ func (h *SearchOptimizationHandler) StartOptimization(c *fiber.Ctx) error {
 // @Tags Search Optimization
 // @Produce json
 // @Param session_id path int true "ID сессии оптимизации"
-// @Success 200 {object} utils.SuccessResponseSwag{data=OptimizationSession} "Статус оптимизации"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверный ID сессии"
-// @Failure 404 {object} utils.ErrorResponseSwag "Сессия не найдена"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=OptimizationSession} "Статус оптимизации"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверный ID сессии"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Сессия не найдена"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-status/{session_id} [get]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) GetOptimizationStatus(c *fiber.Ctx) error {
@@ -178,9 +178,9 @@ func (h *SearchOptimizationHandler) GetOptimizationStatus(c *fiber.Ctx) error {
 // @Tags Search Optimization
 // @Produce json
 // @Param session_id path int true "ID сессии оптимизации"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Оптимизация отменена"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверный ID сессии"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Оптимизация отменена"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверный ID сессии"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-cancel/{session_id} [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) CancelOptimization(c *fiber.Ctx) error {
@@ -214,10 +214,10 @@ func (h *SearchOptimizationHandler) CancelOptimization(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body ApplyWeightsRequest true "Параметры применения весов"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Веса применены"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Веса применены"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/apply-weights [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) ApplyOptimizedWeights(c *fiber.Ctx) error {
@@ -253,9 +253,9 @@ func (h *SearchOptimizationHandler) ApplyOptimizedWeights(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body AnalyzeWeightsRequest true "Параметры анализа"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]WeightOptimizationResult} "Результаты анализа"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]WeightOptimizationResult} "Результаты анализа"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/analyze-weights [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) AnalyzeCurrentWeights(c *fiber.Ctx) error {
@@ -296,8 +296,8 @@ func (h *SearchOptimizationHandler) AnalyzeCurrentWeights(c *fiber.Ctx) error {
 // @Tags Search Optimization
 // @Produce json
 // @Param limit query int false "Максимальное количество записей" default(20)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]OptimizationSession} "История оптимизаций"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]OptimizationSession} "История оптимизаций"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-history [get]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) GetOptimizationHistory(c *fiber.Ctx) error {
@@ -320,8 +320,8 @@ func (h *SearchOptimizationHandler) GetOptimizationHistory(c *fiber.Ctx) error {
 // @Description Возвращает текущую конфигурацию параметров оптимизации весов
 // @Tags Search Optimization
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=service.OptimizationConfig} "Конфигурация оптимизации"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=service.OptimizationConfig} "Конфигурация оптимизации"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-config [get]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) GetOptimizationConfig(c *fiber.Ctx) error {
@@ -340,10 +340,10 @@ func (h *SearchOptimizationHandler) GetOptimizationConfig(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param config body service.OptimizationConfig true "Новая конфигурация"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Конфигурация обновлена"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверная конфигурация"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Конфигурация обновлена"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверная конфигурация"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/optimization-config [put]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) UpdateOptimizationConfig(c *fiber.Ctx) error {
@@ -375,10 +375,10 @@ func (h *SearchOptimizationHandler) UpdateOptimizationConfig(c *fiber.Ctx) error
 // @Accept json
 // @Produce json
 // @Param request body map[string]interface{} true "Параметры резервной копии"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Резервная копия создана"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Резервная копия создана"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/backup-weights [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) CreateWeightBackup(c *fiber.Ctx) error {
@@ -418,10 +418,10 @@ func (h *SearchOptimizationHandler) CreateWeightBackup(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body map[string]interface{} true "ID весов для отката"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Откат выполнен"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Откат выполнен"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/rollback-weights [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) RollbackWeights(c *fiber.Ctx) error {
@@ -472,8 +472,8 @@ type SynonymRequest struct {
 // @Param search query string false "Поиск по термину"
 // @Param page query int false "Номер страницы" default(1)
 // @Param limit query int false "Количество записей на странице" default(20)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}} "Список синонимов"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]map[string]interface{}} "Список синонимов"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/synonyms [get]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) GetSynonyms(c *fiber.Ctx) error {
@@ -516,11 +516,11 @@ func (h *SearchOptimizationHandler) GetSynonyms(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body SynonymRequest true "Данные синонима"
-// @Success 201 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним создан"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 409 {object} utils.ErrorResponseSwag "Синоним уже существует"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним создан"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "Синоним уже существует"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/synonyms [post]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
@@ -545,16 +545,14 @@ func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "create_synonym_failed")
 	}
 
-	return c.Status(http.StatusCreated).JSON(utils.SuccessResponseSwag{
-		Success: true,
-		Data: map[string]interface{}{
-			"message":   "Synonym created successfully",
-			"id":        synonymID,
-			"term":      req.Term,
-			"synonym":   req.Synonym,
-			"language":  req.Language,
-			"is_active": req.IsActive,
-		},
+	c.Status(http.StatusCreated)
+	return utils.SuccessResponse(c, map[string]interface{}{
+		"message":   "Synonym created successfully",
+		"id":        synonymID,
+		"term":      req.Term,
+		"synonym":   req.Synonym,
+		"language":  req.Language,
+		"is_active": req.IsActive,
 	})
 }
 
@@ -566,11 +564,11 @@ func (h *SearchOptimizationHandler) CreateSynonym(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "ID синонима"
 // @Param request body SynonymRequest true "Обновленные данные синонима"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним обновлен"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверные параметры"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 404 {object} utils.ErrorResponseSwag "Синоним не найден"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним обновлен"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверные параметры"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Синоним не найден"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/synonyms/{id} [put]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
@@ -617,11 +615,11 @@ func (h *SearchOptimizationHandler) UpdateSynonym(c *fiber.Ctx) error {
 // @Tags Search Synonyms
 // @Produce json
 // @Param id path int true "ID синонима"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним удален"
-// @Failure 400 {object} utils.ErrorResponseSwag "Неверный ID синонима"
-// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
-// @Failure 404 {object} utils.ErrorResponseSwag "Синоним не найден"
-// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Синоним удален"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Неверный ID синонима"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Синоним не найден"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/admin/search/synonyms/{id} [delete]
 // @Security BearerAuth
 func (h *SearchOptimizationHandler) DeleteSynonym(c *fiber.Ctx) error {

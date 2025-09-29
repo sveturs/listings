@@ -116,8 +116,8 @@ func (h *AdminHandler) GetProviders(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Provider ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Provider status updated"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Provider status updated"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/providers/{id}/toggle [post]
 func (h *AdminHandler) ToggleProvider(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
@@ -148,8 +148,8 @@ func (h *AdminHandler) ToggleProvider(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param id path int true "Provider ID"
 // @Param config body backend_internal_proj_delivery_models.ProviderConfig true "Provider configuration"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Configuration updated"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Configuration updated"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/providers/{id}/config [put]
 func (h *AdminHandler) UpdateProviderConfig(c *fiber.Ctx) error {
 	providerID, err := strconv.Atoi(c.Params("id"))
@@ -185,8 +185,8 @@ func (h *AdminHandler) UpdateProviderConfig(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_proj_delivery_models.PricingRule} "List of pricing rules"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_delivery_models.PricingRule} "List of pricing rules"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules [get]
 func (h *AdminHandler) GetPricingRules(c *fiber.Ctx) error {
 	rules, err := h.service.GetAllPricingRules(c.Context())
@@ -209,8 +209,8 @@ func (h *AdminHandler) GetPricingRules(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param rule body backend_internal_proj_delivery_models.PricingRule true "Pricing rule"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_delivery_models.PricingRule} "Created rule"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_delivery_models.PricingRule} "Created rule"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules [post]
 func (h *AdminHandler) CreatePricingRule(c *fiber.Ctx) error {
 	var rule models.PricingRule
@@ -241,8 +241,8 @@ func (h *AdminHandler) CreatePricingRule(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param id path int true "Rule ID"
 // @Param rule body backend_internal_proj_delivery_models.PricingRule true "Pricing rule"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Rule updated"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Rule updated"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules/{id} [put]
 func (h *AdminHandler) UpdatePricingRule(c *fiber.Ctx) error {
 	ruleID, err := strconv.Atoi(c.Params("id"))
@@ -280,8 +280,8 @@ func (h *AdminHandler) UpdatePricingRule(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path int true "Rule ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Rule deleted"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Rule deleted"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/pricing-rules/{id} [delete]
 func (h *AdminHandler) DeletePricingRule(c *fiber.Ctx) error {
 	ruleID, err := strconv.Atoi(c.Params("id"))
@@ -312,8 +312,8 @@ func (h *AdminHandler) DeletePricingRule(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param type query string false "Problem type filter"
 // @Param status query string false "Status filter"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.ProblemShipment} "List of problem shipments"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_logistics.ProblemShipment} "List of problem shipments"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems [get]
 func (h *AdminHandler) GetProblemShipments(c *fiber.Ctx) error {
 	problemType := c.Query("type", "")
@@ -340,8 +340,8 @@ func (h *AdminHandler) GetProblemShipments(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param id path int true "Problem ID"
 // @Param assignment body backend_internal_proj_delivery_models.ProblemAssignment true "Assignment details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Problem assigned"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Problem assigned"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems/{id}/assign [post]
 func (h *AdminHandler) AssignProblem(c *fiber.Ctx) error {
 	problemID, err := strconv.Atoi(c.Params("id"))
@@ -379,8 +379,8 @@ func (h *AdminHandler) AssignProblem(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param id path int true "Problem ID"
 // @Param resolution body backend_internal_proj_delivery_models.ProblemResolution true "Resolution details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=bool} "Problem resolved"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=bool} "Problem resolved"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/problems/{id}/resolve [post]
 func (h *AdminHandler) ResolveProblem(c *fiber.Ctx) error {
 	problemID, err := strconv.Atoi(c.Params("id"))
@@ -422,8 +422,8 @@ func (h *AdminHandler) ResolveProblem(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_domain_logistics.DashboardStats} "Dashboard statistics"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_logistics.DashboardStats} "Dashboard statistics"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/dashboard [get]
 func (h *AdminHandler) GetDashboard(c *fiber.Ctx) error {
 	stats, err := h.service.GetDashboardStats(c.Context())
@@ -446,8 +446,8 @@ func (h *AdminHandler) GetDashboard(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param period query string false "Time period (7d, 30d, 90d, 365d)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=backend_internal_proj_delivery_models.AnalyticsData} "Analytics data"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_delivery_models.AnalyticsData} "Analytics data"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/admin/delivery/analytics [get]
 func (h *AdminHandler) GetAnalytics(c *fiber.Ctx) error {
 	period := c.Query("period", Period30Days)
