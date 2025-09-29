@@ -698,6 +698,20 @@ CREATE SEQUENCE public.roles_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.saved_search_notifications_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.saved_searches_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.search_behavior_metrics_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -737,18 +751,6 @@ CREATE SEQUENCE public.search_synonyms_config_id_seq
     CACHE 1;
 CREATE SEQUENCE public.search_synonyms_id_seq
     AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.search_weights_history_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.search_weights_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
