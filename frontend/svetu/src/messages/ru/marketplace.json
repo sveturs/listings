@@ -483,6 +483,8 @@
   "rooms": "Комнаты",
   "type": "Тип",
   "year": "Год",
+  "mileage": "Пробег",
+  "fuelType": "Топливо",
   "addToFavorites": "Добавить в избранное",
   "share": "Поделиться",
   "newSeller": "Новичок",
@@ -828,5 +830,17 @@
     "loading": "Загрузка...",
     "save": "Сохранить",
     "cancel": "Отмена"
-  }
+  },
+  "priceOnRequest": "Цена по запросу",
+  "justNow": "Только что",
+  "hoursAgo": "{hours, plural, =1 {# час назад} one {# час назад} few {# часа назад} many {# часов назад} other {# часов назад}}",
+  "yesterday": "Вчера",
+  "daysAgo": "{days, plural, =1 {# день назад} one {# день назад} few {# дня назад} many {# дней назад} other {# дней назад}}",
+  "noImage": "Нет изображения",
+  "removeFromFavorites": "Удалить из избранного",
+  "removeFromCompare": "Удалить из сравнения",
+  "addToCompare": "Добавить в сравнение",
+  "quickView": "Быстрый просмотр",
+  "inFavorites": "В избранном",
+  "calls": "Звонки"
 }

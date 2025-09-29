@@ -102,7 +102,10 @@
       "100k": "До 100 000 км",
       "150k": "До 150 000 км",
       "200k": "До 200 000 км"
-    }
+    },
+    "gas": "Газ",
+    "apply": "Применить фильтры",
+    "showFilters": "Показать фильтры"
   },
   "options": {
     "fuelType": {
@@ -257,7 +260,34 @@
   "createListing": "Создать объявление",
   "priceAnalysis": "Анализ цен",
   "priceAnalysisDescription": "Получите аналитику рынка и рекомендации по ценам",
-  "vinDecoder": "VIN декодер",
+  "vinDecoder": {
+    "title": "VIN декодер",
+    "description": "Декодируйте информацию о транспорте по VIN номеру",
+    "enterVin": "Введите VIN номер",
+    "vinFormat": "17 символов",
+    "decode": "Декодировать",
+    "invalidFormat": "Неверный формат VIN. Должен содержать 17 символов без I, O, Q",
+    "decodeFailed": "Не удалось декодировать VIN",
+    "networkError": "Ошибка сети. Попробуйте еще раз",
+    "hint": "VIN можно найти в техпаспорте, на приборной панели или стойке водительской двери",
+    "decodedInfo": "Информация о транспортном средстве",
+    "year": "Год выпуска",
+    "make": "Марка",
+    "model": "Модель",
+    "trim": "Комплектация",
+    "bodyType": "Тип кузова",
+    "fuelType": "Тип топлива",
+    "transmission": "Коробка передач",
+    "driveType": "Привод",
+    "engineInfo": "Информация о двигателе",
+    "displacement": "Объем",
+    "cylinders": "Цилиндры",
+    "manufacturerInfo": "Производитель",
+    "manufacturer": "Производитель",
+    "country": "Страна",
+    "autoFill": "Заполнить форму"
+  },
+  "vinDecoderOld": "VIN декодер",
   "vinDecoderDescription": "Декодируйте информацию о транспорте по VIN номеру",
   "enterVIN": "Введите VIN",
   "showExamples": "Показать примеры",
@@ -315,5 +345,103 @@
   "hideFilters": "Скрыть фильтры",
   "results": "результатов",
   "totalListings": "всего объявлений",
-  "noResultsFound": "Не найдено автомобилей по вашим критериям"
+  "noResultsFound": "Не найдено автомобилей по вашим критериям",
+  "badges": {
+    "new": "НОВОЕ",
+    "top": "ТОП",
+    "featured": "РЕКОМЕНДУЕМ",
+    "reduced": "СНИЖЕНА ЦЕНА"
+  },
+  "info": {
+    "year": "Год",
+    "mileage": "Пробег",
+    "fuel": "Топливо",
+    "transmission": "Коробка",
+    "engine": "Двигатель",
+    "color": "Цвет",
+    "bodyType": "Кузов",
+    "seats": "Мест"
+  },
+  "time": {
+    "justNow": "Только что",
+    "hoursAgo": "{hours}ч назад",
+    "daysAgo": "{days}д назад",
+    "weeksAgo": "{weeks}нед назад",
+    "monthsAgo": "{months}мес назад"
+  },
+  "actions": {
+    "favorite": "В избранное",
+    "share": "Поделиться",
+    "compare": "Сравнить",
+    "quickView": "Быстрый просмотр",
+    "viewDetails": "Подробнее",
+    "viewFullDetails": "Все подробности",
+    "call": "Позвонить",
+    "message": "Написать"
+  },
+  "common": {
+    "photos": "фото",
+    "noPhoto": "Нет фото",
+    "views": "просмотров",
+    "new": "новое",
+    "noLocation": "Местоположение не указано"
+  },
+  "quickView": {
+    "description": "Описание",
+    "seller": "Продавец",
+    "contactSeller": "Связаться с продавцом"
+  },
+  "shareTitle": "Поделиться автомобилем",
+  "compare": {
+    "title": "Сравнить автомобили",
+    "compareNow": "Сравнить сейчас",
+    "clearAll": "Очистить все",
+    "addMore": "Добавьте еще {{count}} автомобиль для сравнения",
+    "minRequired": "Выберите минимум 2 автомобиля для сравнения",
+    "minRequiredForTable": "Вам нужно выбрать минимум 2 автомобиля для сравнения",
+    "backToCars": "Назад к автомобилям",
+    "pageTitle": "Сравнение автомобилей",
+    "specification": "Характеристика",
+    "different": "Отличается",
+    "print": "Печать сравнения"
+  },
+  "specs": {
+    "price": "Цена",
+    "year": "Год",
+    "mileage": "Пробег",
+    "fuelType": "Тип топлива",
+    "transmission": "Коробка передач",
+    "engineSize": "Объем двигателя",
+    "power": "Мощность",
+    "bodyType": "Тип кузова",
+    "color": "Цвет",
+    "driveType": "Привод",
+    "doors": "Двери",
+    "seats": "Места",
+    "condition": "Состояние",
+    "previousOwners": "Предыдущие владельцы",
+    "warranty": "Гарантия",
+    "firstRegistration": "Первая регистрация",
+    "technicalInspection": "Техосмотр",
+    "vin": "VIN",
+    "features": "Особенности"
+  },
+  "navigation": {
+    "previous": "Предыдущий",
+    "next": "Следующий"
+  },
+  "search": {
+    "placeholder": "Поиск по марке, модели или городу...",
+    "recent": "Недавние поиски",
+    "popular": "Популярные запросы",
+    "clearRecent": "Очистить"
+  },
+  "breadcrumbs": {
+    "filters": "Активные фильтры",
+    "removeFilter": "Удалить фильтр",
+    "cars": "Автомобили",
+    "search": "Поиск",
+    "favorites": "Избранное",
+    "compare": "Сравнить"
+  }
 }

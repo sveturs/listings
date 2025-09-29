@@ -601,6 +601,18 @@ func (m *MockStorage) GetUserStorefrontFavorites(ctx context.Context, userID int
 	return []models.MarketplaceListing{}, nil
 }
 
+// GetCarListingsCount - недостающий метод для подсчета автомобильных объявлений
+func (m *MockStorage) GetCarListingsCount(ctx context.Context) (int, error) {
+	args := m.Called(ctx)
+	return args.Int(0), args.Error(1)
+}
+
+// GetTotalCarModelsCount - недостающий метод для подсчета моделей автомобилей
+func (m *MockStorage) GetTotalCarModelsCount(ctx context.Context) (int, error) {
+	args := m.Called(ctx)
+	return args.Int(0), args.Error(1)
+}
+
 // Создание тестового сервиса
 func createTestService() *MarketplaceService {
 	mockStorage := &MockStorage{}

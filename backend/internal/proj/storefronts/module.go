@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"backend/internal/domain/models"
@@ -275,6 +276,13 @@ func (m *Module) getProductBySlug(c *fiber.Ctx) error {
 
 func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 	slug := c.Params("slug")
+
+	// Декодируем slug на случай если он URL-encoded
+	decodedSlug, err := url.QueryUnescape(slug)
+	if err == nil {
+		slug = decodedSlug
+	}
+
 	logger.Info().
 		Str("slug", slug).
 		Str("method", "createProductBySlug").

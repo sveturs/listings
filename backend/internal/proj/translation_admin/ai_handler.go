@@ -36,10 +36,10 @@ func NewAITranslationHandler(logger zerolog.Logger, service *Service, rateLimite
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.AITranslateRequest true "Translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AITranslateResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_domain_models.AITranslateRequest true "Translation request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.AITranslateResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate [post]
 func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -140,10 +140,10 @@ func (h *AITranslationHandler) TranslateText(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.AITranslateBatchRequest true "Batch translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.AITranslateBatchResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_domain_models.AITranslateBatchRequest true "Batch translation request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.AITranslateBatchResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate-batch [post]
 func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -224,8 +224,8 @@ func (h *AITranslationHandler) TranslateBatch(c *fiber.Ctx) error {
 // @Description Returns list of configured AI translation providers
 // @Tags Translation Admin
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}}
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]map[string]interface{}}
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/providers [get]
 func (h *AITranslationHandler) GetAvailableProviders(c *fiber.Ctx) error {
 	providers := []map[string]interface{}{
@@ -242,8 +242,8 @@ func (h *AITranslationHandler) GetAvailableProviders(c *fiber.Ctx) error {
 // @Description Returns current rate limit status for all AI translation providers
 // @Tags Translation Admin
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]ratelimit.Status}
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]ratelimit.Status}
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/rate-limit-status [get]
 func (h *AITranslationHandler) GetRateLimitStatus(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -273,10 +273,10 @@ func (h *AITranslationHandler) GetRateLimitStatus(c *fiber.Ctx) error {
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Param request body models.TranslateModuleRequest true "Module translation request"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.TranslateModuleResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_domain_models.TranslateModuleRequest true "Module translation request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.TranslateModuleResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/translate-module [post]
 func (h *AITranslationHandler) TranslateModule(c *fiber.Ctx) error {
 	ctx := c.Context()

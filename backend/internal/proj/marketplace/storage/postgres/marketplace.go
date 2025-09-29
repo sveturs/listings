@@ -2039,18 +2039,15 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
             v.boolean_value,
             v.json_value,
             v.unit,
-            -- Настройки отображения из основной таблицы атрибутов или переопределения в маппинге
-            COALESCE(cam.is_required, a.is_required) as is_required,
-            COALESCE(cam.show_in_card, a.show_in_card) as show_in_card,
-            COALESCE(cam.show_in_list, a.show_in_list) as show_in_list,
+            -- Настройки отображения из основной таблицы атрибутов
+            a.is_required as is_required,
+            a.show_in_card as show_in_card,
+            false as show_in_list,  -- Поле не существует в unified_attributes, используем false
             COALESCE(at.translations, '{}'::jsonb) as translations,
             COALESCE(ot.option_translations, '{}'::jsonb) as option_translations
         FROM listing_attribute_values v
-        JOIN category_attributes a ON v.attribute_id = a.id
+        JOIN unified_attributes a ON v.attribute_id = a.id
         JOIN marketplace_listings ml ON ml.id = v.listing_id
-        LEFT JOIN category_attribute_mapping cam ON
-            cam.category_id = ml.category_id AND
-            cam.attribute_id = a.id
         LEFT JOIN attribute_translations at ON at.entity_id = a.id
         LEFT JOIN option_translations ot ON ot.attribute_name = a.name
         WHERE v.listing_id = $1
@@ -3405,7 +3402,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	}
 
 	// Получаем данные товара из storefront_products
-	var categoryName, categorySlug sql.NullString
+	var categoryName, categorySlug, userPhone, userPictureURL sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
         SELECT
@@ -3428,7 +3425,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
 		&listing.ShowOnMap, &listing.OriginalLanguage,
 		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
-		&listing.User.PictureURL, &listing.User.Phone,
+		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata,
 	)
 	if err != nil {
@@ -3441,6 +3438,19 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	}
 	if categorySlug.Valid {
 		listing.Category.Slug = categorySlug.String
+	}
+
+	// Обрабатываем nullable значения пользователя
+	if userPictureURL.Valid {
+		listing.User.PictureURL = userPictureURL.String
+	} else {
+		listing.User.PictureURL = ""
+	}
+
+	if userPhone.Valid {
+		listing.User.Phone = &userPhone.String
+	} else {
+		listing.User.Phone = nil
 	}
 
 	// Загружаем изображения для storefront продукта

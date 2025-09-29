@@ -1,4 +1,32 @@
 # CLAUDE.md
+НЕ ОСТАВЛЯЙ ТЕХНИЧЕСКИЙ ДОЛГ!!!
+ЗАПРЕЩЕНО ПОРАЖДАТЬ РУДИМЕНТЫ - НУЖНО ВСЕГДА ПРОВЕРЯТЬ НАЛИЧИЕ НЕОБХОДИМЫХ ФУНКЦИЙ ПЕРЕД ТЕМ КАК СОЗДАВАТЬ НОВОЕ!
+ВСЕГДА НУЖНО СТАРАТЬСЯ СОЗДАВАТЬ РЕШЕНИЯ, КОТОРЫЕ МОЖНО ИСПОЛЬЗОВАТЬ ВО ВСЕХ МЕСТАХ ГДЕ НУЖЕН ДАННЫЙ ФУНКЦИОНАЛ!
+### команды для переиндексации поисковика
+
+## 1. Полная переиндексация (100% работает)
+
+python3 /data/hostel-booking-system/backend/reindex_full.py
+
+## 2. Проверка состояния индекса OpenSearch
+
+# Количество документов в индексе
+curl -X GET "http://localhost:9200/marketplace_listings/_count" 2>/dev/null | jq '.'
+
+# Проверить документ с атрибутами (например ID 328)
+curl -X GET "http://localhost:9200/marketplace_listings/_doc/328" 2>/dev/null | jq '._source.attributes | length'
+
+## 3. Проверка работы API поиска
+
+# Поиск автомобилей (категория 1301)
+curl -X GET "http://localhost:3000/api/v1/marketplace/search?category_id=1301&limit=5" 2>/dev/null | jq '.meta'                                                                           ][ 09-27  19:07 ]
+
+# Поиск всех объявлений
+curl -X GET "http://localhost:3000/api/v1/marketplace/search?limit=10" 2>/dev/null | jq '.data | length'
+
+## 4. Генерация JWT токена (для API переиндексации)
+
+cd /data/hostel-booking-system/backend && go run scripts/create_test_jwt.go
 
 ## 🚀 Развертывание на dev.svetu.rs
 
@@ -42,31 +70,78 @@ cd ../frontend/svetu && make dev-restart
 - **БД в Docker**: контейнер `svetu-dev_db_1`, база `svetu_dev_db`
 - **Порты**: backend - 3002, frontend - 3003
 
-## 🔐 JWT Token Generator
+## 🔐 JWT Token Generator - ВАЖНОЕ ОБНОВЛЕНИЕ
 
-В директории `backend/scripts` есть утилита для создания JWT токенов для тестирования:
+**⚠️ ВНИМАНИЕ: Локальный скрипт create_test_jwt.go НЕ РАБОТАЕТ с текущей системой!**
 
-### Генератор `create_test_jwt.go`
+Система использует RS256 (RSA) алгоритм с Auth Service, а не HS256 (HMAC).
+
+### ✅ ПРАВИЛЬНЫЙ способ получения валидного токена (ПОЛНАЯ ИНСТРУКЦИЯ):
+
+**⚠️ ВАЖНО: Используйте bash для корректной работы с токеном в ZSH!**
+
 ```bash
-# Создает токен для user_id=1, email=test@example.com на 24 часа
-cd backend && go run scripts/create_test_jwt.go
+# Шаг 1: Получение токена и сохранение в файл
+# Важно: sed необходим для исправления пути к ключу!
+ssh svetu@svetu.rs "cd /opt/svetu-authpreprod && sed 's|/data/auth_svetu/keys/private.pem|./keys/private.pem|g' scripts/create_admin_jwt.go > /tmp/create_jwt_fixed.go && go run /tmp/create_jwt_fixed.go" > /tmp/jwt_token.txt
 
-# С использованием JWT_SECRET из .env
-cd backend && JWT_SECRET=$(grep JWT_SECRET .env | cut -d '=' -f2) go run scripts/create_test_jwt.go
+# Шаг 2: Проверить что токен получен (должен начинаться с eyJ)
+head -c 50 /tmp/jwt_token.txt
+
+# Шаг 3: Проверить что backend запущен
+netstat -tlnp 2>/dev/null | grep :3000  # должен показать процесс main на порту 3000
+
+# Шаг 4: Проверить работу токена (ИСПОЛЬЗУЙТЕ BASH!)
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq ".data.email"'
+
+# Альтернативный способ: Полный one-liner для быстрого тестирования
+ssh svetu@svetu.rs "cd /opt/svetu-authpreprod && sed 's|/data/auth_svetu/keys/private.pem|./keys/private.pem|g' scripts/create_admin_jwt.go > /tmp/create_jwt_fixed.go && go run /tmp/create_jwt_fixed.go" > /tmp/jwt.txt && bash -c 'TOKEN=$(cat /tmp/jwt.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq "."'
 ```
 
-### Пример использования в API запросах:
+### Примеры использования в API запросах:
+
+**⚠️ В ZSH используйте bash -c для корректной подстановки токена!**
+
 ```bash
-# Получаем токен
-TOKEN=$(cd backend && go run scripts/create_test_jwt.go)
+# РЕКОМЕНДУЕТСЯ: Использование через bash (работает в ZSH)
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq "."'
 
-# Используем в запросе
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/protected-endpoint
+# GET запросы - получение информации о пользователе
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq ".data.email"'
 
-# Или для реальных запросов с корректным JWT_SECRET
-TOKEN=$(cd backend && JWT_SECRET=$(grep JWT_SECRET .env | cut -d '=' -f2) go run scripts/create_test_jwt.go)
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/user/profile
+# GET запросы - получение избранных
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/marketplace/favorites | jq "."'
+
+# POST запросы - добавление в избранное (замените 328 на ID нужного объявления)
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -X POST -H "Authorization: Bearer $TOKEN" "http://localhost:3000/api/v1/marketplace/favorites/328" | jq "."'
+
+# DELETE запросы - удаление из избранного
+bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -X DELETE -H "Authorization: Bearer $TOKEN" "http://localhost:3000/api/v1/marketplace/favorites/328" | jq "."'
+
+# Для чистого bash (если вы в bash, а не в zsh)
+TOKEN=$(cat /tmp/jwt_token.txt)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq '.'
 ```
+
+### ⚠️ Важные замечания:
+- НЕ добавляйте `2>/dev/null` при первом запуске - это скрывает ошибки
+- Токен - это очень длинная строка (500+ символов), НЕ обрезайте её
+- Если токен не работает, проверьте что backend запущен на порту 3000
+- Токен валиден 1 день с момента создания
+- sed ОБЯЗАТЕЛЕН! Без него скрипт не найдет ключ и вернет ошибку
+
+### 🔧 Устранение проблем:
+
+**Ошибка: "authentication_required"**
+1. Проверьте что backend запущен: `netstat -tlnp | grep 3000`
+2. Если нет, запустите: `/home/dim/.local/bin/kill-port-3000.sh && screen -dmS backend-3000 bash -c 'cd /data/hostel-booking-system/backend && go run ./cmd/api/main.go'`
+3. Получите новый токен по инструкции выше
+
+**Ошибка: "Failed to read private key"**
+- Убедитесь что используете sed для замены пути к ключу!
+- Проверьте что скрипт запускается из директории /opt/svetu-authpreprod
+
+📚 **Подробная инструкция**: `/data/hostel-booking-system/docs/JWT_TOKEN_TESTING_GUIDE.md`
 
 - ## Important Notes
 

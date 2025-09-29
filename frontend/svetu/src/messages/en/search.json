@@ -102,7 +102,7 @@
   "baseFilters": "Base Filters",
   "categorySpecificFilters": "Category Filters",
   "popularCategories": "Popular Categories",
-  "categorySelected": "Selected category: {{category}}",
+  "categorySelected": "Selected category: {category}",
   "categories": {
     "automotive": "Automotive",
     "realEstate": "Real Estate",

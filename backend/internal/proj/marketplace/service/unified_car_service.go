@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"backend/internal/domain/models"
@@ -110,14 +111,43 @@ func (s *UnifiedCarService) DecodeVIN(ctx context.Context, vin string) (*models.
 
 	// Валидация VIN
 	if len(vin) != 17 {
-		return nil, fmt.Errorf("invalid VIN length: expected 17, got %d", len(vin))
+		return nil, fmt.Errorf("invalid VIN length")
 	}
 
-	// TODO: Проверить кеш
-	// TODO: Использовать NHTSA API (бесплатный)
-	// TODO: При необходимости использовать Vehicle Databases API (платный)
+	// Простая локальная декодировка для демонстрации
+	result := &models.VINDecodeResult{
+		Valid: true,
+		VIN:   vin,
+	}
 
-	return nil, fmt.Errorf("VIN decoding not implemented yet")
+	// Определяем производителя по WMI (первые 3 символа)
+	wmi := vin[0:3]
+	manufacturer, country := decodeWMI(wmi)
+	if manufacturer != "" {
+		result.MakeName = manufacturer
+		if country != "" {
+			result.Manufacturer = models.VINManufacturerInfo{
+				Name:    manufacturer,
+				Country: country,
+			}
+		}
+	}
+
+	// Определяем год по 10-му символу
+	yearChar := vin[9]
+	year := decodeYear(yearChar)
+	if year > 0 {
+		result.Year = year
+	}
+
+	// Для европейских авто добавляем базовую информацию
+	if isEuropeanVIN(wmi) {
+		result.Source = "local_european"
+	} else {
+		result.Source = "local_generic"
+	}
+
+	return result, nil
 }
 
 // GetCarMake получает марку по ID или slug
@@ -254,4 +284,105 @@ type FacetValue struct {
 	Value string
 	Count int
 	Label string
+}
+
+// Helper functions for VIN decoding
+
+func decodeWMI(wmi string) (manufacturer, country string) {
+	// Европейские производители, популярные в Сербии
+	wmiMap := map[string]struct{ Manufacturer, Country string }{
+		"WBA": {"BMW", "Germany"},
+		"WBS": {"BMW M", "Germany"},
+		"WDB": {"Mercedes-Benz", "Germany"},
+		"WDD": {"Mercedes-Benz", "Germany"},
+		"WDC": {"Mercedes-Benz", "Germany"},
+		"WAU": {"Audi", "Germany"},
+		"WVW": {"Volkswagen", "Germany"},
+		"WVZ": {"Volkswagen", "Germany"},
+		"W0L": {"Opel", "Germany"},
+		"VF1": {"Renault", "France"},
+		"VF3": {"Peugeot", "France"},
+		"VF7": {"Citroën", "France"},
+		"ZFA": {"Fiat", "Italy"},
+		"ZAR": {"Alfa Romeo", "Italy"},
+		"VSS": {"SEAT", "Spain"},
+		"TMB": {"Škoda", "Czech Republic"},
+		"TRU": {"Audi (Hungary)", "Hungary"},
+		"UU1": {"Dacia", "Romania"},
+		"YS2": {"Scania", "Sweden"},
+		"YV1": {"Volvo", "Sweden"},
+		"SAJ": {"Jaguar", "UK"},
+		"SAL": {"Land Rover", "UK"},
+		"SCC": {"Lotus", "UK"},
+		// Японские
+		"JHM": {"Honda", "Japan"},
+		"JMB": {"Mitsubishi", "Japan"},
+		"JN1": {"Nissan", "Japan"},
+		"JT1": {"Toyota", "Japan"},
+		"JF1": {"Subaru", "Japan"},
+		"JMZ": {"Mazda", "Japan"},
+		// Корейские
+		"KMH": {"Hyundai", "South Korea"},
+		"KNA": {"Kia", "South Korea"},
+		// Американские (редко в Сербии)
+		"1G1": {"Chevrolet", "USA"},
+		"1FA": {"Ford", "USA"},
+		"1C4": {"Chrysler", "USA"},
+		"5YM": {"Tesla", "USA"},
+	}
+
+	if info, ok := wmiMap[wmi]; ok {
+		return info.Manufacturer, info.Country
+	}
+
+	// Проверяем по первым двум символам для более общей идентификации
+	wmi2 := wmi[0:2]
+	countryMap := map[string]string{
+		"WA": "Germany", "WB": "Germany", "WC": "Germany", "WD": "Germany", "WE": "Germany",
+		"VF": "France", "VG": "France",
+		"ZA": "Italy", "ZB": "Italy", "ZC": "Italy", "ZD": "Italy", "ZF": "Italy",
+		"VS": "Spain", "VT": "Spain",
+		"TM": "Czech Republic", "TN": "Czech Republic",
+		"UU": "Romania", "UZ": "Romania",
+		"YS": "Sweden", "YT": "Sweden", "YV": "Sweden",
+		"SA": "UK", "SB": "UK", "SC": "UK",
+		"JA": "Japan", "JB": "Japan", "JC": "Japan", "JD": "Japan", "JE": "Japan",
+		"JF": "Japan", "JG": "Japan", "JH": "Japan", "JM": "Japan", "JN": "Japan",
+		"JT": "Japan",
+		"KL": "South Korea", "KM": "South Korea", "KN": "South Korea",
+	}
+
+	if country, ok := countryMap[wmi2]; ok {
+		return "", country
+	}
+
+	return "", ""
+}
+
+func decodeYear(yearChar byte) int {
+	// VIN year codes (позиция 10)
+	yearMap := map[byte]int{
+		'A': 2010, 'B': 2011, 'C': 2012, 'D': 2013, 'E': 2014,
+		'F': 2015, 'G': 2016, 'H': 2017, 'J': 2018, 'K': 2019,
+		'L': 2020, 'M': 2021, 'N': 2022, 'P': 2023, 'R': 2024,
+		'S': 2025, 'T': 2026, 'V': 2027, 'W': 2028, 'X': 2029,
+		'Y': 2030, '1': 2001, '2': 2002, '3': 2003, '4': 2004,
+		'5': 2005, '6': 2006, '7': 2007, '8': 2008, '9': 2009,
+	}
+
+	if year, ok := yearMap[yearChar]; ok {
+		return year
+	}
+	return 0
+}
+
+func isEuropeanVIN(wmi string) bool {
+	// Проверяем, является ли это европейский производитель
+	europeanPrefixes := []string{"W", "V", "Z", "T", "U", "Y", "S"}
+	for _, prefix := range europeanPrefixes {
+		if strings.HasPrefix(wmi, prefix) {
+			return true
+		}
+	}
+	return false
 }

@@ -1198,6 +1198,19 @@ func (ts *testStorage) GetUserStorefrontFavorites(ctx context.Context, userID in
 	return []models.MarketplaceListing{}, nil
 }
 
+// GetCarListingsCount - недостающий метод для подсчета автомобильных объявлений
+func (ts *testStorage) GetCarListingsCount(ctx context.Context) (int, error) {
+	var count int
+	err := ts.QueryRow(ctx, `SELECT COUNT(*) FROM marketplace_listings WHERE category_id = 1301`).Scan(&count)
+	return count, err
+}
+
+// GetTotalCarModelsCount - недостающий метод для подсчета моделей автомобилей
+func (ts *testStorage) GetTotalCarModelsCount(ctx context.Context) (int, error) {
+	// В тестах возвращаем фиксированное значение
+	return 0, nil
+}
+
 // testTransaction - простая реализация транзакции для тестов
 type testTransaction struct {
 	tx *sql.Tx

@@ -13,14 +13,15 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
+	"backend/pkg/utils"
 	"backend/internal/logger"
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
+	"backend/internal/proj/marketplace/cache"
 	"backend/internal/proj/marketplace/repository"
 	marketplaceServices "backend/internal/proj/marketplace/services"
 	"backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/storage/postgres"
-	"backend/pkg/utils"
 )
 
 // Global variables for caching categories
@@ -38,6 +39,7 @@ type Handler struct {
 	Search                 *SearchHandler
 	Translations           *TranslationsHandler
 	Favorites              *FavoritesHandler
+	SavedSearches          *SavedSearchesHandler
 	Indexing               *IndexingHandler
 	Chat                   *ChatHandler
 	AdminCategories        *AdminCategoriesHandler
@@ -95,6 +97,21 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		featureFlags := config.LoadFeatureFlags()
 		unifiedAttrStorage := postgres.NewUnifiedAttributeStorage(postgresDB.GetPool(), featureFlags.UnifiedAttributesFallback)
 		unifiedAttributesHandler := NewUnifiedAttributesHandler(unifiedAttrStorage, featureFlags)
+
+		// Создаем универсальный кеш для маркетплейса
+		var universalCache *cache.UniversalCache
+		redisAddr := "localhost:6379" // TODO: взять из конфига
+		if cfg := services.Config(); cfg != nil && cfg.Redis.URL != "" {
+			redisAddr = cfg.Redis.URL
+		}
+
+		universalCache, err := cache.NewUniversalCache(ctx, redisAddr, zap.L(), cache.DefaultCacheConfig())
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to create universal cache, continuing without cache")
+			universalCache = nil
+		} else {
+			logger.Info().Msg("Universal cache created successfully")
+		}
 
 		// Создаём CategoryDetector и CategoryDetectorHandler
 		var categoryDetectorHandler *CategoryDetectorHandler
@@ -154,12 +171,13 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		}
 
 		return &Handler{
-			Listings:               NewListingsHandler(services),
+			Listings:               NewListingsHandler(services, universalCache),
 			Images:                 NewImagesHandler(services),
 			Categories:             categoriesHandler,
-			Search:                 NewSearchHandler(services),
+			Search:                 NewSearchHandler(services, universalCache),
 			Translations:           NewTranslationsHandler(services),
 			Favorites:              NewFavoritesHandler(services),
+			SavedSearches:          NewSavedSearchesHandler(services),
 			Indexing:               NewIndexingHandler(services),
 			Chat:                   NewChatHandler(services, services.Config()),
 			AdminCategories:        adminCategoriesHandler,
@@ -188,12 +206,13 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 	// (используем nil для storage - будет работать только fallback)
 
 	return &Handler{
-		Listings:               NewListingsHandler(services),
+		Listings:               NewListingsHandler(services, nil), // В fallback случае используем nil для кеша
 		Images:                 NewImagesHandler(services),
 		Categories:             categoriesHandler,
-		Search:                 NewSearchHandler(services),
+		Search:                 NewSearchHandler(services, nil), // В fallback случае используем nil для кеша
 		Translations:           NewTranslationsHandler(services),
 		Favorites:              NewFavoritesHandler(services),
+		SavedSearches:          NewSavedSearchesHandler(services),
 		Indexing:               NewIndexingHandler(services),
 		Chat:                   NewChatHandler(services, services.Config()),
 		AdminCategories:        adminCategoriesHandler,
@@ -229,6 +248,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
 	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
 	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
+
+	// Public recommendations endpoint
+	marketplace.Get("/recommendations", h.MarketplaceHandler.GetPublicRecommendations)
 
 	// Cars routes (public endpoints)
 	if h.Cars != nil {
@@ -363,6 +385,14 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	marketplaceProtected.Get("/favorites/count", h.Favorites.GetFavoritesCount)
 	marketplaceProtected.Post("/favorites/:id", h.Favorites.AddToFavorites)
 	marketplaceProtected.Delete("/favorites/:id", h.Favorites.RemoveFromFavorites)
+
+	// Saved searches routes
+	marketplaceProtected.Post("/saved-searches", h.SavedSearches.CreateSavedSearch)
+	marketplaceProtected.Get("/saved-searches", h.SavedSearches.GetSavedSearches)
+	marketplaceProtected.Get("/saved-searches/:id", h.SavedSearches.GetSavedSearch)
+	marketplaceProtected.Put("/saved-searches/:id", h.SavedSearches.UpdateSavedSearch)
+	marketplaceProtected.Delete("/saved-searches/:id", h.SavedSearches.DeleteSavedSearch)
+	marketplaceProtected.Get("/saved-searches/:id/execute", h.SavedSearches.ExecuteSavedSearch)
 	marketplaceProtected.Get("/favorites/:id/check", h.Favorites.IsInFavorites)
 	marketplaceProtected.Put("/translations/:id", h.Translations.UpdateTranslations)
 	marketplaceProtected.Post("/translations/batch", h.Translations.TranslateText) // Предполагается, что этот метод переименован

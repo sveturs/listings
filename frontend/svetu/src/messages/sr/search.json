@@ -221,6 +221,20 @@
     "linux": "Linux"
   },
   "resultsFound": "rezultata pronađeno",
+  "conditions": {
+    "new": "Novo",
+    "likeNew": "Kao novo",
+    "good": "Dobro",
+    "used": "Polovno"
+  },
+  "enterCityName": "Unesite naziv grada",
+  "sortOptions": {
+    "relevance": "Relevantnost",
+    "priceAsc": "Cena (od niže ka višoj)",
+    "priceDesc": "Cena (od više ka nižoj)",
+    "date": "Datum",
+    "popularity": "Popularnost"
+  },
   "contexts": {
     "automotive": {
       "heroTitle": "Auto berza",

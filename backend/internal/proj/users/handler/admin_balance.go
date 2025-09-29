@@ -16,9 +16,9 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserBalance} "User balance"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_balance_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.UserBalance} "User balance"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.balance.error.fetch_balance_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/balance [get]
 func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
@@ -44,9 +44,9 @@ func (h *UserHandler) GetUserBalance(c *fiber.Ctx) error {
 // @Param id path int true "User ID"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BalanceTransaction} "Transaction history"
-// @Failure 400 {object} utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
-// @Failure 500 {object} utils.ErrorResponseSwag "admin.balance.error.fetch_transactions_failed"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.BalanceTransaction} "Transaction history"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.balance.error.invalid_user_id"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.balance.error.fetch_transactions_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/users/{id}/transactions [get]
 func (h *UserHandler) GetUserTransactions(c *fiber.Ctx) error {

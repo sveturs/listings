@@ -37,10 +37,10 @@ func NewBehaviorTrackingHandler(service service.BehaviorTrackingService) *Behavi
 // @Accept json
 // @Produce json
 // @Param event body behavior.TrackEventBatch true "Event batch data"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Events tracked successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 429 {object} utils.ErrorResponseSwag "Too many requests"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Events tracked successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 429 {object} backend_pkg_utils.ErrorResponseSwag "Too many requests"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/track [post]
 func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 	// Rate limiting по IP
@@ -191,11 +191,11 @@ type ClickMetricsResponse struct {
 // @Param user_id path int true "User ID"
 // @Param limit query int false "Limit results (default: 20, max: 100)"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]behavior.BehaviorEvent} "User events"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]behavior.BehaviorEvent} "User events"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/users/{user_id}/events [get]
 func (h *BehaviorTrackingHandler) GetUserEvents(c *fiber.Ctx) error {
 	// Парсим user_id из пути
@@ -252,9 +252,9 @@ func (h *BehaviorTrackingHandler) GetUserEvents(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param session_id path string true "Session ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]behavior.BehaviorEvent} "Session events"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]behavior.BehaviorEvent} "Session events"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/sessions/{session_id}/events [get]
 func (h *BehaviorTrackingHandler) GetSessionEvents(c *fiber.Ctx) error {
 	sessionID := c.Params("session_id")
@@ -283,11 +283,11 @@ func (h *BehaviorTrackingHandler) GetSessionEvents(c *fiber.Ctx) error {
 // @Produce json
 // @Param period_start query string true "Period start date (RFC3339)"
 // @Param period_end query string true "Period end date (RFC3339)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string} "Metrics updated successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Admin access required"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]string} "Metrics updated successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Admin access required"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/update [post]
 // @Security BearerAuth
 func (h *BehaviorTrackingHandler) UpdateMetrics(c *fiber.Ctx) error {

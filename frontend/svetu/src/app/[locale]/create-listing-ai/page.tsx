@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -244,6 +244,205 @@ export default function AIPoweredListingCreationPage() {
     loadCategories();
   }, []);
 
+  // Get category data by name/slug
+  const getCategoryData = useCallback(
+    (categoryName: string): { id: number; name: string; slug: string } => {
+      // Проверка на undefined или пустую строку
+      if (!categoryName) {
+        return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
+      }
+
+      const normalizedName = categoryName.toLowerCase().trim();
+
+      // 1. Обработка подкатегорий из AI анализа
+      if (normalizedName.includes('/')) {
+        // Разбираем путь категории
+        const parts = normalizedName.split('/');
+
+        // Проверяем для автозапчастей и шин
+        if (parts.includes('auto-parts') && parts.includes('tires-wheels')) {
+          // Ищем категорию "Gume i točkovi" (ID: 1304)
+          const tiresCategory = categories.find(
+            (cat) =>
+              cat.id === 1304 ||
+              cat.slug === 'tires-and-wheels' ||
+              cat.name.toLowerCase().includes('gume') ||
+              cat.name.toLowerCase().includes('točkovi')
+          );
+          if (tiresCategory) {
+            return {
+              id: tiresCategory.id,
+              name: tiresCategory.name,
+              slug: tiresCategory.slug,
+            };
+          }
+        }
+
+        // Для других автозапчастей
+        if (parts.includes('auto-parts') && !parts.includes('tires-wheels')) {
+          // Возвращаем категорию "Auto delovi" (ID: 1303)
+          const autoPartsCategory = categories.find(
+            (cat) =>
+              cat.id === 1303 ||
+              cat.slug === 'auto-parts' ||
+              cat.name.toLowerCase().includes('auto delovi')
+          );
+          if (autoPartsCategory) {
+            return {
+              id: autoPartsCategory.id,
+              name: autoPartsCategory.name,
+              slug: autoPartsCategory.slug,
+            };
+          }
+        }
+
+        // Для автомобилей
+        if (parts.includes('cars')) {
+          const carsCategory = categories.find(
+            (cat) =>
+              cat.id === 1301 ||
+              cat.slug === 'cars' ||
+              cat.name.toLowerCase().includes('lični automobili')
+          );
+          if (carsCategory) {
+            return {
+              id: carsCategory.id,
+              name: carsCategory.name,
+              slug: carsCategory.slug,
+            };
+          }
+        }
+      }
+
+      // 2. Поиск по имени/slug категории
+      const category = categories.find(
+        (cat) =>
+          cat.slug === normalizedName ||
+          cat.name.toLowerCase() === normalizedName ||
+          normalizedName.includes(cat.slug)
+      );
+
+      if (category) {
+        return { id: category.id, name: category.name, slug: category.slug };
+      }
+
+      // 3. Маппинг основных категорий
+      const categoryMap: Record<string, number> = {
+        electronics: 1001,
+        fashion: 1002,
+        automotive: 1003,
+        cars: 1002, // Автомобили
+        'real-estate': 1004,
+        'home-garden': 1005,
+        agriculture: 1006,
+        industrial: 1007,
+        'food-beverages': 1008,
+        services: 1009,
+        'sports-recreation': 1010,
+        miscellaneous: 1011, // Разное
+        'books & magazines': 1012,
+        'books-magazines': 1012,
+      };
+
+      const mappedId = categoryMap[normalizedName];
+      if (mappedId) {
+        const mappedCategory = categories.find((cat) => cat.id === mappedId);
+        if (mappedCategory) {
+          return {
+            id: mappedCategory.id,
+            name: mappedCategory.name,
+            slug: mappedCategory.slug,
+          };
+        }
+      }
+
+      // Проверка для категорий Cars и Vehicles
+      if (
+        normalizedName === 'cars' ||
+        normalizedName === 'vehicles' ||
+        normalizedName.includes('car')
+      ) {
+        // Ищем категорию автомобилей
+        const carCategory = categories.find(
+          (cat) =>
+            cat.id === 1301 || cat.slug === 'cars' || cat.slug === 'automobili'
+        );
+        if (carCategory) {
+          return {
+            id: carCategory.id,
+            name: carCategory.name,
+            slug: carCategory.slug,
+          };
+        }
+        // Fallback для автомобилей
+        return { id: 1301, name: 'Lični automobili', slug: 'cars' };
+      }
+
+      // Возвращаем автомобильную категорию по умолчанию для automotive
+      if (normalizedName.includes('automotive')) {
+        return { id: 1003, name: 'Automobili', slug: 'automotive' };
+      }
+
+      // Для категории Miscellaneous возвращаем Разное
+      if (
+        normalizedName === 'miscellaneous' ||
+        normalizedName.includes('misc')
+      ) {
+        const miscCategory = categories.find(
+          (cat) =>
+            cat.id === 1011 ||
+            cat.slug === 'miscellaneous' ||
+            cat.name.toLowerCase().includes('razno')
+        );
+        if (miscCategory) {
+          return {
+            id: miscCategory.id,
+            name: miscCategory.name,
+            slug: miscCategory.slug,
+          };
+        }
+        // Fallback для разного
+        return { id: 1011, name: 'Razno', slug: 'miscellaneous' };
+      }
+
+      return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
+    },
+    [categories]
+  );
+
+  // Проверка, является ли категория автомобильной
+  const isCarCategory = useCallback(
+    (categorySlug: string): boolean => {
+      if (!categorySlug) return false;
+      const carCategories = [
+        'automotive',
+        'cars',
+        'automobili',
+        'licni-automobili',
+      ];
+      const normalizedSlug = categorySlug.toLowerCase();
+
+      // Проверяем основные автомобильные категории
+      if (carCategories.includes(normalizedSlug)) {
+        return true;
+      }
+
+      // Проверяем ID категории
+      const categoryData = getCategoryData(categorySlug);
+      if (categoryData.id >= 1301 && categoryData.id <= 1302) {
+        return true;
+      }
+
+      // Проверяем по ID в диапазоне 10100-10199 (старый диапазон)
+      if (categoryData.id >= 10100 && categoryData.id < 10200) {
+        return true;
+      }
+
+      return false;
+    },
+    [getCategoryData]
+  );
+
   // Автозаполнение марки и модели автомобиля из AI атрибутов
   useEffect(() => {
     const autoFillCarSelection = async () => {
@@ -348,7 +547,13 @@ export default function AIPoweredListingCreationPage() {
     };
 
     autoFillCarSelection();
-  }, [aiData.category, aiData.attributes.brand, aiData.attributes.model]);
+  }, [
+    aiData.category,
+    aiData.attributes.brand,
+    aiData.attributes.model,
+    carSelection.make,
+    isCarCategory,
+  ]);
 
   // Загружаем атрибуты при изменении категории
   const loadCategoryAttributes = async (categoryId: number) => {
@@ -367,198 +572,6 @@ export default function AIPoweredListingCreationPage() {
     } catch (error) {
       console.error('Failed to load category attributes:', error);
     }
-  };
-
-  // Get category data by name/slug
-  const getCategoryData = (
-    categoryName: string
-  ): { id: number; name: string; slug: string } => {
-    // Проверка на undefined или пустую строку
-    if (!categoryName) {
-      return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
-    }
-
-    const normalizedName = categoryName.toLowerCase().trim();
-
-    // 1. Обработка подкатегорий из AI анализа
-    if (normalizedName.includes('/')) {
-      // Разбираем путь категории
-      const parts = normalizedName.split('/');
-
-      // Проверяем для автозапчастей и шин
-      if (parts.includes('auto-parts') && parts.includes('tires-wheels')) {
-        // Ищем категорию "Gume i točkovi" (ID: 1304)
-        const tiresCategory = categories.find(
-          (cat) =>
-            cat.id === 1304 ||
-            cat.slug === 'tires-and-wheels' ||
-            cat.name.toLowerCase().includes('gume') ||
-            cat.name.toLowerCase().includes('točkovi')
-        );
-        if (tiresCategory) {
-          return {
-            id: tiresCategory.id,
-            name: tiresCategory.name,
-            slug: tiresCategory.slug,
-          };
-        }
-      }
-
-      // Для других автозапчастей
-      if (parts.includes('auto-parts') && !parts.includes('tires-wheels')) {
-        // Возвращаем категорию "Auto delovi" (ID: 1303)
-        const autoPartsCategory = categories.find(
-          (cat) =>
-            cat.id === 1303 ||
-            cat.slug === 'auto-parts' ||
-            cat.name.toLowerCase().includes('auto delovi')
-        );
-        if (autoPartsCategory) {
-          return {
-            id: autoPartsCategory.id,
-            name: autoPartsCategory.name,
-            slug: autoPartsCategory.slug,
-          };
-        }
-      }
-
-      // Для автомобилей
-      if (parts.includes('cars')) {
-        const carsCategory = categories.find(
-          (cat) =>
-            cat.id === 1301 ||
-            cat.slug === 'cars' ||
-            cat.name.toLowerCase().includes('lični automobili')
-        );
-        if (carsCategory) {
-          return {
-            id: carsCategory.id,
-            name: carsCategory.name,
-            slug: carsCategory.slug,
-          };
-        }
-      }
-    }
-
-    // 2. Поиск по имени/slug категории
-    const category = categories.find(
-      (cat) =>
-        cat.slug === normalizedName ||
-        cat.name.toLowerCase() === normalizedName ||
-        normalizedName.includes(cat.slug)
-    );
-
-    if (category) {
-      return { id: category.id, name: category.name, slug: category.slug };
-    }
-
-    // 3. Маппинг основных категорий
-    const categoryMap: Record<string, number> = {
-      electronics: 1001,
-      fashion: 1002,
-      automotive: 1003,
-      cars: 1002, // Автомобили
-      'real-estate': 1004,
-      'home-garden': 1005,
-      agriculture: 1006,
-      industrial: 1007,
-      'food-beverages': 1008,
-      services: 1009,
-      'sports-recreation': 1010,
-      miscellaneous: 1011, // Разное
-      'books & magazines': 1012,
-      'books-magazines': 1012,
-    };
-
-    const mappedId = categoryMap[normalizedName];
-    if (mappedId) {
-      const mappedCategory = categories.find((cat) => cat.id === mappedId);
-      if (mappedCategory) {
-        return {
-          id: mappedCategory.id,
-          name: mappedCategory.name,
-          slug: mappedCategory.slug,
-        };
-      }
-    }
-
-    // Проверка для категорий Cars и Vehicles
-    if (
-      normalizedName === 'cars' ||
-      normalizedName === 'vehicles' ||
-      normalizedName.includes('car')
-    ) {
-      // Ищем категорию автомобилей
-      const carCategory = categories.find(
-        (cat) =>
-          cat.id === 1301 || cat.slug === 'cars' || cat.slug === 'automobili'
-      );
-      if (carCategory) {
-        return {
-          id: carCategory.id,
-          name: carCategory.name,
-          slug: carCategory.slug,
-        };
-      }
-      // Fallback для автомобилей
-      return { id: 1301, name: 'Lični automobili', slug: 'cars' };
-    }
-
-    // Возвращаем автомобильную категорию по умолчанию для automotive
-    if (normalizedName.includes('automotive')) {
-      return { id: 1003, name: 'Automobili', slug: 'automotive' };
-    }
-
-    // Для категории Miscellaneous возвращаем Разное
-    if (normalizedName === 'miscellaneous' || normalizedName.includes('misc')) {
-      const miscCategory = categories.find(
-        (cat) =>
-          cat.id === 1011 ||
-          cat.slug === 'miscellaneous' ||
-          cat.name.toLowerCase().includes('razno')
-      );
-      if (miscCategory) {
-        return {
-          id: miscCategory.id,
-          name: miscCategory.name,
-          slug: miscCategory.slug,
-        };
-      }
-      // Fallback для разного
-      return { id: 1011, name: 'Razno', slug: 'miscellaneous' };
-    }
-
-    return { id: 1008, name: 'Hrana i piće', slug: 'food-beverages' };
-  };
-
-  // Проверка, является ли категория автомобильной
-  const isCarCategory = (categorySlug: string): boolean => {
-    if (!categorySlug) return false;
-    const carCategories = [
-      'automotive',
-      'cars',
-      'automobili',
-      'licni-automobili',
-    ];
-    const normalizedSlug = categorySlug.toLowerCase();
-
-    // Проверяем основные автомобильные категории
-    if (carCategories.includes(normalizedSlug)) {
-      return true;
-    }
-
-    // Проверяем ID категории
-    const categoryData = getCategoryData(categorySlug);
-    if (categoryData.id >= 1301 && categoryData.id <= 1302) {
-      return true;
-    }
-
-    // Проверяем по ID в диапазоне 10100-10199 (старый диапазон)
-    if (categoryData.id >= 10100 && categoryData.id < 10200) {
-      return true;
-    }
-
-    return false;
   };
 
   // Convert image to base64 with compression

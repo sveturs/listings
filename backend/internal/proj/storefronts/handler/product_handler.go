@@ -43,9 +43,9 @@ func NewProductHandler(productService *service.ProductService) *ProductHandler {
 // @Param sort_order query string false "Sort order (asc, desc)"
 // @Param limit query int false "Number of items per page (default: 20)"
 // @Param offset query int false "Number of items to skip"
-// @Success 200 {object} []models.StorefrontProduct "List of products"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Success 200 {object} []backend_internal_domain_models.StorefrontProduct "List of products"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products [get]
 func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
@@ -121,9 +121,9 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param id path int true "Product ID"
-// @Success 200 {object} models.StorefrontProduct "Product details"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Success 200 {object} backend_internal_domain_models.StorefrontProduct "Product details"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products/{id} [get]
 func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
@@ -163,9 +163,9 @@ func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Product ID"
-// @Success 200 {object} models.StorefrontProduct "Product details"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Success 200 {object} backend_internal_domain_models.StorefrontProduct "Product details"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/products/{id} [get]
 func (h *ProductHandler) GetProductByID(c *fiber.Ctx) error {
 	productID, err := strconv.Atoi(c.Params("id"))
@@ -198,11 +198,11 @@ func (h *ProductHandler) GetProductByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
-// @Param product body models.CreateProductRequest true "Product data with optional variants"
-// @Success 201 {object} models.StorefrontProduct "Created product with variants"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param product body backend_internal_domain_models.CreateProductRequest true "Product data with optional variants"
+// @Success 201 {object} backend_internal_domain_models.StorefrontProduct "Created product with variants"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/products [post]
 func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
@@ -263,12 +263,12 @@ func (h *ProductHandler) CreateProduct(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param id path int true "Product ID"
-// @Param product body models.UpdateProductRequest true "Product update data"
-// @Success 200 {object} models.SuccessResponse "Product updated successfully"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param product body backend_internal_domain_models.UpdateProductRequest true "Product update data"
+// @Success 200 {object} backend_internal_domain_models.SuccessResponse "Product updated successfully"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/products/{id} [put]
 func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
@@ -326,11 +326,11 @@ func (h *ProductHandler) UpdateProduct(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param id path int true "Product ID"
-// @Success 200 {object} models.SuccessResponse "Product deleted successfully"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Success 200 {object} backend_internal_domain_models.SuccessResponse "Product deleted successfully"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/products/{id} [delete]
 func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
@@ -378,12 +378,12 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param id path int true "Product ID"
-// @Param inventory body models.UpdateInventoryRequest true "Inventory update data"
-// @Success 200 {object} models.SuccessResponse "Inventory updated successfully"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 404 {object} models.ErrorResponse "Product not found"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param inventory body backend_internal_domain_models.UpdateInventoryRequest true "Inventory update data"
+// @Success 200 {object} backend_internal_domain_models.SuccessResponse "Inventory updated successfully"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/products/{id}/inventory [post]
 func (h *ProductHandler) UpdateInventory(c *fiber.Ctx) error {
@@ -433,9 +433,9 @@ func (h *ProductHandler) UpdateInventory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
-// @Success 200 {object} models.ProductStats "Product statistics"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Success 200 {object} backend_internal_domain_models.ProductStats "Product statistics"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/products/stats [get]
 func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
@@ -473,11 +473,11 @@ func (h *ProductHandler) GetProductStats(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param slug path string true "Storefront slug"
-// @Param body body models.BulkCreateProductsRequest true "Products to create"
-// @Success 200 {object} models.BulkCreateProductsResponse "Bulk creation result"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param body body backend_internal_domain_models.BulkCreateProductsRequest true "Products to create"
+// @Success 200 {object} backend_internal_domain_models.BulkCreateProductsResponse "Bulk creation result"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products/bulk/create [post]
 func (h *ProductHandler) BulkCreateProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
@@ -519,11 +519,11 @@ func (h *ProductHandler) BulkCreateProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param slug path string true "Storefront slug"
-// @Param body body models.BulkUpdateProductsRequest true "Products to update"
-// @Success 200 {object} models.BulkUpdateProductsResponse "Bulk update result"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param body body backend_internal_domain_models.BulkUpdateProductsRequest true "Products to update"
+// @Success 200 {object} backend_internal_domain_models.BulkUpdateProductsResponse "Bulk update result"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products/bulk/update [put]
 func (h *ProductHandler) BulkUpdateProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
@@ -565,11 +565,11 @@ func (h *ProductHandler) BulkUpdateProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param slug path string true "Storefront slug"
-// @Param body body models.BulkDeleteProductsRequest true "Product IDs to delete"
-// @Success 200 {object} models.BulkDeleteProductsResponse "Bulk deletion result"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param body body backend_internal_domain_models.BulkDeleteProductsRequest true "Product IDs to delete"
+// @Success 200 {object} backend_internal_domain_models.BulkDeleteProductsResponse "Bulk deletion result"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products/bulk/delete [delete]
 func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)
@@ -615,11 +615,11 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param slug path string true "Storefront slug"
-// @Param body body models.BulkUpdateStatusRequest true "Product IDs and status"
-// @Success 200 {object} models.BulkUpdateStatusResponse "Bulk status update result"
-// @Failure 400 {object} models.ErrorResponse "Bad request"
-// @Failure 401 {object} models.ErrorResponse "Unauthorized"
-// @Failure 500 {object} models.ErrorResponse "Internal server error"
+// @Param body body backend_internal_domain_models.BulkUpdateStatusRequest true "Product IDs and status"
+// @Success 200 {object} backend_internal_domain_models.BulkUpdateStatusResponse "Bulk status update result"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
 // @Router /api/v1/storefronts/{slug}/products/bulk/status [put]
 func (h *ProductHandler) BulkUpdateStatus(c *fiber.Ctx) error {
 	storefrontID, err := getStorefrontIDFromContext(c)

@@ -633,6 +633,7 @@ export default function EditListingPage() {
                       listingId={listing.id}
                       images={images}
                       onImagesChange={handleImagesChange}
+                      storefrontId={(listing as any).storefront_id}
                     />
                   )}
 

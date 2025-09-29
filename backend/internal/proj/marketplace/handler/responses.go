@@ -140,7 +140,7 @@ type ProviderData struct {
 
 // BatchTranslateRequest запрос пакетного перевода
 type BatchTranslateRequest struct {
-	ListingIDs []int  `json:"listing_ids" example:"[1,2,3]"`
+	ListingIDs []int  `json:"listing_ids" example:"1,2,3"`
 	TargetLang string `json:"target_lang" example:"en"`
 	Provider   string `json:"provider" example:"google"`
 }

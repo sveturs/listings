@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+
+	"backend/internal/logger"
+	"backend/pkg/utils"
 )
 
 type NeighborhoodStatsResponse struct {
@@ -25,8 +28,8 @@ type NeighborhoodStatsResponse struct {
 // @Param lat query number false "Center latitude"
 // @Param lon query number false "Center longitude"
 // @Param radius query number false "Radius in kilometers (default 5)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=handler.NeighborhoodStatsResponse} "Statistics"
-// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.statsError"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=internal_proj_marketplace_handler.NeighborhoodStatsResponse} "Statistics"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.statsError"
 // @Router /api/v1/marketplace/neighborhood-stats [get]
 func (h *MarketplaceHandler) GetNeighborhoodStats(c *fiber.Ctx) error {
 	lat := c.QueryFloat("lat", 44.8176) // Default Belgrade coordinates
@@ -40,10 +43,8 @@ func (h *MarketplaceHandler) GetNeighborhoodStats(c *fiber.Ctx) error {
 		WHERE status = 'active'
 	`).Scan(&totalCount)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to get total listings count")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "marketplace.statsError",
-		})
+		logger.Error().Err(err).Msg("Failed to get total listings count")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.statsError")
 	}
 
 	// Get new listings today
@@ -55,10 +56,8 @@ func (h *MarketplaceHandler) GetNeighborhoodStats(c *fiber.Ctx) error {
 		AND created_at >= $1
 	`, today).Scan(&newToday)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to get new listings today")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "marketplace.statsError",
-		})
+		logger.Error().Err(err).Msg("Failed to get new listings today")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.statsError")
 	}
 
 	// Get listings within radius
@@ -91,8 +90,5 @@ func (h *MarketplaceHandler) GetNeighborhoodStats(c *fiber.Ctx) error {
 		CenterLon:     lon,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data":    response,
-	})
+	return utils.SuccessResponse(c, response)
 }

@@ -50,8 +50,8 @@ type StorageConfig struct {
 // @Description Returns storage configuration including bucket names for frontend
 // @Tags config
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag{data=StorageConfig} "Storage configuration"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=StorageConfig} "Storage configuration"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/config/storage [get]
 func (h *Handler) GetStorageConfig(c *fiber.Ctx) error {
 	log.Info().Msg("Getting storage configuration")

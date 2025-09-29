@@ -297,7 +297,7 @@ export default function PreviewStep({
                 {state.productData.stock_quantity !== undefined &&
                   state.productData.stock_quantity > 0 && (
                     <span className="text-sm text-success">
-                      {state.productData.stock_quantity} {t('inStock')}
+                      {state.productData.stock_quantity} {t('products.inStock')}
                     </span>
                   )}
               </div>

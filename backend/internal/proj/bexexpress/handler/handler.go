@@ -70,10 +70,10 @@ func (h *Handler) RegisterRoutes(api fiber.Router) {
 // @Tags BEX Express
 // @Accept json
 // @Produce json
-// @Param request body models.CreateShipmentRequest true "Shipment details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BEXShipment}
-// @Failure 400 {object} utils.ErrorResponseSwag
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_proj_bexexpress_models.CreateShipmentRequest true "Shipment details"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_bexexpress_models.BEXShipment}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments [post]
 func (h *Handler) CreateShipment(c *fiber.Ctx) error {
@@ -111,8 +111,8 @@ func (h *Handler) CreateShipment(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Produce json
 // @Param id path int true "Shipment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BEXShipment}
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_bexexpress_models.BEXShipment}
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments/{id} [get]
 func (h *Handler) GetShipment(c *fiber.Ctx) error {
@@ -135,8 +135,8 @@ func (h *Handler) GetShipment(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Produce json
 // @Param id path int true "Shipment ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BEXShipment}
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_bexexpress_models.BEXShipment}
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments/{id}/status [get]
 func (h *Handler) GetShipmentStatus(c *fiber.Ctx) error {
@@ -175,7 +175,7 @@ func (h *Handler) GetShipmentStatus(c *fiber.Ctx) error {
 // @Param id path int true "Shipment ID"
 // @Param size query int false "Page size (4 for A4, 6 for A6)" default(4)
 // @Success 200 {file} binary
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments/{id}/label [get]
 func (h *Handler) GetShipmentLabel(c *fiber.Ctx) error {
@@ -207,8 +207,8 @@ func (h *Handler) GetShipmentLabel(c *fiber.Ctx) error {
 // @Description Cancel a shipment
 // @Tags BEX Express
 // @Param id path int true "Shipment ID"
-// @Success 200 {object} utils.SuccessResponseSwag
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments/{id} [delete]
 func (h *Handler) CancelShipment(c *fiber.Ctx) error {
@@ -231,9 +231,9 @@ func (h *Handler) CancelShipment(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Accept json
 // @Produce json
-// @Param request body models.CalculateRateRequest true "Rate calculation parameters"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.CalculateRateResponse}
-// @Failure 400 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_proj_bexexpress_models.CalculateRateRequest true "Rate calculation parameters"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_bexexpress_models.CalculateRateResponse}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/bex/calculate-rate [post]
 func (h *Handler) CalculateRate(c *fiber.Ctx) error {
 	var req models.CalculateRateRequest
@@ -260,9 +260,9 @@ func (h *Handler) CalculateRate(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Accept json
 // @Produce json
-// @Param request body models.SearchAddressRequest true "Search parameters"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AddressSuggestion}
-// @Failure 400 {object} utils.ErrorResponseSwag
+// @Param request body backend_internal_proj_bexexpress_models.SearchAddressRequest true "Search parameters"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_bexexpress_models.AddressSuggestion}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/bex/search-address [post]
 func (h *Handler) SearchAddress(c *fiber.Ctx) error {
 	var req models.SearchAddressRequest
@@ -288,8 +288,8 @@ func (h *Handler) SearchAddress(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Produce json
 // @Param city query string false "Filter by city"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BEXParcelShop}
-// @Failure 500 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_bexexpress_models.BEXParcelShop}
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/bex/parcel-shops [get]
 func (h *Handler) GetParcelShops(c *fiber.Ctx) error {
 	city := c.Query("city")
@@ -308,8 +308,8 @@ func (h *Handler) GetParcelShops(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Produce json
 // @Param tracking path string true "Tracking number"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.BEXShipment}
-// @Failure 404 {object} utils.ErrorResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_bexexpress_models.BEXShipment}
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router /api/v1/bex/track/{tracking} [get]
 func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 	tracking := c.Params("tracking")
@@ -336,9 +336,9 @@ func (h *Handler) TrackShipment(c *fiber.Ctx) error {
 // @Tags BEX Express
 // @Accept json
 // @Produce json
-// @Param request body []models.CreateShipmentRequest true "Array of shipment details"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BEXShipment}
-// @Failure 400 {object} utils.ErrorResponseSwag
+// @Param request body []backend_internal_proj_bexexpress_models.CreateShipmentRequest true "Array of shipment details"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_bexexpress_models.BEXShipment}
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
 // @Security ApiKeyAuth
 // @Router /api/v1/bex/shipments/bulk [post]
 func (h *Handler) CreateBulkShipments(c *fiber.Ctx) error {
@@ -397,7 +397,7 @@ func (h *Handler) CreateBulkShipments(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param webhook body map[string]interface{} true "Webhook data"
-// @Success 200 {object} utils.SuccessResponseSwag
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag
 // @Router /api/v1/bex/webhook/status [post]
 func (h *Handler) HandleStatusWebhook(c *fiber.Ctx) error {
 	var data map[string]interface{}

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import LazyImage from '@/components/common/LazyImage';
 
 interface ImageGalleryProps {
   images: string[];
@@ -311,13 +311,13 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             className="relative w-full h-full flex items-center justify-center cursor-pointer"
             onClick={toggleFullscreen}
           >
-            <Image
+            <LazyImage
               src={images[currentIndex]}
               alt={`Review photo ${currentIndex + 1}`}
               fill
               className="object-contain rounded-lg drop-shadow-2xl"
               sizes="(max-width: 1200px) 100vw, 1200px"
-              priority
+              priority={true}
             />
           </div>
 
@@ -383,12 +383,13 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
                           : 'border-base-300 hover:border-primary/50 hover:scale-105 opacity-70 hover:opacity-100'
                       }`}
                   >
-                    <Image
+                    <LazyImage
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
                       width={64}
                       height={64}
                       className="w-full h-full object-cover"
+                      priority={currentIndex === index}
                     />
                   </button>
                 ))}

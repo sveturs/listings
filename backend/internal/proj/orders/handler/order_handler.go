@@ -22,12 +22,12 @@ const (
 // @Tags orders
 // @Accept json
 // @Produce json
-// @Param order body models.CreateOrderRequest true "Order data"
-// @Success 201 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Created order"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 409 {object} utils.ErrorResponseSwag "Insufficient stock"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Param order body backend_internal_domain_models.CreateOrderRequest true "Order data"
+// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.StorefrontOrder} "Created order"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "Insufficient stock"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/orders [post]
 func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
@@ -77,9 +77,9 @@ func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
 // @Param limit query int false "Items per page" default(20)
 // @Param status query string false "Filter by status"
 // @Param storefront_id query int false "Filter by storefront"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.StorefrontOrder} "User orders"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.StorefrontOrder} "User orders"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/orders [get]
 func (h *OrdersHandler) GetMyOrders(c *fiber.Ctx) error {
@@ -126,12 +126,12 @@ func (h *OrdersHandler) GetMyOrders(c *fiber.Ctx) error {
 // @Tags orders
 // @Produce json
 // @Param id path int true "Order ID"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Order details"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.StorefrontOrder} "Order details"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/orders/{id} [get]
 func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
@@ -166,14 +166,14 @@ func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
 // @Tags orders
 // @Produce json
 // @Param id path int true "Order ID"
-// @Param cancel body models.CancelOrderRequest true "Cancellation reason"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Canceled order"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
-// @Failure 409 {object} utils.ErrorResponseSwag "Order cannot be canceled"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Param cancel body backend_internal_domain_models.CancelOrderRequest true "Cancellation reason"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.StorefrontOrder} "Canceled order"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order not found"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "Order cannot be canceled"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/orders/{id}/cancel [put]
 func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
@@ -219,11 +219,11 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
 // @Param status query string false "Filter by status"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.StorefrontOrder} "Storefront orders"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.StorefrontOrder} "Storefront orders"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/orders [get]
 func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
@@ -276,13 +276,13 @@ func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
 // @Param order_id path int true "Order ID"
-// @Param update body models.UpdateOrderStatusRequest true "Status update"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.StorefrontOrder} "Updated order"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Param update body backend_internal_domain_models.UpdateOrderStatusRequest true "Status update"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.StorefrontOrder} "Updated order"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Order not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/orders/{order_id}/status [put]
 func (h *OrdersHandler) UpdateOrderStatus(c *fiber.Ctx) error {

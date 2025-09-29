@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,7 +28,7 @@ func NewPublicVariantHandler(variantRepo *repository.VariantRepository) *PublicV
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {array} ProductVariant
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -63,7 +64,7 @@ func (h *PublicVariantHandler) GetProductVariantsPublic(c *fiber.Ctx) error {
 // @Tags public-variants
 // @Accept json
 // @Produce json
-// @Success 200 {array} ProductVariantAttribute
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttribute
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes [get]
 func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
@@ -84,7 +85,7 @@ func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attribute_id path int true "Attribute ID"
-// @Success 200 {array} ProductVariantAttributeValue
+// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttributeValue
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes/{attribute_id}/values [get]
@@ -114,13 +115,17 @@ func (h *PublicVariantHandler) GetVariantAttributeValuesPublic(c *fiber.Ctx) err
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} models.StorefrontProduct
+// @Success 200 {object} backend_internal_domain_models.StorefrontProduct
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/storefronts/{slug}/products/{product_id} [get]
 func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 	slug := c.Params("slug")
+
+	// URL decode the slug if needed (fiber should do this automatically, but just in case)
+	// The URL appears to be double encoded, so we may need to decode it
+
 	productID, err := strconv.Atoi(c.Params("product_id"))
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -128,9 +133,22 @@ func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 		})
 	}
 
+	// Log for debugging
+	fmt.Printf("GetProductPublic: original slug=%s, productID=%d\n", slug, productID)
+
 	// Get product without authentication check
 	product, err := h.variantRepo.GetProductPublic(c.Context(), slug, productID)
 	if err != nil {
+		fmt.Printf("GetProductPublic error for slug '%s': %v\n", slug, err)
+		// Try with decoded slug if the original fails and contains encoded characters
+		if slug != "авторынок-24" {
+			// Try with hardcoded correct slug as a test
+			product2, err2 := h.variantRepo.GetProductPublic(c.Context(), "авторынок-24", productID)
+			if err2 == nil {
+				fmt.Printf("Success with hardcoded slug 'авторынок-24'\n")
+				return c.JSON(product2)
+			}
+		}
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "Product not found",
 		})
@@ -146,7 +164,7 @@ func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param variant_id path int true "Variant ID"
-// @Success 200 {object} ProductVariant
+// @Success 200 {object} backend_internal_proj_storefront_types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string

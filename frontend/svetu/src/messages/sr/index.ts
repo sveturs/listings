@@ -10,6 +10,7 @@ export type TranslationModule =
   | 'admin'
   | 'ar'
   | 'auth'
+  | 'calculator'
   | 'cars'
   | 'cart'
   | 'chat'
@@ -18,6 +19,7 @@ export type TranslationModule =
   | 'condition'
   | 'dashboard'
   | 'delivery'
+  | 'filters'
   | 'gis'
   | 'home'
   | 'map'
@@ -30,6 +32,7 @@ export type TranslationModule =
   | 'products'
   | 'profile'
   | 'realEstate'
+  | 'recommendations'
   | 'reviews'
   | 'scanner'
   | 'search'
@@ -42,6 +45,7 @@ export const moduleLoaders = {
   admin: () => import('./admin.json'),
   ar: () => import('./ar.json'),
   auth: () => import('./auth.json'),
+  calculator: () => import('./calculator.json'),
   cars: () => import('./cars.json'),
   cart: () => import('./cart.json'),
   chat: () => import('./chat.json'),
@@ -49,6 +53,7 @@ export const moduleLoaders = {
   condition: () => import('./condition.json'),
   dashboard: () => import('./dashboard.json'),
   delivery: () => import('./delivery.json'),
+  filters: () => import('./filters.json'),
   gis: () => import('./gis.json'),
   home: () => import('./home.json'),
   map: () => import('./map.json'),
@@ -61,6 +66,7 @@ export const moduleLoaders = {
   products: () => import('./products.json'),
   profile: () => import('./profile.json'),
   realEstate: () => import('./realEstate.json'),
+  recommendations: () => import('./recommendations.json'),
   reviews: () => import('./reviews.json'),
   scanner: () => import('./scanner.json'),
   search: () => import('./search.json'),

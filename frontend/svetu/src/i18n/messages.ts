@@ -24,6 +24,9 @@ import enSubscription from '@/messages/en/subscription.json';
 import enFavorites from '@/messages/en/favorites.json';
 import enTracking from '@/messages/en/tracking.json';
 import enCreateListing from '@/messages/en/create_listing.json';
+import enCalculator from '@/messages/en/calculator.json';
+import enRecommendations from '@/messages/en/recommendations.json';
+import enFilters from '@/messages/en/filters.json';
 
 // Русские переводы
 import ruCommon from '@/messages/ru/common.json';
@@ -47,6 +50,9 @@ import ruSubscription from '@/messages/ru/subscription.json';
 import ruFavorites from '@/messages/ru/favorites.json';
 import ruTracking from '@/messages/ru/tracking.json';
 import ruCreateListing from '@/messages/ru/create_listing.json';
+import ruCalculator from '@/messages/ru/calculator.json';
+import ruRecommendations from '@/messages/ru/recommendations.json';
+import ruFilters from '@/messages/ru/filters.json';
 
 // Сербские переводы
 import srCommon from '@/messages/sr/common.json';
@@ -70,6 +76,9 @@ import srSubscription from '@/messages/sr/subscription.json';
 import srFavorites from '@/messages/sr/favorites.json';
 import srTracking from '@/messages/sr/tracking.json';
 import srCreateListing from '@/messages/sr/create_listing.json';
+import srCalculator from '@/messages/sr/calculator.json';
+import srRecommendations from '@/messages/sr/recommendations.json';
+import srFilters from '@/messages/sr/filters.json';
 
 // Объединённые сообщения по языкам
 export const messages = {
@@ -95,6 +104,9 @@ export const messages = {
     favorites: enFavorites,
     tracking: enTracking,
     create_listing: enCreateListing,
+    calculator: enCalculator,
+    recommendations: enRecommendations,
+    filters: enFilters,
   },
   ru: {
     common: ruCommon,
@@ -118,6 +130,9 @@ export const messages = {
     favorites: ruFavorites,
     tracking: ruTracking,
     create_listing: ruCreateListing,
+    calculator: ruCalculator,
+    recommendations: ruRecommendations,
+    filters: ruFilters,
   },
   sr: {
     common: srCommon,
@@ -141,6 +156,9 @@ export const messages = {
     favorites: srFavorites,
     tracking: srTracking,
     create_listing: srCreateListing,
+    calculator: srCalculator,
+    recommendations: srRecommendations,
+    filters: srFilters,
   },
 };
 

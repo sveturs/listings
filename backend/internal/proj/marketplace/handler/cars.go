@@ -24,6 +24,49 @@ func NewCarsHandler(service service.Interface, carService *service.UnifiedCarSer
 	}
 }
 
+// GetCarStatistics godoc
+// @Summary Get car statistics
+// @Description Get statistics about cars in the marketplace (total listings, makes, models)
+// @Tags marketplace-cars
+// @Accept json
+// @Produce json
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Car statistics"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/cars/stats [get]
+func (h *CarsHandler) GetCarStatistics(c *fiber.Ctx) error {
+	logger.Info().Msg("GetCarStatistics handler called")
+
+	// Get total car listings count from OpenSearch
+	totalListings, err := h.service.GetCarListingsCount(c.Context())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get car listings count")
+		totalListings = 0
+	}
+
+	// Get total makes count
+	makes, err := h.service.GetCarMakes(c.Context(), "", false, false, true)
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get car makes for stats")
+		makes = nil
+	}
+
+	// Get total models count
+	totalModels, err := h.service.GetTotalCarModelsCount(c.Context())
+	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get total models count")
+		totalModels = 0
+	}
+
+	stats := map[string]interface{}{
+		"totalListings": totalListings,
+		"totalMakes":    len(makes),
+		"totalModels":   totalModels,
+		"lastUpdated":   c.Context().Value("timestamp"),
+	}
+
+	return utils.SuccessResponse(c, stats)
+}
+
 // GetCarMakes godoc
 // @Summary Get all car makes
 // @Description Get all available car makes from the database
@@ -33,9 +76,9 @@ func NewCarsHandler(service service.Interface, carService *service.UnifiedCarSer
 // @Param country query string false "Filter by country"
 // @Param is_domestic query boolean false "Filter domestic brands"
 // @Param active_only query boolean false "Show only active brands" default(true)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CarMake} "List of car makes"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CarMake} "List of car makes"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/makes [get]
 func (h *CarsHandler) GetCarMakes(c *fiber.Ctx) error {
 	logger.Info().Msg("GetCarMakes handler called")
@@ -63,10 +106,10 @@ func (h *CarsHandler) GetCarMakes(c *fiber.Ctx) error {
 // @Produce json
 // @Param make_slug path string true "Car make slug"
 // @Param active_only query boolean false "Show only active models" default(true)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CarModel} "List of car models"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Make not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CarModel} "List of car models"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Make not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/makes/{make_slug}/models [get]
 func (h *CarsHandler) GetCarModels(c *fiber.Ctx) error {
 	makeSlug := c.Params("make_slug")
@@ -98,10 +141,10 @@ func (h *CarsHandler) GetCarModels(c *fiber.Ctx) error {
 // @Produce json
 // @Param model_id path int true "Car model ID"
 // @Param active_only query boolean false "Show only active generations" default(true)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CarGeneration} "List of car generations"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} utils.ErrorResponseSwag "Model not found"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CarGeneration} "List of car generations"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Model not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/models/{model_id}/generations [get]
 func (h *CarsHandler) GetCarGenerations(c *fiber.Ctx) error {
 	modelIDStr := c.Params("model_id")
@@ -134,9 +177,9 @@ func (h *CarsHandler) GetCarGenerations(c *fiber.Ctx) error {
 // @Produce json
 // @Param q query string true "Search query"
 // @Param limit query int false "Limit results" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.CarMake} "Search results"
-// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.CarMake} "Search results"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/makes/search [get]
 func (h *CarsHandler) SearchCarMakes(c *fiber.Ctx) error {
 	query := c.Query("q")
@@ -166,9 +209,9 @@ func (h *CarsHandler) SearchCarMakes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param vin path string true "VIN number (17 characters)"
-// @Success 200 {object} utils.SuccessResponseSwag{data=models.VINDecodeResult} "VIN decode result"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid VIN"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.VINDecodeResult} "VIN decode result"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid VIN"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/cars/vin/{vin}/decode [get]
 func (h *CarsHandler) DecodeVIN(c *fiber.Ctx) error {
 	vin := c.Params("vin")
@@ -201,6 +244,7 @@ func (h *CarsHandler) RegisterRoutes(router fiber.Router) {
 	cars := router.Group("/cars")
 
 	// Public routes
+	cars.Get("/stats", h.GetCarStatistics)
 	cars.Get("/makes", h.GetCarMakes)
 	cars.Get("/makes/search", h.SearchCarMakes)
 	cars.Get("/makes/:make_slug/models", h.GetCarModels)

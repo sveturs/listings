@@ -123,6 +123,8 @@ func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, docu
 		return nil
 	}
 
+	fmt.Printf("BulkIndex: Starting to index %d documents to index %s\n", len(documents), indexName)
+
 	var bulkBody strings.Builder
 
 	for _, doc := range documents {
@@ -175,15 +177,51 @@ func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, docu
 	if err != nil {
 		return fmt.Errorf("ошибка bulk индексации: %w", err)
 	}
+
+	// Всегда закрываем body в конце
 	defer func() {
 		if err := res.Body.Close(); err != nil {
-			fmt.Printf("Failed to close response body: %v", err)
+			fmt.Printf("Failed to close response body: %v\n", err)
 		}
 	}()
 
-	if res.IsError() {
-		return fmt.Errorf("ошибка bulk индексации: %s", res.String())
+	// Читаем ответ для проверки ошибок
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("ошибка чтения ответа bulk: %w", err)
 	}
+
+	// Проверяем HTTP статус
+	if res.IsError() {
+		return fmt.Errorf("ошибка bulk индексации HTTP %d: %s, body: %s", res.StatusCode, res.String(), string(body))
+	}
+
+	// Парсим ответ для проверки индивидуальных ошибок
+	var bulkResponse map[string]interface{}
+	if err := json.Unmarshal(body, &bulkResponse); err != nil {
+		return fmt.Errorf("ошибка парсинга ответа bulk: %w, body: %s", err, string(body))
+	}
+
+	// Проверяем на наличие ошибок в ответе
+	if hasErrors, ok := bulkResponse["errors"].(bool); ok && hasErrors {
+		// Логируем детали ошибок
+		if items, ok := bulkResponse["items"].([]interface{}); ok {
+			for i, item := range items {
+				if itemMap, ok := item.(map[string]interface{}); ok {
+					for action, details := range itemMap {
+						if detailsMap, ok := details.(map[string]interface{}); ok {
+							if errorInfo, hasError := detailsMap["error"]; hasError {
+								fmt.Printf("Bulk error for doc %d (action: %s): %v\n", i, action, errorInfo)
+							}
+						}
+					}
+				}
+			}
+		}
+		return fmt.Errorf("bulk индексация содержит ошибки, см. логи выше")
+	}
+
+	fmt.Printf("BulkIndex: Successfully completed bulk operation (took: %v, errors: %v)\n", bulkResponse["took"], bulkResponse["errors"])
 
 	return nil
 }

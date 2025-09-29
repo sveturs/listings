@@ -42,9 +42,9 @@ type DashboardNotification struct {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Success 200 {object} postgres.DashboardStats "Dashboard statistics"
-// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/dashboard/stats [get]
 func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
@@ -81,10 +81,10 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param limit query int false "Limit" default(5)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]postgres.DashboardOrder} "Recent orders"
-// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]postgres.DashboardOrder} "Recent orders"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/dashboard/recent-orders [get]
 func (h *DashboardHandler) GetRecentOrders(c *fiber.Ctx) error {
@@ -131,10 +131,10 @@ func (h *DashboardHandler) GetRecentOrders(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param slug path string true "Storefront slug"
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]postgres.LowStockProduct} "Low stock products"
-// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]postgres.LowStockProduct} "Low stock products"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/dashboard/low-stock [get]
 func (h *DashboardHandler) GetLowStockProducts(c *fiber.Ctx) error {
@@ -176,10 +176,10 @@ func (h *DashboardHandler) GetLowStockProducts(c *fiber.Ctx) error {
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param limit query int false "Limit" default(10)
-// @Success 200 {object} utils.SuccessResponseSwag{data=[]handler.DashboardNotification} "Dashboard notifications"
-// @Failure 404 {object} utils.ErrorResponseSwag "Storefront not found"
-// @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]handler.DashboardNotification} "Dashboard notifications"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Access denied"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{slug}/dashboard/notifications [get]
 func (h *DashboardHandler) GetDashboardNotifications(c *fiber.Ctx) error {

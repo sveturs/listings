@@ -102,7 +102,10 @@
       "100k": "Up to 100,000 km",
       "150k": "Up to 150,000 km",
       "200k": "Up to 200,000 km"
-    }
+    },
+    "gas": "Gas",
+    "apply": "Apply filters",
+    "showFilters": "Show filters"
   },
   "pageTitle": "Cars - Buy and Sell Vehicles",
   "pageDescription": "Find your perfect car or sell your vehicle on our marketplace",
@@ -257,7 +260,34 @@
   "createListing": "Create Listing",
   "priceAnalysis": "Price Analysis",
   "priceAnalysisDescription": "Get market insights and pricing recommendations",
-  "vinDecoder": "VIN Decoder",
+  "vinDecoder": {
+    "title": "VIN Decoder",
+    "description": "Decode vehicle information from VIN number",
+    "enterVin": "Enter VIN number",
+    "vinFormat": "17 characters",
+    "decode": "Decode",
+    "invalidFormat": "Invalid VIN format. Must be 17 characters without I, O, Q",
+    "decodeFailed": "Failed to decode VIN",
+    "networkError": "Network error. Please try again",
+    "hint": "VIN can be found on registration documents, dashboard or driver's door jamb",
+    "decodedInfo": "Vehicle Information",
+    "year": "Year",
+    "make": "Make",
+    "model": "Model",
+    "trim": "Trim",
+    "bodyType": "Body Type",
+    "fuelType": "Fuel Type",
+    "transmission": "Transmission",
+    "driveType": "Drive Type",
+    "engineInfo": "Engine Information",
+    "displacement": "Displacement",
+    "cylinders": "Cylinders",
+    "manufacturerInfo": "Manufacturer",
+    "manufacturer": "Manufacturer",
+    "country": "Country",
+    "autoFill": "Auto-fill Form"
+  },
+  "vinDecoderOld": "VIN Decoder",
   "vinDecoderDescription": "Decode vehicle information from VIN number",
   "enterVIN": "Enter VIN",
   "showExamples": "Show examples",
@@ -315,5 +345,103 @@
   "hideFilters": "Hide filters",
   "results": "results",
   "totalListings": "total listings",
-  "noResultsFound": "No cars found matching your criteria"
+  "noResultsFound": "No cars found matching your criteria",
+  "badges": {
+    "new": "NEW",
+    "top": "TOP",
+    "featured": "FEATURED",
+    "reduced": "REDUCED"
+  },
+  "info": {
+    "year": "Year",
+    "mileage": "Mileage",
+    "fuel": "Fuel",
+    "transmission": "Transmission",
+    "engine": "Engine",
+    "color": "Color",
+    "bodyType": "Body",
+    "seats": "Seats"
+  },
+  "time": {
+    "justNow": "Just now",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "weeksAgo": "{weeks}w ago",
+    "monthsAgo": "{months}m ago"
+  },
+  "actions": {
+    "favorite": "Add to favorites",
+    "share": "Share",
+    "compare": "Compare",
+    "quickView": "Quick view",
+    "viewDetails": "View details",
+    "viewFullDetails": "View full details",
+    "call": "Call",
+    "message": "Message"
+  },
+  "common": {
+    "photos": "photos",
+    "noPhoto": "No photo available",
+    "views": "views",
+    "new": "new",
+    "noLocation": "Location not specified"
+  },
+  "quickView": {
+    "description": "Description",
+    "seller": "Seller",
+    "contactSeller": "Contact seller"
+  },
+  "shareTitle": "Share this car",
+  "compare": {
+    "title": "Compare cars",
+    "compareNow": "Compare now",
+    "clearAll": "Clear all",
+    "addMore": "Add {{count}} more car to compare",
+    "minRequired": "Select at least 2 cars to compare",
+    "minRequiredForTable": "You need to select at least 2 cars to compare",
+    "backToCars": "Back to cars",
+    "pageTitle": "Car comparison",
+    "specification": "Specification",
+    "different": "Different",
+    "print": "Print comparison"
+  },
+  "specs": {
+    "price": "Price",
+    "year": "Year",
+    "mileage": "Mileage",
+    "fuelType": "Fuel type",
+    "transmission": "Transmission",
+    "engineSize": "Engine size",
+    "power": "Power",
+    "bodyType": "Body type",
+    "color": "Color",
+    "driveType": "Drive type",
+    "doors": "Doors",
+    "seats": "Seats",
+    "condition": "Condition",
+    "previousOwners": "Previous owners",
+    "warranty": "Warranty",
+    "firstRegistration": "First registration",
+    "technicalInspection": "Technical inspection",
+    "vin": "VIN",
+    "features": "Features"
+  },
+  "navigation": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "search": {
+    "placeholder": "Search by make, model, or city...",
+    "recent": "Recent searches",
+    "popular": "Popular searches",
+    "clearRecent": "Clear"
+  },
+  "breadcrumbs": {
+    "filters": "Active filters",
+    "removeFilter": "Remove filter",
+    "cars": "Cars",
+    "search": "Search",
+    "favorites": "Favorites",
+    "compare": "Compare"
+  }
 }

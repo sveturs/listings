@@ -30,3 +30,13 @@ func (s *MarketplaceService) SearchCarMakes(ctx context.Context, query string, l
 func (s *MarketplaceService) GetCarMakeBySlug(ctx context.Context, slug string) (*models.CarMake, error) {
 	return s.storage.GetCarMakeBySlug(ctx, slug)
 }
+
+// GetCarListingsCount возвращает количество автомобильных объявлений
+func (s *MarketplaceService) GetCarListingsCount(ctx context.Context) (int, error) {
+	return s.storage.GetCarListingsCount(ctx)
+}
+
+// GetTotalCarModelsCount возвращает общее количество моделей автомобилей
+func (s *MarketplaceService) GetTotalCarModelsCount(ctx context.Context) (int, error) {
+	return s.storage.GetTotalCarModelsCount(ctx)
+}
