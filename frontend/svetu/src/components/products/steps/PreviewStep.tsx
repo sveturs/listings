@@ -214,7 +214,7 @@ export default function PreviewStep({
           {state.images.length > 0 && (
             <div className="card bg-base-100 shadow-xl">
               <div className="card-body p-0">
-                <div className="aspect-square bg-base-200 rounded-t-2xl overflow-hidden">
+                <div className="aspect-square bg-base-200 rounded-t-2xl overflow-hidden relative">
                   <Image
                     src={URL.createObjectURL(state.images[0])}
                     alt={state.productData.name}
@@ -230,7 +230,7 @@ export default function PreviewStep({
                       {state.images.slice(1, 5).map((image, index) => (
                         <div
                           key={index}
-                          className="aspect-square bg-base-200 rounded-lg overflow-hidden"
+                          className="aspect-square bg-base-200 rounded-lg overflow-hidden relative"
                         >
                           <Image
                             src={URL.createObjectURL(image)}

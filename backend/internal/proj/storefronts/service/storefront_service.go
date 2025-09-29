@@ -276,10 +276,13 @@ func (s *StorefrontServiceImpl) Update(ctx context.Context, userID int, storefro
 
 // Delete удаляет витрину
 func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefrontID int) error {
+	// Определяем тип для ключей контекста (как в handler)
+	type contextKey string
+
 	// Проверяем, является ли пользователь администратором из контекста
-	if isAdmin, ok := ctx.Value("is_admin").(bool); ok && isAdmin {
+	if isAdmin, ok := ctx.Value(contextKey("is_admin")).(bool); ok && isAdmin {
 		// Проверяем флаг жесткого удаления из контекста
-		hardDelete, _ := ctx.Value("hard_delete").(bool)
+		hardDelete, _ := ctx.Value(contextKey("hard_delete")).(bool)
 
 		if hardDelete {
 			// Администратор выбрал жесткое удаление

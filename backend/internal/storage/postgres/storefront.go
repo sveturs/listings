@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 )
 
 // ErrNotFound ошибка когда запись не найдена
@@ -449,25 +450,93 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	// Удаляем связанные записи в правильном порядке
-	// 1. Удаляем заказы
+	// 1. Сначала получаем ID всех товаров витрины
+	var productIDs []int
+	rows, err := tx.Query(ctx, "SELECT id FROM storefront_products WHERE storefront_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to get product IDs: %w", err)
+	}
+	for rows.Next() {
+		var productID int
+		if err := rows.Scan(&productID); err != nil {
+			rows.Close()
+			return fmt.Errorf("failed to scan product ID: %w", err)
+		}
+		productIDs = append(productIDs, productID)
+	}
+	rows.Close()
+
+	// 2. Удаляем связанные с товарами записи
+	if len(productIDs) > 0 {
+		// Удаляем товары из корзин
+		_, err = tx.Exec(ctx, "DELETE FROM cart_items WHERE storefront_product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete cart items: %w", err)
+		}
+
+		// Удаляем товары из избранного
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_favorites WHERE product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete favorites: %w", err)
+		}
+
+		// Удаляем товары из сравнения
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_comparisons WHERE product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete comparisons: %w", err)
+		}
+
+		// Удаляем отзывы на товары
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_reviews WHERE product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete product reviews: %w", err)
+		}
+
+		// Удаляем изображения товаров
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_images WHERE product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete product images: %w", err)
+		}
+
+		// Удаляем варианты товаров
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_variants WHERE product_id = ANY($1)", productIDs)
+		if err != nil {
+			return fmt.Errorf("failed to delete product variants: %w", err)
+		}
+	}
+
+	// 3. Удаляем заказы
 	_, err = tx.Exec(ctx, "DELETE FROM storefront_orders WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront orders: %w", err)
 	}
 
-	// 2. Удаляем товары
+	// 4. Удаляем товары
 	_, err = tx.Exec(ctx, "DELETE FROM storefront_products WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront products: %w", err)
 	}
 
-	// 3. Удаляем сотрудников
+	// 5. Удаляем сотрудников
 	_, err = tx.Exec(ctx, "DELETE FROM storefront_staff WHERE storefront_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront staff: %w", err)
 	}
 
-	// 4. Удаляем саму витрину
+	// 6. Удаляем отзывы на саму витрину
+	_, err = tx.Exec(ctx, "DELETE FROM storefront_reviews WHERE storefront_id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront reviews: %w", err)
+	}
+
+	// 7. Удаляем саму витрину из избранного (если есть такая таблица)
+	_, err = tx.Exec(ctx, "DELETE FROM user_favorite_storefronts WHERE storefront_id = $1", id)
+	if err != nil {
+		// Игнорируем ошибку если таблица не существует
+		logger.Debug().Err(err).Msg("Failed to delete favorite storefronts (table might not exist)")
+	}
+
+	// 8. Удаляем саму витрину
 	result, err := tx.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to hard delete storefront: %w", err)

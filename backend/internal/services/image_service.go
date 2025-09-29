@@ -320,13 +320,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeStorefrontLogo:
 		// Для логотипа витрины
@@ -336,13 +329,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeStorefrontBanner:
 		// Для баннера витрины
@@ -352,13 +338,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeChatFile:
 		// Для файлов чата
