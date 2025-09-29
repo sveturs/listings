@@ -119,7 +119,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем отдельное хранилище для chat-files
 	chatFileStorageConfig := cfg.FileStorage
-	chatFileStorageConfig.MinioBucketName = "chat-files"
+	chatFileStorageConfig.MinioBucketName = cfg.FileStorage.MinioChatBucket
 	chatFileStorageSvc, err := filestorage.NewFileStorage(ctx, chatFileStorageConfig)
 	if err != nil {
 		log.Printf("Ошибка инициализации хранилища чат-файлов: %v", err)
@@ -270,6 +270,6 @@ func (s *Service) SearchLogs() SearchLogsServiceInterface {
 }
 
 // NewImageService создает новый ImageService
-func (s *Service) NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *services.ImageService {
-	return services.NewImageService(fileStorage, repo)
+func (s *Service) NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService {
+	return services.NewImageService(fileStorage, repo, cfg)
 }

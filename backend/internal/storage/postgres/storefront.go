@@ -26,7 +26,10 @@ type StorefrontRepository interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, id int, updates *models.StorefrontUpdateDTO) error
 	Delete(ctx context.Context, id int) error
+	Restore(ctx context.Context, id int) error
 	HardDelete(ctx context.Context, id int) error
+	HardDeleteDebug(ctx context.Context, id int) error // Временный метод для отладки
+	HardDeleteFixed(ctx context.Context, id int) error // Исправленная версия HardDelete
 
 	// Поиск и фильтрация
 	List(ctx context.Context, filter *models.StorefrontFilter) ([]*models.Storefront, int, error)
@@ -427,16 +430,79 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 
 // Delete удаляет витрину (soft delete)
 func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
-	result, err := r.db.pool.Exec(ctx,
+	// Начинаем транзакцию для атомарного обновления
+	tx, err := r.db.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Деактивируем витрину
+	result, err := tx.Exec(ctx,
 		"UPDATE storefronts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
 		id,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to delete storefront: %w", err)
+		return fmt.Errorf("failed to deactivate storefront: %w", err)
 	}
 	if result.RowsAffected() == 0 {
 		return ErrNotFound
 	}
+
+	// Деактивируем все товары этой витрины
+	_, err = tx.Exec(ctx,
+		"UPDATE storefront_products SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to deactivate storefront products: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// Restore восстанавливает деактивированную витрину
+func (r *storefrontRepo) Restore(ctx context.Context, id int) error {
+	// Начинаем транзакцию для атомарного обновления
+	tx, err := r.db.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Активируем витрину
+	result, err := tx.Exec(ctx,
+		"UPDATE storefronts SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to restore storefront: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	// Активируем все товары этой витрины
+	_, err = tx.Exec(ctx,
+		"UPDATE storefront_products SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE storefront_id = $1",
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to restore storefront products: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	logger.Info().Int("storefrontID", id).Msg("Storefront and its products restored successfully")
 	return nil
 }
 
@@ -451,6 +517,7 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 
 	// Удаляем связанные записи в правильном порядке
 	// 1. Сначала получаем ID всех товаров витрины
+	logger.Debug().Int("storefrontID", id).Msg("HardDelete: Getting product IDs")
 	var productIDs []int
 	rows, err := tx.Query(ctx, "SELECT id FROM storefront_products WHERE storefront_id = $1", id)
 	if err != nil {
@@ -468,37 +535,38 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 
 	// 2. Удаляем связанные с товарами записи
 	if len(productIDs) > 0 {
-		// Удаляем товары из корзин
-		_, err = tx.Exec(ctx, "DELETE FROM cart_items WHERE storefront_product_id = ANY($1)", productIDs)
-		if err != nil {
-			return fmt.Errorf("failed to delete cart items: %w", err)
-		}
+		// shopping_cart_items относится к marketplace_listings, а не к storefront_products - пропускаем
 
 		// Удаляем товары из избранного
+		logger.Debug().Ints("productIDs", productIDs).Msg("HardDelete: Deleting from storefront_favorites")
 		_, err = tx.Exec(ctx, "DELETE FROM storefront_favorites WHERE product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete favorites: %w", err)
 		}
 
-		// Удаляем товары из сравнения
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_comparisons WHERE product_id = ANY($1)", productIDs)
-		if err != nil {
-			return fmt.Errorf("failed to delete comparisons: %w", err)
-		}
+		// Удаляем товары из сравнения (если таблица существует)
+		// Пока закомментировано, так как таблица еще не создана
+		// _, err = tx.Exec(ctx, "DELETE FROM storefront_comparisons WHERE product_id = ANY($1)", productIDs)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to delete comparisons: %w", err)
+		// }
 
-		// Удаляем отзывы на товары
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_reviews WHERE product_id = ANY($1)", productIDs)
-		if err != nil {
-			return fmt.Errorf("failed to delete product reviews: %w", err)
-		}
+		// Удаляем отзывы на товары (если таблица существует)
+		// Пока закомментировано, так как таблица еще не создана
+		// _, err = tx.Exec(ctx, "DELETE FROM storefront_product_reviews WHERE product_id = ANY($1)", productIDs)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to delete product reviews: %w", err)
+		// }
 
 		// Удаляем изображения товаров
-		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_images WHERE product_id = ANY($1)", productIDs)
+		logger.Debug().Msg("HardDelete: Deleting from storefront_product_images")
+		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_images WHERE storefront_product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete product images: %w", err)
 		}
 
 		// Удаляем варианты товаров
+		logger.Debug().Msg("HardDelete: Deleting from storefront_product_variants")
 		_, err = tx.Exec(ctx, "DELETE FROM storefront_product_variants WHERE product_id = ANY($1)", productIDs)
 		if err != nil {
 			return fmt.Errorf("failed to delete product variants: %w", err)
@@ -524,10 +592,7 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 	}
 
 	// 6. Удаляем отзывы на саму витрину
-	_, err = tx.Exec(ctx, "DELETE FROM storefront_reviews WHERE storefront_id = $1", id)
-	if err != nil {
-		return fmt.Errorf("failed to delete storefront reviews: %w", err)
-	}
+	// Пропускаем удаление из storefront_reviews - таблица не существует в текущей схеме БД
 
 	// 7. Удаляем саму витрину из избранного (если есть такая таблица)
 	_, err = tx.Exec(ctx, "DELETE FROM user_favorite_storefronts WHERE storefront_id = $1", id)
@@ -580,10 +645,17 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		argCount++
 	} else if filter.UserID == nil && !filter.IsAdminRequest {
 		// Для публичных запросов (без UserID и не от админа) показываем только активные
+		logger.Info().
+			Bool("IsAdminRequest", filter.IsAdminRequest).
+			Msg("List: applying default is_active filter for public request")
 		whereConditions = append(whereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		args = append(args, true)
 		argCount++
+	} else {
+		logger.Info().
+			Bool("IsAdminRequest", filter.IsAdminRequest).
+			Msg("List: NOT applying default is_active filter (admin or user request)")
 	}
 	// Если UserID указан и IsActive не указан - показываем ВСЕ витрины пользователя
 
@@ -697,6 +769,12 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 	`, strings.Join(whereConditions, " AND "), orderBy, argCount, argCount+1)
 
 	args = append(args, filter.Limit, filter.Offset)
+
+	// Логируем итоговый SQL запрос для отладки
+	logger.Info().
+		Str("query", query).
+		Interface("args", args).
+		Msg("List: executing query")
 
 	rows, err := r.db.pool.Query(ctx, query, args...)
 	if err != nil {

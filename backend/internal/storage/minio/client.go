@@ -248,7 +248,15 @@ func (m *MinioClient) UploadToCustomBucket(ctx context.Context, bucketName, obje
 	}
 
 	// Return public URL for the file
-	publicURL := fmt.Sprintf("/%s/%s", bucketName, objectName)
+	// Формируем полный URL с базовым адресом и именем бакета
+	var publicURL string
+	if m.baseURL != "" {
+		// Если есть базовый URL, используем его
+		publicURL = fmt.Sprintf("%s/%s/%s", m.baseURL, bucketName, objectName)
+	} else {
+		// Иначе возвращаем относительный путь (для обратной совместимости)
+		publicURL = fmt.Sprintf("/%s/%s", bucketName, objectName)
+	}
 	return publicURL, nil
 }
 

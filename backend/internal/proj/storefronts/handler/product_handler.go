@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -357,7 +358,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 
 	// Передаем контекст с информацией об администраторе
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	if err := h.productService.DeleteProduct(ctx, storefrontID, productID, userID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -595,7 +596,7 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 
 	// Передаем контекст с информацией об администраторе
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	response, err := h.productService.BulkDeleteProducts(ctx, storefrontID, userID, req)
 	if err != nil {

@@ -114,6 +114,7 @@ func (h *ImageHandler) UploadProductImage(c *fiber.Ctx) error {
 	// Загрузка изображения
 	response, err := h.imageService.UploadImage(c.Context(), uploadRequest)
 	if err != nil {
+		fmt.Printf("UploadProductImage - Error uploading image: %v\n", err)
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "storefronts.upload_failed")
 	}
 

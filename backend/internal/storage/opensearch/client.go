@@ -421,6 +421,21 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 					Body:  bodyReader,
 				}
 				res, err = req.Do(ctx, c.client)
+			} else if strings.Contains(path, "/_delete_by_query") {
+				// Удаление по запросу
+				parts := strings.Split(path, "/_delete_by_query")
+				indexName := strings.TrimPrefix(parts[0], "/")
+				req := opensearchapi.DeleteByQueryRequest{
+					Index: []string{indexName},
+					Body:  bodyReader,
+				}
+				res, err = req.Do(ctx, c.client)
+			} else if path == "/_bulk" {
+				// Bulk операции
+				req := opensearchapi.BulkRequest{
+					Body: bodyReader,
+				}
+				res, err = req.Do(ctx, c.client)
 			} else {
 				// Обычный GET документа
 				req := opensearchapi.GetRequest{

@@ -63,5 +63,5 @@ type ServicesInterface interface {
 	UnifiedCar() *marketplaceService.UnifiedCarService
 
 	// NewImageService создает новый ImageService
-	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *services.ImageService
+	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService
 }

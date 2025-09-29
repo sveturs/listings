@@ -22,8 +22,14 @@ type FileStorageInterface interface {
 	// UploadFile загружает файл в хранилище
 	UploadFile(ctx context.Context, objectName string, reader io.Reader, size int64, contentType string) (string, error)
 
+	// UploadToCustomBucket загружает файл в указанный bucket (только для MinIO)
+	UploadToCustomBucket(ctx context.Context, bucketName, objectName string, reader io.Reader, size int64, contentType string) (string, error)
+
 	// DeleteFile удаляет файл из хранилища
 	DeleteFile(ctx context.Context, objectName string) error
+
+	// DeleteFileFromCustomBucket удаляет файл из указанного bucket (только для MinIO)
+	DeleteFileFromCustomBucket(ctx context.Context, bucketName, objectName string) error
 
 	// GetURL возвращает URL для доступа к файлу
 	GetURL(ctx context.Context, objectName string) (string, error)

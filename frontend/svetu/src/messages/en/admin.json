@@ -1290,6 +1290,7 @@
     "view": "View",
     "edit": "Edit",
     "delete": "Delete",
+    "restore": "Restore",
     "viewProducts": "Products",
     "bulkActions": "Bulk Actions",
     "activateSelected": "Activate Selected",

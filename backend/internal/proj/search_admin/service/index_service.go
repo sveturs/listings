@@ -8,9 +8,11 @@ import (
 )
 
 const (
-	marketplaceIndex = "marketplace"
-	listingType      = "listing"
-	productType      = "product"
+	marketplaceIndex        = "marketplace"
+	marketplaceListingIndex = "marketplace_listings"
+	storefrontProductsIndex = "storefront_products"
+	listingType             = "listing"
+	productType             = "product"
 )
 
 // IndexInfo представляет информацию об индексе
@@ -547,6 +549,36 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 	shouldIndexListings := docType == "" || docType == "listing"
 	shouldIndexProducts := docType == "" || docType == "product"
 
+	// Временно отключено удаление документов - документы будут перезаписываться по ID
+	// TODO: Исправить bulk индексацию и снова включить очистку индексов
+	// if shouldIndexListings {
+	// 	// Удаляем все документы из индекса marketplace_listings
+	// 	deleteQuery := map[string]interface{}{
+	// 		"query": map[string]interface{}{
+	// 			"match_all": map[string]interface{}{},
+	// 		},
+	// 	}
+	// 	deleteJSON, _ := json.Marshal(deleteQuery)
+	// 	_, err := s.osClient.Execute(ctx, "POST", "/" + marketplaceListingIndex + "/_delete_by_query", deleteJSON)
+	// 	if err != nil {
+	// 		fmt.Printf("Warning: Failed to clean marketplace_listings index: %v\n", err)
+	// 	}
+	// }
+
+	// if shouldIndexProducts {
+	// 	// Удаляем все документы из индекса storefront_products
+	// 	deleteQuery := map[string]interface{}{
+	// 		"query": map[string]interface{}{
+	// 			"match_all": map[string]interface{}{},
+	// 		},
+	// 	}
+	// 	deleteJSON, _ := json.Marshal(deleteQuery)
+	// 	_, err := s.osClient.Execute(ctx, "POST", "/" + storefrontProductsIndex + "/_delete_by_query", deleteJSON)
+	// 	if err != nil {
+	// 		fmt.Printf("Warning: Failed to clean storefront_products index: %v\n", err)
+	// 	}
+	// }
+
 	// Переиндексация объявлений маркетплейса
 	if shouldIndexListings {
 		// Получаем все активные объявления напрямую из БД
@@ -638,7 +670,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Индексируем пакет при достижении размера
 			if len(batch) >= batchSize {
-				if err := s.indexBatch(ctx, batch); err != nil {
+				if err := s.indexBatch(ctx, batch, marketplaceListingIndex); err != nil {
 					fmt.Printf("Error indexing batch: %v\n", err)
 					totalErrors += len(batch)
 				} else {
@@ -650,7 +682,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		// Индексируем оставшийся пакет
 		if len(batch) > 0 {
-			if err := s.indexBatch(ctx, batch); err != nil {
+			if err := s.indexBatch(ctx, batch, marketplaceListingIndex); err != nil {
 				fmt.Printf("Error indexing final batch: %v\n", err)
 				totalErrors += len(batch)
 			} else {
@@ -752,7 +784,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Индексируем пакет при достижении размера
 			if len(batch) >= batchSize {
-				if err := s.indexBatch(ctx, batch); err != nil {
+				if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
 					fmt.Printf("Error indexing batch: %v\n", err)
 					totalErrors += len(batch)
 				} else {
@@ -764,7 +796,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		// Индексируем оставшийся пакет
 		if len(batch) > 0 {
-			if err := s.indexBatch(ctx, batch); err != nil {
+			if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
 				fmt.Printf("Error indexing final batch: %v\n", err)
 				totalErrors += len(batch)
 			} else {
@@ -784,7 +816,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 }
 
 // indexBatch индексирует пакет документов в OpenSearch
-func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{}) error {
+func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{}, indexName string) error {
 	if len(docs) == 0 {
 		return nil
 	}
@@ -803,7 +835,7 @@ func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{})
 		// Добавляем команду индексации
 		action := map[string]interface{}{
 			"index": map[string]interface{}{
-				"_index": marketplaceIndex,
+				"_index": indexName,
 				"_id":    docID,
 			},
 		}
@@ -819,8 +851,21 @@ func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{})
 	}
 
 	// Отправляем bulk запрос
-	_, err := s.osClient.Execute(ctx, "POST", "/_bulk", bulkBody)
-	return err
+	response, err := s.osClient.Execute(ctx, "POST", "/_bulk", bulkBody)
+	if err != nil {
+		fmt.Printf("Bulk indexing error: %v\n", err)
+		return err
+	}
+
+	// Проверяем ответ на ошибки
+	var bulkResponse map[string]interface{}
+	if err := json.Unmarshal(response, &bulkResponse); err == nil {
+		if errors, ok := bulkResponse["errors"].(bool); ok && errors {
+			fmt.Printf("Bulk indexing had errors. Response: %s\n", string(response))
+		}
+	}
+
+	return nil
 }
 
 // Вспомогательные функции

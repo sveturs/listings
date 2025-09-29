@@ -161,3 +161,30 @@ func (s *MinioStorage) GetFile(ctx context.Context, objectName string) (io.ReadC
 	logger.Info().Msgf("Файл успешно получен из MinIO")
 	return file, nil
 }
+
+func (s *MinioStorage) UploadToCustomBucket(ctx context.Context, bucketName, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
+	logger.Info().Str("bucketName", bucketName).Str("objectName", objectName).Int64("size", size).
+		Str("contentType", contentType).Msg("Uploading file to custom bucket in MinIO")
+
+	filePath, err := s.client.UploadToCustomBucket(ctx, bucketName, objectName, reader, size, contentType)
+	if err != nil {
+		logger.Error().Err(err).Msg("ERROR uploading file to custom bucket in MinIO")
+		return "", err
+	}
+
+	logger.Info().Str("filePath", filePath).Msg("File successfully uploaded to custom bucket in MinIO")
+	return filePath, nil
+}
+
+func (s *MinioStorage) DeleteFileFromCustomBucket(ctx context.Context, bucketName, objectName string) error {
+	logger.Info().Str("bucketName", bucketName).Str("objectName", objectName).Msg("Deleting file from custom bucket in MinIO")
+
+	err := s.client.DeleteFileFromCustomBucket(ctx, bucketName, objectName)
+	if err != nil {
+		logger.Error().Err(err).Msg("ERROR deleting file from custom bucket in MinIO")
+		return err
+	}
+
+	logger.Info().Msg("File successfully deleted from custom bucket in MinIO")
+	return nil
+}

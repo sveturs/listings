@@ -75,6 +75,8 @@ export default function AdminStorefrontsTable() {
       if (searchQuery) params.append('query', searchQuery);
       params.append('limit', limit.toString());
       params.append('offset', ((page - 1) * limit).toString());
+      // Добавляем параметр для получения всех витрин, включая неактивные
+      params.append('include_inactive', 'true');
 
       const response = await fetch(
         `http://localhost:3000/api/v1/storefronts?${params}`,
@@ -161,7 +163,7 @@ export default function AdminStorefrontsTable() {
       const token = tokenManager.getAccessToken();
       const url =
         type === 'hard'
-          ? `http://localhost:3000/api/v1/storefronts/${id}?hard=true`
+          ? `http://localhost:3000/api/v1/storefronts/${id}?hard_delete=true`
           : `http://localhost:3000/api/v1/storefronts/${id}`;
 
       const response = await fetch(url, {
@@ -183,6 +185,29 @@ export default function AdminStorefrontsTable() {
     }
   };
 
+  // Обработка восстановления
+  const handleRestore = async (id: number) => {
+    try {
+      const token = tokenManager.getAccessToken();
+      const response = await fetch(
+        `http://localhost:3000/api/v1/storefronts/${id}/restore`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        fetchStorefronts();
+      }
+    } catch (error) {
+      console.error('Error restoring storefront:', error);
+    }
+  };
+
   // Массовые действия
   const handleBulkAction = async (action: string) => {
     if (selectedStorefronts.size === 0) return;
@@ -201,7 +226,7 @@ export default function AdminStorefrontsTable() {
         for (const id of selectedStorefronts) {
           const url =
             deleteType === 'hard'
-              ? `http://localhost:3000/api/v1/storefronts/${id}?hard=true`
+              ? `http://localhost:3000/api/v1/storefronts/${id}?hard_delete=true`
               : `http://localhost:3000/api/v1/storefronts/${id}`;
 
           await fetch(url, {
@@ -557,6 +582,16 @@ export default function AdminStorefrontsTable() {
                               {t('storefronts.viewProducts')}
                             </button>
                           </li>
+                          {!storefront.is_active && (
+                            <li>
+                              <button
+                                onClick={() => handleRestore(storefront.id)}
+                                className="text-success"
+                              >
+                                {t('storefronts.restore')}
+                              </button>
+                            </li>
+                          )}
                           <li>
                             <button
                               onClick={() => {

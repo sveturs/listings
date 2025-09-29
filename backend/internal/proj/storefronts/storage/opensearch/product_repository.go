@@ -107,7 +107,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"is_active":      product.IsActive,
 		"views_count":    product.ViewCount, // Добавляем счетчик просмотров для единообразия с marketplace
 		"sold_count":     product.SoldCount, // Добавляем количество продаж
-		"status":         "active",          // Добавляем статус для совместимости с фильтром поиска
+		"status":         r.getProductStatus(product), // Устанавливаем статус на основе реального состояния товара
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
 	}
@@ -1739,4 +1739,12 @@ func (r *ProductRepository) UpdateProductStock(ctx context.Context, productID in
 
 	logger.Info().Msgf("Successfully updated stock for storefront product sp_%d in OpenSearch index %s", productID, r.indexName)
 	return nil
+}
+
+// getProductStatus возвращает статус товара на основе его активности
+func (r *ProductRepository) getProductStatus(product *models.StorefrontProduct) string {
+	if product.IsActive {
+		return "active"
+	}
+	return "inactive"
 }

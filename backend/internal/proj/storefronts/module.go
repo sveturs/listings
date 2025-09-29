@@ -15,6 +15,7 @@ import (
 	"backend/internal/proj/storefront/repository"
 	"backend/internal/proj/storefronts/handler"
 	storefrontService "backend/internal/proj/storefronts/service"
+	internalServices "backend/internal/services"
 	"backend/internal/storage/postgres"
 
 	"github.com/gofiber/fiber/v2"
@@ -55,9 +56,16 @@ func NewModule(services service.ServicesInterface) *Module {
 	// Создаем сервис импорта
 	importSvc := storefrontService.NewImportService(productSvc)
 
-	// Создаем единый ImageService
+	// Создаем единый ImageService с конфигурацией buckets
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
-	imageService := services.NewImageService(services.FileStorage(), imageRepo)
+	cfg := services.Config()
+	imageCfg := internalServices.ImageServiceConfig{
+		BucketListings:    cfg.FileStorage.MinioBucketName,
+		BucketStorefront:  cfg.FileStorage.MinioStorefrontBucket,
+		BucketChatFiles:   cfg.FileStorage.MinioChatBucket,
+		BucketReviewPhoto: cfg.FileStorage.MinioReviewPhotosBucket,
+	}
+	imageService := services.NewImageService(services.FileStorage(), imageRepo, imageCfg)
 
 	// Получаем storefront repository
 	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
@@ -137,6 +145,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		protected.Post("/", m.storefrontHandler.CreateStorefront)
 		protected.Put("/:id", m.storefrontHandler.UpdateStorefront)
 		protected.Delete("/:id", m.storefrontHandler.DeleteStorefront)
+		protected.Post("/:id/restore", m.storefrontHandler.RestoreStorefront)
 
 		// Настройки витрины
 		protected.Put("/:id/hours", m.storefrontHandler.UpdateWorkingHours)

@@ -132,6 +132,20 @@ func (w *chatFileStorageWrapper) GetFile(ctx context.Context, objectName string)
 	return w.baseStorage.GetFile(ctx, objectName)
 }
 
+func (w *chatFileStorageWrapper) UploadToCustomBucket(ctx context.Context, bucketName, objectName string, reader io.Reader, size int64, contentType string) (string, error) {
+	if w.baseStorage == nil {
+		return "", fmt.Errorf("base storage is not initialized")
+	}
+	return w.baseStorage.UploadToCustomBucket(ctx, bucketName, objectName, reader, size, contentType)
+}
+
+func (w *chatFileStorageWrapper) DeleteFileFromCustomBucket(ctx context.Context, bucketName, objectName string) error {
+	if w.baseStorage == nil {
+		return fmt.Errorf("base storage is not initialized")
+	}
+	return w.baseStorage.DeleteFileFromCustomBucket(ctx, bucketName, objectName)
+}
+
 // UploadAttachments загружает вложения для сообщения
 func (s *ChatAttachmentService) UploadAttachments(ctx context.Context, messageID int, files []*multipart.FileHeader) ([]*models.ChatAttachment, error) {
 	logger.Debug().
