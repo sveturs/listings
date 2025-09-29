@@ -6,6 +6,7 @@
 const ALLOWED_DOMAINS = [
   'localhost',
   'svetu.rs',
+  's3.svetu.rs', // MinIO S3 хранилище изображений
   '100.88.44.15',
   'lh3.googleusercontent.com',
   'images.unsplash.com',
