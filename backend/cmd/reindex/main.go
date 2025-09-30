@@ -18,17 +18,17 @@ import (
 	"backend/internal/version"
 )
 
-// Build information set by ldflags
-var (
-	gitCommit = "unknown"
-	buildTime = "unknown"
-)
+// Build information set by ldflags (unused in this command)
+// var (
+// 	gitCommit = "unknown"
+// 	buildTime = "unknown"
+// )
 
 func main() {
 	log.Println("Запуск переиндексации OpenSearch...")
 	startTime := time.Now()
 
-	if err := godotenv.Load(envFile); err != nil {
+	if err := godotenv.Load(); err != nil {
 		logger.Info().Msgf("Warning: Could not load .env file: %s", err)
 	}
 	// Initialize logger
