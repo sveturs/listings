@@ -376,16 +376,15 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 
 // List возвращает список заказов с фильтрацией и пагинацией
 func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) ([]models.StorefrontOrder, int, error) {
-	// Базовый запрос с JOIN для получения информации о продавце
-	baseQuery := `FROM storefront_orders so 
+	// Базовый запрос без JOIN users (информация о продавце теперь в auth-service)
+	baseQuery := `FROM storefront_orders so
 		LEFT JOIN storefronts sf ON so.storefront_id = sf.id
-		LEFT JOIN users seller ON sf.user_id = seller.id
 		WHERE 1=1`
 	countQuery := `SELECT COUNT(*) ` + baseQuery
 	selectQuery := `SELECT so.id, so.order_number, so.storefront_id, so.customer_id, so.status,
 		so.subtotal_amount, so.tax_amount, so.shipping_amount, so.discount, so.total_amount, so.currency,
 		so.created_at, so.updated_at,
-		seller.id as seller_id, seller.name as seller_name, seller.email as seller_email ` + baseQuery
+		sf.user_id as seller_id ` + baseQuery
 
 	var args []interface{}
 	var conditions []string
@@ -461,7 +460,6 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 	for rows.Next() {
 		var order models.StorefrontOrder
 		var sellerID sql.NullInt64
-		var sellerName, sellerEmail sql.NullString
 
 		err := rows.Scan(
 			&order.ID,
@@ -478,21 +476,16 @@ func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) (
 			&order.CreatedAt,
 			&order.UpdatedAt,
 			&sellerID,
-			&sellerName,
-			&sellerEmail,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan order: %w", err)
 		}
 
-		// Заполняем информацию о продавце если есть
+		// Сохраняем seller_id если есть (информация о продавце загружается через auth-service)
 		if sellerID.Valid {
 			seller := &models.User{
-				ID:    int(sellerID.Int64),
-				Email: sellerEmail.String,
-			}
-			if sellerName.Valid {
-				seller.Name = sellerName.String
+				ID: int(sellerID.Int64),
+				// Name и Email будут загружены через auth-service при необходимости
 			}
 
 			// Создаем витрину с продавцом

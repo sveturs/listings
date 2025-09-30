@@ -35,6 +35,15 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 	}
 }
 
+// getUserID safely extracts user_id from fiber context
+func getUserID(c *fiber.Ctx) (int, error) {
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return 0, fmt.Errorf("user not authenticated")
+	}
+	return userID, nil
+}
+
 // CreateDraftReview creates a new draft review (step 1)
 // @Summary Create a draft review
 // @Description Creates a new draft review with text content (step 1 of 2)
@@ -50,7 +59,10 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 // @Router /api/v1/reviews/draft [post]
 func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
 	log.Printf("Starting CreateDraftReview handler")
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 
 	var request models.CreateReviewRequest
 	if err := c.BodyParser(&request); err != nil {
@@ -121,7 +133,10 @@ func (h *ReviewHandler) CreateDraftReview(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/publish [post]
 func (h *ReviewHandler) PublishReview(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -241,7 +256,10 @@ func (h *ReviewHandler) GetReviews(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/vote [post]
 func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -309,7 +327,10 @@ func (h *ReviewHandler) VoteForReview(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/response [post]
 func (h *ReviewHandler) AddResponse(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -405,7 +426,10 @@ func (h *ReviewHandler) GetReviewByID(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id} [put]
 func (h *ReviewHandler) UpdateReview(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
+	userId, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -469,7 +493,10 @@ func (h *ReviewHandler) GetStats(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/photos [post]
 func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
+	userId, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -577,7 +604,10 @@ func (h *ReviewHandler) UploadPhotos(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/upload-photos [post]
 func (h *ReviewHandler) UploadPhotosForNewReview(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
+	userId, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 
 	// Получаем загруженные файлы
 	form, err := c.MultipartForm()
@@ -667,7 +697,10 @@ func (h *ReviewHandler) UploadPhotosForNewReview(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id} [delete]
 func (h *ReviewHandler) DeleteReview(c *fiber.Ctx) error {
-	userId := c.Locals("user_id").(int)
+	userId, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewId, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -928,7 +961,11 @@ func (h *ReviewHandler) GetStorefrontAggregatedRating(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/can-review/{type}/{id} [get]
 func (h *ReviewHandler) CanReview(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, ok := c.Locals("user_id").(int)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
+
 	entityType := c.Params("type")
 	entityID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -965,7 +1002,10 @@ func (h *ReviewHandler) CanReview(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/confirm [post]
 func (h *ReviewHandler) ConfirmReview(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")
@@ -1002,7 +1042,10 @@ func (h *ReviewHandler) ConfirmReview(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/{id}/dispute [post]
 func (h *ReviewHandler) DisputeReview(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, err := getUserID(c)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
 	reviewID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_id")

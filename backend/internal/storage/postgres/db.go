@@ -348,28 +348,10 @@ func (db *Database) GetListingAttributes(ctx context.Context, listingID int) ([]
 	return db.marketplaceDB.GetListingAttributes(ctx, listingID)
 }
 
+// GetSession - DEPRECATED: Sessions are now managed via JWT tokens in auth-service
+// This method is kept for backward compatibility but should not be used in new code
 func (db *Database) GetSession(ctx context.Context, token string) (*types.SessionData, error) {
-	var session types.SessionData
-	err := db.pool.QueryRow(ctx, `
-        SELECT user_id, name, email, google_id, picture_url, provider
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE token = $1 AND expires_at > NOW()
-    `, token).Scan(
-		&session.UserID,
-		&session.Name,
-		&session.Email,
-		&session.GoogleID,
-		&session.PictureURL,
-		&session.Provider,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrSessionNotFound
-		}
-		return nil, err
-	}
-	return &session, nil
+	return nil, fmt.Errorf("GetSession: moved to JWT-based auth, sessions table no longer used")
 }
 
 // Refresh Token methods - DEPRECATED: moved to auth-service

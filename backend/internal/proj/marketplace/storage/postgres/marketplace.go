@@ -2993,10 +2993,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		city                sql.NullString
 		country             sql.NullString
 		originalLang        sql.NullString
-		userName            sql.NullString
-		userEmail           sql.NullString
-		userPictureURL      sql.NullString
-		userPhone           sql.NullString
 		categoryName        sql.NullString
 		categorySlug        sql.NullString
 		storefrontID        sql.NullInt32
@@ -3010,12 +3006,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.price, l.condition, l.status, l.location, l.latitude,
             l.longitude, l.address_city as city, l.address_country as country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
-            u.name, u.email, u.created_at as user_created_at,
-            u.picture_url, u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id,
             COALESCE(ug.privacy_level::text, 'exact') as location_privacy, l.address_multilingual
         FROM marketplace_listings l
-        LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
         LEFT JOIN unified_geo ug ON ug.source_type = 'marketplace_listing' AND ug.source_id = l.id
         WHERE l.id = $1
@@ -3025,8 +3018,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&location, &latitude, &longitude, &city,
 		&country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
 		&listing.ShowOnMap, &originalLang,
-		&userName, &userEmail, &listing.User.CreatedAt,
-		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy, &addressMultilingual,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
@@ -3076,18 +3067,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		} else {
 			listing.AddressMultilingual = multilingualMap
 		}
-	}
-	if userName.Valid {
-		listing.User.Name = userName.String
-	}
-	if userEmail.Valid {
-		listing.User.Email = userEmail.String
-	}
-	if userPictureURL.Valid {
-		listing.User.PictureURL = userPictureURL.String
-	}
-	if userPhone.Valid {
-		listing.User.Phone = &userPhone.String
 	}
 	if categoryName.Valid {
 		listing.Category.Name = categoryName.String

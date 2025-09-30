@@ -227,6 +227,17 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 		}
 	}(id, viewCtx)
 
+	// Загружаем информацию о пользователе из auth-service
+	if listing.UserID > 0 {
+		userInfo, err := h.services.User().GetUserByID(c.Context(), listing.UserID)
+		if err != nil {
+			logger.Warn().Err(err).Int("userId", listing.UserID).Msg("Failed to load user info from auth-service")
+			// Не прерываем выполнение, просто оставляем пустой User
+		} else {
+			listing.User = userInfo
+		}
+	}
+
 	// Получаем ID пользователя из контекста для проверки избранного
 	userID, ok := c.Locals("user_id").(int)
 	if ok && userID > 0 {
