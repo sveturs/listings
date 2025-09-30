@@ -9324,6 +9324,7 @@
                         "in": "query",
                         "schema": {
                             "type": "number",
+                            "format": "float64",
                             "default": 100
                         }
                     },
@@ -9333,6 +9334,7 @@
                         "in": "query",
                         "schema": {
                             "type": "number",
+                            "format": "float64",
                             "default": 2000
                         }
                     }
@@ -13221,49 +13223,71 @@
                 }
             }
         },
-        "/api/v1/auth/login": {
-            "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+        "/api/v1/auth/google": {
+            "get": {
+                "description": "Redirects user to Google OAuth consent page",
                 "tags": [
                     "auth"
                 ],
-                "summary": "Login with email and password",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/internal_proj_users_handler.LoginRequest"
-                            }
+                "summary": "Start Google OAuth authentication",
+                "parameters": [
+                    {
+                        "description": "User locale (en, ru, sr)",
+                        "name": "locale",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
                         }
                     },
-                    "description": "Login credentials",
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Authentication successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_users_handler.AuthResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
+                    {
+                        "description": "URL to return after auth",
+                        "name": "return_url",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
                         }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google OAuth"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/google/callback": {
+            "get": {
+                "description": "Processes OAuth callback from Google and authenticates user",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Handle Google OAuth callback",
+                "parameters": [
+                    {
+                        "description": "OAuth authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "OAuth state parameter",
+                        "name": "state",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to frontend with auth tokens"
                     },
                     "400": {
-                        "description": "auth.login.error.invalid_request_body or auth.login.error.email_password_required",
+                        "description": "Invalid callback parameters",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13271,9 +13295,43 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "Authenticates user via auth-service",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Login request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "auth.login.error.invalid_credentials",
+                        "description": "Invalid credentials",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13283,7 +13341,7 @@
                         }
                     },
                     "500": {
-                        "description": "auth.login.error.failed",
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13302,30 +13360,75 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Logs out the current user",
                 "tags": [
                     "auth"
                 ],
-                "summary": "Logout user",
+                "summary": "User logout",
                 "responses": {
                     "200": {
                         "description": "Logout successful",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_users_handler.MessageResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns info about the currently authenticated user",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "User info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
                                 }
                             }
                         }
@@ -13335,36 +13438,47 @@
         },
         "/api/v1/auth/refresh": {
             "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Refreshes the access token using a refresh token",
                 "tags": [
                     "auth"
                 ],
                 "summary": "Refresh access token",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "description": "Refresh token request",
+                    "required": true
+                },
                 "responses": {
                     "200": {
-                        "description": "New access token",
+                        "description": "Token refreshed successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_users_handler.TokenResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "type": "object",
+                                    "additionalProperties": true
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token",
+                        "description": "Invalid refresh token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13378,47 +13492,37 @@
         },
         "/api/v1/auth/register": {
             "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Registers a new user via auth-service",
                 "tags": [
                     "auth"
                 ],
-                "summary": "Register new user",
+                "summary": "Register a new user",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/internal_proj_users_handler.RegisterRequest"
+                                "type": "object",
+                                "additionalProperties": true
                             }
                         }
                     },
-                    "description": "Registration data",
+                    "description": "Registration request",
                     "required": true
                 },
                 "responses": {
-                    "200": {
-                        "description": "Registration successful",
+                    "201": {
+                        "description": "User registered successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_users_handler.AuthResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
+                                    "type": "object",
+                                    "additionalProperties": true
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "auth.register.error.invalid_request_body or auth.register.error.fields_required",
+                        "description": "Invalid request",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13428,7 +13532,7 @@
                         }
                     },
                     "409": {
-                        "description": "auth.register.error.email_exists",
+                        "description": "User already exists",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13438,7 +13542,91 @@
                         }
                     },
                     "500": {
-                        "description": "auth.register.error.failed",
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/session": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns information about the current authenticated session",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current session",
+                "responses": {
+                    "200": {
+                        "description": "Session info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/validate": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validates the current access token",
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Validate token",
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -16483,7 +16671,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -16492,7 +16681,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     }
                 ],
@@ -17387,7 +17577,8 @@
                                                 "data": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                        "type": "integer"
+                                                        "type": "integer",
+                                                        "format": "int64"
                                                     }
                                                 }
                                             }
@@ -30645,6 +30836,108 @@
                 }
             }
         },
+        "/api/v1/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all available roles in the system",
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get all roles",
+                "responses": {
+                    "200": {
+                        "description": "List of roles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/assign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assigns a specific role to a user",
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Assign role to user",
+                "responses": {
+                    "200": {
+                        "description": "Role assigned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/revoke": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revokes a specific role from a user",
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Revoke role from user",
+                "responses": {
+                    "200": {
+                        "description": "Role revoked successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/search": {
             "get": {
                 "description": "Searches both marketplace listings and storefront products",
@@ -33281,7 +33574,8 @@
                         "name": "min_rating",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float32"
                         }
                     },
                     {
@@ -33297,7 +33591,8 @@
                         "name": "lat",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33305,7 +33600,8 @@
                         "name": "lng",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33313,7 +33609,8 @@
                         "name": "radius_km",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33751,7 +34048,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33760,7 +34058,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     }
                 ],
@@ -33861,7 +34160,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33870,7 +34170,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33879,7 +34180,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33888,7 +34190,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -33896,7 +34199,8 @@
                         "name": "min_rating",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float32"
                         }
                     }
                 ],
@@ -34001,7 +34305,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -34010,7 +34315,8 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -34018,7 +34324,8 @@
                         "name": "radius_km",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -34149,7 +34456,8 @@
                         "name": "lat",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -34157,7 +34465,8 @@
                         "name": "lng",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -34173,7 +34482,8 @@
                         "name": "min_rating",
                         "in": "query",
                         "schema": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     {
@@ -39904,6 +40214,54 @@
                 }
             }
         },
+        "/api/v1/users/{userId}/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all roles assigned to a specific user",
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get user roles",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User roles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/vin/auto-fill": {
             "post": {
                 "security": [
@@ -41079,7 +41437,8 @@
                                                 "data": {
                                                     "type": "object",
                                                     "additionalProperties": {
-                                                        "type": "number"
+                                                        "type": "number",
+                                                        "format": "float64"
                                                     }
                                                 }
                                             }
@@ -41358,117 +41717,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/google": {
-            "get": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Initiate Google OAuth authentication",
-                "parameters": [
-                    {
-                        "description": "URL to return after authentication",
-                        "name": "returnTo",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirect to Google OAuth",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/google/callback": {
-            "get": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Handle Google OAuth callback",
-                "parameters": [
-                    {
-                        "description": "Authorization code from Google",
-                        "name": "code",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirect to frontend with session",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "auth.google_callback.error.authentication_failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/session": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get current user session information",
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Get current session",
-                "responses": {
-                    "200": {
-                        "description": "Session information",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/internal_proj_users_handler.SessionResponse"
-                                                }
-                                            }
-                                        }
-                                    ]
                                 }
                             }
                         }
@@ -43869,6 +44117,11 @@
                     "AttributeEntityTypeProduct": "Товар витрины",
                     "AttributeEntityTypeProductVariant": "Вариант товара"
                 },
+                "x-enum-descriptions": [
+                    "Объявление маркетплейса",
+                    "Товар витрины",
+                    "Вариант товара"
+                ],
                 "x-enum-varnames": [
                     "AttributeEntityTypeListing",
                     "AttributeEntityTypeProduct",
@@ -43957,6 +44210,11 @@
                     "PurposeRegular": "Обычный атрибут для фильтрации/поиска",
                     "PurposeVariant": "Вариативный атрибут (влияет на SKU)"
                 },
+                "x-enum-descriptions": [
+                    "Обычный атрибут для фильтрации/поиска",
+                    "Вариативный атрибут (влияет на SKU)",
+                    "Может использоваться в обоих случаях"
+                ],
                 "x-enum-varnames": [
                     "PurposeRegular",
                     "PurposeVariant",
@@ -46075,6 +46333,12 @@
                     "PrivacyLevelExact": "Точный адрес",
                     "PrivacyLevelStreet": "Только улица"
                 },
+                "x-enum-descriptions": [
+                    "Точный адрес",
+                    "Только улица",
+                    "Только район",
+                    "Только город"
+                ],
                 "x-enum-varnames": [
                     "PrivacyLevelExact",
                     "PrivacyLevelStreet",
@@ -46910,6 +47174,15 @@
                     "OrderStatusRefunded": "возвращен",
                     "OrderStatusShipped": "отправлен"
                 },
+                "x-enum-descriptions": [
+                    "ожидает оплаты",
+                    "оплачен, подтвержден",
+                    "в обработке",
+                    "отправлен",
+                    "доставлен",
+                    "отменен",
+                    "возвращен"
+                ],
                 "x-enum-varnames": [
                     "OrderStatusPending",
                     "OrderStatusConfirmed",
@@ -47051,6 +47324,17 @@
                     "PaymentMethodKeks": "Keks Pay (популярно в Сербии)",
                     "PaymentMethodPostanska": "Poštanska štedionica"
                 },
+                "x-enum-descriptions": [
+                    "Наличные в магазине",
+                    "Cash on Delivery - оплата курьеру",
+                    "Банковская карта",
+                    "Банковский перевод",
+                    "",
+                    "",
+                    "Poštanska štedionica",
+                    "Keks Pay (популярно в Сербии)",
+                    "Instant Payment System"
+                ],
                 "x-enum-varnames": [
                     "PaymentMethodCash",
                     "PaymentMethodCOD",
@@ -48114,6 +48398,10 @@
                     "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
                     "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
                 },
+                "x-enum-descriptions": [
+                    "Использовать адрес витрины",
+                    "Использовать индивидуальные адреса товаров"
+                ],
                 "x-enum-varnames": [
                     "GeoStrategyStorefrontLocation",
                     "GeoStrategyIndividualLocation"
@@ -50626,11 +50914,13 @@
                     },
                     "latitude": {
                         "description": "Широта для геопоиска",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "longitude": {
                         "description": "Долгота для геопоиска",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "minimumShouldMatch": {
                         "description": "Минимальное количество совпадений (70%, 50% и т.д.)",
@@ -50642,11 +50932,13 @@
                     },
                     "priceMax": {
                         "description": "Максимальная цена",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "priceMin": {
                         "description": "Минимальная цена",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "query": {
                         "description": "Текстовый запрос",
@@ -51631,7 +51923,8 @@
                     "geographic_distribution": {
                         "type": "object",
                         "additionalProperties": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     "period": {
@@ -52186,7 +52479,8 @@
                     "average_delivery_days": {
                         "type": "object",
                         "additionalProperties": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     "period": {
@@ -52859,7 +53153,8 @@
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "number"
+                                                        "type": "number",
+                                                        "format": "float64"
                                                     }
                                                 }
                                             }
@@ -52896,6 +53191,12 @@
                     "PrivacyExact": "Точный адрес",
                     "PrivacyStreet": "Размытие ±100-200м"
                 },
+                "x-enum-descriptions": [
+                    "Точный адрес",
+                    "Размытие ±100-200м",
+                    "Размытие ±500-1000м",
+                    "Только город"
+                ],
                 "x-enum-varnames": [
                     "PrivacyExact",
                     "PrivacyStreet",
@@ -53084,7 +53385,8 @@
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "format": "float64"
                                 }
                             }
                         }
@@ -54552,13 +54854,15 @@
                     "documents_by_category": {
                         "type": "object",
                         "additionalProperties": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     },
                     "documents_by_status": {
                         "type": "object",
                         "additionalProperties": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     },
                     "index_health": {
@@ -55026,7 +55330,8 @@
                     },
                     "distance": {
                         "description": "Расстояние в км (если есть)",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "email": {
                         "type": "string"
@@ -55057,10 +55362,12 @@
                         "type": "boolean"
                     },
                     "latitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "longitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "name": {
                         "type": "string"
@@ -55078,14 +55385,16 @@
                         "type": "integer"
                     },
                     "rating": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "reviewsCount": {
                         "type": "integer"
                     },
                     "score": {
                         "description": "Релевантность",
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "slug": {
                         "type": "string"
@@ -58035,13 +58344,16 @@
                         "type": "integer"
                     },
                     "latitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "longitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "speed": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "updatedAt": {
                         "type": "string"
@@ -58152,10 +58464,12 @@
                         "type": "string"
                     },
                     "deliveryLatitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "deliveryLongitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "distance": {
                         "description": "в метрах",
@@ -58181,10 +58495,12 @@
                         "type": "string"
                     },
                     "pickupLatitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "pickupLongitude": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     },
                     "status": {
                         "type": "string"
@@ -58242,14 +58558,16 @@
                         "description": "map[date]cost",
                         "type": "object",
                         "additionalProperties": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     "hourly_costs": {
                         "description": "map[hour]cost",
                         "type": "object",
                         "additionalProperties": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     },
                     "last_updated": {
@@ -58344,44 +58662,6 @@
                     }
                 }
             },
-            "internal_proj_users_handler.AuthResponse": {
-                "type": "object",
-                "properties": {
-                    "access_token": {
-                        "type": "string",
-                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    },
-                    "expires_in": {
-                        "type": "integer",
-                        "example": 3600
-                    },
-                    "token_type": {
-                        "type": "string",
-                        "example": "Bearer"
-                    },
-                    "user": {
-                        "$ref": "#/components/schemas/internal_proj_users_handler.UserResponse"
-                    }
-                }
-            },
-            "internal_proj_users_handler.LoginRequest": {
-                "type": "object",
-                "required": [
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "example": "user@example.com"
-                    },
-                    "password": {
-                        "type": "string",
-                        "minLength": 6,
-                        "example": "password123"
-                    }
-                }
-            },
             "internal_proj_users_handler.MessageResponse": {
                 "type": "object",
                 "properties": {
@@ -58416,104 +58696,6 @@
                     }
                 }
             },
-            "internal_proj_users_handler.RegisterRequest": {
-                "type": "object",
-                "required": [
-                    "email",
-                    "name",
-                    "password"
-                ],
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "example": "user@example.com"
-                    },
-                    "name": {
-                        "type": "string",
-                        "minLength": 2,
-                        "example": "John Doe"
-                    },
-                    "password": {
-                        "type": "string",
-                        "minLength": 6,
-                        "example": "password123"
-                    },
-                    "phone": {
-                        "type": "string",
-                        "example": "+1234567890"
-                    }
-                }
-            },
-            "internal_proj_users_handler.SessionResponse": {
-                "type": "object",
-                "properties": {
-                    "authenticated": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "user": {
-                        "$ref": "#/components/schemas/internal_proj_users_handler.SessionUserResponse"
-                    }
-                }
-            },
-            "internal_proj_users_handler.SessionUserResponse": {
-                "type": "object",
-                "properties": {
-                    "city": {
-                        "type": "string",
-                        "example": "Moscow"
-                    },
-                    "country": {
-                        "type": "string",
-                        "example": "Russia"
-                    },
-                    "email": {
-                        "type": "string",
-                        "example": "user@example.com"
-                    },
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "is_admin": {
-                        "type": "boolean",
-                        "example": false
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "John Doe"
-                    },
-                    "phone": {
-                        "type": "string",
-                        "example": "+1234567890"
-                    },
-                    "picture_url": {
-                        "type": "string",
-                        "example": "https://example.com/avatar.jpg"
-                    },
-                    "provider": {
-                        "type": "string",
-                        "example": "password"
-                    }
-                }
-            },
-            "internal_proj_users_handler.TokenResponse": {
-                "type": "object",
-                "properties": {
-                    "access_token": {
-                        "type": "string",
-                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    },
-                    "expires_in": {
-                        "type": "integer",
-                        "example": 3600
-                    },
-                    "token_type": {
-                        "type": "string",
-                        "example": "Bearer"
-                    }
-                }
-            },
             "internal_proj_users_handler.UpdateUserRoleRequest": {
                 "type": "object",
                 "required": [
@@ -58524,27 +58706,6 @@
                         "type": "integer",
                         "minimum": 1,
                         "example": 2
-                    }
-                }
-            },
-            "internal_proj_users_handler.UserResponse": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "example": "user@example.com"
-                    },
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "John Doe"
-                    },
-                    "picture_url": {
-                        "type": "string",
-                        "example": "https://example.com/avatar.jpg"
                     }
                 }
             },

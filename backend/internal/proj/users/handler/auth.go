@@ -41,9 +41,9 @@ func NewAuthHandler(
 // @Produce json
 // @Param request body map[string]interface{} true "Registration request"
 // @Success 201 {object} map[string]interface{} "User registered successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
-// @Failure 409 {object} utils.ErrorResponseSwag "User already exists"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "User already exists"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	// Log that we reached the handler
@@ -89,8 +89,8 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Produce json
 // @Param request body map[string]interface{} true "Login request"
 // @Success 200 {object} map[string]interface{} "Login successful"
-// @Failure 401 {object} utils.ErrorResponseSwag "Invalid credentials"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid credentials"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req entity.UserLoginRequest
@@ -139,9 +139,9 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Tags auth
 // @Security BearerAuth
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag "Logout successful"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Logout successful"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
@@ -168,8 +168,8 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 // @Produce json
 // @Param request body map[string]interface{} true "Refresh token request"
 // @Success 200 {object} map[string]interface{} "Token refreshed successfully"
-// @Failure 401 {object} utils.ErrorResponseSwag "Invalid refresh token"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid refresh token"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	var req entity.RefreshTokenRequest
@@ -206,8 +206,8 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]interface{} "Token is valid"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/validate [get]
 func (h *AuthHandler) Validate(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
@@ -241,7 +241,7 @@ func (h *AuthHandler) Validate(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]interface{} "User info"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")

@@ -51,7 +51,7 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 // @Param state query string true "OAuth state parameter"
 // @Produce json
 // @Success 302 "Redirect to frontend with auth tokens"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid callback parameters"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid callback parameters"
 // @Router /api/v1/auth/google/callback [get]
 func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	code := c.Query("code")
@@ -154,7 +154,7 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Produce json
 // @Success 200 {object} map[string]interface{} "Session info"
-// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/auth/session [get]
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
@@ -184,8 +184,8 @@ func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Param userId path int true "User ID"
 // @Produce json
-// @Success 200 {object} authclient.EntityUserRolesResponse "User roles"
-// @Failure 404 {object} utils.ErrorResponseSwag "User not found"
+// @Success 200 {object} map[string]interface{} "User roles"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "User not found"
 // @Router /api/v1/users/{userId}/roles [get]
 func (h *AuthHandler) GetUserRoles(c *fiber.Ctx) error {
 	userID := c.Params("userId")
@@ -208,7 +208,7 @@ func (h *AuthHandler) GetUserRoles(c *fiber.Ctx) error {
 // @Tags roles
 // @Security BearerAuth
 // @Produce json
-// @Success 200 {object} []authclient.EntityRole "List of roles"
+// @Success 200 {object} []map[string]interface{} "List of roles"
 // @Router /api/v1/roles [get]
 func (h *AuthHandler) GetRoles(c *fiber.Ctx) error {
 	// TODO: Implement through auth service
@@ -227,8 +227,8 @@ func (h *AuthHandler) GetRoles(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag "Role assigned successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Role assigned successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
 // @Router /api/v1/roles/assign [post]
 func (h *AuthHandler) AssignRole(c *fiber.Ctx) error {
 	// TODO: Implement through auth service when EntityAssignRoleRequest is available
@@ -245,8 +245,8 @@ func (h *AuthHandler) AssignRole(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} utils.SuccessResponseSwag "Role revoked successfully"
-// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Role revoked successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
 // @Router /api/v1/roles/revoke [post]
 func (h *AuthHandler) RevokeRole(c *fiber.Ctx) error {
 	// TODO: Implement through auth service when EntityRevokeRoleRequest is available
