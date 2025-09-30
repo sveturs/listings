@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"backend/internal/domain/models"
@@ -43,6 +44,45 @@ func NewListingsHandler(services globalService.ServicesInterface, cache *cache.U
 		services:           services,
 		marketplaceService: services.Marketplace(),
 		cache:              cache,
+	}
+}
+
+// loadUserInfoForListings загружает информацию о пользователях из auth-service для списка объявлений
+func (h *ListingsHandler) loadUserInfoForListings(ctx context.Context, listings []models.MarketplaceListing) {
+	// Собираем все уникальные user IDs
+	userIDs := make(map[int]bool)
+	for i := range listings {
+		if listings[i].UserID > 0 {
+			userIDs[listings[i].UserID] = true
+		}
+	}
+
+	// Загружаем пользователей параллельно
+	userCache := make(map[int]*models.User)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for userID := range userIDs {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			user, err := h.services.User().GetUserByID(ctx, id)
+			if err != nil {
+				logger.Warn().Err(err).Int("userId", id).Msg("Failed to load user from auth-service")
+				return
+			}
+			mu.Lock()
+			userCache[id] = user
+			mu.Unlock()
+		}(userID)
+	}
+	wg.Wait()
+
+	// Заполняем информацию о пользователях в объявлениях
+	for i := range listings {
+		if user, ok := userCache[listings[i].UserID]; ok {
+			listings[i].User = user
+		}
 	}
 }
 
@@ -226,6 +266,17 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 			logger.Error().Err(err).Int("listingId", listingID).Msg("Failed to increment views count")
 		}
 	}(id, viewCtx)
+
+	// Загружаем информацию о пользователе из auth-service
+	if listing.UserID > 0 {
+		userInfo, err := h.services.User().GetUserByID(c.Context(), listing.UserID)
+		if err != nil {
+			logger.Warn().Err(err).Int("userId", listing.UserID).Msg("Failed to load user info from auth-service")
+			// Не прерываем выполнение, просто оставляем пустой User
+		} else {
+			listing.User = userInfo
+		}
+	}
 
 	// Получаем ID пользователя из контекста для проверки избранного
 	userID, ok := c.Locals("user_id").(int)
@@ -419,6 +470,9 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	if listings == nil {
 		listings = []models.MarketplaceListing{}
 	}
+
+	// Загружаем информацию о пользователях из auth-service
+	h.loadUserInfoForListings(c.Context(), listings)
 
 	// Асинхронное логирование поискового запроса (если есть query)
 	if query != "" && h.services.SearchLogs() != nil {

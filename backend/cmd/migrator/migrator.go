@@ -9,6 +9,7 @@ import (
 
 	"backend/internal/app/migrator"
 	"backend/internal/logger"
+	"backend/internal/version"
 )
 
 // Build information set by ldflags
@@ -33,7 +34,7 @@ func main() {
 	}
 
 	// Initialize logger
-	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
+	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL"), version.GetVersion()); err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 

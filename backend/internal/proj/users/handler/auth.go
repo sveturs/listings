@@ -1,268 +1,258 @@
-// backend/internal/proj/users/handler/auth.go
 package handler
 
 import (
-	"crypto/rand"
-	"math/big"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
-
-	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
-	"backend/internal/proj/users/service"
-	_ "backend/pkg/utils" // For swagger documentation
+	"github.com/rs/zerolog"
+	"github.com/sveturs/auth/pkg/http/entity"
+	"github.com/sveturs/auth/pkg/http/service"
 )
 
 type AuthHandler struct {
-	services    globalService.ServicesInterface
-	authService service.AuthServiceInterface
+	authService  *service.AuthService
+	oauthService *service.OAuthService
+	backendURL   string
+	frontendURL  string
+	log          zerolog.Logger
 }
 
-func NewAuthHandler(services globalService.ServicesInterface) *AuthHandler {
+func NewAuthHandler(
+	authService *service.AuthService,
+	oauthService *service.OAuthService,
+	backendURL string,
+	frontendURL string,
+	log zerolog.Logger,
+) *AuthHandler {
 	return &AuthHandler{
-		services:    services,
-		authService: services.Auth(),
+		authService:  authService,
+		oauthService: oauthService,
+		backendURL:   backendURL,
+		frontendURL:  frontendURL,
+		log:          log,
 	}
 }
 
-// GoogleAuth - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Initiate Google OAuth authentication
-// @Description This endpoint is deprecated and should be proxied to Auth Service
+// Register handles user registration via auth-service
+// @Summary Register a new user
+// @Description Registers a new user via auth-service
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param returnTo query string false "URL to return after authentication"
-// @Success 302 {string} string "Redirect to Google OAuth"
-// @Router /auth/google [get]
-func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
-	// Check for explicit returnTo parameter first
-	returnTo := c.Query("returnTo")
-
-	if returnTo == "" {
-		// Fallback to Origin header
-		returnTo = c.Get("Origin")
-	}
-	if returnTo == "" {
-		// Fallback to Referer header
-		returnTo = c.Get("Referer")
-	}
-	if returnTo == "" {
-		// Use configured frontend URL as last resort
-		if h.services != nil && h.services.Config() != nil {
-			returnTo = h.services.Config().FrontendURL
-		}
-	}
-
-	authURL := h.authService.GetGoogleAuthURL(returnTo)
-	return c.Redirect(authURL, fiber.StatusTemporaryRedirect)
-}
-
-// GoogleCallback - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Handle Google OAuth callback
-// @Description This endpoint is deprecated and should be proxied to Auth Service
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param code query string true "Authorization code from Google"
-// @Success 302 {string} string "Redirect to frontend with session"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.google_callback.error.authentication_failed"
-// @Router /auth/google/callback [get]
-func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
-	code := c.Query("code")
-	if code == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "auth.google_callback.error.missing_code",
-		})
-	}
-
-	state := c.Query("state")
-	sessionData, err := h.authService.HandleGoogleCallback(c.Context(), code)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Str("code", code[:10]+"...").
-			Msg("GoogleCallback: Failed to handle callback")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "auth.google_callback.error.authentication_failed",
-		})
-	}
-
-	// Generate JWT token for OAuth user
-	jwtToken, err := h.authService.GenerateJWT(sessionData.UserID, sessionData.Email)
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Int("user_id", sessionData.UserID).
-			Msg("GoogleCallback: Failed to generate JWT token")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "auth.google_callback.error.token_generation_failed",
-		})
-	}
-
-	// Generate session token and save session
-	sessionToken := generateSessionToken()
-	h.authService.SaveSession(sessionToken, sessionData)
-
-	// Set session cookie
-	c.Cookie(&fiber.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		MaxAge:   24 * 60 * 60, // 24 hours
-		Path:     "/",
-		HTTPOnly: true,
-		Secure:   false, // Set to true in production
-		SameSite: "Lax",
-	})
-
-	// Redirect to frontend with JWT token
-	redirectURL := state
-	if redirectURL == "" || redirectURL == "default" {
-		if h.services != nil && h.services.Config() != nil {
-			redirectURL = h.services.Config().FrontendURL // Use configured frontend URL
-		}
-	}
-
-	// Добавляем JWT токен в URL для передачи на frontend
-	redirectURL = redirectURL + "?token=" + jwtToken
-
-	return c.Redirect(redirectURL, fiber.StatusTemporaryRedirect)
-}
-
-// GetSession - Local implementation when Auth Service is disabled
-// @Summary Get current session
-// @Description Get current user session information
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=SessionResponse} "Session information"
-// @Router /auth/session [get]
-func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
-	// Check if user is authenticated via JWT middleware
-	userID := c.Locals("user_id")
-	if userID == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "auth.session.error.not_authenticated",
-		})
-	}
-
-	// Get user profile from database
-	userProfile, err := h.services.User().GetUserProfile(c.Context(), userID.(int))
-	if err != nil {
-		logger.Error().
-			Err(err).
-			Int("user_id", userID.(int)).
-			Msg("GetSession: Failed to get user profile")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "auth.session.error.failed",
-		})
-	}
-
-	// Return session information
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"authenticated": true,
-			"user": fiber.Map{
-				"id":       userProfile.ID,
-				"email":    userProfile.Email,
-				"name":     userProfile.Name,
-				"is_admin": userProfile.IsAdmin,
-			},
-		},
-	})
-}
-
-// Logout - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Logout user
-// @Description This endpoint is deprecated and should be proxied to Auth Service
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Logout successful"
-// @Router /api/v1/auth/logout [post]
-func (h *AuthHandler) Logout(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("Logout handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "Logout endpoint should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
-	})
-}
-
-// Login - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Login with email and password
-// @Description This endpoint is deprecated and should be proxied to Auth Service
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param body body LoginRequest true "Login credentials"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AuthResponse} "Authentication successful"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.invalid_request_body or auth.login.error.email_password_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.invalid_credentials"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.login.error.failed"
-// @Router /api/v1/auth/login [post]
-func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("Login handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "Login endpoint should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
-	})
-}
-
-// Register - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Register new user
-// @Description This endpoint is deprecated and should be proxied to Auth Service
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param body body RegisterRequest true "Registration data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AuthResponse} "Registration successful"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.invalid_request_body or auth.register.error.fields_required"
-// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.email_exists"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "auth.register.error.failed"
+// @Param request body map[string]interface{} true "Registration request"
+// @Success 201 {object} map[string]interface{} "User registered successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
+// @Failure 409 {object} backend_pkg_utils.ErrorResponseSwag "User already exists"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("Register handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "Register endpoint should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
-	})
+	// Log that we reached the handler
+	h.log.Debug().Msg("Register handler called")
+
+	var req entity.UserRegistrationRequest
+	if err := c.BodyParser(&req); err != nil {
+		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse registration request")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request body",
+		})
+	}
+
+	h.log.Debug().Interface("parsed_request", req).Msg("Registration request parsed")
+
+	resp, err := h.authService.Register(c.Context(), req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to connect to auth service",
+		})
+	}
+
+	c.Set("Content-Type", "application/json")
+	switch resp.StatusCode() {
+	case 201:
+		return c.Status(201).JSON(resp.JSON201)
+	case 400:
+		return c.Status(400).JSON(resp.JSON400)
+	case 409:
+		return c.Status(409).JSON(resp.JSON409)
+	case 500:
+		return c.Status(500).JSON(resp.JSON500)
+	default:
+		return c.Status(resp.StatusCode()).Send(resp.Body)
+	}
 }
 
-// RefreshToken - DEPRECATED: This endpoint should be handled by Auth Service
-// @Summary Refresh access token
-// @Description This endpoint is deprecated and should be proxied to Auth Service
+// Login handles user login via auth-service
+// @Summary User login
+// @Description Authenticates user via auth-service
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TokenResponse} "New access token"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token"
+// @Param request body map[string]interface{} true "Login request"
+// @Success 200 {object} map[string]interface{} "Login successful"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid credentials"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/auth/login [post]
+func (h *AuthHandler) Login(c *fiber.Ctx) error {
+	var req entity.UserLoginRequest
+	if err := c.BodyParser(&req); err != nil {
+		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse login request")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request body",
+		})
+	}
+
+	// Add default device info if not provided
+	if req.DeviceID == "" {
+		req.DeviceID = "web-browser"
+	}
+	if req.DeviceName == "" {
+		req.DeviceName = "Web Browser"
+	}
+
+	resp, err := h.authService.Login(c.Context(), req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to connect to auth service",
+		})
+	}
+
+	c.Set("Content-Type", "application/json")
+	switch resp.StatusCode() {
+	case 200:
+		return c.Status(200).JSON(resp.JSON200)
+	case 400:
+		return c.Status(400).JSON(resp.JSON400)
+	case 401:
+		return c.Status(401).JSON(resp.JSON401)
+	case 403:
+		return c.Status(403).JSON(resp.JSON403)
+	case 429:
+		return c.Status(429).JSON(resp.JSON429)
+	default:
+		return c.Status(resp.StatusCode()).Send(resp.Body)
+	}
+}
+
+// Logout handles user logout via auth-service
+// @Summary User logout
+// @Description Logs out the current user
+// @Tags auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Logout successful"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/auth/logout [post]
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+
+	resp, err := h.authService.Logout(c.Context(), authHeader)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to connect to auth service",
+		})
+	}
+
+	c.Set("Content-Type", "application/json")
+	if resp.JSON200 != nil {
+		return c.Status(200).JSON(resp.JSON200)
+	}
+	return c.Status(resp.StatusCode()).Send(resp.Body)
+}
+
+// RefreshToken handles token refresh via auth-service
+// @Summary Refresh access token
+// @Description Refreshes the access token using a refresh token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body map[string]interface{} true "Refresh token request"
+// @Success 200 {object} map[string]interface{} "Token refreshed successfully"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid refresh token"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
-	// This handler should never be called - all auth requests are proxied to Auth Service
-	logger.Error().Msg("RefreshToken handler called in monolith - should be proxied to Auth Service")
-	return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-		"error":   "RefreshToken endpoint should be handled by Auth Service",
-		"message": "Auth Service proxy is not configured correctly",
+	var req entity.RefreshTokenRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request body",
+		})
+	}
+
+	resp, err := h.authService.RefreshToken(c.Context(), req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to connect to auth service",
+		})
+	}
+
+	c.Set("Content-Type", "application/json")
+	switch resp.StatusCode() {
+	case 200:
+		return c.Status(200).JSON(resp.JSON200)
+	case 400:
+		return c.Status(400).JSON(resp.JSON400)
+	case 401:
+		return c.Status(401).JSON(resp.JSON401)
+	default:
+		return c.Status(resp.StatusCode()).Send(resp.Body)
+	}
+}
+
+// Validate validates the current token
+// @Summary Validate token
+// @Description Validates the current access token
+// @Tags auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Token is valid"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Router /api/v1/auth/validate [get]
+func (h *AuthHandler) Validate(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	resp, err := h.authService.ValidateToken(c.Context(), token)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "failed to connect to auth service",
+		})
+	}
+
+	if resp.Valid {
+		return c.JSON(fiber.Map{
+			"valid":   resp.Valid,
+			"user_id": resp.UserID,
+			"email":   resp.Email,
+			"roles":   resp.Roles,
+		})
+	}
+
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		"error": "invalid token",
 	})
 }
 
-// generateSessionToken generates a secure random session token
-func generateSessionToken() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token := make([]byte, 32)
-	for i := range token {
-		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		if err != nil {
-			// Fallback to a less random but still functional approach
-			// This should never happen with crypto/rand
-			continue
-		}
-		token[i] = charset[n.Int64()]
-	}
-	return string(token)
+// GetCurrentUser returns current authenticated user info
+// @Summary Get current user info
+// @Description Returns info about the currently authenticated user
+// @Tags auth
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]interface{} "User info"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Router /api/v1/auth/me [get]
+func (h *AuthHandler) GetCurrentUser(c *fiber.Ctx) error {
+	userID := c.Locals("user_id")
+	email := c.Locals("email")
+	roles := c.Locals("roles")
+
+	return c.JSON(fiber.Map{
+		"user": fiber.Map{
+			"id":    userID,
+			"email": email,
+			"roles": roles,
+		},
+	})
 }

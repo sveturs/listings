@@ -712,6 +712,10 @@ definitions:
       AttributeEntityTypeListing: Объявление маркетплейса
       AttributeEntityTypeProduct: Товар витрины
       AttributeEntityTypeProductVariant: Вариант товара
+    x-enum-descriptions:
+    - Объявление маркетплейса
+    - Товар витрины
+    - Вариант товара
     x-enum-varnames:
     - AttributeEntityTypeListing
     - AttributeEntityTypeProduct
@@ -772,6 +776,10 @@ definitions:
       PurposeBoth: Может использоваться в обоих случаях
       PurposeRegular: Обычный атрибут для фильтрации/поиска
       PurposeVariant: Вариативный атрибут (влияет на SKU)
+    x-enum-descriptions:
+    - Обычный атрибут для фильтрации/поиска
+    - Вариативный атрибут (влияет на SKU)
+    - Может использоваться в обоих случаях
     x-enum-varnames:
     - PurposeRegular
     - PurposeVariant
@@ -2205,6 +2213,11 @@ definitions:
       PrivacyLevelDistrict: Только район
       PrivacyLevelExact: Точный адрес
       PrivacyLevelStreet: Только улица
+    x-enum-descriptions:
+    - Точный адрес
+    - Только улица
+    - Только район
+    - Только город
     x-enum-varnames:
     - PrivacyLevelExact
     - PrivacyLevelStreet
@@ -2770,6 +2783,14 @@ definitions:
       OrderStatusProcessing: в обработке
       OrderStatusRefunded: возвращен
       OrderStatusShipped: отправлен
+    x-enum-descriptions:
+    - ожидает оплаты
+    - оплачен, подтвержден
+    - в обработке
+    - отправлен
+    - доставлен
+    - отменен
+    - возвращен
     x-enum-varnames:
     - OrderStatusPending
     - OrderStatusConfirmed
@@ -2870,6 +2891,16 @@ definitions:
       PaymentMethodIPS: Instant Payment System
       PaymentMethodKeks: Keks Pay (популярно в Сербии)
       PaymentMethodPostanska: Poštanska štedionica
+    x-enum-descriptions:
+    - Наличные в магазине
+    - Cash on Delivery - оплата курьеру
+    - Банковская карта
+    - Банковский перевод
+    - ""
+    - ""
+    - Poštanska štedionica
+    - Keks Pay (популярно в Сербии)
+    - Instant Payment System
     x-enum-varnames:
     - PaymentMethodCash
     - PaymentMethodCOD
@@ -3569,6 +3600,9 @@ definitions:
     x-enum-comments:
       GeoStrategyIndividualLocation: Использовать индивидуальные адреса товаров
       GeoStrategyStorefrontLocation: Использовать адрес витрины
+    x-enum-descriptions:
+    - Использовать адрес витрины
+    - Использовать индивидуальные адреса товаров
     x-enum-varnames:
     - GeoStrategyStorefrontLocation
     - GeoStrategyIndividualLocation
@@ -5241,9 +5275,11 @@ definitions:
         type: string
       latitude:
         description: Широта для геопоиска
+        format: float64
         type: number
       longitude:
         description: Долгота для геопоиска
+        format: float64
         type: number
       minimumShouldMatch:
         description: Минимальное количество совпадений (70%, 50% и т.д.)
@@ -5253,9 +5289,11 @@ definitions:
         type: integer
       priceMax:
         description: Максимальная цена
+        format: float64
         type: number
       priceMin:
         description: Минимальная цена
+        format: float64
         type: number
       query:
         description: Текстовый запрос
@@ -5920,6 +5958,7 @@ definitions:
         type: number
       geographic_distribution:
         additionalProperties:
+          format: float64
           type: number
         type: object
       period:
@@ -6283,6 +6322,7 @@ definitions:
         type: number
       average_delivery_days:
         additionalProperties:
+          format: float64
           type: number
         type: object
       period:
@@ -6729,6 +6769,7 @@ definitions:
                   items:
                     items:
                       items:
+                        format: float64
                         type: number
                       type: array
                     type: array
@@ -6756,6 +6797,11 @@ definitions:
       PrivacyDistrict: Размытие ±500-1000м
       PrivacyExact: Точный адрес
       PrivacyStreet: Размытие ±100-200м
+    x-enum-descriptions:
+    - Точный адрес
+    - Размытие ±100-200м
+    - Размытие ±500-1000м
+    - Только город
     x-enum-varnames:
     - PrivacyExact
     - PrivacyStreet
@@ -6889,6 +6935,7 @@ definitions:
         items:
           items:
             items:
+              format: float64
               type: number
             type: array
           type: array
@@ -7881,10 +7928,12 @@ definitions:
     properties:
       documents_by_category:
         additionalProperties:
+          format: int64
           type: integer
         type: object
       documents_by_status:
         additionalProperties:
+          format: int64
           type: integer
         type: object
       index_health:
@@ -8202,6 +8251,7 @@ definitions:
         type: string
       distance:
         description: Расстояние в км (если есть)
+        format: float64
         type: number
       email:
         type: string
@@ -8223,8 +8273,10 @@ definitions:
       isVerified:
         type: boolean
       latitude:
+        format: float64
         type: number
       longitude:
+        format: float64
         type: number
       name:
         type: string
@@ -8237,11 +8289,13 @@ definitions:
       productsCount:
         type: integer
       rating:
+        format: float64
         type: number
       reviewsCount:
         type: integer
       score:
         description: Релевантность
+        format: float64
         type: number
       slug:
         type: string
@@ -10247,10 +10301,13 @@ definitions:
       heading:
         type: integer
       latitude:
+        format: float64
         type: number
       longitude:
+        format: float64
         type: number
       speed:
+        format: float64
         type: number
       updatedAt:
         type: string
@@ -10333,8 +10390,10 @@ definitions:
       deliveryAddress:
         type: string
       deliveryLatitude:
+        format: float64
         type: number
       deliveryLongitude:
+        format: float64
         type: number
       distance:
         description: в метрах
@@ -10353,8 +10412,10 @@ definitions:
       pickupAddress:
         type: string
       pickupLatitude:
+        format: float64
         type: number
       pickupLongitude:
+        format: float64
         type: number
       status:
         type: string
@@ -10393,11 +10454,13 @@ definitions:
     properties:
       daily_costs:
         additionalProperties:
+          format: float64
           type: number
         description: map[date]cost
         type: object
       hourly_costs:
         additionalProperties:
+          format: float64
           type: number
         description: map[hour]cost
         type: object
@@ -10464,33 +10527,6 @@ definitions:
         example: 100
         type: integer
     type: object
-  internal_proj_users_handler.AuthResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      expires_in:
-        example: 3600
-        type: integer
-      token_type:
-        example: Bearer
-        type: string
-      user:
-        $ref: '#/definitions/internal_proj_users_handler.UserResponse'
-    type: object
-  internal_proj_users_handler.LoginRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      password:
-        example: password123
-        minLength: 6
-        type: string
-    required:
-    - email
-    - password
-    type: object
   internal_proj_users_handler.MessageResponse:
     properties:
       message:
@@ -10515,77 +10551,6 @@ definitions:
         example: https://example.com/avatar.jpg
         type: string
     type: object
-  internal_proj_users_handler.RegisterRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      name:
-        example: John Doe
-        minLength: 2
-        type: string
-      password:
-        example: password123
-        minLength: 6
-        type: string
-      phone:
-        example: "+1234567890"
-        type: string
-    required:
-    - email
-    - name
-    - password
-    type: object
-  internal_proj_users_handler.SessionResponse:
-    properties:
-      authenticated:
-        example: true
-        type: boolean
-      user:
-        $ref: '#/definitions/internal_proj_users_handler.SessionUserResponse'
-    type: object
-  internal_proj_users_handler.SessionUserResponse:
-    properties:
-      city:
-        example: Moscow
-        type: string
-      country:
-        example: Russia
-        type: string
-      email:
-        example: user@example.com
-        type: string
-      id:
-        example: 1
-        type: integer
-      is_admin:
-        example: false
-        type: boolean
-      name:
-        example: John Doe
-        type: string
-      phone:
-        example: "+1234567890"
-        type: string
-      picture_url:
-        example: https://example.com/avatar.jpg
-        type: string
-      provider:
-        example: password
-        type: string
-    type: object
-  internal_proj_users_handler.TokenResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      expires_in:
-        example: 3600
-        type: integer
-      token_type:
-        example: Bearer
-        type: string
-    type: object
   internal_proj_users_handler.UpdateUserRoleRequest:
     properties:
       role_id:
@@ -10594,21 +10559,6 @@ definitions:
         type: integer
     required:
     - role_id
-    type: object
-  internal_proj_users_handler.UserResponse:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      id:
-        example: 1
-        type: integer
-      name:
-        example: John Doe
-        type: string
-      picture_url:
-        example: https://example.com/avatar.jpg
-        type: string
     type: object
   internal_proj_viber.EstimateCostRequest:
     properties:
@@ -16306,11 +16256,13 @@ paths:
       parameters:
       - default: 100
         description: Daily cost limit in USD
+        format: float64
         in: query
         name: daily_limit
         type: number
       - default: 2000
         description: Monthly cost limit in USD
+        format: float64
         in: query
         name: monthly_limit
         type: number
@@ -18336,86 +18288,154 @@ paths:
       summary: Get user events
       tags:
       - analytics
+  /api/v1/auth/google:
+    get:
+      description: Redirects user to Google OAuth consent page
+      parameters:
+      - description: User locale (en, ru, sr)
+        in: query
+        name: locale
+        type: string
+      - description: URL to return after auth
+        in: query
+        name: return_url
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to Google OAuth
+      summary: Start Google OAuth authentication
+      tags:
+      - auth
+  /api/v1/auth/google/callback:
+    get:
+      description: Processes OAuth callback from Google and authenticates user
+      parameters:
+      - description: OAuth authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state parameter
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Redirect to frontend with auth tokens
+        "400":
+          description: Invalid callback parameters
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Handle Google OAuth callback
+      tags:
+      - auth
   /api/v1/auth/login:
     post:
       consumes:
       - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Authenticates user via auth-service
       parameters:
-      - description: Login credentials
+      - description: Login request
         in: body
-        name: body
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_proj_users_handler.LoginRequest'
+          additionalProperties: true
+          type: object
       produces:
       - application/json
       responses:
         "200":
-          description: Authentication successful
+          description: Login successful
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
-              type: object
-        "400":
-          description: auth.login.error.invalid_request_body or auth.login.error.email_password_required
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+            additionalProperties: true
+            type: object
         "401":
-          description: auth.login.error.invalid_credentials
+          description: Invalid credentials
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: auth.login.error.failed
+          description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Login with email and password
+      summary: User login
       tags:
       - auth
   /api/v1/auth/logout:
     post:
-      consumes:
-      - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Logs out the current user
       produces:
       - application/json
       responses:
         "200":
           description: Logout successful
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.MessageResponse'
-              type: object
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       security:
       - BearerAuth: []
-      summary: Logout user
+      summary: User logout
+      tags:
+      - auth
+  /api/v1/auth/me:
+    get:
+      description: Returns info about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User info
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get current user info
       tags:
       - auth
   /api/v1/auth/refresh:
     post:
       consumes:
       - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Refreshes the access token using a refresh token
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
       produces:
       - application/json
       responses:
         "200":
-          description: New access token
+          description: Token refreshed successfully
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.TokenResponse'
-              type: object
+            additionalProperties: true
+            type: object
         "401":
-          description: auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token
+          description: Invalid refresh token
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
       summary: Refresh access token
@@ -18425,39 +18445,80 @@ paths:
     post:
       consumes:
       - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Registers a new user via auth-service
       parameters:
-      - description: Registration data
+      - description: Registration request
         in: body
-        name: body
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_proj_users_handler.RegisterRequest'
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Register a new user
+      tags:
+      - auth
+  /api/v1/auth/session:
+    get:
+      description: Returns information about the current authenticated session
       produces:
       - application/json
       responses:
         "200":
-          description: Registration successful
+          description: Session info
           schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.AuthResponse'
-              type: object
-        "400":
-          description: auth.register.error.invalid_request_body or auth.register.error.fields_required
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-        "409":
-          description: auth.register.error.email_exists
+      security:
+      - BearerAuth: []
+      summary: Get current session
+      tags:
+      - auth
+  /api/v1/auth/validate:
+    get:
+      description: Validates the current access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token is valid
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "500":
-          description: auth.register.error.failed
+          description: Internal server error
           schema:
             $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Register new user
+      security:
+      - BearerAuth: []
+      summary: Validate token
       tags:
       - auth
   /api/v1/balance:
@@ -20087,11 +20148,13 @@ paths:
       description: Получает адрес по географическим координатам
       parameters:
       - description: Широта
+        format: float64
         in: query
         name: lat
         required: true
         type: number
       - description: Долгота
+        format: float64
         in: query
         name: lon
         required: true
@@ -20573,6 +20636,7 @@ paths:
             - properties:
                 data:
                   additionalProperties:
+                    format: int64
                     type: integer
                   type: object
               type: object
@@ -27588,6 +27652,66 @@ paths:
       summary: Get user rating summary
       tags:
       - reviews
+  /api/v1/roles:
+    get:
+      description: Returns all available roles in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of roles
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all roles
+      tags:
+      - roles
+  /api/v1/roles/assign:
+    post:
+      consumes:
+      - application/json
+      description: Assigns a specific role to a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role assigned successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Assign role to user
+      tags:
+      - roles
+  /api/v1/roles/revoke:
+    post:
+      consumes:
+      - application/json
+      description: Revokes a specific role from a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role revoked successfully
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Revoke role from user
+      tags:
+      - roles
   /api/v1/search:
     get:
       consumes:
@@ -29043,6 +29167,7 @@ paths:
         name: city
         type: string
       - description: Minimum rating filter
+        format: float32
         in: query
         name: min_rating
         type: number
@@ -29051,14 +29176,17 @@ paths:
         name: search
         type: string
       - description: Latitude for geo search
+        format: float64
         in: query
         name: lat
         type: number
       - description: Longitude for geo search
+        format: float64
         in: query
         name: lng
         type: number
       - description: Radius in km for geo search
+        format: float64
         in: query
         name: radius_km
         type: number
@@ -31256,11 +31384,13 @@ paths:
       description: Returns all storefronts located in the same building
       parameters:
       - description: Building latitude
+        format: float64
         in: query
         name: lat
         required: true
         type: number
       - description: Building longitude
+        format: float64
         in: query
         name: lng
         required: true
@@ -31322,26 +31452,31 @@ paths:
       description: Returns storefronts within map bounds with minimal data for performance
       parameters:
       - description: Minimum latitude
+        format: float64
         in: query
         name: min_lat
         required: true
         type: number
       - description: Maximum latitude
+        format: float64
         in: query
         name: max_lat
         required: true
         type: number
       - description: Minimum longitude
+        format: float64
         in: query
         name: min_lng
         required: true
         type: number
       - description: Maximum longitude
+        format: float64
         in: query
         name: max_lng
         required: true
         type: number
       - description: Minimum rating filter
+        format: float32
         in: query
         name: min_rating
         type: number
@@ -31400,16 +31535,19 @@ paths:
       description: Returns storefronts within specified radius from coordinates
       parameters:
       - description: Latitude
+        format: float64
         in: query
         name: lat
         required: true
         type: number
       - description: Longitude
+        format: float64
         in: query
         name: lng
         required: true
         type: number
       - description: Radius in kilometers (default 5)
+        format: float64
         in: query
         name: radius_km
         type: number
@@ -31482,10 +31620,12 @@ paths:
         name: city
         type: string
       - description: Latitude for geo search
+        format: float64
         in: query
         name: lat
         type: number
       - description: Longitude for geo search
+        format: float64
         in: query
         name: lng
         type: number
@@ -31494,6 +31634,7 @@ paths:
         name: radius_km
         type: integer
       - description: Minimum rating
+        format: float64
         in: query
         name: min_rating
         type: number
@@ -32357,6 +32498,32 @@ paths:
       summary: Get public user profile
       tags:
       - users
+  /api/v1/users/{userId}/roles:
+    get:
+      description: Returns all roles assigned to a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User roles
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get user roles
+      tags:
+      - roles
   /api/v1/users/admin-check/{email}:
     get:
       consumes:
@@ -33142,6 +33309,7 @@ paths:
             - properties:
                 data:
                   additionalProperties:
+                    format: float64
                     type: number
                   type: object
               type: object
@@ -33302,73 +33470,6 @@ paths:
       summary: Handle Viber webhook
       tags:
       - viber
-  /auth/google:
-    get:
-      consumes:
-      - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
-      parameters:
-      - description: URL to return after authentication
-        in: query
-        name: returnTo
-        type: string
-      produces:
-      - application/json
-      responses:
-        "302":
-          description: Redirect to Google OAuth
-          schema:
-            type: string
-      summary: Initiate Google OAuth authentication
-      tags:
-      - auth
-  /auth/google/callback:
-    get:
-      consumes:
-      - application/json
-      description: This endpoint is deprecated and should be proxied to Auth Service
-      parameters:
-      - description: Authorization code from Google
-        in: query
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "302":
-          description: Redirect to frontend with session
-          schema:
-            type: string
-        "500":
-          description: auth.google_callback.error.authentication_failed
-          schema:
-            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
-      summary: Handle Google OAuth callback
-      tags:
-      - auth
-  /auth/session:
-    get:
-      consumes:
-      - application/json
-      description: Get current user session information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Session information
-          schema:
-            allOf:
-            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
-            - properties:
-                data:
-                  $ref: '#/definitions/internal_proj_users_handler.SessionResponse'
-              type: object
-      security:
-      - BearerAuth: []
-      summary: Get current session
-      tags:
-      - auth
   /health/live:
     get:
       description: Check if the service is alive

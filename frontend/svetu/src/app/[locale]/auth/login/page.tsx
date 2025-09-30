@@ -1,20 +1,15 @@
 'use client';
 
 import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 function LoginPageContent() {
-  const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { loginWithGoogle } = useAuth();
 
   useEffect(() => {
-    // Получаем URL для редиректа после логина
-    const redirect = searchParams.get('redirect') || '/';
-
     // Инициируем логин через Google OAuth
-    login(redirect);
-  }, [searchParams, login]);
+    loginWithGoogle();
+  }, [loginWithGoogle]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-100">

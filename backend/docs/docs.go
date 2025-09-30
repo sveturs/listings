@@ -8130,6 +8130,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "default": 100,
                         "description": "Daily cost limit in USD",
                         "name": "daily_limit",
@@ -8137,6 +8138,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "default": 2000,
                         "description": "Monthly cost limit in USD",
                         "name": "monthly_limit",
@@ -11508,9 +11510,79 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/google": {
+            "get": {
+                "description": "Redirects user to Google OAuth consent page",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Start Google OAuth authentication",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User locale (en, ru, sr)",
+                        "name": "locale",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL to return after auth",
+                        "name": "return_url",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to Google OAuth"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/google/callback": {
+            "get": {
+                "description": "Processes OAuth callback from Google and authenticates user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Handle Google OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OAuth state parameter",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirect to frontend with auth tokens"
+                    },
+                    "400": {
+                        "description": "Invalid callback parameters",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Authenticates user via auth-service",
                 "consumes": [
                     "application/json"
                 ],
@@ -11520,51 +11592,35 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Login with email and password",
+                "summary": "User login",
                 "parameters": [
                     {
-                        "description": "Login credentials",
-                        "name": "body",
+                        "description": "Login request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.LoginRequest"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Authentication successful",
+                        "description": "Login successful",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "auth.login.error.invalid_request_body or auth.login.error.email_password_required",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
-                        "description": "auth.login.error.invalid_credentials",
+                        "description": "Invalid credentials",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "auth.login.error.failed",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -11579,34 +11635,63 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Logs out the current user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Logout user",
+                "summary": "User logout",
                 "responses": {
                     "200": {
                         "description": "Logout successful",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.MessageResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns info about the currently authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "User info",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     }
                 }
@@ -11614,7 +11699,7 @@ const docTemplate = `{
         },
         "/api/v1/auth/refresh": {
             "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Refreshes the access token using a refresh token",
                 "consumes": [
                     "application/json"
                 ],
@@ -11625,27 +11710,34 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh token request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "New access token",
+                        "description": "Token refreshed successfully",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.TokenResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
-                        "description": "auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token",
+                        "description": "Invalid refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -11655,7 +11747,7 @@ const docTemplate = `{
         },
         "/api/v1/auth/register": {
             "post": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
+                "description": "Registers a new user via auth-service",
                 "consumes": [
                     "application/json"
                 ],
@@ -11665,51 +11757,111 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Register new user",
+                "summary": "Register a new user",
                 "parameters": [
                     {
-                        "description": "Registration data",
-                        "name": "body",
+                        "description": "Registration request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_proj_users_handler.RegisterRequest"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Registration successful",
+                    "201": {
+                        "description": "User registered successfully",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.AuthResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "auth.register.error.invalid_request_body or auth.register.error.fields_required",
+                        "description": "Invalid request",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "409": {
-                        "description": "auth.register.error.email_exists",
+                        "description": "User already exists",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "500": {
-                        "description": "auth.register.error.failed",
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/session": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns information about the current authenticated session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get current session",
+                "responses": {
+                    "200": {
+                        "description": "Session info",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/validate": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validates the current access token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Validate token",
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -14400,6 +14552,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Широта",
                         "name": "lat",
                         "in": "query",
@@ -14407,6 +14560,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Долгота",
                         "name": "lon",
                         "in": "query",
@@ -15187,7 +15341,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "integer"
+                                                "type": "integer",
+                                                "format": "int64"
                                             }
                                         }
                                     }
@@ -26563,6 +26718,103 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all available roles in the system",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get all roles",
+                "responses": {
+                    "200": {
+                        "description": "List of roles",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/assign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assigns a specific role to a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Assign role to user",
+                "responses": {
+                    "200": {
+                        "description": "Role assigned successfully",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/roles/revoke": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revokes a specific role from a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Revoke role from user",
+                "responses": {
+                    "200": {
+                        "description": "Role revoked successfully",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/search": {
             "get": {
                 "description": "Searches both marketplace listings and storefront products",
@@ -28836,6 +29088,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -28848,18 +29101,21 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Radius in km for geo search",
                         "name": "radius_km",
                         "in": "query"
@@ -29245,6 +29501,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Building latitude",
                         "name": "lat",
                         "in": "query",
@@ -29252,6 +29509,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Building longitude",
                         "name": "lng",
                         "in": "query",
@@ -29343,6 +29601,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum latitude",
                         "name": "min_lat",
                         "in": "query",
@@ -29350,6 +29609,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Maximum latitude",
                         "name": "max_lat",
                         "in": "query",
@@ -29357,6 +29617,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum longitude",
                         "name": "min_lng",
                         "in": "query",
@@ -29364,6 +29625,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Maximum longitude",
                         "name": "max_lng",
                         "in": "query",
@@ -29371,6 +29633,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -29461,6 +29724,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude",
                         "name": "lat",
                         "in": "query",
@@ -29468,6 +29732,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude",
                         "name": "lng",
                         "in": "query",
@@ -29475,6 +29740,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Radius in kilometers (default 5)",
                         "name": "radius_km",
                         "in": "query"
@@ -29584,12 +29850,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
@@ -29602,6 +29870,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum rating",
                         "name": "min_rating",
                         "in": "query"
@@ -34292,6 +34561,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/{userId}/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all roles assigned to a specific user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Get user roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User roles",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/vin/auto-fill": {
             "post": {
                 "security": [
@@ -35307,7 +35617,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "format": "float64"
                                             }
                                         }
                                     }
@@ -35552,115 +35863,6 @@ const docTemplate = `{
                         "description": "Invalid signature",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/google": {
-            "get": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Initiate Google OAuth authentication",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "URL to return after authentication",
-                        "name": "returnTo",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirect to Google OAuth",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/google/callback": {
-            "get": {
-                "description": "This endpoint is deprecated and should be proxied to Auth Service",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Handle Google OAuth callback",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Authorization code from Google",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "302": {
-                        "description": "Redirect to frontend with session",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "auth.google_callback.error.authentication_failed",
-                        "schema": {
-                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/session": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get current user session information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Get current session",
-                "responses": {
-                    "200": {
-                        "description": "Session information",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/internal_proj_users_handler.SessionResponse"
-                                        }
-                                    }
-                                }
-                            ]
                         }
                     }
                 }
@@ -37823,6 +38025,11 @@ const docTemplate = `{
                 "AttributeEntityTypeProduct": "Товар витрины",
                 "AttributeEntityTypeProductVariant": "Вариант товара"
             },
+            "x-enum-descriptions": [
+                "Объявление маркетплейса",
+                "Товар витрины",
+                "Вариант товара"
+            ],
             "x-enum-varnames": [
                 "AttributeEntityTypeListing",
                 "AttributeEntityTypeProduct",
@@ -37911,6 +38118,11 @@ const docTemplate = `{
                 "PurposeRegular": "Обычный атрибут для фильтрации/поиска",
                 "PurposeVariant": "Вариативный атрибут (влияет на SKU)"
             },
+            "x-enum-descriptions": [
+                "Обычный атрибут для фильтрации/поиска",
+                "Вариативный атрибут (влияет на SKU)",
+                "Может использоваться в обоих случаях"
+            ],
             "x-enum-varnames": [
                 "PurposeRegular",
                 "PurposeVariant",
@@ -40029,6 +40241,12 @@ const docTemplate = `{
                 "PrivacyLevelExact": "Точный адрес",
                 "PrivacyLevelStreet": "Только улица"
             },
+            "x-enum-descriptions": [
+                "Точный адрес",
+                "Только улица",
+                "Только район",
+                "Только город"
+            ],
             "x-enum-varnames": [
                 "PrivacyLevelExact",
                 "PrivacyLevelStreet",
@@ -40864,6 +41082,15 @@ const docTemplate = `{
                 "OrderStatusRefunded": "возвращен",
                 "OrderStatusShipped": "отправлен"
             },
+            "x-enum-descriptions": [
+                "ожидает оплаты",
+                "оплачен, подтвержден",
+                "в обработке",
+                "отправлен",
+                "доставлен",
+                "отменен",
+                "возвращен"
+            ],
             "x-enum-varnames": [
                 "OrderStatusPending",
                 "OrderStatusConfirmed",
@@ -41005,6 +41232,17 @@ const docTemplate = `{
                 "PaymentMethodKeks": "Keks Pay (популярно в Сербии)",
                 "PaymentMethodPostanska": "Poštanska štedionica"
             },
+            "x-enum-descriptions": [
+                "Наличные в магазине",
+                "Cash on Delivery - оплата курьеру",
+                "Банковская карта",
+                "Банковский перевод",
+                "",
+                "",
+                "Poštanska štedionica",
+                "Keks Pay (популярно в Сербии)",
+                "Instant Payment System"
+            ],
             "x-enum-varnames": [
                 "PaymentMethodCash",
                 "PaymentMethodCOD",
@@ -42068,6 +42306,10 @@ const docTemplate = `{
                 "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
                 "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
             },
+            "x-enum-descriptions": [
+                "Использовать адрес витрины",
+                "Использовать индивидуальные адреса товаров"
+            ],
             "x-enum-varnames": [
                 "GeoStrategyStorefrontLocation",
                 "GeoStrategyIndividualLocation"
@@ -44580,11 +44822,13 @@ const docTemplate = `{
                 },
                 "latitude": {
                     "description": "Широта для геопоиска",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
                     "description": "Долгота для геопоиска",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "minimumShouldMatch": {
                     "description": "Минимальное количество совпадений (70%, 50% и т.д.)",
@@ -44596,11 +44840,13 @@ const docTemplate = `{
                 },
                 "priceMax": {
                     "description": "Максимальная цена",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "priceMin": {
                     "description": "Минимальная цена",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "query": {
                     "description": "Текстовый запрос",
@@ -45585,7 +45831,8 @@ const docTemplate = `{
                 "geographic_distribution": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "period": {
@@ -46140,7 +46387,8 @@ const docTemplate = `{
                 "average_delivery_days": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "period": {
@@ -46813,7 +47061,8 @@ const docTemplate = `{
                                             "items": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "number"
+                                                    "type": "number",
+                                                    "format": "float64"
                                                 }
                                             }
                                         }
@@ -46850,6 +47099,12 @@ const docTemplate = `{
                 "PrivacyExact": "Точный адрес",
                 "PrivacyStreet": "Размытие ±100-200м"
             },
+            "x-enum-descriptions": [
+                "Точный адрес",
+                "Размытие ±100-200м",
+                "Размытие ±500-1000м",
+                "Только город"
+            ],
             "x-enum-varnames": [
                 "PrivacyExact",
                 "PrivacyStreet",
@@ -47038,7 +47293,8 @@ const docTemplate = `{
                         "items": {
                             "type": "array",
                             "items": {
-                                "type": "number"
+                                "type": "number",
+                                "format": "float64"
                             }
                         }
                     }
@@ -48506,13 +48762,15 @@ const docTemplate = `{
                 "documents_by_category": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 },
                 "documents_by_status": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 },
                 "index_health": {
@@ -48980,7 +49238,8 @@ const docTemplate = `{
                 },
                 "distance": {
                     "description": "Расстояние в км (если есть)",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "email": {
                     "type": "string"
@@ -49011,10 +49270,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "latitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "name": {
                     "type": "string"
@@ -49032,14 +49293,16 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rating": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "reviewsCount": {
                     "type": "integer"
                 },
                 "score": {
                     "description": "Релевантность",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "slug": {
                     "type": "string"
@@ -51989,13 +52252,16 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "latitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "speed": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -52106,10 +52372,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deliveryLatitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "deliveryLongitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "distance": {
                     "description": "в метрах",
@@ -52135,10 +52403,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pickupLatitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "pickupLongitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "status": {
                     "type": "string"
@@ -52196,14 +52466,16 @@ const docTemplate = `{
                     "description": "map[date]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "hourly_costs": {
                     "description": "map[hour]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "last_updated": {
@@ -52298,44 +52570,6 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_users_handler.AuthResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                "expires_in": {
-                    "type": "integer",
-                    "example": 3600
-                },
-                "token_type": {
-                    "type": "string",
-                    "example": "Bearer"
-                },
-                "user": {
-                    "$ref": "#/definitions/internal_proj_users_handler.UserResponse"
-                }
-            }
-        },
-        "internal_proj_users_handler.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "password123"
-                }
-            }
-        },
         "internal_proj_users_handler.MessageResponse": {
             "type": "object",
             "properties": {
@@ -52370,104 +52604,6 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_proj_users_handler.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "minLength": 2,
-                    "example": "John Doe"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "password123"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+1234567890"
-                }
-            }
-        },
-        "internal_proj_users_handler.SessionResponse": {
-            "type": "object",
-            "properties": {
-                "authenticated": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "user": {
-                    "$ref": "#/definitions/internal_proj_users_handler.SessionUserResponse"
-                }
-            }
-        },
-        "internal_proj_users_handler.SessionUserResponse": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "example": "Moscow"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "Russia"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_admin": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+1234567890"
-                },
-                "picture_url": {
-                    "type": "string",
-                    "example": "https://example.com/avatar.jpg"
-                },
-                "provider": {
-                    "type": "string",
-                    "example": "password"
-                }
-            }
-        },
-        "internal_proj_users_handler.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                "expires_in": {
-                    "type": "integer",
-                    "example": 3600
-                },
-                "token_type": {
-                    "type": "string",
-                    "example": "Bearer"
-                }
-            }
-        },
         "internal_proj_users_handler.UpdateUserRoleRequest": {
             "type": "object",
             "required": [
@@ -52478,27 +52614,6 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1,
                     "example": 2
-                }
-            }
-        },
-        "internal_proj_users_handler.UserResponse": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "picture_url": {
-                    "type": "string",
-                    "example": "https://example.com/avatar.jpg"
                 }
             }
         },

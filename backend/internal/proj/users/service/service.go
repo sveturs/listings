@@ -2,17 +2,15 @@
 package service
 
 import (
-	"backend/internal/storage"
+	authService "github.com/sveturs/auth/pkg/http/service"
 )
 
 type Service struct {
-	Auth AuthServiceInterface
 	User UserServiceInterface
 }
 
-func NewService(store storage.Storage, googleClientID, googleClientSecret, googleRedirectURL, jwtSecret string, jwtExpHours int) *Service {
+func NewService(authSvc *authService.AuthService, userSvc *authService.UserService) *Service {
 	return &Service{
-		Auth: NewAuthService(googleClientID, googleClientSecret, googleRedirectURL, store, jwtSecret, jwtExpHours),
-		User: NewUserService(store),
+		User: NewUserService(authSvc, userSvc),
 	}
 }

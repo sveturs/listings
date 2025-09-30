@@ -18,6 +18,8 @@ import (
 	globalService "backend/internal/proj/global/service"
 	pkglogger "backend/pkg/logger"
 	"backend/pkg/utils"
+
+	authService "github.com/sveturs/auth/pkg/http/service"
 )
 
 type Middleware struct {
@@ -25,13 +27,17 @@ type Middleware struct {
 	services          globalService.ServicesInterface
 	metrics           *monitoring.MetricsCollector
 	authServicePubKey *rsa.PublicKey
+	authService       *authService.AuthService
+	jwtParserMW       fiber.Handler
 }
 
-func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface) *Middleware {
+func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface, authSvc *authService.AuthService, jwtParser fiber.Handler) *Middleware {
 	m := &Middleware{
-		config:   cfg,
-		services: services,
-		metrics:  monitoring.NewMetricsCollector(pkglogger.GetLogger()),
+		config:      cfg,
+		services:    services,
+		metrics:     monitoring.NewMetricsCollector(pkglogger.GetLogger()),
+		authService: authSvc,
+		jwtParserMW: jwtParser,
 	}
 
 	// Загружаем публичный ключ auth service
@@ -143,14 +149,19 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
 	}
 
-	// ПЕРВЫМ ДЕЛОМ проверяем флаг is_admin из JWT токена (установлен в AuthRequiredJWT)
-	if isAdmin, ok := c.Locals("is_admin").(bool); ok && isAdmin {
-		logger.Info().
-			Int("user_id", userID).
-			Str("source", "jwt_token").
-			Msg("AdminRequired: Access granted - user has admin role in JWT")
-		c.Locals("admin_id", userID)
-		return c.Next()
+	// ПЕРВЫМ ДЕЛОМ проверяем роли из JWT токена (установлены в JWTParser из sveturs/auth)
+	if roles, ok := c.Locals("roles").([]string); ok {
+		for _, role := range roles {
+			if role == "admin" {
+				logger.Info().
+					Int("user_id", userID).
+					Str("source", "jwt_token").
+					Strs("roles", roles).
+					Msg("AdminRequired: Access granted - user has admin role in JWT")
+				c.Locals("admin_id", userID)
+				return c.Next()
+			}
+		}
 	}
 
 	// Затем проверяем ID пользователя (для обратной совместимости)
@@ -255,12 +266,57 @@ func (m *Middleware) RequireAdmin() fiber.Handler {
 	return m.AdminRequired
 }
 
+// GetJWTParser возвращает JWT parser middleware из sveturs/auth
+func (m *Middleware) GetJWTParser() fiber.Handler {
+	return m.jwtParserMW
+}
+
+// GetAuthService возвращает auth service из sveturs/auth
+func (m *Middleware) GetAuthService() *authService.AuthService {
+	return m.authService
+}
+
+// AuthRequiredJWT это алиас для совместимости
+// Использует комбинацию JWTParser и RequireAuth из sveturs/auth
+func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
+	// Сначала парсим JWT
+	if err := m.jwtParserMW(c); err != nil {
+		return err
+	}
+
+	// Затем проверяем аутентификацию
+	// Если userID есть в контексте - значит пользователь аутентифицирован
+	if userID, ok := c.Locals("user_id").(int); !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Требуется авторизация")
+	}
+
+	return c.Next()
+}
+
+// OptionalAuthJWT это алиас для совместимости
+// Просто парсит JWT если он есть, но не требует его
+func (m *Middleware) OptionalAuthJWT(c *fiber.Ctx) error {
+	// Просто парсим JWT если он есть
+	if m.jwtParserMW != nil {
+		return m.jwtParserMW(c)
+	}
+	return c.Next()
+}
+
 // RequireAuth требует обязательную аутентификацию
+// Возвращает middleware, которое требует аутентификацию
 func (m *Middleware) RequireAuth() fiber.Handler {
-	return m.AuthRequiredJWT
+	// Возвращаем функцию, которая использует AuthRequiredJWT
+	return func(c *fiber.Ctx) error {
+		return m.AuthRequiredJWT(c)
+	}
 }
 
 // OptionalAuth опциональная аутентификация
+// Возвращает middleware, которое опционально проверяет JWT
 func (m *Middleware) OptionalAuth() fiber.Handler {
-	return m.OptionalAuthJWT
+	// Возвращаем функцию, которая использует OptionalAuthJWT
+	return func(c *fiber.Ctx) error {
+		return m.OptionalAuthJWT(c)
+	}
 }

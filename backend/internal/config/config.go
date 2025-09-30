@@ -22,6 +22,8 @@ type Config struct {
 	GoogleClientSecret    string
 	GoogleRedirectURL     string
 	FrontendURL           string
+	AuthServiceURL        string
+	BackendURL            string
 	Environment           string
 	LogLevel              string `yaml:"log_level"`
 	OpenAIAPIKey          string
@@ -180,6 +182,20 @@ func NewConfig() (*Config, error) {
 		log.Printf("Using default AUTH_SERVICE_PUBLIC_KEY_PATH: %s", config.AuthServicePubKeyPath)
 	}
 	log.Printf("Final AUTH_SERVICE_PUBLIC_KEY_PATH in config: %s", config.AuthServicePubKeyPath)
+
+	// Получаем URL auth-service
+	config.AuthServiceURL = os.Getenv("AUTH_SERVICE_URL")
+	if config.AuthServiceURL == "" {
+		config.AuthServiceURL = "http://localhost:28080"
+		log.Printf("Using default AUTH_SERVICE_URL: %s", config.AuthServiceURL)
+	}
+
+	// Получаем URL текущего backend для OAuth callbacks
+	config.BackendURL = os.Getenv("BACKEND_URL")
+	if config.BackendURL == "" {
+		config.BackendURL = fmt.Sprintf("http://localhost:%s", port)
+		log.Printf("Using default BACKEND_URL: %s", config.BackendURL)
+	}
 
 	// Получаем время жизни JWT токена (в часах)
 	jwtExpirationStr := os.Getenv("JWT_EXPIRATION_HOURS")
@@ -465,6 +481,8 @@ func NewConfig() (*Config, error) {
 		JWTSecret:             config.JWTSecret,
 		JWTExpirationHours:    config.JWTExpirationHours,
 		AuthServicePubKeyPath: config.AuthServicePubKeyPath,
+		AuthServiceURL:        config.AuthServiceURL,
+		BackendURL:            config.BackendURL,
 		MinIOPublicURL:        config.MinIOPublicURL,
 		OpenSearch:            config.OpenSearch,
 		FileStorage:           config.FileStorage,
@@ -472,6 +490,9 @@ func NewConfig() (*Config, error) {
 		Docs:                  docsConfig,
 		AllSecure:             allSecureConfig,
 		PostExpress:           postExpressConfig,
+		BEXAuthToken:          config.BEXAuthToken,
+		BEXClientID:           config.BEXClientID,
+		BEXAPIURL:             config.BEXAPIURL,
 		SearchWeights:         searchWeights,
 		Redis:                 redisConfig,
 		MigrationsOnAPI:       migrationsOnAPI,

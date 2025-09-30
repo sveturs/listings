@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
+
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	osClientPkg "backend/internal/storage/opensearch"
 	postgresStorage "backend/internal/storage/postgres"
-
-	"github.com/joho/godotenv"
+	"backend/internal/version"
 )
 
 func main() {
@@ -35,7 +36,7 @@ func main() {
 	}
 
 	// Initialize logger
-	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL")); err != nil {
+	if err := logger.Init(os.Getenv("APP_MODE"), os.Getenv("LOG_LEVEL"), version.GetVersion()); err != nil {
 		fmt.Printf("Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
@@ -98,7 +99,7 @@ func main() {
 
 	// We need to access products directly from the database
 	query := `
-		SELECT 
+		SELECT
 			p.id, p.storefront_id, p.category_id, p.name, p.description,
 			p.price, p.currency, p.sku, p.barcode, p.stock_quantity,
 			p.stock_status, p.is_active, p.attributes, p.created_at, p.updated_at,

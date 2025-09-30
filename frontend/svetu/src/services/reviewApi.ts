@@ -1,5 +1,4 @@
 import config from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 import { AuthService } from '@/services/auth';
 import type {
   Review,
@@ -13,16 +12,6 @@ import type {
 } from '@/types/review';
 
 const API_BASE = config.getApiUrl() + '/api/v1';
-
-// Helper function to get auth headers
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const headers: HeadersInit = {};
-  const token = await tokenManager.getAccessToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-}
 
 export const reviewApi = {
   // Get reviews with filters
@@ -124,11 +113,9 @@ export const reviewApi = {
     entityType: string,
     entityId: number
   ): Promise<CanReviewResponse> {
-    const authHeaders = await getAuthHeaders();
     const response = await fetch(
       `${API_BASE}/reviews/can-review/${entityType}/${entityId}`,
       {
-        headers: authHeaders,
         credentials: 'include',
       }
     );
@@ -147,14 +134,12 @@ export const reviewApi = {
 
   // Create a draft review (step 1)
   async createDraftReview(reviewData: CreateReviewRequest): Promise<Review> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/draft`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -172,13 +157,11 @@ export const reviewApi = {
 
   // Publish a draft review (step 2b)
   async publishReview(reviewId: number): Promise<Review> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${reviewId}/publish`, {
       method: 'POST',
       headers: {
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -195,8 +178,6 @@ export const reviewApi = {
 
   // Legacy: Create a new review (single step)
   async createReview(reviewData: CreateReviewRequest): Promise<Review> {
-    const authHeaders = await getAuthHeaders();
-
     // Get CSRF token for POST request
     const csrfToken = await AuthService.getCsrfToken();
 
@@ -204,7 +185,6 @@ export const reviewApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -222,7 +202,6 @@ export const reviewApi = {
 
   // Upload photos to existing review (step 2a)
   async uploadReviewPhotos(reviewId: number, files: File[]): Promise<string[]> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const formData = new FormData();
@@ -233,7 +212,6 @@ export const reviewApi = {
     const response = await fetch(`${API_BASE}/reviews/${reviewId}/photos`, {
       method: 'POST',
       headers: {
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -253,14 +231,12 @@ export const reviewApi = {
     id: number,
     updates: Partial<CreateReviewRequest>
   ): Promise<Review> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -277,13 +253,11 @@ export const reviewApi = {
 
   // Delete a review
   async deleteReview(id: number): Promise<void> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${id}`, {
       method: 'DELETE',
       headers: {
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -299,14 +273,12 @@ export const reviewApi = {
     reviewId: number,
     voteType: 'helpful' | 'not_helpful'
   ): Promise<void> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${reviewId}/vote`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -323,14 +295,12 @@ export const reviewApi = {
     reviewId: number,
     notes?: string
   ): Promise<ReviewConfirmation> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${reviewId}/confirm`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -350,14 +320,12 @@ export const reviewApi = {
     reviewId: number,
     reason: string
   ): Promise<ReviewDispute> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const response = await fetch(`${API_BASE}/reviews/${reviewId}/dispute`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -374,14 +342,12 @@ export const reviewApi = {
 
   // Add response to review
   async addResponse(reviewId: number, response: string): Promise<Review> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const res = await fetch(`${API_BASE}/reviews/${reviewId}/response`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',
@@ -398,7 +364,6 @@ export const reviewApi = {
 
   // Upload review photos
   async uploadPhotos(files: File[]): Promise<string[]> {
-    const authHeaders = await getAuthHeaders();
     const csrfToken = await AuthService.getCsrfToken();
 
     const formData = new FormData();
@@ -409,7 +374,6 @@ export const reviewApi = {
     const response = await fetch(`${API_BASE}/reviews/upload-photos`, {
       method: 'POST',
       headers: {
-        ...authHeaders,
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       },
       credentials: 'include',

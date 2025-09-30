@@ -50,14 +50,11 @@ export default function RoleManager({
       const token = tokenManager.getAccessToken();
       if (!token) return;
 
-      const response = await fetch(
-        `${config.getAuthServiceUrl()}/api/v1/roles`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${config.getApiUrl()}/api/v1/roles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -74,7 +71,7 @@ export default function RoleManager({
       if (!token) return;
 
       const response = await fetch(
-        `${config.getAuthServiceUrl()}/api/v1/users/${userId}/roles`,
+        `${config.getApiUrl()}/api/v1/users/${userId}/roles`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -114,7 +111,7 @@ export default function RoleManager({
       }
 
       const response = await fetch(
-        `${config.getAuthServiceUrl()}/api/v1/roles/assign`,
+        `${config.getApiUrl()}/api/v1/roles/assign`,
         {
           method: 'POST',
           headers: {
@@ -164,7 +161,7 @@ export default function RoleManager({
       }
 
       const response = await fetch(
-        `${config.getAuthServiceUrl()}/api/v1/roles/revoke`,
+        `${config.getApiUrl()}/api/v1/roles/revoke`,
         {
           method: 'POST',
           headers: {

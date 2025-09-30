@@ -544,11 +544,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     l.metadata,`
 
 	baseQuery += `
-    u.name as user_name,
-        u.email as user_email,
-        u.created_at as user_created_at,
-        u.picture_url as user_picture_url,
-        c.name as category_name,
+    c.name as category_name,
         c.slug as category_slug,
         COALESCE(t.translations, '{}'::jsonb) as translations,
         COALESCE(li.images, '[]'::jsonb) as images,
@@ -560,7 +556,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         ) as is_favorite,
         COUNT(*) OVER() as total_count
     FROM marketplace_listings l
-    JOIN users u ON l.user_id = u.id
     JOIN marketplace_categories c ON l.category_id = c.id
     LEFT JOIN translations_agg t ON t.entity_id = l.id
     LEFT JOIN listing_images li ON li.listing_id = l.id
@@ -670,8 +665,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		var metadataJSON []byte
 
 		var (
-			tempEmail        sql.NullString
-			tempPictureURL   sql.NullString
 			tempLocation     sql.NullString
 			tempLatitude     sql.NullFloat64
 			tempLongitude    sql.NullFloat64
@@ -683,7 +676,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			tempStatus       sql.NullString
 			tempCondition    sql.NullString
 			tempDescription  sql.NullString
-			tempUserName     sql.NullString
 		)
 
 		err := rows.Scan(
@@ -707,10 +699,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.OriginalLanguage,
 			&tempStorefrontID,
 			&metadataJSON,
-			&tempUserName,
-			&tempEmail,
-			&listing.User.CreatedAt,
-			&tempPictureURL,
 			&tempCategoryName,
 			&tempCategorySlug,
 			&translationsJSON,
@@ -770,12 +758,9 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempStatus.Valid {
 			listing.Status = tempStatus.String
 		}
-		if tempUserName.Valid {
-			listing.User.Name = tempUserName.String
-		}
-		// Заполняем ID пользователя
+		// User info будет загружена в handler через auth-service
 		listing.User.ID = listing.UserID
-		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d, listing.User.ID=%d", listing.ID, listing.UserID, listing.User.ID)
+		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d", listing.ID, listing.UserID)
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
 			listing.StorefrontID = &sfID
@@ -795,12 +780,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempCountry.Valid {
 			listing.Country = tempCountry.String
 		}
-		if tempEmail.Valid {
-			listing.User.Email = tempEmail.String
-		}
-		if tempPictureURL.Valid {
-			listing.User.PictureURL = tempPictureURL.String
-		}
+		// User email and picture будет загружено в handler через auth-service
 		if tempCategoryName.Valid {
 			listing.Category.Name = tempCategoryName.String
 		}
@@ -1228,17 +1208,12 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             l.views_count,
             l.created_at,
             l.updated_at,
-            u.name,
-            u.email,
-			u.created_at as user_created_at,
-            COALESCE(u.picture_url, ''),
             COALESCE(c.name, '') as category_name,
             COALESCE(c.slug, '') as category_slug,
             true as is_favorite,
             COALESCE(li.images, '[]'::jsonb) as listing_images
         FROM marketplace_listings l
         JOIN marketplace_favorites f ON l.id = f.listing_id
-        LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
         LEFT JOIN listing_images li ON li.listing_id = l.id
         WHERE f.user_id = $1
@@ -1257,7 +1232,6 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			User:     &models.User{},
 			Category: &models.MarketplaceCategory{},
 		}
-		var userPictureURL string
 		var imagesJSON json.RawMessage
 
 		err := rows.Scan(
@@ -1277,10 +1251,6 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			&listing.ViewsCount,
 			&listing.CreatedAt,
 			&listing.UpdatedAt,
-			&listing.User.Name,
-			&listing.User.Email,
-			&listing.User.CreatedAt,
-			&userPictureURL,
 			&listing.Category.Name,
 			&listing.Category.Slug,
 			&listing.IsFavorite,
@@ -1291,8 +1261,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			continue
 		}
 
-		// Присваиваем отдельно
-		listing.User.PictureURL = userPictureURL
+		// User info будет загружена в handler через auth-service
 		listing.User.ID = listing.UserID
 
 		// Парсим изображения из JSON
@@ -2993,10 +2962,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		city                sql.NullString
 		country             sql.NullString
 		originalLang        sql.NullString
-		userName            sql.NullString
-		userEmail           sql.NullString
-		userPictureURL      sql.NullString
-		userPhone           sql.NullString
 		categoryName        sql.NullString
 		categorySlug        sql.NullString
 		storefrontID        sql.NullInt32
@@ -3010,12 +2975,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             l.price, l.condition, l.status, l.location, l.latitude,
             l.longitude, l.address_city as city, l.address_country as country, l.views_count,
             l.created_at, l.updated_at, l.show_on_map, l.original_language,
-            u.name, u.email, u.created_at as user_created_at,
-            u.picture_url, u.phone,
             c.name as category_name, c.slug as category_slug, l.metadata, l.storefront_id,
             COALESCE(ug.privacy_level::text, 'exact') as location_privacy, l.address_multilingual
         FROM marketplace_listings l
-        LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
         LEFT JOIN unified_geo ug ON ug.source_type = 'marketplace_listing' AND ug.source_id = l.id
         WHERE l.id = $1
@@ -3025,8 +2987,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&location, &latitude, &longitude, &city,
 		&country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
 		&listing.ShowOnMap, &originalLang,
-		&userName, &userEmail, &listing.User.CreatedAt,
-		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy, &addressMultilingual,
 	)
 	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
@@ -3076,18 +3036,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		} else {
 			listing.AddressMultilingual = multilingualMap
 		}
-	}
-	if userName.Valid {
-		listing.User.Name = userName.String
-	}
-	if userEmail.Valid {
-		listing.User.Email = userEmail.String
-	}
-	if userPictureURL.Valid {
-		listing.User.PictureURL = userPictureURL.String
-	}
-	if userPhone.Valid {
-		listing.User.Phone = &userPhone.String
 	}
 	if categoryName.Valid {
 		listing.Category.Name = categoryName.String
@@ -3402,7 +3350,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	}
 
 	// Получаем данные товара из storefront_products
-	var categoryName, categorySlug, userPhone, userPictureURL sql.NullString
+	var categoryName, categorySlug sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
         SELECT
@@ -3410,12 +3358,9 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
             sp.price, 'new' as condition, 'active' as status, '' as location,
             0 as latitude, 0 as longitude, '' as city, '' as country,
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
-            u.name as user_name, u.email as user_email, u.created_at as user_created_at,
-            u.picture_url as user_picture_url, u.phone as user_phone,
             c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
         FROM storefront_products sp
         LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
-        LEFT JOIN users u ON sf.user_id = u.id
         LEFT JOIN marketplace_categories c ON sp.category_id = c.id
         WHERE sp.id = $1 AND sp.is_active = true
     `, id).Scan(
@@ -3424,8 +3369,6 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
 		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
 		&listing.ShowOnMap, &listing.OriginalLanguage,
-		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
-		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata,
 	)
 	if err != nil {
@@ -3440,18 +3383,8 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		listing.Category.Slug = categorySlug.String
 	}
 
-	// Обрабатываем nullable значения пользователя
-	if userPictureURL.Valid {
-		listing.User.PictureURL = userPictureURL.String
-	} else {
-		listing.User.PictureURL = ""
-	}
-
-	if userPhone.Valid {
-		listing.User.Phone = &userPhone.String
-	} else {
-		listing.User.Phone = nil
-	}
+	// User info будет загружена в handler через auth-service
+	listing.User.ID = listing.UserID
 
 	// Загружаем изображения для storefront продукта
 	log.Printf("DEBUG getStorefrontProductAsListing: Loading images for storefront product %d", listing.ID)

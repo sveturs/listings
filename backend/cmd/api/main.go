@@ -33,6 +33,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/logger"
 	"backend/internal/server"
+	"backend/internal/version"
 )
 
 // Build information set by ldflags
@@ -58,7 +59,7 @@ func main() {
 	}
 
 	// Initialize logger с конфигурацией
-	if err := logger.Init(cfg.Environment, cfg.LogLevel); err != nil {
+	if err := logger.Init(cfg.Environment, cfg.LogLevel, version.GetVersion()); err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize logger")
 	}
 	logger.Info().

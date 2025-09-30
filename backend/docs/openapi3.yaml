@@ -5526,12 +5526,14 @@ paths:
           name: daily_limit
           schema:
             type: number
+            format: float64
             default: 100
         - description: Monthly cost limit in USD
           in: query
           name: monthly_limit
           schema:
             type: number
+            format: float64
             default: 2000
       responses:
         "200":
@@ -7771,88 +7773,164 @@ paths:
       summary: Get user events
       tags:
         - analytics
-  /api/v1/auth/login:
-    post:
-      description: This endpoint is deprecated and should be proxied to Auth Service
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/internal_proj_users_handler.LoginRequest"
-        description: Login credentials
-        required: true
+  /api/v1/auth/google:
+    get:
+      description: Redirects user to Google OAuth consent page
+      parameters:
+        - description: User locale (en, ru, sr)
+          in: query
+          name: locale
+          schema:
+            type: string
+        - description: URL to return after auth
+          in: query
+          name: return_url
+          schema:
+            type: string
       responses:
-        "200":
-          description: Authentication successful
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/internal_proj_users_handler.AuthResponse"
-                    type: object
+        "302":
+          description: Redirect to Google OAuth
+      summary: Start Google OAuth authentication
+      tags:
+        - auth
+  /api/v1/auth/google/callback:
+    get:
+      description: Processes OAuth callback from Google and authenticates user
+      parameters:
+        - description: OAuth authorization code
+          in: query
+          name: code
+          required: true
+          schema:
+            type: string
+        - description: OAuth state parameter
+          in: query
+          name: state
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to frontend with auth tokens
         "400":
-          description: auth.login.error.invalid_request_body or
-            auth.login.error.email_password_required
+          description: Invalid callback parameters
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      summary: Handle Google OAuth callback
+      tags:
+        - auth
+  /api/v1/auth/login:
+    post:
+      description: Authenticates user via auth-service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+        description: Login request
+        required: true
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
         "401":
-          description: auth.login.error.invalid_credentials
+          description: Invalid credentials
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
-          description: auth.login.error.failed
+          description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Login with email and password
+      summary: User login
       tags:
         - auth
   /api/v1/auth/logout:
     post:
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Logs out the current user
       responses:
         "200":
           description: Logout successful
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/internal_proj_users_handler.MessageResponse"
-                    type: object
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
       security:
         - BearerAuth: []
-      summary: Logout user
+      summary: User logout
+      tags:
+        - auth
+  /api/v1/auth/me:
+    get:
+      description: Returns info about the currently authenticated user
+      responses:
+        "200":
+          description: User info
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get current user info
       tags:
         - auth
   /api/v1/auth/refresh:
     post:
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Refreshes the access token using a refresh token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              additionalProperties: true
+              type: object
+        description: Refresh token request
+        required: true
       responses:
         "200":
-          description: New access token
+          description: Token refreshed successfully
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/internal_proj_users_handler.TokenResponse"
-                    type: object
+                additionalProperties: true
+                type: object
         "401":
-          description: auth.refresh_token.error.token_not_found or
-            auth.refresh_token.error.invalid_token
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
           content:
             application/json:
               schema:
@@ -7862,46 +7940,92 @@ paths:
         - auth
   /api/v1/auth/register:
     post:
-      description: This endpoint is deprecated and should be proxied to Auth Service
+      description: Registers a new user via auth-service
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/internal_proj_users_handler.RegisterRequest"
-        description: Registration data
+              additionalProperties: true
+              type: object
+        description: Registration request
         required: true
       responses:
-        "200":
-          description: Registration successful
+        "201":
+          description: User registered successfully
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/internal_proj_users_handler.AuthResponse"
-                    type: object
+                additionalProperties: true
+                type: object
         "400":
-          description: auth.register.error.invalid_request_body or
-            auth.register.error.fields_required
+          description: Invalid request
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "409":
-          description: auth.register.error.email_exists
+          description: User already exists
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
         "500":
-          description: auth.register.error.failed
+          description: Internal server error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Register new user
+      summary: Register a new user
+      tags:
+        - auth
+  /api/v1/auth/session:
+    get:
+      description: Returns information about the current authenticated session
+      responses:
+        "200":
+          description: Session info
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get current session
+      tags:
+        - auth
+  /api/v1/auth/validate:
+    get:
+      description: Validates the current access token
+      responses:
+        "200":
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Validate token
       tags:
         - auth
   /api/v1/balance:
@@ -9688,12 +9812,14 @@ paths:
           required: true
           schema:
             type: number
+            format: float64
         - description: Долгота
           in: query
           name: lon
           required: true
           schema:
             type: number
+            format: float64
       responses:
         "200":
           description: Адрес по координатам
@@ -10222,6 +10348,7 @@ paths:
                   - properties:
                       data:
                         additionalProperties:
+                          format: int64
                           type: integer
                         type: object
                     type: object
@@ -18093,6 +18220,66 @@ paths:
       summary: Get user rating summary
       tags:
         - reviews
+  /api/v1/roles:
+    get:
+      description: Returns all available roles in the system
+      responses:
+        "200":
+          description: List of roles
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+      security:
+        - BearerAuth: []
+      summary: Get all roles
+      tags:
+        - roles
+  /api/v1/roles/assign:
+    post:
+      description: Assigns a specific role to a user
+      responses:
+        "200":
+          description: Role assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Assign role to user
+      tags:
+        - roles
+  /api/v1/roles/revoke:
+    post:
+      description: Revokes a specific role from a user
+      responses:
+        "200":
+          description: Role revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Revoke role from user
+      tags:
+        - roles
   /api/v1/search:
     get:
       description: Searches both marketplace listings and storefront products
@@ -19701,6 +19888,7 @@ paths:
           name: min_rating
           schema:
             type: number
+            format: float32
         - description: Search in name and description
           in: query
           name: search
@@ -19711,16 +19899,19 @@ paths:
           name: lat
           schema:
             type: number
+            format: float64
         - description: Longitude for geo search
           in: query
           name: lng
           schema:
             type: number
+            format: float64
         - description: Radius in km for geo search
           in: query
           name: radius_km
           schema:
             type: number
+            format: float64
         - description: Sort field (rating, products_count, distance)
           in: query
           name: sort_by
@@ -22301,12 +22492,14 @@ paths:
           required: true
           schema:
             type: number
+            format: float64
         - description: Building longitude
           in: query
           name: lng
           required: true
           schema:
             type: number
+            format: float64
       responses:
         "200":
           description: Businesses in building
@@ -22371,29 +22564,34 @@ paths:
           required: true
           schema:
             type: number
+            format: float64
         - description: Maximum latitude
           in: query
           name: max_lat
           required: true
           schema:
             type: number
+            format: float64
         - description: Minimum longitude
           in: query
           name: min_lng
           required: true
           schema:
             type: number
+            format: float64
         - description: Maximum longitude
           in: query
           name: max_lng
           required: true
           schema:
             type: number
+            format: float64
         - description: Minimum rating filter
           in: query
           name: min_rating
           schema:
             type: number
+            format: float32
       responses:
         "200":
           description: Map markers data
@@ -22458,17 +22656,20 @@ paths:
           required: true
           schema:
             type: number
+            format: float64
         - description: Longitude
           in: query
           name: lng
           required: true
           schema:
             type: number
+            format: float64
         - description: Radius in kilometers (default 5)
           in: query
           name: radius_km
           schema:
             type: number
+            format: float64
         - description: Maximum results (default 20, max 100)
           in: query
           name: limit
@@ -22550,11 +22751,13 @@ paths:
           name: lat
           schema:
             type: number
+            format: float64
         - description: Longitude for geo search
           in: query
           name: lng
           schema:
             type: number
+            format: float64
         - description: Search radius in kilometers
           in: query
           name: radius_km
@@ -22565,6 +22768,7 @@ paths:
           name: min_rating
           schema:
             type: number
+            format: float64
         - description: Only verified storefronts
           in: query
           name: is_verified
@@ -23536,6 +23740,35 @@ paths:
       summary: Get public user profile
       tags:
         - users
+  "/api/v1/users/{userId}/roles":
+    get:
+      description: Returns all roles assigned to a specific user
+      parameters:
+        - description: User ID
+          in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User roles
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Get user roles
+      tags:
+        - roles
   "/api/v1/users/admin-check/{email}":
     get:
       description: Checks if user with specified email is administrator (simplified
@@ -24402,6 +24635,7 @@ paths:
                   - properties:
                       data:
                         additionalProperties:
+                          format: float64
                           type: number
                         type: object
                     type: object
@@ -24574,71 +24808,6 @@ paths:
       summary: Handle Viber webhook
       tags:
         - viber
-  /auth/google:
-    get:
-      description: This endpoint is deprecated and should be proxied to Auth Service
-      parameters:
-        - description: URL to return after authentication
-          in: query
-          name: returnTo
-          schema:
-            type: string
-      responses:
-        "302":
-          description: Redirect to Google OAuth
-          content:
-            application/json:
-              schema:
-                type: string
-      summary: Initiate Google OAuth authentication
-      tags:
-        - auth
-  /auth/google/callback:
-    get:
-      description: This endpoint is deprecated and should be proxied to Auth Service
-      parameters:
-        - description: Authorization code from Google
-          in: query
-          name: code
-          required: true
-          schema:
-            type: string
-      responses:
-        "302":
-          description: Redirect to frontend with session
-          content:
-            application/json:
-              schema:
-                type: string
-        "500":
-          description: auth.google_callback.error.authentication_failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
-      summary: Handle Google OAuth callback
-      tags:
-        - auth
-  /auth/session:
-    get:
-      description: Get current user session information
-      responses:
-        "200":
-          description: Session information
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/internal_proj_users_handler.SessionResponse"
-                    type: object
-      security:
-        - BearerAuth: []
-      summary: Get current session
-      tags:
-        - auth
   /health/live:
     get:
       description: Check if the service is alive
@@ -26154,6 +26323,10 @@ components:
         AttributeEntityTypeListing: Объявление маркетплейса
         AttributeEntityTypeProduct: Товар витрины
         AttributeEntityTypeProductVariant: Вариант товара
+      x-enum-descriptions:
+        - Объявление маркетплейса
+        - Товар витрины
+        - Вариант товара
       x-enum-varnames:
         - AttributeEntityTypeListing
         - AttributeEntityTypeProduct
@@ -26214,6 +26387,10 @@ components:
         PurposeBoth: Может использоваться в обоих случаях
         PurposeRegular: Обычный атрибут для фильтрации/поиска
         PurposeVariant: Вариативный атрибут (влияет на SKU)
+      x-enum-descriptions:
+        - Обычный атрибут для фильтрации/поиска
+        - Вариативный атрибут (влияет на SKU)
+        - Может использоваться в обоих случаях
       x-enum-varnames:
         - PurposeRegular
         - PurposeVariant
@@ -27649,6 +27826,11 @@ components:
         PrivacyLevelDistrict: Только район
         PrivacyLevelExact: Точный адрес
         PrivacyLevelStreet: Только улица
+      x-enum-descriptions:
+        - Точный адрес
+        - Только улица
+        - Только район
+        - Только город
       x-enum-varnames:
         - PrivacyLevelExact
         - PrivacyLevelStreet
@@ -28217,6 +28399,14 @@ components:
         OrderStatusProcessing: в обработке
         OrderStatusRefunded: возвращен
         OrderStatusShipped: отправлен
+      x-enum-descriptions:
+        - ожидает оплаты
+        - оплачен, подтвержден
+        - в обработке
+        - отправлен
+        - доставлен
+        - отменен
+        - возвращен
       x-enum-varnames:
         - OrderStatusPending
         - OrderStatusConfirmed
@@ -28317,6 +28507,16 @@ components:
         PaymentMethodIPS: Instant Payment System
         PaymentMethodKeks: Keks Pay (популярно в Сербии)
         PaymentMethodPostanska: Poštanska štedionica
+      x-enum-descriptions:
+        - Наличные в магазине
+        - Cash on Delivery - оплата курьеру
+        - Банковская карта
+        - Банковский перевод
+        - ""
+        - ""
+        - Poštanska štedionica
+        - Keks Pay (популярно в Сербии)
+        - Instant Payment System
       x-enum-varnames:
         - PaymentMethodCash
         - PaymentMethodCOD
@@ -29018,6 +29218,9 @@ components:
       x-enum-comments:
         GeoStrategyIndividualLocation: Использовать индивидуальные адреса товаров
         GeoStrategyStorefrontLocation: Использовать адрес витрины
+      x-enum-descriptions:
+        - Использовать адрес витрины
+        - Использовать индивидуальные адреса товаров
       x-enum-varnames:
         - GeoStrategyStorefrontLocation
         - GeoStrategyIndividualLocation
@@ -30695,9 +30898,11 @@ components:
           type: string
         latitude:
           description: Широта для геопоиска
+          format: float64
           type: number
         longitude:
           description: Долгота для геопоиска
+          format: float64
           type: number
         minimumShouldMatch:
           description: Минимальное количество совпадений (70%, 50% и т.д.)
@@ -30707,9 +30912,11 @@ components:
           type: integer
         priceMax:
           description: Максимальная цена
+          format: float64
           type: number
         priceMin:
           description: Минимальная цена
+          format: float64
           type: number
         query:
           description: Текстовый запрос
@@ -31387,6 +31594,7 @@ components:
           type: number
         geographic_distribution:
           additionalProperties:
+            format: float64
             type: number
           type: object
         period:
@@ -31750,6 +31958,7 @@ components:
           type: number
         average_delivery_days:
           additionalProperties:
+            format: float64
             type: number
           type: object
         period:
@@ -32202,6 +32411,7 @@ components:
                     items:
                       items:
                         items:
+                          format: float64
                           type: number
                         type: array
                       type: array
@@ -32229,6 +32439,11 @@ components:
         PrivacyDistrict: Размытие ±500-1000м
         PrivacyExact: Точный адрес
         PrivacyStreet: Размытие ±100-200м
+      x-enum-descriptions:
+        - Точный адрес
+        - Размытие ±100-200м
+        - Размытие ±500-1000м
+        - Только город
       x-enum-varnames:
         - PrivacyExact
         - PrivacyStreet
@@ -32362,6 +32577,7 @@ components:
           items:
             items:
               items:
+                format: float64
                 type: number
               type: array
             type: array
@@ -33360,10 +33576,12 @@ components:
       properties:
         documents_by_category:
           additionalProperties:
+            format: int64
             type: integer
           type: object
         documents_by_status:
           additionalProperties:
+            format: int64
             type: integer
           type: object
         index_health:
@@ -33687,6 +33905,7 @@ components:
           type: string
         distance:
           description: Расстояние в км (если есть)
+          format: float64
           type: number
         email:
           type: string
@@ -33708,8 +33927,10 @@ components:
         isVerified:
           type: boolean
         latitude:
+          format: float64
           type: number
         longitude:
+          format: float64
           type: number
         name:
           type: string
@@ -33722,11 +33943,13 @@ components:
         productsCount:
           type: integer
         rating:
+          format: float64
           type: number
         reviewsCount:
           type: integer
         score:
           description: Релевантность
+          format: float64
           type: number
         slug:
           type: string
@@ -35740,10 +35963,13 @@ components:
         heading:
           type: integer
         latitude:
+          format: float64
           type: number
         longitude:
+          format: float64
           type: number
         speed:
+          format: float64
           type: number
         updatedAt:
           type: string
@@ -35826,8 +36052,10 @@ components:
         deliveryAddress:
           type: string
         deliveryLatitude:
+          format: float64
           type: number
         deliveryLongitude:
+          format: float64
           type: number
         distance:
           description: в метрах
@@ -35846,8 +36074,10 @@ components:
         pickupAddress:
           type: string
         pickupLatitude:
+          format: float64
           type: number
         pickupLongitude:
+          format: float64
           type: number
         status:
           type: string
@@ -35886,11 +36116,13 @@ components:
       properties:
         daily_costs:
           additionalProperties:
+            format: float64
             type: number
           description: map[date]cost
           type: object
         hourly_costs:
           additionalProperties:
+            format: float64
             type: number
           description: map[hour]cost
           type: object
@@ -35957,33 +36189,6 @@ components:
           example: 100
           type: integer
       type: object
-    internal_proj_users_handler.AuthResponse:
-      properties:
-        access_token:
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          type: string
-        expires_in:
-          example: 3600
-          type: integer
-        token_type:
-          example: Bearer
-          type: string
-        user:
-          $ref: "#/components/schemas/internal_proj_users_handler.UserResponse"
-      type: object
-    internal_proj_users_handler.LoginRequest:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        password:
-          example: password123
-          minLength: 6
-          type: string
-      required:
-        - email
-        - password
-      type: object
     internal_proj_users_handler.MessageResponse:
       properties:
         message:
@@ -36008,77 +36213,6 @@ components:
           example: https://example.com/avatar.jpg
           type: string
       type: object
-    internal_proj_users_handler.RegisterRequest:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        name:
-          example: John Doe
-          minLength: 2
-          type: string
-        password:
-          example: password123
-          minLength: 6
-          type: string
-        phone:
-          example: "+1234567890"
-          type: string
-      required:
-        - email
-        - name
-        - password
-      type: object
-    internal_proj_users_handler.SessionResponse:
-      properties:
-        authenticated:
-          example: true
-          type: boolean
-        user:
-          $ref: "#/components/schemas/internal_proj_users_handler.SessionUserResponse"
-      type: object
-    internal_proj_users_handler.SessionUserResponse:
-      properties:
-        city:
-          example: Moscow
-          type: string
-        country:
-          example: Russia
-          type: string
-        email:
-          example: user@example.com
-          type: string
-        id:
-          example: 1
-          type: integer
-        is_admin:
-          example: false
-          type: boolean
-        name:
-          example: John Doe
-          type: string
-        phone:
-          example: "+1234567890"
-          type: string
-        picture_url:
-          example: https://example.com/avatar.jpg
-          type: string
-        provider:
-          example: password
-          type: string
-      type: object
-    internal_proj_users_handler.TokenResponse:
-      properties:
-        access_token:
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-          type: string
-        expires_in:
-          example: 3600
-          type: integer
-        token_type:
-          example: Bearer
-          type: string
-      type: object
     internal_proj_users_handler.UpdateUserRoleRequest:
       properties:
         role_id:
@@ -36087,21 +36221,6 @@ components:
           type: integer
       required:
         - role_id
-      type: object
-    internal_proj_users_handler.UserResponse:
-      properties:
-        email:
-          example: user@example.com
-          type: string
-        id:
-          example: 1
-          type: integer
-        name:
-          example: John Doe
-          type: string
-        picture_url:
-          example: https://example.com/avatar.jpg
-          type: string
       type: object
     internal_proj_viber.EstimateCostRequest:
       properties:

@@ -1,34 +1,42 @@
-// backend/internal/proj/notifications/routes.go
+// backend/internal/proj/users/handler/routes.go
 package handler
 
 import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
 
-// RegisterRoutes регистрирует все маршруты для проекта users
+// RegisterRoutes регистрирует маршруты с использованием auth-service
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	app.Post("/api/v1/auth/register", mw.RegistrationRateLimit(), mw.CSRFProtection(), h.Auth.Register)
-	app.Post("/api/v1/auth/login", mw.AuthRateLimit(), mw.CSRFProtection(), h.Auth.Login)
+	// Публичные auth эндпоинты (без middleware аутентификации)
+	// Все handlers проксируют к auth-service
+	app.Post("/api/v1/auth/register", mw.RegistrationRateLimit(), h.Auth.Register)
+	app.Post("/api/v1/auth/login", mw.AuthRateLimit(), h.Auth.Login)
 	app.Post("/api/v1/auth/logout", mw.RateLimitByIP(10, time.Minute), h.Auth.Logout)
 	// Временно отключаем rate limit для refresh в development из-за проблемы с частыми вызовами
 	// TODO: исправить логику refresh на frontend чтобы не было избыточных вызовов
 	app.Post("/api/v1/auth/refresh", h.Auth.RefreshToken)
-	app.Get("/api/v1/auth/session", h.Auth.GetSession)
-	// OAuth routes - локальные, Auth Service отключен
+
+	// Защищенные auth эндпоинты (требуют токен)
+	app.Post("/api/v1/auth/logout", h.jwtParserMW, authMiddleware.RequireAuth(), mw.RateLimitByIP(10, time.Minute), h.Auth.Logout)
+	app.Get("/api/v1/auth/logout", h.jwtParserMW, authMiddleware.RequireAuth(), h.Auth.Logout)
+	app.Get("/api/v1/auth/session", h.jwtParserMW, authMiddleware.RequireAuth(), h.Auth.GetSession)
+	app.Get("/api/v1/auth/validate", h.jwtParserMW, authMiddleware.RequireAuth(), h.Auth.Validate)
+	app.Get("/api/v1/auth/me", h.jwtParserMW, authMiddleware.RequireAuth(), h.Auth.GetCurrentUser)
+
+	// OAuth эндпоинты
 	app.Get("/api/v1/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
-	app.Get("/api/v1/auth/oauth/google/start", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
-	app.Get("/api/v1/auth/oauth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
-	app.Get("/auth/google", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleAuth)
-	app.Get("/auth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
-	app.Get("/api/v1/auth/logout", h.Auth.Logout)
-	app.Post("/api/v1/auth/logout", mw.CSRFProtection(), h.Auth.Logout) // Поддержка POST для logout
+	app.Get("/api/v1/auth/google/callback", mw.RateLimitByIP(10, time.Minute), h.Auth.GoogleCallback)
+
+	// Admin check остается локальным (использует нашу БД)
 	app.Get("/api/v1/admin-check/:email", h.User.IsAdminPublic)
 
-	users := app.Group("/api/v1/users", mw.AuthRequiredJWT, mw.CSRFProtection())
+	// User profile endpoints
+	users := app.Group("/api/v1/users", h.jwtParserMW, authMiddleware.RequireAuthString(), mw.CSRFProtection())
 	users.Get("/me", h.User.GetProfile)    // TODO: remove
 	users.Put("/me", h.User.UpdateProfile) // TODO: remove
 	users.Get("/profile", h.User.GetProfile)
@@ -37,8 +45,11 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	users.Get("/privacy-settings", h.User.GetPrivacySettings)
 	users.Put("/privacy-settings", h.User.UpdatePrivacySettings)
 
-	// Use specific route groups to avoid conflicts with marketplace admin routes
-	adminUsersRoutes := app.Group("/api/v1/admin/users", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+	// Roles endpoints for specific users
+	users.Get("/:userId/roles", h.Auth.GetUserRoles)
+
+	// Admin endpoints
+	adminUsersRoutes := app.Group("/api/v1/admin/users", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), mw.CSRFProtection())
 	adminUsersRoutes.Get("/", h.User.GetAllUsers)
 	adminUsersRoutes.Get("/:id", h.User.GetUserByIDAdmin)
 	adminUsersRoutes.Put("/:id", h.User.UpdateUserAdmin)
@@ -48,11 +59,18 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminUsersRoutes.Get("/:id/balance", h.User.GetUserBalance)
 	adminUsersRoutes.Get("/:id/transactions", h.User.GetUserTransactions)
 
-	// Routes for roles management
-	adminRolesRoutes := app.Group("/api/v1/admin/roles", mw.AuthRequiredJWT, mw.AdminRequired)
+	// Roles management (general endpoints)
+	rolesRoutes := app.Group("/api/v1/roles", h.jwtParserMW, authMiddleware.RequireAuthString())
+	rolesRoutes.Get("/", h.Auth.GetRoles)
+	rolesRoutes.Post("/assign", mw.CSRFProtection(), h.Auth.AssignRole)
+	rolesRoutes.Post("/revoke", mw.CSRFProtection(), h.Auth.RevokeRole)
+
+	// Admin roles management
+	adminRolesRoutes := app.Group("/api/v1/admin/roles", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	adminRolesRoutes.Get("/", h.User.GetAllRoles)
 
-	adminAdminsRoutes := app.Group("/api/v1/admin/admins", mw.AuthRequiredJWT, mw.AdminRequired, mw.CSRFProtection())
+	// Admin management
+	adminAdminsRoutes := app.Group("/api/v1/admin/admins", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), mw.CSRFProtection())
 	adminAdminsRoutes.Get("/", h.User.GetAllAdmins)
 	adminAdminsRoutes.Post("/", h.User.AddAdmin)
 	adminAdminsRoutes.Delete("/:email", h.User.RemoveAdmin)

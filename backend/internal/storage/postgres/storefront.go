@@ -1092,17 +1092,16 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 // GetRecentOrders получает последние заказы
 func (r *storefrontRepo) GetRecentOrders(ctx context.Context, storefrontID int, limit int) ([]*DashboardOrder, error) {
 	rows, err := r.db.pool.Query(ctx, `
-		SELECT 
+		SELECT
 			o.id,
 			o.order_number,
-			COALESCE(u.name, u.email, 'Guest') as customer_name,
+			o.customer_id::text as customer_name,
 			(SELECT COUNT(*) FROM storefront_order_items WHERE order_id = o.id) as items_count,
 			o.total_amount,
 			o.currency,
 			o.status,
 			o.created_at
 		FROM storefront_orders o
-		LEFT JOIN users u ON o.customer_id = u.id
 		WHERE o.storefront_id = $1
 		ORDER BY o.created_at DESC
 		LIMIT $2

@@ -11317,6 +11317,99 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auth/google': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Start Google OAuth authentication
+     * @description Redirects user to Google OAuth consent page
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description User locale (en, ru, sr) */
+          locale?: string;
+          /** @description URL to return after auth */
+          return_url?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Redirect to Google OAuth */
+        302: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/google/callback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Handle Google OAuth callback
+     * @description Processes OAuth callback from Google and authenticates user
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description OAuth authorization code */
+          code: string;
+          /** @description OAuth state parameter */
+          state: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Redirect to frontend with auth tokens */
+        302: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Invalid callback parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/login': {
     parameters: {
       query?: never;
@@ -11327,8 +11420,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Login with email and password
-     * @description This endpoint is deprecated and should be proxied to Auth Service
+     * User login
+     * @description Authenticates user via auth-service
      */
     post: {
       parameters: {
@@ -11337,34 +11430,27 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Login credentials */
+      /** @description Login request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.LoginRequest'];
+          'application/json': {
+            [key: string]: unknown;
+          };
         };
       };
       responses: {
-        /** @description Authentication successful */
+        /** @description Login successful */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AuthResponse'];
+            'application/json': {
+              [key: string]: unknown;
             };
           };
         };
-        /** @description auth.login.error.invalid_request_body or auth.login.error.email_password_required */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description auth.login.error.invalid_credentials */
+        /** @description Invalid credentials */
         401: {
           headers: {
             [name: string]: unknown;
@@ -11373,7 +11459,7 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
-        /** @description auth.login.error.failed */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
@@ -11400,8 +11486,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Logout user
-     * @description This endpoint is deprecated and should be proxied to Auth Service
+     * User logout
+     * @description Logs out the current user
      */
     post: {
       parameters: {
@@ -11418,13 +11504,79 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.MessageResponse'];
-            };
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get current user info
+     * @description Returns info about the currently authenticated user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User info */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -11442,7 +11594,7 @@ export interface paths {
     put?: never;
     /**
      * Refresh access token
-     * @description This endpoint is deprecated and should be proxied to Auth Service
+     * @description Refreshes the access token using a refresh token
      */
     post: {
       parameters: {
@@ -11451,21 +11603,37 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      requestBody?: never;
+      /** @description Refresh token request */
+      requestBody: {
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
       responses: {
-        /** @description New access token */
+        /** @description Token refreshed successfully */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.TokenResponse'];
+            'application/json': {
+              [key: string]: unknown;
             };
           };
         };
-        /** @description auth.refresh_token.error.token_not_found or auth.refresh_token.error.invalid_token */
+        /** @description Invalid refresh token */
         401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
           headers: {
             [name: string]: unknown;
           };
@@ -11491,8 +11659,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Register new user
-     * @description This endpoint is deprecated and should be proxied to Auth Service
+     * Register a new user
+     * @description Registers a new user via auth-service
      */
     post: {
       parameters: {
@@ -11501,25 +11669,27 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Registration data */
+      /** @description Registration request */
       requestBody: {
         content: {
-          'application/json': components['schemas']['internal_proj_users_handler.RegisterRequest'];
+          'application/json': {
+            [key: string]: unknown;
+          };
         };
       };
       responses: {
-        /** @description Registration successful */
-        200: {
+        /** @description User registered successfully */
+        201: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.AuthResponse'];
+            'application/json': {
+              [key: string]: unknown;
             };
           };
         };
-        /** @description auth.register.error.invalid_request_body or auth.register.error.fields_required */
+        /** @description Invalid request */
         400: {
           headers: {
             [name: string]: unknown;
@@ -11528,7 +11698,7 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
-        /** @description auth.register.error.email_exists */
+        /** @description User already exists */
         409: {
           headers: {
             [name: string]: unknown;
@@ -11537,7 +11707,7 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
-        /** @description auth.register.error.failed */
+        /** @description Internal server error */
         500: {
           headers: {
             [name: string]: unknown;
@@ -11548,6 +11718,115 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/session': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get current session
+     * @description Returns information about the current authenticated session
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Session info */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Validate token
+     * @description Validates the current access token
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Token is valid */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -26726,6 +27005,143 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/roles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get all roles
+     * @description Returns all available roles in the system
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of roles */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            }[];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/roles/assign': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Assign role to user
+     * @description Assigns a specific role to a user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Role assigned successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/roles/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revoke role from user
+     * @description Revokes a specific role from a user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Role revoked successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/search': {
     parameters: {
       query?: never;
@@ -34751,6 +35167,59 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/users/{userId}/roles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user roles
+     * @description Returns all roles assigned to a specific user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description User ID */
+          userId: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description User roles */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+        /** @description User not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/admin-check/{email}': {
     parameters: {
       query?: never;
@@ -36432,140 +36901,6 @@ export interface paths {
         };
       };
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/auth/google': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Initiate Google OAuth authentication
-     * @description This endpoint is deprecated and should be proxied to Auth Service
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description URL to return after authentication */
-          returnTo?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Redirect to Google OAuth */
-        302: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': string;
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/auth/google/callback': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Handle Google OAuth callback
-     * @description This endpoint is deprecated and should be proxied to Auth Service
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Authorization code from Google */
-          code: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Redirect to frontend with session */
-        302: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': string;
-          };
-        };
-        /** @description auth.google_callback.error.authentication_failed */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/auth/session': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get current session
-     * @description Get current user session information
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Session information */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['internal_proj_users_handler.SessionResponse'];
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -40472,17 +40807,29 @@ export interface components {
       fuzziness?: string;
       /** @description Язык для поиска */
       language?: string;
-      /** @description Широта для геопоиска */
+      /**
+       * Format: float64
+       * @description Широта для геопоиска
+       */
       latitude?: number;
-      /** @description Долгота для геопоиска */
+      /**
+       * Format: float64
+       * @description Долгота для геопоиска
+       */
       longitude?: number;
       /** @description Минимальное количество совпадений (70%, 50% и т.д.) */
       minimumShouldMatch?: string;
       /** @description Номер страницы */
       page?: number;
-      /** @description Максимальная цена */
+      /**
+       * Format: float64
+       * @description Максимальная цена
+       */
       priceMax?: number;
-      /** @description Минимальная цена */
+      /**
+       * Format: float64
+       * @description Минимальная цена
+       */
       priceMin?: number;
       /** @description Текстовый запрос */
       query?: string;
@@ -41945,7 +42292,10 @@ export interface components {
       city?: string;
       country?: string;
       description?: string;
-      /** @description Расстояние в км (если есть) */
+      /**
+       * Format: float64
+       * @description Расстояние в км (если есть)
+       */
       distance?: number;
       email?: string;
       hasDelivery?: boolean;
@@ -41957,15 +42307,21 @@ export interface components {
       id?: number;
       isOpenNow?: boolean;
       isVerified?: boolean;
+      /** Format: float64 */
       latitude?: number;
+      /** Format: float64 */
       longitude?: number;
       name?: string;
       paymentMethods?: string[];
       phone?: string;
       productsCount?: number;
+      /** Format: float64 */
       rating?: number;
       reviewsCount?: number;
-      /** @description Релевантность */
+      /**
+       * Format: float64
+       * @description Релевантность
+       */
       score?: number;
       slug?: string;
       userID?: number;
@@ -43128,8 +43484,11 @@ export interface components {
     };
     'internal_proj_tracking.CourierLocation': {
       heading?: number;
+      /** Format: float64 */
       latitude?: number;
+      /** Format: float64 */
       longitude?: number;
+      /** Format: float64 */
       speed?: number;
       updatedAt?: string;
     };
@@ -43157,7 +43516,9 @@ export interface components {
       courierPhone?: string;
       createdAt?: string;
       deliveryAddress?: string;
+      /** Format: float64 */
       deliveryLatitude?: number;
+      /** Format: float64 */
       deliveryLongitude?: number;
       /** @description в метрах */
       distance?: number;
@@ -43168,7 +43529,9 @@ export interface components {
       lastKnownLocation?: components['schemas']['internal_proj_tracking.LocationUpdate'];
       orderID?: number;
       pickupAddress?: string;
+      /** Format: float64 */
       pickupLatitude?: number;
+      /** Format: float64 */
       pickupLongitude?: number;
       status?: string;
       trackingToken?: string;
@@ -43232,21 +43595,6 @@ export interface components {
       /** @example 100 */
       total?: number;
     };
-    'internal_proj_users_handler.AuthResponse': {
-      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
-      access_token?: string;
-      /** @example 3600 */
-      expires_in?: number;
-      /** @example Bearer */
-      token_type?: string;
-      user?: components['schemas']['internal_proj_users_handler.UserResponse'];
-    };
-    'internal_proj_users_handler.LoginRequest': {
-      /** @example user@example.com */
-      email: string;
-      /** @example password123 */
-      password: string;
-    };
     'internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
       message?: string;
@@ -43263,62 +43611,9 @@ export interface components {
       /** @example https://example.com/avatar.jpg */
       picture_url?: string;
     };
-    'internal_proj_users_handler.RegisterRequest': {
-      /** @example user@example.com */
-      email: string;
-      /** @example John Doe */
-      name: string;
-      /** @example password123 */
-      password: string;
-      /** @example +1234567890 */
-      phone?: string;
-    };
-    'internal_proj_users_handler.SessionResponse': {
-      /** @example true */
-      authenticated?: boolean;
-      user?: components['schemas']['internal_proj_users_handler.SessionUserResponse'];
-    };
-    'internal_proj_users_handler.SessionUserResponse': {
-      /** @example Moscow */
-      city?: string;
-      /** @example Russia */
-      country?: string;
-      /** @example user@example.com */
-      email?: string;
-      /** @example 1 */
-      id?: number;
-      /** @example false */
-      is_admin?: boolean;
-      /** @example John Doe */
-      name?: string;
-      /** @example +1234567890 */
-      phone?: string;
-      /** @example https://example.com/avatar.jpg */
-      picture_url?: string;
-      /** @example password */
-      provider?: string;
-    };
-    'internal_proj_users_handler.TokenResponse': {
-      /** @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... */
-      access_token?: string;
-      /** @example 3600 */
-      expires_in?: number;
-      /** @example Bearer */
-      token_type?: string;
-    };
     'internal_proj_users_handler.UpdateUserRoleRequest': {
       /** @example 2 */
       role_id: number;
-    };
-    'internal_proj_users_handler.UserResponse': {
-      /** @example user@example.com */
-      email?: string;
-      /** @example 1 */
-      id?: number;
-      /** @example John Doe */
-      name?: string;
-      /** @example https://example.com/avatar.jpg */
-      picture_url?: string;
     };
     'internal_proj_viber.EstimateCostRequest': {
       is_rich_media?: boolean;

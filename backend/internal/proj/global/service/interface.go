@@ -26,7 +26,6 @@ type SearchLogsServiceInterface interface {
 }
 
 type ServicesInterface interface {
-	Auth() userService.AuthServiceInterface
 	User() userService.UserServiceInterface
 	Config() *config.Config
 	Marketplace() marketplaceService.MarketplaceServiceInterface

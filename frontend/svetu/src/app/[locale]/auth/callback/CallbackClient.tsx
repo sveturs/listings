@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { tokenManager } from '@/utils/tokenManager';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function CallbackClient() {
@@ -12,23 +11,37 @@ export default function CallbackClient() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Получаем токен из URL (поддерживаем оба варианта: auth_token и token)
-      const authToken =
-        searchParams?.get('auth_token') || searchParams?.get('token');
-      const returnUrl =
-        searchParams?.get('returnUrl') || searchParams?.get('state') || '/';
+      // Get success status and error from URL
+      const success = searchParams?.get('success');
+      const error = searchParams?.get('error');
+      const returnUrl = searchParams?.get('return_url') || '/';
 
-      if (authToken) {
-        console.log('[AuthCallback] Received auth token from OAuth callback');
-        // Сохраняем токен
-        tokenManager.setAccessToken(authToken);
-
-        // Обновляем сессию для загрузки данных пользователя
-        await refreshSession();
+      if (error) {
+        console.error('[AuthCallback] Authentication error:', error);
+        router.push('/');
+        return;
       }
 
-      // Редиректим на нужную страницу
-      router.push(returnUrl);
+      if (success === 'true') {
+        console.log('[AuthCallback] OAuth successful');
+        console.log('[AuthCallback] Return URL:', returnUrl);
+
+        try {
+          // Cookies are already set by backend, just refresh session
+          await refreshSession();
+
+          // Decode return URL and redirect
+          const decodedReturnUrl = decodeURIComponent(returnUrl);
+          console.log('[AuthCallback] Redirecting to:', decodedReturnUrl);
+          router.push(decodedReturnUrl);
+        } catch (err) {
+          console.error('[AuthCallback] Error refreshing session:', err);
+          router.push('/');
+        }
+      } else {
+        console.error('[AuthCallback] Missing success flag');
+        router.push('/');
+      }
     };
 
     handleCallback();

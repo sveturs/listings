@@ -32,4 +32,3 @@ restart-frontend:
 	docker-compose rm -f frontend
 	docker-compose up -d --build frontend
 	@echo "Run docker-compose logs -f frontend"
-
