@@ -7,6 +7,7 @@ import { tokenManager } from '@/utils/tokenManager';
 import UploadView from './UploadView';
 import ProcessView from './ProcessView';
 import EnhanceView from './EnhanceView';
+import AIVariantsView from './AIVariantsView';
 import PublishView from './PublishView';
 
 interface AIProductWizardProps {
@@ -74,6 +75,7 @@ export default function AIProductWizard({
     { id: 'upload', label: t('stepUpload'), icon: '📤' },
     { id: 'process', label: t('stepAIProcessing'), icon: '🤖' },
     { id: 'enhance', label: t('stepEnhance'), icon: '✨' },
+    { id: 'variants', label: t('stepVariants'), icon: '🎨' },
     { id: 'publish', label: t('stepPublish'), icon: '🚀' },
   ];
 
@@ -150,6 +152,12 @@ export default function AIProductWizard({
         )}
         {state.currentView === 'enhance' && (
           <EnhanceView
+            storefrontId={storefrontId}
+            storefrontSlug={storefrontSlug}
+          />
+        )}
+        {state.currentView === 'variants' && (
+          <AIVariantsView
             storefrontId={storefrontId}
             storefrontSlug={storefrontSlug}
           />

@@ -11,12 +11,22 @@ import configManager from '@/config';
 
 interface VariantAttribute {
   id: number;
+  code: string;
   name: string;
   display_name: string;
-  type: string;
+  attribute_type: string;
+  purpose: string;
+  options?: any;
+  validation_rules?: any;
+  ui_settings?: any;
+  is_searchable: boolean;
+  is_filterable: boolean;
   is_required: boolean;
-  sort_order: number;
+  is_variant_compatible: boolean;
   affects_stock: boolean;
+  affects_price: boolean;
+  sort_order: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -61,7 +71,7 @@ export default function VariantAttributesClient() {
       const token = tokenManager.getAccessToken();
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `${apiUrl}/api/v1/admin/variant-attributes`,
+        `${apiUrl}/api/v1/admin/attributes/variant-compatible`,
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : '',
@@ -194,11 +204,15 @@ export default function VariantAttributesClient() {
             m.category_id === categoryId
         );
         if (mapping) {
+          const token = tokenManager.getAccessToken();
           const apiUrl = configManager.getApiUrl();
           const response = await fetch(
             `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
             {
               method: 'DELETE',
+              headers: {
+                Authorization: token ? `Bearer ${token}` : '',
+              },
             }
           );
 

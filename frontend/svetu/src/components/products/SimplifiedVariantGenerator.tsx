@@ -104,9 +104,11 @@ export default function SimplifiedVariantGenerator({
 
           if (matchingCategoryAttr) {
             // Проверяем, есть ли выбранные значения для этого атрибута
+            const selectedAttr = selectedAttributes[matchingCategoryAttr.id];
             const hasSelectedValues =
-              selectedAttributes[matchingCategoryAttr.id] &&
-              selectedAttributes[matchingCategoryAttr.id].length > 0;
+              selectedAttr &&
+              selectedAttr.values &&
+              selectedAttr.values.length > 0;
 
             console.log(
               `Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`,
@@ -234,7 +236,7 @@ export default function SimplifiedVariantGenerator({
         values = value;
       } else if (typeof value === 'string') {
         if (value.includes(',')) {
-          values = value.split('products.,').filter(Boolean);
+          values = value.split(',').filter(Boolean);
         } else {
           values = [value];
         }
@@ -302,7 +304,7 @@ export default function SimplifiedVariantGenerator({
       if (Array.isArray(value)) {
         count = value.length;
       } else if (typeof value === 'string' && value.includes(',')) {
-        count = value.split('products.,').filter(Boolean).length;
+        count = value.split(',').filter(Boolean).length;
       } else if (value) {
         count = 1;
       }
@@ -414,7 +416,7 @@ export default function SimplifiedVariantGenerator({
             values = value;
           } else if (typeof value === 'string') {
             if (value.includes(',')) {
-              values = value.split('products.,').filter(Boolean);
+              values = value.split(',').filter(Boolean);
             } else {
               values = [value];
             }
@@ -455,7 +457,7 @@ export default function SimplifiedVariantGenerator({
           ></path>
         </svg>
         <span>
-          {t('products.willGenerateVariants', { count: getTotalVariants() })}
+          {t('willGenerateVariants', { count: getTotalVariants() })}
         </span>
       </div>
 
