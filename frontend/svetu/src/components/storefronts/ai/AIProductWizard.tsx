@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
-import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
 import { tokenManager } from '@/utils/tokenManager';
 import UploadView from './UploadView';
 import ProcessView from './ProcessView';
@@ -29,10 +28,7 @@ export default function AIProductWizard({
       );
       try {
         const token = tokenManager.getAccessToken();
-        console.log(
-          '[AIProductWizard] Token available:',
-          token ? 'yes' : 'no'
-        );
+        console.log('[AIProductWizard] Token available:', token ? 'yes' : 'no');
 
         const headers: HeadersInit = {
           'Content-Type': 'application/json',

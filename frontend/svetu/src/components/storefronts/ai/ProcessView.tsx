@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { storefrontAI } from '@/services/ai/storefronts.service';
 import { tokenManager } from '@/utils/tokenManager';
@@ -21,7 +21,6 @@ export default function ProcessView({
   storefrontSlug: _storefrontSlug,
 }: ProcessViewProps) {
   const t = useTranslations('storefronts');
-  const locale = useLocale();
   const { state, setAIData, setView, setError, setProcessing } =
     useCreateAIProduct();
 
@@ -46,7 +45,6 @@ export default function ProcessView({
     let isCancelled = false;
 
     const processImages = async () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       setProcessing(true);
       setError(null);
 
@@ -207,6 +205,7 @@ export default function ProcessView({
     return () => {
       isCancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
   const getStepIcon = (status: ProcessStep['status']) => {

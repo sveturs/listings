@@ -15,8 +15,7 @@ export default function EnhanceView({
 }: EnhanceViewProps) {
   const t = useTranslations('storefronts');
   const locale = useLocale();
-  const { state, setAIData, setView, selectTitleVariant } =
-    useCreateAIProduct();
+  const { state, setAIData, setView } = useCreateAIProduct();
 
   // Получаем контент на текущей локали
   const getLocalizedContent = () => {

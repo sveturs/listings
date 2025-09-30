@@ -3,7 +3,7 @@ package handler
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 - MD5 используется только для кэширования, не для безопасности
 	"encoding/json"
 	"fmt"
 	"math"
@@ -798,6 +798,6 @@ func (h *SearchHandler) generateSearchCacheKey(params *search.ServiceParams) str
 
 	// Сериализуем в JSON и хешируем
 	jsonData, _ := json.Marshal(keyData)
-	hash := md5.Sum(jsonData)
+	hash := md5.Sum(jsonData) // #nosec G401 - MD5 безопасен для кэширования
 	return fmt.Sprintf("%x", hash)
 }

@@ -75,7 +75,11 @@ func (s *MarketplaceService) GetUserSavedSearches(ctx context.Context, userID in
 		logger.Error().Err(err).Int("userId", userID).Msg("Failed to get saved searches")
 		return nil, fmt.Errorf("failed to get saved searches: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var searches []interface{}
 	for rows.Next() {
@@ -283,13 +287,14 @@ func (s *MarketplaceService) ExecuteSavedSearch(ctx context.Context, savedSearch
 		case "sortBy", "sort_by":
 			if v, ok := value.(string); ok {
 				// Parse sort field like "created_at_desc" or "price_asc"
-				if strings.HasSuffix(v, "_desc") {
+				switch {
+				case strings.HasSuffix(v, "_desc"):
 					params.Sort = strings.TrimSuffix(v, "_desc")
 					params.SortDirection = "desc"
-				} else if strings.HasSuffix(v, "_asc") {
+				case strings.HasSuffix(v, "_asc"):
 					params.Sort = strings.TrimSuffix(v, "_asc")
 					params.SortDirection = "asc"
-				} else {
+				default:
 					params.Sort = v
 					params.SortDirection = "desc"
 				}
@@ -365,7 +370,11 @@ func (s *MarketplaceService) GetUserViewHistory(ctx context.Context, userID int,
 		logger.Error().Err(err).Int("userId", userID).Msg("Failed to get user view history")
 		return nil, fmt.Errorf("failed to get user view history: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var history []*models.UserCarViewHistory
 	for rows.Next() {

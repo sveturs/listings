@@ -121,76 +121,12 @@ func (h *Handler) GetRecommendations(c *fiber.Ctx) error {
 	return utils.SendSuccessResponse(c, listings, "success")
 }
 
-func (h *Handler) getSimilarListings(itemID int64, category string, limit int) ([]models.MarketplaceListing, error) {
-	// Get the current item details
-	var currentItem models.MarketplaceListing
-	err := h.db.GetSQLXDB().Get(&currentItem, `
-		SELECT * FROM marketplace_listings
-		WHERE id = $1 AND status = 'active'
-	`, itemID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find similar items based on price range and category
-	var listings []models.MarketplaceListing
-	priceMin := currentItem.Price * 0.7
-	priceMax := currentItem.Price * 1.3
-
-	query := `
-		SELECT * FROM marketplace_listings
-		WHERE category_id = $1
-		AND id != $2
-		AND status = 'active'
-		AND price BETWEEN $3 AND $4
-		ORDER BY ABS(price - $5) ASC
-		LIMIT $6
-	`
-
-	err = h.db.GetSQLXDB().Select(&listings, query,
-		currentItem.CategoryID, itemID, priceMin, priceMax, currentItem.Price, limit)
-
-	return listings, err
-}
-
-func (h *Handler) getTrendingListings(category string, limit int) ([]models.MarketplaceListing, error) {
-	var listings []models.MarketplaceListing
-
-	// Get listings with most views in last 7 days
-	query := `
-		SELECT ml.* FROM marketplace_listings ml
-		WHERE ml.status = 'active'
-		AND ml.created_at > NOW() - INTERVAL '7 days'
-		ORDER BY ml.views DESC, ml.created_at DESC
-		LIMIT $1
-	`
-
-	err := h.db.GetSQLXDB().Select(&listings, query, limit)
-	return listings, err
-}
-
 func (h *Handler) getNewListings(category string, limit int) ([]models.MarketplaceListing, error) {
 	var listings []models.MarketplaceListing
 
 	query := `
 		SELECT * FROM marketplace_listings
 		WHERE status = 'active'
-		ORDER BY created_at DESC
-		LIMIT $1
-	`
-
-	err := h.db.GetSQLXDB().Select(&listings, query, limit)
-	return listings, err
-}
-
-func (h *Handler) getRecommendedListings(category string, userID int64, limit int) ([]models.MarketplaceListing, error) {
-	// For now, return featured listings
-	var listings []models.MarketplaceListing
-
-	query := `
-		SELECT * FROM marketplace_listings
-		WHERE status = 'active'
-		AND is_featured = true
 		ORDER BY created_at DESC
 		LIMIT $1
 	`

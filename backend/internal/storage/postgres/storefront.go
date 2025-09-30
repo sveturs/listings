@@ -638,12 +638,13 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 	// - Если не передан И запрашивает конкретный пользователь (UserID != nil) - показываем ВСЕ его витрины
 	// - Если не передан И это админ запрос - показываем ВСЕ витрины
 	// - Если не передан И это общий публичный запрос - показываем только активные
-	if filter.IsActive != nil {
+	switch {
+	case filter.IsActive != nil:
 		whereConditions = append(whereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		args = append(args, *filter.IsActive)
 		argCount++
-	} else if filter.UserID == nil && !filter.IsAdminRequest {
+	case filter.UserID == nil && !filter.IsAdminRequest:
 		// Для публичных запросов (без UserID и не от админа) показываем только активные
 		logger.Info().
 			Bool("IsAdminRequest", filter.IsAdminRequest).
@@ -652,7 +653,7 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 		countWhereConditions = append(countWhereConditions, fmt.Sprintf("is_active = $%d", argCount))
 		args = append(args, true)
 		argCount++
-	} else {
+	default:
 		logger.Info().
 			Bool("IsAdminRequest", filter.IsAdminRequest).
 			Msg("List: NOT applying default is_active filter (admin or user request)")

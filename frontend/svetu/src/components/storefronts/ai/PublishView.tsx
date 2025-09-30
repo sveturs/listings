@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from '@/utils/toast';
 import { tokenManager } from '@/utils/tokenManager';
 
@@ -21,7 +20,6 @@ export default function PublishView({
   const t = useTranslations('storefronts');
   const locale = useLocale();
   const router = useRouter();
-  const { user } = useAuthContext();
   const { state, setError, setProcessing, setView, reset } =
     useCreateAIProduct();
   const [isPublishing, setIsPublishing] = useState(false);

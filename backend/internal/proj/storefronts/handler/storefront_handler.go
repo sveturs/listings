@@ -203,7 +203,7 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 
 	// Pass admin status and hard delete flag through context
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	hardDelete := c.Query("hard_delete") == "true" // Query parameter для выбора жесткого удаления
+	hardDelete := c.Query("hard_delete") == boolValueTrue // Query parameter для выбора жесткого удаления
 
 	// Логируем для отладки
 	logger.Info().

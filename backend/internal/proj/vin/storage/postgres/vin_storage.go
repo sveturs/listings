@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
+	"backend/internal/logger"
 	"backend/internal/proj/vin/models"
 
 	"github.com/jmoiron/sqlx"
@@ -40,8 +42,8 @@ func (s *VINStorage) GetCachedVIN(ctx context.Context, vin string) (*models.VIND
 	var cached models.VINDecodeCache
 	err := s.db.GetContext(ctx, &cached, query, vin)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Не найдено в кэше
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("VIN not found in cache: %w", sql.ErrNoRows)
 		}
 		return nil, fmt.Errorf("failed to get cached VIN: %w", err)
 	}
@@ -181,7 +183,11 @@ func (s *VINStorage) GetHistory(ctx context.Context, req *models.VINHistoryReque
 	if err != nil {
 		return nil, fmt.Errorf("failed to get history: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var history []*models.VINCheckHistory
 	for rows.Next() {
@@ -277,7 +283,11 @@ func (s *VINStorage) GetManufacturerStats(ctx context.Context, userID *int64) ([
 	if err != nil {
 		return nil, fmt.Errorf("failed to get manufacturer stats: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	var stats []map[string]interface{}
 	for rows.Next() {
@@ -310,7 +320,7 @@ func (s *VINStorage) GetVINByListingID(ctx context.Context, listingID int64) (st
 
 	var vin string
 	err := s.db.GetContext(ctx, &vin, query, listingID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", fmt.Errorf("failed to get VIN by listing ID: %w", err)
 	}
 
