@@ -9,5 +9,5 @@ INSERT INTO public.user_telegram_connections (user_id, telegram_chat_id, telegra
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: variant_attribute_mappings; Type: TABLE DATA; Schema: public; Owner: -
 --

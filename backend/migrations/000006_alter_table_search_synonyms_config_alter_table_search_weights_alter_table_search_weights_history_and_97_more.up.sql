@@ -1,8 +1,3 @@
-ALTER TABLE ONLY public.search_config ALTER COLUMN id SET DEFAULT nextval('public.search_config_id_seq'::regclass);
-ALTER TABLE ONLY public.search_optimization_sessions ALTER COLUMN id SET DEFAULT nextval('public.search_optimization_sessions_id_seq'::regclass);
-ALTER TABLE ONLY public.search_queries ALTER COLUMN id SET DEFAULT nextval('public.search_queries_id_seq'::regclass);
-ALTER TABLE ONLY public.search_statistics ALTER COLUMN id SET DEFAULT nextval('public.search_statistics_id_seq'::regclass);
-ALTER TABLE ONLY public.search_synonyms ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_id_seq'::regclass);
 ALTER TABLE ONLY public.search_synonyms_config ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_config_id_seq'::regclass);
 ALTER TABLE ONLY public.search_weights ALTER COLUMN id SET DEFAULT nextval('public.search_weights_id_seq'::regclass);
 ALTER TABLE ONLY public.search_weights_history ALTER COLUMN id SET DEFAULT nextval('public.search_weights_history_id_seq'::regclass);
@@ -45,7 +40,6 @@ ALTER TABLE ONLY public.user_notification_preferences ALTER COLUMN id SET DEFAUL
 ALTER TABLE ONLY public.user_storefronts ALTER COLUMN id SET DEFAULT nextval('public.user_storefronts_id_seq'::regclass);
 ALTER TABLE ONLY public.user_subscriptions ALTER COLUMN id SET DEFAULT nextval('public.user_subscriptions_id_seq'::regclass);
 ALTER TABLE ONLY public.user_view_history ALTER COLUMN id SET DEFAULT nextval('public.user_view_history_id_seq'::regclass);
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 ALTER TABLE ONLY public.variant_attribute_mappings ALTER COLUMN id SET DEFAULT nextval('public.variant_attribute_mappings_id_seq'::regclass);
 ALTER TABLE ONLY public.viber_messages ALTER COLUMN id SET DEFAULT nextval('public.viber_messages_id_seq'::regclass);
 ALTER TABLE ONLY public.viber_sessions ALTER COLUMN id SET DEFAULT nextval('public.viber_sessions_id_seq'::regclass);
@@ -168,34 +162,6 @@ CREATE MATERIALIZED VIEW public.gis_listing_density_grid AS
      LEFT JOIN public.marketplace_listings l ON (((l.id = lg.listing_id) AND ((l.status)::text = 'active'::text))))
   GROUP BY g.grid_x, g.grid_y, g.cell
   WITH NO DATA;
-CREATE VIEW public.map_items_view AS
- SELECT ml.id,
-    ml.title,
-    ml.description,
-    ml.price,
-    ml.condition,
-    ml.location,
-    ml.latitude,
-    ml.longitude,
-    ml.address_city AS city,
-    ml.address_country AS country,
-    ml.status,
-    ml.created_at,
-    ml.updated_at,
-    ml.user_id,
-    ml.category_id,
-    mc.name AS category_name,
-    mc.slug AS category_slug,
-    ( SELECT mi.public_url
-           FROM public.marketplace_images mi
-          WHERE ((mi.listing_id = ml.id) AND (mi.is_main = true))
-         LIMIT 1) AS main_image_url,
-    u.name AS user_name,
-    ml.show_on_map
-   FROM ((public.marketplace_listings ml
-     LEFT JOIN public.marketplace_categories mc ON ((ml.category_id = mc.id)))
-     LEFT JOIN public.users u ON ((ml.user_id = u.id)))
-  WHERE (((ml.status)::text = 'active'::text) AND (ml.show_on_map = true) AND (ml.latitude IS NOT NULL) AND (ml.longitude IS NOT NULL));
 CREATE MATERIALIZED VIEW public.mv_category_statistics AS
  SELECT c.id AS category_id,
     c.name,
@@ -323,77 +289,6 @@ CREATE MATERIALIZED VIEW public.storefront_ratings AS
   WHERE (((reviews.entity_origin_type)::text = 'storefront'::text) AND ((reviews.status)::text = 'published'::text))
   GROUP BY reviews.entity_origin_id
   WITH NO DATA;
-CREATE MATERIALIZED VIEW public.user_rating_distribution AS
- SELECT reviews.entity_origin_id AS user_id,
-    reviews.rating,
-    count(*) AS count
-   FROM public.reviews
-  WHERE (((reviews.entity_origin_type)::text = 'user'::text) AND ((reviews.status)::text = 'published'::text))
-  GROUP BY reviews.entity_origin_id, reviews.rating
-  WITH NO DATA;
-CREATE MATERIALIZED VIEW public.user_rating_summary AS
- WITH review_stats AS (
-         SELECT COALESCE(reviews.entity_origin_id, reviews.user_id) AS user_id,
-            count(*) AS total_reviews,
-            avg(reviews.rating) AS average_rating,
-            count(*) FILTER (WHERE (reviews.rating = 1)) AS rating_1,
-            count(*) FILTER (WHERE (reviews.rating = 2)) AS rating_2,
-            count(*) FILTER (WHERE (reviews.rating = 3)) AS rating_3,
-            count(*) FILTER (WHERE (reviews.rating = 4)) AS rating_4,
-            count(*) FILTER (WHERE (reviews.rating = 5)) AS rating_5
-           FROM public.reviews
-          WHERE ((((reviews.entity_type)::text = 'listing'::text) AND (reviews.entity_origin_type IS NULL)) OR ((reviews.entity_origin_type)::text = 'user'::text))
-          GROUP BY COALESCE(reviews.entity_origin_id, reviews.user_id)
-        )
- SELECT u.id AS user_id,
-    u.name,
-    rs.total_reviews,
-    rs.average_rating,
-    rs.rating_1,
-    rs.rating_2,
-    rs.rating_3,
-    rs.rating_4,
-    rs.rating_5
-   FROM (public.users u
-     LEFT JOIN review_stats rs ON ((u.id = rs.user_id)))
-  WITH NO DATA;
-CREATE MATERIALIZED VIEW public.user_ratings AS
- SELECT reviews.entity_origin_id AS user_id,
-    count(*) AS total_reviews,
-    avg(reviews.rating) AS average_rating,
-    count(*) FILTER (WHERE ((reviews.entity_type)::text = 'user'::text)) AS direct_reviews,
-    count(*) FILTER (WHERE ((reviews.entity_type)::text = 'listing'::text)) AS listing_reviews,
-    count(*) FILTER (WHERE ((reviews.entity_type)::text = 'storefront'::text)) AS storefront_reviews,
-    count(*) FILTER (WHERE (reviews.is_verified_purchase = true)) AS verified_reviews,
-    count(*) FILTER (WHERE (array_length(reviews.photos, 1) > 0)) AS photo_reviews,
-    count(*) FILTER (WHERE (reviews.rating = 1)) AS rating_1,
-    count(*) FILTER (WHERE (reviews.rating = 2)) AS rating_2,
-    count(*) FILTER (WHERE (reviews.rating = 3)) AS rating_3,
-    count(*) FILTER (WHERE (reviews.rating = 4)) AS rating_4,
-    count(*) FILTER (WHERE (reviews.rating = 5)) AS rating_5,
-    avg(reviews.rating) FILTER (WHERE (reviews.created_at >= (now() - '30 days'::interval))) AS recent_rating,
-    count(*) FILTER (WHERE (reviews.created_at >= (now() - '30 days'::interval))) AS recent_reviews,
-    max(reviews.created_at) AS last_review_at
-   FROM public.reviews
-  WHERE (((reviews.entity_origin_type)::text = 'user'::text) AND ((reviews.status)::text = 'published'::text))
-  GROUP BY reviews.entity_origin_id
-  WITH NO DATA;
-CREATE VIEW public.user_role_permissions AS
- SELECT u.id AS user_id,
-    u.email,
-    u.name AS user_name,
-    r.id AS role_id,
-    r.name AS role_name,
-    r.display_name AS role_display_name,
-    p.id AS permission_id,
-    p.name AS permission_name,
-    p.resource,
-    p.action
-   FROM (((public.users u
-     LEFT JOIN public.roles r ON ((u.role_id = r.id)))
-     LEFT JOIN public.role_permissions rp ON ((r.id = rp.role_id)))
-     LEFT JOIN public.permissions p ON ((rp.permission_id = p.id)))
-  WHERE ((u.account_status)::text = 'active'::text);
 CREATE INDEX idx_address_log_change_reason ON public.address_change_log USING btree (change_reason);
 CREATE INDEX idx_address_log_new_location ON public.address_change_log USING gist (new_location);
 CREATE INDEX idx_address_log_old_location ON public.address_change_log USING gist (old_location);
@@ -419,3 +314,14 @@ CREATE INDEX idx_address_log_user_id ON public.address_change_log USING btree (u
 CREATE INDEX idx_ai_decisions_category_confidence ON public.ai_category_decisions USING btree (category_id, confidence DESC);
 CREATE INDEX idx_ai_decisions_created_at ON public.ai_category_decisions USING btree (created_at DESC);
 CREATE INDEX idx_ai_decisions_domain_type ON public.ai_category_decisions USING btree (ai_domain, ai_product_type);
+CREATE INDEX idx_ai_decisions_entity_type ON public.ai_category_decisions USING btree (entity_type, created_at DESC);
+CREATE INDEX idx_ai_decisions_title_hash ON public.ai_category_decisions USING btree (title_hash);
+CREATE UNIQUE INDEX idx_ai_decisions_unique_title_hash ON public.ai_category_decisions USING btree (title_hash);
+CREATE INDEX idx_ai_decisions_user_confirmed ON public.ai_category_decisions USING btree (user_confirmed) WHERE (user_confirmed = true);
+CREATE INDEX idx_ai_mappings_active ON public.category_ai_mappings USING btree (is_active) WHERE (is_active = true);
+CREATE INDEX idx_ai_mappings_category ON public.category_ai_mappings USING btree (category_id);
+CREATE INDEX idx_ai_mappings_domain_type ON public.category_ai_mappings USING btree (ai_domain, product_type);
+CREATE INDEX idx_attribute_group_items_attribute ON public.attribute_group_items USING btree (attribute_id);
+CREATE INDEX idx_attribute_group_items_group ON public.attribute_group_items USING btree (group_id);
+CREATE INDEX idx_attribute_option_translations ON public.attribute_option_translations USING btree (attribute_name, option_value);
+CREATE INDEX idx_audit_log_entity ON public.translation_audit_log USING btree (entity_type, entity_id);

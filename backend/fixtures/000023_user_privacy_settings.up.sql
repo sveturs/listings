@@ -7,5 +7,5 @@ INSERT INTO public.user_privacy_settings (user_id, allow_contact_requests, allow
 
 
 --
--- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: user_storefronts; Type: TABLE DATA; Schema: public; Owner: -
 --

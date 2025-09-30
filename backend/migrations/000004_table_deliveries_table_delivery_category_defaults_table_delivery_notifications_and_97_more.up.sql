@@ -311,6 +311,18 @@ CREATE TABLE public.listing_views (
     view_time timestamp without time zone DEFAULT now(),
     CONSTRAINT at_least_one_identifier CHECK (((user_id IS NOT NULL) OR (ip_hash IS NOT NULL)))
 );
+CREATE TABLE public.marketplace_chats (
+    id integer NOT NULL,
+    listing_id integer,
+    buyer_id integer,
+    seller_id integer,
+    last_message_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    is_archived boolean DEFAULT false,
+    storefront_product_id integer,
+    CONSTRAINT check_chat_target CHECK ((NOT ((listing_id IS NOT NULL) AND (storefront_product_id IS NOT NULL))))
+);
 CREATE TABLE public.marketplace_images (
     id integer NOT NULL,
     listing_id integer,
@@ -323,62 +335,6 @@ CREATE TABLE public.marketplace_images (
     storage_type character varying(20) DEFAULT 'local'::character varying,
     storage_bucket character varying(100),
     public_url text
-);
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    email character varying(150) NOT NULL,
-    google_id character varying(255),
-    picture_url text,
-    phone character varying(20),
-    bio text,
-    notification_email boolean DEFAULT true,
-    timezone character varying(50) DEFAULT 'UTC'::character varying,
-    last_seen timestamp without time zone,
-    account_status character varying(20) DEFAULT 'active'::character varying,
-    settings jsonb DEFAULT '{}'::jsonb,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    city character varying(100),
-    country character varying(100),
-    password character varying(255),
-    provider character varying(50) DEFAULT 'email'::character varying,
-    preferred_language character varying(10) DEFAULT 'ru'::character varying,
-    role_id integer,
-    old_email text,
-    CONSTRAINT users_account_status_check CHECK (((account_status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text]))),
-    CONSTRAINT users_preferred_language_check CHECK (((preferred_language)::text = ANY (ARRAY[('ru'::character varying)::text, ('sr'::character varying)::text, ('en'::character varying)::text])))
-);
-CREATE TABLE public.marketplace_favorites (
-    user_id integer NOT NULL,
-    listing_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.notification_settings (
-    user_id integer NOT NULL,
-    notification_type character varying(50) NOT NULL,
-    telegram_enabled boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    email_enabled boolean DEFAULT false
-);
-CREATE TABLE public.user_telegram_connections (
-    user_id integer NOT NULL,
-    telegram_chat_id character varying(100) NOT NULL,
-    telegram_username character varying(100),
-    connected_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE public.marketplace_chats (
-    id integer NOT NULL,
-    listing_id integer,
-    buyer_id integer,
-    seller_id integer,
-    last_message_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    is_archived boolean DEFAULT false,
-    storefront_product_id integer,
-    CONSTRAINT check_chat_target CHECK ((NOT ((listing_id IS NOT NULL) AND (storefront_product_id IS NOT NULL))))
 );
 CREATE TABLE public.marketplace_listing_variants (
     id integer NOT NULL,
@@ -849,12 +805,6 @@ CREATE TABLE public.roles (
     is_system boolean DEFAULT false,
     is_assignable boolean DEFAULT true,
     priority integer DEFAULT 100
-);
-CREATE TABLE public.user_roles (
-    user_id integer NOT NULL,
-    role_id integer NOT NULL,
-    assigned_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    assigned_by integer
 );
 CREATE TABLE public.saved_search_notifications (
     id integer NOT NULL,
@@ -1472,4 +1422,65 @@ CREATE TABLE public.unified_geo (
     privacy_level public.location_privacy_level DEFAULT 'exact'::public.location_privacy_level,
     original_location public.geography(Point,4326),
     blur_radius_meters integer DEFAULT 0
+);
+CREATE TABLE public.user_behavior_events (
+    id bigint NOT NULL,
+    event_type character varying(50) NOT NULL,
+    user_id integer,
+    session_id character varying(100) NOT NULL,
+    search_query text,
+    item_id character varying(50),
+    item_type character varying(20),
+    "position" integer,
+    metadata jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT user_behavior_events_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text, (NULL::character varying)::text])))
+);
+CREATE TABLE public.user_car_view_history (
+    id integer NOT NULL,
+    user_id integer,
+    listing_id integer NOT NULL,
+    session_id character varying(100),
+    viewed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    view_duration_seconds integer,
+    referrer character varying(255),
+    device_type character varying(50),
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+CREATE TABLE public.user_contacts (
+    id bigint NOT NULL,
+    user_id integer NOT NULL,
+    contact_user_id integer NOT NULL,
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    added_from_chat_id integer,
+    notes text,
+    CONSTRAINT user_contacts_check CHECK ((user_id <> contact_user_id)),
+    CONSTRAINT user_contacts_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('blocked'::character varying)::text])))
+);
+CREATE TABLE public.user_notification_contacts (
+    id integer NOT NULL,
+    user_id integer,
+    channel character varying(20) NOT NULL,
+    contact_value character varying(255) NOT NULL,
+    is_verified boolean DEFAULT false,
+    is_primary boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+CREATE TABLE public.user_notification_preferences (
+    id integer NOT NULL,
+    user_id integer,
+    channel character varying(20) NOT NULL,
+    is_enabled boolean DEFAULT true,
+    notify_on_confirmed boolean DEFAULT true,
+    notify_on_picked_up boolean DEFAULT true,
+    notify_on_in_transit boolean DEFAULT false,
+    notify_on_out_for_delivery boolean DEFAULT true,
+    notify_on_delivered boolean DEFAULT true,
+    notify_on_failed boolean DEFAULT true,
+    notify_on_returned boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );

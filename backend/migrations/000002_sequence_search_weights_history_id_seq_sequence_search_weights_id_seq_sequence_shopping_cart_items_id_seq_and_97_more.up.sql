@@ -276,13 +276,6 @@ CREATE SEQUENCE public.user_view_history_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-CREATE SEQUENCE public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
 CREATE SEQUENCE public.variant_attribute_mappings_id_seq
     AS integer
     START WITH 1
@@ -394,6 +387,36 @@ CREATE FUNCTION public.calculate_volumetric_weight(p_length_cm numeric, p_width_
     AS $$
 BEGIN
     RETURN (p_length_cm * p_width_cm * p_height_cm) / p_divisor;
+END;
+$$;
+CREATE FUNCTION public.check_user_permission(p_user_id integer, p_permission_name character varying) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    has_permission BOOLEAN;
+BEGIN
+    -- Check if user has permission through their role
+    SELECT EXISTS (
+        SELECT 1
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        JOIN role_permissions rp ON r.id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE u.id = p_user_id
+        AND p.name = p_permission_name
+    ) INTO has_permission;
+    -- Also check user_roles table for multiple roles
+    IF NOT has_permission THEN
+        SELECT EXISTS (
+            SELECT 1
+            FROM user_roles ur
+            JOIN role_permissions rp ON ur.role_id = rp.role_id
+            JOIN permissions p ON rp.permission_id = p.id
+            WHERE ur.user_id = p_user_id
+            AND p.name = p_permission_name
+        ) INTO has_permission;
+    END IF;
+    RETURN has_permission;
 END;
 $$;
 CREATE FUNCTION public.cleanup_expired_refresh_tokens() RETURNS void

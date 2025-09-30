@@ -1,33 +1,3 @@
-ALTER SEQUENCE public.custom_ui_components_id_seq OWNED BY public.custom_ui_components.id;
-ALTER SEQUENCE public.custom_ui_templates_id_seq OWNED BY public.custom_ui_templates.id;
-ALTER SEQUENCE public.deliveries_id_seq OWNED BY public.deliveries.id;
-ALTER SEQUENCE public.delivery_category_defaults_id_seq OWNED BY public.delivery_category_defaults.id;
-ALTER SEQUENCE public.delivery_notifications_id_seq OWNED BY public.delivery_notifications.id;
-ALTER SEQUENCE public.delivery_pricing_rules_id_seq OWNED BY public.delivery_pricing_rules.id;
-ALTER SEQUENCE public.delivery_providers_id_seq OWNED BY public.delivery_providers.id;
-ALTER SEQUENCE public.delivery_shipments_id_seq OWNED BY public.delivery_shipments.id;
-ALTER SEQUENCE public.delivery_tracking_events_id_seq OWNED BY public.delivery_tracking_events.id;
-ALTER SEQUENCE public.delivery_zones_id_seq OWNED BY public.delivery_zones.id;
-ALTER SEQUENCE public.escrow_payments_id_seq OWNED BY public.escrow_payments.id;
-ALTER SEQUENCE public.geocoding_cache_id_seq OWNED BY public.geocoding_cache.id;
-ALTER SEQUENCE public.gis_filter_analytics_id_seq OWNED BY public.gis_filter_analytics.id;
-ALTER SEQUENCE public.gis_isochrone_cache_id_seq OWNED BY public.gis_isochrone_cache.id;
-ALTER SEQUENCE public.gis_poi_cache_id_seq OWNED BY public.gis_poi_cache.id;
-ALTER SEQUENCE public.import_history_id_seq OWNED BY public.import_history.id;
-ALTER SEQUENCE public.import_sources_id_seq OWNED BY public.import_sources.id;
-ALTER SEQUENCE public.imported_categories_id_seq OWNED BY public.imported_categories.id;
-ALTER SEQUENCE public.inventory_reservations_id_seq OWNED BY public.inventory_reservations.id;
-ALTER SEQUENCE public.item_performance_metrics_id_seq OWNED BY public.item_performance_metrics.id;
-ALTER SEQUENCE public.listing_attribute_values_id_seq OWNED BY public.listing_attribute_values.id;
-ALTER SEQUENCE public.listing_views_id_seq OWNED BY public.listing_views.id;
-ALTER SEQUENCE public.listings_geo_id_seq OWNED BY public.listings_geo.id;
-ALTER SEQUENCE public.map_items_cache_id_seq OWNED BY public.map_items_cache.id;
-ALTER SEQUENCE public.marketplace_categories_id_seq OWNED BY public.marketplace_categories.id;
-ALTER SEQUENCE public.marketplace_chats_id_seq OWNED BY public.marketplace_chats.id;
-ALTER SEQUENCE public.marketplace_images_id_seq OWNED BY public.marketplace_images.id;
-ALTER SEQUENCE public.marketplace_listing_variants_id_seq OWNED BY public.marketplace_listing_variants.id;
-ALTER SEQUENCE public.marketplace_messages_id_seq OWNED BY public.marketplace_messages.id;
-ALTER SEQUENCE public.marketplace_orders_id_seq OWNED BY public.marketplace_orders.id;
 ALTER SEQUENCE public.merchant_payouts_id_seq OWNED BY public.merchant_payouts.id;
 ALTER SEQUENCE public.notification_templates_id_seq OWNED BY public.notification_templates.id;
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
@@ -98,3 +68,49 @@ ALTER SEQUENCE public.user_car_view_history_id_seq OWNED BY public.user_car_view
 ALTER SEQUENCE public.user_contacts_id_seq OWNED BY public.user_contacts.id;
 ALTER SEQUENCE public.user_notification_contacts_id_seq OWNED BY public.user_notification_contacts.id;
 ALTER SEQUENCE public.user_notification_preferences_id_seq OWNED BY public.user_notification_preferences.id;
+ALTER SEQUENCE public.user_storefronts_id_seq OWNED BY public.user_storefronts.id;
+ALTER SEQUENCE public.user_subscriptions_id_seq OWNED BY public.user_subscriptions.id;
+ALTER SEQUENCE public.user_view_history_id_seq OWNED BY public.user_view_history.id;
+ALTER SEQUENCE public.variant_attribute_mappings_id_seq OWNED BY public.variant_attribute_mappings.id;
+ALTER SEQUENCE public.viber_messages_id_seq OWNED BY public.viber_messages.id;
+ALTER SEQUENCE public.viber_sessions_id_seq OWNED BY public.viber_sessions.id;
+ALTER SEQUENCE public.viber_tracking_sessions_id_seq OWNED BY public.viber_tracking_sessions.id;
+ALTER SEQUENCE public.viber_users_id_seq OWNED BY public.viber_users.id;
+ALTER SEQUENCE public.view_statistics_id_seq OWNED BY public.view_statistics.id;
+ALTER SEQUENCE public.vin_accident_history_id_seq OWNED BY public.vin_accident_history.id;
+ALTER SEQUENCE public.vin_check_history_id_seq OWNED BY public.vin_check_history.id;
+ALTER SEQUENCE public.vin_decode_cache_id_seq OWNED BY public.vin_decode_cache.id;
+ALTER SEQUENCE public.vin_ownership_history_id_seq OWNED BY public.vin_ownership_history.id;
+ALTER SEQUENCE public.vin_recalls_id_seq OWNED BY public.vin_recalls.id;
+ALTER TABLE ONLY public.ai_category_decisions
+    ADD CONSTRAINT ai_category_decisions_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.ai_category_decisions
+    ADD CONSTRAINT ai_category_decisions_user_corrected_category_id_fkey FOREIGN KEY (user_corrected_category_id) REFERENCES public.marketplace_categories(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.bex_tracking_events
+    ADD CONSTRAINT bex_tracking_events_shipment_id_fkey FOREIGN KEY (shipment_id) REFERENCES public.bex_shipments(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.car_generations
+    ADD CONSTRAINT car_generations_model_id_fkey FOREIGN KEY (model_id) REFERENCES public.car_models(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.car_models
+    ADD CONSTRAINT car_models_make_id_fkey FOREIGN KEY (make_id) REFERENCES public.car_makes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.category_ai_mappings
+    ADD CONSTRAINT category_ai_mappings_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.category_detection_cache
+    ADD CONSTRAINT category_detection_cache_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id);
+ALTER TABLE ONLY public.category_detection_feedback
+    ADD CONSTRAINT category_detection_feedback_correct_category_id_fkey FOREIGN KEY (correct_category_id) REFERENCES public.marketplace_categories(id);
+ALTER TABLE ONLY public.category_detection_feedback
+    ADD CONSTRAINT category_detection_feedback_detected_category_id_fkey FOREIGN KEY (detected_category_id) REFERENCES public.marketplace_categories(id);
+ALTER TABLE ONLY public.category_detection_feedback
+    ADD CONSTRAINT category_detection_feedback_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.category_keyword_weights
+    ADD CONSTRAINT category_keyword_weights_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.category_keywords
+    ADD CONSTRAINT category_keywords_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.category_variant_attributes
+    ADD CONSTRAINT category_variant_attributes_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.component_templates
+    ADD CONSTRAINT component_templates_component_id_fkey FOREIGN KEY (component_id) REFERENCES public.custom_ui_components(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.courier_location_history
+    ADD CONSTRAINT courier_location_history_courier_id_fkey FOREIGN KEY (courier_id) REFERENCES public.couriers(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.courier_location_history
+    ADD CONSTRAINT courier_location_history_delivery_id_fkey FOREIGN KEY (delivery_id) REFERENCES public.deliveries(id) ON DELETE CASCADE;

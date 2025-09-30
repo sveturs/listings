@@ -1,64 +1,3 @@
-CREATE TABLE public.user_behavior_events (
-    id bigint NOT NULL,
-    event_type character varying(50) NOT NULL,
-    user_id integer,
-    session_id character varying(100) NOT NULL,
-    search_query text,
-    item_id character varying(50),
-    item_type character varying(20),
-    "position" integer,
-    metadata jsonb DEFAULT '{}'::jsonb,
-    created_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT user_behavior_events_item_type_check CHECK (((item_type)::text = ANY (ARRAY[('marketplace'::character varying)::text, ('storefront'::character varying)::text, (NULL::character varying)::text])))
-);
-CREATE TABLE public.user_car_view_history (
-    id integer NOT NULL,
-    user_id integer,
-    listing_id integer NOT NULL,
-    session_id character varying(100),
-    viewed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    view_duration_seconds integer,
-    referrer character varying(255),
-    device_type character varying(50),
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-CREATE TABLE public.user_contacts (
-    id bigint NOT NULL,
-    user_id integer NOT NULL,
-    contact_user_id integer NOT NULL,
-    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    added_from_chat_id integer,
-    notes text,
-    CONSTRAINT user_contacts_check CHECK ((user_id <> contact_user_id)),
-    CONSTRAINT user_contacts_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('blocked'::character varying)::text])))
-);
-CREATE TABLE public.user_notification_contacts (
-    id integer NOT NULL,
-    user_id integer,
-    channel character varying(20) NOT NULL,
-    contact_value character varying(255) NOT NULL,
-    is_verified boolean DEFAULT false,
-    is_primary boolean DEFAULT false,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-CREATE TABLE public.user_notification_preferences (
-    id integer NOT NULL,
-    user_id integer,
-    channel character varying(20) NOT NULL,
-    is_enabled boolean DEFAULT true,
-    notify_on_confirmed boolean DEFAULT true,
-    notify_on_picked_up boolean DEFAULT true,
-    notify_on_in_transit boolean DEFAULT false,
-    notify_on_out_for_delivery boolean DEFAULT true,
-    notify_on_delivered boolean DEFAULT true,
-    notify_on_failed boolean DEFAULT true,
-    notify_on_returned boolean DEFAULT true,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
 CREATE TABLE public.user_subscriptions (
     id integer NOT NULL,
     user_id integer NOT NULL,
@@ -350,3 +289,8 @@ ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_
 ALTER TABLE ONLY public.saved_search_notifications ALTER COLUMN id SET DEFAULT nextval('public.saved_search_notifications_id_seq'::regclass);
 ALTER TABLE ONLY public.saved_searches ALTER COLUMN id SET DEFAULT nextval('public.saved_searches_id_seq'::regclass);
 ALTER TABLE ONLY public.search_behavior_metrics ALTER COLUMN id SET DEFAULT nextval('public.search_behavior_metrics_id_seq'::regclass);
+ALTER TABLE ONLY public.search_config ALTER COLUMN id SET DEFAULT nextval('public.search_config_id_seq'::regclass);
+ALTER TABLE ONLY public.search_optimization_sessions ALTER COLUMN id SET DEFAULT nextval('public.search_optimization_sessions_id_seq'::regclass);
+ALTER TABLE ONLY public.search_queries ALTER COLUMN id SET DEFAULT nextval('public.search_queries_id_seq'::regclass);
+ALTER TABLE ONLY public.search_statistics ALTER COLUMN id SET DEFAULT nextval('public.search_statistics_id_seq'::regclass);
+ALTER TABLE ONLY public.search_synonyms ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_id_seq'::regclass);

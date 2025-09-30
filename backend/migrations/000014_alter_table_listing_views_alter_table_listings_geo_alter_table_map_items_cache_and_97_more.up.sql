@@ -1,53 +1,3 @@
-ALTER TABLE ONLY public.delivery_category_defaults
-    ADD CONSTRAINT delivery_category_defaults_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_notifications
-    ADD CONSTRAINT delivery_notifications_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_pricing_rules
-    ADD CONSTRAINT delivery_pricing_rules_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_providers
-    ADD CONSTRAINT delivery_providers_code_key UNIQUE (code);
-ALTER TABLE ONLY public.delivery_providers
-    ADD CONSTRAINT delivery_providers_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_shipments
-    ADD CONSTRAINT delivery_shipments_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_shipments
-    ADD CONSTRAINT delivery_shipments_tracking_number_key UNIQUE (tracking_number);
-ALTER TABLE ONLY public.delivery_tracking_events
-    ADD CONSTRAINT delivery_tracking_events_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_zones
-    ADD CONSTRAINT delivery_zones_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.districts
-    ADD CONSTRAINT districts_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.escrow_payments
-    ADD CONSTRAINT escrow_payments_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.geocoding_cache
-    ADD CONSTRAINT geocoding_cache_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.gis_filter_analytics
-    ADD CONSTRAINT gis_filter_analytics_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.gis_isochrone_cache
-    ADD CONSTRAINT gis_isochrone_cache_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.gis_poi_cache
-    ADD CONSTRAINT gis_poi_cache_external_id_key UNIQUE (external_id);
-ALTER TABLE ONLY public.gis_poi_cache
-    ADD CONSTRAINT gis_poi_cache_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.import_history
-    ADD CONSTRAINT import_history_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.import_sources
-    ADD CONSTRAINT import_sources_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.imported_categories
-    ADD CONSTRAINT imported_categories_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.imported_categories
-    ADD CONSTRAINT imported_categories_source_id_source_category_key UNIQUE (source_id, source_category);
-ALTER TABLE ONLY public.inventory_reservations
-    ADD CONSTRAINT inventory_reservations_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.item_performance_metrics
-    ADD CONSTRAINT item_performance_metrics_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.listing_attribute_values
-    ADD CONSTRAINT listing_attribute_values_listing_id_attribute_id_key UNIQUE (listing_id, attribute_id);
-ALTER TABLE ONLY public.listing_attribute_values
-    ADD CONSTRAINT listing_attribute_values_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.listing_views
-    ADD CONSTRAINT listing_view_uniqueness UNIQUE (listing_id, user_id);
 ALTER TABLE ONLY public.listing_views
     ADD CONSTRAINT listing_views_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.listings_geo
@@ -198,3 +148,53 @@ ALTER TABLE ONLY public.storefront_orders
     ADD CONSTRAINT storefront_orders_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.storefront_payment_methods
     ADD CONSTRAINT storefront_payment_methods_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_attributes
+    ADD CONSTRAINT storefront_product_attributes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_attributes
+    ADD CONSTRAINT storefront_product_attributes_product_id_attribute_id_key UNIQUE (product_id, attribute_id);
+ALTER TABLE ONLY public.storefront_product_images
+    ADD CONSTRAINT storefront_product_images_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_variant_images
+    ADD CONSTRAINT storefront_product_variant_images_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_variants
+    ADD CONSTRAINT storefront_product_variants_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_variants
+    ADD CONSTRAINT storefront_product_variants_sku_key UNIQUE (sku);
+ALTER TABLE ONLY public.storefront_products
+    ADD CONSTRAINT storefront_products_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_staff
+    ADD CONSTRAINT storefront_staff_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_staff
+    ADD CONSTRAINT storefront_staff_storefront_id_user_id_key UNIQUE (storefront_id, user_id);
+ALTER TABLE ONLY public.storefronts
+    ADD CONSTRAINT storefronts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefronts
+    ADD CONSTRAINT storefronts_slug_key UNIQUE (slug);
+ALTER TABLE ONLY public.subscription_history
+    ADD CONSTRAINT subscription_history_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.subscription_payments
+    ADD CONSTRAINT subscription_payments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.subscription_plans
+    ADD CONSTRAINT subscription_plans_code_key UNIQUE (code);
+ALTER TABLE ONLY public.subscription_plans
+    ADD CONSTRAINT subscription_plans_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.subscription_usage
+    ADD CONSTRAINT subscription_usage_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.tracking_websocket_connections
+    ADD CONSTRAINT tracking_websocket_connections_connection_id_key UNIQUE (connection_id);
+ALTER TABLE ONLY public.tracking_websocket_connections
+    ADD CONSTRAINT tracking_websocket_connections_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_audit_log
+    ADD CONSTRAINT translation_audit_log_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_providers
+    ADD CONSTRAINT translation_providers_name_key UNIQUE (name);
+ALTER TABLE ONLY public.translation_providers
+    ADD CONSTRAINT translation_providers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_quality_metrics
+    ADD CONSTRAINT translation_quality_metrics_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_sync_conflicts
+    ADD CONSTRAINT translation_sync_conflicts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_tasks
+    ADD CONSTRAINT translation_tasks_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_entity_type_entity_id_language_field_name_key UNIQUE (entity_type, entity_id, language, field_name);

@@ -1,27 +1,3 @@
-SELECT pg_catalog.setval('public.storefront_delivery_options_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_hours_id_seq', 70, true);
-SELECT pg_catalog.setval('public.storefront_inventory_movements_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_order_items_id_seq', 19, true);
-SELECT pg_catalog.setval('public.storefront_orders_id_seq', 58, true);
-SELECT pg_catalog.setval('public.storefront_payment_methods_id_seq', 42, true);
-SELECT pg_catalog.setval('public.storefront_product_attributes_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_product_images_id_seq', 89, true);
-SELECT pg_catalog.setval('public.storefront_product_variant_images_id_seq', 1, false);
-SELECT pg_catalog.setval('public.storefront_product_variants_id_seq', 97, true);
-SELECT pg_catalog.setval('public.storefront_staff_id_seq', 22, true);
-SELECT pg_catalog.setval('public.storefronts_id_seq', 44, true);
-SELECT pg_catalog.setval('public.subscription_history_id_seq', 1, false);
-SELECT pg_catalog.setval('public.subscription_payments_id_seq', 1, false);
-SELECT pg_catalog.setval('public.subscription_plans_id_seq', 4, true);
-SELECT pg_catalog.setval('public.subscription_usage_id_seq', 1, false);
-SELECT pg_catalog.setval('public.tracking_websocket_connections_id_seq', 1, false);
-SELECT pg_catalog.setval('public.translation_audit_log_id_seq', 2, true);
-SELECT pg_catalog.setval('public.translation_providers_id_seq', 4, true);
-SELECT pg_catalog.setval('public.translation_quality_metrics_id_seq', 1, false);
-SELECT pg_catalog.setval('public.translation_sync_conflicts_id_seq', 1, false);
-SELECT pg_catalog.setval('public.translation_tasks_id_seq', 1, false);
-SELECT pg_catalog.setval('public.translations_id_seq', 5254, true);
-SELECT pg_catalog.setval('public.transliteration_rules_id_seq', 52, false);
 SELECT pg_catalog.setval('public.unified_attribute_stats_id_seq', 1, false);
 SELECT pg_catalog.setval('public.unified_attribute_values_id_seq', 31, true);
 SELECT pg_catalog.setval('public.unified_attributes_id_seq', 333, true);
@@ -35,8 +11,7 @@ SELECT pg_catalog.setval('public.user_notification_preferences_id_seq', 1, false
 SELECT pg_catalog.setval('public.user_storefronts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.user_subscriptions_id_seq', 1, false);
 SELECT pg_catalog.setval('public.user_view_history_id_seq', 1, false);
-SELECT pg_catalog.setval('public.users_id_seq', 12, true);
-SELECT pg_catalog.setval('public.variant_attribute_mappings_id_seq', 1, false);
+SELECT pg_catalog.setval('public.variant_attribute_mappings_id_seq', 10, true);
 SELECT pg_catalog.setval('public.viber_messages_id_seq', 1, false);
 SELECT pg_catalog.setval('public.viber_sessions_id_seq', 2, true);
 SELECT pg_catalog.setval('public.viber_tracking_sessions_id_seq', 1, false);
@@ -149,3 +124,53 @@ ALTER TABLE ONLY public.deliveries
     ADD CONSTRAINT deliveries_tracking_token_key UNIQUE (tracking_token);
 ALTER TABLE ONLY public.delivery_category_defaults
     ADD CONSTRAINT delivery_category_defaults_category_id_key UNIQUE (category_id);
+ALTER TABLE ONLY public.delivery_category_defaults
+    ADD CONSTRAINT delivery_category_defaults_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_notifications
+    ADD CONSTRAINT delivery_notifications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_pricing_rules
+    ADD CONSTRAINT delivery_pricing_rules_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_providers
+    ADD CONSTRAINT delivery_providers_code_key UNIQUE (code);
+ALTER TABLE ONLY public.delivery_providers
+    ADD CONSTRAINT delivery_providers_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_shipments
+    ADD CONSTRAINT delivery_shipments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_shipments
+    ADD CONSTRAINT delivery_shipments_tracking_number_key UNIQUE (tracking_number);
+ALTER TABLE ONLY public.delivery_tracking_events
+    ADD CONSTRAINT delivery_tracking_events_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_zones
+    ADD CONSTRAINT delivery_zones_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.districts
+    ADD CONSTRAINT districts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.escrow_payments
+    ADD CONSTRAINT escrow_payments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.geocoding_cache
+    ADD CONSTRAINT geocoding_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.gis_filter_analytics
+    ADD CONSTRAINT gis_filter_analytics_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.gis_isochrone_cache
+    ADD CONSTRAINT gis_isochrone_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.gis_poi_cache
+    ADD CONSTRAINT gis_poi_cache_external_id_key UNIQUE (external_id);
+ALTER TABLE ONLY public.gis_poi_cache
+    ADD CONSTRAINT gis_poi_cache_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.import_history
+    ADD CONSTRAINT import_history_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.import_sources
+    ADD CONSTRAINT import_sources_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.imported_categories
+    ADD CONSTRAINT imported_categories_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.imported_categories
+    ADD CONSTRAINT imported_categories_source_id_source_category_key UNIQUE (source_id, source_category);
+ALTER TABLE ONLY public.inventory_reservations
+    ADD CONSTRAINT inventory_reservations_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.item_performance_metrics
+    ADD CONSTRAINT item_performance_metrics_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_listing_id_attribute_id_key UNIQUE (listing_id, attribute_id);
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listing_views
+    ADD CONSTRAINT listing_view_uniqueness UNIQUE (listing_id, user_id);
