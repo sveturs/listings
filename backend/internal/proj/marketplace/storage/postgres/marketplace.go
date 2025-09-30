@@ -544,11 +544,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
     l.metadata,`
 
 	baseQuery += `
-    u.name as user_name,
-        u.email as user_email,
-        u.created_at as user_created_at,
-        u.picture_url as user_picture_url,
-        c.name as category_name,
+    c.name as category_name,
         c.slug as category_slug,
         COALESCE(t.translations, '{}'::jsonb) as translations,
         COALESCE(li.images, '[]'::jsonb) as images,
@@ -560,7 +556,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
         ) as is_favorite,
         COUNT(*) OVER() as total_count
     FROM marketplace_listings l
-    JOIN users u ON l.user_id = u.id
     JOIN marketplace_categories c ON l.category_id = c.id
     LEFT JOIN translations_agg t ON t.entity_id = l.id
     LEFT JOIN listing_images li ON li.listing_id = l.id
@@ -670,8 +665,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		var metadataJSON []byte
 
 		var (
-			tempEmail        sql.NullString
-			tempPictureURL   sql.NullString
 			tempLocation     sql.NullString
 			tempLatitude     sql.NullFloat64
 			tempLongitude    sql.NullFloat64
@@ -683,7 +676,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			tempStatus       sql.NullString
 			tempCondition    sql.NullString
 			tempDescription  sql.NullString
-			tempUserName     sql.NullString
 		)
 
 		err := rows.Scan(
@@ -707,10 +699,6 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			&listing.OriginalLanguage,
 			&tempStorefrontID,
 			&metadataJSON,
-			&tempUserName,
-			&tempEmail,
-			&listing.User.CreatedAt,
-			&tempPictureURL,
 			&tempCategoryName,
 			&tempCategorySlug,
 			&translationsJSON,
@@ -770,12 +758,9 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempStatus.Valid {
 			listing.Status = tempStatus.String
 		}
-		if tempUserName.Valid {
-			listing.User.Name = tempUserName.String
-		}
-		// Заполняем ID пользователя
+		// User info будет загружена в handler через auth-service
 		listing.User.ID = listing.UserID
-		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d, listing.User.ID=%d", listing.ID, listing.UserID, listing.User.ID)
+		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d", listing.ID, listing.UserID)
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
 			listing.StorefrontID = &sfID
@@ -795,12 +780,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		if tempCountry.Valid {
 			listing.Country = tempCountry.String
 		}
-		if tempEmail.Valid {
-			listing.User.Email = tempEmail.String
-		}
-		if tempPictureURL.Valid {
-			listing.User.PictureURL = tempPictureURL.String
-		}
+		// User email and picture будет загружено в handler через auth-service
 		if tempCategoryName.Valid {
 			listing.Category.Name = tempCategoryName.String
 		}
