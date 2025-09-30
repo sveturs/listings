@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"backend/internal/config"
+	"backend/internal/logger"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"

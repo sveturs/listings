@@ -2,8 +2,10 @@
 package handler
 
 import (
+	"context"
 	"strconv"
 	"strings"
+	"sync"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -25,6 +27,45 @@ func NewFavoritesHandler(services globalService.ServicesInterface) *FavoritesHan
 	return &FavoritesHandler{
 		services:           services,
 		marketplaceService: services.Marketplace(),
+	}
+}
+
+// loadUserInfoForListings загружает информацию о пользователях из auth-service для списка объявлений
+func (h *FavoritesHandler) loadUserInfoForListings(ctx context.Context, listings []models.MarketplaceListing) {
+	// Собираем все уникальные user IDs
+	userIDs := make(map[int]bool)
+	for i := range listings {
+		if listings[i].UserID > 0 {
+			userIDs[listings[i].UserID] = true
+		}
+	}
+
+	// Загружаем пользователей параллельно
+	userCache := make(map[int]*models.User)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for userID := range userIDs {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			user, err := h.services.User().GetUserByID(ctx, id)
+			if err != nil {
+				logger.Warn().Err(err).Int("userId", id).Msg("Failed to load user from auth-service")
+				return
+			}
+			mu.Lock()
+			userCache[id] = user
+			mu.Unlock()
+		}(userID)
+	}
+	wg.Wait()
+
+	// Заполняем информацию о пользователях в объявлениях
+	for i := range listings {
+		if user, ok := userCache[listings[i].UserID]; ok {
+			listings[i].User = user
+		}
 	}
 }
 
@@ -174,6 +215,9 @@ func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 	if listings == nil {
 		listings = []models.MarketplaceListing{}
 	}
+
+	// Загружаем информацию о пользователях из auth-service
+	h.loadUserInfoForListings(c.Context(), listings)
 
 	// Возвращаем список избранных объявлений
 	return utils.SuccessResponse(c, listings)

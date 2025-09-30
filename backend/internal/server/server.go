@@ -3,13 +3,14 @@
 package server
 
 import (
-	version "backend/internal/version"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
 	"time"
+
+	version "backend/internal/version"
 
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
@@ -51,9 +52,9 @@ import (
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
 	postexpressHandler "backend/internal/proj/postexpress/handler"
-	recommendationsHandler "backend/internal/proj/recommendations"
 	postexpressService "backend/internal/proj/postexpress/service"
 	postexpressRepository "backend/internal/proj/postexpress/storage/postgres"
+	recommendationsHandler "backend/internal/proj/recommendations"
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"

@@ -52,8 +52,8 @@ type Database struct {
 	pool          *pgxpool.Pool
 	marketplaceDB *marketplaceStorage.Storage
 
-	reviewDB        *reviewStorage.Storage
-	notificationsDB *notificationStorage.Storage
+	reviewDB             *reviewStorage.Storage
+	notificationsDB      *notificationStorage.Storage
 	osMarketplaceRepo    opensearch.MarketplaceSearchRepository
 	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
 	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов

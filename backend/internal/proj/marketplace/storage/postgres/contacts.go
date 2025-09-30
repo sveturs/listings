@@ -297,26 +297,18 @@ func (s *Storage) RemoveContact(ctx context.Context, userID, contactUserID int) 
 
 // Получить/создать настройки приватности
 func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error) {
-	// Сначала проверяем что пользователь существует
-	var exists bool
-	checkUserQuery := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`
-	err := s.pool.QueryRow(ctx, checkUserQuery, userID).Scan(&exists)
-	if err != nil {
-		return nil, fmt.Errorf("error checking user existence: %w", err)
-	}
-	if !exists {
-		return nil, fmt.Errorf("user does not exist")
-	}
+	// User existence проверяется через JWT auth middleware
+	// Если запрос дошел сюда, пользователь уже аутентифицирован в auth-service
 
 	// Пытаемся получить существующие настройки
 	selectQuery := `
 		SELECT user_id, allow_contact_requests, allow_messages_from_contacts_only, created_at, updated_at
-		FROM user_privacy_settings 
+		FROM user_privacy_settings
 		WHERE user_id = $1
 	`
 
 	settings := &models.UserPrivacySettings{}
-	err = s.pool.QueryRow(ctx, selectQuery, userID).Scan(
+	err := s.pool.QueryRow(ctx, selectQuery, userID).Scan(
 		&settings.UserID,
 		&settings.AllowContactRequests,
 		&settings.AllowMessagesFromContactsOnly,

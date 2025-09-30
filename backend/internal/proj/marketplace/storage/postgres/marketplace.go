@@ -1208,17 +1208,12 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
             l.views_count,
             l.created_at,
             l.updated_at,
-            u.name,
-            u.email,
-			u.created_at as user_created_at,
-            COALESCE(u.picture_url, ''),
             COALESCE(c.name, '') as category_name,
             COALESCE(c.slug, '') as category_slug,
             true as is_favorite,
             COALESCE(li.images, '[]'::jsonb) as listing_images
         FROM marketplace_listings l
         JOIN marketplace_favorites f ON l.id = f.listing_id
-        LEFT JOIN users u ON l.user_id = u.id
         LEFT JOIN marketplace_categories c ON l.category_id = c.id
         LEFT JOIN listing_images li ON li.listing_id = l.id
         WHERE f.user_id = $1
@@ -1237,7 +1232,6 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			User:     &models.User{},
 			Category: &models.MarketplaceCategory{},
 		}
-		var userPictureURL string
 		var imagesJSON json.RawMessage
 
 		err := rows.Scan(
@@ -1257,10 +1251,6 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			&listing.ViewsCount,
 			&listing.CreatedAt,
 			&listing.UpdatedAt,
-			&listing.User.Name,
-			&listing.User.Email,
-			&listing.User.CreatedAt,
-			&userPictureURL,
 			&listing.Category.Name,
 			&listing.Category.Slug,
 			&listing.IsFavorite,
@@ -1271,8 +1261,7 @@ func (s *Storage) GetUserFavorites(ctx context.Context, userID int) ([]models.Ma
 			continue
 		}
 
-		// Присваиваем отдельно
-		listing.User.PictureURL = userPictureURL
+		// User info будет загружена в handler через auth-service
 		listing.User.ID = listing.UserID
 
 		// Парсим изображения из JSON
@@ -3361,7 +3350,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	}
 
 	// Получаем данные товара из storefront_products
-	var categoryName, categorySlug, userPhone, userPictureURL sql.NullString
+	var categoryName, categorySlug sql.NullString
 
 	err := s.pool.QueryRow(ctx, `
         SELECT
@@ -3369,12 +3358,9 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
             sp.price, 'new' as condition, 'active' as status, '' as location,
             0 as latitude, 0 as longitude, '' as city, '' as country,
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
-            u.name as user_name, u.email as user_email, u.created_at as user_created_at,
-            u.picture_url as user_picture_url, u.phone as user_phone,
             c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
         FROM storefront_products sp
         LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
-        LEFT JOIN users u ON sf.user_id = u.id
         LEFT JOIN marketplace_categories c ON sp.category_id = c.id
         WHERE sp.id = $1 AND sp.is_active = true
     `, id).Scan(
@@ -3383,8 +3369,6 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		&listing.Location, &listing.Latitude, &listing.Longitude, &listing.City,
 		&listing.Country, &listing.ViewsCount, &listing.CreatedAt, &listing.UpdatedAt,
 		&listing.ShowOnMap, &listing.OriginalLanguage,
-		&listing.User.Name, &listing.User.Email, &listing.User.CreatedAt,
-		&userPictureURL, &userPhone,
 		&categoryName, &categorySlug, &listing.Metadata,
 	)
 	if err != nil {
@@ -3399,18 +3383,8 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 		listing.Category.Slug = categorySlug.String
 	}
 
-	// Обрабатываем nullable значения пользователя
-	if userPictureURL.Valid {
-		listing.User.PictureURL = userPictureURL.String
-	} else {
-		listing.User.PictureURL = ""
-	}
-
-	if userPhone.Valid {
-		listing.User.Phone = &userPhone.String
-	} else {
-		listing.User.Phone = nil
-	}
+	// User info будет загружена в handler через auth-service
+	listing.User.ID = listing.UserID
 
 	// Загружаем изображения для storefront продукта
 	log.Printf("DEBUG getStorefrontProductAsListing: Loading images for storefront product %d", listing.ID)
