@@ -8130,7 +8130,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
-                        "format": "float64",
                         "default": 100,
                         "description": "Daily cost limit in USD",
                         "name": "daily_limit",
@@ -8138,7 +8137,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "default": 2000,
                         "description": "Monthly cost limit in USD",
                         "name": "monthly_limit",
@@ -14402,7 +14400,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Широта",
                         "name": "lat",
                         "in": "query",
@@ -14410,7 +14407,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Долгота",
                         "name": "lon",
                         "in": "query",
@@ -15191,8 +15187,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "integer",
-                                                "format": "int64"
+                                                "type": "integer"
                                             }
                                         }
                                     }
@@ -28841,7 +28836,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -28854,21 +28848,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Radius in km for geo search",
                         "name": "radius_km",
                         "in": "query"
@@ -29254,7 +29245,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Building latitude",
                         "name": "lat",
                         "in": "query",
@@ -29262,7 +29252,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Building longitude",
                         "name": "lng",
                         "in": "query",
@@ -29354,7 +29343,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Minimum latitude",
                         "name": "min_lat",
                         "in": "query",
@@ -29362,7 +29350,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Maximum latitude",
                         "name": "max_lat",
                         "in": "query",
@@ -29370,7 +29357,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Minimum longitude",
                         "name": "min_lng",
                         "in": "query",
@@ -29378,7 +29364,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Maximum longitude",
                         "name": "max_lng",
                         "in": "query",
@@ -29386,7 +29371,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -29477,7 +29461,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Latitude",
                         "name": "lat",
                         "in": "query",
@@ -29485,7 +29468,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Longitude",
                         "name": "lng",
                         "in": "query",
@@ -29493,7 +29475,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Radius in kilometers (default 5)",
                         "name": "radius_km",
                         "in": "query"
@@ -29603,14 +29584,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
@@ -29623,7 +29602,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
-                        "format": "float64",
                         "description": "Minimum rating",
                         "name": "min_rating",
                         "in": "query"
@@ -35329,8 +35307,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "number",
-                                                "format": "float64"
+                                                "type": "number"
                                             }
                                         }
                                     }
@@ -37846,11 +37823,6 @@ const docTemplate = `{
                 "AttributeEntityTypeProduct": "Товар витрины",
                 "AttributeEntityTypeProductVariant": "Вариант товара"
             },
-            "x-enum-descriptions": [
-                "Объявление маркетплейса",
-                "Товар витрины",
-                "Вариант товара"
-            ],
             "x-enum-varnames": [
                 "AttributeEntityTypeListing",
                 "AttributeEntityTypeProduct",
@@ -37939,11 +37911,6 @@ const docTemplate = `{
                 "PurposeRegular": "Обычный атрибут для фильтрации/поиска",
                 "PurposeVariant": "Вариативный атрибут (влияет на SKU)"
             },
-            "x-enum-descriptions": [
-                "Обычный атрибут для фильтрации/поиска",
-                "Вариативный атрибут (влияет на SKU)",
-                "Может использоваться в обоих случаях"
-            ],
             "x-enum-varnames": [
                 "PurposeRegular",
                 "PurposeVariant",
@@ -40062,12 +40029,6 @@ const docTemplate = `{
                 "PrivacyLevelExact": "Точный адрес",
                 "PrivacyLevelStreet": "Только улица"
             },
-            "x-enum-descriptions": [
-                "Точный адрес",
-                "Только улица",
-                "Только район",
-                "Только город"
-            ],
             "x-enum-varnames": [
                 "PrivacyLevelExact",
                 "PrivacyLevelStreet",
@@ -40903,15 +40864,6 @@ const docTemplate = `{
                 "OrderStatusRefunded": "возвращен",
                 "OrderStatusShipped": "отправлен"
             },
-            "x-enum-descriptions": [
-                "ожидает оплаты",
-                "оплачен, подтвержден",
-                "в обработке",
-                "отправлен",
-                "доставлен",
-                "отменен",
-                "возвращен"
-            ],
             "x-enum-varnames": [
                 "OrderStatusPending",
                 "OrderStatusConfirmed",
@@ -41053,17 +41005,6 @@ const docTemplate = `{
                 "PaymentMethodKeks": "Keks Pay (популярно в Сербии)",
                 "PaymentMethodPostanska": "Poštanska štedionica"
             },
-            "x-enum-descriptions": [
-                "Наличные в магазине",
-                "Cash on Delivery - оплата курьеру",
-                "Банковская карта",
-                "Банковский перевод",
-                "",
-                "",
-                "Poštanska štedionica",
-                "Keks Pay (популярно в Сербии)",
-                "Instant Payment System"
-            ],
             "x-enum-varnames": [
                 "PaymentMethodCash",
                 "PaymentMethodCOD",
@@ -42127,10 +42068,6 @@ const docTemplate = `{
                 "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
                 "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
             },
-            "x-enum-descriptions": [
-                "Использовать адрес витрины",
-                "Использовать индивидуальные адреса товаров"
-            ],
             "x-enum-varnames": [
                 "GeoStrategyStorefrontLocation",
                 "GeoStrategyIndividualLocation"
@@ -44643,13 +44580,11 @@ const docTemplate = `{
                 },
                 "latitude": {
                     "description": "Широта для геопоиска",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "longitude": {
                     "description": "Долгота для геопоиска",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "minimumShouldMatch": {
                     "description": "Минимальное количество совпадений (70%, 50% и т.д.)",
@@ -44661,13 +44596,11 @@ const docTemplate = `{
                 },
                 "priceMax": {
                     "description": "Максимальная цена",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "priceMin": {
                     "description": "Минимальная цена",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "query": {
                     "description": "Текстовый запрос",
@@ -45652,8 +45585,7 @@ const docTemplate = `{
                 "geographic_distribution": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
+                        "type": "number"
                     }
                 },
                 "period": {
@@ -46208,8 +46140,7 @@ const docTemplate = `{
                 "average_delivery_days": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
+                        "type": "number"
                     }
                 },
                 "period": {
@@ -46882,8 +46813,7 @@ const docTemplate = `{
                                             "items": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "number",
-                                                    "format": "float64"
+                                                    "type": "number"
                                                 }
                                             }
                                         }
@@ -46920,12 +46850,6 @@ const docTemplate = `{
                 "PrivacyExact": "Точный адрес",
                 "PrivacyStreet": "Размытие ±100-200м"
             },
-            "x-enum-descriptions": [
-                "Точный адрес",
-                "Размытие ±100-200м",
-                "Размытие ±500-1000м",
-                "Только город"
-            ],
             "x-enum-varnames": [
                 "PrivacyExact",
                 "PrivacyStreet",
@@ -47114,8 +47038,7 @@ const docTemplate = `{
                         "items": {
                             "type": "array",
                             "items": {
-                                "type": "number",
-                                "format": "float64"
+                                "type": "number"
                             }
                         }
                     }
@@ -48583,15 +48506,13 @@ const docTemplate = `{
                 "documents_by_category": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
+                        "type": "integer"
                     }
                 },
                 "documents_by_status": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
+                        "type": "integer"
                     }
                 },
                 "index_health": {
@@ -49059,8 +48980,7 @@ const docTemplate = `{
                 },
                 "distance": {
                     "description": "Расстояние в км (если есть)",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "email": {
                     "type": "string"
@@ -49091,12 +49011,10 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "latitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "longitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "name": {
                     "type": "string"
@@ -49114,16 +49032,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rating": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "reviewsCount": {
                     "type": "integer"
                 },
                 "score": {
                     "description": "Релевантность",
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "slug": {
                     "type": "string"
@@ -52073,16 +51989,13 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "latitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "longitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "speed": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -52193,12 +52106,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deliveryLatitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "deliveryLongitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "distance": {
                     "description": "в метрах",
@@ -52224,12 +52135,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pickupLatitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "pickupLongitude": {
-                    "type": "number",
-                    "format": "float64"
+                    "type": "number"
                 },
                 "status": {
                     "type": "string"
@@ -52287,16 +52196,14 @@ const docTemplate = `{
                     "description": "map[date]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
+                        "type": "number"
                     }
                 },
                 "hourly_costs": {
                     "description": "map[hour]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
+                        "type": "number"
                     }
                 },
                 "last_updated": {

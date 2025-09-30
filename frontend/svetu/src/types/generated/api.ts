@@ -30106,6 +30106,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/storefronts/{id}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore deactivated storefront
+     * @description Restores a previously deactivated storefront (admin only)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront restored */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Admin access required */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/storefronts/{id}/staff': {
     parameters: {
       query?: never;
@@ -31041,12 +31121,15 @@ export interface paths {
     };
     post?: never;
     /**
-     * Delete a storefront product
-     * @description Permanently deletes a product
+     * Hard delete a storefront product
+     * @description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
      */
     delete: {
       parameters: {
-        query?: never;
+        query: {
+          /** @description Must be true for hard delete */
+          hard: boolean;
+        };
         header?: never;
         path: {
           /** @description Storefront slug */
@@ -31058,7 +31141,7 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description Product deleted successfully */
+        /** @description Product permanently deleted */
         200: {
           headers: {
             [name: string]: unknown;
@@ -32470,6 +32553,306 @@ export interface paths {
       };
     };
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/ai/ab-test-titles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * A/B test product titles
+     * @description Evaluates multiple title variants and returns the best one
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Title variants */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.ABTestTitlesRequest'];
+        };
+      };
+      responses: {
+        /** @description A/B test result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/ai/analyze-product-image': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze product image with AI for storefront products
+     * @description Uses Claude AI to analyze product image and extract title, description, category hints, price, etc.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Image data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.AnalyzeProductImageRequest'];
+        };
+      };
+      responses: {
+        /** @description AI analysis result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_ai_handler.AnalyzeProductResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/ai/detect-category': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Detect category for storefront product
+     * @description Uses AI to detect the most suitable category for a storefront product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Product details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.DetectCategoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Category detection result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_proj_marketplace_services.AIDetectionResult'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/ai/metrics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI detection metrics for storefront products
+     * @description Returns accuracy and performance metrics for AI category detection
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Metrics data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/storefronts/ai/translate-content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Translate product content to multiple languages
+     * @description Translates product title and description to specified languages
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Content to translate */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_storefronts_handler.TranslateContentRequest'];
+        };
+      };
+      responses: {
+        /** @description Translation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     delete?: never;
     options?: never;
     head?: never;
@@ -40123,6 +40506,35 @@ export interface components {
       max_minutes?: number;
       transport_mode?: string;
     };
+    'backend_internal_proj_ai_handler.AnalyzeProductResponse': {
+      attributes?: {
+        [key: string]: unknown;
+      };
+      category?: string;
+      categoryHints?: components['schemas']['backend_internal_proj_ai_handler.CategoryHints'];
+      categoryProbabilities?: components['schemas']['backend_internal_proj_ai_handler.CategoryProbability'][];
+      condition?: string;
+      currency?: string;
+      description?: string;
+      keywords?: string[];
+      price?: number;
+      socialPosts?: {
+        [key: string]: string;
+      };
+      suggestedLocation?: string;
+      tags?: string[];
+      title?: string;
+      titleVariants?: string[];
+    };
+    'backend_internal_proj_ai_handler.CategoryHints': {
+      domain?: string;
+      keywords?: string[];
+      productType?: string;
+    };
+    'backend_internal_proj_ai_handler.CategoryProbability': {
+      name?: string;
+      probability?: number;
+    };
     'backend_internal_proj_analytics_service.ItemPerformance': {
       category_id?: number;
       clicks?: number;
@@ -40943,6 +41355,8 @@ export interface components {
     'backend_internal_proj_marketplace_services.AIDetectionInput': {
       aiHints?: components['schemas']['backend_internal_proj_marketplace_services.AIHints'];
       description?: string;
+      /** @description "listing" или "product" */
+      entityType?: string;
       listingId?: number;
       title?: string;
       userId?: number;
@@ -42657,9 +43071,18 @@ export interface components {
       sample_size?: number;
       search_queries?: string[];
     };
+    'internal_proj_storefronts_handler.ABTestTitlesRequest': {
+      titleVariants?: string[];
+    };
     'internal_proj_storefronts_handler.AddStaffRequest': {
       role: components['schemas']['backend_internal_domain_models.StaffRole'];
       user_id: number;
+    };
+    'internal_proj_storefronts_handler.AnalyzeProductImageRequest': {
+      /** @description base64 encoded image */
+      imageData?: string;
+      /** @description ru, en, sr */
+      language?: string;
     };
     'internal_proj_storefronts_handler.DashboardNotification': {
       created_at?: string;
@@ -42669,6 +43092,12 @@ export interface components {
       title?: string;
       /** @description order, message, stock */
       type?: string;
+    };
+    'internal_proj_storefronts_handler.DetectCategoryRequest': {
+      aiHints?: components['schemas']['backend_internal_proj_marketplace_services.AIHints'];
+      description?: string;
+      language?: string;
+      title?: string;
     };
     'internal_proj_storefronts_handler.ImageOrderUpdate': {
       display_order?: number;
@@ -42683,6 +43112,14 @@ export interface components {
       offset?: number;
       storefronts?: components['schemas']['backend_internal_domain_models.Storefront'][];
       total?: number;
+    };
+    'internal_proj_storefronts_handler.TranslateContentRequest': {
+      content?: {
+        description?: string;
+        title?: string;
+      };
+      sourceLanguage?: string;
+      targetLanguages?: string[];
     };
     'internal_proj_subscriptions_handler.InitiatePaymentRequest': {
       billing_cycle?: components['schemas']['backend_internal_domain_models.BillingCycle'];

@@ -85,134 +85,6 @@ export const ABTestProvider: React.FC<{
   );
   const pathname = usePathname();
 
-  // Загрузка принудительных вариантов из localStorage
-  const loadForcedVariants = () => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const stored = localStorage.getItem(FORCE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setForcedVariants(new Map(Object.entries(parsed)));
-      }
-    } catch (err) {
-      console.error('Failed to load forced variants:', err);
-    }
-  };
-
-  // Инициализация активных тестов
-  const initializeTests = useCallback(() => {
-    const assignments = new Map<string, string>();
-    const storedAssignments = loadStoredAssignments();
-
-    tests.forEach((test) => {
-      // Проверяем, подходит ли тест для текущих условий
-      if (!shouldRunTest(test)) return;
-
-      // Проверяем принудительный вариант
-      const forcedVariant = forcedVariants.get(test.id);
-      if (forcedVariant) {
-        assignments.set(test.id, forcedVariant);
-        if (debug) {
-          console.log(
-            `[ABTest] Using forced variant for ${test.id}: ${forcedVariant}`
-          );
-        }
-        return;
-      }
-
-      // Проверяем сохраненное назначение
-      const storedVariant = storedAssignments[test.id];
-      if (storedVariant && test.variants.some((v) => v.id === storedVariant)) {
-        assignments.set(test.id, storedVariant);
-        return;
-      }
-
-      // Назначаем новый вариант
-      const variant = selectVariant(test);
-      if (variant) {
-        assignments.set(test.id, variant.id);
-      }
-    });
-
-    setActiveTests(assignments);
-    saveAssignments(assignments);
-  }, [tests, forcedVariants, debug]);
-
-  // Проверка, должен ли тест запускаться
-  const shouldRunTest = useCallback(
-    (test: ABTest): boolean => {
-      // Проверка статуса
-      if (test.status !== 'running') return false;
-
-      // Проверка дат
-      const now = new Date();
-      if (test.startDate && now < test.startDate) return false;
-      if (test.endDate && now > test.endDate) return false;
-
-      // Проверка allocation
-      if (test.allocation !== undefined && test.allocation < 100) {
-        const hash = hashCode(userId || getOrCreateUserId());
-        const bucket = Math.abs(hash % 100);
-        if (bucket >= test.allocation) return false;
-      }
-
-      // Проверка targeting
-      if (test.targeting) {
-        // Проверка URL
-        if (
-          test.targeting.urls &&
-          !test.targeting.urls.some((url) => pathname.includes(url))
-        ) {
-          return false;
-        }
-
-        // Проверка устройства
-        if (test.targeting.devices && typeof window !== 'undefined') {
-          const device = getDeviceType();
-          if (!test.targeting.devices.includes(device)) return false;
-        }
-      }
-
-      return true;
-    },
-    [userId, pathname]
-  );
-
-  // Выбор варианта на основе весов
-  const selectVariant = useCallback(
-    (test: ABTest): ABVariant | null => {
-      const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
-      if (totalWeight === 0) return null;
-
-      const hash = hashCode(userId || getOrCreateUserId() + test.id);
-      const bucket = Math.abs(hash % totalWeight);
-
-      let cumWeight = 0;
-      for (const variant of test.variants) {
-        cumWeight += variant.weight;
-        if (bucket < cumWeight) {
-          return variant;
-        }
-      }
-
-      return test.variants[test.variants.length - 1];
-    },
-    [userId]
-  );
-
-  // Получение или создание ID пользователя
-  const getOrCreateUserId = useCallback((): string => {
-    if (typeof window === 'undefined') return 'server';
-
-    let id = localStorage.getItem('ab_user_id');
-    if (!id) {
-      id = generateUserId();
-      localStorage.setItem('ab_user_id', id);
-    }
-    return id;
-  }, []);
-
   // Генерация уникального ID пользователя
   const generateUserId = (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -263,6 +135,134 @@ export const ABTestProvider: React.FC<{
       console.error('Failed to save AB test assignments:', err);
     }
   };
+
+  // Загрузка принудительных вариантов из localStorage
+  const loadForcedVariants = () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const stored = localStorage.getItem(FORCE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setForcedVariants(new Map(Object.entries(parsed)));
+      }
+    } catch (err) {
+      console.error('Failed to load forced variants:', err);
+    }
+  };
+
+  // Получение или создание ID пользователя
+  const getOrCreateUserId = useCallback((): string => {
+    if (typeof window === 'undefined') return 'server';
+
+    let id = localStorage.getItem('ab_user_id');
+    if (!id) {
+      id = generateUserId();
+      localStorage.setItem('ab_user_id', id);
+    }
+    return id;
+  }, []);
+
+  // Проверка, должен ли тест запускаться
+  const shouldRunTest = useCallback(
+    (test: ABTest): boolean => {
+      // Проверка статуса
+      if (test.status !== 'running') return false;
+
+      // Проверка дат
+      const now = new Date();
+      if (test.startDate && now < test.startDate) return false;
+      if (test.endDate && now > test.endDate) return false;
+
+      // Проверка allocation
+      if (test.allocation !== undefined && test.allocation < 100) {
+        const hash = hashCode(userId || getOrCreateUserId());
+        const bucket = Math.abs(hash % 100);
+        if (bucket >= test.allocation) return false;
+      }
+
+      // Проверка targeting
+      if (test.targeting) {
+        // Проверка URL
+        if (
+          test.targeting.urls &&
+          !test.targeting.urls.some((url) => pathname.includes(url))
+        ) {
+          return false;
+        }
+
+        // Проверка устройства
+        if (test.targeting.devices && typeof window !== 'undefined') {
+          const device = getDeviceType();
+          if (!test.targeting.devices.includes(device)) return false;
+        }
+      }
+
+      return true;
+    },
+    [userId, pathname, getOrCreateUserId]
+  );
+
+  // Выбор варианта на основе весов
+  const selectVariant = useCallback(
+    (test: ABTest): ABVariant | null => {
+      const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
+      if (totalWeight === 0) return null;
+
+      const hash = hashCode(userId || getOrCreateUserId() + test.id);
+      const bucket = Math.abs(hash % totalWeight);
+
+      let cumWeight = 0;
+      for (const variant of test.variants) {
+        cumWeight += variant.weight;
+        if (bucket < cumWeight) {
+          return variant;
+        }
+      }
+
+      return test.variants[test.variants.length - 1];
+    },
+    [userId, getOrCreateUserId]
+  );
+
+  // Инициализация активных тестов
+  const initializeTests = useCallback(() => {
+    const assignments = new Map<string, string>();
+    const storedAssignments = loadStoredAssignments();
+
+    tests.forEach((test) => {
+      // Проверяем, подходит ли тест для текущих условий
+      if (!shouldRunTest(test)) return;
+
+      // Проверяем принудительный вариант
+      const forcedVariant = forcedVariants.get(test.id);
+      if (forcedVariant) {
+        assignments.set(test.id, forcedVariant);
+        if (debug) {
+          console.log(
+            `[ABTest] Using forced variant for ${test.id}: ${forcedVariant}`
+          );
+        }
+        return;
+      }
+
+      // Проверяем сохраненное назначение
+      const storedVariant = storedAssignments[test.id];
+      if (storedVariant && test.variants.some((v) => v.id === storedVariant)) {
+        assignments.set(test.id, storedVariant);
+        return;
+      }
+
+      // Назначаем новый вариант
+      const variant = selectVariant(test);
+      if (variant) {
+        assignments.set(test.id, variant.id);
+      }
+    });
+
+    setActiveTests(assignments);
+    saveAssignments(assignments);
+  }, [tests, forcedVariants, debug, selectVariant, shouldRunTest]);
 
   // Получение варианта для теста
   const getVariant = (testId: string): string | null => {
