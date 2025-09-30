@@ -391,10 +391,6 @@ func (db *Database) DeleteExpiredRefreshTokens(ctx context.Context) (int64, erro
 	return 0, fmt.Errorf("DeleteExpiredRefreshTokens: moved to auth-service")
 }
 
-func (db *Database) CountActiveUserTokens(ctx context.Context, userID int) (int, error) {
-	return 0, fmt.Errorf("CountActiveUserTokens: moved to auth-service")
-}
-
 // GetSQLDB returns the raw sql.DB connection
 func (db *Database) GetSQLDB() *sql.DB {
 	return db.db
@@ -1535,7 +1531,7 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 				'manual', 'exact', 0,
 				true
 			)
-			ON CONFLICT (source_type, source_id) 
+			ON CONFLICT (source_type, source_id)
 			DO UPDATE SET
 				location = EXCLUDED.location,
 				geohash = EXCLUDED.geohash,
@@ -1662,7 +1658,7 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID int) (int, error) {
 	var userID int
 	err := db.pool.QueryRow(ctx, `
-		SELECT s.user_id 
+		SELECT s.user_id
 		FROM storefronts s
 		INNER JOIN storefront_products sp ON sp.storefront_id = s.id
 		WHERE sp.id = $1
@@ -1806,9 +1802,9 @@ func (db *Database) CreateListingVariants(ctx context.Context, listingID int, va
 
 func (db *Database) GetListingVariants(ctx context.Context, listingID int) ([]models.MarketplaceListingVariant, error) {
 	query := `
-		SELECT id, listing_id, sku, price, stock, attributes, image_url, is_active, 
+		SELECT id, listing_id, sku, price, stock, attributes, image_url, is_active,
 		       created_at::text, updated_at::text
-		FROM marketplace_listing_variants 
+		FROM marketplace_listing_variants
 		WHERE listing_id = $1 AND is_active = true
 		ORDER BY id
 	`
@@ -1853,7 +1849,7 @@ func (db *Database) UpdateListingVariant(ctx context.Context, variant *models.Ma
 	}
 
 	query := `
-		UPDATE marketplace_listing_variants 
+		UPDATE marketplace_listing_variants
 		SET sku = $1, price = $2, stock = $3, attributes = $4, image_url = $5, is_active = $6
 		WHERE id = $7
 	`

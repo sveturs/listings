@@ -9,41 +9,12 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/filestorage"
-	"backend/internal/types"
 )
 
 type Storage interface {
 	// User methods
-	GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error)
-	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
-	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
-	UpdateUser(ctx context.Context, user *models.User) error
-	GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error)
-	UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error
-	UpdateLastSeen(ctx context.Context, id int) error
 	GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
-	GetSession(ctx context.Context, token string) (*types.SessionData, error)
-
-	// Refresh Token methods
-	CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error
-	GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error)
-	GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error)
-	GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error)
-	UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error
-	RevokeRefreshToken(ctx context.Context, tokenID int) error
-	RevokeRefreshTokenByValue(ctx context.Context, tokenValue string) error
-	RevokeUserRefreshTokens(ctx context.Context, userID int) error
-	DeleteExpiredRefreshTokens(ctx context.Context) (int64, error)
-	CountActiveUserTokens(ctx context.Context, userID int) (int, error)
-
-	// Административные методы для управления пользователями
-	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error)
-	GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error)
-	UpdateUserStatus(ctx context.Context, id int, status string) error
-	UpdateUserRole(ctx context.Context, id int, roleID int) error
-	GetAllRoles(ctx context.Context) ([]*models.Role, error)
-	DeleteUser(ctx context.Context, id int) error
 
 	// Методы для работы с администраторами
 	IsUserAdmin(ctx context.Context, email string) (bool, error)
