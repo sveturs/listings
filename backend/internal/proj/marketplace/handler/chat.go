@@ -32,6 +32,60 @@ func NewChatHandler(services globalService.ServicesInterface, config *config.Con
 	}
 }
 
+// loadUserInfoForChats загружает информацию о пользователях из auth-service для списка чатов
+func (h *ChatHandler) loadUserInfoForChats(ctx context.Context, chats []models.MarketplaceChat, currentUserID int) {
+	// Собираем все уникальные user IDs
+	userIDs := make(map[int]bool)
+	for i := range chats {
+		chat := &chats[i]
+		if chat.BuyerID > 0 {
+			userIDs[chat.BuyerID] = true
+		}
+		if chat.SellerID > 0 {
+			userIDs[chat.SellerID] = true
+		}
+	}
+
+	// Загружаем пользователей параллельно
+	userCache := make(map[int]*models.User)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for userID := range userIDs {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			user, err := h.services.User().GetUserByID(ctx, id)
+			if err != nil {
+				logger.Warn().Err(err).Int("userId", id).Msg("Failed to load user from auth-service")
+				return
+			}
+			mu.Lock()
+			userCache[id] = user
+			mu.Unlock()
+		}(userID)
+	}
+	wg.Wait()
+
+	// Заполняем информацию о пользователях в чатах
+	for i := range chats {
+		chat := &chats[i]
+		if buyer, ok := userCache[chat.BuyerID]; ok {
+			chat.Buyer = buyer
+		}
+		if seller, ok := userCache[chat.SellerID]; ok {
+			chat.Seller = seller
+		}
+
+		// Определяем OtherUser - собеседника для текущего пользователя
+		if chat.BuyerID == currentUserID {
+			chat.OtherUser = chat.Seller
+		} else {
+			chat.OtherUser = chat.Buyer
+		}
+	}
+}
+
 // GetChats возвращает список чатов пользователя
 // @Summary Get user's chats
 // @Description Returns all chats where the user is a participant
@@ -52,6 +106,9 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 		logger.Error().Err(err).Int("userId", userID).Msg("Error in GetChats")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getChatsError")
 	}
+
+	// Загружаем информацию о пользователях из auth-service
+	h.loadUserInfoForChats(c.Context(), chats, userID)
 
 	logger.Info().Int("userId", userID).Int("chatsCount", len(chats)).Msg("GetChats successful")
 	return utils.SuccessResponse(c, chats)

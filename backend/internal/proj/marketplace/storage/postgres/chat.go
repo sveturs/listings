@@ -51,41 +51,10 @@ func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.
 		return nil, fmt.Errorf("error getting chat: %w", err)
 	}
 
-	// Получаем имена и аватарки пользователей
-	var sellerName, sellerPicture, buyerName, buyerPicture sql.NullString
-
-	err = s.pool.QueryRow(ctx, `
-	    SELECT
-	        seller.name, seller.picture_url,
-	        buyer.name, buyer.picture_url
-	    FROM marketplace_chats c
-	    LEFT JOIN users seller ON c.seller_id = seller.id
-	    LEFT JOIN users buyer ON c.buyer_id = buyer.id
-	    WHERE c.id = $1
-	`, chatID).Scan(
-		&sellerName, &sellerPicture,
-		&buyerName, &buyerPicture,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error getting user details: %w", err)
-	}
-
-	// Добавляем информацию о продавце и покупателе
-	chat.Seller = &models.User{
-		ID:         chat.SellerID,
-		Name:       sellerName.String,
-		PictureURL: sellerPicture.String,
-	}
-
-	chat.Buyer = &models.User{
-		ID:         chat.BuyerID,
-		Name:       buyerName.String,
-		PictureURL: buyerPicture.String,
-	}
-
-	// Определяем, кто другой пользователь (не текущий)
+	// User info будет загружена в handler через auth-service
+	// Определяем, кто другой пользователь (не текущий) - ID заполним в handler
 	if chat.BuyerID == userID {
-		chat.OtherUser = chat.Seller
+		// OtherUser будет заполнен в handler как Seller
 	} else {
 		chat.OtherUser = chat.Buyer
 	}
@@ -162,27 +131,6 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			ELSE COALESCE(l.price, 0)
 		END as listing_price,
 		COALESCE(uc.unread_count, 0) as unread_count,
-		-- Информация о пользователе
-		CASE
-			WHEN c.buyer_id = $1 THEN seller.id
-			ELSE buyer.id
-		END as other_user_id,
-		CASE
-			WHEN c.buyer_id = $1 THEN seller.name
-			ELSE buyer.name
-		END as other_user_name,
-		CASE
-			WHEN c.buyer_id = $1 THEN seller.email
-			ELSE buyer.email
-		END as other_user_email,
-		CASE
-			WHEN c.buyer_id = $1 THEN seller.picture_url
-			ELSE buyer.picture_url
-		END as other_user_picture,
-		CASE
-			WHEN c.buyer_id = $1 THEN seller.provider
-			ELSE buyer.provider
-		END as other_user_provider,
 		-- Изображения листинга
 		CASE
 			WHEN c.storefront_product_id IS NOT NULL THEN COALESCE(spi.images, '[]'::json)
@@ -193,8 +141,6 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
 	LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
 	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
-	LEFT JOIN users buyer ON c.buyer_id = buyer.id
-	LEFT JOIN users seller ON c.seller_id = seller.id
 	LEFT JOIN chat_images ci ON c.id = ci.chat_id
 	LEFT JOIN storefront_product_images spi ON c.id = spi.chat_id
 	WHERE c.buyer_id = $1 OR c.seller_id = $1
@@ -209,13 +155,8 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	var chats []models.MarketplaceChat
 	for rows.Next() {
 		var (
-			chat              models.MarketplaceChat
-			otherUserID       sql.NullInt64
-			otherUserName     sql.NullString
-			otherUserEmail    sql.NullString
-			otherUserPicture  sql.NullString
-			otherUserProvider sql.NullString
-			imagesJSON        json.RawMessage
+			chat       models.MarketplaceChat
+			imagesJSON json.RawMessage
 		)
 		chat.Listing = &models.MarketplaceListing{}
 
@@ -224,11 +165,6 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 			&chat.LastMessageAt, &chat.CreatedAt, &chat.UpdatedAt, &chat.IsArchived,
 			&chat.Listing.Title, &chat.Listing.Price,
 			&chat.UnreadCount,
-			&otherUserID,
-			&otherUserName,
-			&otherUserEmail,
-			&otherUserPicture,
-			&otherUserProvider,
 			&imagesJSON,
 		)
 		if err != nil {
@@ -243,25 +179,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 		}
 		chat.Listing.Images = images
 
-		// Создаем структуру other_user
-		chat.OtherUser = &models.User{
-			ID:         int(otherUserID.Int64),
-			Name:       otherUserName.String,
-			Email:      otherUserEmail.String,
-			PictureURL: otherUserPicture.String,
-			Provider:   otherUserProvider.String,
-		}
-
-		// Добавляем информацию о продавце и покупателе для полноты данных
-		if chat.BuyerID == userID {
-			chat.Buyer = &models.User{ID: userID}
-			chat.Seller = chat.OtherUser
-			chat.Seller.ID = chat.SellerID
-		} else {
-			chat.Seller = &models.User{ID: userID}
-			chat.Buyer = chat.OtherUser
-			chat.Buyer.ID = chat.BuyerID
-		}
+		// User info (Buyer, Seller, OtherUser) будет загружена в handler через auth-service
 
 		chats = append(chats, chat)
 	}
