@@ -1,3 +1,7 @@
+ALTER TABLE ONLY public.storefront_product_attributes
+    ADD CONSTRAINT storefront_product_attributes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.storefront_product_attributes
+    ADD CONSTRAINT storefront_product_attributes_product_id_attribute_id_key UNIQUE (product_id, attribute_id);
 ALTER TABLE ONLY public.storefront_product_images
     ADD CONSTRAINT storefront_product_images_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.storefront_product_variant_images
@@ -178,5 +182,3 @@ CREATE TRIGGER trg_new_listing_price_history AFTER INSERT ON public.marketplace_
 CREATE TRIGGER trg_update_listing_price_history AFTER UPDATE OF price ON public.marketplace_listings FOR EACH ROW WHEN ((old.price IS DISTINCT FROM new.price)) EXECUTE FUNCTION public.update_price_history('update');
 CREATE TRIGGER trig_update_metadata_after_price_change AFTER INSERT ON public.price_history FOR EACH ROW EXECUTE FUNCTION public.update_listing_metadata_after_price_change();
 CREATE TRIGGER trigger_assign_district_municipality BEFORE INSERT OR UPDATE OF location ON public.listings_geo FOR EACH ROW EXECUTE FUNCTION public.assign_district_municipality();
-ALTER TABLE public.listings_geo DISABLE TRIGGER trigger_assign_district_municipality;
-CREATE TRIGGER trigger_auto_geocode_storefront_product AFTER INSERT OR UPDATE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.auto_geocode_storefront_product();

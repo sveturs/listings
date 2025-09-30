@@ -1,4 +1,8 @@
 ALTER TABLE ONLY public.role_audit_log
+    ADD CONSTRAINT role_audit_log_old_role_id_fkey FOREIGN KEY (old_role_id) REFERENCES public.roles(id);
+ALTER TABLE ONLY public.role_audit_log
+    ADD CONSTRAINT role_audit_log_target_user_id_fkey FOREIGN KEY (target_user_id) REFERENCES public.users(id);
+ALTER TABLE ONLY public.role_audit_log
     ADD CONSTRAINT role_audit_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 ALTER TABLE ONLY public.role_permissions
     ADD CONSTRAINT role_permissions_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.permissions(id) ON DELETE CASCADE;

@@ -73,6 +73,10 @@ INSERT INTO public.search_queries (id, query, normalized_query, search_count, la
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (333, 'марк', 'марк', 1, '2025-09-26 17:42:26.966906', 'en', 1, '2025-09-26 17:42:26.966906', '2025-09-26 17:42:26.966906');
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (334, 'Automobil je crveno-bordo boje sa crnim', 'Automobil je crveno-bordo boje sa crnim', 2, '2025-09-27 18:38:06.798544', 'sr', 2, '2025-09-27 18:37:44.983478', '2025-09-27 18:38:06.798544');
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (313, 'Автомобиль вездеходный старый хороший', 'Автомобиль вездеходный старый хороший', 18, '2025-09-27 21:06:14.930008', 'ru', 5, '2025-09-15 13:00:04.772274', '2025-09-27 21:06:14.930008');
+INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (339, 'высоко', 'высоко', 1, '2025-09-30 08:42:42.396997', 'ru', 2, '2025-09-30 08:42:42.396997', '2025-09-30 08:42:42.396997');
+INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (340, 'высокого', 'высокого', 1, '2025-09-30 08:42:43.076246', 'ru', 1, '2025-09-30 08:42:43.076246', '2025-09-30 08:42:43.076246');
+INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (341, 'песок', 'песок', 7, '2025-09-30 08:52:52.519632', 'ru', 1, '2025-09-30 08:47:29.862566', '2025-09-30 08:52:52.519632');
+INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (348, 'высого', 'высого', 1, '2025-09-30 09:01:17.222775', 'ru', 1, '2025-09-30 09:01:17.222775', '2025-09-30 09:01:17.222775');
 
 
 --

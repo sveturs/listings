@@ -1,3 +1,5 @@
+ALTER SEQUENCE public.custom_ui_components_id_seq OWNED BY public.custom_ui_components.id;
+ALTER SEQUENCE public.custom_ui_templates_id_seq OWNED BY public.custom_ui_templates.id;
 ALTER SEQUENCE public.deliveries_id_seq OWNED BY public.deliveries.id;
 ALTER SEQUENCE public.delivery_category_defaults_id_seq OWNED BY public.delivery_category_defaults.id;
 ALTER SEQUENCE public.delivery_notifications_id_seq OWNED BY public.delivery_notifications.id;
@@ -96,5 +98,3 @@ ALTER SEQUENCE public.user_car_view_history_id_seq OWNED BY public.user_car_view
 ALTER SEQUENCE public.user_contacts_id_seq OWNED BY public.user_contacts.id;
 ALTER SEQUENCE public.user_notification_contacts_id_seq OWNED BY public.user_notification_contacts.id;
 ALTER SEQUENCE public.user_notification_preferences_id_seq OWNED BY public.user_notification_preferences.id;
-ALTER SEQUENCE public.user_storefronts_id_seq OWNED BY public.user_storefronts.id;
-ALTER SEQUENCE public.user_subscriptions_id_seq OWNED BY public.user_subscriptions.id;

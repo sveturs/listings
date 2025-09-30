@@ -1,3 +1,4 @@
+CREATE INDEX idx_saved_searches_notify_enabled ON public.saved_searches USING btree (notify_enabled) WHERE (notify_enabled = true);
 CREATE INDEX idx_saved_searches_search_type ON public.saved_searches USING btree (search_type);
 CREATE INDEX idx_saved_searches_user_id ON public.saved_searches USING btree (user_id);
 CREATE INDEX idx_search_behavior_metrics_conversions ON public.search_behavior_metrics USING btree (conversions DESC);
@@ -97,4 +98,3 @@ CREATE INDEX idx_translations_type_lang ON public.translations USING btree (enti
 CREATE INDEX idx_transliteration_rules_active ON public.transliteration_rules USING btree (language, enabled, priority DESC);
 CREATE INDEX idx_transliteration_rules_enabled ON public.transliteration_rules USING btree (enabled);
 CREATE INDEX idx_transliteration_rules_language ON public.transliteration_rules USING btree (language);
-CREATE INDEX idx_transliteration_rules_priority ON public.transliteration_rules USING btree (priority DESC);

@@ -1502,7 +1502,9 @@ CREATE TABLE public.ai_category_decisions (
     user_feedback_at timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ai_category_decisions_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric)))
+    entity_type character varying(20) DEFAULT 'listing'::character varying NOT NULL,
+    CONSTRAINT ai_category_decisions_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
+    CONSTRAINT ai_category_decisions_entity_type_check CHECK (((entity_type)::text = ANY ((ARRAY['listing'::character varying, 'product'::character varying])::text[])))
 );
 CREATE TABLE public.attribute_group_items (
     id integer NOT NULL,

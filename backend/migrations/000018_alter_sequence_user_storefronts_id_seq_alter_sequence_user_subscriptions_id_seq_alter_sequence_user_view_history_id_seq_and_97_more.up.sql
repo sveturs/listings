@@ -1,3 +1,5 @@
+ALTER SEQUENCE public.user_storefronts_id_seq OWNED BY public.user_storefronts.id;
+ALTER SEQUENCE public.user_subscriptions_id_seq OWNED BY public.user_subscriptions.id;
 ALTER SEQUENCE public.user_view_history_id_seq OWNED BY public.user_view_history.id;
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 ALTER SEQUENCE public.variant_attribute_mappings_id_seq OWNED BY public.variant_attribute_mappings.id;
@@ -181,7 +183,3 @@ ALTER TABLE ONLY public.reviews
     ADD CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.role_audit_log
     ADD CONSTRAINT role_audit_log_new_role_id_fkey FOREIGN KEY (new_role_id) REFERENCES public.roles(id);
-ALTER TABLE ONLY public.role_audit_log
-    ADD CONSTRAINT role_audit_log_old_role_id_fkey FOREIGN KEY (old_role_id) REFERENCES public.roles(id);
-ALTER TABLE ONLY public.role_audit_log
-    ADD CONSTRAINT role_audit_log_target_user_id_fkey FOREIGN KEY (target_user_id) REFERENCES public.users(id);

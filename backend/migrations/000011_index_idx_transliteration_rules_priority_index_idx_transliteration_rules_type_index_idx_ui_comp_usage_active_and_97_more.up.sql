@@ -1,3 +1,4 @@
+CREATE INDEX idx_transliteration_rules_priority ON public.transliteration_rules USING btree (priority DESC);
 CREATE INDEX idx_transliteration_rules_type ON public.transliteration_rules USING btree (rule_type);
 CREATE INDEX idx_ui_comp_usage_active ON public.custom_ui_component_usage USING btree (is_active);
 CREATE INDEX idx_ui_comp_usage_category ON public.custom_ui_component_usage USING btree (category_id);
@@ -97,4 +98,3 @@ CREATE INDEX idx_vin_recalls_vin ON public.vin_recalls USING btree (vin);
 CREATE INDEX idx_websocket_connections_active ON public.tracking_websocket_connections USING btree (delivery_id) WHERE (disconnected_at IS NULL);
 CREATE UNIQUE INDEX storefront_rating_distribution_storefront_id_idx ON public.storefront_rating_distribution USING btree (storefront_id);
 CREATE UNIQUE INDEX storefront_rating_summary_storefront_id_idx ON public.storefront_rating_summary USING btree (storefront_id);
-CREATE UNIQUE INDEX storefront_ratings_storefront_id_idx ON public.storefront_ratings USING btree (storefront_id);

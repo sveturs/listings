@@ -1,3 +1,4 @@
+CREATE INDEX idx_ai_decisions_entity_type ON public.ai_category_decisions USING btree (entity_type, created_at DESC);
 CREATE INDEX idx_ai_decisions_title_hash ON public.ai_category_decisions USING btree (title_hash);
 CREATE UNIQUE INDEX idx_ai_decisions_unique_title_hash ON public.ai_category_decisions USING btree (title_hash);
 CREATE INDEX idx_ai_decisions_user_confirmed ON public.ai_category_decisions USING btree (user_confirmed) WHERE (user_confirmed = true);
@@ -97,4 +98,3 @@ CREATE INDEX idx_districts_boundary ON public.districts USING gist (boundary);
 CREATE INDEX idx_districts_center ON public.districts USING gist (center_point);
 CREATE INDEX idx_districts_city_id ON public.districts USING btree (city_id);
 CREATE INDEX idx_districts_country ON public.districts USING btree (country_code);
-CREATE INDEX idx_districts_name ON public.districts USING btree (name);

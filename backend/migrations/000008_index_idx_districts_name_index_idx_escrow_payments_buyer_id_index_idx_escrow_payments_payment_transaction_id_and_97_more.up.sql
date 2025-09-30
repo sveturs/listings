@@ -1,3 +1,4 @@
+CREATE INDEX idx_districts_name ON public.districts USING btree (name);
 CREATE INDEX idx_escrow_payments_buyer_id ON public.escrow_payments USING btree (buyer_id);
 CREATE INDEX idx_escrow_payments_payment_transaction_id ON public.escrow_payments USING btree (payment_transaction_id);
 CREATE INDEX idx_escrow_payments_seller_id ON public.escrow_payments USING btree (seller_id);
@@ -97,4 +98,3 @@ CREATE INDEX idx_marketplace_listing_variants_listing_id ON public.marketplace_l
 CREATE INDEX idx_marketplace_listing_variants_sku ON public.marketplace_listing_variants USING btree (sku);
 CREATE INDEX idx_marketplace_listings_address_multilingual ON public.marketplace_listings USING gin (address_multilingual);
 CREATE INDEX idx_marketplace_listings_category_status ON public.marketplace_listings USING btree (category_id, status) WHERE ((status)::text = 'active'::text);
-CREATE INDEX idx_marketplace_listings_city ON public.marketplace_listings USING btree (address_city) WHERE (address_city IS NOT NULL);

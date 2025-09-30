@@ -1,14 +1,15 @@
-SELECT pg_catalog.setval('public.storefront_hours_id_seq', 60, true);
+SELECT pg_catalog.setval('public.storefront_delivery_options_id_seq', 1, true);
+SELECT pg_catalog.setval('public.storefront_hours_id_seq', 70, true);
 SELECT pg_catalog.setval('public.storefront_inventory_movements_id_seq', 1, true);
 SELECT pg_catalog.setval('public.storefront_order_items_id_seq', 19, true);
 SELECT pg_catalog.setval('public.storefront_orders_id_seq', 58, true);
-SELECT pg_catalog.setval('public.storefront_payment_methods_id_seq', 36, true);
+SELECT pg_catalog.setval('public.storefront_payment_methods_id_seq', 42, true);
 SELECT pg_catalog.setval('public.storefront_product_attributes_id_seq', 1, true);
-SELECT pg_catalog.setval('public.storefront_product_images_id_seq', 77, true);
+SELECT pg_catalog.setval('public.storefront_product_images_id_seq', 89, true);
 SELECT pg_catalog.setval('public.storefront_product_variant_images_id_seq', 1, false);
 SELECT pg_catalog.setval('public.storefront_product_variants_id_seq', 97, true);
-SELECT pg_catalog.setval('public.storefront_staff_id_seq', 20, true);
-SELECT pg_catalog.setval('public.storefronts_id_seq', 42, true);
+SELECT pg_catalog.setval('public.storefront_staff_id_seq', 22, true);
+SELECT pg_catalog.setval('public.storefronts_id_seq', 44, true);
 SELECT pg_catalog.setval('public.subscription_history_id_seq', 1, false);
 SELECT pg_catalog.setval('public.subscription_payments_id_seq', 1, false);
 SELECT pg_catalog.setval('public.subscription_plans_id_seq', 4, true);
@@ -25,10 +26,10 @@ SELECT pg_catalog.setval('public.unified_attribute_stats_id_seq', 1, false);
 SELECT pg_catalog.setval('public.unified_attribute_values_id_seq', 31, true);
 SELECT pg_catalog.setval('public.unified_attributes_id_seq', 333, true);
 SELECT pg_catalog.setval('public.unified_category_attributes_id_seq', 2306, true);
-SELECT pg_catalog.setval('public.unified_geo_id_seq', 563, true);
-SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 2769, true);
+SELECT pg_catalog.setval('public.unified_geo_id_seq', 624, true);
+SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 2783, true);
 SELECT pg_catalog.setval('public.user_car_view_history_id_seq', 1, false);
-SELECT pg_catalog.setval('public.user_contacts_id_seq', 31, true);
+SELECT pg_catalog.setval('public.user_contacts_id_seq', 32, true);
 SELECT pg_catalog.setval('public.user_notification_contacts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.user_notification_preferences_id_seq', 1, false);
 SELECT pg_catalog.setval('public.user_storefronts_id_seq', 1, false);
@@ -54,6 +55,8 @@ ALTER TABLE ONLY public.admin_users
     ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.ai_category_decisions
     ADD CONSTRAINT ai_category_decisions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.ai_category_decisions
+    ADD CONSTRAINT ai_category_decisions_unique_hash UNIQUE (title_hash, entity_type);
 ALTER TABLE ONLY public.attribute_group_items
     ADD CONSTRAINT attribute_group_items_group_id_attribute_id_key UNIQUE (group_id, attribute_id);
 ALTER TABLE ONLY public.attribute_group_items
@@ -146,7 +149,3 @@ ALTER TABLE ONLY public.deliveries
     ADD CONSTRAINT deliveries_tracking_token_key UNIQUE (tracking_token);
 ALTER TABLE ONLY public.delivery_category_defaults
     ADD CONSTRAINT delivery_category_defaults_category_id_key UNIQUE (category_id);
-ALTER TABLE ONLY public.delivery_category_defaults
-    ADD CONSTRAINT delivery_category_defaults_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.delivery_notifications
-    ADD CONSTRAINT delivery_notifications_pkey PRIMARY KEY (id);

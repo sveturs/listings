@@ -1,3 +1,4 @@
+CREATE INDEX idx_marketplace_listings_city ON public.marketplace_listings USING btree (address_city) WHERE (address_city IS NOT NULL);
 CREATE INDEX idx_marketplace_listings_created_at_desc ON public.marketplace_listings USING btree (created_at DESC) WHERE ((status)::text = 'active'::text);
 CREATE INDEX idx_marketplace_listings_description_trgm ON public.marketplace_listings USING gin (description public.gin_trgm_ops);
 CREATE INDEX idx_marketplace_listings_external_id ON public.marketplace_listings USING btree (external_id);
@@ -97,4 +98,3 @@ CREATE INDEX idx_saved_search_notifications_created_at ON public.saved_search_no
 CREATE INDEX idx_saved_search_notifications_saved_search_id ON public.saved_search_notifications USING btree (saved_search_id);
 CREATE INDEX idx_saved_searches_created_at ON public.saved_searches USING btree (created_at DESC);
 CREATE INDEX idx_saved_searches_filters ON public.saved_searches USING gin (filters);
-CREATE INDEX idx_saved_searches_notify_enabled ON public.saved_searches USING btree (notify_enabled) WHERE (notify_enabled = true);

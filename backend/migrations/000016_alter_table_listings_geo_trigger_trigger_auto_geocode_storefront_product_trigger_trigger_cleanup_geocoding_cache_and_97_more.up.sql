@@ -1,3 +1,5 @@
+ALTER TABLE public.listings_geo DISABLE TRIGGER trigger_assign_district_municipality;
+CREATE TRIGGER trigger_auto_geocode_storefront_product AFTER INSERT OR UPDATE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.auto_geocode_storefront_product();
 CREATE TRIGGER trigger_cleanup_geocoding_cache AFTER INSERT ON public.geocoding_cache FOR EACH STATEMENT EXECUTE FUNCTION public.trigger_cleanup_geocoding_cache();
 CREATE TRIGGER trigger_cleanup_storefront_product_geo AFTER DELETE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.cleanup_unified_geo();
 CREATE TRIGGER trigger_geocoding_cache_updated_at BEFORE UPDATE ON public.geocoding_cache FOR EACH ROW EXECUTE FUNCTION public.update_geocoding_cache_updated_at();
@@ -96,5 +98,3 @@ ALTER SEQUENCE public.courier_location_history_id_seq OWNED BY public.courier_lo
 ALTER SEQUENCE public.courier_zones_id_seq OWNED BY public.courier_zones.id;
 ALTER SEQUENCE public.couriers_id_seq OWNED BY public.couriers.id;
 ALTER SEQUENCE public.custom_ui_component_usage_id_seq OWNED BY public.custom_ui_component_usage.id;
-ALTER SEQUENCE public.custom_ui_components_id_seq OWNED BY public.custom_ui_components.id;
-ALTER SEQUENCE public.custom_ui_templates_id_seq OWNED BY public.custom_ui_templates.id;

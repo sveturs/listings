@@ -102,6 +102,7 @@ INSERT INTO public.notifications (id, user_id, type, title, message, data, is_re
 Товар: Volkswagen Golf 8 2.0 TDI 2023
 
 123456', NULL, false, NULL, '2025-09-16 20:29:09.899945');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (95, 6, 'storefront_created', 'Витрина создана', 'Витрина ''shop'' успешно создана', NULL, false, NULL, '2025-09-29 15:04:21.996005');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (54, 10, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
 Товар: Volkswagen Golf 8 2.0 TDI 2023
 
@@ -163,10 +164,15 @@ INSERT INTO public.notifications (id, user_id, type, title, message, data, is_re
 Товар: Личное сообщение1
 
 рпопаропраопрао пар опаропраопаропраопрао паропаропаропарпраопропраопрао', NULL, false, NULL, '2025-09-15 20:17:29.96427');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (96, 5, 'storefront_created', 'Витрина создана', 'Витрина ''Тестовая витрина'' успешно создана', NULL, false, NULL, '2025-09-29 20:11:21.738504');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (90, 7, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
 Товар: Volkswagen Golf 8 2.0 TDI 2023
 
 12345', NULL, false, NULL, '2025-09-16 20:30:30.793395');
+INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (97, 7, 'new_message', 'Новое сообщение', 'Новое сообщение от Dmitry Voroshilov
+Товар: Зубочистки пластиковые N1
+
+6546546', NULL, false, NULL, '2025-09-30 10:26:32.785476');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (1, 6, 'storefront_created', 'Витрина создана', 'Витрина ''агенство недвижимости'' успешно создана', NULL, false, NULL, '2025-07-21 21:49:54.815017');
 INSERT INTO public.notifications (id, user_id, type, title, message, data, is_read, delivered_to, created_at) VALUES (5, 6, 'new_review', 'Новый отзыв', 'reviews.notification.new_review
 reviews.notification.rating: 4/5

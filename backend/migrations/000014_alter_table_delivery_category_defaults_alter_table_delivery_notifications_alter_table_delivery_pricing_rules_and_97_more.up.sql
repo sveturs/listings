@@ -1,3 +1,7 @@
+ALTER TABLE ONLY public.delivery_category_defaults
+    ADD CONSTRAINT delivery_category_defaults_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.delivery_notifications
+    ADD CONSTRAINT delivery_notifications_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.delivery_pricing_rules
     ADD CONSTRAINT delivery_pricing_rules_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.delivery_providers
@@ -194,7 +198,3 @@ ALTER TABLE ONLY public.storefront_orders
     ADD CONSTRAINT storefront_orders_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.storefront_payment_methods
     ADD CONSTRAINT storefront_payment_methods_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.storefront_product_attributes
-    ADD CONSTRAINT storefront_product_attributes_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.storefront_product_attributes
-    ADD CONSTRAINT storefront_product_attributes_product_id_attribute_id_key UNIQUE (product_id, attribute_id);
