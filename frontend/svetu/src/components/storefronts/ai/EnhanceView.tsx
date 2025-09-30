@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations, useLocale, NextIntlClientProvider } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
+import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 
 interface EnhanceViewProps {
   storefrontId: number | null;
@@ -41,6 +42,8 @@ export default function EnhanceView({
     description: localizedContent.description,
     price: state.aiData.price,
     stockQuantity: state.aiData.stockQuantity,
+    categoryId: state.aiData.categoryId,
+    category: state.aiData.category,
   });
 
   const handleSave = () => {
@@ -49,8 +52,34 @@ export default function EnhanceView({
       description: editedData.description,
       price: editedData.price,
       stockQuantity: editedData.stockQuantity,
+      categoryId: editedData.categoryId,
+      category: editedData.category,
     });
-    setView('publish');
+    setView('variants');
+  };
+
+  const handleCategoryChange = async (categoryId: number | number[]) => {
+    const id = Array.isArray(categoryId) ? categoryId[0] : categoryId;
+    // Загружаем информацию о категории для получения имени
+    try {
+      const response = await fetch(
+        `/api/v1/marketplace/categories?page=1&limit=1000`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const category = data.data?.find((cat: any) => cat.id === id);
+        if (category) {
+          setEditedData((prev) => ({
+            ...prev,
+            categoryId: id,
+            category: category.name,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load category name:', error);
+      setEditedData((prev) => ({ ...prev, categoryId: id }));
+    }
   };
 
   return (
@@ -141,27 +170,38 @@ export default function EnhanceView({
         </div>
       </div>
 
-      {/* Category Info */}
-      <div className="alert alert-info">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          className="stroke-current shrink-0 w-6 h-6"
+      {/* Category Selection */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold">
+            {t('category') || 'Category'}
+          </span>
+          <span className="label-text-alt text-info">
+            {t('aiDetected') || 'AI Detected'}: {state.aiData.category}
+          </span>
+        </label>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={{
+            marketplace: {
+              selectCategory: t('selectCategory'),
+              searchCategories: t('searchCategories'),
+              categoriesSelected: t.raw('categoriesSelected'),
+              apply: t('apply'),
+              cancel: t('cancel'),
+              categoriesLoadError: t('categoriesLoadError'),
+              noCategoriesFound: t('noCategoriesFound'),
+            },
+          }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          <CategoryTreeSelector
+            value={editedData.categoryId}
+            onChange={handleCategoryChange}
+            placeholder={t('selectCategory') || 'Select category'}
+            showPath={true}
+            allowParentSelection={false}
           />
-        </svg>
-        <div>
-          <div className="font-semibold">
-            {t('aiDetectedCategory') || 'AI Detected Category'}
-          </div>
-          <div className="text-sm">{state.aiData.category}</div>
-        </div>
+        </NextIntlClientProvider>
       </div>
 
       {/* Actions */}
@@ -170,7 +210,7 @@ export default function EnhanceView({
           {t('back') || 'Back'}
         </button>
         <button onClick={handleSave} className="btn btn-primary px-8">
-          {t('continueToPublish') || 'Continue to Publish'}
+          {t('continueToVariants') || 'Continue to Variants'}
         </button>
       </div>
     </div>

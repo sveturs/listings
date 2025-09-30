@@ -475,22 +475,24 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Регистрируем маршруты администрирования вариативных атрибутов
 	adminRoutes.Get("/variant-attributes", h.AdminVariantAttributes.GetVariantAttributes)
 	adminRoutes.Post("/variant-attributes", h.AdminVariantAttributes.CreateVariantAttribute)
-	adminRoutes.Get("/variant-attributes/:id", h.AdminVariantAttributes.GetVariantAttributeByID)
-	adminRoutes.Put("/variant-attributes/:id", h.AdminVariantAttributes.UpdateVariantAttribute)
-	adminRoutes.Delete("/variant-attributes/:id", h.AdminVariantAttributes.DeleteVariantAttribute)
-	// Маршруты для управления связями вариативных атрибутов
-	adminRoutes.Get("/variant-attributes/:id/mappings", h.AdminVariantAttributes.GetVariantAttributeMappings)
-	adminRoutes.Put("/variant-attributes/:id/mappings", h.AdminVariantAttributes.UpdateVariantAttributeMappings)
 
 	// Новые маршруты для управления вариативными атрибутами через единый интерфейс
+	// ВАЖНО: регистрируем ДО :id маршрутов, чтобы избежать конфликтов
 	if h.VariantMappings != nil {
-		// variant-compatible уже зарегистрирован выше, до :id маршрутов
 		adminRoutes.Get("/variant-attributes/mappings", h.VariantMappings.GetCategoryVariantMappings)
 		adminRoutes.Post("/variant-attributes/mappings", h.VariantMappings.CreateVariantMapping)
 		adminRoutes.Patch("/variant-attributes/mappings/:id", h.VariantMappings.UpdateVariantMapping)
 		adminRoutes.Delete("/variant-attributes/mappings/:id", h.VariantMappings.DeleteVariantMapping)
 		adminRoutes.Put("/categories/variant-attributes", h.VariantMappings.UpdateCategoryVariantAttributes)
 	}
+
+	// Маршруты с параметрами - регистрируем ПОСЛЕ статичных путей
+	adminRoutes.Get("/variant-attributes/:id", h.AdminVariantAttributes.GetVariantAttributeByID)
+	adminRoutes.Put("/variant-attributes/:id", h.AdminVariantAttributes.UpdateVariantAttribute)
+	adminRoutes.Delete("/variant-attributes/:id", h.AdminVariantAttributes.DeleteVariantAttribute)
+	// Маршруты для управления связями вариативных атрибутов
+	adminRoutes.Get("/variant-attributes/:id/mappings", h.AdminVariantAttributes.GetVariantAttributeMappings)
+	adminRoutes.Put("/variant-attributes/:id/mappings", h.AdminVariantAttributes.UpdateVariantAttributeMappings)
 
 	// Маршруты для шаблонов (должны быть перед :id, чтобы не конфликтовать)
 	adminRoutes.Get("/custom-components/templates", h.CustomComponents.ListTemplates)

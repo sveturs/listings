@@ -81,6 +81,10 @@ export default function PublishView({
         individual_address: state.aiData.location?.address,
         individual_latitude: state.aiData.location?.latitude,
         individual_longitude: state.aiData.location?.longitude,
+
+        // Variants
+        has_variants: state.aiData.hasVariants,
+        variants: state.aiData.hasVariants ? state.aiData.variants : undefined,
       };
 
       const createResponse = await fetch(
@@ -224,6 +228,14 @@ export default function PublishView({
               </span>
               <p className="font-semibold">{state.images.length}</p>
             </div>
+            {state.aiData.hasVariants && (
+              <div>
+                <span className="text-base-content/60">
+                  {t('variants') || 'Variants'}:
+                </span>
+                <p className="font-semibold">{state.aiData.variants.length}</p>
+              </div>
+            )}
           </div>
 
           {state.aiData.location && (
@@ -305,10 +317,49 @@ export default function PublishView({
         </div>
       )}
 
+      {/* Variants Preview */}
+      {state.aiData.hasVariants && state.aiData.variants.length > 0 && (
+        <div className="collapse collapse-arrow bg-base-200">
+          <input type="checkbox" />
+          <div className="collapse-title font-medium">
+            {t('viewVariants') || 'View Variants'} (
+            {state.aiData.variants.length})
+          </div>
+          <div className="collapse-content">
+            <div className="overflow-x-auto">
+              <table className="table table-sm">
+                <thead>
+                  <tr>
+                    <th>{t('sku') || 'SKU'}</th>
+                    <th>{t('attributes') || 'Attributes'}</th>
+                    <th>{t('price') || 'Price'}</th>
+                    <th>{t('stock') || 'Stock'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {state.aiData.variants.map((variant, idx) => (
+                    <tr key={idx}>
+                      <td>{variant.sku || '-'}</td>
+                      <td>
+                        {Object.entries(variant.variant_attributes || {})
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(', ') || '-'}
+                      </td>
+                      <td>{variant.price || state.aiData.price}</td>
+                      <td>{variant.stock_quantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex justify-between gap-3">
         <button
-          onClick={() => setView('enhance')}
+          onClick={() => setView('variants')}
           disabled={isPublishing}
           className="btn btn-outline"
         >

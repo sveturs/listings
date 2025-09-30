@@ -2,7 +2,31 @@
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
-type View = 'upload' | 'process' | 'enhance' | 'publish';
+type View = 'upload' | 'process' | 'enhance' | 'variants' | 'publish';
+
+// Типы для вариантов (из CreateProductContext)
+interface ProductVariantCreate {
+  sku?: string;
+  barcode?: string;
+  price?: number;
+  compare_at_price?: number;
+  cost_price?: number;
+  stock_quantity: number;
+  low_stock_threshold?: number;
+  variant_attributes: Record<string, any>;
+  weight?: number;
+  dimensions?: Record<string, any>;
+  is_default: boolean;
+}
+
+interface VariantSettings {
+  track_inventory: boolean;
+  continue_selling: boolean;
+  require_shipping: boolean;
+  taxable_product: boolean;
+  weight_unit?: string;
+  selected_attributes: string[];
+}
 
 interface AIProductState {
   // Workflow
@@ -45,6 +69,11 @@ interface AIProductState {
       region: string;
       source: 'exif' | 'storefront' | 'manual';
     } | null;
+
+    // НОВОЕ: Варианты товара
+    hasVariants: boolean;
+    variants: ProductVariantCreate[];
+    variantSettings: VariantSettings;
   };
 
   // Настройки
@@ -61,6 +90,15 @@ type AIProductAction =
   | { type: 'SET_AI_DATA'; payload: Partial<AIProductState['aiData']> }
   | { type: 'SELECT_TITLE_VARIANT'; payload: number }
   | { type: 'SET_USE_STOREFRONT_LOCATION'; payload: boolean }
+  | { type: 'SET_HAS_VARIANTS'; payload: boolean }
+  | { type: 'SET_VARIANTS'; payload: ProductVariantCreate[] }
+  | { type: 'ADD_VARIANT'; payload: ProductVariantCreate }
+  | {
+      type: 'UPDATE_VARIANT';
+      payload: { index: number; variant: ProductVariantCreate };
+    }
+  | { type: 'REMOVE_VARIANT'; payload: number }
+  | { type: 'SET_VARIANT_SETTINGS'; payload: Partial<VariantSettings> }
   | { type: 'RESET' };
 
 const initialState: AIProductState = {
@@ -87,6 +125,17 @@ const initialState: AIProductState = {
     keywords: [],
     translations: {},
     location: null,
+
+    // Варианты
+    hasVariants: false,
+    variants: [],
+    variantSettings: {
+      track_inventory: true,
+      continue_selling: false,
+      require_shipping: true,
+      taxable_product: true,
+      selected_attributes: [],
+    },
   },
   useStorefrontLocation: true,
   locationPrivacyLevel: 'exact',
@@ -132,6 +181,63 @@ function aiProductReducer(
     case 'SET_USE_STOREFRONT_LOCATION':
       return { ...state, useStorefrontLocation: action.payload };
 
+    case 'SET_HAS_VARIANTS':
+      return {
+        ...state,
+        aiData: {
+          ...state.aiData,
+          hasVariants: action.payload,
+          variants: action.payload ? state.aiData.variants : [],
+        },
+      };
+
+    case 'SET_VARIANTS':
+      return {
+        ...state,
+        aiData: { ...state.aiData, variants: action.payload },
+      };
+
+    case 'ADD_VARIANT':
+      return {
+        ...state,
+        aiData: {
+          ...state.aiData,
+          variants: [...state.aiData.variants, action.payload],
+        },
+      };
+
+    case 'UPDATE_VARIANT': {
+      const updatedVariants = [...state.aiData.variants];
+      updatedVariants[action.payload.index] = action.payload.variant;
+      return {
+        ...state,
+        aiData: { ...state.aiData, variants: updatedVariants },
+      };
+    }
+
+    case 'REMOVE_VARIANT':
+      return {
+        ...state,
+        aiData: {
+          ...state.aiData,
+          variants: state.aiData.variants.filter(
+            (_, i) => i !== action.payload
+          ),
+        },
+      };
+
+    case 'SET_VARIANT_SETTINGS':
+      return {
+        ...state,
+        aiData: {
+          ...state.aiData,
+          variantSettings: {
+            ...state.aiData.variantSettings,
+            ...action.payload,
+          },
+        },
+      };
+
     case 'RESET':
       return initialState;
 
@@ -151,6 +257,13 @@ interface CreateAIProductContextType {
   setAIData: (data: Partial<AIProductState['aiData']>) => void;
   selectTitleVariant: (index: number) => void;
   reset: () => void;
+  // Variant methods
+  setHasVariants: (hasVariants: boolean) => void;
+  setVariants: (variants: ProductVariantCreate[]) => void;
+  addVariant: (variant: ProductVariantCreate) => void;
+  updateVariant: (index: number, variant: ProductVariantCreate) => void;
+  removeVariant: (index: number) => void;
+  setVariantSettings: (settings: Partial<VariantSettings>) => void;
 }
 
 const CreateAIProductContext = createContext<
@@ -173,6 +286,20 @@ export function CreateAIProductProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SELECT_TITLE_VARIANT', payload: index });
   const reset = () => dispatch({ type: 'RESET' });
 
+  // Variant methods
+  const setHasVariants = (hasVariants: boolean) =>
+    dispatch({ type: 'SET_HAS_VARIANTS', payload: hasVariants });
+  const setVariants = (variants: ProductVariantCreate[]) =>
+    dispatch({ type: 'SET_VARIANTS', payload: variants });
+  const addVariant = (variant: ProductVariantCreate) =>
+    dispatch({ type: 'ADD_VARIANT', payload: variant });
+  const updateVariant = (index: number, variant: ProductVariantCreate) =>
+    dispatch({ type: 'UPDATE_VARIANT', payload: { index, variant } });
+  const removeVariant = (index: number) =>
+    dispatch({ type: 'REMOVE_VARIANT', payload: index });
+  const setVariantSettings = (settings: Partial<VariantSettings>) =>
+    dispatch({ type: 'SET_VARIANT_SETTINGS', payload: settings });
+
   const value: CreateAIProductContextType = {
     state,
     dispatch,
@@ -183,6 +310,12 @@ export function CreateAIProductProvider({ children }: { children: ReactNode }) {
     setAIData,
     selectTitleVariant,
     reset,
+    setHasVariants,
+    setVariants,
+    addVariant,
+    updateVariant,
+    removeVariant,
+    setVariantSettings,
   };
 
   return (
