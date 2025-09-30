@@ -311,15 +311,19 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 	// Для пользователей и витрин используем материализованные представления
 	switch entityType {
 	case entityTypeUser:
-		// Используем материализованное представление user_ratings
+		// Запрашиваем статистику отзывов пользователя напрямую из таблицы reviews
+		// Включаем как отзывы к пользователю (entity_type='user'), так и отзывы на его объявления
 		err := s.storage.QueryRow(ctx, `
 			SELECT
-				total_reviews,
-				average_rating,
-				verified_reviews,
-				photo_reviews
-			FROM user_ratings
-			WHERE user_id = $1
+				COUNT(*) as total_reviews,
+				COALESCE(AVG(rating), 0) as average_rating,
+				COUNT(*) FILTER (WHERE is_verified_purchase = true) as verified_reviews,
+				COUNT(*) FILTER (WHERE array_length(photos, 1) > 0) as photo_reviews
+			FROM reviews
+			WHERE ((entity_type = 'user' AND entity_id = $1) OR
+				   (entity_type = 'listing' AND EXISTS
+					 (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+			  AND status = 'published'
 		`, entityId).Scan(
 			&stats.TotalReviews,
 			&stats.AverageRating,
@@ -328,17 +332,23 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 		)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				// Если нет записи в материализованном представлении, возвращаем пустую статистику
 				return stats, nil
 			}
 			return nil, err
 		}
 
-		// Получаем распределение оценок из материализованного представления
+		// Получаем распределение оценок
 		rows, err := s.storage.Query(ctx, `
-			SELECT rating, count
-			FROM user_rating_distribution
-			WHERE user_id = $1
+			SELECT
+				rating,
+				COUNT(*) as count
+			FROM reviews
+			WHERE ((entity_type = 'user' AND entity_id = $1) OR
+				   (entity_type = 'listing' AND EXISTS
+					 (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+			  AND status = 'published'
+			GROUP BY rating
+			ORDER BY rating
 		`, entityId)
 		if err != nil {
 			return nil, err

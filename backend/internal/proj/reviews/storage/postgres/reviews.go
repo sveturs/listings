@@ -159,7 +159,6 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
         r.original_language,
         COALESCE(vc.helpful_votes, 0) as helpful_votes,
         COALESCE(vc.not_helpful_votes, 0) as not_helpful_votes,
-        u.name as user_name, u.email as user_email, u.picture_url as user_picture,
         COUNT(*) OVER() as total_count,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
@@ -168,7 +167,6 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
             WHERE review_id = r.id AND user_id = $1
         ) as current_user_vote
     FROM reviews r
-    LEFT JOIN users u ON r.user_id = u.id
     LEFT JOIN vote_counts vc ON vc.review_id = r.id
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE 1=1`
@@ -242,7 +240,6 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
 		var currentUserVote *string
 		var translationsJSON []byte
 		var pros, cons *string
-		var userEmail, userPicture *string
 
 		err := rows.Scan(
 			&r.ID, &r.UserID, &r.EntityType, &r.EntityID, &r.Rating,
@@ -250,7 +247,6 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
 			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
 			&r.OriginalLanguage,
 			&r.HelpfulVotes, &r.NotHelpfulVotes,
-			&r.User.Name, &userEmail, &userPicture,
 			&totalCount,
 			&translationsJSON,
 			&currentUserVote,
@@ -266,12 +262,7 @@ func (s *Storage) GetReviews(ctx context.Context, filter models.ReviewsFilter) (
 		if cons != nil {
 			r.Cons = *cons
 		}
-		if userEmail != nil {
-			r.User.Email = *userEmail
-		}
-		if userPicture != nil {
-			r.User.PictureURL = *userPicture
-		}
+		// User info will be loaded from auth-service at handler/service level
 
 		// Парсим переводы из JSON
 		if err := json.Unmarshal(translationsJSON, &r.Translations); err != nil {
@@ -309,10 +300,9 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 
 	// Используем NullString для всех полей, которые могут быть NULL
 	var (
-		comment, pros, cons                 sql.NullString
-		photos                              []string
-		userName, userEmail, userPictureURL sql.NullString
-		currentUserVote                     sql.NullString
+		comment, pros, cons sql.NullString
+		photos              []string
+		currentUserVote     sql.NullString
 	)
 
 	err := s.pool.QueryRow(ctx, `
@@ -327,7 +317,6 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
             r.id, r.user_id, r.entity_type, r.entity_id, r.rating,
             r.comment, r.pros, r.cons, r.photos, r.likes_count,
             r.is_verified_purchase, r.status, r.created_at, r.updated_at,
-            u.name, u.email, u.picture_url,
             vs.helpful_count, vs.not_helpful_count,
             (
                 SELECT vote_type
@@ -335,14 +324,12 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
                 WHERE review_id = r.id AND user_id = $2
             ) as current_user_vote
         FROM reviews r
-        LEFT JOIN users u ON r.user_id = u.id
         CROSS JOIN votes_summary vs
         WHERE r.id = $1
     `, id, userID).Scan(
 		&review.ID, &review.UserID, &review.EntityType, &review.EntityID, &review.Rating,
 		&comment, &pros, &cons, &photos, &review.LikesCount,
 		&review.IsVerifiedPurchase, &review.Status, &review.CreatedAt, &review.UpdatedAt,
-		&userName, &userEmail, &userPictureURL,
 		&review.HelpfulVotes, &review.NotHelpfulVotes,
 		&currentUserVote,
 	)
@@ -362,16 +349,7 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 	}
 	review.Photos = photos
 
-	// Заполняем информацию о пользователе
-	if userName.Valid {
-		review.User.Name = userName.String
-	}
-	if userEmail.Valid {
-		review.User.Email = userEmail.String
-	}
-	if userPictureURL.Valid {
-		review.User.PictureURL = userPictureURL.String
-	}
+	// User info will be loaded from auth-service at handler/service level
 
 	// Устанавливаем current_user_vote только если значение не NULL
 	if currentUserVote.Valid {
@@ -390,10 +368,8 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 	// Загружаем ответы на отзыв
 	rows, err := s.pool.Query(ctx, `
         SELECT
-            rr.id, rr.user_id, rr.response, rr.created_at, rr.updated_at,
-            u.name, u.email, u.picture_url
+            rr.id, rr.user_id, rr.response, rr.created_at, rr.updated_at
         FROM review_responses rr
-        LEFT JOIN users u ON rr.user_id = u.id
         WHERE rr.review_id = $1
         ORDER BY rr.created_at
     `, review.ID)
@@ -409,11 +385,11 @@ func (s *Storage) GetReviewByID(ctx context.Context, id int) (*models.Review, er
 		err := rows.Scan(
 			&response.ID, &response.UserID, &response.Response,
 			&response.CreatedAt, &response.UpdatedAt,
-			&response.User.Name, &response.User.Email, &response.User.PictureURL,
 		)
 		if err != nil {
 			return nil, err
 		}
+		// User info will be loaded from auth-service at handler/service level
 		review.Responses = append(review.Responses, response)
 	}
 
@@ -692,7 +668,6 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
         r.original_language, r.entity_origin_type, r.entity_origin_id,
         COALESCE(vc.helpful_votes, 0) as helpful_votes,
         COALESCE(vc.not_helpful_votes, 0) as not_helpful_votes,
-        u.name as user_name, u.email as user_email, u.picture_url as user_picture,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
             SELECT vote_type
@@ -701,7 +676,6 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
             LIMIT 1
         ) as current_user_vote
     FROM reviews r
-    LEFT JOIN users u ON r.user_id = u.id
     LEFT JOIN vote_counts vc ON vc.review_id = r.id
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE (r.entity_origin_type = 'user' AND r.entity_origin_id = $2)
@@ -724,7 +698,6 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
 		var currentUserVote *string
 		var translationsJSON []byte
 		var pros, cons *string
-		var userEmail, userPicture *string
 		var entityOriginType *string
 		var entityOriginID *int
 
@@ -734,7 +707,6 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
 			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
 			&r.OriginalLanguage, &entityOriginType, &entityOriginID,
 			&r.HelpfulVotes, &r.NotHelpfulVotes,
-			&r.User.Name, &userEmail, &userPicture,
 			&translationsJSON,
 			&currentUserVote,
 		)
@@ -748,12 +720,6 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
 		}
 		if cons != nil {
 			r.Cons = *cons
-		}
-		if userEmail != nil {
-			r.User.Email = *userEmail
-		}
-		if userPicture != nil {
-			r.User.PictureURL = *userPicture
 		}
 		if entityOriginType != nil {
 			r.EntityOriginType = *entityOriginType
@@ -816,7 +782,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
         r.original_language, r.entity_origin_type, r.entity_origin_id,
         COALESCE(vc.helpful_votes, 0) as helpful_votes,
         COALESCE(vc.not_helpful_votes, 0) as not_helpful_votes,
-        u.name as user_name, u.email as user_email, u.picture_url as user_picture,
         COALESCE(ta.translations, '{}'::jsonb) as translations,
         (
             SELECT vote_type
@@ -825,7 +790,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
             LIMIT 1
         ) as current_user_vote
     FROM reviews r
-    LEFT JOIN users u ON r.user_id = u.id
     LEFT JOIN vote_counts vc ON vc.review_id = r.id
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE (r.entity_origin_type = 'storefront' AND r.entity_origin_id = $2)
@@ -848,7 +812,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
 		var currentUserVote *string
 		var translationsJSON []byte
 		var pros, cons *string
-		var userEmail, userPicture *string
 		var entityOriginType *string
 		var entityOriginID *int
 
@@ -858,7 +821,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
 			&r.IsVerifiedPurchase, &r.Status, &r.CreatedAt, &r.UpdatedAt,
 			&r.OriginalLanguage, &entityOriginType, &entityOriginID,
 			&r.HelpfulVotes, &r.NotHelpfulVotes,
-			&r.User.Name, &userEmail, &userPicture,
 			&translationsJSON,
 			&currentUserVote,
 		)
@@ -872,12 +834,6 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
 		}
 		if cons != nil {
 			r.Cons = *cons
-		}
-		if userEmail != nil {
-			r.User.Email = *userEmail
-		}
-		if userPicture != nil {
-			r.User.PictureURL = *userPicture
 		}
 		if entityOriginType != nil {
 			r.EntityOriginType = *entityOriginType
@@ -924,19 +880,12 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
 		Rating5:       0,
 	}
 
-	// Получаем имя пользователя
-	var userName sql.NullString
-	err := s.pool.QueryRow(ctx, `SELECT name FROM users WHERE id = $1`, userID).Scan(&userName)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		log.Printf("Error getting user name: %v", err)
-	}
-
-	if userName.Valid {
-		summary.Name = userName.String
-	}
+	// TODO: User name should be loaded from auth-service at handler level
+	// For now, summary.Name will be empty until auth-service integration is added
 
 	// Получаем данные о рейтинге из отзывов к пользователю
 	// Теперь запрос включает как отзывы с entity_type='user', так и отзывы на объявления пользователя
+	var err error
 	query := `
     SELECT
         COUNT(*) as total_reviews,
