@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+	authService "github.com/sveturs/auth/pkg/http/service"
 
 	"backend/internal/cache"
 	"backend/internal/config"
@@ -49,7 +50,7 @@ type Service struct {
 	unifiedCar       *marketplaceService.UnifiedCarService
 }
 
-func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface) *Service {
+func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface, authSvc *authService.AuthService, userSvc *authService.UserService) *Service {
 	notificationSvc := notificationService.NewService(storage)
 	balanceSvc := balance.NewBalanceService(storage)
 	geocodeSvc := geocodeService.NewGeocodeService(storage)
@@ -142,7 +143,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:            userService.NewService(storage),
+		users:            userService.NewService(authSvc, userSvc),
 		marketplace:      marketplaceSvc,
 		review:           reviewService.NewService(storage),
 		chat:             marketplaceSvc, // Reuse the same service for chat

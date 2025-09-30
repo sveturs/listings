@@ -27,7 +27,6 @@ import (
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
-	userStorage "backend/internal/proj/users/storage/postgres"
 
 	"backend/internal/proj/marketplace/storage/opensearch"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
@@ -53,9 +52,8 @@ type Database struct {
 	pool          *pgxpool.Pool
 	marketplaceDB *marketplaceStorage.Storage
 
-	reviewDB             *reviewStorage.Storage
-	usersDB              *userStorage.Storage
-	notificationsDB      *notificationStorage.Storage
+	reviewDB        *reviewStorage.Storage
+	notificationsDB *notificationStorage.Storage
 	osMarketplaceRepo    opensearch.MarketplaceSearchRepository
 	osStorefrontRepo     storefrontOpenSearch.StorefrontSearchRepository
 	osClient             *osClient.OpenSearchClient // Клиент OpenSearch для прямых запросов
@@ -106,7 +104,6 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		sqlxDB:           sqlxDB,
 		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService),
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
-		usersDB:          userStorage.NewStorage(pool),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
 		osClient:         osClient,      // Сохраняем клиент OpenSearch
 		marketplaceIndex: indexName,     // Сохраняем имя индекса
@@ -375,45 +372,45 @@ func (db *Database) GetSession(ctx context.Context, token string) (*types.Sessio
 	return &session, nil
 }
 
-// Refresh Token methods
+// Refresh Token methods - DEPRECATED: moved to auth-service
 func (db *Database) CreateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
-	return db.usersDB.CreateRefreshToken(ctx, token)
+	return fmt.Errorf("CreateRefreshToken: moved to auth-service")
 }
 
 func (db *Database) GetRefreshToken(ctx context.Context, token string) (*models.RefreshToken, error) {
-	return db.usersDB.GetRefreshToken(ctx, token)
+	return nil, fmt.Errorf("GetRefreshToken: moved to auth-service")
 }
 
 func (db *Database) GetRefreshTokenByID(ctx context.Context, id int) (*models.RefreshToken, error) {
-	return db.usersDB.GetRefreshTokenByID(ctx, id)
+	return nil, fmt.Errorf("GetRefreshTokenByID: moved to auth-service")
 }
 
 func (db *Database) GetUserRefreshTokens(ctx context.Context, userID int) ([]*models.RefreshToken, error) {
-	return db.usersDB.GetUserRefreshTokens(ctx, userID)
+	return nil, fmt.Errorf("GetUserRefreshTokens: moved to auth-service")
 }
 
 func (db *Database) UpdateRefreshToken(ctx context.Context, token *models.RefreshToken) error {
-	return db.usersDB.UpdateRefreshToken(ctx, token)
+	return fmt.Errorf("UpdateRefreshToken: moved to auth-service")
 }
 
 func (db *Database) RevokeRefreshToken(ctx context.Context, tokenID int) error {
-	return db.usersDB.RevokeRefreshToken(ctx, tokenID)
+	return fmt.Errorf("RevokeRefreshToken: moved to auth-service")
 }
 
 func (db *Database) RevokeRefreshTokenByValue(ctx context.Context, tokenValue string) error {
-	return db.usersDB.RevokeRefreshTokenByValue(ctx, tokenValue)
+	return fmt.Errorf("RevokeRefreshTokenByValue: moved to auth-service")
 }
 
 func (db *Database) RevokeUserRefreshTokens(ctx context.Context, userID int) error {
-	return db.usersDB.RevokeUserRefreshTokens(ctx, userID)
+	return fmt.Errorf("RevokeUserRefreshTokens: moved to auth-service")
 }
 
 func (db *Database) DeleteExpiredRefreshTokens(ctx context.Context) (int64, error) {
-	return db.usersDB.DeleteExpiredRefreshTokens(ctx)
+	return 0, fmt.Errorf("DeleteExpiredRefreshTokens: moved to auth-service")
 }
 
 func (db *Database) CountActiveUserTokens(ctx context.Context, userID int) (int, error) {
-	return db.usersDB.CountActiveUserTokens(ctx, userID)
+	return 0, fmt.Errorf("CountActiveUserTokens: moved to auth-service")
 }
 
 // GetSQLDB returns the raw sql.DB connection
@@ -641,62 +638,62 @@ func (db *Database) GetAttributeGroups() AttributeGroupStorage {
 	return db.attributeGroups
 }
 
-// User methods
+// User methods - DEPRECATED: moved to auth-service
 func (db *Database) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	return db.usersDB.GetUserByEmail(ctx, email)
+	return nil, fmt.Errorf("GetUserByEmail: moved to auth-service")
 }
 
 func (db *Database) GetUserByID(ctx context.Context, id int) (*models.User, error) {
-	return db.usersDB.GetUserByID(ctx, id)
+	return nil, fmt.Errorf("GetUserByID: moved to auth-service")
 }
 
 func (db *Database) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return db.usersDB.CreateUser(ctx, user)
+	return nil, fmt.Errorf("CreateUser: moved to auth-service")
 }
 
 func (db *Database) UpdateUser(ctx context.Context, user *models.User) error {
-	return db.usersDB.UpdateUser(ctx, user)
+	return fmt.Errorf("UpdateUser: moved to auth-service")
 }
 
 func (db *Database) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return db.usersDB.GetOrCreateGoogleUser(ctx, user)
+	return nil, fmt.Errorf("GetOrCreateGoogleUser: moved to auth-service")
 }
 
 func (db *Database) GetUserProfile(ctx context.Context, id int) (*models.UserProfile, error) {
-	return db.usersDB.GetUserProfile(ctx, id)
+	return nil, fmt.Errorf("GetUserProfile: moved to auth-service")
 }
 
 func (db *Database) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
-	return db.usersDB.UpdateUserProfile(ctx, id, update)
+	return fmt.Errorf("UpdateUserProfile: moved to auth-service")
 }
 
 func (db *Database) UpdateLastSeen(ctx context.Context, id int) error {
-	return db.usersDB.UpdateLastSeen(ctx, id)
+	return fmt.Errorf("UpdateLastSeen: moved to auth-service")
 }
 
-// Административные методы для управления пользователями
+// Административные методы для управления пользователями - DEPRECATED: moved to auth-service
 func (db *Database) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.UserProfile, int, error) {
-	return db.usersDB.GetAllUsers(ctx, limit, offset)
+	return nil, 0, fmt.Errorf("GetAllUsers: moved to auth-service")
 }
 
 func (db *Database) GetAllUsersWithSort(ctx context.Context, limit, offset int, sortBy, sortOrder, statusFilter string) ([]*models.UserProfile, int, error) {
-	return db.usersDB.GetAllUsersWithSort(ctx, limit, offset, sortBy, sortOrder, statusFilter)
+	return nil, 0, fmt.Errorf("GetAllUsersWithSort: moved to auth-service")
 }
 
 func (db *Database) UpdateUserStatus(ctx context.Context, id int, status string) error {
-	return db.usersDB.UpdateUserStatus(ctx, id, status)
+	return fmt.Errorf("UpdateUserStatus: moved to auth-service")
 }
 
 func (db *Database) UpdateUserRole(ctx context.Context, id int, roleID int) error {
-	return db.usersDB.UpdateUserRole(ctx, id, roleID)
+	return fmt.Errorf("UpdateUserRole: moved to auth-service")
 }
 
 func (db *Database) GetAllRoles(ctx context.Context) ([]*models.Role, error) {
-	return db.usersDB.GetAllRoles(ctx)
+	return nil, fmt.Errorf("GetAllRoles: moved to auth-service")
 }
 
 func (db *Database) DeleteUser(ctx context.Context, id int) error {
-	return db.usersDB.DeleteUser(ctx, id)
+	return fmt.Errorf("DeleteUser: moved to auth-service")
 }
 
 // Добавить следующие методы в структуру Database:

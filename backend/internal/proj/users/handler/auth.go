@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	authclient "github.com/sveturs/auth/pkg/http/client"
+	"github.com/sveturs/auth/pkg/http/entity"
 	"github.com/sveturs/auth/pkg/http/service"
 )
 
@@ -47,7 +49,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	// Log that we reached the handler
 	h.log.Debug().Msg("Register handler called")
 
-	var req authclient.EntityUserRegistrationRequest
+	var req entity.UserRegistrationRequest
 	if err := c.BodyParser(&req); err != nil {
 		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse registration request")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -91,7 +93,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	var req authclient.EntityUserLoginRequest
+	var req entity.UserLoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse login request")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -100,13 +102,11 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	// Add default device info if not provided
-	if req.DeviceId == nil || *req.DeviceId == "" {
-		deviceId := "web-browser"
-		req.DeviceId = &deviceId
+	if req.DeviceID == "" {
+		req.DeviceID = "web-browser"
 	}
-	if req.DeviceName == nil || *req.DeviceName == "" {
-		deviceName := "Web Browser"
-		req.DeviceName = &deviceName
+	if req.DeviceName == "" {
+		req.DeviceName = "Web Browser"
 	}
 
 	resp, err := h.authService.Login(c.Context(), req)
@@ -172,7 +172,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
-	var req authclient.EntityRefreshTokenRequest
+	var req entity.RefreshTokenRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "invalid request body",
@@ -211,18 +211,19 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 // @Router /api/v1/auth/validate [get]
 func (h *AuthHandler) Validate(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	resp, err := h.authService.ValidateToken(authHeader)
+	resp, err := h.authService.ValidateToken(c.Context(), token)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to connect to auth service",
 		})
 	}
 
-	if resp.Valid != nil && *resp.Valid {
+	if resp.Valid {
 		return c.JSON(fiber.Map{
 			"valid":   resp.Valid,
-			"user_id": resp.UserId,
+			"user_id": resp.UserID,
 			"email":   resp.Email,
 			"roles":   resp.Roles,
 		})

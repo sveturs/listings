@@ -3,26 +3,31 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"backend/internal/domain/models"
 )
 
 // IsUserAdmin проверяет, является ли пользователь администратором по email
+// DEPRECATED: moved to auth-service
 func (db *Database) IsUserAdmin(ctx context.Context, email string) (bool, error) {
-	return db.usersDB.IsUserAdmin(ctx, email)
+	return false, fmt.Errorf("IsUserAdmin: moved to auth-service")
 }
 
 // GetAllAdmins возвращает список всех администраторов
+// DEPRECATED: moved to auth-service
 func (db *Database) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
-	return db.usersDB.GetAllAdmins(ctx)
+	return nil, fmt.Errorf("GetAllAdmins: moved to auth-service")
 }
 
 // AddAdmin добавляет нового администратора
+// DEPRECATED: moved to auth-service
 func (db *Database) AddAdmin(ctx context.Context, admin *models.AdminUser) error {
-	return db.usersDB.AddAdmin(ctx, admin)
+	return fmt.Errorf("AddAdmin: moved to auth-service")
 }
 
 // RemoveAdmin удаляет администратора по email
+// DEPRECATED: moved to auth-service
 func (db *Database) RemoveAdmin(ctx context.Context, email string) error {
-	return db.usersDB.RemoveAdmin(ctx, email)
+	return fmt.Errorf("RemoveAdmin: moved to auth-service")
 }

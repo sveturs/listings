@@ -157,9 +157,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize translation service: %w", err)
 	}
 
-	services := globalService.NewService(ctx, db, cfg, translationService)
-
-	// Create auth service client
+	// Create auth service client BEFORE creating services
 	authClient, err := authclient.NewClientWithResponses(cfg.AuthServiceURL)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to create auth client")
@@ -168,7 +166,11 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	// Create auth service with client and logger
 	zerologLogger := *logger.Get()
 	authServiceInstance := authService.NewAuthService(authClient, zerologLogger)
+	userServiceInstance := authService.NewUserService(authClient, zerologLogger)
 	oauthServiceInstance := authService.NewOAuthService(authClient)
+
+	// Now create services with authService and userService
+	services := globalService.NewService(ctx, db, cfg, translationService, authServiceInstance, userServiceInstance)
 
 	configModule := configHandler.NewModule(cfg)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
