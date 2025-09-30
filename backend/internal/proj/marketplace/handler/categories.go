@@ -11,8 +11,8 @@ import (
 
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
-	"backend/pkg/utils"
 	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
 )
 
 // Используем переменные кеша из marketplace.go

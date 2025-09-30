@@ -12,6 +12,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	variantTypes "backend/internal/proj/storefront/types"
+	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/pkg/utils"
 )
@@ -42,6 +43,7 @@ type Storage interface {
 	CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
 	UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
+	HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
 	IncrementProductViews(ctx context.Context, productID int) error
@@ -82,7 +84,7 @@ func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepos
 // ValidateStorefrontOwnership checks if user owns the storefront
 func (s *ProductService) ValidateStorefrontOwnership(ctx context.Context, storefrontID, userID int) error {
 	// Проверяем, является ли пользователь администратором
-	if isAdmin, ok := ctx.Value("is_admin").(bool); ok && isAdmin {
+	if isAdmin, ok := ctx.Value(common.ContextKeyIsAdmin).(bool); ok && isAdmin {
 		// Администратор имеет доступ ко всем витринам
 		logger.Info().Msgf("Admin user %d accessing storefront %d", userID, storefrontID)
 		return nil
@@ -353,6 +355,31 @@ func (s *ProductService) DeleteProduct(ctx context.Context, storefrontID, produc
 	// Delete product
 	if err := s.storage.DeleteStorefrontProduct(ctx, storefrontID, productID); err != nil {
 		return fmt.Errorf("failed to delete product: %w", err)
+	}
+
+	// Delete from OpenSearch
+	if s.searchRepo != nil {
+		if err := s.searchRepo.DeleteProduct(ctx, productID); err != nil {
+			logger.Error().Err(err).Msgf("Failed to delete product %d from OpenSearch", productID)
+			// Не возвращаем ошибку, так как товар уже удален из БД
+		} else {
+			logger.Info().Msgf("Successfully deleted product %d from OpenSearch", productID)
+		}
+	}
+
+	return nil
+}
+
+// HardDeleteProduct permanently deletes a product and all related data
+func (s *ProductService) HardDeleteProduct(ctx context.Context, storefrontID, productID, userID int) error {
+	// Validate ownership
+	if err := s.ValidateStorefrontOwnership(ctx, storefrontID, userID); err != nil {
+		return err
+	}
+
+	// Hard delete product (cascades to all related data)
+	if err := s.storage.HardDeleteStorefrontProduct(ctx, storefrontID, productID); err != nil {
+		return fmt.Errorf("failed to permanently delete product: %w", err)
 	}
 
 	// Delete from OpenSearch

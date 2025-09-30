@@ -2178,18 +2178,38 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 
 // getProductSuggestionsUnified возвращает подходящие товары
 func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
-	// Поиск товаров по названию
+	// Поиск товаров по названию из обеих таблиц (marketplace_listings и storefront_products)
 	sqlQuery := `
-		SELECT ml.id, ml.title, ml.price, mc.name as category_name,
-		       COALESCE(mi.public_url, '') as image_url,
-		       ml.storefront_id, s.name as storefront_name, s.slug as storefront_slug
-		FROM marketplace_listings ml
-		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-		LEFT JOIN marketplace_images mi ON ml.id = mi.listing_id AND mi.is_main = true
-		LEFT JOIN storefronts s ON ml.storefront_id = s.id
-		WHERE LOWER(ml.title) LIKE LOWER($1)
-		  AND ml.status = 'active'
-		ORDER BY ml.views_count DESC, ml.created_at DESC
+		SELECT id, title, price, category_name, image_url, storefront_id, storefront_name, storefront_slug, source_type
+		FROM (
+			-- Marketplace listings
+			SELECT ml.id, ml.title, ml.price, mc.name as category_name,
+			       COALESCE(mi.public_url, '') as image_url,
+			       ml.storefront_id, s.name as storefront_name, s.slug as storefront_slug,
+			       'marketplace' as source_type,
+			       ml.views_count, ml.created_at
+			FROM marketplace_listings ml
+			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+			LEFT JOIN marketplace_images mi ON ml.id = mi.listing_id AND mi.is_main = true
+			LEFT JOIN storefronts s ON ml.storefront_id = s.id
+			WHERE LOWER(ml.title) LIKE LOWER($1)
+			  AND ml.status = 'active'
+
+			UNION ALL
+
+			-- Storefront products
+			SELECT sp.id, sp.name as title, sp.price, mc.name as category_name,
+			       COALESCE(spi.image_url, '') as image_url,
+			       sp.storefront_id, s.name as storefront_name, s.slug as storefront_slug,
+			       'storefront' as source_type,
+			       0 as views_count, sp.created_at
+			FROM storefront_products sp
+			LEFT JOIN marketplace_categories mc ON sp.category_id = mc.id
+			LEFT JOIN storefront_product_images spi ON sp.id = spi.storefront_product_id AND spi.is_default = true
+			JOIN storefronts s ON sp.storefront_id = s.id
+			WHERE LOWER(sp.name) LIKE LOWER($1)
+		) combined
+		ORDER BY views_count DESC, created_at DESC
 		LIMIT $2`
 
 	rows, err := s.storage.Query(ctx, sqlQuery, "%"+query+"%", limit)
@@ -2204,19 +2224,19 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 		var id int
 		var title string
 		var price float64
-		var categoryName, imageURL string
+		var categoryName, imageURL, sourceType string
 		var storefrontID *int
 		var storefrontName, storefrontSlug *string
 
 		if err := rows.Scan(&id, &title, &price, &categoryName, &imageURL,
-			&storefrontID, &storefrontName, &storefrontSlug); err != nil {
+			&storefrontID, &storefrontName, &storefrontSlug, &sourceType); err != nil {
 			continue
 		}
 
 		metadata := &models.UnifiedSuggestionMeta{
 			Price:      &price,
 			Category:   &categoryName,
-			SourceType: strPtr("marketplace"),
+			SourceType: strPtr(sourceType),
 		}
 
 		if imageURL != "" {

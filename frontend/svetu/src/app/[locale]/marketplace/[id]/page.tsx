@@ -233,7 +233,15 @@ export default function ListingPage({ params }: Props) {
         response = await fetch(
           `${config.getApiUrl()}/api/v1/storefronts/products/${id}`
         );
-        if (!response.ok) throw new Error('Failed to fetch listing');
+        if (!response.ok) {
+          // Оба API не вернули результат - объявление не найдено
+          console.error(
+            `Listing ${id} not found in both marketplace and storefronts`
+          );
+          setListing(null);
+          setIsLoading(false);
+          return;
+        }
         isStorefrontProduct = true;
       }
 

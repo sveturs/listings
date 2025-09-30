@@ -5,10 +5,10 @@ import (
 
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
-	"backend/pkg/utils"
 	"backend/internal/proj/viber/handler"
 	"backend/internal/proj/viber/service"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

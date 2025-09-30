@@ -10,9 +10,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
 )
 
 const (

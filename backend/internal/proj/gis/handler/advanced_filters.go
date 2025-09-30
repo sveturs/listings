@@ -6,8 +6,8 @@ import (
 
 	"backend/internal/logger"
 	"backend/internal/proj/gis/service"
-	"backend/pkg/utils"
 	"backend/internal/proj/gis/types"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

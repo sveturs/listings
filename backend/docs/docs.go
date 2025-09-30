@@ -28966,6 +28966,268 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/ai/ab-test-titles": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Evaluates multiple title variants and returns the best one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "A/B test product titles",
+                "parameters": [
+                    {
+                        "description": "Title variants",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.ABTestTitlesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A/B test result",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/analyze-product-image": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uses Claude AI to analyze product image and extract title, description, category hints, price, etc.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Analyze product image with AI for storefront products",
+                "parameters": [
+                    {
+                        "description": "Image data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.AnalyzeProductImageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AI analysis result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_ai_handler.AnalyzeProductResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/detect-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uses AI to detect the most suitable category for a storefront product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Detect category for storefront product",
+                "parameters": [
+                    {
+                        "description": "Product details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.DetectCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category detection result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns accuracy and performance metrics for AI category detection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Get AI detection metrics for storefront products",
+                "responses": {
+                    "200": {
+                        "description": "Metrics data",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/translate-content": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates product title and description to specified languages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Translate product content to multiple languages",
+                "parameters": [
+                    {
+                        "description": "Content to translate",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.TranslateContentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation result",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/building": {
             "get": {
                 "description": "Returns all storefronts located in the same building",
@@ -30554,6 +30816,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/{id}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Restores a previously deactivated storefront (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Restore deactivated storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront restored",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Admin access required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/{id}/staff": {
             "get": {
                 "description": "Returns list of staff members with their roles and permissions",
@@ -31791,7 +32117,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently deletes a product",
+                "description": "Permanently deletes a product and all related data (reviews, favorites, images, etc.)",
                 "consumes": [
                     "application/json"
                 ],
@@ -31801,7 +32127,7 @@ const docTemplate = `{
                 "tags": [
                     "storefront-products"
                 ],
-                "summary": "Delete a storefront product",
+                "summary": "Hard delete a storefront product",
                 "parameters": [
                     {
                         "type": "string",
@@ -31816,11 +32142,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Must be true for hard delete",
+                        "name": "hard",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product deleted successfully",
+                        "description": "Product permanently deleted",
                         "schema": {
                             "$ref": "#/definitions/SuccessResponse"
                         }
@@ -44319,6 +44652,97 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_proj_ai_handler.AnalyzeProductResponse": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "categoryHints": {
+                    "$ref": "#/definitions/backend_internal_proj_ai_handler.CategoryHints"
+                },
+                "categoryProbabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_ai_handler.CategoryProbability"
+                    }
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "socialPosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "suggestedLocation": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_ai_handler.CategoryHints": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "productType": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_ai_handler.CategoryProbability": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "probability": {
+                    "type": "number"
+                }
+            }
+        },
         "backend_internal_proj_analytics_service.ItemPerformance": {
             "type": "object",
             "properties": {
@@ -46872,6 +47296,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "entityType": {
+                    "description": "\"listing\" или \"product\"",
                     "type": "string"
                 },
                 "listingId": {
@@ -51387,6 +51815,17 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_storefronts_handler.ABTestTitlesRequest": {
+            "type": "object",
+            "properties": {
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "internal_proj_storefronts_handler.AddStaffRequest": {
             "type": "object",
             "required": [
@@ -51399,6 +51838,19 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_proj_storefronts_handler.AnalyzeProductImageRequest": {
+            "type": "object",
+            "properties": {
+                "imageData": {
+                    "description": "base64 encoded image",
+                    "type": "string"
+                },
+                "language": {
+                    "description": "ru, en, sr",
+                    "type": "string"
                 }
             }
         },
@@ -51422,6 +51874,23 @@ const docTemplate = `{
                 },
                 "type": {
                     "description": "order, message, stock",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_storefronts_handler.DetectCategoryRequest": {
+            "type": "object",
+            "properties": {
+                "aiHints": {
+                    "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -51468,6 +51937,31 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_proj_storefronts_handler.TranslateContentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sourceLanguage": {
+                    "type": "string"
+                },
+                "targetLanguages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

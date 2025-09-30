@@ -10,15 +10,19 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
+	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/global/service"
+	marketplaceServices "backend/internal/proj/marketplace/services"
 	storefrontHandler "backend/internal/proj/storefront/handler"
 	"backend/internal/proj/storefront/repository"
 	"backend/internal/proj/storefronts/handler"
 	storefrontService "backend/internal/proj/storefronts/service"
+	internalServices "backend/internal/services"
 	"backend/internal/storage/postgres"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 // Module представляет модуль витрин с продуктами
@@ -31,10 +35,11 @@ type Module struct {
 	dashboardHandler     *handler.DashboardHandler
 	variantHandler       *storefrontHandler.VariantHandler
 	publicVariantHandler *storefrontHandler.PublicVariantHandler
+	aiProductHandler     *handler.AIProductHandler
 }
 
 // NewModule создает новый модуль витрин
-func NewModule(services service.ServicesInterface) *Module {
+func NewModule(ctx context.Context, services service.ServicesInterface) *Module {
 	storefrontSvc := services.Storefront()
 	// Создаем адаптер для storage
 	db := services.Storage().(*postgres.Database)
@@ -55,9 +60,16 @@ func NewModule(services service.ServicesInterface) *Module {
 	// Создаем сервис импорта
 	importSvc := storefrontService.NewImportService(productSvc)
 
-	// Создаем единый ImageService
+	// Создаем единый ImageService с конфигурацией buckets
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
-	imageService := services.NewImageService(services.FileStorage(), imageRepo)
+	cfg := services.Config()
+	imageCfg := internalServices.ImageServiceConfig{
+		BucketListings:    cfg.FileStorage.MinioBucketName,
+		BucketStorefront:  cfg.FileStorage.MinioStorefrontBucket,
+		BucketChatFiles:   cfg.FileStorage.MinioChatBucket,
+		BucketReviewPhoto: cfg.FileStorage.MinioReviewPhotosBucket,
+	}
+	imageService := services.NewImageService(services.FileStorage(), imageRepo, imageCfg)
 
 	// Получаем storefront repository
 	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
@@ -65,6 +77,23 @@ func NewModule(services service.ServicesInterface) *Module {
 	// Создаем variant handlers (используем уже созданный variantRepo)
 	variantHandler := storefrontHandler.NewVariantHandler(variantRepo)
 	publicVariantHandler := storefrontHandler.NewPublicVariantHandler(variantRepo)
+
+	// Инициализируем AI Product Handler (переиспользуем marketplace AI infrastructure)
+	// Создаем AICategoryDetector (он легковесный, использует тот же DB и Redis cache)
+	log := logger.Info() // Используем logger из internal/logger
+	_ = log              // Избегаем warning о неиспользуемой переменной
+
+	aiDetector := marketplaceServices.NewAICategoryDetector(ctx, db.GetSQLXDB(), zap.L())
+
+	// Создаем AI Handler для общих AI операций (анализ изображений, переводы и т.д.)
+	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
+
+	// Создаем AI Product Handler для витрин
+	aiProductHandlerInstance := handler.NewAIProductHandler(
+		aiDetector,
+		aiHandlerInstance,
+		zap.L(),
+	)
 
 	return &Module{
 		services:             services,
@@ -75,6 +104,7 @@ func NewModule(services service.ServicesInterface) *Module {
 		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
 		variantHandler:       variantHandler,
 		publicVariantHandler: publicVariantHandler,
+		aiProductHandler:     aiProductHandlerInstance,
 	}
 }
 
@@ -133,10 +163,21 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	protected := api.Group("/storefronts")
 	protected.Use(mw.AuthRequiredJWT)
 	{
+		// AI endpoints для витрин (защищенные)
+		if m.aiProductHandler != nil {
+			aiGroup := protected.Group("/ai")
+			aiGroup.Post("/analyze-product-image", m.aiProductHandler.AnalyzeProductImage)
+			aiGroup.Post("/detect-category", m.aiProductHandler.DetectCategory)
+			aiGroup.Post("/ab-test-titles", m.aiProductHandler.ABTestTitles)
+			aiGroup.Post("/translate-content", m.aiProductHandler.TranslateContent)
+			aiGroup.Get("/metrics", m.aiProductHandler.GetMetrics)
+		}
+
 		// Управление витринами
 		protected.Post("/", m.storefrontHandler.CreateStorefront)
 		protected.Put("/:id", m.storefrontHandler.UpdateStorefront)
 		protected.Delete("/:id", m.storefrontHandler.DeleteStorefront)
+		protected.Post("/:id/restore", m.storefrontHandler.RestoreStorefront)
 
 		// Настройки витрины
 		protected.Put("/:id/hours", m.storefrontHandler.UpdateWorkingHours)
@@ -396,6 +437,11 @@ func (m *Module) deleteProductBySlug(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Проверяем параметр hard для выбора типа удаления
+	if c.Query("hard") == "true" {
+		return m.productHandler.HardDeleteProduct(c)
+	}
+
 	return m.productHandler.DeleteProduct(c)
 }
 
@@ -434,8 +480,13 @@ func (m *Module) setStorefrontIDBySlug(c *fiber.Ctx) error {
 		})
 	}
 
+	// Декодируем slug на случай если он URL-encoded (для кириллических slug)
+	decodedSlug, err := url.QueryUnescape(slugOrID)
+	if err == nil {
+		slugOrID = decodedSlug
+	}
+
 	var storefront *models.Storefront
-	var err error
 
 	// Пробуем сначала как ID
 	if id, parseErr := strconv.Atoi(slugOrID); parseErr == nil {
@@ -868,6 +919,11 @@ func (s *storageAdapter) UpdateStorefrontProduct(ctx context.Context, storefront
 // DeleteStorefrontProduct delegates to database
 func (s *storageAdapter) DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
 	return s.db.DeleteStorefrontProduct(ctx, storefrontID, productID)
+}
+
+// HardDeleteStorefrontProduct delegates to database
+func (s *storageAdapter) HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
+	return s.db.HardDeleteStorefrontProduct(ctx, storefrontID, productID)
 }
 
 // UpdateProductInventory delegates to database

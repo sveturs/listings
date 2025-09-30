@@ -171,7 +171,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services)
 	balanceHandler := balanceHandler.NewHandler(services)
-	storefrontModule := storefronts.NewModule(services)
+	storefrontModule := storefronts.NewModule(ctx, services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{
 		URL:      cfg.OpenSearch.URL,
 		Username: cfg.OpenSearch.Username,

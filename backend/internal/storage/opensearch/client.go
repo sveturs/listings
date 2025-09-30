@@ -413,7 +413,8 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 
 		switch method {
 		case "GET", "POST":
-			if strings.Contains(path, "/_search") {
+			switch {
+			case strings.Contains(path, "/_search"):
 				// Поисковый запрос
 				parts := strings.Split(path, "/_search")
 				req := opensearchapi.SearchRequest{
@@ -421,7 +422,22 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 					Body:  bodyReader,
 				}
 				res, err = req.Do(ctx, c.client)
-			} else {
+			case strings.Contains(path, "/_delete_by_query"):
+				// Удаление по запросу
+				parts := strings.Split(path, "/_delete_by_query")
+				indexName := strings.TrimPrefix(parts[0], "/")
+				req := opensearchapi.DeleteByQueryRequest{
+					Index: []string{indexName},
+					Body:  bodyReader,
+				}
+				res, err = req.Do(ctx, c.client)
+			case path == "/_bulk":
+				// Bulk операции
+				req := opensearchapi.BulkRequest{
+					Body: bodyReader,
+				}
+				res, err = req.Do(ctx, c.client)
+			default:
 				// Обычный GET документа
 				req := opensearchapi.GetRequest{
 					Index:      path,

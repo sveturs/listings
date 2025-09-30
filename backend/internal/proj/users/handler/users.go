@@ -7,9 +7,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/users/service"
+	"backend/pkg/utils"
 )
 
 type UserHandler struct {

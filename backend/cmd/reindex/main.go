@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"backend/internal/config"
-	"backend/internal/storage/postgres"
-	"backend/internal/storage/opensearch"
 	"backend/internal/storage/filestorage"
+	"backend/internal/storage/opensearch"
+	"backend/internal/storage/postgres"
 )
 
 func main() {

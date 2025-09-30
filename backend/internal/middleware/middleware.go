@@ -14,10 +14,10 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	"backend/internal/monitoring"
 	globalService "backend/internal/proj/global/service"
 	pkglogger "backend/pkg/logger"
+	"backend/pkg/utils"
 )
 
 type Middleware struct {

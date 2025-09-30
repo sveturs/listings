@@ -7,6 +7,7 @@ import (
 	"backend/internal/logger"
 
 	"backend/pkg/utils"
+
 	"github.com/gofiber/fiber/v2"
 )
 

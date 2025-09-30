@@ -5293,6 +5293,66 @@ definitions:
       transport_mode:
         type: string
     type: object
+  backend_internal_proj_ai_handler.AnalyzeProductResponse:
+    properties:
+      attributes:
+        additionalProperties: true
+        type: object
+      category:
+        type: string
+      categoryHints:
+        $ref: '#/definitions/backend_internal_proj_ai_handler.CategoryHints'
+      categoryProbabilities:
+        items:
+          $ref: '#/definitions/backend_internal_proj_ai_handler.CategoryProbability'
+        type: array
+      condition:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      price:
+        type: number
+      socialPosts:
+        additionalProperties:
+          type: string
+        type: object
+      suggestedLocation:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      titleVariants:
+        items:
+          type: string
+        type: array
+    type: object
+  backend_internal_proj_ai_handler.CategoryHints:
+    properties:
+      domain:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      productType:
+        type: string
+    type: object
+  backend_internal_proj_ai_handler.CategoryProbability:
+    properties:
+      name:
+        type: string
+      probability:
+        type: number
+    type: object
   backend_internal_proj_analytics_service.ItemPerformance:
     properties:
       category_id:
@@ -7007,6 +7067,9 @@ definitions:
       aiHints:
         $ref: '#/definitions/backend_internal_proj_marketplace_services.AIHints'
       description:
+        type: string
+      entityType:
+        description: '"listing" или "product"'
         type: string
       listingId:
         type: integer
@@ -10070,6 +10133,13 @@ definitions:
           type: string
         type: array
     type: object
+  internal_proj_storefronts_handler.ABTestTitlesRequest:
+    properties:
+      titleVariants:
+        items:
+          type: string
+        type: array
+    type: object
   internal_proj_storefronts_handler.AddStaffRequest:
     properties:
       role:
@@ -10079,6 +10149,15 @@ definitions:
     required:
     - role
     - user_id
+    type: object
+  internal_proj_storefronts_handler.AnalyzeProductImageRequest:
+    properties:
+      imageData:
+        description: base64 encoded image
+        type: string
+      language:
+        description: ru, en, sr
+        type: string
     type: object
   internal_proj_storefronts_handler.DashboardNotification:
     properties:
@@ -10094,6 +10173,17 @@ definitions:
         type: string
       type:
         description: order, message, stock
+        type: string
+    type: object
+  internal_proj_storefronts_handler.DetectCategoryRequest:
+    properties:
+      aiHints:
+        $ref: '#/definitions/backend_internal_proj_marketplace_services.AIHints'
+      description:
+        type: string
+      language:
+        type: string
+      title:
         type: string
     type: object
   internal_proj_storefronts_handler.ImageOrderUpdate:
@@ -10124,6 +10214,22 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  internal_proj_storefronts_handler.TranslateContentRequest:
+    properties:
+      content:
+        properties:
+          description:
+            type: string
+          title:
+            type: string
+        type: object
+      sourceLanguage:
+        type: string
+      targetLanguages:
+        items:
+          type: string
+        type: array
     type: object
   internal_proj_subscriptions_handler.InitiatePaymentRequest:
     properties:
@@ -29475,6 +29581,47 @@ paths:
       summary: Update payment methods
       tags:
       - storefronts
+  /api/v1/storefronts/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restores a previously deactivated storefront (admin only)
+      parameters:
+      - description: Storefront ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Storefront restored
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "403":
+          description: Admin access required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "404":
+          description: Storefront not found
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Restore deactivated storefront
+      tags:
+      - storefronts
   /api/v1/storefronts/{id}/staff:
     get:
       consumes:
@@ -29990,7 +30137,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Permanently deletes a product
+      description: Permanently deletes a product and all related data (reviews, favorites,
+        images, etc.)
       parameters:
       - description: Storefront slug
         in: path
@@ -30002,11 +30150,16 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Must be true for hard delete
+        in: query
+        name: hard
+        required: true
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
-          description: Product deleted successfully
+          description: Product permanently deleted
           schema:
             $ref: '#/definitions/SuccessResponse'
         "400":
@@ -30027,7 +30180,7 @@ paths:
             $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Delete a storefront product
+      summary: Hard delete a storefront product
       tags:
       - storefront-products
     get:
@@ -30936,6 +31089,166 @@ paths:
       summary: Update order status
       tags:
       - orders
+  /api/v1/storefronts/ai/ab-test-titles:
+    post:
+      consumes:
+      - application/json
+      description: Evaluates multiple title variants and returns the best one
+      parameters:
+      - description: Title variants
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_storefronts_handler.ABTestTitlesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A/B test result
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: A/B test product titles
+      tags:
+      - AI Storefronts
+  /api/v1/storefronts/ai/analyze-product-image:
+    post:
+      consumes:
+      - application/json
+      description: Uses Claude AI to analyze product image and extract title, description,
+        category hints, price, etc.
+      parameters:
+      - description: Image data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_storefronts_handler.AnalyzeProductImageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: AI analysis result
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_ai_handler.AnalyzeProductResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Analyze product image with AI for storefront products
+      tags:
+      - AI Storefronts
+  /api/v1/storefronts/ai/detect-category:
+    post:
+      consumes:
+      - application/json
+      description: Uses AI to detect the most suitable category for a storefront product
+      parameters:
+      - description: Product details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_storefronts_handler.DetectCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category detection result
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Detect category for storefront product
+      tags:
+      - AI Storefronts
+  /api/v1/storefronts/ai/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Returns accuracy and performance metrics for AI category detection
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Metrics data
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get AI detection metrics for storefront products
+      tags:
+      - AI Storefronts
+  /api/v1/storefronts/ai/translate-content:
+    post:
+      consumes:
+      - application/json
+      description: Translates product title and description to specified languages
+      parameters:
+      - description: Content to translate
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_storefronts_handler.TranslateContentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Translation result
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Translate product content to multiple languages
+      tags:
+      - AI Storefronts
   /api/v1/storefronts/building:
     get:
       consumes:

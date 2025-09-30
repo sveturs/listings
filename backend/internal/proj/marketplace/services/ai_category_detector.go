@@ -38,6 +38,7 @@ type AIDetectionInput struct {
 	AIHints     *AIHints `json:"aiHints,omitempty"`
 	UserID      int32    `json:"userId,omitempty"`
 	ListingID   int32    `json:"listingId,omitempty"`
+	EntityType  string   `json:"entityType,omitempty"` // "listing" или "product"
 }
 
 type AIDetectionResult struct {
@@ -1403,6 +1404,12 @@ func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input A
 	hash := sha256.Sum256([]byte(strings.ToLower(input.Title)))
 	titleHash := hex.EncodeToString(hash[:])
 
+	// Определяем entity_type (по умолчанию "listing")
+	entityType := input.EntityType
+	if entityType == "" {
+		entityType = "listing"
+	}
+
 	query := `
 		SELECT
 			acd.category_id,
@@ -1417,6 +1424,7 @@ func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input A
 		FROM ai_category_decisions acd
 		JOIN marketplace_categories c ON c.id = acd.category_id
 		WHERE acd.title_hash = $1
+			AND acd.entity_type = $2
 			AND acd.created_at > NOW() - INTERVAL '30 days'
 		ORDER BY acd.confidence DESC, acd.created_at DESC
 		LIMIT 1
@@ -1434,7 +1442,7 @@ func (d *AICategoryDetector) getAIDecisionFromCache(ctx context.Context, input A
 		AIProductType  *string  `db:"ai_product_type"`
 	}
 
-	err := d.db.GetContext(ctx, &result, query, titleHash)
+	err := d.db.GetContext(ctx, &result, query, titleHash, entityType)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoCachedResult // Не найдено в кеше
@@ -1472,6 +1480,12 @@ func (d *AICategoryDetector) saveAIDecisionToCache(ctx context.Context, input AI
 	hash := sha256.Sum256([]byte(strings.ToLower(input.Title)))
 	titleHash := hex.EncodeToString(hash[:])
 
+	// Определяем entity_type (по умолчанию "listing")
+	entityType := input.EntityType
+	if entityType == "" {
+		entityType = "listing"
+	}
+
 	// Определяем модель
 	aiModel := "local_algorithms"
 	if fromAI {
@@ -1496,9 +1510,9 @@ func (d *AICategoryDetector) saveAIDecisionToCache(ctx context.Context, input AI
 		INSERT INTO ai_category_decisions (
 			title_hash, title, description, category_id, confidence,
 			reasoning, alternative_category_ids, ai_model, processing_time_ms,
-			ai_domain, ai_product_type, ai_keywords
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-		ON CONFLICT (title_hash) DO UPDATE SET
+			ai_domain, ai_product_type, ai_keywords, entity_type
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		ON CONFLICT (title_hash, entity_type) DO UPDATE SET
 			category_id = EXCLUDED.category_id,
 			confidence = EXCLUDED.confidence,
 			reasoning = EXCLUDED.reasoning,
@@ -1522,6 +1536,7 @@ func (d *AICategoryDetector) saveAIDecisionToCache(ctx context.Context, input AI
 		aiDomain,
 		aiProductType,
 		aiKeywords,
+		entityType,
 	)
 
 	if err != nil {

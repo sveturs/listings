@@ -32,7 +32,7 @@ func (d *VINDecoder) ValidateVIN(vin string) error {
 
 	// Проверка что все символы валидные (A-Z, 0-9, кроме I, O, Q)
 	for _, char := range vin {
-		if !((char >= '0' && char <= '9') || (char >= 'A' && char <= 'Z')) {
+		if (char < '0' || char > '9') && (char < 'A' || char > 'Z') {
 			return fmt.Errorf("VIN содержит недопустимый символ: %c", char)
 		}
 	}
@@ -40,10 +40,8 @@ func (d *VINDecoder) ValidateVIN(vin string) error {
 	// Проверка контрольной суммы (позиция 9) - опциональна для европейских авто
 	// В Европе контрольная сумма не обязательна, но если это североамериканское авто - проверяем
 	if d.isNorthAmericanVIN(vin) {
-		if !d.validateCheckDigit(vin) {
-			// Для европейского рынка это не критично, просто предупреждение
-			// return fmt.Errorf("неверная контрольная сумма VIN")
-		}
+		// Валидируем контрольную сумму (не возвращаем ошибку для совместимости с европейскими VIN)
+		_ = d.validateCheckDigit(vin)
 	}
 
 	return nil

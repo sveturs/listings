@@ -6,6 +6,8 @@ import { useCreateListing } from '@/contexts/CreateListingContext';
 import { UnifiedAttributeField } from '@/components/shared/UnifiedAttributeField';
 import { unifiedAttributeService } from '@/services/unifiedAttributeService';
 import { CarSelector } from '@/components/cars/CarSelector';
+import VinDecoder from '@/components/cars/VinDecoder';
+import { toast } from '@/utils/toast';
 import type { CarSelection } from '@/types/cars';
 import type { components } from '@/types/generated/api';
 
@@ -53,6 +55,7 @@ export default function UnifiedAttributesStep({
   const [validationErrors, setValidationErrors] = useState<
     Record<number, string>
   >({});
+  const [showVinDecoder, setShowVinDecoder] = useState(false);
 
   // Проверяем является ли категория автомобильной
   const isAutomotiveCategory = useMemo(() => {
@@ -373,6 +376,127 @@ export default function UnifiedAttributesStep({
     });
   };
 
+  // Обработчик автозаполнения из VIN декодера
+  const handleVinAutoFill = useCallback(
+    (vinData: any) => {
+      if (!vinData) return;
+
+      const updatedValues: Record<number, UnifiedAttributeValue> = {
+        ...attributeValues,
+      };
+
+      // Мапинг данных VIN на атрибуты
+      const vinToAttributeMap: Record<string, any> = {
+        year: vinData.year,
+        mileage: vinData.mileage || 0,
+        fuel_type: vinData.fuel_type,
+        transmission: vinData.transmission,
+        body_type: vinData.body_type,
+        drive_type: vinData.drive_type,
+        engine_volume: vinData.engine?.displacement,
+        engine_cylinders: vinData.engine?.cylinders,
+      };
+
+      // Автозаполнение атрибутов из VIN данных
+      attributes.forEach((attr) => {
+        if (!attr.id || !attr.name) return;
+
+        const attrName = attr.name.toLowerCase();
+
+        // Год выпуска
+        if (attrName.includes('year') && vinToAttributeMap.year) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            numeric_value: vinToAttributeMap.year,
+            display_value: String(vinToAttributeMap.year),
+          };
+        }
+
+        // Пробег
+        if (
+          attrName.includes('mileage') &&
+          vinToAttributeMap.mileage !== undefined
+        ) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            numeric_value: vinToAttributeMap.mileage,
+            display_value: `${vinToAttributeMap.mileage} км`,
+          };
+        }
+
+        // Тип топлива
+        if (attrName.includes('fuel') && vinToAttributeMap.fuel_type) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            text_value: vinToAttributeMap.fuel_type,
+            display_value: vinToAttributeMap.fuel_type,
+          };
+        }
+
+        // Коробка передач
+        if (
+          attrName.includes('transmission') &&
+          vinToAttributeMap.transmission
+        ) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            text_value: vinToAttributeMap.transmission,
+            display_value: vinToAttributeMap.transmission,
+          };
+        }
+
+        // Тип кузова
+        if (attrName.includes('body') && vinToAttributeMap.body_type) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            text_value: vinToAttributeMap.body_type,
+            display_value: vinToAttributeMap.body_type,
+          };
+        }
+
+        // Привод
+        if (attrName.includes('drive') && vinToAttributeMap.drive_type) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            text_value: vinToAttributeMap.drive_type,
+            display_value: vinToAttributeMap.drive_type,
+          };
+        }
+
+        // Объем двигателя
+        if (
+          attrName.includes('engine_volume') &&
+          vinToAttributeMap.engine_volume
+        ) {
+          updatedValues[attr.id] = {
+            attribute_id: attr.id,
+            numeric_value: vinToAttributeMap.engine_volume,
+            display_value: `${vinToAttributeMap.engine_volume} л`,
+          };
+        }
+      });
+
+      setAttributeValues(updatedValues);
+
+      // Обновляем марку и модель если они есть в VIN данных
+      if (vinData.make_name || vinData.model_name) {
+        setCarSelection((prev) => ({
+          ...prev,
+          make: vinData.make_name
+            ? { id: 0, name: vinData.make_name }
+            : prev.make,
+          model: vinData.model_name
+            ? { id: 0, name: vinData.model_name }
+            : prev.model,
+        }));
+      }
+
+      toast.success(t('attributes.vin_autofill_success'));
+      setShowVinDecoder(false);
+    },
+    [attributes, attributeValues, t]
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -432,25 +556,64 @@ export default function UnifiedAttributesStep({
             </div>
           ) : (
             <div className="space-y-6 mb-8">
-              {/* CarSelector для автомобильных категорий */}
+              {/* CarSelector и VIN декодер для автомобильных категорий */}
               {isAutomotiveCategory && (
-                <div className="card bg-base-100 shadow-lg">
-                  <div className="card-body">
-                    <h3 className="card-title text-xl flex items-center gap-3">
-                      <span className="text-2xl">🚗</span>
-                      {t('attributes.groups.car_selection')}
-                      <div className="badge badge-warning">
-                        {tCommon('required')}
+                <>
+                  {/* VIN Декодер */}
+                  <div className="card bg-base-100 shadow-lg">
+                    <div className="card-body">
+                      <div className="flex items-center justify-between">
+                        <h3 className="card-title text-xl flex items-center gap-3">
+                          <span className="text-2xl">🔍</span>
+                          {t('attributes.vin_decoder_title')}
+                          <div className="badge badge-info">
+                            {t('attributes.vin_decoder_optional')}
+                          </div>
+                        </h3>
+                        <button
+                          type="button"
+                          className={`btn btn-sm ${showVinDecoder ? 'btn-ghost' : 'btn-primary'}`}
+                          onClick={() => setShowVinDecoder(!showVinDecoder)}
+                        >
+                          {showVinDecoder
+                            ? t('attributes.vin_decoder_hide')
+                            : t('attributes.vin_decoder_show')}
+                        </button>
                       </div>
-                    </h3>
-                    <CarSelector
-                      value={carSelection}
-                      onChange={setCarSelection}
-                      required={true}
-                      className="mt-4"
-                    />
+
+                      {showVinDecoder && (
+                        <div className="mt-4">
+                          <p className="text-sm text-base-content/70 mb-4">
+                            {t('attributes.vin_decoder_description')}
+                          </p>
+                          <VinDecoder
+                            onAutoFill={handleVinAutoFill}
+                            showAutoFill={true}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Селектор марки и модели */}
+                  <div className="card bg-base-100 shadow-lg">
+                    <div className="card-body">
+                      <h3 className="card-title text-xl flex items-center gap-3">
+                        <span className="text-2xl">🚗</span>
+                        {t('attributes.groups.car_selection')}
+                        <div className="badge badge-warning">
+                          {tCommon('required')}
+                        </div>
+                      </h3>
+                      <CarSelector
+                        value={carSelection}
+                        onChange={setCarSelection}
+                        required={true}
+                        className="mt-4"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Информация об обязательных полях */}

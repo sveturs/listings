@@ -143,12 +143,13 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
                   type: 'product' as const,
                   value: item.name || item.title,
                   label: item.name || item.title,
-                  product_id: item.id,
+                  product_id: item.product_id || item.id,
                   metadata: {
                     price: item.price,
                     image: imageUrl,
                     category: item.category?.name,
-                    source_type: 'marketplace',
+                    source_type: item.product_type || 'marketplace',
+                    storefront_slug: item.storefront?.slug,
                   },
                 };
               });

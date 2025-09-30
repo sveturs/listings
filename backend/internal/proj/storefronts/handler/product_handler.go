@@ -7,6 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -84,6 +85,14 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	if isActive := c.Query("is_active"); isActive != "" {
 		active := isActive == boolValueTrue
 		filter.IsActive = &active
+	} else {
+		// Для публичного API (не-админов) показываем только активные товары
+		isAdmin, _ := c.Locals("is_admin").(bool)
+		if !isAdmin {
+			activeTrue := true
+			filter.IsActive = &activeTrue
+		}
+		// Для админов: если is_active не указан, показываем все товары (nil)
 	}
 
 	if sku := c.Query("sku"); sku != "" {
@@ -357,7 +366,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 
 	// Передаем контекст с информацией об администраторе
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	if err := h.productService.DeleteProduct(ctx, storefrontID, productID, userID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -367,6 +376,65 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Product deleted successfully",
+	})
+}
+
+// HardDeleteProduct permanently deletes a product
+// @Summary Hard delete a storefront product
+// @Description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
+// @Tags storefront-products
+// @Accept json
+// @Produce json
+// @Param slug path string true "Storefront slug"
+// @Param id path int true "Product ID"
+// @Param hard query bool true "Must be true for hard delete"
+// @Success 200 {object} backend_internal_domain_models.SuccessResponse "Product permanently deleted"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Product not found"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{slug}/products/{id} [delete]
+func (h *ProductHandler) HardDeleteProduct(c *fiber.Ctx) error {
+	storefrontID, err := getStorefrontIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	productID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid product ID",
+		})
+	}
+
+	// Передаем контекст с информацией об администраторе
+	isAdmin, _ := c.Locals("is_admin").(bool)
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
+
+	if err := h.productService.HardDeleteProduct(ctx, storefrontID, productID, userID); err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefront_id", storefrontID).
+			Int("product_id", productID).
+			Int("user_id", userID).
+			Msg("Failed to hard delete product")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Product permanently deleted",
 	})
 }
 
@@ -595,7 +663,7 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 
 	// Передаем контекст с информацией об администраторе
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	response, err := h.productService.BulkDeleteProducts(ctx, storefrontID, userID, req)
 	if err != nil {

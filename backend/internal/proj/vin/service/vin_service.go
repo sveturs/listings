@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"backend/internal/logger"
 	"backend/internal/proj/vin/models"
 	"backend/internal/proj/vin/storage/postgres"
 )
@@ -70,7 +71,9 @@ func (s *VINService) DecodeVIN(ctx context.Context, req *models.VINDecodeRequest
 			DecodeSuccess: false,
 			CheckType:     "manual",
 		}
-		s.storage.SaveCheckHistory(ctx, history)
+		if err := s.storage.SaveCheckHistory(ctx, history); err != nil {
+			logger.Error().Err(err).Msg("Failed to save VIN check history")
+		}
 
 		return &models.VINDecodeResponse{
 			Success: false,

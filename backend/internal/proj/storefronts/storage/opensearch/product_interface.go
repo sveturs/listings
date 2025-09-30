@@ -48,6 +48,7 @@ type ProductSearchParams struct {
 	PriceMin        float64                // Минимальная цена
 	PriceMax        float64                // Максимальная цена
 	InStock         *bool                  // Только в наличии
+	IsActive        *bool                  // Фильтр по активности (nil = не фильтровать, для админки)
 	Attributes      map[string]interface{} // Фильтры по атрибутам
 	City            string                 // Город витрины
 	Latitude        float64                // Широта для геопоиска

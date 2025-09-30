@@ -356,7 +356,13 @@
       "dimensions": "Dimensions",
       "other": "Other",
       "car_selection": "Car selection"
-    }
+    },
+    "vin_decoder_title": "VIN Decoder",
+    "vin_decoder_optional": "Optional",
+    "vin_decoder_show": "Use VIN",
+    "vin_decoder_hide": "Hide",
+    "vin_decoder_description": "Enter the vehicle's VIN to automatically fill in the specifications",
+    "vin_autofill_success": "Specifications successfully filled from VIN data"
   },
 
   "errors": {

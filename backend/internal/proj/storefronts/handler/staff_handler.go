@@ -6,8 +6,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/service"
-	"backend/pkg/utils"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

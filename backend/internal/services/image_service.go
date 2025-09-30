@@ -5,13 +5,16 @@ import (
 	"context"
 	"fmt"
 	"image"
+	_ "image/gif" // Регистрация GIF декодера
 	"image/jpeg"
-	_ "image/png" // Регистрация PNG декодера
+	_ "image/png"
 	"io"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
 	"time"
+
+	// Регистрация PNG декодера
 
 	"backend/internal/domain/models"
 	"backend/internal/storage/filestorage"
@@ -19,6 +22,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nfnt/resize"
+	_ "golang.org/x/image/webp" // Регистрация WebP декодера
 )
 
 // ImageType определяет тип изображения для выбора правильного бакета
@@ -35,8 +39,12 @@ const (
 
 // ImageService - единый сервис для работы с изображениями
 type ImageService struct {
-	fileStorage filestorage.FileStorageInterface
-	repo        interfaces.ImageRepositoryInterface
+	fileStorage       filestorage.FileStorageInterface
+	repo              interfaces.ImageRepositoryInterface
+	bucketListings    string // Bucket для marketplace listings
+	bucketStorefront  string // Bucket для storefront products
+	bucketChatFiles   string // Bucket для chat files
+	bucketReviewPhoto string // Bucket для review photos
 }
 
 // GetRepo возвращает репозиторий (для использования в handler)
@@ -44,11 +52,23 @@ func (s *ImageService) GetRepo() interfaces.ImageRepositoryInterface {
 	return s.repo
 }
 
+// ImageServiceConfig содержит конфигурацию для ImageService
+type ImageServiceConfig struct {
+	BucketListings    string
+	BucketStorefront  string
+	BucketChatFiles   string
+	BucketReviewPhoto string
+}
+
 // NewImageService создает новый ImageService
-func NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface) *ImageService {
+func NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg ImageServiceConfig) *ImageService {
 	return &ImageService{
-		fileStorage: fileStorage,
-		repo:        repo,
+		fileStorage:       fileStorage,
+		repo:              repo,
+		bucketListings:    cfg.BucketListings,
+		bucketStorefront:  cfg.BucketStorefront,
+		bucketChatFiles:   cfg.BucketChatFiles,
+		bucketReviewPhoto: cfg.BucketReviewPhoto,
 	}
 }
 
@@ -97,17 +117,18 @@ func (s *ImageService) UploadImage(ctx context.Context, req *UploadImageRequest)
 	// Определение бакета
 	bucket := s.getBucketForImageType(req.EntityType)
 
-	// Загрузка основного изображения
-	imageURL, err := s.fileStorage.UploadFile(ctx, filePath, bytes.NewReader(fileBytes), req.FileHeader.Size, req.FileHeader.Header.Get("Content-Type"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to upload image: %w", err)
+	// Загрузка основного изображения в соответствующий bucket
+	// Всегда используем UploadToCustomBucket, так как теперь у нас есть имена всех buckets
+	imageURL, uploadErr := s.fileStorage.UploadToCustomBucket(ctx, bucket, filePath, bytes.NewReader(fileBytes), req.FileHeader.Size, req.FileHeader.Header.Get("Content-Type"))
+	if uploadErr != nil {
+		return nil, fmt.Errorf("failed to upload image: %w", uploadErr)
 	}
 
-	// Загрузка миниатюры
+	// Загрузка миниатюры в тот же bucket
 	thumbnailPath := s.generateThumbnailPath(filePath)
-	thumbnailURL, err := s.fileStorage.UploadFile(ctx, thumbnailPath, bytes.NewReader(thumbnailBytes), int64(len(thumbnailBytes)), "image/jpeg")
-	if err != nil {
-		return nil, fmt.Errorf("failed to upload thumbnail: %w", err)
+	thumbnailURL, uploadErr := s.fileStorage.UploadToCustomBucket(ctx, bucket, thumbnailPath, bytes.NewReader(thumbnailBytes), int64(len(thumbnailBytes)), "image/jpeg")
+	if uploadErr != nil {
+		return nil, fmt.Errorf("failed to upload thumbnail: %w", uploadErr)
 	}
 
 	// Создание записи в БД
@@ -150,20 +171,33 @@ func (s *ImageService) DeleteImage(ctx context.Context, imageID int, entityType 
 	imageURL := imageRecord.GetImageURL()
 	thumbnailURL := imageRecord.GetThumbnailURL()
 
-	// Удаляем префикс /listings/ из URL для получения пути в MinIO
-	imagePath := strings.TrimPrefix(imageURL, "/listings/")
-	thumbnailPath := strings.TrimPrefix(thumbnailURL, "/listings/")
+	// Определяем bucket для типа изображения
+	bucket := s.getBucketForImageType(entityType)
+
+	// Удаляем префикс /{bucket}/ из URL для получения пути в MinIO
+	bucketPrefix := "/" + bucket + "/"
+	imagePath := strings.TrimPrefix(imageURL, bucketPrefix)
+	// Также удаляем старый префикс для обратной совместимости
+	if imagePath == imageURL {
+		imagePath = strings.TrimPrefix(imageURL, "/listings/")
+	}
+	thumbnailPath := strings.TrimPrefix(thumbnailURL, bucketPrefix)
+	if thumbnailPath == thumbnailURL {
+		thumbnailPath = strings.TrimPrefix(thumbnailURL, "/listings/")
+	}
 
 	// Удаление основного изображения из MinIO
 	if imagePath != "" && imagePath != imageURL {
-		if err := s.fileStorage.DeleteFile(ctx, imagePath); err != nil {
+		err = s.fileStorage.DeleteFileFromCustomBucket(ctx, bucket, imagePath)
+		if err != nil {
 			return fmt.Errorf("failed to delete image from storage: %w", err)
 		}
 	}
 
 	// Удаление миниатюры из MinIO
 	if thumbnailPath != "" && thumbnailPath != thumbnailURL {
-		if err := s.fileStorage.DeleteFile(ctx, thumbnailPath); err != nil {
+		err = s.fileStorage.DeleteFileFromCustomBucket(ctx, bucket, thumbnailPath)
+		if err != nil {
 			// Логируем ошибку, но не останавливаем процесс
 			fmt.Printf("Warning: failed to delete thumbnail: %v\n", err)
 		}
@@ -225,6 +259,7 @@ func (s *ImageService) validateImageFile(fileHeader *multipart.FileHeader) error
 }
 
 // generateFilePath генерирует путь для сохранения файла
+// Для кастомных buckets путь не должен включать название bucket (оно уже в UploadToCustomBucket)
 func (s *ImageService) generateFilePath(entityType ImageType, entityID int, filename string) string {
 	ext := filepath.Ext(filename)
 	uniqueID := uuid.New().String()
@@ -234,15 +269,16 @@ func (s *ImageService) generateFilePath(entityType ImageType, entityID int, file
 	case ImageTypeMarketplaceListing:
 		return fmt.Sprintf("listings/%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
 	case ImageTypeStorefrontProduct:
-		return fmt.Sprintf("storefront-products/%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
+		// Для товаров витрин путь без префикса bucket (bucket передается отдельно)
+		return fmt.Sprintf("%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
 	case ImageTypeStorefrontLogo:
-		return fmt.Sprintf("storefronts/%d/logo_%s_%s%s", entityID, timestamp, uniqueID, ext)
+		return fmt.Sprintf("%d/logo_%s_%s%s", entityID, timestamp, uniqueID, ext)
 	case ImageTypeStorefrontBanner:
-		return fmt.Sprintf("storefronts/%d/banner_%s_%s%s", entityID, timestamp, uniqueID, ext)
+		return fmt.Sprintf("%d/banner_%s_%s%s", entityID, timestamp, uniqueID, ext)
 	case ImageTypeChatFile:
-		return fmt.Sprintf("chat-files/%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
+		return fmt.Sprintf("%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
 	case ImageTypeReviewPhoto:
-		return fmt.Sprintf("review-photos/%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
+		return fmt.Sprintf("%d/%s_%s%s", entityID, timestamp, uniqueID, ext)
 	default:
 		return fmt.Sprintf("misc/%s_%s%s", timestamp, uniqueID, ext)
 	}
@@ -262,17 +298,17 @@ func (s *ImageService) generateThumbnailPath(originalPath string) string {
 func (s *ImageService) getBucketForImageType(entityType ImageType) string {
 	switch entityType {
 	case ImageTypeMarketplaceListing:
-		return "listings"
+		return s.bucketListings
 	case ImageTypeStorefrontProduct:
-		return "storefront-products"
+		return s.bucketStorefront
 	case ImageTypeStorefrontLogo, ImageTypeStorefrontBanner:
-		return "storefronts"
+		return s.bucketStorefront // Используем тот же bucket для storefront images
 	case ImageTypeChatFile:
-		return "chat-files"
+		return s.bucketChatFiles
 	case ImageTypeReviewPhoto:
-		return "review-photos"
+		return s.bucketReviewPhoto
 	default:
-		return "misc"
+		return s.bucketListings // Fallback на listings bucket
 	}
 }
 
@@ -320,13 +356,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeStorefrontLogo:
 		// Для логотипа витрины
@@ -336,13 +365,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeStorefrontBanner:
 		// Для баннера витрины
@@ -352,13 +374,6 @@ func (s *ImageService) createImageRecord(req *UploadImageRequest, imageURL, thum
 			ThumbnailURL:        thumbnailURL,
 			DisplayOrder:        req.DisplayOrder,
 			IsDefault:           req.IsMain,
-			FilePath:            filePath,
-			FileName:            req.FileHeader.Filename,
-			FileSize:            int(req.FileHeader.Size),
-			ContentType:         req.FileHeader.Header.Get("Content-Type"),
-			StorageType:         "minio",
-			StorageBucket:       bucket,
-			PublicURL:           imageURL,
 		}
 	case ImageTypeChatFile:
 		// Для файлов чата

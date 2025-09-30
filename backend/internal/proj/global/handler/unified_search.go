@@ -14,11 +14,11 @@ import (
 
 	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
-	"backend/pkg/utils"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
+	"backend/pkg/utils"
 )
 
 const (
@@ -698,6 +698,14 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 			if err != nil {
 				logger.Error().Err(err).Int("storefront_id", product.StorefrontID).Msg("Failed to get storefront info for user")
 			} else if storefront != nil {
+				// Обновляем информацию о витрине из БД (если slug пустой в OpenSearch)
+				if item.Storefront.Slug == "" {
+					item.Storefront.Slug = storefront.Slug
+				}
+				if item.Storefront.Name == "" {
+					item.Storefront.Name = storefront.Name
+				}
+
 				// Получаем информацию о пользователе - владельце витрины
 				user, err := h.services.User().GetUserByID(ctx, storefront.UserID)
 				if err != nil {

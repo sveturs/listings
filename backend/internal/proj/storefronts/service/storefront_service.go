@@ -12,6 +12,7 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/proj/notifications/service"
+	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
@@ -88,6 +89,7 @@ type StorefrontService interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Storefront, error)
 	Update(ctx context.Context, userID int, storefrontID int, dto *models.StorefrontUpdateDTO) error
 	Delete(ctx context.Context, userID int, storefrontID int) error
+	Restore(ctx context.Context, userID int, storefrontID int) error
 
 	// Листинг и поиск
 	ListUserStorefronts(ctx context.Context, userID int) ([]*models.Storefront, error)
@@ -277,16 +279,25 @@ func (s *StorefrontServiceImpl) Update(ctx context.Context, userID int, storefro
 // Delete удаляет витрину
 func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefrontID int) error {
 	// Проверяем, является ли пользователь администратором из контекста
-	if isAdmin, ok := ctx.Value("is_admin").(bool); ok && isAdmin {
+	isAdmin, ok := ctx.Value(common.ContextKeyIsAdmin).(bool)
+	logger.Info().
+		Int("userID", userID).
+		Int("storefrontID", storefrontID).
+		Bool("isAdmin", isAdmin).
+		Bool("isAdminOk", ok).
+		Msg("Delete service called")
+
+	if ok && isAdmin {
 		// Проверяем флаг жесткого удаления из контекста
-		hardDelete, _ := ctx.Value("hard_delete").(bool)
+		hardDelete, _ := ctx.Value(common.ContextKeyHardDelete).(bool)
 
 		if hardDelete {
 			// Администратор выбрал жесткое удаление
 			logger.Info().Msgf("Admin user %d hard deleting storefront %d", userID, storefrontID)
 
 			// Жестко удаляем витрину (полное удаление из БД)
-			if err := s.repo.HardDelete(ctx, storefrontID); err != nil {
+			if err := s.repo.HardDeleteDebug(ctx, storefrontID); err != nil {
+				logger.Error().Err(err).Int("storefrontID", storefrontID).Msg("Failed to hard delete storefront")
 				return fmt.Errorf("ошибка жесткого удаления витрины: %w", err)
 			}
 		} else {
@@ -326,6 +337,44 @@ func (s *StorefrontServiceImpl) Delete(ctx context.Context, userID int, storefro
 		logger.Error().Err(err).Msg("Ошибка удаления витрины из OpenSearch")
 	}
 
+	return nil
+}
+
+// Restore восстанавливает деактивированную витрину
+func (s *StorefrontServiceImpl) Restore(ctx context.Context, userID int, storefrontID int) error {
+	// Проверяем, является ли пользователь администратором из контекста
+	isAdmin, ok := ctx.Value(common.ContextKeyIsAdmin).(bool)
+	logger.Info().
+		Int("userID", userID).
+		Int("storefrontID", storefrontID).
+		Bool("isAdmin", isAdmin).
+		Bool("isAdminOk", ok).
+		Msg("Restore service called")
+
+	if !ok || !isAdmin {
+		return fmt.Errorf("только администраторы могут восстанавливать витрины")
+	}
+
+	// Восстанавливаем витрину (активируем)
+	if err := s.repo.Restore(ctx, storefrontID); err != nil {
+		logger.Error().Err(err).Int("storefrontID", storefrontID).Msg("Failed to restore storefront")
+		return fmt.Errorf("ошибка восстановления витрины: %w", err)
+	}
+
+	// Обновляем индекс в OpenSearch
+	storefront, err := s.repo.GetByID(ctx, storefrontID)
+	if err != nil {
+		logger.Error().Err(err).Int("storefrontID", storefrontID).Msg("Failed to get storefront after restore")
+		return fmt.Errorf("ошибка получения витрины после восстановления: %w", err)
+	}
+
+	// Индексируем в OpenSearch
+	if err := s.services.Storage().IndexStorefront(ctx, storefront); err != nil {
+		logger.Error().Err(err).Msg("Ошибка индексации витрины в OpenSearch после восстановления")
+		// Не возвращаем ошибку, так как витрина уже восстановлена в БД
+	}
+
+	logger.Info().Int("storefrontID", storefrontID).Msg("Storefront restored successfully")
 	return nil
 }
 

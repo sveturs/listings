@@ -9,10 +9,11 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
+	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -202,11 +203,19 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 
 	// Pass admin status and hard delete flag through context
 	isAdmin, _ := c.Locals("is_admin").(bool)
-	hardDelete := c.Query("hard") == "true" // Query parameter для выбора жесткого удаления
+	hardDelete := c.Query("hard_delete") == boolValueTrue // Query parameter для выбора жесткого удаления
 
-	ctx := context.WithValue(context.Background(), isAdminKey, isAdmin)
-	ctx = context.WithValue(ctx, userIDKey, userID)
-	ctx = context.WithValue(ctx, hardDeleteKey, hardDelete)
+	// Логируем для отладки
+	logger.Info().
+		Int("userID", userID).
+		Int("storefrontID", id).
+		Bool("isAdmin", isAdmin).
+		Bool("hardDelete", hardDelete).
+		Msg("DeleteStorefront called")
+
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
+	ctx = context.WithValue(ctx, common.ContextKeyUserID, userID)
+	ctx = context.WithValue(ctx, common.ContextKeyHardDelete, hardDelete)
 
 	err = h.service.Delete(ctx, userID, id)
 	if err != nil {
@@ -222,6 +231,58 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Storefront deleted successfully",
+	})
+}
+
+// RestoreStorefront восстанавливает деактивированную витрину
+// @Summary Restore deactivated storefront
+// @Description Restores a previously deactivated storefront (admin only)
+// @Tags storefronts
+// @Accept json
+// @Produce json
+// @Param id path int true "Storefront ID"
+// @Success 200 {object} map[string]string "Storefront restored"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Admin access required"
+// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Storefront not found"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{id}/restore [post]
+func (h *StorefrontHandler) RestoreStorefront(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(int)
+	isAdmin, _ := c.Locals("is_admin").(bool)
+
+	if !isAdmin {
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.admin_access_required")
+	}
+
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "storefronts.error.invalid_id")
+	}
+
+	logger.Info().
+		Int("userID", userID).
+		Int("storefrontID", id).
+		Bool("isAdmin", isAdmin).
+		Msg("RestoreStorefront called")
+
+	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
+	ctx = context.WithValue(ctx, common.ContextKeyUserID, userID)
+
+	err = h.service.Restore(ctx, userID, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, postgres.ErrNotFound):
+			return utils.ErrorResponse(c, fiber.StatusNotFound, "storefronts.error.not_found")
+		default:
+			logger.Error().Err(err).Int("storefrontID", id).Msg("Failed to restore storefront")
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.restore_failed")
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Storefront restored successfully",
 	})
 }
 
@@ -265,20 +326,47 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	// Set admin flag in filter for repository
 	filter.IsAdminRequest = isAdmin
 
+	logger.Info().
+		Bool("isAdmin", isAdmin).
+		Bool("filter.IsAdminRequest", filter.IsAdminRequest).
+		Msg("ListStorefronts: admin status")
+
 	// Парсим query параметры
 	if userID := c.QueryInt("user_id"); userID > 0 {
 		filter.UserID = &userID
 	}
+
+	// Проверяем параметр include_inactive для админ панели
+	includeInactive := c.Query("include_inactive") == "true"
+
+	// Если запрашивается include_inactive, то обрабатываем как админ запрос
+	// чтобы репозиторий не применял фильтрацию по is_active
+	if includeInactive {
+		filter.IsAdminRequest = true
+		logger.Info().
+			Msg("ListStorefronts: include_inactive=true, treating as admin request")
+	}
+
+	logger.Info().
+		Bool("includeInactive", includeInactive).
+		Str("includeInactiveParam", c.Query("include_inactive")).
+		Bool("filter.IsAdminRequest", filter.IsAdminRequest).
+		Msg("ListStorefronts: include_inactive status")
 
 	// Для админа и владельца (если указан userID) не применяем фильтр по активности по умолчанию
 	// Для публичных запросов - применяем
 	if isActive := c.Query("is_active"); isActive != "" {
 		active := isActive == boolValueTrue
 		filter.IsActive = &active
-	} else if !isAdmin && filter.UserID == nil {
+		logger.Info().Bool("isActiveSet", active).Msg("ListStorefronts: is_active explicitly set")
+	} else if !includeInactive && !isAdmin && filter.UserID == nil {
 		// Для публичных запросов (не админ и не запрос конкретного пользователя) показываем только активные
+		// ЕСЛИ не передан флаг include_inactive
 		active := true
 		filter.IsActive = &active
+		logger.Info().Msg("ListStorefronts: applying default is_active=true filter")
+	} else {
+		logger.Info().Msg("ListStorefronts: NOT applying default is_active filter")
 	}
 
 	if isVerified := c.Query("is_verified"); isVerified != "" {

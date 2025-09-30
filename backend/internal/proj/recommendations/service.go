@@ -3,6 +3,7 @@ package recommendations
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/storage/postgres"
 )
 
@@ -137,7 +139,11 @@ func (s *Service) GetContentBasedRecommendations(itemID int64, limit int) ([]mod
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			logger.Error().Err(err).Msg("Failed to close rows")
+		}
+	}()
 
 	for rows.Next() {
 		var listing models.MarketplaceListing
@@ -161,13 +167,21 @@ func (s *Service) GetContentBasedRecommendations(itemID int64, limit int) ([]mod
 
 		// Parse JSON fields if not null
 		if metadata.Valid {
-			json.Unmarshal([]byte(metadata.String), &listing.Metadata)
+			if err := json.Unmarshal([]byte(metadata.String), &listing.Metadata); err != nil {
+				logger.Error().Err(err).Msg("Failed to unmarshal metadata")
+			}
 		}
 		if addressMultilingual.Valid {
-			json.Unmarshal([]byte(addressMultilingual.String), &listing.AddressMultilingual)
+			if err := json.Unmarshal([]byte(addressMultilingual.String), &listing.AddressMultilingual); err != nil {
+				logger.Error().Err(err).Msg("Failed to unmarshal address multilingual")
+			}
 		}
 
 		listings = append(listings, listing)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
 
 	// If we have attributes, calculate attribute similarity and re-sort
@@ -321,7 +335,7 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 			AND vh.interaction_type IN ('view', 'click_phone', 'add_favorite')
 			AND ml.price > 0
 	`, userID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
@@ -336,7 +350,11 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 		LIMIT 3
 	`, userID)
 	if err == nil {
-		defer rows.Close()
+		defer func() {
+			if err := rows.Close(); err != nil {
+				logger.Error().Err(err).Msg("Failed to close rows")
+			}
+		}()
 		for rows.Next() {
 			var city string
 			var count int
@@ -344,6 +362,9 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 				// Store city names instead of IDs
 				_ = city // We'll use city names in the future if needed
 			}
+		}
+		if err = rows.Err(); err != nil {
+			logger.Error().Err(err).Msg("Rows iteration error")
 		}
 	}
 
@@ -462,7 +483,9 @@ func (s *Service) enhanceWithAttributeSimilarity(listings *[]models.MarketplaceL
 		`, listing.ID)
 
 		if err == nil {
-			json.Unmarshal(attrs, &listingAttrs)
+			if err := json.Unmarshal(attrs, &listingAttrs); err != nil {
+				logger.Error().Err(err).Msg("Failed to unmarshal listing attributes")
+			}
 
 			// Calculate Jaccard similarity
 			similarity := s.calculateAttributeSimilarity(refAttrs, listingAttrs)
@@ -508,7 +531,7 @@ func (s *Service) calculateAttributeSimilarity(attrs1, attrs2 []map[string]inter
 	union := float64(len(map1) + len(map2))
 	if union > 0 {
 		// Adjust for intersection counted twice
-		union = union - intersection
+		union -= intersection
 		if union > 0 {
 			return intersection / union
 		}

@@ -11,8 +11,8 @@ import (
 
 	"backend/internal/proj/gis/constants"
 	"backend/internal/proj/gis/service"
-	"backend/pkg/utils"
 	"backend/internal/proj/gis/types"
+	"backend/pkg/utils"
 )
 
 // SpatialHandler обработчик пространственных запросов
