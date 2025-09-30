@@ -9,8 +9,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 )
 
 // CustomComponentHandler handles requests for custom components

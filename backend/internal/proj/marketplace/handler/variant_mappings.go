@@ -5,10 +5,10 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
-	"backend/pkg/utils"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/services/attributes"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

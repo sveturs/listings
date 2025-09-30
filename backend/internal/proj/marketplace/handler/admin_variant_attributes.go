@@ -10,8 +10,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	globalService "backend/internal/proj/global/service"
+	"backend/pkg/utils"
 )
 
 // AdminVariantAttributesHandler обрабатывает запросы админки для управления вариативными атрибутами

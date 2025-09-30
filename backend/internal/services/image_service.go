@@ -5,15 +5,16 @@ import (
 	"context"
 	"fmt"
 	"image"
-	_ "image/gif"  // Регистрация GIF декодера
+	_ "image/gif" // Регистрация GIF декодера
 	"image/jpeg"
-	_ "image/png" // Регистрация PNG декодера
-
+	_ "image/png"
 	"io"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
 	"time"
+
+	// Регистрация PNG декодера
 
 	"backend/internal/domain/models"
 	"backend/internal/storage/filestorage"

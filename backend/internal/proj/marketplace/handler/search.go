@@ -13,12 +13,12 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/pkg/utils"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/marketplace/cache"
 	"backend/internal/proj/marketplace/service"
 	searchlogsTypes "backend/internal/proj/searchlogs/types"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

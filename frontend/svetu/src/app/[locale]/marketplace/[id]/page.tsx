@@ -235,7 +235,9 @@ export default function ListingPage({ params }: Props) {
         );
         if (!response.ok) {
           // Оба API не вернули результат - объявление не найдено
-          console.error(`Listing ${id} not found in both marketplace and storefronts`);
+          console.error(
+            `Listing ${id} not found in both marketplace and storefronts`
+          );
           setListing(null);
           setIsLoading(false);
           return;

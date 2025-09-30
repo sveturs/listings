@@ -5,9 +5,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/pkg/utils"
 	"backend/internal/logger"
 	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

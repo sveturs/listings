@@ -19,8 +19,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	"backend/internal/proj/notifications/service"
+	"backend/pkg/utils"
 )
 
 type Handler struct {

@@ -9,8 +9,8 @@ import (
 
 	globalService "backend/internal/proj/global/service"
 	paymentService "backend/internal/proj/payments/service"
-	"backend/pkg/utils"
 	"backend/pkg/logger"
+	"backend/pkg/utils"
 )
 
 type Handler struct {

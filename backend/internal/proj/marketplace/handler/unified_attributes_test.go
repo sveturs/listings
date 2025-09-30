@@ -12,8 +12,8 @@ import (
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
-	"backend/pkg/utils"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"

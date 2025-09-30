@@ -84,11 +84,22 @@ export default function AdminStorefrontProductsTable() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // Для админ панели загружаем ВСЕ витрины
+      // Получаем токен авторизации для админского доступа
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      // Для админ панели загружаем ВСЕ витрины (включая неактивные)
       const storefrontsResponse = await fetch(
-        `http://localhost:3000/api/v1/storefronts`,
+        `http://localhost:3000/api/v1/storefronts?include_inactive=true`,
         {
           credentials: 'include',
+          headers,
         }
       );
 
@@ -127,16 +138,19 @@ export default function AdminStorefrontProductsTable() {
         );
 
         const params = new URLSearchParams();
-        if (searchQuery) params.append('query', searchQuery);
+        if (searchQuery) params.append('search', searchQuery);
         // if (categoryFilter) params.append('category_id', categoryFilter);
         // if (statusFilter) params.append('status', statusFilter);
         params.append('limit', '100'); // Получаем больше товаров за раз
+        // Для админки не фильтруем по is_active - показываем все товары
+        // (не передаем параметр is_active вообще, чтобы получить и активные и неактивные)
 
         // Используем правильный эндпоинт с slug в пути
         const response = await fetch(
           `http://localhost:3000/api/v1/storefronts/slug/${storefront.slug}/products?${params}`,
           {
             credentials: 'include',
+            headers,
           }
         );
 
@@ -337,11 +351,11 @@ export default function AdminStorefrontProductsTable() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDeactivate = async () => {
     if (selectedProducts.size === 0) return;
 
     const confirmed = window.confirm(
-      `Вы уверены что хотите удалить ${selectedProducts.size} товаров?`
+      `Вы уверены что хотите деактивировать ${selectedProducts.size} товаров?`
     );
     if (!confirmed) return;
 
@@ -355,7 +369,80 @@ export default function AdminStorefrontProductsTable() {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
-      // Удаляем все товары параллельно для ускорения
+      // Деактивируем все товары параллельно
+      const deactivatePromises = Array.from(selectedProducts).map(
+        async (id) => {
+          const product = products.find((p) => p.id === id);
+          const slug = product?.storefront_slug || product?.storefront?.slug;
+
+          if (!slug) {
+            console.error(
+              `Cannot deactivate product ${id}: storefront slug not found`
+            );
+            return false;
+          }
+
+          try {
+            const response = await fetch(
+              `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}`,
+              {
+                method: 'PUT',
+                headers,
+                credentials: 'include',
+                body: JSON.stringify({
+                  is_active: false,
+                }),
+              }
+            );
+
+            if (!response.ok) {
+              console.error(
+                `Failed to deactivate product ${id}:`,
+                response.status
+              );
+              return false;
+            }
+            return true;
+          } catch (error) {
+            console.error(`Error deactivating product ${id}:`, error);
+            return false;
+          }
+        }
+      );
+
+      const results = await Promise.all(deactivatePromises);
+      const successCount = results.filter((r) => r === true).length;
+      console.log(
+        `Successfully deactivated ${successCount} out of ${selectedProducts.size} products`
+      );
+
+      // Очищаем выбранные товары и обновляем список
+      setSelectedProducts(new Set());
+      await fetchProducts();
+    } catch (error) {
+      console.error('Error during bulk deactivate:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedProducts.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Вы уверены что хотите УДАЛИТЬ НАВСЕГДА ${selectedProducts.size} товаров? Это действие необратимо!`
+    );
+    if (!confirmed) return;
+
+    try {
+      // Получаем токен один раз для всех запросов
+      const accessToken = tokenManager.getAccessToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+
+      // Удаляем все товары параллельно с параметром ?hard=true
       const deletePromises = Array.from(selectedProducts).map(async (id) => {
         const product = products.find((p) => p.id === id);
         const slug = product?.storefront_slug || product?.storefront?.slug;
@@ -369,7 +456,7 @@ export default function AdminStorefrontProductsTable() {
 
         try {
           const response = await fetch(
-            `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}`,
+            `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}?hard=true`,
             {
               method: 'DELETE',
               headers,
@@ -643,7 +730,7 @@ export default function AdminStorefrontProductsTable() {
                     <a
                       onClick={() => {
                         if (selectedProducts.size > 0) {
-                          console.log('Deactivate selected');
+                          handleBulkDeactivate();
                         }
                       }}
                     >

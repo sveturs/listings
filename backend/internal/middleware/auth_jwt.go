@@ -138,6 +138,13 @@ func (m *Middleware) AuthRequiredJWT(c *fiber.Ctx) error {
 					c.Locals("user_id", authClaims.UserID)
 					c.Locals("user_email", authClaims.Email)
 					c.Locals("auth_method", "jwt_auth_service_optional")
+
+					// Проверяем и устанавливаем is_admin для публичных маршрутов
+					isAdmin := false
+					if authClaims.Email != "" {
+						isAdmin, _ = m.services.User().IsUserAdmin(c.Context(), authClaims.Email)
+					}
+					c.Locals("is_admin", isAdmin)
 				}
 			}
 		}

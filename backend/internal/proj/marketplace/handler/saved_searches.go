@@ -6,8 +6,8 @@ import (
 
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
-	"backend/pkg/utils"
 	"backend/internal/proj/marketplace/service"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

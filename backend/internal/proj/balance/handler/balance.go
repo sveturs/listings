@@ -11,8 +11,8 @@ import (
 
 	"backend/internal/domain/models"
 	balance "backend/internal/proj/balance/service"
-	"backend/pkg/utils"
 	paymentService "backend/internal/proj/payments/service"
+	"backend/pkg/utils"
 )
 
 // ContextKey is a type for context keys to avoid collisions

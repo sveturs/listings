@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useDispatch } from 'react-redux';
 import Link from 'next/link';
-import { FiPlus, FiUpload, FiArrowLeft } from 'react-icons/fi';
+import { FiPlus, FiUpload, FiArrowLeft, FiZap } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/services/api-client';
 import { ProductList } from '@/components/products/ProductList';
@@ -137,6 +137,14 @@ export default function ProductsPage({ params }: PageProps) {
             >
               <FiUpload className="w-5 h-5" />
               {t('products.importProducts')}
+            </Link>
+            <Link
+              href={`/${locale}/storefronts/${slug}/products/new-ai`}
+              className="btn btn-secondary gap-2"
+              title={t('products.addProductWithAI')}
+            >
+              <FiZap className="w-5 h-5" />
+              {t('products.addProductAI')}
             </Link>
             <Link
               href={`/${locale}/storefronts/${slug}/products/new`}

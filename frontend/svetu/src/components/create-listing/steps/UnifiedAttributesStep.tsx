@@ -413,7 +413,10 @@ export default function UnifiedAttributesStep({
         }
 
         // Пробег
-        if (attrName.includes('mileage') && vinToAttributeMap.mileage !== undefined) {
+        if (
+          attrName.includes('mileage') &&
+          vinToAttributeMap.mileage !== undefined
+        ) {
           updatedValues[attr.id] = {
             attribute_id: attr.id,
             numeric_value: vinToAttributeMap.mileage,
@@ -431,7 +434,10 @@ export default function UnifiedAttributesStep({
         }
 
         // Коробка передач
-        if (attrName.includes('transmission') && vinToAttributeMap.transmission) {
+        if (
+          attrName.includes('transmission') &&
+          vinToAttributeMap.transmission
+        ) {
           updatedValues[attr.id] = {
             attribute_id: attr.id,
             text_value: vinToAttributeMap.transmission,
@@ -458,7 +464,10 @@ export default function UnifiedAttributesStep({
         }
 
         // Объем двигателя
-        if (attrName.includes('engine_volume') && vinToAttributeMap.engine_volume) {
+        if (
+          attrName.includes('engine_volume') &&
+          vinToAttributeMap.engine_volume
+        ) {
           updatedValues[attr.id] = {
             attribute_id: attr.id,
             numeric_value: vinToAttributeMap.engine_volume,
@@ -473,8 +482,12 @@ export default function UnifiedAttributesStep({
       if (vinData.make_name || vinData.model_name) {
         setCarSelection((prev) => ({
           ...prev,
-          make: vinData.make_name ? { id: 0, name: vinData.make_name } : prev.make,
-          model: vinData.model_name ? { id: 0, name: vinData.model_name } : prev.model,
+          make: vinData.make_name
+            ? { id: 0, name: vinData.make_name }
+            : prev.make,
+          model: vinData.model_name
+            ? { id: 0, name: vinData.model_name }
+            : prev.model,
         }));
       }
 
@@ -562,7 +575,9 @@ export default function UnifiedAttributesStep({
                           className={`btn btn-sm ${showVinDecoder ? 'btn-ghost' : 'btn-primary'}`}
                           onClick={() => setShowVinDecoder(!showVinDecoder)}
                         >
-                          {showVinDecoder ? t('attributes.vin_decoder_hide') : t('attributes.vin_decoder_show')}
+                          {showVinDecoder
+                            ? t('attributes.vin_decoder_hide')
+                            : t('attributes.vin_decoder_show')}
                         </button>
                       </div>
 

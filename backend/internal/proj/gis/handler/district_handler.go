@@ -7,9 +7,9 @@ import (
 
 	"backend/internal/proj/gis/constants"
 
-	"backend/pkg/utils"
 	"backend/internal/proj/gis/service"
 	"backend/internal/proj/gis/types"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"

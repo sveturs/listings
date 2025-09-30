@@ -8130,6 +8130,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "default": 100,
                         "description": "Daily cost limit in USD",
                         "name": "daily_limit",
@@ -8137,6 +8138,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "default": 2000,
                         "description": "Monthly cost limit in USD",
                         "name": "monthly_limit",
@@ -14400,6 +14402,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Широта",
                         "name": "lat",
                         "in": "query",
@@ -14407,6 +14410,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Долгота",
                         "name": "lon",
                         "in": "query",
@@ -15187,7 +15191,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "integer"
+                                                "type": "integer",
+                                                "format": "int64"
                                             }
                                         }
                                     }
@@ -28836,6 +28841,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -28848,18 +28854,21 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Radius in km for geo search",
                         "name": "radius_km",
                         "in": "query"
@@ -28966,6 +28975,268 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/storefronts/ai/ab-test-titles": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Evaluates multiple title variants and returns the best one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "A/B test product titles",
+                "parameters": [
+                    {
+                        "description": "Title variants",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.ABTestTitlesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A/B test result",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/analyze-product-image": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uses Claude AI to analyze product image and extract title, description, category hints, price, etc.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Analyze product image with AI for storefront products",
+                "parameters": [
+                    {
+                        "description": "Image data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.AnalyzeProductImageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AI analysis result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_ai_handler.AnalyzeProductResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/detect-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uses AI to detect the most suitable category for a storefront product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Detect category for storefront product",
+                "parameters": [
+                    {
+                        "description": "Product details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.DetectCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category detection result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIDetectionResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns accuracy and performance metrics for AI category detection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Get AI detection metrics for storefront products",
+                "responses": {
+                    "200": {
+                        "description": "Metrics data",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/ai/translate-content": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates product title and description to specified languages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI Storefronts"
+                ],
+                "summary": "Translate product content to multiple languages",
+                "parameters": [
+                    {
+                        "description": "Content to translate",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_storefronts_handler.TranslateContentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation result",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/storefronts/building": {
             "get": {
                 "description": "Returns all storefronts located in the same building",
@@ -28983,6 +29254,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Building latitude",
                         "name": "lat",
                         "in": "query",
@@ -28990,6 +29262,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Building longitude",
                         "name": "lng",
                         "in": "query",
@@ -29081,6 +29354,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum latitude",
                         "name": "min_lat",
                         "in": "query",
@@ -29088,6 +29362,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Maximum latitude",
                         "name": "max_lat",
                         "in": "query",
@@ -29095,6 +29370,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum longitude",
                         "name": "min_lng",
                         "in": "query",
@@ -29102,6 +29378,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Maximum longitude",
                         "name": "max_lng",
                         "in": "query",
@@ -29109,6 +29386,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float32",
                         "description": "Minimum rating filter",
                         "name": "min_rating",
                         "in": "query"
@@ -29199,6 +29477,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude",
                         "name": "lat",
                         "in": "query",
@@ -29206,6 +29485,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude",
                         "name": "lng",
                         "in": "query",
@@ -29213,6 +29493,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Radius in kilometers (default 5)",
                         "name": "radius_km",
                         "in": "query"
@@ -29322,12 +29603,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Latitude for geo search",
                         "name": "lat",
                         "in": "query"
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Longitude for geo search",
                         "name": "lng",
                         "in": "query"
@@ -29340,6 +29623,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "number",
+                        "format": "float64",
                         "description": "Minimum rating",
                         "name": "min_rating",
                         "in": "query"
@@ -30541,6 +30825,70 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Insufficient permissions",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/storefronts/{id}/restore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Restores a previously deactivated storefront (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "storefronts"
+                ],
+                "summary": "Restore deactivated storefront",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Storefront ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Storefront restored",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Admin access required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Storefront not found",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -31791,7 +32139,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently deletes a product",
+                "description": "Permanently deletes a product and all related data (reviews, favorites, images, etc.)",
                 "consumes": [
                     "application/json"
                 ],
@@ -31801,7 +32149,7 @@ const docTemplate = `{
                 "tags": [
                     "storefront-products"
                 ],
-                "summary": "Delete a storefront product",
+                "summary": "Hard delete a storefront product",
                 "parameters": [
                     {
                         "type": "string",
@@ -31816,11 +32164,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Must be true for hard delete",
+                        "name": "hard",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Product deleted successfully",
+                        "description": "Product permanently deleted",
                         "schema": {
                             "$ref": "#/definitions/SuccessResponse"
                         }
@@ -34974,7 +35329,8 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "number"
+                                                "type": "number",
+                                                "format": "float64"
                                             }
                                         }
                                     }
@@ -37490,6 +37846,11 @@ const docTemplate = `{
                 "AttributeEntityTypeProduct": "Товар витрины",
                 "AttributeEntityTypeProductVariant": "Вариант товара"
             },
+            "x-enum-descriptions": [
+                "Объявление маркетплейса",
+                "Товар витрины",
+                "Вариант товара"
+            ],
             "x-enum-varnames": [
                 "AttributeEntityTypeListing",
                 "AttributeEntityTypeProduct",
@@ -37578,6 +37939,11 @@ const docTemplate = `{
                 "PurposeRegular": "Обычный атрибут для фильтрации/поиска",
                 "PurposeVariant": "Вариативный атрибут (влияет на SKU)"
             },
+            "x-enum-descriptions": [
+                "Обычный атрибут для фильтрации/поиска",
+                "Вариативный атрибут (влияет на SKU)",
+                "Может использоваться в обоих случаях"
+            ],
             "x-enum-varnames": [
                 "PurposeRegular",
                 "PurposeVariant",
@@ -39696,6 +40062,12 @@ const docTemplate = `{
                 "PrivacyLevelExact": "Точный адрес",
                 "PrivacyLevelStreet": "Только улица"
             },
+            "x-enum-descriptions": [
+                "Точный адрес",
+                "Только улица",
+                "Только район",
+                "Только город"
+            ],
             "x-enum-varnames": [
                 "PrivacyLevelExact",
                 "PrivacyLevelStreet",
@@ -40531,6 +40903,15 @@ const docTemplate = `{
                 "OrderStatusRefunded": "возвращен",
                 "OrderStatusShipped": "отправлен"
             },
+            "x-enum-descriptions": [
+                "ожидает оплаты",
+                "оплачен, подтвержден",
+                "в обработке",
+                "отправлен",
+                "доставлен",
+                "отменен",
+                "возвращен"
+            ],
             "x-enum-varnames": [
                 "OrderStatusPending",
                 "OrderStatusConfirmed",
@@ -40672,6 +41053,17 @@ const docTemplate = `{
                 "PaymentMethodKeks": "Keks Pay (популярно в Сербии)",
                 "PaymentMethodPostanska": "Poštanska štedionica"
             },
+            "x-enum-descriptions": [
+                "Наличные в магазине",
+                "Cash on Delivery - оплата курьеру",
+                "Банковская карта",
+                "Банковский перевод",
+                "",
+                "",
+                "Poštanska štedionica",
+                "Keks Pay (популярно в Сербии)",
+                "Instant Payment System"
+            ],
             "x-enum-varnames": [
                 "PaymentMethodCash",
                 "PaymentMethodCOD",
@@ -41735,6 +42127,10 @@ const docTemplate = `{
                 "GeoStrategyIndividualLocation": "Использовать индивидуальные адреса товаров",
                 "GeoStrategyStorefrontLocation": "Использовать адрес витрины"
             },
+            "x-enum-descriptions": [
+                "Использовать адрес витрины",
+                "Использовать индивидуальные адреса товаров"
+            ],
             "x-enum-varnames": [
                 "GeoStrategyStorefrontLocation",
                 "GeoStrategyIndividualLocation"
@@ -44247,11 +44643,13 @@ const docTemplate = `{
                 },
                 "latitude": {
                     "description": "Широта для геопоиска",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
                     "description": "Долгота для геопоиска",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "minimumShouldMatch": {
                     "description": "Минимальное количество совпадений (70%, 50% и т.д.)",
@@ -44263,11 +44661,13 @@ const docTemplate = `{
                 },
                 "priceMax": {
                     "description": "Максимальная цена",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "priceMin": {
                     "description": "Минимальная цена",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "query": {
                     "description": "Текстовый запрос",
@@ -44316,6 +44716,97 @@ const docTemplate = `{
                 },
                 "transport_mode": {
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_ai_handler.AnalyzeProductResponse": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "categoryHints": {
+                    "$ref": "#/definitions/backend_internal_proj_ai_handler.CategoryHints"
+                },
+                "categoryProbabilities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/backend_internal_proj_ai_handler.CategoryProbability"
+                    }
+                },
+                "condition": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "socialPosts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "suggestedLocation": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "backend_internal_proj_ai_handler.CategoryHints": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "productType": {
+                    "type": "string"
+                }
+            }
+        },
+        "backend_internal_proj_ai_handler.CategoryProbability": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "probability": {
+                    "type": "number"
                 }
             }
         },
@@ -45161,7 +45652,8 @@ const docTemplate = `{
                 "geographic_distribution": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "period": {
@@ -45716,7 +46208,8 @@ const docTemplate = `{
                 "average_delivery_days": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "period": {
@@ -46389,7 +46882,8 @@ const docTemplate = `{
                                             "items": {
                                                 "type": "array",
                                                 "items": {
-                                                    "type": "number"
+                                                    "type": "number",
+                                                    "format": "float64"
                                                 }
                                             }
                                         }
@@ -46426,6 +46920,12 @@ const docTemplate = `{
                 "PrivacyExact": "Точный адрес",
                 "PrivacyStreet": "Размытие ±100-200м"
             },
+            "x-enum-descriptions": [
+                "Точный адрес",
+                "Размытие ±100-200м",
+                "Размытие ±500-1000м",
+                "Только город"
+            ],
             "x-enum-varnames": [
                 "PrivacyExact",
                 "PrivacyStreet",
@@ -46614,7 +47114,8 @@ const docTemplate = `{
                         "items": {
                             "type": "array",
                             "items": {
-                                "type": "number"
+                                "type": "number",
+                                "format": "float64"
                             }
                         }
                     }
@@ -46872,6 +47373,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "entityType": {
+                    "description": "\"listing\" или \"product\"",
                     "type": "string"
                 },
                 "listingId": {
@@ -48078,13 +48583,15 @@ const docTemplate = `{
                 "documents_by_category": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 },
                 "documents_by_status": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 },
                 "index_health": {
@@ -48552,7 +49059,8 @@ const docTemplate = `{
                 },
                 "distance": {
                     "description": "Расстояние в км (если есть)",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "email": {
                     "type": "string"
@@ -48583,10 +49091,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "latitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "name": {
                     "type": "string"
@@ -48604,14 +49114,16 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "rating": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "reviewsCount": {
                     "type": "integer"
                 },
                 "score": {
                     "description": "Релевантность",
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "slug": {
                     "type": "string"
@@ -51387,6 +51899,17 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_storefronts_handler.ABTestTitlesRequest": {
+            "type": "object",
+            "properties": {
+                "titleVariants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "internal_proj_storefronts_handler.AddStaffRequest": {
             "type": "object",
             "required": [
@@ -51399,6 +51922,19 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "internal_proj_storefronts_handler.AnalyzeProductImageRequest": {
+            "type": "object",
+            "properties": {
+                "imageData": {
+                    "description": "base64 encoded image",
+                    "type": "string"
+                },
+                "language": {
+                    "description": "ru, en, sr",
+                    "type": "string"
                 }
             }
         },
@@ -51422,6 +51958,23 @@ const docTemplate = `{
                 },
                 "type": {
                     "description": "order, message, stock",
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_storefronts_handler.DetectCategoryRequest": {
+            "type": "object",
+            "properties": {
+                "aiHints": {
+                    "$ref": "#/definitions/backend_internal_proj_marketplace_services.AIHints"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -51471,6 +52024,31 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_proj_storefronts_handler.TranslateContentRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sourceLanguage": {
+                    "type": "string"
+                },
+                "targetLanguages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "internal_proj_subscriptions_handler.InitiatePaymentRequest": {
             "type": "object",
             "required": [
@@ -51495,13 +52073,16 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "latitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "longitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "speed": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -51612,10 +52193,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deliveryLatitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "deliveryLongitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "distance": {
                     "description": "в метрах",
@@ -51641,10 +52224,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pickupLatitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "pickupLongitude": {
-                    "type": "number"
+                    "type": "number",
+                    "format": "float64"
                 },
                 "status": {
                     "type": "string"
@@ -51702,14 +52287,16 @@ const docTemplate = `{
                     "description": "map[date]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "hourly_costs": {
                     "description": "map[hour]cost",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "number"
+                        "type": "number",
+                        "format": "float64"
                     }
                 },
                 "last_updated": {

@@ -44,20 +44,17 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON p.category_id = c.id
-		WHERE p.storefront_id = $1 AND p.is_active = true`
+		WHERE p.storefront_id = $1`
 
 	args := []interface{}{filter.StorefrontID}
 	argIndex := 2
 
 	// Apply filters
-	// Если явно указан фильтр по активности, используем его
+	// Фильтр по активности - применяем только если явно указан
 	if filter.IsActive != nil {
-		if *filter.IsActive {
-			// Уже есть в базовом запросе
-		} else {
-			// Заменяем условие на показ только неактивных
-			query = strings.Replace(query, "AND p.is_active = true", "AND p.is_active = false", 1)
-		}
+		query += fmt.Sprintf(" AND p.is_active = $%d", argIndex)
+		args = append(args, *filter.IsActive)
+		argIndex++
 	}
 
 	if filter.CategoryID != nil {
@@ -87,12 +84,6 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 	if filter.StockStatus != nil {
 		query += fmt.Sprintf(" AND p.stock_status = $%d", argIndex)
 		args = append(args, *filter.StockStatus)
-		argIndex++
-	}
-
-	if filter.IsActive != nil {
-		query += fmt.Sprintf(" AND p.is_active = $%d", argIndex)
-		args = append(args, *filter.IsActive)
 		argIndex++
 	}
 
@@ -918,10 +909,10 @@ func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, pr
 		}
 	}()
 
-	// Деактивируем товар в storefront_products
-	query := `UPDATE storefront_products 
-		SET is_active = false, updated_at = CURRENT_TIMESTAMP 
-		WHERE id = $1 AND storefront_id = $2 AND is_active = true`
+	// Деактивируем товар в storefront_products (если еще активен)
+	query := `UPDATE storefront_products
+		SET is_active = false, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $1 AND storefront_id = $2`
 	result, err := tx.Exec(ctx, query, productID, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to deactivate storefront product: %w", err)
@@ -939,6 +930,74 @@ func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, pr
 	_, err = tx.Exec(ctx, updateQuery, productID, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to update marketplace listing status: %w", err)
+	}
+
+	// Коммитим транзакцию
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// HardDeleteStorefrontProduct permanently deletes a product and all related data
+func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			_ = rollbackErr // Explicitly ignore error if transaction was already committed
+		}
+	}()
+
+	// Удаляем связанные данные в правильном порядке (от зависимых к независимым)
+
+	// 1. Удаляем изображения товара
+	_, err = tx.Exec(ctx, `DELETE FROM storefront_product_images WHERE storefront_product_id = $1`, productID)
+	if err != nil {
+		return fmt.Errorf("failed to delete product images: %w", err)
+	}
+
+	// 2. Удаляем варианты товара (если есть)
+	_, err = tx.Exec(ctx, `DELETE FROM storefront_product_variants WHERE product_id = $1`, productID)
+	if err != nil {
+		return fmt.Errorf("failed to delete product variants: %w", err)
+	}
+
+	// 3. Удаляем записи в избранном
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_favorites WHERE listing_id = $1`, productID)
+	if err != nil {
+		return fmt.Errorf("failed to delete favorites: %w", err)
+	}
+
+	// 4. Удаляем отзывы и оценки
+	_, err = tx.Exec(ctx, `DELETE FROM reviews WHERE entity_type = $1 AND entity_id = $2`, "storefront_product", productID)
+	if err != nil {
+		return fmt.Errorf("failed to delete reviews: %w", err)
+	}
+
+	// 5. Удаляем записи инвентаризации
+	_, err = tx.Exec(ctx, `DELETE FROM storefront_inventory_movements WHERE storefront_product_id = $1`, productID)
+	if err != nil {
+		return fmt.Errorf("failed to delete inventory movements: %w", err)
+	}
+
+	// 6. Удаляем из marketplace_listings
+	_, err = tx.Exec(ctx, `DELETE FROM marketplace_listings WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
+	if err != nil {
+		return fmt.Errorf("failed to delete marketplace listing: %w", err)
+	}
+
+	// 7. Наконец, удаляем сам товар из storefront_products
+	result, err := tx.Exec(ctx, `DELETE FROM storefront_products WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
+	if err != nil {
+		return fmt.Errorf("failed to delete storefront product: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("product not found")
 	}
 
 	// Коммитим транзакцию

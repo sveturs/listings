@@ -105,8 +105,8 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
-		"views_count":    product.ViewCount, // Добавляем счетчик просмотров для единообразия с marketplace
-		"sold_count":     product.SoldCount, // Добавляем количество продаж
+		"views_count":    product.ViewCount,           // Добавляем счетчик просмотров для единообразия с marketplace
+		"sold_count":     product.SoldCount,           // Добавляем количество продаж
 		"status":         r.getProductStatus(product), // Устанавливаем статус на основе реального состояния товара
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
@@ -315,6 +315,61 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	// Рассчитываем дополнительные поля для ранжирования
 	doc["popularity_score"] = calculatePopularityScore(product)
 	doc["quality_score"] = calculateQualityScore(product)
+
+	// НОВОЕ: Добавляем AI метаданные (если есть в attributes)
+	if product.Attributes != nil {
+		// Проверяем наличие AI метаданных в атрибутах
+		if aiGenerated, ok := product.Attributes["ai_generated"].(bool); ok && aiGenerated {
+			doc["ai_generated"] = true
+
+			// AI category confidence
+			if categoryConfidence, ok := product.Attributes["ai_category_confidence"].(float64); ok {
+				doc["ai_category_confidence"] = categoryConfidence
+			}
+
+			// AI detected keywords
+			if keywords, ok := product.Attributes["ai_detected_keywords"].([]interface{}); ok {
+				keywordsStr := make([]string, 0, len(keywords))
+				for _, kw := range keywords {
+					if kwStr, ok := kw.(string); ok {
+						keywordsStr = append(keywordsStr, kwStr)
+					}
+				}
+				doc["ai_detected_keywords"] = keywordsStr
+			}
+
+			// AI title variants
+			if titleVariants, ok := product.Attributes["ai_title_variants"].([]interface{}); ok {
+				variantsStr := make([]string, 0, len(titleVariants))
+				for _, tv := range titleVariants {
+					if tvStr, ok := tv.(string); ok {
+						variantsStr = append(variantsStr, tvStr)
+					}
+				}
+				doc["ai_title_variants"] = variantsStr
+			}
+		} else {
+			doc["ai_generated"] = false
+		}
+
+		// НОВОЕ: Мультиязычные поля для full-text search
+		// Проверяем наличие переводов в attributes
+		if translations, ok := product.Attributes["translations"].(map[string]interface{}); ok {
+			for lang, translation := range translations {
+				if translationMap, ok := translation.(map[string]interface{}); ok {
+					if title, ok := translationMap["title"].(string); ok {
+						doc[fmt.Sprintf("name_%s", lang)] = title
+					}
+					if description, ok := translationMap["description"].(string); ok {
+						doc[fmt.Sprintf("description_%s", lang)] = description
+					}
+				}
+			}
+			doc["ai_translations"] = translations
+		}
+	} else {
+		doc["ai_generated"] = false
+	}
 
 	return doc
 }
@@ -647,12 +702,16 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 		})
 	}
 
-	// Только активные товары
-	filter = append(filter, map[string]interface{}{
-		"term": map[string]interface{}{
-			"is_active": true,
-		},
-	})
+	// Фильтр по активности товара
+	// Если IsActive != nil, применяем фильтр с указанным значением
+	// Если IsActive == nil, не применяем фильтр (для админки показываем все товары)
+	if params.IsActive != nil {
+		filter = append(filter, map[string]interface{}{
+			"term": map[string]interface{}{
+				"is_active": *params.IsActive,
+			},
+		})
+	}
 
 	// Построение bool запроса
 	boolQuery := map[string]interface{}{}

@@ -8,8 +8,8 @@ import (
 
 	"backend/internal/domain"
 	"backend/internal/proj/search_admin/service"
-	"backend/pkg/utils"
 	"backend/pkg/logger"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )

@@ -9,11 +9,11 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/pkg/utils"
 	"backend/internal/proj/storefronts/common"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/proj/storefronts/storage/opensearch"
 	"backend/internal/storage/postgres"
+	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
