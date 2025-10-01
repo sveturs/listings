@@ -1558,6 +1558,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		UseSynonyms:      params.UseSynonyms,
 		Fuzziness:        params.Fuzziness,
 		StorefrontFilter: params.StorefrontFilter,
+		DocumentType:     params.DocumentType,
 	}
 	// Преобразуем числовые значения в указатели для SearchParams
 	// Обрабатываем массив категорий

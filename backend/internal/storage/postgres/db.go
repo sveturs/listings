@@ -143,7 +143,8 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
+		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "marketplace_listings")
 		// Подготавливаем индекс товаров витрин
 		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
@@ -1746,7 +1747,8 @@ func (db *Database) StorefrontProductSearch() interface{} {
 	}
 	// Возвращаем новый репозиторий если есть клиент OpenSearch
 	if db.osClient != nil {
-		return storefrontOpenSearch.NewProductRepository(db.osClient, "storefront_products")
+		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
+		return storefrontOpenSearch.NewProductRepository(db.osClient, "marketplace_listings")
 	}
 	return nil
 }

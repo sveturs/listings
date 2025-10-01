@@ -86,8 +86,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 					Strs("roles", roles).
 					Msg("AdminRequired: Access granted - user has admin role in JWT")
 				c.Locals("admin_id", userID)
-				// ИСПРАВЛЕНИЕ: не возвращаем результат c.Next(), а просто вызываем его
-				return nil
+				// Передаем управление следующему handler'у
+				return c.Next()
 			}
 		}
 	}
@@ -99,8 +99,8 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 			Msg("AdminRequired: Access granted for hardcoded user ID")
 		// Устанавливаем admin_id для использования в handlers
 		c.Locals("admin_id", userID)
-		// ИСПРАВЛЕНИЕ: не возвращаем результат c.Next(), а просто вызываем его
-		return nil
+		// Передаем управление следующему handler'у
+		return c.Next()
 	}
 
 	logger.Info().

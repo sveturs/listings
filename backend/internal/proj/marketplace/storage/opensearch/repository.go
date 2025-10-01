@@ -1592,6 +1592,17 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
 
+	// Фильтр по типу документа (listing или product)
+	if params.DocumentType != "" {
+		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+		filter = append(filter, map[string]interface{}{
+			"term": map[string]interface{}{
+				"type": params.DocumentType,
+			},
+		})
+		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
+	}
+
 	if params.Query != "" {
 		logger.Info().Msgf("Текстовый поиск по запросу: '%s'", params.Query)
 
@@ -3014,12 +3025,26 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.Location = location
 	}
 
-	if city, ok := doc["city"].(string); ok {
+	// Парсим новые поля адреса
+	if addressCity, ok := doc["address_city"].(string); ok {
+		listing.City = addressCity
+	} else if city, ok := doc["city"].(string); ok {
 		listing.City = city
 	}
 
-	if country, ok := doc["country"].(string); ok {
+	if addressCountry, ok := doc["address_country"].(string); ok {
+		listing.Country = addressCountry
+	} else if country, ok := doc["country"].(string); ok {
 		listing.Country = country
+	}
+
+	if addressMultilingual, ok := doc["address_multilingual"].(map[string]interface{}); ok {
+		listing.AddressMultilingual = make(map[string]string)
+		for key, value := range addressMultilingual {
+			if strValue, ok := value.(string); ok {
+				listing.AddressMultilingual[key] = strValue
+			}
+		}
 	}
 
 	if viewsCount, ok := doc["views_count"].(float64); ok {
@@ -3126,8 +3151,31 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.CategoryPathIds = []int{listing.CategoryID}
 	}
 
-	// Обрабатываем изображения
-	if imagesArray, ok := doc["images"].([]interface{}); ok {
+	// Обрабатываем изображения из массива image_urls (новый формат)
+	if imageURLsArray, ok := doc["image_urls"].([]interface{}); ok && len(imageURLsArray) > 0 {
+		images := make([]models.MarketplaceImage, 0, len(imageURLsArray))
+
+		// Получаем primary_image_url если есть
+		var primaryImageURL string
+		if primaryURL, ok := doc["primary_image_url"].(string); ok {
+			primaryImageURL = primaryURL
+		}
+
+		for idx, urlI := range imageURLsArray {
+			if url, ok := urlI.(string); ok {
+				image := models.MarketplaceImage{
+					ID:          idx + 1, // Генерируем ID для изображения
+					PublicURL:   url,
+					IsMain:      url == primaryImageURL, // Помечаем главное изображение
+					StorageType: "minio", // Предполагаем что это MinIO
+				}
+				images = append(images, image)
+			}
+		}
+
+		listing.Images = images
+	} else if imagesArray, ok := doc["images"].([]interface{}); ok {
+		// Старый формат - массив объектов с полной информацией
 		images := make([]models.MarketplaceImage, 0, len(imagesArray))
 
 		for _, imgI := range imagesArray {
@@ -3173,6 +3221,12 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		}
 
 		listing.Images = images
+	} else {
+		// Если не нашли ни image_urls, ни images
+		logger.Warn().
+			Int("listing_id", listing.ID).
+			Interface("doc_keys", getDocKeys(doc)).
+			Msg("No image_urls or images found in document")
 	}
 
 	// Обрабатываем переводы
@@ -3421,4 +3475,13 @@ func (r *Repository) FindSimilarListings(ctx context.Context, text string, size 
 	}
 
 	return results, nil
+}
+
+// getDocKeys - helper функция для получения списка ключей документа (для отладки)
+func getDocKeys(doc map[string]interface{}) []string {
+	keys := make([]string, 0, len(doc))
+	for k := range doc {
+		keys = append(keys, k)
+	}
+	return keys
 }

@@ -217,7 +217,7 @@ func NewConfig() (*Config, error) {
 
 	// Если индекс не указан, используем значение по умолчанию
 	if config.OpenSearch.MarketplaceIndex == "" {
-		config.OpenSearch.MarketplaceIndex = "marketplace"
+		config.OpenSearch.MarketplaceIndex = "marketplace_listings"
 	}
 
 	// Настройки хранилища файлов

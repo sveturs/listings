@@ -465,7 +465,8 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		Latitude:      params.Latitude,
 		Longitude:     params.Longitude,
 		// AttributeFilters: params.AttributeFilters, // TODO: конвертировать типы
-		Language: params.Language,
+		Language:     params.Language,
+		DocumentType: "listing", // Фильтруем только marketplace listings
 	}
 
 	results, err := h.services.Marketplace().SearchListingsAdvanced(ctx, searchParams)
@@ -648,6 +649,7 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Name: product.Category.Name,
 				Slug: product.Category.Slug,
 			},
+			Location:   h.convertStorefrontLocation(product),
 			Score:      product.Score,
 			ViewsCount: product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
 			CreatedAt:  product.CreatedAt,
@@ -943,6 +945,27 @@ func (h *UnifiedSearchHandler) convertMarketplaceLocation(listing *models.Market
 	}
 	if listing.Longitude != nil {
 		location.Lng = *listing.Longitude
+	}
+
+	return location
+}
+
+func (h *UnifiedSearchHandler) convertStorefrontLocation(product *storefrontOpenSearch.ProductSearchItem) *UnifiedLocationInfo {
+	if product == nil {
+		return nil
+	}
+
+	// Для storefront products адрес берется из витрины
+	location := &UnifiedLocationInfo{
+		City:    product.City,
+		Country: product.Country,
+	}
+
+	// Адрес как простая строка (не мультиязычная)
+	if product.Address != "" {
+		location.AddressMultilingual = map[string]string{
+			"default": product.Address,
+		}
 	}
 
 	return location

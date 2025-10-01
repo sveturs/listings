@@ -72,7 +72,16 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	indexGroup.Get("/info", h.GetIndexInfo)
 	indexGroup.Get("/statistics", h.GetIndexStatistics)
 	indexGroup.Get("/documents", h.SearchIndexedDocuments)
-	indexGroup.Post("/reindex", h.ReindexDocuments)
+	indexGroup.Post("/reindex", func(c *fiber.Ctx) error {
+		log.Printf("POST /admin/search/index/reindex - route wrapper reached")
+		return h.ReindexDocuments(c)
+	})
+
+	// TEMPORARY: Public reindex endpoint for development
+	api.Post("/dev/reindex", func(c *fiber.Ctx) error {
+		log.Printf("POST /dev/reindex - development endpoint reached")
+		return h.ReindexDocuments(c)
+	})
 
 	return nil
 }

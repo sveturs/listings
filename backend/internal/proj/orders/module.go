@@ -48,7 +48,8 @@ func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config) (*Mod
 			log.Error("Failed to create OpenSearch client for orders module: %v", err)
 		} else {
 			// Используем правильный индекс для товаров витрин
-			productSearchRepo = storefrontsOpensearch.NewProductRepository(osClient, "storefront_products")
+			// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
+			productSearchRepo = storefrontsOpensearch.NewProductRepository(osClient, "marketplace_listings")
 		}
 	}
 
