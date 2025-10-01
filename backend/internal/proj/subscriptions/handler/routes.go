@@ -23,6 +23,6 @@ func (h *SubscriptionHandler) RegisterRoutes(app *fiber.App, authMiddleware *mid
 	protected.Post("/complete-payment", h.CompletePayment)
 
 	// Admin routes
-	admin := app.Group("/api/v1/admin", authMiddleware.RequireAuth(), authMiddleware.RequireAdmin())
+	admin := app.Group("/api/v1/admin/subscriptions", authMiddleware.RequireAuth(), authMiddleware.RequireAdmin())
 	admin.Get("/users/:user_id/subscription", h.AdminGetUserSubscription)
 }

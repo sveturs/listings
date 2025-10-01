@@ -418,8 +418,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
-	// Используем только RequireAuth с ролью "admin" - не нужен отдельный AdminRequired
-	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth("admin"))
+	// Используем JWTParser + AdminRequired для защиты admin роутов
+	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), mw.AdminRequired)
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)

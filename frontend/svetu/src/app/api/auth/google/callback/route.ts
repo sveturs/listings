@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 15, // 15 minutes
+      maxAge: 60 * 60 * 48, // 48 hours (соответствует времени жизни токена)
     });
 
     // Устанавливаем refresh token в httpOnly cookie

@@ -50,13 +50,9 @@ func NewModule(db *sql.DB, cfg *config.Config, logger *logger.Logger) (*Module, 
 // RegisterRoutes регистрирует маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Создаем группу для админки логистики
+	// ВАЖНО: middleware JWTParser и AdminRequired уже применены от родительской группы /api/v1/admin (marketplace)
+	// Поэтому НЕ нужно добавлять их здесь повторно
 	adminLogistics := app.Group("/api/v1/admin/logistics")
-
-	// Требуем авторизацию для всех роутов
-	adminLogistics.Use(mw.AuthRequiredJWT)
-
-	// Требуем права администратора
-	adminLogistics.Use(mw.AdminRequired)
 
 	// Dashboard роуты
 	adminLogistics.Get("/dashboard", m.dashboardHandler.GetDashboardStats)

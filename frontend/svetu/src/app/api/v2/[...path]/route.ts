@@ -25,6 +25,7 @@ async function proxyRequest(
     // Получаем cookies
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('access_token')?.value;
+    const allCookies = cookieStore.getAll();
 
     // Строим URL для backend
     const backendPath = path.join('/');
@@ -32,6 +33,8 @@ async function proxyRequest(
     const backendUrl = `${BACKEND_URL}/api/v1/${backendPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log(`[BFF Proxy] ${method} /api/v2/${backendPath} → ${backendUrl}`);
+    console.log(`[BFF Proxy] Access token: ${accessToken ? 'present (length: ' + accessToken.length + ')' : 'MISSING'}`);
+    console.log(`[BFF Proxy] All cookies:`, allCookies.map(c => c.name).join(', '));
 
     // Подготавливаем заголовки
     const headers: HeadersInit = {
