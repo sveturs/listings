@@ -6,6 +6,10 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git
 
+# GitHub token for private repos
+ARG GITHUB_TOKEN
+RUN git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
 # Copy go mod files
 COPY go.mod go.sum ./
 RUN go mod download
