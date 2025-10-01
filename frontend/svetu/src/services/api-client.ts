@@ -2,12 +2,14 @@ import configManager from '@/config';
 import { logger } from '@/utils/logger';
 
 export interface ApiClientOptions extends RequestInit {
-  // Использовать внутренний URL для серверных запросов
+  // DEPRECATED: Больше не используется, все запросы идут через BFF прокси /api/v2
   internal?: boolean;
   // Timeout в миллисекундах
   timeout?: number;
   // Повторные попытки при ошибках сети
   retries?: number;
+  // Использовать прямой доступ к backend (минуя BFF прокси) - только для специальных случаев
+  direct?: boolean;
 }
 
 export interface ApiResponse<T = any> {
@@ -27,9 +29,29 @@ class ApiClient {
 
   /**
    * Получает базовый URL в зависимости от контекста
+   *
+   * По умолчанию все запросы идут через Next.js BFF прокси /api/v2
+   * который автоматически добавляет JWT токены из httpOnly cookies.
+   *
+   * Маппинг: /api/v2/* → backend /api/v1/*
    */
-  private getBaseUrl(isInternal: boolean = false): string {
-    return configManager.getApiUrl({ internal: isInternal });
+  private getBaseUrl(useDirect: boolean = false): string {
+    if (useDirect) {
+      // Прямой доступ к backend (используется редко, только для специальных случаев)
+      return configManager.getApiUrl();
+    }
+
+    // По умолчанию используем BFF прокси
+    // В browser это будет относительный путь: /api/v2
+    // В SSR это будет полный URL: http://localhost:3001/api/v2
+    if (typeof window === 'undefined') {
+      // SSR: используем полный URL
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3001';
+      return `${frontendUrl}/api/v2`;
+    }
+
+    // Browser: используем относительный путь
+    return '/api/v2';
   }
 
   /**
@@ -110,15 +132,25 @@ class ApiClient {
     options: ApiClientOptions = {}
   ): Promise<ApiResponse<T>> {
     const {
-      internal = false,
+      internal = false, // deprecated
+      direct = false,
       timeout = this.defaultTimeout,
       retries = this.defaultRetries,
       ...fetchOptions
     } = options;
 
     // Получаем базовый URL
-    const baseUrl = this.getBaseUrl(internal);
-    const url = `${baseUrl}${endpoint}`;
+    const baseUrl = this.getBaseUrl(direct);
+
+    // Для BFF прокси нужно убрать /api/v1 из endpoint если он есть
+    let finalEndpoint = endpoint;
+    if (!direct && endpoint.startsWith('/api/v1/')) {
+      // BFF прокси ожидает путь без /api/v1
+      // Например: /api/v1/users/me → /users/me → BFF → backend /api/v1/users/me
+      finalEndpoint = endpoint.replace('/api/v1/', '/');
+    }
+
+    const url = `${baseUrl}${finalEndpoint}`;
 
     // Подготавливаем заголовки
     const headers = new Headers(fetchOptions.headers);
