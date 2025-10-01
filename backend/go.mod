@@ -1,6 +1,6 @@
 module backend
 
-go 1.25
+go 1.23
 
 require (
 	cloud.google.com/go/vision v1.2.0
