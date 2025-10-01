@@ -53,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: user.email,
           name: user.name || user.email,
           provider: 'email', // Default provider since backend doesn't send it
-          is_admin: user.is_admin,
+          is_admin: user.is_admin, // Backend теперь возвращает is_admin из middleware
+          roles: user.roles,
         };
         setUser(userWithProvider);
       } else {
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name: response.user.name || response.user.email,
             provider: 'email', // Default provider since backend doesn't send it
             is_admin: response.user.is_admin,
+            roles: response.user.roles,
           };
           setUser(userWithProvider);
           router.push('/');
@@ -124,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name: response.user.name || name || response.user.email,
             provider: 'email', // Default provider since backend doesn't send it
             is_admin: response.user.is_admin,
+            roles: response.user.roles,
           };
           setUser(userWithProvider);
           router.push('/');

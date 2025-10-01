@@ -14,7 +14,7 @@ type AuthHandler struct {
 	oauthService *service.OAuthService
 	backendURL   string
 	frontendURL  string
-	log          zerolog.Logger
+	logger       zerolog.Logger
 }
 
 func NewAuthHandler(
@@ -22,14 +22,14 @@ func NewAuthHandler(
 	oauthService *service.OAuthService,
 	backendURL string,
 	frontendURL string,
-	log zerolog.Logger,
+	logger zerolog.Logger,
 ) *AuthHandler {
 	return &AuthHandler{
 		authService:  authService,
 		oauthService: oauthService,
 		backendURL:   backendURL,
 		frontendURL:  frontendURL,
-		log:          log,
+		logger:       logger,
 	}
 }
 
@@ -47,17 +47,17 @@ func NewAuthHandler(
 // @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	// Log that we reached the handler
-	h.log.Debug().Msg("Register handler called")
+	h.logger.Debug().Msg("Register handler called")
 
 	var req entity.UserRegistrationRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse registration request")
+		h.logger.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse registration request")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "invalid request body",
 		})
 	}
 
-	h.log.Debug().Interface("parsed_request", req).Msg("Registration request parsed")
+	h.logger.Debug().Interface("parsed_request", req).Msg("Registration request parsed")
 
 	resp, err := h.authService.Register(c.Context(), req)
 	if err != nil {
@@ -95,7 +95,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req entity.UserLoginRequest
 	if err := c.BodyParser(&req); err != nil {
-		h.log.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse login request")
+		h.logger.Error().Err(err).Str("body", string(c.Body())).Msg("Failed to parse login request")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "invalid request body",
 		})
@@ -261,12 +261,14 @@ func (h *AuthHandler) GetCurrentUser(c *fiber.Ctx) error {
 	userID := c.Locals("user_id")
 	email := c.Locals("email")
 	roles := c.Locals("roles")
+	isAdmin := c.Locals("is_admin")
 
 	return c.JSON(fiber.Map{
 		"user": fiber.Map{
-			"id":    userID,
-			"email": email,
-			"roles": roles,
+			"id":       userID,
+			"email":    email,
+			"roles":    roles,
+			"is_admin": isAdmin,
 		},
 	})
 }

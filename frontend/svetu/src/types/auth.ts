@@ -5,6 +5,7 @@ export interface User {
   provider: string;
   picture_url?: string;
   is_admin?: boolean;
+  roles?: string[];
   city?: string;
   country?: string;
   phone?: string;
