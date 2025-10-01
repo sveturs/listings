@@ -8,6 +8,62 @@
 4. **Процессы: Всегда закрывай старые** перед запуском новых (kill-port скрипты + screen quit)
 5. **НЕ ПОРАЖДАЙ РУДИМЕНТЫ** - проверяй наличие функций перед созданием новых
 6. **Универсальные решения** - создавай код, который можно использовать везде
+7. **Auth Service: ВСЕГДА используй библиотеку** `github.com/sveturs/auth/pkg/http/service`
+
+---
+
+## 🔐 Аутентификация и пользователи
+
+### Библиотека Auth Service
+
+В роутах для авторизации нужно  использовать middleware из библиотеки github.com/sveturs/auth
+А именно
+- JWTParser middleware
+- RequireAuth() или RequireAuthString() middleware
+
+Создание jwtParserMW есть в backend/internal/server/server.go:180 - jwtParserMW := authMiddleware.JWTParser(authServiceInstance)
+А пример использования есть в @backend/internal/proj/users/handler/routes.go
+
+Используем внешний микросервис для управления пользователями: `github.com/sveturs/auth`
+
+**ВАЖНО:** Auth Service - это ВНУТРЕННИЙ API микросервис!
+- ✅ Backend взаимодействует с Auth Service через HTTP клиент
+- ✅ Валидация JWT происходит локально (публичный ключ)
+- ✅ OAuth flow управляется через backend proxy
+- ❌ Frontend НЕ обращается напрямую к Auth Service
+
+### Основные сервисы:
+```go
+// 1. AuthService - аутентификация и валидация токенов
+authSvc := authservice.NewAuthServiceWithLocalValidation(client, logger)
+
+// 2. UserService - управление пользователями
+userSvc := authservice.NewUserService(client, logger)
+
+// 3. OAuthService - OAuth интеграция
+oauthSvc := authservice.NewOAuthService(client)
+```
+
+### Middleware для защиты роутов:
+```go
+// Парсинг JWT (не требует аутентификации)
+app.Use(authmiddleware.JWTParser(authSvc))
+
+// Требует аутентификацию
+protected := app.Use(authmiddleware.RequireAuth())
+
+// Требует admin роль
+admin := app.Use(authmiddleware.RequireAuth(entity.RoleAdmin))
+```
+
+### Получение пользователя в хендлере:
+```go
+userID, ok := authmiddleware.GetUserID(c)
+email, ok := authmiddleware.GetEmail(c)
+roles, ok := authmiddleware.GetRoles(c)
+```
+
+📚 **Полная документация:** `ssh svetu@svetu.rs cat /opt/svetu-authpreprod/MARKETPLACE_INTEGRATION_SPEC.md`
 
 ---
 
@@ -26,6 +82,7 @@
 - [Автомобильный раздел](docs/AUTOMOTIVE_SECTION_STATUS_AND_PLAN.md)
 - [Post Express интеграция](docs/POST_EXPRESS_INTEGRATION_COMPLETE.md)
 - [Загрузка изображений](docs/IMAGE_UPLOAD_TESTING_GUIDE.md)
+- [🔐 Auth Service Integration](ssh://svetu@svetu.rs/opt/svetu-authpreprod/MARKETPLACE_INTEGRATION_SPEC.md) - полная спецификация
 
 ---
 
@@ -64,8 +121,14 @@ cd frontend/svetu && yarn format && yarn lint && yarn build
 # Подключение
 psql "postgres://postgres:mX3g1XGhMRUZEX3l@localhost:5432/svetubd?sslmode=disable"
 
-# Применить миграции
+# Применить миграции (только схема)
 cd backend && ./migrator up
+
+# Применить миграции с фикстурами (схема + данные)
+cd backend && ./migrator -with-fixtures up
+
+# Применить только фикстуры (без миграций)
+cd backend && ./migrator -only-fixtures up
 
 # Подробнее: docs/CLAUDE_DATABASE_GUIDELINES.md
 ```

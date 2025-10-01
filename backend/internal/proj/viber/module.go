@@ -2,6 +2,7 @@ package viber
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 	"backend/internal/proj/global/service"
@@ -36,7 +37,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	viber.Post("/infobip-webhook", m.viberHandler.HandleInfobipWebhook)
 
 	// Роуты для отправки сообщений (требуют авторизации)
-	viberAPI := api.Group("/viber", middleware.AuthRequiredJWT)
+	viberAPI := api.Group("/viber", middleware.JWTParser(), authMiddleware.RequireAuth())
 	viberAPI.Post("/send", m.viberHandler.SendMessage)
 	viberAPI.Post("/send-tracking", m.viberHandler.SendTrackingNotification)
 	viberAPI.Get("/stats", m.viberHandler.GetSessionStats)

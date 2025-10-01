@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/config"
 	"backend/internal/middleware"
@@ -69,7 +70,7 @@ func (m *Module) SetNotificationService(notifSvc notifService.NotificationServic
 // RegisterRoutes регистрирует маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Создаем группу для API v1 с авторизацией (для основных роутов)
-	api := app.Group("/api/v1", mw.AuthRequiredJWT)
+	api := app.Group("/api/v1", mw.JWTParser(), authMiddleware.RequireAuth())
 
 	// Регистрируем защищенные роуты
 	m.handler.RegisterRoutes(api)
@@ -80,8 +81,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 
 	// Регистрируем админские роуты (консолидация из admin/logistics)
 	adminGroup := app.Group("/api/v1/admin/delivery")
-	adminGroup.Use(mw.AuthRequiredJWT)
-	adminGroup.Use(mw.AdminRequired)
+	adminGroup.Use(mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
 	m.adminHandler.RegisterConsolidatedRoutes(adminGroup, mw)
 
 	return nil

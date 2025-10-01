@@ -79,6 +79,7 @@ type Server struct {
 	users              *userHandler.Handler
 	middleware         *middleware.Middleware
 	authService        *authService.AuthService
+	jwtParserMW        fiber.Handler
 	review             *reviewHandler.Handler
 	marketplace        *marketplaceHandler.Handler
 	notifications      *notificationHandler.Handler
@@ -327,6 +328,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		users:              usersHandler,
 		middleware:         middleware,
 		authService:        authServiceInstance,
+		jwtParserMW:        jwtParserMW,
 		review:             reviewHandler,
 		marketplace:        marketplaceHandlerInstance,
 		notifications:      notificationsHandler,
@@ -475,7 +477,31 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 	}))
 
 	// WebSocket с проверкой аутентификации и rate limiting
-	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
+	// ВАЖНО: WebSocket передает токен в query параметре, не в cookie/header
+	s.app.Get("/ws/chat", func(c *fiber.Ctx) error {
+		// Получаем токен из query параметра
+		token := c.Query("token")
+		if token == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Missing authentication token",
+			})
+		}
+
+		// Валидируем токен через auth service
+		claims, err := s.authService.ValidateToken(c.Context(), token)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid or expired token",
+			})
+		}
+
+		// Устанавливаем user_id в контекст
+		c.Locals("user_id", claims.UserID)
+		c.Locals("email", claims.Email)
+		c.Locals("roles", claims.Roles)
+
+		return c.Next()
+	}, s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
 			// Сохраняем userID для использования в WebSocket handler

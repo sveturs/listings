@@ -288,7 +288,7 @@ func (h *StorefrontHandler) RestoreStorefront(c *fiber.Ctx) error {
 
 // ListStorefronts получает список витрин
 // @Summary List storefronts
-// @Description Returns paginated list of storefronts with filters
+// @Description Returns paginated list of storefronts with filters. Public endpoint that shows only active storefronts by default. Admins can see all storefronts.
 // @Tags storefronts
 // @Accept json
 // @Produce json
@@ -309,18 +309,20 @@ func (h *StorefrontHandler) RestoreStorefront(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/storefronts [get]
 func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
+	logger.Info().
+		Str("path", c.Path()).
+		Str("method", c.Method()).
+		Msg("🔥🔥🔥 ListStorefronts HANDLER CALLED 🔥🔥🔥")
+
 	filter := &models.StorefrontFilter{
 		Limit:  20,
 		Offset: 0,
 	}
 
-	// Проверяем, является ли пользователь админом
+	// Проверяем, является ли пользователь админом (опциональная аутентификация)
 	isAdmin := false
-	if userIDLocal := c.Locals("user_id"); userIDLocal != nil {
-		// Проверяем роль пользователя (предполагаем, что есть поле is_admin или role)
-		if adminLocal := c.Locals("is_admin"); adminLocal != nil {
-			isAdmin = adminLocal.(bool)
-		}
+	if adminLocal := c.Locals("is_admin"); adminLocal != nil {
+		isAdmin, _ = adminLocal.(bool)
 	}
 
 	// Set admin flag in filter for repository
@@ -413,12 +415,34 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "storefronts.error.list_failed")
 	}
 
-	return c.JSON(StorefrontsListResponse{
+	logger.Info().
+		Int("total", total).
+		Int("returned", len(storefronts)).
+		Msg("ListStorefronts: preparing response")
+
+	response := StorefrontsListResponse{
 		Storefronts: storefronts,
 		Total:       total,
 		Limit:       filter.Limit,
 		Offset:      filter.Offset,
-	})
+	}
+
+	logger.Info().
+		Interface("response", response).
+		Msg("ListStorefronts: returning JSON response")
+
+	// Явно устанавливаем статус 200
+	c.Status(fiber.StatusOK)
+	logger.Info().Int("status_before_json", c.Response().StatusCode()).Msg("ListStorefronts: status set to 200")
+
+	// Отправляем JSON
+	jsonErr := c.JSON(response)
+	logger.Info().
+		Int("status_after_json", c.Response().StatusCode()).
+		Bool("is_nil_error", jsonErr == nil).
+		Msg("ListStorefronts: JSON sent, returning from handler")
+
+	return jsonErr
 }
 
 // GetMyStorefronts получает витрины текущего пользователя

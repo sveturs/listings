@@ -6,6 +6,7 @@ import (
 	"backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // RegisterRoutes регистрирует все маршруты проекта
@@ -39,7 +40,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	statsGroup.Get("/popular", h.GetPopularSearches)
 
 	// Защищенные admin маршруты для поиска (специфичная группа)
-	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.AuthRequiredJWT, mw.AdminRequired)
+	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
 
 	// Аналитика поиска - REMOVED (deprecated, use /api/v1/analytics/metrics/search instead)
 

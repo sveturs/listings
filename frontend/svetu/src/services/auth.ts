@@ -13,13 +13,14 @@ interface RegisterData {
 interface User {
   id: number;
   email: string;
-  name: string;
-  email_verified: boolean;
+  name?: string;
+  email_verified?: boolean;
   phone_verified?: boolean;
   two_factor_enabled?: boolean;
   is_admin?: boolean;
-  created_at: string;
-  updated_at: string;
+  roles?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthResponse {

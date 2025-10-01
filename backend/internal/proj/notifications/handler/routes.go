@@ -4,6 +4,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
@@ -15,7 +16,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Post("/api/v1/notifications/email/public", h.SendPublicEmail)
 
 	// Защищенные маршруты
-	protected := app.Group("/api/v1/notifications", mw.AuthRequiredJWT)
+	protected := app.Group("/api/v1/notifications", mw.JWTParser(), authMiddleware.RequireAuth())
 
 	protected.Get("/", h.GetNotifications)
 	protected.Get("/settings", h.GetSettings)

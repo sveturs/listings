@@ -31,6 +31,11 @@ type Middleware struct {
 	jwtParserMW       fiber.Handler
 }
 
+// JWTParser возвращает middleware для парсинга JWT токенов из auth service
+func (m *Middleware) JWTParser() fiber.Handler {
+	return m.jwtParserMW
+}
+
 func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface, authSvc *authService.AuthService, jwtParser fiber.Handler) *Middleware {
 	m := &Middleware{
 		config:      cfg,

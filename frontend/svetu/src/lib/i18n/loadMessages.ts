@@ -89,6 +89,7 @@ export async function loadMessages(
           moduleData = await import(`@/messages/${locale}/admin.json`);
           break;
         case 'storefronts':
+        case 'storefront':
           moduleData = await import(`@/messages/${locale}/storefronts.json`);
           break;
         case 'create_storefront':

@@ -76,10 +76,6 @@ export async function getHomePageData(locale: string) {
     // Обрабатываем категории и добавляем количество
     const categoriesWithCount: CategoryWithCount[] =
       categoriesResponse.data?.data?.slice(0, 5).map((cat: any) => {
-        console.log('[getHomePageData] Category:', cat);
-        console.log('[getHomePageData] Translations:', cat.translations);
-        console.log('[getHomePageData] Looking for locale:', locale);
-
         return {
           id: cat.id,
           name: cat.translations?.[locale] || cat.name || cat.id, // Используем перевод для текущей локали

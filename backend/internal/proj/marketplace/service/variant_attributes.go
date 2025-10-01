@@ -7,37 +7,6 @@ import (
 	"backend/internal/domain/models"
 )
 
-// categoryVariantAttributesMap определяет какие вариативные атрибуты доступны для каждой категории
-var categoryVariantAttributesMap = map[string][]string{
-	// Одежда
-	"womens-clothing": {"color", "size", "material", "pattern", "style"},
-	"mens-clothing":   {"color", "size", "material", "pattern", "style"},
-	"kids-clothing":   {"color", "size", "material", "pattern"},
-	"sports-clothing": {"color", "size", "material"},
-
-	// Обувь
-	"shoes": {"color", "size", "material", "style"},
-
-	// Аксессуары
-	"bags":        {"color", "size", "material", "style", "pattern"},
-	"accessories": {"color", "size", "material", "style", "pattern"},
-
-	// Электроника
-	"smartphones":             {"color", "size"},
-	"computers":               {"color", "size"},
-	"gaming-consoles":         {"color", "size"},
-	"electronics-accessories": {"color", "size"},
-
-	// Бытовая техника
-	"home-appliances": {"color", "capacity", "power"},
-
-	// Мебель
-	"furniture": {"color", "material", "style"},
-
-	// Кухонная утварь
-	"kitchenware": {"color", "capacity", "material"},
-}
-
 // GetProductVariantAttributes возвращает все доступные вариативные атрибуты
 func (s *MarketplaceService) GetProductVariantAttributes(ctx context.Context) ([]*models.ProductVariantAttribute, error) {
 	query := `

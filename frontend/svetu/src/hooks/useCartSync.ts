@@ -42,6 +42,24 @@ export function useCartSync() {
       try {
         syncAttempts.current++;
 
+        // ВАЖНО: Ждём получения токена через refresh (после OAuth callback)
+        // Проверяем наличие токена с экспоненциальной задержкой
+        let tokenCheckAttempts = 0;
+        const maxTokenCheckAttempts = 10;
+
+        while (tokenCheckAttempts < maxTokenCheckAttempts) {
+          // Проверяем наличие access token в cookies
+          const hasToken = document.cookie.includes('access_token=');
+          if (hasToken) {
+            break; // Токен найден, продолжаем
+          }
+
+          // Ждём с экспоненциальной задержкой: 50ms, 100ms, 200ms, 400ms...
+          const delay = 50 * Math.pow(2, tokenCheckAttempts);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          tokenCheckAttempts++;
+        }
+
         // ВАЖНО: Сначала загружаем корзины с сервера
         // Это нужно чтобы не потерять существующие товары
         await dispatch(fetchUserCarts(user.id)).unwrap();
