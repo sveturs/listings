@@ -31,6 +31,11 @@ func (h *AuthHandler) GoogleAuth(c *fiber.Ctx) error {
 
 	redirectURI := fmt.Sprintf("%s/api/v1/auth/google/callback", h.backendURL)
 
+	logger.Info().
+		Str("backend_url", h.backendURL).
+		Str("redirect_uri", redirectURI).
+		Msg("OAuth redirectURI configuration")
+
 	// Use the new method with locale and returnPath
 	oauthURL, err := h.oauthService.StartGoogleOAuth(c.Context(), redirectURI, locale, returnPath)
 	if err != nil {
