@@ -12,9 +12,6 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
   },
-  env: {
-    NEXT_PUBLIC_APP_VERSION: version,
-  },
   // Настройки для API routes
   api: {
     bodyParser: {
@@ -134,9 +131,9 @@ const nextConfig: NextConfig = {
           source: '/uploads/:path*',
           destination: `${apiUrl}/uploads/:path*`,
         },
-        // Проксируем все API запросы на backend
+        // Проксируем все API запросы на backend, КРОМЕ /api/v2 (BFF proxy)
         {
-          source: '/api/:path*',
+          source: '/api/:path((?!v2).*)*',
           destination: `${apiUrl}/api/:path*`,
         },
         // Проксируем auth запросы (не API) с учетом локали

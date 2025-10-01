@@ -9,6 +9,7 @@
 5. **НЕ ПОРАЖДАЙ РУДИМЕНТЫ** - проверяй наличие функций перед созданием новых
 6. **Универсальные решения** - создавай код, который можно использовать везде
 7. **Auth Service: ВСЕГДА используй библиотеку** `github.com/sveturs/auth/pkg/http/service`
+8. **Frontend → Backend: ВСЕГДА через BFF proxy `/api/v2`** - НЕ обращайся напрямую к backend!
 
 ---
 
@@ -64,6 +65,64 @@ roles, ok := authmiddleware.GetRoles(c)
 ```
 
 📚 **Полная документация:** `ssh svetu@svetu.rs cat /opt/svetu-authpreprod/MARKETPLACE_INTEGRATION_SPEC.md`
+
+---
+
+## 🌐 BFF Proxy Architecture (Backend-for-Frontend)
+
+**КРИТИЧЕСКИ ВАЖНО:** Frontend НИКОГДА не обращается напрямую к backend API!
+
+### Архитектура:
+```
+Browser → /api/v2/* (Next.js BFF) → /api/v1/* (Backend)
+         └─ httpOnly cookies     └─ Authorization: Bearer <JWT>
+```
+
+### Правила использования:
+
+#### ✅ ПРАВИЛЬНО:
+```typescript
+// В любом frontend коде всегда используй apiClient
+import { apiClient } from '@/services/api-client';
+
+// Без /api/v1/ префикса!
+const response = await apiClient.get('/admin/categories');
+const response = await apiClient.post('/marketplace/listings', data);
+```
+
+#### ❌ НЕПРАВИЛЬНО:
+```typescript
+// НЕ используй прямые fetch к backend
+fetch('http://localhost:3000/api/v1/...')  // ❌ НИКОГДА!
+fetch(`${apiUrl}/api/v1/...`)              // ❌ НИКОГДА!
+
+// НЕ добавляй /api/v1/ префикс
+apiClient.get('/api/v1/admin/categories')  // ❌ Избыточно!
+
+// НЕ используй getAuthHeaders или tokenManager
+const headers = await getAuthHeaders();    // ❌ Рудимент!
+```
+
+### Преимущества BFF:
+1. ✅ **Безопасность**: JWT в httpOnly cookies (не доступны JS)
+2. ✅ **Нет CORS**: Все на одном домене
+3. ✅ **Централизация**: Авторизация в одном месте
+4. ✅ **Простота**: Не нужно управлять токенами вручную
+
+### Файлы:
+- **BFF Proxy**: `frontend/svetu/src/app/api/v2/[...path]/route.ts`
+- **API Client**: `frontend/svetu/src/services/api-client.ts`
+- **Config**: `frontend/svetu/next.config.ts` (исключен `/api/v2` из rewrite)
+
+### Переменные окружения:
+```bash
+# Backend URL для BFF proxy (server-side)
+BACKEND_INTERNAL_URL=http://localhost:3000
+
+# Fallback: http://localhost:33423 (странный порт для легкого обнаружения проблем)
+```
+
+**См. также:** [PR #181](https://github.com/sveturs/svetu/pull/181) - реализация BFF proxy
 
 ---
 
