@@ -78,7 +78,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS storefront_ratings_storefront_id_idx
 
 -- Create additional indexes
 CREATE INDEX IF NOT EXISTS idx_storefront_ratings_average ON storefront_ratings(average_rating DESC);
-CREATE INDEX IF NOT EXISTS idx_storefront_ratings_owner ON storefront_ratings(owner_id);
 
 -- Fix refresh_rating_views function to handle missing views gracefully
 CREATE OR REPLACE FUNCTION public.refresh_rating_views()
