@@ -107,43 +107,21 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 		returnPath = "/"
 	}
 
-	// URL encode the return path to pass it safely
+	// URL encode all parameters for redirect
 	encodedReturnPath := url.QueryEscape(returnPath)
+	encodedAccessToken := url.QueryEscape(result.AccessToken)
+	encodedRefreshToken := url.QueryEscape(result.RefreshToken)
 
-	// Set httpOnly cookies with tokens (same as email/password login)
-	// Access token cookie
-	c.Cookie(&fiber.Cookie{
-		Name:     "access_token",
-		Value:    result.AccessToken,
-		Path:     "/",
-		Domain:   "",
-		MaxAge:   900, // 15 minutes
-		HTTPOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: "Lax",
-	})
-
-	// Refresh token cookie
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    result.RefreshToken,
-		Path:     "/",
-		Domain:   "",
-		MaxAge:   2592000, // 30 days
-		HTTPOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: "Lax",
-	})
-
-	// Build redirect URL without tokens (just success flag and return URL)
-	redirectURL := fmt.Sprintf("%s/%s/auth/callback?success=true&return_url=%s",
-		h.frontendURL, locale, encodedReturnPath)
+	// Redirect to Next.js API route which will set cookies
+	// Next.js API route will then redirect to frontend callback page
+	redirectURL := fmt.Sprintf("%s/api/auth/google/callback?access_token=%s&refresh_token=%s&locale=%s&return_url=%s",
+		h.frontendURL, encodedAccessToken, encodedRefreshToken, locale, encodedReturnPath)
 
 	logger.Info().
-		Str("redirect_url", redirectURL).
+		Str("redirect_url_without_tokens", fmt.Sprintf("%s/api/auth/google/callback?locale=%s&return_url=%s", h.frontendURL, locale, encodedReturnPath)).
 		Str("frontend_url", h.frontendURL).
 		Str("locale", locale).
-		Msg("Redirecting to frontend callback with cookies set")
+		Msg("Redirecting to Next.js API route to set cookies")
 
 	return c.Redirect(redirectURL)
 }
