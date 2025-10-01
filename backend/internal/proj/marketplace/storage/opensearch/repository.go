@@ -3167,7 +3167,7 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 					ID:          idx + 1, // Генерируем ID для изображения
 					PublicURL:   url,
 					IsMain:      url == primaryImageURL, // Помечаем главное изображение
-					StorageType: "minio", // Предполагаем что это MinIO
+					StorageType: "minio",                // Предполагаем что это MinIO
 				}
 				images = append(images, image)
 			}

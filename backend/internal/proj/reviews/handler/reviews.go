@@ -3,11 +3,12 @@
 package handler
 
 import (
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
+
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"github.com/gofiber/fiber/v2"
 

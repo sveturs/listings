@@ -1,12 +1,13 @@
 package handler
 
 import (
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"errors"
 	"strconv"
 	"strings"
 	"time"
+
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"

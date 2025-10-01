@@ -2,7 +2,6 @@
 package handler
 
 import (
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"

@@ -2,7 +2,6 @@
 package handler
 
 import (
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"

@@ -6,54 +6,23 @@ import { toast } from '@/utils/toast';
 import Link from 'next/link';
 import { tokenManager } from '@/utils/tokenManager';
 import VariantAttributeForm from './components/VariantAttributeForm';
+import type {
+  VariantAttributeFull,
+  VariantMapping,
+} from '@/types/variant-attributes';
 
 import configManager from '@/config';
 
-interface VariantAttribute {
-  id: number;
-  code: string;
-  name: string;
-  display_name: string;
-  attribute_type: string;
-  purpose: string;
-  options?: any;
-  validation_rules?: any;
-  ui_settings?: any;
-  is_searchable: boolean;
-  is_filterable: boolean;
-  is_required: boolean;
-  is_variant_compatible: boolean;
-  affects_stock: boolean;
-  affects_price: boolean;
-  sort_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-interface VariantMapping {
-  id: number;
-  variant_attribute_id: number;
-  category_id: number;
-  sort_order: number;
-  is_required: boolean;
-  attribute?: VariantAttribute;
-  category?: {
-    id: number;
-    name: string;
-  };
-}
-
 export default function VariantAttributesClient() {
   const _t = useTranslations('admin');
-  const [attributes, setAttributes] = useState<VariantAttribute[]>([]);
+  const [attributes, setAttributes] = useState<VariantAttributeFull[]>([]);
   const [mappings, setMappings] = useState<VariantMapping[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedAttribute, setSelectedAttribute] =
-    useState<VariantAttribute | null>(null);
+    useState<VariantAttributeFull | null>(null);
 
   useEffect(() => {
     fetchVariantAttributes();
@@ -132,7 +101,7 @@ export default function VariantAttributesClient() {
     }
   };
 
-  const handleDelete = async (attr: VariantAttribute) => {
+  const handleDelete = async (attr: VariantAttributeFull) => {
     if (
       !confirm(
         `Удалить атрибут "${attr.display_name}"? Это действие нельзя отменить.`
@@ -168,7 +137,7 @@ export default function VariantAttributesClient() {
   };
 
   const handleToggleMapping = async (
-    attribute: VariantAttribute,
+    attribute: VariantAttributeFull,
     categoryId: number,
     isEnabled: boolean
   ) => {
@@ -292,7 +261,7 @@ export default function VariantAttributesClient() {
                       <div className="flex-1">
                         <div className="font-medium">{attr.display_name}</div>
                         <div className="text-sm text-base-content/70">
-                          {attr.name} • {attr.type}
+                          {attr.name} • {attr.attribute_type}
                         </div>
                         <div className="flex gap-2 mt-2">
                           {attr.affects_stock && (

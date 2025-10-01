@@ -14,6 +14,7 @@ export type TranslationModule =
   | 'profile' // Профиль пользователя
   | 'marketplace' // Маркетплейс и объявления
   | 'admin' // Админ панель
+  | 'storefront' // Витрина (алиас для storefronts)
   | 'storefronts' // Витрины магазинов
   | 'create_storefront' // Создание витрин
   | 'create_listing' // Создание объявлений

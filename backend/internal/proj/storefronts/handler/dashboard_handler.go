@@ -1,10 +1,11 @@
 package handler
 
 import (
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
+
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )

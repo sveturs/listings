@@ -817,7 +817,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				&product.City,
 				&product.Country,
 				&product.Address,
-			); err != nil{
+			); err != nil {
 				fmt.Printf("Error scanning product: %v\n", err)
 				totalErrors++
 				continue
@@ -850,8 +850,8 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Создаем документ для индексации
 			doc := map[string]interface{}{
-			"_doc_id":       fmt.Sprintf("sp_%d", product.ID), // Используется для _id в OpenSearch
-				"id":            product.ID, // Используем числовой ID для совместимости с mapping
+				"_doc_id":       fmt.Sprintf("sp_%d", product.ID), // Используется для _id в OpenSearch
+				"id":            product.ID,                       // Используем числовой ID для совместимости с mapping
 				"product_id":    product.ID,
 				"name":          product.Name, // Название продукта
 				"title":         product.Name, // Используем title для единообразия с listings

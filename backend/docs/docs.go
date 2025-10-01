@@ -11699,7 +11699,7 @@ const docTemplate = `{
         },
         "/api/v1/auth/refresh": {
             "post": {
-                "description": "Refreshes the access token using a refresh token",
+                "description": "Refreshes the access token using a refresh token from body or cookie",
                 "consumes": [
                     "application/json"
                 ],
@@ -11712,10 +11712,9 @@ const docTemplate = `{
                 "summary": "Refresh access token",
                 "parameters": [
                     {
-                        "description": "Refresh token request",
+                        "description": "Refresh token request (optional if using cookie)",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -11728,6 +11727,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "No refresh token provided",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
                     "401": {
@@ -29050,7 +29055,7 @@ const docTemplate = `{
         },
         "/api/v1/storefronts": {
             "get": {
-                "description": "Returns paginated list of storefronts with filters",
+                "description": "Returns paginated list of storefronts with filters. Public endpoint that shows only active storefronts by default. Admins can see all storefronts.",
                 "consumes": [
                     "application/json"
                 ],
@@ -38039,6 +38044,9 @@ const docTemplate = `{
         "backend_internal_domain_models.AttributeGroup": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -44810,6 +44818,10 @@ const docTemplate = `{
                 },
                 "distance": {
                     "description": "Радиус поиска",
+                    "type": "string"
+                },
+                "documentType": {
+                    "description": "Тип документа для фильтрации: \"listing\" или \"product\"",
                     "type": "string"
                 },
                 "fuzziness": {

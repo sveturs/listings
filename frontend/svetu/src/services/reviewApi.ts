@@ -44,6 +44,9 @@ export const reviewApi = {
   // Get review by ID
   async getReviewById(id: number): Promise<Review> {
     const response = await apiClient.get<{ data: Review }>(`/reviews/${id}`);
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -55,6 +58,9 @@ export const reviewApi = {
     const response = await apiClient.get<{ data: ReviewStats }>(
       `/entity/${entityType}/${entityId}/stats`
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -69,6 +75,9 @@ export const reviewApi = {
         : `/storefronts/${entityId}/aggregated-rating`;
 
     const response = await apiClient.get<{ data: AggregatedRating }>(endpoint);
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -81,6 +90,9 @@ export const reviewApi = {
       const response = await apiClient.get<{ data: CanReviewResponse }>(
         `/reviews/can-review/${entityType}/${entityId}`
       );
+      if (!response.data) {
+        throw new Error('No data received');
+      }
       return response.data.data;
     } catch (error: any) {
       // Return default response instead of throwing error for 401
@@ -97,6 +109,9 @@ export const reviewApi = {
       `/reviews/draft`,
       reviewData
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -106,6 +121,9 @@ export const reviewApi = {
       `/reviews/${reviewId}/publish`,
       {}
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -115,6 +133,9 @@ export const reviewApi = {
       `/reviews`,
       reviewData
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -134,6 +155,9 @@ export const reviewApi = {
         },
       }
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data.photos;
   },
 
@@ -146,6 +170,9 @@ export const reviewApi = {
       `/reviews/${id}`,
       updates
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -171,6 +198,9 @@ export const reviewApi = {
       `/reviews/${reviewId}/confirm`,
       { notes }
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -183,6 +213,9 @@ export const reviewApi = {
       `/reviews/${reviewId}/dispute`,
       { reason }
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data;
   },
 
@@ -192,6 +225,9 @@ export const reviewApi = {
       `/reviews/${reviewId}/response`,
       { response }
     );
+    if (!res.data) {
+      throw new Error('No data received');
+    }
     return res.data.data;
   },
 
@@ -211,6 +247,9 @@ export const reviewApi = {
         },
       }
     );
+    if (!response.data) {
+      throw new Error('No data received');
+    }
     return response.data.data.photos;
   },
 };
