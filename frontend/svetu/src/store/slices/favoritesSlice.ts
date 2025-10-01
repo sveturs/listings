@@ -27,6 +27,13 @@ export const fetchFavorites = createAsyncThunk(
   async () => {
     const response = await api.get('/marketplace/favorites');
     return response.data;
+  },
+  {
+    // Предотвращаем повторные запросы если уже загружается
+    condition: (_, { getState }) => {
+      const state = getState() as { favorites: FavoritesState };
+      return !state.favorites.loading;
+    },
   }
 );
 

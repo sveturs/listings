@@ -42,6 +42,12 @@ export function useCartSync() {
       try {
         syncAttempts.current++;
 
+        // ВАЖНО: Даём время на получение токена через refresh (после OAuth callback)
+        // Небольшая задержка позволяет избежать race condition
+        if (syncAttempts.current === 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
         // ВАЖНО: Сначала загружаем корзины с сервера
         // Это нужно чтобы не потерять существующие товары
         await dispatch(fetchUserCarts(user.id)).unwrap();

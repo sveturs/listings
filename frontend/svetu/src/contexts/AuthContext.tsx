@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const updateProfile = useCallback(
-    async (data: UpdateProfileRequest): Promise<boolean> => {
+    async (_data: UpdateProfileRequest): Promise<boolean> => {
       setIsUpdatingProfile(true);
       setError(null);
       try {
