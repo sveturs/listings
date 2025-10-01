@@ -2,6 +2,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"time"
 
@@ -42,7 +43,7 @@ func NewIndexingHandler(services globalService.ServicesInterface) *IndexingHandl
 // @Router /api/v1/admin/reindex-listings [post]
 func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -92,7 +93,7 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 // @Router /api/v1/admin/reindex-listings-with-translations [post]
 func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -185,7 +186,7 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 // @Router /api/v1/admin/reindex-all-listings [post]
 func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -234,7 +235,7 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 // @Router /api/v1/admin/reindex-ratings [post]
 func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")

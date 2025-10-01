@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"log"
 	"strconv"
 
@@ -65,7 +66,7 @@ type CreateMarketplaceOrderRequest struct {
 func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 	log.Printf("CreateMarketplaceOrder called")
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	log.Printf("UserID: %d", userID)
 
 	var req CreateMarketplaceOrderRequest
@@ -123,7 +124,7 @@ func (h *OrderHandler) CreateMarketplaceOrder(c *fiber.Ctx) error {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Orders list"
 // @Router /api/v1/marketplace/orders/my/purchases [get]
 func (h *OrderHandler) GetMyPurchases(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -159,7 +160,7 @@ func (h *OrderHandler) GetMyPurchases(c *fiber.Ctx) error {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Orders list"
 // @Router /api/v1/marketplace/orders/my/sales [get]
 func (h *OrderHandler) GetMySales(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "20"))
@@ -194,7 +195,7 @@ func (h *OrderHandler) GetMySales(c *fiber.Ctx) error {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceOrder} "Order details"
 // @Router /api/v1/marketplace/orders/{id} [get]
 func (h *OrderHandler) GetOrderDetails(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
@@ -227,7 +228,7 @@ type ConfirmPaymentRequest struct {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Payment confirmed"
 // @Router /api/v1/marketplace/orders/{id}/confirm-payment [post]
 func (h *OrderHandler) ConfirmPayment(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
@@ -277,7 +278,7 @@ type MarkAsShippedRequest struct {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Order marked as shipped"
 // @Router /api/v1/marketplace/orders/{id}/ship [post]
 func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
@@ -318,7 +319,7 @@ func (h *OrderHandler) MarkAsShipped(c *fiber.Ctx) error {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Delivery confirmed"
 // @Router /api/v1/marketplace/orders/{id}/confirm-delivery [post]
 func (h *OrderHandler) ConfirmDelivery(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
@@ -355,7 +356,7 @@ type OpenDisputeRequest struct {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Dispute opened"
 // @Router /api/v1/marketplace/orders/{id}/dispute [post]
 func (h *OrderHandler) OpenDispute(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")
@@ -395,7 +396,7 @@ type AddMessageRequest struct {
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Message added"
 // @Router /api/v1/marketplace/orders/{id}/message [post]
 func (h *OrderHandler) AddMessage(c *fiber.Ctx) error {
-	// userID := c.Locals("user_id").(int)
+	// userID, _ := authMiddleware.GetUserID(c)
 	// orderID, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	// if err != nil {
 	//     return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.invalidID")

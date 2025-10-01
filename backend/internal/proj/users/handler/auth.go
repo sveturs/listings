@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
 	"github.com/sveturs/auth/pkg/http/entity"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"github.com/sveturs/auth/pkg/http/service"
 )
 
@@ -258,10 +259,10 @@ func (h *AuthHandler) Validate(c *fiber.Ctx) error {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *fiber.Ctx) error {
-	userID := c.Locals("user_id")
-	email := c.Locals("email")
-	roles := c.Locals("roles")
-	isAdmin := c.Locals("is_admin")
+	userID, _ := authMiddleware.GetUserID(c)
+	email, _ := authMiddleware.GetEmail(c)
+	roles, _ := authMiddleware.GetRoles(c)
+	isAdmin := authMiddleware.IsAdmin(c)
 
 	return c.JSON(fiber.Map{
 		"user": fiber.Map{

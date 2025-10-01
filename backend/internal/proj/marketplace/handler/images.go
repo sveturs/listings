@@ -2,6 +2,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -55,7 +56,7 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 	logger.Info().Str("method", c.Method()).Str("path", c.Path()).Msg("Starting image upload")
 
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Error getting user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -216,7 +217,7 @@ func getMapKeys(m map[string][]*multipart.FileHeader) []string {
 // @Router /api/v1/marketplace/images/{id} [delete]
 func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -277,7 +278,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/moderate-image [post]
 func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -361,7 +362,7 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/enhance-preview [post]
 func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
@@ -428,7 +429,7 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/enhance-images [post]
 func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")

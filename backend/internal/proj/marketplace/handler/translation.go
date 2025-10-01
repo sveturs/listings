@@ -2,6 +2,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"strconv"
 	"strings"
@@ -52,7 +53,7 @@ func NewTranslationsHandler(services globalService.ServicesInterface) *Translati
 // @Router /api/v1/marketplace/translations/{id} [put]
 func (h *TranslationsHandler) UpdateTranslations(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")

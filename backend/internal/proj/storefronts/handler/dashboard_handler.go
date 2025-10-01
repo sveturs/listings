@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"backend/internal/proj/storefronts/service"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
@@ -49,7 +50,7 @@ type DashboardNotification struct {
 // @Router /api/v1/storefronts/{slug}/dashboard/stats [get]
 func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Проверяем доступ к витрине
 	storefront, err := h.service.GetBySlug(c.Context(), slug)
@@ -89,7 +90,7 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{slug}/dashboard/recent-orders [get]
 func (h *DashboardHandler) GetRecentOrders(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Проверяем доступ к витрине
 	storefront, err := h.service.GetBySlug(c.Context(), slug)
@@ -139,7 +140,7 @@ func (h *DashboardHandler) GetRecentOrders(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{slug}/dashboard/low-stock [get]
 func (h *DashboardHandler) GetLowStockProducts(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Проверяем доступ к витрине
 	storefront, err := h.service.GetBySlug(c.Context(), slug)
@@ -184,7 +185,7 @@ func (h *DashboardHandler) GetLowStockProducts(c *fiber.Ctx) error {
 // @Router /api/v1/storefronts/{slug}/dashboard/notifications [get]
 func (h *DashboardHandler) GetDashboardNotifications(c *fiber.Ctx) error {
 	slug := c.Params("slug")
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Проверяем доступ к витрине
 	storefront, err := h.service.GetBySlug(c.Context(), slug)

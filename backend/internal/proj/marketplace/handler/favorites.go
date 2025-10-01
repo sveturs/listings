@@ -2,6 +2,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"strconv"
 	"strings"
@@ -85,7 +86,7 @@ func (h *FavoritesHandler) loadUserInfoForListings(ctx context.Context, listings
 // @Router /api/v1/marketplace/favorites/{id} [post]
 func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -147,7 +148,7 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/favorites/{id} [delete]
 func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -198,7 +199,7 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/favorites [get]
 func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -238,7 +239,7 @@ func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/favorites/{id}/check [get]
 func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -284,7 +285,7 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/favorites/count [get]
 func (h *FavoritesHandler) GetFavoritesCount(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")

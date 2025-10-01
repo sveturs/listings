@@ -3,6 +3,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"fmt"
 	"log"
 	"strconv"
@@ -37,7 +38,7 @@ func NewReviewHandler(services globalService.ServicesInterface) *ReviewHandler {
 
 // getUserID safely extracts user_id from fiber context
 func getUserID(c *fiber.Ctx) (int, error) {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return 0, fmt.Errorf("user not authenticated")
 	}
@@ -961,7 +962,7 @@ func (h *ReviewHandler) GetStorefrontAggregatedRating(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/reviews/can-review/{type}/{id} [get]
 func (h *ReviewHandler) CanReview(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
 	}

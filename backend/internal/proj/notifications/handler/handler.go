@@ -3,6 +3,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -54,7 +55,7 @@ func NewHandler(service service.NotificationServiceInterface) *Handler {
 // @Security BearerAuth
 // @Router /api/v1/notifications [get]
 func (h *Handler) GetNotifications(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	limit := c.QueryInt("limit", 20)
 	offset := c.QueryInt("offset", 0)
 
@@ -210,7 +211,7 @@ func (h *Handler) handleStartCommand(c *fiber.Ctx, message *tgbotapi.Message, ar
 // @Security BearerAuth
 // @Router /api/v1/notifications/telegram/token [get]
 func (h *Handler) GetTelegramToken(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	token, err := h.generateUserToken(userID)
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "notifications.tokenGenerateError")
@@ -266,7 +267,7 @@ func (h *Handler) validateUserToken(token string) (int, error) {
 // @Security BearerAuth
 // @Router /api/v1/notifications/settings [get]
 func (h *Handler) GetSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Создаем базовые настройки, если их нет
 	baseSettings := []models.NotificationSettings{
@@ -453,7 +454,7 @@ func (h *Handler) SendPublicEmail(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/notifications/settings [put]
 func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	body := string(c.Body())
 	logger.Debug().Str("body", body).Msg("Raw request body")
@@ -583,7 +584,7 @@ func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/notifications/telegram/connect [post]
 func (h *Handler) ConnectTelegram(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var data struct {
 		ChatID   string `json:"chat_id"`
@@ -617,7 +618,7 @@ func (h *Handler) ConnectTelegram(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/notifications/{id}/read [put]
 func (h *Handler) MarkAsRead(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	notificationID, err := c.ParamsInt("id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidNotificationId")

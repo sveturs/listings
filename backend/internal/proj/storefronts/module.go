@@ -357,7 +357,7 @@ func (m *Module) createProductBySlug(c *fiber.Ctx) error {
 	c.Locals("storefrontID", storefront.ID)
 
 	// Проверяем доступ
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().
 			Msg("User ID not found in context")
@@ -519,7 +519,7 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 		})
 	}
 
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "User ID not found in context",
@@ -527,7 +527,7 @@ func (m *Module) checkStorefrontAccess(c *fiber.Ctx) error {
 	}
 
 	// Проверяем, является ли пользователь администратором
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	if isAdmin {
 		// Администраторы имеют полный доступ ко всем витринам
 		return nil

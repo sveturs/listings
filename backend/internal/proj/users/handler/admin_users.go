@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -25,7 +26,7 @@ import (
 func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.admins.error.unauthorized")
 	}
@@ -56,7 +57,7 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.admins.error.unauthorized")
 	}
@@ -101,7 +102,7 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.admins.error.unauthorized")
 	}
@@ -141,7 +142,7 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.admins.error.unauthorized")
 	}

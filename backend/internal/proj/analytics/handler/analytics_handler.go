@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"encoding/json"
 
 	"backend/internal/logger"
@@ -59,7 +60,7 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 	referrer := c.Get("Referer")
 
 	// Если пользователь авторизован, добавляем user_id
-	if userID, ok := c.Locals("user_id").(int); ok && req.UserID == nil {
+	if userID, ok := authMiddleware.GetUserID(c); ok && req.UserID == nil {
 		req.UserID = &userID
 	}
 
@@ -100,7 +101,7 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 // @Router /api/v1/analytics/metrics/search [get]
 func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 	// Проверяем права админа - используем тот же подход как в search_admin
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -148,7 +149,7 @@ func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 // @Router /api/v1/analytics/metrics/items [get]
 func (h *AnalyticsHandler) GetItemsPerformance(c *fiber.Ctx) error {
 	// Проверяем права админа - используем тот же подход как в search_admin
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}

@@ -1,6 +1,7 @@
 package translation_admin
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 
 	"backend/internal/domain/models"
@@ -167,7 +168,7 @@ func (h *Handler) UpdateModuleTranslations(c *fiber.Ctx) error {
 	h.logger.Info().Str("module", moduleName).Msg("UpdateModuleTranslations called")
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		h.logger.Error().Msg("User ID not found in context")
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
@@ -234,7 +235,7 @@ func (h *Handler) SyncFrontendToDBOld(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -374,7 +375,7 @@ func (h *Handler) UpdateTranslation(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -418,7 +419,7 @@ func (h *Handler) DeleteTranslation(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -456,7 +457,7 @@ func (h *Handler) BatchOperations(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -479,7 +480,7 @@ func (h *Handler) TranslateText(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -502,7 +503,7 @@ func (h *Handler) BatchTranslate(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -538,7 +539,7 @@ func (h *Handler) UpdateProvider(c *fiber.Ctx) error {
 	providerID := c.Params("id")
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -605,7 +606,7 @@ func (h *Handler) ImportFromJSON(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -639,7 +640,7 @@ func (h *Handler) SyncFrontendToDB(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -670,7 +671,7 @@ func (h *Handler) SyncDBToFrontend(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -860,7 +861,7 @@ func (h *Handler) RollbackVersion(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -945,7 +946,7 @@ func (h *Handler) ApplyAITranslations(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -1070,7 +1071,7 @@ func (h *Handler) ImportAdvanced(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}
@@ -1110,7 +1111,7 @@ func (h *Handler) BulkTranslate(c *fiber.Ctx) error {
 	ctx := c.Context()
 
 	// Get user ID from context
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "admin.translations.unauthorized")
 	}

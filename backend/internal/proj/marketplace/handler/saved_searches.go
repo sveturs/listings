@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 	"time"
 
@@ -76,7 +77,7 @@ type SavedSearchResponse struct {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches [post]
 func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -118,7 +119,7 @@ func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches [get]
 func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -155,7 +156,7 @@ func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [get]
 func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -194,7 +195,7 @@ func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [put]
 func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -239,7 +240,7 @@ func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id} [delete]
 func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -279,7 +280,7 @@ func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/saved-searches/{id}/execute [get]
 func (h *SavedSearchesHandler) ExecuteSavedSearch(c *fiber.Ctx) error {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")

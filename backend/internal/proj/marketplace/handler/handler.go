@@ -436,9 +436,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	adminRoutes.Post("/categories", h.AdminCategories.CreateCategory)
 	adminRoutes.Get("/categories", h.AdminCategories.GetCategories)
+	// Используем отдельный путь чтобы избежать конфликта с :id параметром
+	adminRoutes.Get("/categories-all", h.AdminCategories.GetAllCategories)
 	adminRoutes.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
-	// ВАЖНО: /all должен быть ПОСЛЕ :id для правильной обработки Fiber routing
-	adminRoutes.Get("/categories/all", h.AdminCategories.GetAllCategories)
 	adminRoutes.Put("/categories/:id", h.AdminCategories.UpdateCategory)
 	adminRoutes.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
 	adminRoutes.Post("/categories/:id/reorder", h.AdminCategories.ReorderCategories)

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"strconv"
 	"strings"
@@ -87,7 +88,7 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 		filter.IsActive = &active
 	} else {
 		// Для публичного API (не-админов) показываем только активные товары
-		isAdmin, _ := c.Locals("is_admin").(bool)
+		isAdmin := authMiddleware.IsAdmin(c)
 		if !isAdmin {
 			activeTrue := true
 			filter.IsActive = &activeTrue
@@ -365,7 +366,7 @@ func (h *ProductHandler) DeleteProduct(c *fiber.Ctx) error {
 	}
 
 	// Передаем контекст с информацией об администраторе
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	if err := h.productService.DeleteProduct(ctx, storefrontID, productID, userID); err != nil {
@@ -418,7 +419,7 @@ func (h *ProductHandler) HardDeleteProduct(c *fiber.Ctx) error {
 	}
 
 	// Передаем контекст с информацией об администраторе
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	if err := h.productService.HardDeleteProduct(ctx, storefrontID, productID, userID); err != nil {
@@ -662,7 +663,7 @@ func (h *ProductHandler) BulkDeleteProducts(c *fiber.Ctx) error {
 	}
 
 	// Передаем контекст с информацией об администраторе
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	ctx := context.WithValue(context.Background(), common.ContextKeyIsAdmin, isAdmin)
 
 	response, err := h.productService.BulkDeleteProducts(ctx, storefrontID, userID, req)
@@ -731,7 +732,7 @@ func getStorefrontIDFromContext(c *fiber.Ctx) (int, error) {
 }
 
 func getUserIDFromContext(c *fiber.Ctx) (int, error) {
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return 0, fiber.NewError(fiber.StatusUnauthorized, "user ID not found in context")
 	}

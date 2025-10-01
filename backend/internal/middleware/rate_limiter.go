@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"fmt"
 	"sync"
 	"time"
@@ -213,7 +214,7 @@ func (m *Middleware) RateLimitByUser(limit int, window time.Duration) fiber.Hand
 
 	return func(c *fiber.Ctx) error {
 		// Получаем userID из контекста
-		userID, ok := c.Locals("user_id").(int)
+		userID, ok := authMiddleware.GetUserID(c)
 		if !ok || userID == 0 {
 			// Если нет userID, используем IP
 			key := fmt.Sprintf("ip:%s", c.IP())
@@ -267,7 +268,7 @@ func (m *Middleware) RateLimitMessages() fiber.Handler {
 	fileLimiter := NewRateLimiter(5 * time.Minute)
 
 	return func(c *fiber.Ctx) error {
-		userID, ok := c.Locals("user_id").(int)
+		userID, ok := authMiddleware.GetUserID(c)
 		if !ok || userID == 0 {
 			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
 		}
@@ -347,7 +348,7 @@ func (m *Middleware) PaymentAPIRateLimit() fiber.Handler {
 
 		// Генерация ключа по userID если авторизован, иначе по IP
 		KeyGenerator: func(c *fiber.Ctx) string {
-			userID, ok := c.Locals("user_id").(int)
+			userID, ok := authMiddleware.GetUserID(c)
 			if ok && userID > 0 {
 				return fmt.Sprintf("payment_user_%d", userID)
 			}
@@ -420,7 +421,7 @@ func (m *Middleware) StrictPaymentRateLimit() fiber.Handler {
 
 		// Генерация ключа по userID
 		KeyGenerator: func(c *fiber.Ctx) string {
-			userID, ok := c.Locals("user_id").(int)
+			userID, ok := authMiddleware.GetUserID(c)
 			if ok && userID > 0 {
 				return fmt.Sprintf("strict_payment_user_%d", userID)
 			}

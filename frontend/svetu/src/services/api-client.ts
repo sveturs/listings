@@ -1,5 +1,6 @@
 import configManager from '@/config';
 import { logger } from '@/utils/logger';
+import { tokenManager } from '@/utils/tokenManager';
 
 export interface ApiClientOptions extends RequestInit {
   // Использовать внутренний URL для серверных запросов
@@ -136,6 +137,14 @@ class ApiClient {
     if (!headers.has('Accept-Language') && typeof window !== 'undefined') {
       const locale = localStorage.getItem('locale') || 'sr';
       headers.set('Accept-Language', locale);
+    }
+
+    // Добавляем JWT токен из tokenManager
+    if (typeof window !== 'undefined') {
+      const token = tokenManager.getAccessToken();
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
     }
 
     // Cookies are sent automatically with credentials: 'include'

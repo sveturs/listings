@@ -75,6 +75,7 @@ roles, ok := authmiddleware.GetRoles(c)
 - [🗄️ Database Guidelines](docs/CLAUDE_DATABASE_GUIDELINES.md) - работа с БД через миграции
 - [🆘 Troubleshooting](docs/CLAUDE_TROUBLESHOOTING.md) - типичные проблемы и решения
 - [🤖 Parallel Agents](docs/CLAUDE_PARALLEL_AGENTS.md) - параллельное выполнение задач
+- [🔧 AdminRequired & ApiClient Fix](docs/FIXES_ADMIN_MIDDLEWARE_AND_API_CLIENT.md) - исправление middleware и JWT токенов
 
 ### 📖 Документация по фичам
 - [Категории и фильтры](docs/IMPLEMENTATION_CATEGORY_SELECTOR.md)

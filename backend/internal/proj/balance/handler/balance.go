@@ -3,6 +3,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"log"
 	"strconv"
@@ -47,7 +48,7 @@ func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentSe
 // @Security BearerAuth
 // @Router /api/v1/balance [get]
 func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	log.Printf("Getting balance for user %d", userID)
 
@@ -91,7 +92,7 @@ type DepositRequest struct {
 // @Security BearerAuth
 // @Router /api/v1/balance/deposit [post]
 func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var request DepositRequest
 
@@ -136,7 +137,7 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/balance/transactions [get]
 func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	// Заменяем utils.QueryInt на собственную реализацию
 	limit := 20
@@ -199,7 +200,7 @@ type CompleteMockPaymentRequest struct {
 // @Security BearerAuth
 // @Router /api/v1/balance/mock/complete [post]
 func (h *BalanceHandler) CompleteMockPayment(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var request CompleteMockPaymentRequest
 	if err := c.BodyParser(&request); err != nil {

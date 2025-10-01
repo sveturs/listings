@@ -7,6 +7,7 @@ import (
 	"backend/internal/logger"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // GoogleAuth redirects to Google OAuth
@@ -157,11 +158,11 @@ func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/auth/session [get]
 func (h *AuthHandler) GetSession(c *fiber.Ctx) error {
-	userID := c.Locals("user_id")
-	email := c.Locals("email")
-	roles := c.Locals("roles")
+	userID, ok := authMiddleware.GetUserID(c)
+	email, _ := authMiddleware.GetEmail(c)
+	roles, _ := authMiddleware.GetRoles(c)
 
-	if userID == nil {
+	if !ok || userID == 0 {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "unauthorized",
 		})

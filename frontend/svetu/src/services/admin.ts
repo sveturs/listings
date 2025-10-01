@@ -180,7 +180,7 @@ export const adminApi = {
 
         const apiUrl = configManager.getApiUrl();
         const response = await fetch(
-          `${apiUrl}/api/v1/admin/categories/all?lang=${currentLocale}`,
+          `${apiUrl}/api/v1/admin/categories-all?lang=${currentLocale}`,
           {
             method: 'GET',
             headers,
