@@ -193,10 +193,10 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
             : 'grid grid-cols-1 md:grid-cols-2 gap-4'
         }
       >
-        {displayedListings.map((listing) =>
+        {displayedListings.map((listing, index) =>
           viewMode === 'grid' ? (
             <div
-              key={listing.id}
+              key={`similar-grid-${listing.id}-${index}`}
               className="group hover:shadow-lg transition-all duration-200"
             >
               <Link
@@ -316,7 +316,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
           ) : (
             // List view
             <div
-              key={listing.id}
+              key={`similar-list-${listing.id}-${index}`}
               className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow"
             >
               <div className="card-body p-4">
