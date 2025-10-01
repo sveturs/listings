@@ -8,6 +8,7 @@ import (
 // AttributeGroup представляет группу атрибутов
 type AttributeGroup struct {
 	ID          int       `json:"id" db:"id"`
+	Code        string    `json:"code" db:"code"`
 	Name        string    `json:"name" db:"name"`
 	DisplayName string    `json:"display_name" db:"display_name"`
 	Description *string   `json:"description" db:"description"`
@@ -55,6 +56,7 @@ type AttributeGroupWithItems struct {
 
 // CreateAttributeGroupRequest запрос на создание группы атрибутов
 type CreateAttributeGroupRequest struct {
+	Code        string  `json:"code" validate:"required"`
 	Name        string  `json:"name" validate:"required"`
 	DisplayName string  `json:"display_name" validate:"required"`
 	Description *string `json:"description"`
