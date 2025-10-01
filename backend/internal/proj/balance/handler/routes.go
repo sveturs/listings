@@ -3,6 +3,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
@@ -10,7 +11,7 @@ import (
 // RegisterRoutes регистрирует все маршруты для проекта balance
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Защищенные маршруты с аутентификацией
-	balanceRoutes := app.Group("/api/v1/balance", mw.AuthRequiredJWT)
+	balanceRoutes := app.Group("/api/v1/balance", mw.JWTParser(), authMiddleware.RequireAuth())
 
 	balanceRoutes.Get("/", h.Balance.GetBalance)
 	balanceRoutes.Get("/transactions", h.Balance.GetTransactions)

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	authMW "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 	"backend/internal/proj/gis/service"
@@ -39,7 +40,7 @@ func RegisterRoutes(app *fiber.App, db *sqlx.DB, authMiddleware *middleware.Midd
 	gis.Get("/heatmap", clusterHandler.GetHeatmap)
 
 	// ========== Защищенные маршруты (требуют авторизации) ==========
-	protected := gis.Group("/", authMiddleware.AuthRequiredJWT)
+	protected := gis.Group("/", authMiddleware.JWTParser(), authMW.RequireAuth())
 
 	// Старые endpoints
 	protected.Put("/listings/:id/location", spatialHandler.UpdateListingLocation)

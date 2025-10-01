@@ -46,11 +46,8 @@ export default function NearbyStats() {
           lon = position.coords.longitude;
           console.log('[NearbyStats] Got user location:', { lat, lon });
         } catch (geoError) {
-          // Use default location if geolocation fails
-          console.log(
-            '[NearbyStats] Using default location (geolocation failed)',
-            geoError
-          );
+          // Use default location if geolocation fails (user denied or not available)
+          // Это нормальное поведение - не логируем как ошибку
         }
       }
 

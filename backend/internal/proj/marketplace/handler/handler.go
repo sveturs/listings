@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"go.uber.org/zap"
 
 	"backend/internal/config"
@@ -302,7 +303,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		aiGroup.Post("/validate-category", h.AICategoryHandler.ValidateCategory) // ДОБАВЛЕН НЕДОСТАЮЩИЙ РОУТ
 		aiGroup.Post("/confirm/:feedbackId", h.AICategoryHandler.ConfirmDetection)
 		aiGroup.Get("/metrics", h.AICategoryHandler.GetAccuracyMetrics)
-		aiGroup.Post("/learn", mw.AuthRequiredJWT, h.AICategoryHandler.TriggerLearning) // Защищено для админов
+		aiGroup.Post("/learn", mw.JWTParser(), authMiddleware.RequireAuth(), h.AICategoryHandler.TriggerLearning) // Защищено для админов
 	}
 
 	// Карта - геопространственные маршруты
@@ -338,12 +339,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		v2Marketplace.Get("/categories/:category_id/attribute-ranges", h.UnifiedAttributes.GetAttributeRanges)
 
 		// Защищенные эндпоинты v2 (требуют авторизации)
-		v2Protected := v2.Group("/marketplace", mw.AuthRequiredJWT, featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Protected := v2.Group("/marketplace", mw.JWTParser(), authMiddleware.RequireAuth(), featureFlagsMiddleware.CheckUnifiedAttributes())
 		v2Protected.Post("/listings/:listing_id/attributes", h.UnifiedAttributes.SaveListingAttributeValues)
 		v2Protected.Put("/listings/:listing_id/attributes", h.UnifiedAttributes.UpdateListingAttributeValues)
 
 		// Административные эндпоинты v2
-		v2Admin := app.Group("/api/v2/admin", mw.AuthRequiredJWT, mw.AdminRequired, featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Admin := app.Group("/api/v2/admin", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired, featureFlagsMiddleware.CheckUnifiedAttributes())
 		v2Admin.Post("/attributes", h.UnifiedAttributes.CreateAttribute)
 		v2Admin.Put("/attributes/:attribute_id", h.UnifiedAttributes.UpdateAttribute)
 		v2Admin.Delete("/attributes/:attribute_id", h.UnifiedAttributes.DeleteAttribute)
@@ -365,54 +366,59 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	translation.Get("/limits", h.Translations.GetTranslationLimits)
 	translation.Post("/provider", h.Translations.SetTranslationProvider)
 
-	authedAPIGroup := app.Group("/api/v1", mw.AuthRequiredJWT)
+	// ВАЖНО: НЕ используем Group("/api/v1") с middleware - это вызывает middleware leak!
+	// Все защищенные маршруты регистрируем с inline middleware
 
-	marketplaceProtected := authedAPIGroup.Group("/marketplace")
-	marketplaceProtected.Post("/listings", h.Listings.CreateListing)
-	marketplaceProtected.Put("/listings/:id", h.Listings.UpdateListing)
-	marketplaceProtected.Patch("/listings/:id/status", h.Listings.UpdateListingStatus)
-	marketplaceProtected.Delete("/listings/:id", h.Listings.DeleteListing)
-	marketplaceProtected.Post("/listings/check-slug", h.Listings.CheckSlugAvailability)
-	marketplaceProtected.Post("/listings/:id/images", h.Images.UploadImages)
-	marketplaceProtected.Delete("/listings/:id/images/:image_id", h.Images.DeleteImage)
+	// Marketplace protected routes - используем прямую регистрацию
+	authMW := []fiber.Handler{mw.JWTParser(), authMiddleware.RequireAuth()}
+
+	app.Post("/api/v1/marketplace/listings", append(authMW, h.Listings.CreateListing)...)
+	app.Put("/api/v1/marketplace/listings/:id", append(authMW, h.Listings.UpdateListing)...)
+	app.Patch("/api/v1/marketplace/listings/:id/status", append(authMW, h.Listings.UpdateListingStatus)...)
+	app.Delete("/api/v1/marketplace/listings/:id", append(authMW, h.Listings.DeleteListing)...)
+	app.Post("/api/v1/marketplace/listings/check-slug", append(authMW, h.Listings.CheckSlugAvailability)...)
+	app.Post("/api/v1/marketplace/listings/:id/images", append(authMW, h.Images.UploadImages)...)
+	app.Delete("/api/v1/marketplace/listings/:id/images/:image_id", append(authMW, h.Images.DeleteImage)...)
+
 	// Favorites routes - поддерживаем оба варианта для совместимости
 	// Старый формат через listings
-	marketplaceProtected.Post("/listings/:id/favorite", h.Favorites.AddToFavorites)
-	marketplaceProtected.Delete("/listings/:id/favorite", h.Favorites.RemoveFromFavorites)
+	app.Post("/api/v1/marketplace/listings/:id/favorite", append(authMW, h.Favorites.AddToFavorites)...)
+	app.Delete("/api/v1/marketplace/listings/:id/favorite", append(authMW, h.Favorites.RemoveFromFavorites)...)
 
 	// Новый формат - основной
-	marketplaceProtected.Get("/favorites", h.Favorites.GetFavorites)
-	marketplaceProtected.Get("/favorites/count", h.Favorites.GetFavoritesCount)
-	marketplaceProtected.Post("/favorites/:id", h.Favorites.AddToFavorites)
-	marketplaceProtected.Delete("/favorites/:id", h.Favorites.RemoveFromFavorites)
+	app.Get("/api/v1/marketplace/favorites", append(authMW, h.Favorites.GetFavorites)...)
+	app.Get("/api/v1/marketplace/favorites/count", append(authMW, h.Favorites.GetFavoritesCount)...)
+	app.Post("/api/v1/marketplace/favorites/:id", append(authMW, h.Favorites.AddToFavorites)...)
+	app.Delete("/api/v1/marketplace/favorites/:id", append(authMW, h.Favorites.RemoveFromFavorites)...)
 
 	// Saved searches routes
-	marketplaceProtected.Post("/saved-searches", h.SavedSearches.CreateSavedSearch)
-	marketplaceProtected.Get("/saved-searches", h.SavedSearches.GetSavedSearches)
-	marketplaceProtected.Get("/saved-searches/:id", h.SavedSearches.GetSavedSearch)
-	marketplaceProtected.Put("/saved-searches/:id", h.SavedSearches.UpdateSavedSearch)
-	marketplaceProtected.Delete("/saved-searches/:id", h.SavedSearches.DeleteSavedSearch)
-	marketplaceProtected.Get("/saved-searches/:id/execute", h.SavedSearches.ExecuteSavedSearch)
-	marketplaceProtected.Get("/favorites/:id/check", h.Favorites.IsInFavorites)
-	marketplaceProtected.Put("/translations/:id", h.Translations.UpdateTranslations)
-	marketplaceProtected.Post("/translations/batch", h.Translations.TranslateText) // Предполагается, что этот метод переименован
-	marketplaceProtected.Post("/moderate-image", h.Images.ModerateImage)
-	marketplaceProtected.Post("/enhance-preview", h.Images.EnhancePreview)
-	marketplaceProtected.Post("/enhance-images", h.Images.EnhanceImages)
+	app.Post("/api/v1/marketplace/saved-searches", append(authMW, h.SavedSearches.CreateSavedSearch)...)
+	app.Get("/api/v1/marketplace/saved-searches", append(authMW, h.SavedSearches.GetSavedSearches)...)
+	app.Get("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.GetSavedSearch)...)
+	app.Put("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.UpdateSavedSearch)...)
+	app.Delete("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.DeleteSavedSearch)...)
+	app.Get("/api/v1/marketplace/saved-searches/:id/execute", append(authMW, h.SavedSearches.ExecuteSavedSearch)...)
+	app.Get("/api/v1/marketplace/favorites/:id/check", append(authMW, h.Favorites.IsInFavorites)...)
+	app.Put("/api/v1/marketplace/translations/:id", append(authMW, h.Translations.UpdateTranslations)...)
+	app.Post("/api/v1/marketplace/translations/batch", append(authMW, h.Translations.TranslateText)...)
+	app.Post("/api/v1/marketplace/moderate-image", append(authMW, h.Images.ModerateImage)...)
+	app.Post("/api/v1/marketplace/enhance-preview", append(authMW, h.Images.EnhancePreview)...)
+	app.Post("/api/v1/marketplace/enhance-images", append(authMW, h.Images.EnhanceImages)...)
 
 	// маршруты для новых методов в TranslationsHandler
-	marketplaceProtected.Post("/translations/batch-translate", h.Translations.BatchTranslateListings)
-	marketplaceProtected.Post("/translations/translate", h.Translations.TranslateText)
-	marketplaceProtected.Post("/translations/detect-language", h.Translations.DetectLanguage)
-	marketplaceProtected.Get("/translations/:id", h.Translations.GetTranslations)
+	app.Post("/api/v1/marketplace/translations/batch-translate", append(authMW, h.Translations.BatchTranslateListings)...)
+	app.Post("/api/v1/marketplace/translations/translate", append(authMW, h.Translations.TranslateText)...)
+	app.Post("/api/v1/marketplace/translations/detect-language", append(authMW, h.Translations.DetectLanguage)...)
+	app.Get("/api/v1/marketplace/translations/:id", append(authMW, h.Translations.GetTranslations)...)
 
 	// Регистрируем маршруты для заказов маркетплейса под marketplace префиксом
 	if h.Orders != nil {
-		ordersGroup := marketplaceProtected.Group("/orders")
+		// Создаем защищенную группу ТОЛЬКО для orders - узкий префикс!
+		ordersGroup := app.Group("/api/v1/marketplace/orders", mw.JWTParser(), authMiddleware.RequireAuth())
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
-	adminRoutes := app.Group("/api/v1/admin", mw.AuthRequiredJWT, mw.AdminRequired)
+	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)
@@ -544,7 +550,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/sync-discounts", h.Listings.SynchronizeDiscounts) // Оставляем в Listings, т.к. это работа с объявлениями
 	adminRoutes.Post("/reindex-ratings", h.Indexing.ReindexRatings)
 
-	chat := authedAPIGroup.Group("/marketplace/chat")
+	// Chat routes - используем узкий префикс для группы
+	chat := app.Group("/api/v1/marketplace/chat", mw.JWTParser(), authMiddleware.RequireAuth())
 	chat.Get("/", h.Chat.GetChats)
 	chat.Get("/messages", h.Chat.GetMessages)
 

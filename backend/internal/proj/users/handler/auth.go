@@ -162,20 +162,34 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 
 // RefreshToken handles token refresh via auth-service
 // @Summary Refresh access token
-// @Description Refreshes the access token using a refresh token
+// @Description Refreshes the access token using a refresh token from body or cookie
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body map[string]interface{} true "Refresh token request"
+// @Param request body map[string]interface{} false "Refresh token request (optional if using cookie)"
 // @Success 200 {object} map[string]interface{} "Token refreshed successfully"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "No refresh token provided"
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Invalid refresh token"
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	var req entity.RefreshTokenRequest
-	if err := c.BodyParser(&req); err != nil {
+
+	// Пытаемся прочитать refresh token из тела запроса
+	_ = c.BodyParser(&req)
+
+	// Если refresh token не в теле, пробуем получить из cookie
+	if req.RefreshToken == "" {
+		cookieToken := c.Cookies("refresh_token")
+		if cookieToken != "" {
+			req.RefreshToken = cookieToken
+		}
+	}
+
+	// Если refresh token все еще пустой, возвращаем ошибку
+	if req.RefreshToken == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid request body",
+			"error": "no refresh token provided in body or cookie",
 		})
 	}
 

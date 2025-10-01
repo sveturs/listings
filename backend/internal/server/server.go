@@ -79,6 +79,7 @@ type Server struct {
 	users              *userHandler.Handler
 	middleware         *middleware.Middleware
 	authService        *authService.AuthService
+	jwtParserMW        fiber.Handler
 	review             *reviewHandler.Handler
 	marketplace        *marketplaceHandler.Handler
 	notifications      *notificationHandler.Handler
@@ -327,6 +328,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		users:              usersHandler,
 		middleware:         middleware,
 		authService:        authServiceInstance,
+		jwtParserMW:        jwtParserMW,
 		review:             reviewHandler,
 		marketplace:        marketplaceHandlerInstance,
 		notifications:      notificationsHandler,
@@ -475,7 +477,7 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 	}))
 
 	// WebSocket с проверкой аутентификации и rate limiting
-	s.app.Get("/ws/chat", s.middleware.AuthRequiredJWT, s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
+	s.app.Get("/ws/chat", s.jwtParserMW, authMiddleware.RequireAuth(), s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
 			// Сохраняем userID для использования в WebSocket handler

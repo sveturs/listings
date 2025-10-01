@@ -4,31 +4,29 @@ import (
 	"backend/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // RegisterRoutes регистрирует все маршруты для заказов
 func (h *OrdersHandler) RegisterRoutes(app *fiber.App, m *middleware.Middleware) {
-	// Корзина покупок (требует аутентификации или session)
-	cartGroup := app.Group("/api/v1/storefronts/:storefront_id/cart", m.OptionalAuth()) // Опциональная аутентификация для поддержки анонимных корзин
-	cartGroup.Post("/items", h.AddToCart)                                               // POST /api/v1/storefronts/:id/cart/items
-	cartGroup.Put("/items/:item_id", h.UpdateCartItem)                                  // PUT /api/v1/storefronts/:id/cart/items/:item_id
-	cartGroup.Delete("/items/:item_id", h.RemoveFromCart)                               // DELETE /api/v1/storefronts/:id/cart/items/:item_id
-	cartGroup.Get("/", h.GetCart)                                                       // GET /api/v1/storefronts/:id/cart
-	cartGroup.Delete("/", h.ClearCart)                                                  // DELETE /api/v1/storefronts/:id/cart
+	// Корзина покупок (опциональная аутентификация для поддержки анонимных корзин)
+	// ВАЖНО: НЕ используем Group с префиксом /api/v1/storefronts - это создает middleware leak!
+	app.Post("/api/v1/storefronts/:storefront_id/cart/items", m.JWTParser(), h.AddToCart)
+	app.Put("/api/v1/storefronts/:storefront_id/cart/items/:item_id", m.JWTParser(), h.UpdateCartItem)
+	app.Delete("/api/v1/storefronts/:storefront_id/cart/items/:item_id", m.JWTParser(), h.RemoveFromCart)
+	app.Get("/api/v1/storefronts/:storefront_id/cart", m.JWTParser(), h.GetCart)
+	app.Delete("/api/v1/storefronts/:storefront_id/cart", m.JWTParser(), h.ClearCart)
 
 	// Корзины пользователя (требует аутентификации)
-	userCartsGroup := app.Group("/api/v1/user", m.RequireAuth())
-	userCartsGroup.Get("/carts", h.GetUserCarts) // GET /api/v1/user/carts
+	app.Get("/api/v1/user/carts", m.JWTParser(), authMiddleware.RequireAuth(), h.GetUserCarts)
 
 	// Заказы (требует полную аутентификацию)
-	ordersGroup := app.Group("/api/v1/orders", m.RequireAuth())
-	ordersGroup.Post("/", h.CreateOrder)          // POST /api/v1/orders
-	ordersGroup.Get("/", h.GetMyOrders)           // GET /api/v1/orders
-	ordersGroup.Get("/:id", h.GetOrder)           // GET /api/v1/orders/:id
-	ordersGroup.Put("/:id/cancel", h.CancelOrder) // PUT /api/v1/orders/:id/cancel
+	app.Post("/api/v1/orders", m.JWTParser(), authMiddleware.RequireAuth(), h.CreateOrder)
+	app.Get("/api/v1/orders", m.JWTParser(), authMiddleware.RequireAuth(), h.GetMyOrders)
+	app.Get("/api/v1/orders/:id", m.JWTParser(), authMiddleware.RequireAuth(), h.GetOrder)
+	app.Put("/api/v1/orders/:id/cancel", m.JWTParser(), authMiddleware.RequireAuth(), h.CancelOrder)
 
 	// Управление заказами витрины (для продавцов)
-	storefrontOrdersGroup := app.Group("/api/v1/storefronts/:storefront_id/orders", m.RequireAuth())
-	storefrontOrdersGroup.Get("/", h.GetStorefrontOrders)               // GET /api/v1/storefronts/:id/orders
-	storefrontOrdersGroup.Put("/:order_id/status", h.UpdateOrderStatus) // PUT /api/v1/storefronts/:id/orders/:order_id/status
+	app.Get("/api/v1/storefronts/:storefront_id/orders", m.JWTParser(), authMiddleware.RequireAuth(), h.GetStorefrontOrders)
+	app.Put("/api/v1/storefronts/:storefront_id/orders/:order_id/status", m.JWTParser(), authMiddleware.RequireAuth(), h.UpdateOrderStatus)
 }

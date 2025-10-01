@@ -10,6 +10,7 @@ import (
 	"backend/internal/proj/bexexpress/service"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // Module представляет модуль BEX Express
@@ -37,10 +38,7 @@ func NewModule(db *sql.DB, cfg *config.Config) (*Module, error) {
 
 // RegisterRoutes регистрирует маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	api := app.Group("/api/v1")
-
-	// BEX API требует авторизацию
-	api.Use(mw.AuthRequiredJWT)
+	api := app.Group("/api/v1", mw.JWTParser(), authMiddleware.RequireAuth())
 
 	// Регистрируем маршруты BEX
 	m.handler.RegisterRoutes(api)

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 	"backend/internal/storage/postgres"
@@ -46,12 +47,12 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	tracking.Get("/connections", m.trackingHandler.GetWebSocketConnections)
 
 	// Роуты для курьеров (требуют авторизации)
-	courier := api.Group("/courier", middleware.AuthRequiredJWT)
+	courier := api.Group("/courier", middleware.JWTParser(), authMiddleware.RequireAuth())
 	courier.Post("/:courier_id/location", m.trackingHandler.UpdateCourierLocation)
 	courier.Get("/:courier_id/deliveries", m.trackingHandler.GetActiveDeliveries)
 
 	// Роуты для управления доставками
-	delivery := api.Group("/tracking/delivery", middleware.AuthRequiredJWT)
+	delivery := api.Group("/tracking/delivery", middleware.JWTParser(), authMiddleware.RequireAuth())
 	delivery.Post("/", m.trackingHandler.CreateDelivery)
 	delivery.Put("/:delivery_id/status", m.trackingHandler.UpdateDeliveryStatus)
 
