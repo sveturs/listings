@@ -70,7 +70,7 @@ LEFT JOIN reviews r ON (
     -- Reviews through origin after deletion
     (r.entity_origin_type = 'storefront' AND r.entity_origin_id = s.id)
 ) AND r.status = 'published'
-GROUP BY s.id, s.user_id;
+GROUP BY s.id;
 
 -- Create unique index for CONCURRENTLY refresh support
 CREATE UNIQUE INDEX IF NOT EXISTS storefront_ratings_storefront_id_idx
