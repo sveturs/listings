@@ -418,7 +418,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
-	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
+	// Используем только RequireAuth с ролью "admin" - не нужен отдельный AdminRequired
+	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth("admin"))
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)
@@ -435,8 +436,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	adminRoutes.Post("/categories", h.AdminCategories.CreateCategory)
 	adminRoutes.Get("/categories", h.AdminCategories.GetCategories)
-	adminRoutes.Get("/categories/all", h.AdminCategories.GetAllCategories)
 	adminRoutes.Get("/categories/:id", h.AdminCategories.GetCategoryByID)
+	// ВАЖНО: /all должен быть ПОСЛЕ :id для правильной обработки Fiber routing
+	adminRoutes.Get("/categories/all", h.AdminCategories.GetAllCategories)
 	adminRoutes.Put("/categories/:id", h.AdminCategories.UpdateCategory)
 	adminRoutes.Delete("/categories/:id", h.AdminCategories.DeleteCategory)
 	adminRoutes.Post("/categories/:id/reorder", h.AdminCategories.ReorderCategories)
