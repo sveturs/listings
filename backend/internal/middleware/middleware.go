@@ -2,13 +2,7 @@
 package middleware
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
-	"fmt"
-	"os"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -23,12 +17,11 @@ import (
 )
 
 type Middleware struct {
-	config            *config.Config
-	services          globalService.ServicesInterface
-	metrics           *monitoring.MetricsCollector
-	authServicePubKey *rsa.PublicKey
-	authService       *authService.AuthService
-	jwtParserMW       fiber.Handler
+	config      *config.Config
+	services    globalService.ServicesInterface
+	metrics     *monitoring.MetricsCollector
+	authService *authService.AuthService
+	jwtParserMW fiber.Handler
 }
 
 // JWTParser возвращает middleware для парсинга JWT токенов из auth service
@@ -37,84 +30,13 @@ func (m *Middleware) JWTParser() fiber.Handler {
 }
 
 func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface, authSvc *authService.AuthService, jwtParser fiber.Handler) *Middleware {
-	m := &Middleware{
+	return &Middleware{
 		config:      cfg,
 		services:    services,
 		metrics:     monitoring.NewMetricsCollector(pkglogger.GetLogger()),
 		authService: authSvc,
 		jwtParserMW: jwtParser,
 	}
-
-	// Загружаем публичный ключ auth service
-	if err := m.loadAuthServicePublicKey(); err != nil {
-		logger.Error().Err(err).Msg("Failed to load auth service public key, RS256 tokens will not be validated")
-	}
-
-	return m
-}
-
-func (m *Middleware) loadAuthServicePublicKey() error {
-	// Загружаем из пути, указанного в конфигурации
-	pubKeyPath := m.config.AuthServicePubKeyPath
-	if pubKeyPath == "" {
-		// Используем дефолтный путь если не указан в конфиге
-		pubKeyPath = "keys/auth_service_public.pem"
-	}
-	logger.Info().Str("path", pubKeyPath).Msg("Loading auth service public key from path")
-
-	// Проверяем существование файла
-	if _, err := os.Stat(pubKeyPath); os.IsNotExist(err) {
-		logger.Error().Str("path", pubKeyPath).Msg("Public key file does not exist")
-		return fmt.Errorf("public key file not found: %s", pubKeyPath)
-	}
-
-	pubKeyData, err := os.ReadFile(pubKeyPath) // #nosec G304 - path is from config or hardcoded default
-	if err != nil {
-		logger.Error().Err(err).Str("path", pubKeyPath).Msg("Failed to read public key file")
-		return err
-	}
-
-	// Временное логирование для отладки
-	logger.Info().
-		Str("path", pubKeyPath).
-		Int("size", len(pubKeyData)).
-		Str("first_line", strings.Split(string(pubKeyData), "\n")[0]).
-		Msg("Public key file loaded, details")
-
-	block, _ := pem.Decode(pubKeyData)
-	if block == nil {
-		logger.Error().Str("content_preview", string(pubKeyData[:100])).Msg("Failed to parse PEM block")
-		return errors.New("failed to parse PEM block")
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to parse public key")
-		return err
-	}
-
-	rsaPub, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		logger.Error().Msg("Not an RSA public key")
-		return errors.New("not an RSA public key")
-	}
-
-	m.authServicePubKey = rsaPub
-
-	// Временное детальное логирование ключа для отладки
-	modulusBytes := rsaPub.N.Bytes()
-	previewLen := 32
-	if len(modulusBytes) < previewLen {
-		previewLen = len(modulusBytes)
-	}
-
-	logger.Info().
-		Int("key_size", rsaPub.Size()).
-		Int("exponent", rsaPub.E).
-		Str("modulus_first_32_bytes", fmt.Sprintf("%x", modulusBytes[:previewLen])).
-		Msg("Auth service RSA public key loaded successfully with details")
-
-	return nil
 }
 
 // Setup - deprecated, middleware регистрируется в server.go

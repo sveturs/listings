@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
-	"time"
 
 	"backend/internal/config"
-	"backend/internal/storage/filestorage"
-	"backend/internal/storage/postgres"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/rs/zerolog"
+	authClient "github.com/sveturs/auth/pkg/http/client"
+	authEntity "github.com/sveturs/auth/pkg/http/entity"
+	authService "github.com/sveturs/auth/pkg/http/service"
 )
 
 func main() {
@@ -21,96 +22,133 @@ func main() {
 		log.Fatal("Failed to load config:", err)
 	}
 
-	// Создаем файловое хранилище
-	fileStorage, err := filestorage.NewFileStorage(context.Background(), cfg.FileStorage)
-	if err != nil {
-		log.Fatal("Failed to create file storage:", err)
+	// Инициализируем логгер
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+
+	fmt.Println("🔐 Генерация токена через Auth Service\n")
+	fmt.Println("⚠️  ВАЖНО: Этот скрипт требует email и пароль пользователя.")
+	fmt.Println("    Убедитесь, что пользователь существует в Auth Service.")
+	fmt.Println()
+
+	var email, password string
+
+	// Проверяем env переменные
+	email = os.Getenv("ADMIN_EMAIL")
+	password = os.Getenv("ADMIN_PASSWORD")
+
+	// Если не заданы в env, запрашиваем у пользователя
+	if email == "" {
+		fmt.Print("📧 Введите email пользователя: ")
+		fmt.Scanln(&email)
 	}
 
-	// Подключаемся к базе данных
-	db, err := postgres.NewDatabase(context.Background(), cfg.DatabaseURL, nil, "", fileStorage, cfg.SearchWeights)
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+	if password == "" {
+		fmt.Print("🔑 Введите пароль: ")
+		fmt.Scanln(&password)
 	}
-	defer db.Close()
 
-	// Целевой email администратора
+	if email == "" || password == "" {
+		log.Fatal("❌ Email и пароль обязательны!")
+	}
+
+	// Создаем Auth Service клиент
+	client, err := authClient.NewClientWithResponses(cfg.AuthServiceURL)
+	if err != nil {
+		log.Fatalf("❌ Не удалось создать Auth Service клиент: %v", err)
+	}
+
+	authSvc := authService.NewAuthService(client, logger)
+
+	// Выполняем логин
 	ctx := context.Background()
-	targetEmail := "admin@test.com"
-
-	// Получаем пользователя
-	user, err := db.GetUserByEmail(ctx, targetEmail)
-	if err != nil || user == nil {
-		log.Printf("Admin user not found: %v", err)
-		return
+	loginReq := authEntity.UserLoginRequest{
+		Email:      email,
+		Password:   password,
+		DeviceID:   "generate_token_script",
+		DeviceName: "Token Generator Script",
 	}
 
-	// Получаем профиль пользователя с полем is_admin
-	userProfile, err := db.GetUserProfile(ctx, user.ID)
+	fmt.Printf("\n🔄 Выполняем логин через Auth Service (%s)...\n", cfg.AuthServiceURL)
+
+	resp, err := authSvc.Login(ctx, loginReq)
 	if err != nil {
-		log.Printf("Failed to get user profile: %v", err)
-		return
+		log.Fatalf("❌ Ошибка при логине: %v", err)
 	}
 
-	// Проверяем, что пользователь является администратором
-	if !userProfile.IsAdmin {
-		log.Printf("User is not an admin")
-		return
+	// Проверяем статус
+	if resp.StatusCode() != 200 {
+		log.Fatalf("❌ Ошибка логина: статус %d", resp.StatusCode())
 	}
 
-	// Генерируем JWT токен
-	jwtToken, err := generateJWT(int64(user.ID), user.Email, cfg.JWTSecret, cfg.JWTExpirationHours)
-	if err != nil {
-		log.Printf("Failed to generate JWT token: %v", err)
-		return
+	if resp.JSON200 == nil || resp.JSON200.AccessToken == nil || *resp.JSON200.AccessToken == "" {
+		log.Fatal("❌ Не получен access token от Auth Service")
+	}
+
+	accessToken := *resp.JSON200.AccessToken
+	refreshToken := ""
+	if resp.JSON200.RefreshToken != nil && *resp.JSON200.RefreshToken != "" {
+		refreshToken = *resp.JSON200.RefreshToken
+	}
+
+	// Получаем информацию о пользователе
+	var userName string
+	var isAdmin bool
+
+	if resp.JSON200.User != nil {
+		if resp.JSON200.User.Name != nil {
+			userName = *resp.JSON200.User.Name
+		}
+		if resp.JSON200.User.IsAdmin != nil {
+			isAdmin = *resp.JSON200.User.IsAdmin
+		}
 	}
 
 	// Выводим результат
 	fmt.Println("\n" + strings.Repeat("=", 80))
-	fmt.Printf("🎉 ADMIN JWT ТОКЕН УСПЕШНО СОЗДАН!\n")
+	fmt.Printf("🎉 ТОКЕНЫ УСПЕШНО ПОЛУЧЕНЫ!\n")
 	fmt.Println(strings.Repeat("=", 80))
-	fmt.Printf("\n👤 Администратор: %s (ID: %d)\n", user.Email, user.ID)
-	fmt.Printf("📧 Имя: %s\n", user.Name)
-	fmt.Printf("🔑 Admin права: %v\n", userProfile.IsAdmin)
+	fmt.Printf("\n👤 Пользователь: %s\n", email)
+	if userName != "" {
+		fmt.Printf("📧 Имя: %s\n", userName)
+	}
+	fmt.Printf("🔑 Admin права: %v\n", isAdmin)
 
 	fmt.Println("\n🔑 ACCESS TOKEN (JWT):")
 	fmt.Println(strings.Repeat("-", 80))
-	fmt.Printf("%s\n", jwtToken)
+	fmt.Printf("%s\n", accessToken)
+
+	if refreshToken != "" {
+		fmt.Println("\n🔄 REFRESH TOKEN:")
+		fmt.Println(strings.Repeat("-", 80))
+		fmt.Printf("%s\n", refreshToken)
+	}
 
 	fmt.Println("\n📝 СПОСОБЫ ИСПОЛЬЗОВАНИЯ:")
 	fmt.Println(strings.Repeat("-", 80))
 
 	fmt.Println("\n1️⃣  Тест API синонимов:")
-	fmt.Printf("   curl -H \"Authorization: Bearer %s\" \\\n", jwtToken)
+	fmt.Printf("   curl -H \"Authorization: Bearer %s\" \\\n", accessToken)
 	fmt.Println("        'http://localhost:3000/api/v1/admin/search/synonyms?page=1&limit=20&language=ru'")
 
 	fmt.Println("\n2️⃣  Добавление синонима:")
-	fmt.Printf("   curl -X POST -H \"Authorization: Bearer %s\" \\\n", jwtToken)
+	fmt.Printf("   curl -X POST -H \"Authorization: Bearer %s\" \\\n", accessToken)
 	fmt.Println("        -H \"Content-Type: application/json\" \\")
 	fmt.Println("        -d '{\"word\": \"телефон\", \"synonyms\": [\"смартфон\", \"мобильный\"], " +
 		"\"language\": \"ru\"}' \\")
 	fmt.Println("        'http://localhost:3000/api/v1/admin/search/synonyms'")
 
-	fmt.Println("\n3️⃣  Для использования в браузере (установка в localStorage):")
-	fmt.Printf("   localStorage.setItem('access_token', '%s');\n", jwtToken)
+	fmt.Println("\n3️⃣  Проверка профиля:")
+	fmt.Printf("   curl -H \"Authorization: Bearer %s\" \\\n", accessToken)
+	fmt.Println("        'http://localhost:3000/api/v1/auth/me'")
+
+	fmt.Println("\n4️⃣  Сохранить в переменную для последующего использования:")
+	fmt.Printf("   export TOKEN='%s'\n", accessToken)
+	fmt.Println("   curl -H \"Authorization: Bearer $TOKEN\" http://localhost:3000/api/v1/users/me")
 
 	fmt.Println("\n" + strings.Repeat("=", 80))
-	fmt.Printf("⏰ Access токен действителен: %d часов\n", cfg.JWTExpirationHours)
-	fmt.Println("🔒 Тип авторизации: JWT Bearer")
+	fmt.Println("⏰ Access токен действителен: обычно 15 минут")
+	fmt.Println("🔄 Refresh токен действителен: обычно 30 дней")
+	fmt.Println("🔒 Алгоритм: RS256 (Auth Service)")
 	fmt.Println(strings.Repeat("=", 80))
-}
-
-func generateJWT(userID int64, email string, secret string, expirationHours int) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"email":   email,
-		"iss":     "svetu-backend",
-		"sub":     fmt.Sprintf("user:%d", userID),
-		"exp":     time.Now().Add(time.Hour * time.Duration(expirationHours)).Unix(),
-		"nbf":     time.Now().Unix(),
-		"iat":     time.Now().Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+	fmt.Println()
 }
