@@ -269,29 +269,18 @@ mw.AdminRequired
 mw.AuthRequiredJWT
 ```
 
-## Public Key Management
+## Валидация JWT токенов
 
-### Loading Public Key
-```go
-func (m *Middleware) loadAuthServicePublicKey() error {
-    pubKeyPath := m.config.AuthServicePubKeyPath
-    if pubKeyPath == "" {
-        pubKeyPath = "keys/auth_service_public.pem"
-    }
+JWT токены валидируются автоматически через middleware из библиотеки `github.com/sveturs/auth/pkg/http/fiber/middleware`.
 
-    pubKeyData, err := os.ReadFile(pubKeyPath)
-    block, _ := pem.Decode(pubKeyData)
-    pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-    rsaPub, ok := pub.(*rsa.PublicKey)
+**Важно:** Библиотека сама управляет получением и кэшированием публичного ключа от Auth Service.
+Вам **не нужно** вручную конфигурировать путь к публичному ключу или загружать его.
 
-    m.authServicePubKey = rsaPub
-    return nil
-}
-```
-
-### Public Key Location
-- Development: `/data/hostel-booking-system/backend/keys/auth_service_public.pem`
-- Config: `AuthServicePubKeyPath` environment variable
+### Как это работает:
+1. Middleware `JWTParser()` автоматически получает публичный ключ от Auth Service
+2. Ключ кэшируется для последующих запросов
+3. Токен валидируется с использованием RS256 алгоритма
+4. Claims из токена (user_id, email, roles) становятся доступны в контексте запроса
 
 ## История изменений
 
