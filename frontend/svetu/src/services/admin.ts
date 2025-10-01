@@ -208,22 +208,16 @@ export const adminApi = {
     },
 
     async reorder(orderedIds: number[]): Promise<any> {
-      const response = await apiClient.post(
-        '/admin/categories/reorder',
-        {
-          ordered_ids: orderedIds,
-        }
-      );
+      const response = await apiClient.post('/admin/categories/reorder', {
+        ordered_ids: orderedIds,
+      });
       return response.data as any as { message: string };
     },
 
     async move(id: number, newParentId: number): Promise<any> {
-      const response = await apiClient.put(
-        `/admin/categories/${id}/move`,
-        {
-          new_parent_id: newParentId,
-        }
-      );
+      const response = await apiClient.put(`/admin/categories/${id}/move`, {
+        new_parent_id: newParentId,
+      });
       return response.data as any as { message: string };
     },
 
@@ -477,7 +471,10 @@ export const adminApi = {
         throw new Error(response.error.message);
       }
 
-      console.log('[adminApi.attributes.update] Success response:', response.data);
+      console.log(
+        '[adminApi.attributes.update] Success response:',
+        response.data
+      );
       return response.data;
     },
 
@@ -498,10 +495,9 @@ export const adminApi = {
       total_count: number;
       errors?: string[];
     }> {
-      const response = await apiClient.post(
-        '/admin/attributes/bulk-update',
-        { attributes }
-      );
+      const response = await apiClient.post('/admin/attributes/bulk-update', {
+        attributes,
+      });
       return response.data as any as {
         success_count: number;
         total_count: number;
@@ -518,19 +514,14 @@ export const adminApi = {
     },
 
     async getById(id: number): Promise<AttributeGroup> {
-      const response = await apiClient.get(
-        `/admin/attribute-groups/${id}`
-      );
+      const response = await apiClient.get(`/admin/attribute-groups/${id}`);
       return response.data?.data?.group;
     },
 
     async create(
       group: Partial<AttributeGroup>
     ): Promise<{ id: number; message: string }> {
-      const response = await apiClient.post(
-        '/admin/attribute-groups',
-        group
-      );
+      const response = await apiClient.post('/admin/attribute-groups', group);
       return response.data?.data;
     },
 
@@ -546,9 +537,7 @@ export const adminApi = {
     },
 
     async delete(id: number): Promise<{ message: string }> {
-      const response = await apiClient.delete(
-        `/admin/attribute-groups/${id}`
-      );
+      const response = await apiClient.delete(`/admin/attribute-groups/${id}`);
       return response.data?.data;
     },
 
@@ -787,13 +776,10 @@ export const adminApi = {
     async create(
       attribute: Partial<VariantAttribute>
     ): Promise<{ id: number; message: string }> {
-      const response = await apiClient.request(
-        '/admin/variant-attributes',
-        {
-          method: 'POST',
-          body: JSON.stringify(attribute),
-        }
-      );
+      const response = await apiClient.request('/admin/variant-attributes', {
+        method: 'POST',
+        body: JSON.stringify(attribute),
+      });
 
       if (response.error) {
         throw new Error(response.error.message);

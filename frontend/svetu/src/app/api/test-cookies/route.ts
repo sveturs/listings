@@ -6,7 +6,7 @@ export async function GET() {
   const allCookies = cookieStore.getAll();
 
   return NextResponse.json({
-    cookies: allCookies.map(c => ({
+    cookies: allCookies.map((c) => ({
       name: c.name,
       value: c.value.substring(0, 20) + '...', // Первые 20 символов для безопасности
       hasValue: !!c.value,

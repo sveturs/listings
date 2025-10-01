@@ -362,13 +362,17 @@ export default function SearchIndexManager() {
                     <span className="text-base-content/70">
                       {t('search.index.listings')}
                     </span>
-                    <span>{(statistics.listings_count ?? 0).toLocaleString()}</span>
+                    <span>
+                      {(statistics.listings_count ?? 0).toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-base-content/70">
                       {t('search.index.products')}
                     </span>
-                    <span>{(statistics.products_count ?? 0).toLocaleString()}</span>
+                    <span>
+                      {(statistics.products_count ?? 0).toLocaleString()}
+                    </span>
                   </div>
                   {statistics.last_reindexed && (
                     <div className="flex justify-between">
@@ -411,22 +415,24 @@ export default function SearchIndexManager() {
             )}
 
           {/* Поля для поиска */}
-          {statistics && statistics.searchable_fields && statistics.searchable_fields.length > 0 && (
-            <div className="card bg-base-100 lg:col-span-2">
-              <div className="card-body">
-                <h3 className="card-title">
-                  {t('search.index.searchableFields')}
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {statistics.searchable_fields.map((field) => (
-                    <span key={field} className="badge badge-outline">
-                      {field}
-                    </span>
-                  ))}
+          {statistics &&
+            statistics.searchable_fields &&
+            statistics.searchable_fields.length > 0 && (
+              <div className="card bg-base-100 lg:col-span-2">
+                <div className="card-body">
+                  <h3 className="card-title">
+                    {t('search.index.searchableFields')}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {statistics.searchable_fields.map((field) => (
+                      <span key={field} className="badge badge-outline">
+                        {field}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       )}
 

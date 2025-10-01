@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || 'http://localhost:33423';
+const BACKEND_URL =
+  process.env.BACKEND_INTERNAL_URL || 'http://localhost:33423';
 
 /**
  * Универсальный BFF прокси для всех backend API запросов
@@ -33,8 +34,13 @@ async function proxyRequest(
     const backendUrl = `${BACKEND_URL}/api/v1/${backendPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log(`[BFF Proxy] ${method} /api/v2/${backendPath} → ${backendUrl}`);
-    console.log(`[BFF Proxy] Access token: ${accessToken ? 'present (length: ' + accessToken.length + ')' : 'MISSING'}`);
-    console.log(`[BFF Proxy] All cookies:`, allCookies.map(c => c.name).join(', '));
+    console.log(
+      `[BFF Proxy] Access token: ${accessToken ? 'present (length: ' + accessToken.length + ')' : 'MISSING'}`
+    );
+    console.log(
+      `[BFF Proxy] All cookies:`,
+      allCookies.map((c) => c.name).join(', ')
+    );
 
     // Подготавливаем заголовки
     const headers: HeadersInit = {
