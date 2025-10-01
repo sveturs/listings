@@ -33,9 +33,6 @@ type Config struct {
 	DeepLUseFreeAPI       bool `yaml:"deepl_use_free_api"`
 	StripeAPIKey          string
 	StripeWebhookSecret   string
-	JWTSecret             string            // Deprecated - используется только для обратной совместимости
-	JWTExpirationHours    int               `yaml:"jwt_expiration_hours"`
-	AuthServicePubKeyPath string            `yaml:"auth_service_public_key_path"` // Путь к публичному ключу Auth Service
 	OpenSearch            OpenSearchConfig  `yaml:"opensearch"`
 	FileStorage           FileStorageConfig `yaml:"file_storage"`
 	FileUpload            FileUploadConfig  `yaml:"file_upload"`
@@ -171,18 +168,6 @@ func NewConfig() (*Config, error) {
 	config.StripeAPIKey = os.Getenv("STRIPE_API_KEY")
 	config.StripeWebhookSecret = os.Getenv("STRIPE_WEBHOOK_SECRET")
 
-	// Получаем JWT секретный ключ (deprecated - оставлено для обратной совместимости)
-	config.JWTSecret = os.Getenv("JWT_SECRET")
-
-	// Получаем путь к публичному ключу Auth Service
-	config.AuthServicePubKeyPath = os.Getenv("AUTH_SERVICE_PUBLIC_KEY_PATH")
-	log.Printf("AUTH_SERVICE_PUBLIC_KEY_PATH from env: %s", config.AuthServicePubKeyPath)
-	if config.AuthServicePubKeyPath == "" {
-		config.AuthServicePubKeyPath = "/data/hostel-booking-system/backend/keys/auth_service_public.pem"
-		log.Printf("Using default AUTH_SERVICE_PUBLIC_KEY_PATH: %s", config.AuthServicePubKeyPath)
-	}
-	log.Printf("Final AUTH_SERVICE_PUBLIC_KEY_PATH in config: %s", config.AuthServicePubKeyPath)
-
 	// Получаем URL auth-service
 	config.AuthServiceURL = os.Getenv("AUTH_SERVICE_URL")
 	if config.AuthServiceURL == "" {
@@ -196,16 +181,6 @@ func NewConfig() (*Config, error) {
 		config.BackendURL = fmt.Sprintf("http://localhost:%s", port)
 		log.Printf("Using default BACKEND_URL: %s", config.BackendURL)
 	}
-
-	// Получаем время жизни JWT токена (в часах)
-	jwtExpirationStr := os.Getenv("JWT_EXPIRATION_HOURS")
-	jwtExpirationHours := 1 // По умолчанию 1 час
-	if jwtExpirationStr != "" {
-		if parsed, err := strconv.Atoi(jwtExpirationStr); err == nil && parsed > 0 {
-			jwtExpirationHours = parsed
-		}
-	}
-	config.JWTExpirationHours = jwtExpirationHours
 
 	// Получаем ключ Google Translate API (необязательный)
 	config.GoogleTranslateAPIKey = os.Getenv("GOOGLE_TRANSLATE_API_KEY")
@@ -478,9 +453,6 @@ func NewConfig() (*Config, error) {
 		DeepLUseFreeAPI:       config.DeepLUseFreeAPI,
 		StripeAPIKey:          config.StripeAPIKey,
 		StripeWebhookSecret:   config.StripeWebhookSecret,
-		JWTSecret:             config.JWTSecret,
-		JWTExpirationHours:    config.JWTExpirationHours,
-		AuthServicePubKeyPath: config.AuthServicePubKeyPath,
 		AuthServiceURL:        config.AuthServiceURL,
 		BackendURL:            config.BackendURL,
 		MinIOPublicURL:        config.MinIOPublicURL,
@@ -499,11 +471,6 @@ func NewConfig() (*Config, error) {
 		ReindexOnAPI:          reindexOnAPI,
 		FeatureFlags:          LoadFeatureFlags(),
 	}, nil
-}
-
-// GetJWTDuration возвращает время жизни JWT токена как time.Duration
-func (c *Config) GetJWTDuration() time.Duration {
-	return time.Duration(c.JWTExpirationHours) * time.Hour
 }
 
 // IsProduction проверяет, работает ли приложение в production режиме
