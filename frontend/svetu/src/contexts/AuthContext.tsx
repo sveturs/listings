@@ -106,7 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = useCallback(() => {
     // Redirect to backend OAuth endpoint
-    window.location.href = 'http://localhost:3000/api/v1/auth/google';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/api/v1/auth/google`;
   }, []);
 
   const register = useCallback(
