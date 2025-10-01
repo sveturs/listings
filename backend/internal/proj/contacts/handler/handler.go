@@ -3,6 +3,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +38,7 @@ func NewHandler(services globalService.ServicesInterface) *Handler {
 // @Security BearerAuth
 // @Router /api/v1/contacts [post]
 func (h *Handler) AddContact(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.AddContactRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -81,7 +82,7 @@ func (h *Handler) AddContact(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/{contact_user_id}/status [put]
 func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
 	if err != nil {
@@ -121,7 +122,7 @@ func (h *Handler) UpdateContactStatus(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts [get]
 func (h *Handler) GetContacts(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	status := c.Query("status", "")
 	page := utils.StringToInt(c.Query("page"), 1)
@@ -154,7 +155,7 @@ func (h *Handler) GetContacts(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/incoming [get]
 func (h *Handler) GetIncomingRequests(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	page := utils.StringToInt(c.Query("page"), 1)
 	limit := utils.StringToInt(c.Query("limit"), 20)
@@ -180,7 +181,7 @@ func (h *Handler) GetIncomingRequests(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/{contact_user_id} [delete]
 func (h *Handler) RemoveContact(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	contactUserID, err := c.ParamsInt("contact_user_id")
 	if err != nil {
@@ -206,7 +207,7 @@ func (h *Handler) RemoveContact(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/privacy [get]
 func (h *Handler) GetPrivacySettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	settings, err := h.services.Contacts().GetPrivacySettings(c.Context(), userID)
 	if err != nil {
@@ -229,7 +230,7 @@ func (h *Handler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/privacy [put]
 func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.UpdatePrivacySettingsRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -257,7 +258,7 @@ func (h *Handler) UpdatePrivacySettings(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/contacts/{contact_user_id}/check [get]
 func (h *Handler) GetContactStatus(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	contactUserIDStr := c.Params("contact_user_id")
 	contactUserID, err := strconv.Atoi(contactUserIDStr)

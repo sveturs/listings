@@ -3,6 +3,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -98,7 +99,7 @@ func (h *ChatHandler) loadUserInfoForChats(ctx context.Context, chats []models.M
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chat [get]
 func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	logger.Info().Int("userId", userID).Msg("GetChats called")
 
 	chats, err := h.services.Chat().GetChats(c.Context(), userID)
@@ -132,7 +133,7 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chat/messages [get]
 func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	chatID := c.Query("chat_id")
 	listingID := c.Query("listing_id")
@@ -259,7 +260,7 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/unread [get]
 func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	count, err := h.services.Chat().GetUnreadMessagesCount(c.Context(), userID)
 	if err != nil {
@@ -285,7 +286,7 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages [post]
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.CreateMessageRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -347,7 +348,7 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/read [post]
 func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.MarkAsReadRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -375,7 +376,7 @@ func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chats/{chat_id}/archive [post]
 func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	chatID, err := c.ParamsInt("chat_id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidChatId")
@@ -408,7 +409,7 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/messages/{id}/attachments [post]
 func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 	logger.Info().Msg("UploadAttachments called")
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	messageID, err := c.ParamsInt("id")
 	if err != nil {
 		logger.Error().Err(err).Msg("Error parsing message ID")
@@ -492,7 +493,7 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id} [get]
 func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	attachmentID, err := c.ParamsInt("id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")
@@ -533,7 +534,7 @@ func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id}/download [get]
 func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	attachmentID, err := c.ParamsInt("id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")
@@ -591,7 +592,7 @@ func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id} [delete]
 func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	attachmentID, err := c.ParamsInt("id")
 	if err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidAttachmentId")

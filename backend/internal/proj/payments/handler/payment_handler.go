@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -58,7 +59,7 @@ type CreatePaymentResponse struct {
 // @Router /payments/create [post]
 func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, 401, "unauthorized")
 	}

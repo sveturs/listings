@@ -138,7 +138,7 @@ class ApiClient {
       headers.set('Accept-Language', locale);
     }
 
-    // Cookies are sent automatically with credentials: 'include'
+    // Cookies (включая JWT токены) отправляются автоматически через credentials: 'include'
 
     // Добавляем CSRF токен для небезопасных методов
     const method = fetchOptions.method?.toUpperCase();

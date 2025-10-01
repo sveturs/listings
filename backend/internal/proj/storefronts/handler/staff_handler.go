@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"errors"
 	"strconv"
 
@@ -28,7 +29,7 @@ import (
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff [post]
 func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -85,7 +86,7 @@ func (h *StorefrontHandler) AddStaff(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{staffId}/permissions [put]
 func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	staffID, err := strconv.Atoi(c.Params("staffId"))
 	if err != nil {
@@ -131,7 +132,7 @@ func (h *StorefrontHandler) UpdateStaffPermissions(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/staff/{userId} [delete]
 func (h *StorefrontHandler) RemoveStaff(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {

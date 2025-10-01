@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 	"time"
 
@@ -210,7 +211,7 @@ func (h *BehaviorTrackingHandler) GetUserEvents(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "errors.unauthorized")
 	}
 
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	if currentUserID != userID && !isAdmin {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "errors.forbidden")
 	}
@@ -292,7 +293,7 @@ func (h *BehaviorTrackingHandler) GetSessionEvents(c *fiber.Ctx) error {
 // @Security BearerAuth
 func (h *BehaviorTrackingHandler) UpdateMetrics(c *fiber.Ctx) error {
 	// Только админы могут обновлять метрики
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	if !isAdmin {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "errors.admin_required")
 	}

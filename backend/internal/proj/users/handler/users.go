@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -81,7 +82,7 @@ type AdminCheckResponseWrapper struct {
 // @Security BearerAuth
 // @Router /api/v1/users/me [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	profile, err := h.services.User().GetUserProfile(c.Context(), userID)
 	if err != nil {
@@ -116,7 +117,7 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/users/me [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var update models.UserProfileUpdate
 	if err := c.BodyParser(&update); err != nil {
@@ -208,7 +209,7 @@ func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetPrivacySettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	settings, err := h.userService.GetPrivacySettings(c.Context(), userID)
 	if err != nil {
@@ -238,7 +239,7 @@ func (h *UserHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/users/privacy-settings [put]
 func (h *UserHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var settings models.UpdatePrivacySettingsRequest
 	if err := c.BodyParser(&settings); err != nil {

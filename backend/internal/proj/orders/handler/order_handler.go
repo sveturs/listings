@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"strconv"
 
 	"backend/internal/domain/models"
@@ -31,7 +32,7 @@ const (
 // @Security BearerAuth
 // @Router /api/v1/orders [post]
 func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.CreateOrderRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -83,7 +84,7 @@ func (h *OrdersHandler) CreateOrder(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/orders [get]
 func (h *OrdersHandler) GetMyOrders(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	filter := &models.OrderFilter{
 		CustomerID: &userID,
@@ -141,7 +142,7 @@ func (h *OrdersHandler) GetOrder(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.invalid_order_id")
 	}
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	order, err := h.orderService.GetOrderByID(c.Context(), orderID, userID)
 	if err != nil {
@@ -189,7 +190,7 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.invalid_request_body")
 	}
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	order, err := h.orderService.CancelOrder(c.Context(), orderID, userID, req.Reason)
 	if err != nil {
@@ -233,7 +234,7 @@ func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.invalid_storefront_id")
 	}
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	filter := &models.OrderFilter{
 		StorefrontID: &storefrontID,
@@ -304,7 +305,7 @@ func (h *OrdersHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "orders.error.invalid_request_body")
 	}
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	order, err := h.orderService.UpdateOrderStatus(c.Context(), orderID, storefrontID, userID, req.Status, req.TrackingNumber, req.SellerNotes)
 	if err != nil {

@@ -35,8 +35,12 @@ func (h *MarketplaceHandler) CreateAttributeGroup(c *fiber.Ctx) error {
 	if req.Name == "" {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.groupNameRequired")
 	}
+	if req.Code == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.groupCodeRequired")
+	}
 
 	group := &models.AttributeGroup{
+		Code:        req.Code,
 		Name:        req.Name,
 		DisplayName: req.DisplayName,
 		Description: req.Description,

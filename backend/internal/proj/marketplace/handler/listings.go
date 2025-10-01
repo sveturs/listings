@@ -2,6 +2,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -102,7 +103,7 @@ func (h *ListingsHandler) loadUserInfoForListings(ctx context.Context, listings 
 // @Router /api/v1/marketplace/listings [post]
 func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -279,7 +280,7 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 	}
 
 	// Получаем ID пользователя из контекста для проверки избранного
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if ok && userID > 0 {
 		// Проверяем, находится ли объявление в избранном у пользователя
 		var favorites []models.MarketplaceListing
@@ -361,7 +362,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 	}(listing.ID, viewCtx)
 
 	// Получаем ID пользователя из контекста для проверки избранного
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if ok && userID > 0 {
 		// Проверяем, находится ли объявление в избранном у пользователя
 		var favorites []models.MarketplaceListing
@@ -585,7 +586,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/listings/{id} [put]
 func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -696,7 +697,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/listings/{id}/status [patch]
 func (h *ListingsHandler) UpdateListingStatus(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -827,7 +828,7 @@ func (h *ListingsHandler) CheckSlugAvailability(c *fiber.Ctx) error {
 // @Router /api/v1/marketplace/listings/{id} [delete]
 func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -934,7 +935,7 @@ func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 // @Router /api/v1/admin/sync-discounts [post]
 func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
-	userID, ok := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
@@ -1266,7 +1267,7 @@ func (h *ListingsHandler) GetAdminStatistics(c *fiber.Ctx) error {
 	ctx := context.Background()
 
 	// Проверяем, что пользователь администратор
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	if !isAdmin {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "admin.unauthorized")
 	}

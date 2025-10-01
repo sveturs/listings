@@ -105,6 +105,7 @@ export interface Attribute {
 
 export interface AttributeGroup {
   id: number;
+  code: string;
   name: string;
   display_name: string;
   description?: string;
@@ -180,7 +181,7 @@ export const adminApi = {
 
         const apiUrl = configManager.getApiUrl();
         const response = await fetch(
-          `${apiUrl}/api/v1/admin/categories/all?lang=${currentLocale}`,
+          `${apiUrl}/api/v1/admin/categories-all?lang=${currentLocale}`,
           {
             method: 'GET',
             headers,
@@ -727,42 +728,42 @@ export const adminApi = {
   attributeGroups: {
     async getAll(): Promise<AttributeGroup[]> {
       const response = await apiClient.get('/api/v1/admin/attribute-groups');
-      return response.data?.groups || [];
+      return response.data?.data?.groups || [];
     },
 
     async getById(id: number): Promise<AttributeGroup> {
       const response = await apiClient.get(
         `/api/v1/admin/attribute-groups/${id}`
       );
-      return (response.data as any as any).group;
+      return response.data?.data?.group;
     },
 
     async create(
       group: Partial<AttributeGroup>
-    ): Promise<{ id: number; success: boolean }> {
+    ): Promise<{ id: number; message: string }> {
       const response = await apiClient.post(
         '/api/v1/admin/attribute-groups',
         group
       );
-      return response.data as any;
+      return response.data?.data;
     },
 
     async update(
       id: number,
       group: Partial<AttributeGroup>
-    ): Promise<{ success: boolean; message: string }> {
+    ): Promise<{ message: string }> {
       const response = await apiClient.put(
         `/api/v1/admin/attribute-groups/${id}`,
         group
       );
-      return response.data as any;
+      return response.data?.data;
     },
 
-    async delete(id: number): Promise<{ success: boolean; message: string }> {
+    async delete(id: number): Promise<{ message: string }> {
       const response = await apiClient.delete(
         `/api/v1/admin/attribute-groups/${id}`
       );
-      return response.data as any;
+      return response.data?.data;
     },
 
     async getWithItems(

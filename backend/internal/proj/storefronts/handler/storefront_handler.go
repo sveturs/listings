@@ -1,6 +1,7 @@
 package handler
 
 import (
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"context"
 	"errors"
 	"strconv"
@@ -45,7 +46,7 @@ func NewStorefrontHandler(service service.StorefrontService) *StorefrontHandler 
 // @Security BearerAuth
 // @Router /api/v1/storefronts [post]
 func (h *StorefrontHandler) CreateStorefront(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var dto models.StorefrontCreateDTO
 	if err := c.BodyParser(&dto); err != nil {
@@ -147,7 +148,7 @@ func (h *StorefrontHandler) GetStorefrontBySlug(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [put]
 func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -194,7 +195,7 @@ func (h *StorefrontHandler) UpdateStorefront(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id} [delete]
 func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -202,7 +203,7 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 	}
 
 	// Pass admin status and hard delete flag through context
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	isAdmin := authMiddleware.IsAdmin(c)
 	hardDelete := c.Query("hard_delete") == boolValueTrue // Query parameter для выбора жесткого удаления
 
 	// Логируем для отладки
@@ -249,8 +250,8 @@ func (h *StorefrontHandler) DeleteStorefront(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/restore [post]
 func (h *StorefrontHandler) RestoreStorefront(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
-	isAdmin, _ := c.Locals("is_admin").(bool)
+	userID, _ := authMiddleware.GetUserID(c)
+	isAdmin := authMiddleware.IsAdmin(c)
 
 	if !isAdmin {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "storefronts.error.admin_access_required")
@@ -459,7 +460,7 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 func (h *StorefrontHandler) GetMyStorefronts(c *fiber.Ctx) error {
 	logger.Info().Msg("GetMyStorefronts called")
 
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 	logger.Info().Int("userID", userID).Msg("Getting storefronts for user")
 
 	storefronts, err := h.service.ListUserStorefronts(c.Context(), userID)
@@ -695,7 +696,7 @@ func (h *StorefrontHandler) GetBusinessesInBuilding(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/hours [put]
 func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -736,7 +737,7 @@ func (h *StorefrontHandler) UpdateWorkingHours(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/payment-methods [put]
 func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -777,7 +778,7 @@ func (h *StorefrontHandler) UpdatePaymentMethods(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/delivery-options [put]
 func (h *StorefrontHandler) UpdateDeliveryOptions(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -846,7 +847,7 @@ func (h *StorefrontHandler) RecordView(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetAnalytics(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -911,7 +912,7 @@ type StorefrontsListResponse struct {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/logo [post]
 func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -970,7 +971,7 @@ func (h *StorefrontHandler) UploadLogo(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/banner [post]
 func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -1031,7 +1032,7 @@ func (h *StorefrontHandler) UploadBanner(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{id}/analytics [get]
 func (h *StorefrontHandler) GetStorefrontAnalytics(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {

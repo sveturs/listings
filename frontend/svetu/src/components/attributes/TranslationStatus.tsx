@@ -50,7 +50,10 @@ export function TranslationStatus({
         setStatus(statuses[0]);
       }
     } catch (error) {
-      console.error('Failed to fetch translation status:', error);
+      // Игнорируем ошибки 401 - это нормально если пользователь не залогинен
+      if ((error as any)?.status !== 401) {
+        console.error('Failed to fetch translation status:', error);
+      }
     } finally {
       setLoading(false);
     }

@@ -49,12 +49,13 @@ func NewAttributeGroupStorage(pool *pgxpool.Pool) AttributeGroupStorage {
 // CreateAttributeGroup создает новую группу атрибутов
 func (s *attributeGroupStorage) CreateAttributeGroup(ctx context.Context, group *models.AttributeGroup) (int, error) {
 	query := `
-		INSERT INTO attribute_groups (name, display_name, description, icon, sort_order, is_active, is_system)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO attribute_groups (code, name, display_name, description, icon, sort_order, is_active, is_system)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id`
 
 	var id int
 	err := s.pool.QueryRow(ctx, query,
+		group.Code,
 		group.Name,
 		group.DisplayName,
 		group.Description,
@@ -73,13 +74,14 @@ func (s *attributeGroupStorage) CreateAttributeGroup(ctx context.Context, group 
 // GetAttributeGroup получает группу атрибутов по ID
 func (s *attributeGroupStorage) GetAttributeGroup(ctx context.Context, id int) (*models.AttributeGroup, error) {
 	query := `
-		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
+		SELECT id, code, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		WHERE id = $1`
 
 	group := &models.AttributeGroup{}
 	err := s.pool.QueryRow(ctx, query, id).Scan(
 		&group.ID,
+		&group.Code,
 		&group.Name,
 		&group.DisplayName,
 		&group.Description,
@@ -104,13 +106,14 @@ func (s *attributeGroupStorage) GetAttributeGroup(ctx context.Context, id int) (
 // GetAttributeGroupByName получает группу атрибутов по имени
 func (s *attributeGroupStorage) GetAttributeGroupByName(ctx context.Context, name string) (*models.AttributeGroup, error) {
 	query := `
-		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
+		SELECT id, code, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		WHERE name = $1`
 
 	group := &models.AttributeGroup{}
 	err := s.pool.QueryRow(ctx, query, name).Scan(
 		&group.ID,
+		&group.Code,
 		&group.Name,
 		&group.DisplayName,
 		&group.Description,
@@ -135,7 +138,7 @@ func (s *attributeGroupStorage) GetAttributeGroupByName(ctx context.Context, nam
 // ListAttributeGroups получает список всех групп атрибутов
 func (s *attributeGroupStorage) ListAttributeGroups(ctx context.Context) ([]*models.AttributeGroup, error) {
 	query := `
-		SELECT id, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
+		SELECT id, code, name, display_name, description, icon, sort_order, is_active, is_system, created_at, updated_at
 		FROM attribute_groups
 		ORDER BY sort_order, name`
 
@@ -150,6 +153,7 @@ func (s *attributeGroupStorage) ListAttributeGroups(ctx context.Context) ([]*mod
 		group := &models.AttributeGroup{}
 		err := rows.Scan(
 			&group.ID,
+			&group.Code,
 			&group.Name,
 			&group.DisplayName,
 			&group.Description,
