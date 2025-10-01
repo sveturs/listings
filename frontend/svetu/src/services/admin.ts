@@ -105,6 +105,7 @@ export interface Attribute {
 
 export interface AttributeGroup {
   id: number;
+  code: string;
   name: string;
   display_name: string;
   description?: string;

@@ -16,6 +16,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
   const tCommon = useTranslations('admin');
 
   const [formData, setFormData] = useState<Partial<AttributeGroup>>({
+    code: '',
     name: '',
     display_name: '',
     description: '',
@@ -29,6 +30,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
   useEffect(() => {
     if (group) {
       setFormData({
+        code: group.code || '',
         name: group.name || '',
         display_name: group.display_name || '',
         description: group.description || '',
@@ -54,14 +56,14 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
             : value,
     }));
 
-    // Auto-generate system name from display name
+    // Auto-generate code and system name from display name
     if (name === 'display_name' && !group) {
       const systemName = value
         .toLowerCase()
         .replace(/[^a-z0-9_]/g, '_')
         .replace(/_+/g, '_')
         .replace(/^_|_$/g, '');
-      setFormData((prev) => ({ ...prev, name: systemName }));
+      setFormData((prev) => ({ ...prev, code: systemName, name: systemName }));
     }
   };
 
@@ -95,7 +97,7 @@ export default function GroupForm({ group, onSave, onCancel }: GroupFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.display_name) {
+    if (!formData.code || !formData.name || !formData.display_name) {
       toast.error('Заполните обязательные поля');
       return;
     }
