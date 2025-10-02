@@ -19,9 +19,9 @@
 ```
 
 **Дата создания:** 2025-10-02
-**Последнее обновление:** 2025-10-02 (Phase 2.1 завершена)
+**Последнее обновление:** 2025-10-02 (Phase 2.1-2.3 завершены)
 **Версия библиотеки:** github.com/sveturs/auth v1.8.0
-**Статус:** ФАЗА 2 В ПРОЦЕССЕ 🔶 (Phase 2.1 завершена, коммит 9e003b54)
+**Статус:** ФАЗА 2 В ПРОЦЕССЕ 🔶 (Phase 2.1-2.3 завершены, коммиты 9e003b54, d1916cf6)
 **Токен для тестирования:** `/tmp/token` (пользователь voroshilovdo@gmail.com, роли: admin, user)
 
 ---
@@ -69,10 +69,10 @@ make lint
 | Метрика | Текущее | Целевое | Статус |
 |---------|---------|---------|--------|
 | Правильное использование middleware | 95% | 95%+ | ✅ |
-| Использование helper функций | 80% (20/68 исправлено) | 90%+ | 🟡 |
+| Использование helper функций | 40% (31/77 исправлено) | 90%+ | 🟡 |
 | Модулей без критических проблем | 18/18 | 18/18 | ✅ |
 | Критических уязвимостей | 0 | 0 | ✅ |
-| Прямой доступ к c.Locals | ~48 мест (20 исправлено) | 0 | 🟠 |
+| Прямой доступ к c.Locals | 46 мест (31 исправлено) | 0 | 🟡 |
 
 ---
 
@@ -327,7 +327,7 @@ Resolves: AUTH_LIBRARY_AUDIT_REPORT.md Problems #1, #2, #3"
 **Цель:** Убрать весь legacy код с прямым доступом к контексту
 **Время:** 1 неделя
 **Приоритет:** 🟠 ВЫСОКИЙ
-**Статус:** 🔶 В ПРОЦЕССЕ (Phase 2.1 завершена)
+**Статус:** 🔶 В ПРОЦЕССЕ (Phase 2.1-2.3 завершены, 40% выполнено)
 
 ### ✅ Phase 2.1: admin/logistics модуль - ЗАВЕРШЕНА (2025-10-02)
 
@@ -446,49 +446,96 @@ curl -H "Authorization: Bearer $TOKEN" -X POST http://localhost:3000/api/v1/subs
 
 ---
 
-### Модуль: payments (Приоритет 3)
+### ✅ Phase 2.2: payments модуль - ЗАВЕРШЕНА (2025-10-02)
 
-**Статистика:** 5 мест прямого доступа
+**Коммит:** d1916cf6
+**Исправлено:** 5 мест прямого доступа к c.Locals("user_id")
 
-**Файлы для рефакторинга:**
-- [ ] `backend/internal/proj/payments/handler/*.go` (5 мест)
+**Файлы:**
+- ✅ `backend/internal/proj/payments/handler/order_payment_handler.go` (2 места)
+  - GetOrderPaymentStatus (строка 135)
+  - CancelOrderPayment (строка 171)
+- ✅ `backend/internal/proj/payments/handler/payment_handler.go` (3 места)
+  - CapturePayment (строка 141)
+  - RefundPayment (строка 188)
+  - GetPaymentStatus (строка 243)
+
+**Изменения:**
+- Заменен `c.Locals("user_id")` на `authMiddleware.GetUserID(c)`
+- Исправлены проверки `if userID == nil` на `if !ok`
+- Обновлены форматы логов с `%v` на `%d`
 
 **Тестирование:**
 ```bash
-TOKEN=$(cat /tmp/token)
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/payments/balance
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/payments/transactions
+✅ Backend запускается без ошибок
+✅ make lint - 0 issues
+✅ Все handlers работают корректно с токеном
 ```
 
 ---
 
-### Модуль: orders (Приоритет 4)
+### ✅ Phase 2.3: orders модуль - ЗАВЕРШЕНА (2025-10-02)
 
-**Статистика:** 6 мест прямого доступа
+**Коммит:** d1916cf6
+**Исправлено:** 6 мест прямого доступа к c.Locals("user_id")
 
-**Файлы для рефакторинга:**
-- [ ] `backend/internal/proj/orders/handler/cart_handler.go` (6 мест)
+**Файлы:**
+- ✅ `backend/internal/proj/orders/handler/cart_handler.go` (6 мест)
+  - AddToCart (строка 45)
+  - UpdateCartItem (строка 113)
+  - RemoveFromCart (строка 164)
+  - GetCart (строка 207)
+  - ClearCart (строка 251)
+  - GetUserCarts (строка 283)
+
+**Изменения:**
+- Добавлен import `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+- Заменен паттерн `if userIDRaw := c.Locals("user_id"); userIDRaw != nil` на `if userIDVal, ok := authMiddleware.GetUserID(c); ok`
+- Исправлены type assertions и проверки
 
 **Тестирование:**
 ```bash
-TOKEN=$(cat /tmp/token)
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/cart
-curl -H "Authorization: Bearer $TOKEN" -X POST http://localhost:3000/api/v1/cart/items \
-  -H "Content-Type: application/json" \
-  -d '{"listing_id": 1, "quantity": 1}'
+✅ Backend запускается без ошибок
+✅ /api/v1/user/carts - 200 OK (user_id: 6 распознан)
+✅ make lint - 0 issues
+✅ Корректная работа cart endpoints с токеном
 ```
 
 ---
 
-### Модуль: marketplace (Приоритет 5)
+### ~~Модуль: payments~~ ✅ ЗАВЕРШЕН (Phase 2.2)
 
-**Статистика:** ~30 мест прямого доступа (уже 80% мигрировано)
+См. Phase 2.2 выше
 
-**Файлы для рефакторинга:**
-- [ ] `backend/internal/proj/marketplace/handler/listings.go` (~10 мест)
-- [ ] `backend/internal/proj/marketplace/handler/images.go` (~8 мест)
-- [ ] `backend/internal/proj/marketplace/handler/favorites.go` (~6 мест)
-- [ ] `backend/internal/proj/marketplace/handler/saved_searches.go` (~6 мест)
+---
+
+### ~~Модуль: orders~~ ✅ ЗАВЕРШЕН (Phase 2.3)
+
+См. Phase 2.3 выше
+
+---
+
+### Phase 2.4: Оставшиеся модули (Приоритет 4)
+
+**Статус:** 🔶 ТРЕБУЕТСЯ ВЫПОЛНЕНИЕ
+**Осталось:** 46 мест в 12 файлах
+
+**Подробная статистика по файлам:**
+- [ ] `notifications/handler/handler.go` (1 место)
+- [ ] `behavior_tracking/handler/handler.go` (2 места)
+- [ ] `subscriptions/handler/subscription_handler.go` (7 мест)
+- [ ] `marketplace/handler/favorites.go` (5 мест)
+- [ ] `marketplace/handler/search.go` (2 места)
+- [ ] `marketplace/handler/images.go` (5 мест)
+- [ ] `marketplace/handler/listings.go` (8 мест)
+- [ ] `marketplace/handler/saved_searches.go` (6 мест)
+- [ ] `marketplace/handler/custom_components.go` (4 места)
+- [ ] `marketplace/handler/chat.go` (1 место)
+- [ ] `marketplace/handler/indexing.go` (4 места)
+- [ ] `marketplace/handler/translation.go` (1 место)
+
+**Итого marketplace:** 36 мест в 9 файлах
+**Итого другие:** 10 мест в 3 файлах
 
 **Тестирование:**
 ```bash

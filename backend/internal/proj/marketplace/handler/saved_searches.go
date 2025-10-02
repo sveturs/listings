@@ -80,7 +80,7 @@ type SavedSearchResponse struct {
 func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -122,7 +122,7 @@ func (h *SavedSearchesHandler) CreateSavedSearch(c *fiber.Ctx) error {
 func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -159,7 +159,7 @@ func (h *SavedSearchesHandler) GetSavedSearches(c *fiber.Ctx) error {
 func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -198,7 +198,7 @@ func (h *SavedSearchesHandler) GetSavedSearch(c *fiber.Ctx) error {
 func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -243,7 +243,7 @@ func (h *SavedSearchesHandler) UpdateSavedSearch(c *fiber.Ctx) error {
 func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -283,7 +283,7 @@ func (h *SavedSearchesHandler) DeleteSavedSearch(c *fiber.Ctx) error {
 func (h *SavedSearchesHandler) ExecuteSavedSearch(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 

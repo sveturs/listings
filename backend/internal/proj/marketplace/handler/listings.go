@@ -106,7 +106,7 @@ func (h *ListingsHandler) CreateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -243,7 +243,8 @@ func (h *ListingsHandler) GetListing(c *fiber.Ctx) error {
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
 	// Создаем новый контекст с данными из текущего запроса
-	viewCtx := context.WithValue(context.Background(), contextKeyUserID, c.Locals("user_id"))
+	currentUserID, _ := authMiddleware.GetUserID(c)
+	viewCtx := context.WithValue(context.Background(), contextKeyUserID, currentUserID)
 
 	// Получаем IP адрес клиента
 	clientIP := c.IP()
@@ -336,7 +337,8 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 
 	// Делаем запрос на увеличение счетчика просмотров в горутине, чтобы не задерживать ответ
 	// Создаем новый контекст с данными из текущего запроса
-	viewCtx := context.WithValue(context.Background(), contextKeyUserID, c.Locals("user_id"))
+	currentUserID, _ := authMiddleware.GetUserID(c)
+	viewCtx := context.WithValue(context.Background(), contextKeyUserID, currentUserID)
 
 	// Получаем IP адрес клиента
 	clientIP := c.IP()
@@ -480,7 +482,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	if query != "" && h.services.SearchLogs() != nil {
 		// Извлекаем данные из контекста Fiber ДО запуска горутины
 		var userID *int
-		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+		if uid, ok := authMiddleware.GetUserID(c); ok && uid > 0 {
 			userID = &uid
 		}
 
@@ -589,7 +591,7 @@ func (h *ListingsHandler) UpdateListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -700,7 +702,7 @@ func (h *ListingsHandler) UpdateListingStatus(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -831,7 +833,7 @@ func (h *ListingsHandler) DeleteListing(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -938,7 +940,7 @@ func (h *ListingsHandler) SynchronizeDiscounts(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 

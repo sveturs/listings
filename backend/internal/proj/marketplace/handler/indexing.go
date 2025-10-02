@@ -46,7 +46,7 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -96,7 +96,7 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -189,7 +189,7 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -238,7 +238,7 @@ func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("user_id", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 

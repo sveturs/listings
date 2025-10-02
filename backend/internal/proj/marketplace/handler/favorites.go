@@ -89,7 +89,7 @@ func (h *FavoritesHandler) AddToFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -151,7 +151,7 @@ func (h *FavoritesHandler) RemoveFromFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -202,7 +202,7 @@ func (h *FavoritesHandler) GetFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -242,7 +242,7 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 
@@ -288,7 +288,7 @@ func (h *FavoritesHandler) IsInFavorites(c *fiber.Ctx) error {
 func (h *FavoritesHandler) GetFavoritesCount(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
 	}
 

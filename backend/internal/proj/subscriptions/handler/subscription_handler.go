@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/subscriptions/service"
@@ -56,21 +57,9 @@ func (h *SubscriptionHandler) GetPlans(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/current [get]
 func (h *SubscriptionHandler) GetCurrentSubscription(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	subscription, err := h.service.GetUserSubscription(c.Context(), userID)
@@ -97,21 +86,9 @@ func (h *SubscriptionHandler) GetCurrentSubscription(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions [post]
 func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	var req models.CreateSubscriptionRequest
@@ -149,21 +126,9 @@ func (h *SubscriptionHandler) CreateSubscription(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/upgrade [post]
 func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	var req models.UpgradeSubscriptionRequest
@@ -197,21 +162,9 @@ func (h *SubscriptionHandler) UpgradeSubscription(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/cancel [post]
 func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	var body map[string]string
@@ -250,21 +203,9 @@ func (h *SubscriptionHandler) CancelSubscription(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/check-limits [post]
 func (h *SubscriptionHandler) CheckLimits(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	var req models.CheckLimitRequest
@@ -295,19 +236,9 @@ func (h *SubscriptionHandler) CheckLimits(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/initiate-payment [post]
 func (h *SubscriptionHandler) InitiatePayment(c *fiber.Ctx) error {
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
-		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
-	}
-
-	userID, ok := userIDVal.(int)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		// Try int64
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
+		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
 	var req InitiatePaymentRequest
@@ -356,22 +287,11 @@ type InitiatePaymentRequest struct {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/subscriptions/complete-payment [post]
 func (h *SubscriptionHandler) CompletePayment(c *fiber.Ctx) error {
-	// Safe type assertion for userId
-	userIDVal := c.Locals("user_id")
-	if userIDVal == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.SendError(c, fiber.StatusUnauthorized, "users.auth.error.unauthorized")
 	}
 
-	userID, ok := userIDVal.(int)
-	if !ok {
-		// Try int64 as fallback
-		userID64, ok := userIDVal.(int64)
-		if !ok {
-			h.logger.Error("Invalid userId type in context: %v", userIDVal)
-			return utils.SendError(c, fiber.StatusInternalServerError, "common.internalError")
-		}
-		userID = int(userID64)
-	}
 	paymentIntentID := c.Query("payment_intent")
 
 	if paymentIntentID == "" {
