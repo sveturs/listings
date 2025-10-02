@@ -72,6 +72,10 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 
 	// Приводим storage к postgres.Database для доступа к pool
 	if postgresDB, ok := marketplaceService.Storage().(*postgres.Database); ok {
+		// Получаем auth UserService и устанавливаем в marketplace storage
+		authUserSvc := services.AuthUserService()
+		postgresDB.SetMarketplaceUserService(authUserSvc)
+
 		// Создаем Storage с AttributeGroups
 		storage := postgres.NewStorage(postgresDB.GetPool(), services.Translation())
 

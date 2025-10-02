@@ -478,6 +478,7 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 
 	// WebSocket с проверкой аутентификации и rate limiting
 	// ВАЖНО: WebSocket передает токен в query параметре, не в cookie/header
+	// Используем кастомный middleware для извлечения токена из query и валидации через auth service
 	s.app.Get("/ws/chat", func(c *fiber.Ctx) error {
 		// Получаем токен из query параметра
 		token := c.Query("token")
@@ -487,25 +488,20 @@ func (s *Server) setupRoutes() { //nolint:contextcheck // внутренние �
 			})
 		}
 
-		// Валидируем токен через auth service
-		claims, err := s.authService.ValidateToken(c.Context(), token)
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Invalid or expired token",
-			})
-		}
-
-		// Устанавливаем user_id в контекст
-		c.Locals("user_id", claims.UserID)
-		c.Locals("email", claims.Email)
-		c.Locals("roles", claims.Roles)
+		// Устанавливаем токен в Authorization header для JWT Parser middleware
+		c.Request().Header.Set("Authorization", "Bearer "+token)
 
 		return c.Next()
-	}, s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
+	}, s.jwtParserMW, authMiddleware.RequireAuth(), s.middleware.RateLimitByUser(30, time.Minute), func(c *fiber.Ctx) error {
 		// Проверяем, что это WebSocket запрос
 		if websocket.IsWebSocketUpgrade(c) {
-			// Сохраняем userID для использования в WebSocket handler
-			userID := c.Locals("user_id").(int)
+			// Получаем userID из контекста, установленного auth middleware
+			userID, ok := authMiddleware.GetUserID(c)
+			if !ok || userID == 0 {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"error": "Invalid user authentication",
+				})
+			}
 
 			return websocket.New(func(conn *websocket.Conn) {
 				// Передаем userID через контекст соединения

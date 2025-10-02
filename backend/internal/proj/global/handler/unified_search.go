@@ -634,8 +634,14 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 		}
 
 		// Создаем унифицированный элемент
+		// Формируем ID: используем product.ID если он уже имеет префикс sp_, иначе добавляем префикс
+		productID := product.ID
+		if !strings.HasPrefix(productID, "sp_") {
+			productID = "sp_" + productID
+		}
+
 		item := UnifiedSearchItem{
-			ID:          "sp_" + strconv.Itoa(product.ProductID),
+			ID:          productID, // Гарантируем префикс sp_ для storefront товаров
 			ProductType: productTypeStorefront,
 			ProductID:   product.ProductID,
 			Name:        product.Name,

@@ -63,4 +63,7 @@ type ServicesInterface interface {
 
 	// NewImageService создает новый ImageService
 	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService
+
+	// AuthUserService возвращает UserService из auth библиотеки
+	AuthUserService() interface{}
 }

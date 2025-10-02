@@ -48,6 +48,7 @@ type Service struct {
 	unifiedSearch    UnifiedSearchServiceInterface
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 	unifiedCar       *marketplaceService.UnifiedCarService
+	authUserService  *authService.UserService // Auth библиотека UserService
 }
 
 func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config, translationSvc marketplaceService.TranslationServiceInterface, authSvc *authService.AuthService, userSvc *authService.UserService) *Service {
@@ -160,6 +161,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 		chatAttachment:   chatAttachmentSvc,
 		behaviorTracking: behaviorTrackingSvc,
 		unifiedCar:       unifiedCarSvc,
+		authUserService:  userSvc, // Сохраняем auth UserService
 	}
 
 	// Теперь создаем сервис витрин с правильными зависимостями
@@ -270,4 +272,9 @@ func (s *Service) SearchLogs() SearchLogsServiceInterface {
 // NewImageService создает новый ImageService
 func (s *Service) NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService {
 	return services.NewImageService(fileStorage, repo, cfg)
+}
+
+// AuthUserService возвращает UserService из auth библиотеки
+func (s *Service) AuthUserService() interface{} {
+	return s.authUserService
 }

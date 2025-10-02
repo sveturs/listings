@@ -404,6 +404,14 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 	must := []map[string]interface{}{}
 	filter := []map[string]interface{}{}
 
+	// КРИТИЧЕСКИ ВАЖНО: Всегда фильтруем только товары витрин (с storefront_id)
+	// Это предотвращает попадание marketplace объявлений в результаты поиска товаров витрин
+	filter = append(filter, map[string]interface{}{
+		"exists": map[string]interface{}{
+			"field": "storefront_id",
+		},
+	})
+
 	// Текстовый поиск
 	if params.Query != "" {
 		must = append(must, map[string]interface{}{
@@ -1168,6 +1176,12 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			primaryImageURL = primaryURL
 		}
 
+		logger.Debug().
+			Int("product_id", item.ProductID).
+			Int("images_count", len(imageURLsArray)).
+			Interface("image_urls", imageURLsArray).
+			Msg("✅ Found image_urls array in storefront product")
+
 		for idx, urlI := range imageURLsArray {
 			if url, ok := urlI.(string); ok {
 				image := ProductImage{
@@ -1180,6 +1194,10 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			}
 		}
 	} else if images, ok := source["images"].([]interface{}); ok {
+		logger.Debug().
+			Int("product_id", item.ProductID).
+			Msg("Found images array (old format) in storefront product")
+
 		for _, img := range images {
 			if imgMap, ok := img.(map[string]interface{}); ok {
 				image := ProductImage{}
@@ -1202,9 +1220,18 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			}
 		}
 	} else {
+		// Детальное логирование для отладки
+		imageURLsRaw := source["image_urls"]
+		imagesRaw := source["images"]
+
 		logger.Warn().
 			Int("product_id", item.ProductID).
-			Msg("No image_urls or images found in storefront product document")
+			Interface("image_urls_raw", imageURLsRaw).
+			Interface("image_urls_type", fmt.Sprintf("%T", imageURLsRaw)).
+			Interface("images_raw", imagesRaw).
+			Interface("images_type", fmt.Sprintf("%T", imagesRaw)).
+			Interface("source_keys", getSourceKeys(source)).
+			Msg("❌ No image_urls or images found in storefront product document")
 	}
 
 	// Адрес на верхнем уровне (из витрины)
@@ -1876,4 +1903,13 @@ func (r *ProductRepository) getProductStatus(product *models.StorefrontProduct) 
 		return "active"
 	}
 	return "inactive"
+}
+
+// getSourceKeys возвращает список ключей из source документа для отладки
+func getSourceKeys(source map[string]interface{}) []string {
+	keys := make([]string, 0, len(source))
+	for k := range source {
+		keys = append(keys, k)
+	}
+	return keys
 }

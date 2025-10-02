@@ -54,112 +54,116 @@ export const websocketMiddleware: Middleware =
       // Устанавливаем флаг подключения
       isConnecting = true;
 
-      // Создаем новое подключение
-      ws = chatService.connectWebSocket((event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (process.env.NODE_ENV === 'development') {
-            console.log('WebSocket message:', data);
-          }
+      // Создаем новое подключение (async)
+      chatService
+        .connectWebSocket((event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('WebSocket message:', data);
+            }
 
-          switch (data.type) {
-            case 'new_message':
-              // Сообщение уже должно содержать вложения от сервера
-              store.dispatch(handleNewMessage(data.payload));
+            switch (data.type) {
+              case 'new_message':
+                // Сообщение уже должно содержать вложения от сервера
+                store.dispatch(handleNewMessage(data.payload));
 
-              // Если сообщение помечено как имеющее вложения, но вложения не пришли
-              // это может означать, что файлы еще загружаются
-              if (data.payload.has_attachments && !data.payload.attachments) {
-                // Ждем немного и пытаемся загрузить сообщение с вложениями
-                setTimeout(() => {
-                  store.dispatch(
-                    refreshMessageWithAttachments({
-                      chatId: data.payload.chat_id,
-                      messageId: data.payload.id,
-                    })
-                  );
-                }, 3000); // Ждем 3 секунды, чтобы дать время файлам загрузиться
-              }
-              break;
+                // Если сообщение помечено как имеющее вложения, но вложения не пришли
+                // это может означать, что файлы еще загружаются
+                if (data.payload.has_attachments && !data.payload.attachments) {
+                  // Ждем немного и пытаемся загрузить сообщение с вложениями
+                  setTimeout(() => {
+                    store.dispatch(
+                      refreshMessageWithAttachments({
+                        chatId: data.payload.chat_id,
+                        messageId: data.payload.id,
+                      })
+                    );
+                  }, 3000); // Ждем 3 секунды, чтобы дать время файлам загрузиться
+                }
+                break;
 
-            case 'message_read':
-              store.dispatch(handleMessageRead(data.payload));
-              break;
+              case 'message_read':
+                store.dispatch(handleMessageRead(data.payload));
+                break;
 
-            case 'user_typing':
-              store.dispatch(
-                setUserTyping({
-                  chatId: data.payload.chat_id,
-                  userId: data.payload.user_id,
-                  isTyping: data.payload.is_typing,
-                })
-              );
-              break;
-
-            case 'user_online':
-              store.dispatch(
-                handleUserOnline({ user_id: data.payload.user_id })
-              );
-              break;
-
-            case 'user_offline':
-              store.dispatch(
-                handleUserOffline({
-                  user_id: data.payload.user_id,
-                  last_seen: data.payload.last_seen,
-                })
-              );
-              break;
-
-            case 'attachment_upload':
-              // Когда другой пользователь загрузил вложение
-              // Это событие должно содержать полную информацию о сообщении с вложениями
-              if (
-                data.payload &&
-                data.payload.message_id &&
-                data.payload.attachments
-              ) {
+              case 'user_typing':
                 store.dispatch(
-                  updateMessageAttachments({
-                    messageId: data.payload.message_id,
+                  setUserTyping({
                     chatId: data.payload.chat_id,
-                    attachments: data.payload.attachments,
+                    userId: data.payload.user_id,
+                    isTyping: data.payload.is_typing,
                   })
                 );
-              }
-              break;
+                break;
 
-            case 'attachment_delete':
-              // Обрабатываем удаление вложений если нужно
-              break;
+              case 'user_online':
+                store.dispatch(
+                  handleUserOnline({ user_id: data.payload.user_id })
+                );
+                break;
 
-            case 'online_users_list':
-              // Обработка списка онлайн пользователей
-              if (data.payload && data.payload.users) {
-                data.payload.users.forEach((userId: number) => {
-                  store.dispatch(handleUserOnline({ user_id: userId }));
-                });
-              }
-              break;
+              case 'user_offline':
+                store.dispatch(
+                  handleUserOffline({
+                    user_id: data.payload.user_id,
+                    last_seen: data.payload.last_seen,
+                  })
+                );
+                break;
 
-            default:
-              if (process.env.NODE_ENV === 'development') {
-                console.log('Unknown WebSocket message type:', data.type);
-              }
+              case 'attachment_upload':
+                // Когда другой пользователь загрузил вложение
+                // Это событие должно содержать полную информацию о сообщении с вложениями
+                if (
+                  data.payload &&
+                  data.payload.message_id &&
+                  data.payload.attachments
+                ) {
+                  store.dispatch(
+                    updateMessageAttachments({
+                      messageId: data.payload.message_id,
+                      chatId: data.payload.chat_id,
+                      attachments: data.payload.attachments,
+                    })
+                  );
+                }
+                break;
+
+              case 'attachment_delete':
+                // Обрабатываем удаление вложений если нужно
+                break;
+
+              case 'online_users_list':
+                // Обработка списка онлайн пользователей
+                if (data.payload && data.payload.users) {
+                  data.payload.users.forEach((userId: number) => {
+                    store.dispatch(handleUserOnline({ user_id: userId }));
+                  });
+                }
+                break;
+
+              default:
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Unknown WebSocket message type:', data.type);
+                }
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
           }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      });
+        })
+        .then((websocket) => {
+          ws = websocket;
 
-      if (!ws) {
-        console.warn(
-          '[WebSocket] Connection not created, possibly no auth token'
-        );
-        return next(action);
-      }
+          if (!ws) {
+            console.warn(
+              '[WebSocket] Connection not created, possibly no auth token'
+            );
+            isConnecting = false;
+            return;
+          }
 
-      store.dispatch(setWebSocket(ws));
+          store.dispatch(setWebSocket(ws));
 
       // Запрашиваем статус всех пользователей при подключении
       ws.addEventListener('open', () => {
@@ -206,10 +210,15 @@ export const websocketMiddleware: Middleware =
         }
       });
 
-      ws.addEventListener('error', () => {
-        isConnecting = false; // Сбрасываем флаг при ошибке
-        console.error('[WebSocket] Connection error occurred');
-      });
+          ws.addEventListener('error', () => {
+            isConnecting = false; // Сбрасываем флаг при ошибке
+            console.error('[WebSocket] Connection error occurred');
+          });
+        })
+        .catch((error) => {
+          console.error('[WebSocket] Failed to connect:', error);
+          isConnecting = false;
+        });
     }
 
     if (action.type === 'chat/closeWebSocket') {

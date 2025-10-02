@@ -102,7 +102,7 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		pool:             pool,
 		db:               stdDB,
 		sqlxDB:           sqlxDB,
-		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService),
+		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
 		osClient:         osClient,      // Сохраняем клиент OpenSearch
@@ -1885,4 +1885,11 @@ func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) err
 	}
 
 	return nil
+}
+
+// SetMarketplaceUserService устанавливает UserService для marketplace storage
+func (db *Database) SetMarketplaceUserService(userService interface{}) {
+	if db.marketplaceDB != nil {
+		db.marketplaceDB.SetUserService(userService)
+	}
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	// "time"
 	"github.com/jackc/pgx/v5"
+	authservice "github.com/sveturs/auth/pkg/http/service"
 )
 
 const (
@@ -57,12 +58,30 @@ func init() {
 type Storage struct {
 	pool               *pgxpool.Pool
 	translationService service.TranslationServiceInterface
+	userService        *authservice.UserService
 }
 
-func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface) *Storage {
+func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface, userService interface{}) *Storage {
+	var authUserSvc *authservice.UserService
+	if userService != nil {
+		if svc, ok := userService.(*authservice.UserService); ok {
+			authUserSvc = svc
+		}
+	}
+
 	return &Storage{
 		pool:               pool,
 		translationService: translationService,
+		userService:        authUserSvc,
+	}
+}
+
+// SetUserService устанавливает UserService для Storage
+func (s *Storage) SetUserService(userService interface{}) {
+	if userService != nil {
+		if svc, ok := userService.(*authservice.UserService); ok {
+			s.userService = svc
+		}
 	}
 }
 
