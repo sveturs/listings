@@ -10,7 +10,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"go.uber.org/zap"
 )
 
@@ -160,7 +160,7 @@ type ViewHistoryRequest struct {
 // @Router /api/v1/recommendations/view-history [post]
 func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 	// Пытаемся получить userID из контекста через библиотечный helper
-	userID, ok := authmw.GetUserID(c)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok || userID == 0 {
 		// Если нет авторизации, пропускаем сохранение истории
 		return utils.SendSuccessResponse(c, map[string]string{"status": "ok", "message": "anonymous"}, "success")

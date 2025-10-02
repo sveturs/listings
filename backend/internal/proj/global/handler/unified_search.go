@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
@@ -326,7 +326,7 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		}
 
 		// Получаем userID если пользователь авторизован через библиотечный helper
-		if uid, ok := authmw.GetUserID(c); ok && uid > 0 {
+		if uid, ok := authMiddleware.GetUserID(c); ok && uid > 0 {
 			trackCtx.userID = &uid
 		}
 

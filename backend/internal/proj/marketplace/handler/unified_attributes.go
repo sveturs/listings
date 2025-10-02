@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/config"
 	"backend/internal/domain/models"
@@ -59,7 +60,7 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	}
 
 	// Проверяем feature flag для конкретного пользователя
-	userID := utils.GetUserIDFromContext(c)
+	userID, _ := authMiddleware.GetUserID(c)
 	if !h.featureFlags.ShouldUseUnifiedAttributes(userID) {
 		// Если новая система отключена для пользователя - возвращаем из старой
 		return h.getCategoryAttributesLegacy(c, categoryID)
@@ -106,7 +107,7 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributesWithSettings(c *fiber.Ct
 		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidCategoryId")
 	}
 
-	userID := utils.GetUserIDFromContext(c)
+	userID, _ := authMiddleware.GetUserID(c)
 	if !h.featureFlags.ShouldUseUnifiedAttributes(userID) {
 		return utils.SendError(c, fiber.StatusNotImplemented, "errors.featureNotAvailable")
 	}
@@ -139,7 +140,7 @@ func (h *UnifiedAttributesHandler) GetListingAttributeValues(c *fiber.Ctx) error
 		return utils.SendError(c, fiber.StatusBadRequest, "errors.invalidListingId")
 	}
 
-	userID := utils.GetUserIDFromContext(c)
+	userID, _ := authMiddleware.GetUserID(c)
 	if !h.featureFlags.ShouldUseUnifiedAttributes(userID) {
 		return h.getListingAttributeValuesLegacy(c, listingID)
 	}
@@ -180,7 +181,7 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 	}
 
 	// Проверяем авторизацию
-	userID := utils.GetUserIDFromContext(c)
+	userID, _ := authMiddleware.GetUserID(c)
 	if userID == 0 {
 		return utils.SendError(c, fiber.StatusUnauthorized, "errors.unauthorized")
 	}
@@ -229,7 +230,7 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 // @Router /api/v2/admin/attributes [post]
 func (h *UnifiedAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -265,7 +266,7 @@ func (h *UnifiedAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Router /api/v2/admin/attributes/{id} [put]
 func (h *UnifiedAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -307,7 +308,7 @@ func (h *UnifiedAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 // @Router /api/v2/admin/attributes/{id} [delete]
 func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -345,7 +346,7 @@ func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Router /api/v2/admin/categories/{category_id}/attributes/{attribute_id} [post]
 func (h *UnifiedAttributesHandler) AttachAttributeToCategory(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -412,7 +413,7 @@ func (h *UnifiedAttributesHandler) saveListingAttributeValuesLegacy(c *fiber.Ctx
 // @Router /api/v2/admin/attributes/feature-status [get]
 func (h *UnifiedAttributesHandler) GetFeatureStatus(c *fiber.Ctx) error {
 	// Только для администраторов
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -450,7 +451,7 @@ func (h *UnifiedAttributesHandler) DetachAttributeFromCategory(c *fiber.Ctx) err
 	}
 
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -480,7 +481,7 @@ func (h *UnifiedAttributesHandler) UpdateCategoryAttribute(c *fiber.Ctx) error {
 	}
 
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -505,7 +506,7 @@ func (h *UnifiedAttributesHandler) UpdateCategoryAttribute(c *fiber.Ctx) error {
 // MigrateFromLegacy запускает миграцию данных из старой системы
 func (h *UnifiedAttributesHandler) MigrateFromLegacy(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 
@@ -528,7 +529,7 @@ func (h *UnifiedAttributesHandler) MigrateFromLegacy(c *fiber.Ctx) error {
 // GetMigrationStatus возвращает статус миграции
 func (h *UnifiedAttributesHandler) GetMigrationStatus(c *fiber.Ctx) error {
 	// Проверяем права администратора
-	if !utils.IsAdmin(c) {
+	if !authMiddleware.IsAdmin(c) {
 		return utils.SendError(c, fiber.StatusForbidden, "errors.forbidden")
 	}
 

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/config"
 	"backend/internal/logger"
@@ -23,7 +24,7 @@ func NewFeatureFlagsMiddleware(featureFlags *config.FeatureFlags) *FeatureFlagsM
 // CheckUnifiedAttributes проверяет доступность унифицированных атрибутов для пользователя
 func (m *FeatureFlagsMiddleware) CheckUnifiedAttributes() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userID := utils.GetUserIDFromContext(c)
+		userID, _ := authMiddleware.GetUserID(c)
 
 		// Проверяем, включена ли функция для пользователя
 		if !m.featureFlags.ShouldUseUnifiedAttributes(userID) {
@@ -52,7 +53,7 @@ func (m *FeatureFlagsMiddleware) CheckUnifiedAttributes() fiber.Handler {
 // CheckFeaturePercentage проверяет процент включения функции
 func (m *FeatureFlagsMiddleware) CheckFeaturePercentage(feature string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userID := utils.GetUserIDFromContext(c)
+		userID, _ := authMiddleware.GetUserID(c)
 
 		// Проверяем процент включения
 		percentage := m.featureFlags.GetFeaturePercentage(feature)
@@ -71,7 +72,7 @@ func (m *FeatureFlagsMiddleware) CheckFeaturePercentage(feature string) fiber.Ha
 func (m *FeatureFlagsMiddleware) LogFeatureUsage(feature string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if m.featureFlags.LogAttributeSystemCalls {
-			userID := utils.GetUserIDFromContext(c)
+			userID, _ := authMiddleware.GetUserID(c)
 			logger.Info().
 				Str("feature", feature).
 				Int("user_id", userID).
@@ -86,7 +87,7 @@ func (m *FeatureFlagsMiddleware) LogFeatureUsage(feature string) fiber.Handler {
 // DynamicVersionRouting выбирает версию API на основе feature flags
 func (m *FeatureFlagsMiddleware) DynamicVersionRouting() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userID := utils.GetUserIDFromContext(c)
+		userID, _ := authMiddleware.GetUserID(c)
 
 		// Если путь содержит /api/unified/ - проверяем доступность
 		if c.Path()[:12] == "/api/unified" {

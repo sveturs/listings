@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 	"go.uber.org/zap"
 
 	"backend/internal/proj/marketplace/services"
@@ -115,7 +115,7 @@ func (h *CategoryDetectorHandler) DetectCategory(c *fiber.Ctx) error {
 
 	// Получаем user_id из контекста через библиотечный helper
 	var userIDPtr *int32
-	if userID, ok := authmw.GetUserID(c); ok {
+	if userID, ok := authMiddleware.GetUserID(c); ok {
 		id32 := int32(userID) //nolint:gosec // UserID проверяется в middleware
 		userIDPtr = &id32
 	}

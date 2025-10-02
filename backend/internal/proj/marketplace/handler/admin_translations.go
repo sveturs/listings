@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -535,7 +535,7 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 
 	// Получаем user_id из контекста через библиотечный helper
 	var userIDInt int
-	if uid, ok := authmw.GetUserID(c); ok {
+	if uid, ok := authMiddleware.GetUserID(c); ok {
 		userIDInt = uid
 	}
 

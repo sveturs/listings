@@ -11,7 +11,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 const (
@@ -51,7 +51,7 @@ func NewProblemsHandler(problemService *service.ProblemService, logger *logger.L
 // @Router /api/v1/admin/logistics/problems [get]
 func (h *ProblemsHandler) GetProblems(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -111,7 +111,7 @@ func (h *ProblemsHandler) GetProblems(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems [post]
 func (h *ProblemsHandler) CreateProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -162,7 +162,7 @@ func (h *ProblemsHandler) CreateProblem(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id} [put]
 func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -208,7 +208,7 @@ func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/resolve [post]
 func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userIDInt, ok := authmw.GetUserID(c)
+	userIDInt, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -278,7 +278,7 @@ func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/assign [post]
 func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID, ok := authmw.GetUserID(c)
+	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -347,7 +347,7 @@ func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/comments [post]
 func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userIDInt, ok := authmw.GetUserID(c)
+	userIDInt, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -399,7 +399,7 @@ func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/comments [get]
 func (h *ProblemsHandler) GetProblemComments(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -434,7 +434,7 @@ func (h *ProblemsHandler) GetProblemComments(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/history [get]
 func (h *ProblemsHandler) GetProblemHistory(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -469,7 +469,7 @@ func (h *ProblemsHandler) GetProblemHistory(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/problems/{id}/details [get]
 func (h *ProblemsHandler) GetProblemDetails(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}

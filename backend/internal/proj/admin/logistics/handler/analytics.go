@@ -9,7 +9,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 const (
@@ -45,7 +45,7 @@ func NewAnalyticsHandler(analyticsService *service.AnalyticsService) *AnalyticsH
 // @Router /api/v1/admin/logistics/analytics/performance [get]
 func (h *AnalyticsHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -104,7 +104,7 @@ func (h *AnalyticsHandler) GetPerformanceMetrics(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/analytics/financial [get]
 func (h *AnalyticsHandler) GetFinancialReport(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -165,7 +165,7 @@ func (h *AnalyticsHandler) GetFinancialReport(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/analytics/export [get]
 func (h *AnalyticsHandler) ExportReport(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -447,7 +447,7 @@ func (h *AnalyticsHandler) exportXLSX(c *fiber.Ctx, data interface{}, reportType
 // @Router /api/v1/admin/logistics/analytics/couriers [get]
 func (h *AnalyticsHandler) GetCourierComparison(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}

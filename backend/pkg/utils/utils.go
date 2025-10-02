@@ -46,35 +46,6 @@ func ErrorResponse(c *fiber.Ctx, status int, message string) error {
 	})
 }
 
-// GetUserIDFromContext извлекает userID из контекста Fiber
-func GetUserIDFromContext(c *fiber.Ctx) int {
-	if userID := c.Locals("userID"); userID != nil {
-		if uid, ok := userID.(int); ok {
-			return uid
-		}
-	}
-	return 0
-}
-
-// IsAdmin проверяет, является ли пользователь администратором
-func IsAdmin(c *fiber.Ctx) bool {
-	// Проверяем роль пользователя из контекста
-	if role := c.Locals("role"); role != nil {
-		if roleStr, ok := role.(string); ok && roleStr == "admin" {
-			return true
-		}
-	}
-
-	// Также проверяем флаг isAdmin
-	if isAdmin := c.Locals("isAdmin"); isAdmin != nil {
-		if admin, ok := isAdmin.(bool); ok && admin {
-			return true
-		}
-	}
-
-	return false
-}
-
 func SuccessResponse(c *fiber.Ctx, data interface{}) error {
 	c.Status(fiber.StatusOK)
 	return c.JSON(fiber.Map{

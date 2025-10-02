@@ -10,7 +10,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
-	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // ShipmentsHandler обработчик для управления отправлениями
@@ -54,7 +54,7 @@ func NewShipmentsHandler(monitoringService *service.MonitoringService, problemSe
 // @Router /api/v1/admin/logistics/shipments [get]
 func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -141,7 +141,7 @@ func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{provider}/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -186,7 +186,7 @@ func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -228,7 +228,7 @@ func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{id}/status [put]
 func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
@@ -284,7 +284,7 @@ func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{id}/action [post]
 func (h *ShipmentsHandler) PerformShipmentAction(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	_, ok := authmw.GetUserID(c)
+	_, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
