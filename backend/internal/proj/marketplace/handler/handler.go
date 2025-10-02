@@ -417,9 +417,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		ordersGroup := app.Group("/api/v1/marketplace/orders", mw.JWTParser(), authMiddleware.RequireAuth())
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
-
-	// Используем JWTParser + AdminRequired для защиты admin роутов
-	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), mw.AdminRequired)
+	
+	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth("admin"))
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)
