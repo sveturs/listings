@@ -18,6 +18,7 @@ export default async function AdminLayout({
       'admin',
       'misc',
       'common',
+      'auth',
       'auth-shared',
       'marketplace', // Для IconPicker компонента
     ] as any

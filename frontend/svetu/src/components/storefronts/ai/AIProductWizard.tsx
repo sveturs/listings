@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
-import { tokenManager } from '@/utils/tokenManager';
 import UploadView from './UploadView';
 import ProcessView from './ProcessView';
 import EnhanceView from './EnhanceView';
 import AIVariantsView from './AIVariantsView';
 import PublishView from './PublishView';
+import { apiClient } from '@/services/api-client';
 
 interface AIProductWizardProps {
   storefrontSlug: string;
@@ -28,36 +28,17 @@ export default function AIProductWizard({
         storefrontSlug
       );
       try {
-        const token = tokenManager.getAccessToken();
-        console.log('[AIProductWizard] Token available:', token ? 'yes' : 'no');
+        const response = await apiClient.get(`/storefronts/slug/${storefrontSlug}`);
+        console.log('[AIProductWizard] Response:', response);
 
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const url = `/api/v1/storefronts/slug/${storefrontSlug}`;
-        console.log('[AIProductWizard] Fetching URL:', url);
-
-        const response = await fetch(url, { headers });
-        console.log('[AIProductWizard] Response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[AIProductWizard] Fetched storefront:', data);
+        if (response.data) {
+          console.log('[AIProductWizard] Fetched storefront:', response.data);
           // API возвращает storefront напрямую, а не обернутый в data
-          const id = data.id || null;
+          const id = response.data.id || null;
           console.log('[AIProductWizard] Extracted ID:', id);
           setStorefrontId(id);
         } else {
-          const errorText = await response.text();
-          console.error(
-            '[AIProductWizard] Failed to fetch storefront:',
-            response.status,
-            errorText
-          );
+          console.error('[AIProductWizard] Failed to fetch storefront');
         }
       } catch (error) {
         console.error('[AIProductWizard] Error fetching storefront ID:', error);

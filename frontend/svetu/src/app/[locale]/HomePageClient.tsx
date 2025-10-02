@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { logger } from '@/utils/logger';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { useAuth } from '@/contexts/AuthContext';
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 // import CartIcon from '@/components/cart/CartIcon';
 // import { AuthButton } from '@/components/AuthButton';
 import { NestedCategorySelector } from '@/components/search/NestedCategorySelector';
@@ -166,8 +166,8 @@ export default function HomePageClient({
           'No storefront_id in deal, fetching product details from API...'
         );
         try {
-          const response = await api.get(
-            `/api/v1/storefronts/products/${productId}`
+          const response = await apiClient.get(
+            `/storefronts/products/${productId}`
           );
           if (response.data && response.data.storefront_id) {
             storefrontId = response.data.storefront_id;
@@ -266,27 +266,9 @@ export default function HomePageClient({
   useEffect(() => {
     setMounted(true);
 
-    // Check for OAuth token in URL
-    const token = searchParams.get('token');
-    if (token) {
-      // Import tokenManager and save token properly
-      import('@/utils/tokenManager').then(({ tokenManager }) => {
-        // Save token using TokenManager
-        tokenManager.setAccessToken(token);
-
-        // Refresh session to get user data
-        refreshSession();
-
-        // Remove token from URL to clean it up
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('token');
-        window.history.replaceState({}, '', newUrl.toString());
-
-        // Show success message
-        toast.success(t('loginSuccessful') || 'Successfully logged in!');
-      });
-    }
-  }, [searchParams, refreshSession, t]);
+    // OAuth авторизация теперь обрабатывается через BFF proxy с httpOnly cookies
+    // Токен больше не передается через URL и не сохраняется в localStorage
+  }, []);
 
   // Отдельный эффект для инициализации избранного при смене пользователя
   useEffect(() => {
@@ -455,14 +437,9 @@ export default function HomePageClient({
       try {
         // Загружаем активные витрины
         // Сначала загружаем больше витрин, чтобы выбрать те, у которых есть изображения
-        const response = await api.get('/api/v1/storefronts', {
-          params: {
-            is_active: true,
-            limit: 10,
-            sort_by: 'products_count',
-            sort_order: 'desc',
-          },
-        });
+        const response = await apiClient.get(
+          '/storefronts?is_active=true&limit=10&sort_by=products_count&sort_order=desc'
+        );
 
         if (response.data && response.data.storefronts) {
           // Форматируем данные витрин для отображения
@@ -566,12 +543,9 @@ export default function HomePageClient({
         searchParams.append('product_types[]', 'marketplace');
         searchParams.append('product_types[]', 'storefront');
 
-        logger.debug(
-          'Request URL:',
-          `/api/v1/search?${searchParams.toString()}`
-        );
-        const response = await api.get(
-          `/api/v1/search?${searchParams.toString()}`
+        logger.debug('Request URL:', `/search?${searchParams.toString()}`);
+        const response = await apiClient.get(
+          `/search?${searchParams.toString()}`
         );
         logger.debug('API Response:', response.data);
 

@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
 import {
   FolderIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
+import { apiClient } from '@/services/api-client';
 
 interface ModuleData {
   name: string;
@@ -52,26 +52,13 @@ export default function ModuleExplorer({
     setLoading(true);
     setError(null);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const response = await apiClient.get('/admin/translations/frontend/modules');
 
-      const response = await fetch(
-        '/api/v1/admin/translations/frontend/modules',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to fetch modules');
       }
 
-      const data = await response.json();
-      setModules(data.data || []);
+      setModules(response.data.data || []);
     } catch (err) {
       setError((err as Error).message);
     } finally {

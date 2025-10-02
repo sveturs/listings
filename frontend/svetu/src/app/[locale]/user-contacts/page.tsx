@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface UserContact {
   id: number;
@@ -54,27 +55,16 @@ export default function UserContactsPage() {
     async (status: string = '') => {
       try {
         setLoading(true);
-        const apiUrl = configManager.getApiUrl();
-        let url = `${apiUrl}/api/v1/contacts`;
+        let url = `/api/v2/contacts`;
         if (status) {
           url += `?status=${encodeURIComponent(status)}`;
         }
 
-        // Получаем JWT токен через tokenManager
-        const { tokenManager } = await import('@/utils/tokenManager');
-        const accessToken = await tokenManager.getAccessToken();
-
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        };
-
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
-        }
-
         const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
           credentials: 'include',
-          headers,
         });
 
         if (!response.ok) {
@@ -98,27 +88,10 @@ export default function UserContactsPage() {
 
   const fetchPrivacySettings = useCallback(async () => {
     try {
-      // Получаем JWT токен через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const accessToken = await tokenManager.getAccessToken();
+      const response = await apiClient.get('/contacts/privacy');
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/contacts/privacy`, {
-        credentials: 'include',
-        headers,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const data: PrivacySettings = result.data || result;
+      if (response.data) {
+        const data: PrivacySettings = response.data.data || response.data;
         setPrivacySettings(data);
       } else {
         // Если настройки приватности недоступны, используем дефолтные
@@ -169,41 +142,12 @@ export default function UserContactsPage() {
     notes: string = ''
   ) => {
     try {
-      // Получаем JWT токен через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const accessToken = await tokenManager.getAccessToken();
+      const response = await apiClient.put(`/contacts/${contactUserID}/status`, {
+        status,
+        notes,
+      });
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      // Добавляем CSRF токен для PUT запроса
-      try {
-        const { AuthService } = await import('@/services/auth');
-        const csrfToken = await AuthService.getCsrfToken();
-        if (csrfToken) {
-          (headers as any)['X-CSRF-Token'] = csrfToken;
-        }
-      } catch (error) {
-        console.warn('Failed to get CSRF token:', error);
-      }
-
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/contacts/${contactUserID}/status`,
-        {
-          method: 'PUT',
-          credentials: 'include',
-          headers,
-          body: JSON.stringify({ status, notes }),
-        }
-      );
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to update contact status');
       }
 
@@ -217,40 +161,9 @@ export default function UserContactsPage() {
 
   const removeContact = async (contactUserID: number) => {
     try {
-      // Получаем JWT токен через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const accessToken = await tokenManager.getAccessToken();
+      const response = await apiClient.delete(`/contacts/${contactUserID}`);
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      // Добавляем CSRF токен для DELETE запроса
-      try {
-        const { AuthService } = await import('@/services/auth');
-        const csrfToken = await AuthService.getCsrfToken();
-        if (csrfToken) {
-          (headers as any)['X-CSRF-Token'] = csrfToken;
-        }
-      } catch (error) {
-        console.warn('Failed to get CSRF token:', error);
-      }
-
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/contacts/${contactUserID}`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-          headers,
-        }
-      );
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to remove contact');
       }
 
@@ -264,43 +177,13 @@ export default function UserContactsPage() {
 
   const updatePrivacySettings = async (settings: Partial<PrivacySettings>) => {
     try {
-      // Получаем JWT токен через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const accessToken = await tokenManager.getAccessToken();
+      const response = await apiClient.put('/contacts/privacy', settings);
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      // Добавляем CSRF токен для PUT запроса
-      try {
-        const { AuthService } = await import('@/services/auth');
-        const csrfToken = await AuthService.getCsrfToken();
-        if (csrfToken) {
-          (headers as any)['X-CSRF-Token'] = csrfToken;
-        }
-      } catch (error) {
-        console.warn('Failed to get CSRF token:', error);
-      }
-
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/contacts/privacy`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify(settings),
-      });
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to update privacy settings');
       }
 
-      const result = await response.json();
-      const data: PrivacySettings = result.data || result;
+      const data: PrivacySettings = response.data.data || response.data;
       setPrivacySettings(data);
       setShowPrivacyModal(false);
     } catch (err) {

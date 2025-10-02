@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Filter, Tag } from 'lucide-react';
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 
 interface CategoryAttribute {
   id: number;
@@ -43,8 +43,8 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
   const loadCategoryAttributes = async () => {
     setLoading(true);
     try {
-      const response = await api.get(
-        `/api/v1/marketplace/categories/${categoryId}/attributes`
+      const response = await apiClient.get(
+        `/marketplace/categories/${categoryId}/attributes`
       );
       if (response.data?.data) {
         const filterableAttributes = response.data.data.filter(

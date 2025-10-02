@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface Provider {
   id: number;
@@ -32,26 +31,10 @@ export default function DeliveryProviders() {
 
   const fetchProviders = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.get('/admin/delivery/providers');
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/admin/delivery/providers`,
-        {
-          credentials: 'include',
-          headers,
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setProviders(data.data || []);
+      if (response.data) {
+        setProviders(response.data.data || []);
       } else {
         // Использовать mock данные если API не доступен
         setProviders([
@@ -132,25 +115,11 @@ export default function DeliveryProviders() {
 
   const toggleProviderStatus = async (provider: Provider) => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/delivery/providers/${provider.id}/toggle`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers,
-        }
+      const response = await apiClient.post(
+        `/admin/delivery/providers/${provider.id}/toggle`
       );
 
-      if (response.ok) {
+      if (response.data) {
         setProviders((prev) =>
           prev.map((p) =>
             p.id === provider.id ? { ...p, is_active: !p.is_active } : p

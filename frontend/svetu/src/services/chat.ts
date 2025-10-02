@@ -1,5 +1,3 @@
-import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 import {
   MarketplaceChat,
   MarketplaceMessage,
@@ -17,7 +15,8 @@ class ChatService {
   private reconnectAttempts = 0;
 
   constructor() {
-    this.baseUrl = `${configManager.getApiUrl()}/api/v1/marketplace/chat`;
+    // BFF proxy endpoint
+    this.baseUrl = '/api/v2/marketplace/chat';
   }
 
   private async getCsrfToken(): Promise<string> {
@@ -26,13 +25,10 @@ class ChatService {
     }
 
     try {
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/csrf-token`,
-        {
-          method: 'GET',
-          credentials: 'include',
-        }
-      );
+      const response = await fetch('/api/v2/csrf-token', {
+        method: 'GET',
+        credentials: 'include',
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -54,19 +50,12 @@ class ChatService {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    // Получаем JWT токен
-    const accessToken = tokenManager.getAccessToken();
-
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string>),
     };
 
-    // Добавляем JWT токен если есть
-    if (accessToken) {
-      (headers as any)['Authorization'] = `Bearer ${accessToken}`;
-    }
-
+    // BFF proxy handles JWT automatically via httpOnly cookies
     // Добавляем CSRF токен для изменяющих запросов
     const method = options?.method || 'GET';
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase())) {
@@ -291,17 +280,12 @@ class ChatService {
         reject(new Error('Network error'));
       });
 
-      xhr.withCredentials = true; // Включаем отправку куки
+      xhr.withCredentials = true; // Включаем отправку куки для BFF proxy
 
       const uploadUrl = `${this.baseUrl}/messages/${messageId}/attachments`;
       xhr.open('POST', uploadUrl);
 
-      // Добавляем JWT токен
-      const accessToken = tokenManager.getAccessToken();
-      if (accessToken) {
-        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-      }
-
+      // BFF proxy handles JWT automatically via httpOnly cookies
       // Добавляем CSRF токен
       const csrfToken = await this.getCsrfToken();
       xhr.setRequestHeader('X-CSRF-Token', csrfToken);
@@ -330,14 +314,7 @@ class ChatService {
       formData.append('files', file);
     });
 
-    // Получаем JWT токен
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {};
-
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
+    // BFF proxy handles JWT automatically via httpOnly cookies
     const xhr = new XMLHttpRequest();
 
     return new Promise(async (resolve, reject) => {
@@ -379,11 +356,7 @@ class ChatService {
 
       xhr.open('POST', `${this.baseUrl}/messages/${messageId}/attachments`);
 
-      // Устанавливаем заголовки
-      Object.entries(headers).forEach(([key, value]) => {
-        xhr.setRequestHeader(key, value);
-      });
-
+      // BFF proxy handles JWT automatically via httpOnly cookies
       // Добавляем CSRF токен
       const csrfToken = await this.getCsrfToken();
       xhr.setRequestHeader('X-CSRF-Token', csrfToken);
@@ -402,30 +375,19 @@ class ChatService {
 
   // WebSocket соединение
   connectWebSocket(onMessage: (event: MessageEvent) => void): WebSocket | null {
-    // Получаем JWT токен из tokenManager
-    const accessToken = tokenManager.getAccessToken();
+    // WebSocket подключается напрямую к backend
+    // Аутентификация через cookie автоматически передаётся браузером
+    // TODO: В будущем можно добавить WebSocket proxy через BFF, но сейчас работает напрямую
 
-    // Если нет токена, не подключаемся
-    if (!accessToken) {
-      console.warn(
-        '[ChatService] No access token available, skipping WebSocket connection'
-      );
-      return null;
-    }
+    // Определяем WebSocket URL на основе текущего протокола
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
 
-    // Всегда используем WebSocket URL из конфигурации
-    const config = configManager.getConfig();
-    let wsUrl: string;
+    // Для development используем backend порт напрямую
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const wsHost = isDevelopment ? 'localhost:3000' : host;
 
-    if (config.api.websocketUrl) {
-      // Используем WebSocket URL из конфигурации
-      wsUrl = `${config.api.websocketUrl}/ws/chat?token=${accessToken}`;
-    } else {
-      // Фоллбэк на API URL если WebSocket URL не задан
-      const apiUrl = configManager.getApiUrl().replace(/^http/, 'ws');
-      wsUrl = `${apiUrl}/ws/chat?token=${accessToken}`;
-    }
-
+    const wsUrl = `${protocol}//${wsHost}/ws/chat`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

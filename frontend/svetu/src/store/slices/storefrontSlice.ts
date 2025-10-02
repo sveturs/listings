@@ -5,9 +5,8 @@ import {
   PayloadAction,
 } from '@reduxjs/toolkit';
 import { RootState } from '../index';
-import { tokenManager } from '@/utils/tokenManager';
 import { apiClientAuth } from '@/lib/api-client-auth';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/storefront';
 
@@ -239,25 +238,13 @@ export const fetchStorefrontById = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchStorefrontById', async (id, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await apiClient.get(`/storefronts/${id}`);
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+    if (!response.data) {
+      return rejectWithValue('Failed to fetch storefront');
     }
 
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : 'Unknown error'
@@ -272,33 +259,14 @@ export const fetchStorefrontBySlug = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchStorefrontBySlug', async (slug, { rejectWithValue }) => {
   try {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
+    const response = await apiClient.get(`/storefronts/slug/${slug}`);
 
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+    if (!response.data) {
+      return rejectWithValue('Failed to fetch storefront');
     }
 
-    const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/storefronts/slug/${slug}`, {
-      method: 'GET',
-      headers,
-      credentials: 'include', // Include cookies
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : 'Unknown error'
@@ -313,32 +281,14 @@ export const fetchMyStorefronts = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/fetchMyStorefronts', async (_, { rejectWithValue }) => {
   try {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
+    const response = await apiClient.get('/storefronts/my');
 
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
+    if (!response.data) {
+      return rejectWithValue('Failed to fetch my storefronts');
     }
 
-    const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/storefronts/my`, {
-      method: 'GET',
-      headers,
-      credentials: 'include', // Важно для отправки cookies
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
-    }
-
-    const data = await response.json();
+    const data = response.data;
     // API возвращает массив витрин, преобразуем в ожидаемый формат
     if (Array.isArray(data)) {
       return {
@@ -365,26 +315,13 @@ export const createStorefront = createAsyncThunk<
   'storefronts/createStorefront',
   async (storefrontData, { rejectWithValue }) => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/storefronts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(storefrontData),
-      });
+      const response = await apiClient.post('/storefronts', storefrontData);
 
-      if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: 'Network error' }));
-        return rejectWithValue(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
+      if (!response.data) {
+        return rejectWithValue('Failed to create storefront');
       }
 
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Unknown error'
@@ -400,26 +337,13 @@ export const updateStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/updateStorefront', async ({ id, data }, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    const response = await apiClient.put(`/storefronts/${id}`, data);
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+    if (!response.data) {
+      return rejectWithValue('Failed to update storefront');
     }
 
-    const responseData = await response.json();
-    return responseData;
+    return response.data;
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : 'Unknown error'
@@ -434,21 +358,10 @@ export const deleteStorefront = createAsyncThunk<
   { rejectValue: string }
 >('storefronts/deleteStorefront', async (id, { rejectWithValue }) => {
   try {
-    const apiUrl = configManager.getApiUrl();
-    const response = await fetch(`${apiUrl}/api/v1/storefronts/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await apiClient.delete(`/storefronts/${id}`);
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: 'Network error' }));
-      return rejectWithValue(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+    if (!response.data) {
+      return rejectWithValue('Failed to delete storefront');
     }
 
     return id;

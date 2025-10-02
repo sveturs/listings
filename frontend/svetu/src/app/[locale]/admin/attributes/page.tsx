@@ -18,7 +18,6 @@ export default function AttributesPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Пагинация
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,43 +33,13 @@ export default function AttributesPage() {
   const filterSelectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
-    // Ждем инициализации авторизации
-    const initAuth = async () => {
-      try {
-        // Проверяем, есть ли токен
-        const { tokenManager } = await import('@/utils/tokenManager');
-
-        // Даем время на обновление токена если нужно
-        const token = await tokenManager.getAccessToken();
-        if (!token) {
-          // Попробуем обновить токен
-          try {
-            await tokenManager.refreshAccessToken();
-          } catch (error) {
-            console.log('Failed to refresh token:', error);
-          }
-        }
-
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setIsInitialized(true); // Все равно пытаемся загрузить
-      }
-    };
-
-    initAuth();
-  }, []);
-
-  useEffect(() => {
-    if (isInitialized) {
-      loadAttributes();
-    }
+    loadAttributes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInitialized, currentPage, debouncedSearchTerm, filterType]);
+  }, [currentPage, debouncedSearchTerm, filterType]);
 
   // Сбрасываем на первую страницу при изменении поиска или фильтра
   useEffect(() => {
-    if (isInitialized && currentPage !== 1) {
+    if (currentPage !== 1) {
       setCurrentPage(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

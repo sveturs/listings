@@ -1,6 +1,4 @@
 import { apiClient } from './api-client';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
 import type {
   ImportJob,
   ImportJobStatus,
@@ -87,17 +85,12 @@ export class ImportApi {
         reject(new Error('Network error'));
       });
 
+      // Используем BFF proxy - автоматически добавит cookies для авторизации
       xhr.open(
         'POST',
-        `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/import/file`
+        `/api/v2/storefronts/slug/${storefrontSlug}/import/file`
       );
       xhr.withCredentials = true; // Include cookies
-
-      // Add authorization header if token exists
-      const accessToken = tokenManager.getAccessToken();
-      if (accessToken) {
-        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-      }
 
       xhr.send(formData);
     });
@@ -173,17 +166,9 @@ export class ImportApi {
         reject(new Error('Network error'));
       });
 
-      xhr.open(
-        'POST',
-        `${configManager.getApiUrl()}/api/v1/storefronts/${storefrontId}/import/file`
-      );
+      // Используем BFF proxy - автоматически добавит cookies для авторизации
+      xhr.open('POST', `/api/v2/storefronts/${storefrontId}/import/file`);
       xhr.withCredentials = true; // Include cookies
-
-      // Add authorization header if token exists
-      const accessToken = tokenManager.getAccessToken();
-      if (accessToken) {
-        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
-      }
 
       xhr.send(formData);
     });
@@ -259,19 +244,10 @@ export class ImportApi {
    * Downloads CSV template for product import
    */
   static async downloadCsvTemplate(): Promise<Blob> {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
-    const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/storefronts/import/csv-template`,
-      {
-        headers,
-        credentials: 'include',
-      }
-    );
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
+    const response = await fetch('/api/v2/storefronts/import/csv-template', {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -305,19 +281,10 @@ export class ImportApi {
    * Exports import results as CSV
    */
   static async exportResults(jobId: number): Promise<Blob> {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
-    const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/import/jobs/${jobId}/export`,
-      {
-        headers,
-        credentials: 'include',
-      }
-    );
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
+    const response = await fetch(`/api/v2/import/jobs/${jobId}/export`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -418,16 +385,10 @@ export class ImportApi {
    * Downloads sample import file for given format
    */
   static async downloadSample(format: 'csv' | 'xml'): Promise<Blob> {
-    const accessToken = tokenManager.getAccessToken();
-    const headers: Record<string, string> = {};
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/storefronts/import/sample/${format}`,
+      `/api/v2/storefronts/import/sample/${format}`,
       {
-        headers,
         credentials: 'include',
       }
     );

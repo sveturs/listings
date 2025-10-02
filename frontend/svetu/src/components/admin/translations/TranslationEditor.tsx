@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
-import { tokenManager } from '@/utils/tokenManager';
 import {
   PencilIcon,
   CheckIcon,
@@ -14,6 +13,7 @@ import {
   ArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import { debounce } from 'lodash';
+import { apiClient } from '@/services/api-client';
 
 interface Translation {
   module: string;
@@ -61,26 +61,15 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
   const fetchTranslations = async () => {
     setLoading(true);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/translations/frontend/module/${module}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/admin/translations/frontend/module/${module}`
       );
 
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to fetch translations');
       }
 
-      const data = await response.json();
-      setTranslations(data.data || []);
+      setTranslations(response.data.data || []);
     } catch {
       toast.error(t('translations.fetchError'));
     } finally {
@@ -144,19 +133,12 @@ export default function TranslationEditor({ module }: TranslationEditorProps) {
         translations: editValues,
       };
 
-      const response = await fetch(
-        `/api/v1/admin/translations/frontend/module/${module}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify([updatedTranslation]),
-        }
+      const response = await apiClient.put(
+        `/admin/translations/frontend/module/${module}`,
+        [updatedTranslation]
       );
 
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to save translation');
       }
 

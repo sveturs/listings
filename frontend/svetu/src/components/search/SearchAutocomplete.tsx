@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDebounce } from '@/hooks/useDebounce';
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 import { useRouter } from 'next/navigation';
 
 interface SearchAutocompleteProps {
@@ -104,31 +104,30 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
       setIsLoading(true);
       try {
         // Запрос на получение расширенных подсказок с типами
-        const response = await api.get('/api/v1/search/suggestions', {
-          params: {
-            q: debouncedQuery,
-            limit: 10,
-            types: 'queries,categories,products',
-            category:
-              selectedCategory !== 'all' ? String(selectedCategory) : undefined,
-            lang: locale,
-          },
+        const params = new URLSearchParams({
+          q: debouncedQuery,
+          limit: '10',
+          types: 'queries,categories,products',
+          lang: locale,
         });
+        if (selectedCategory !== 'all') {
+          params.append('category', String(selectedCategory));
+        }
+        const response = await apiClient.get(`/search/suggestions?${params}`);
 
         if (response.data?.data && Array.isArray(response.data.data)) {
           // Backend возвращает массив расширенных подсказок
           setSuggestions(response.data.data);
         } else {
           // Если API не возвращает подсказки, используем поиск
-          const searchResponse = await api.get('/api/v1/search', {
-            params: {
-              query: debouncedQuery,
-              size: 5,
-              page: 1,
-              language: locale,
-              status: 'active',
-            },
+          const searchParams = new URLSearchParams({
+            query: debouncedQuery,
+            size: '5',
+            page: '1',
+            language: locale,
+            status: 'active',
           });
+          const searchResponse = await apiClient.get(`/search?${searchParams}`);
 
           if (searchResponse.data?.items) {
             const productSuggestions: Suggestion[] = searchResponse.data.items

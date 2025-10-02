@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import WeightOptimization from './WeightOptimization';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface SearchWeight {
   id: number;
@@ -35,22 +34,13 @@ export default function SearchWeights() {
   const loadWeights = useCallback(async () => {
     try {
       setLoading(true);
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/weights?item_type=${selectedItemType}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/admin/search/weights?item_type=${selectedItemType}`
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to load weights');
+      if (response.data) {
+        setWeights(response.data.data || []);
       }
-
-      const data = await response.json();
-      setWeights(data.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load weights');
     } finally {
@@ -64,25 +54,14 @@ export default function SearchWeights() {
 
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/weights/${weightId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({ weight: newWeight }),
-        }
-      );
+      const response = await apiClient.put(`/admin/search/weights/${weightId}`, {
+        weight: newWeight,
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to update weight');
+      if (response.data) {
+        await loadWeights();
+        setEditingWeight(null);
       }
-
-      await loadWeights();
-      setEditingWeight(null);
     } catch (err) {
       alert(
         'Ошибка при обновлении веса: ' +
@@ -93,26 +72,13 @@ export default function SearchWeights() {
 
   const createBackup = async () => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/backup-weights`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            item_type: selectedItemType,
-          }),
-        }
-      );
+      const response = await apiClient.post('/admin/search/backup-weights', {
+        item_type: selectedItemType,
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to create backup');
+      if (response.data) {
+        alert('Резервная копия весов создана успешно!');
       }
-
-      alert('Резервная копия весов создана успешно!');
     } catch (err) {
       alert(
         'Ошибка при создании резервной копии: ' +

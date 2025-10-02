@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { tokenManager } from '@/utils/tokenManager';
 
 function OAuthCallbackContent() {
   const searchParams = useSearchParams();
@@ -44,21 +43,20 @@ function OAuthCallbackContent() {
           return;
         }
 
-        // Exchange code for token with Auth Service through backend proxy
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/oauth/callback`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              code,
-              state,
-              provider: 'google',
-            }),
-          }
-        );
+        // Exchange code for token with Auth Service through BFF proxy
+        // BFF proxy автоматически сохранит токен в httpOnly cookies
+        const response = await fetch('/api/v2/auth/oauth/callback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            code,
+            state,
+            provider: 'google',
+          }),
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -67,21 +65,11 @@ function OAuthCallbackContent() {
           );
         }
 
-        const data = await response.json();
+        console.log('[OAuth Callback] Successfully authenticated via OAuth');
 
-        if (!data.access_token) {
-          throw new Error('No access token received from server');
-        }
-
-        console.log('[OAuth Callback] Successfully received tokens');
-
-        // Save access token
-        tokenManager.setAccessToken(data.access_token);
-        // Note: refresh_token is handled internally by tokenManager if needed
-
-        // Redirect to home with token in URL for AuthContext to handle
+        // Redirect to home - токен уже в cookies
         console.log('[OAuth Callback] Login successful, redirecting to home');
-        router.push(`/ru?auth_token=${encodeURIComponent(data.access_token)}`);
+        router.push('/ru');
       } catch (err) {
         console.error('[OAuth Callback] Error processing callback:', err);
         setError(

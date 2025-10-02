@@ -6,7 +6,7 @@ import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from '@/utils/toast';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface PublishViewProps {
   storefrontId: number | null;
@@ -62,11 +62,6 @@ export default function PublishView({
     setError(null);
 
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('Authentication required. Please log in.');
-      }
-
       // 1. Create product first (without images)
       const productData = {
         name: state.aiData.title,
@@ -87,29 +82,20 @@ export default function PublishView({
         variants: state.aiData.hasVariants ? state.aiData.variants : undefined,
       };
 
-      const createResponse = await fetch(
-        `http://localhost:3000/api/v1/storefronts/slug/${storefrontSlug}/products`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(productData),
-        }
+      const createResponse = await apiClient.post(
+        `/storefronts/slug/${storefrontSlug}/products`,
+        productData
       );
 
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        throw new Error(errorData.error || 'Failed to create product');
+      if (!createResponse.data) {
+        throw new Error('Failed to create product');
       }
 
-      const result = await createResponse.json();
       // Backend возвращает product напрямую, а не обернутый в data
-      const productId = result.id;
+      const productId = createResponse.data.id;
 
       if (!productId) {
-        console.error('[PublishView] Invalid response:', result);
+        console.error('[PublishView] Invalid response:', createResponse.data);
         throw new Error('Product ID not returned from server');
       }
 
@@ -124,14 +110,13 @@ export default function PublishView({
         }
         formData.append('display_order', String(index));
 
-        return fetch(
-          `http://localhost:3000/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
+        return apiClient.post(
+          `/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
+          formData,
           {
-            method: 'POST',
             headers: {
-              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
             },
-            body: formData,
           }
         );
       });
@@ -139,7 +124,7 @@ export default function PublishView({
       const uploadResults = await Promise.all(uploadPromises);
 
       // Check if all uploads succeeded
-      const failedUploads = uploadResults.filter((res) => !res.ok);
+      const failedUploads = uploadResults.filter((res) => !res.data);
       if (failedUploads.length > 0) {
         console.warn(
           `${failedUploads.length} image(s) failed to upload, but product was created`

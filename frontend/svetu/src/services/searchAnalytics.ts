@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { apiClient } from './api-client';
 
 // Типы для аналитических данных
 export interface SearchMetrics {
@@ -54,51 +54,14 @@ export interface AnalyticsFilters {
 }
 
 class SearchAnalyticsService {
-  private baseUrl: string;
+  private async fetchWithAuth<T>(url: string): Promise<T> {
+    const response = await apiClient.get(url);
 
-  constructor() {
-    this.baseUrl = config.api.url;
-  }
-
-  private async fetchWithAuth<T>(
-    url: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...((options.headers as Record<string, string>) || {}),
-    };
-
-    // Получаем токен из tokenManager асинхронно
-    if (typeof window !== 'undefined') {
-      try {
-        const { tokenManager } = await import('@/utils/tokenManager');
-        // Инициализируем tokenManager из localStorage
-        tokenManager.initializeFromStorage();
-        const accessToken = tokenManager.getAccessToken();
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
-          console.log('[SearchAnalytics] Auth token added');
-        } else {
-          console.log('[SearchAnalytics] No auth token available');
-        }
-      } catch (error) {
-        console.log('[SearchAnalytics] Error getting auth token:', error);
-      }
+    if (!response.data) {
+      throw new Error('API request failed');
     }
 
-    const response = await fetch(`${this.baseUrl}${url}`, {
-      ...options,
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.data || data;
+    return response.data.data || response.data;
   }
 
   /**
@@ -116,7 +79,7 @@ class SearchAnalyticsService {
     }
 
     const queryString = params.toString();
-    const url = `/api/v1/analytics/metrics/search${queryString ? `?${queryString}` : ''}`;
+    const url = `/analytics/metrics/search${queryString ? `?${queryString}` : ''}`;
 
     return this.fetchWithAuth<SearchMetrics>(url);
   }
@@ -138,7 +101,7 @@ class SearchAnalyticsService {
     }
 
     const queryString = params.toString();
-    const url = `/api/v1/analytics/metrics/items${queryString ? `?${queryString}` : ''}`;
+    const url = `/analytics/metrics/items${queryString ? `?${queryString}` : ''}`;
 
     return this.fetchWithAuth<ItemPerformance[]>(url);
   }

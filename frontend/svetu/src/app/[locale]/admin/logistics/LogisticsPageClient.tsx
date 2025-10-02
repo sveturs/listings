@@ -11,8 +11,7 @@ import {
   FaClock,
   FaChartLine,
 } from 'react-icons/fa';
-import { tokenManager } from '@/utils/tokenManager';
-import config from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface DashboardStats {
   today_shipments: number;
@@ -55,30 +54,11 @@ export default function LogisticsPageClient() {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.get('/admin/logistics/dashboard');
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (response.data) {
+        setStats(response.data.data);
       }
-
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/logistics/dashboard`,
-        {
-          method: 'GET',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
-      }
-
-      const result = await response.json();
-      setStats(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {

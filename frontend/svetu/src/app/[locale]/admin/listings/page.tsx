@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import AdminListingsTable from './AdminListingsTable';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface ListingsStats {
   total: number;
@@ -28,35 +28,19 @@ export default function ListingsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const token = tokenManager.getAccessToken();
-        console.log(
-          '[Admin Listings] Fetching statistics with token:',
-          token ? 'present' : 'missing'
-        );
+        console.log('[Admin Listings] Fetching statistics');
 
-        const response = await fetch('/api/v1/admin/listings/statistics', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await apiClient.get('/admin/listings/statistics');
 
-        console.log(
-          '[Admin Listings] Statistics response status:',
-          response.status
-        );
+        console.log('[Admin Listings] Statistics data:', response.data);
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[Admin Listings] Statistics data:', data);
-
-          if (data.success && data.data) {
-            setStats({
-              total: data.data.total || 0,
-              active: data.data.active || 0,
-              pending: data.data.pending || 0,
-              views: data.data.views || 0,
-            });
-          }
+        if (response.data?.success && response.data.data) {
+          setStats({
+            total: response.data.data.total || 0,
+            active: response.data.data.active || 0,
+            pending: response.data.data.pending || 0,
+            views: response.data.data.views || 0,
+          });
         }
       } catch (error) {
         console.error('Error fetching admin statistics:', error);

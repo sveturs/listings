@@ -1,25 +1,12 @@
 import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 
 /**
  * Получает защищенный URL для скачивания файла вложения
- * Использует новый эндпоинт с проверкой авторизации
+ * Использует BFF proxy с автоматической авторизацией через cookies
  */
 export function getSecureAttachmentUrl(attachmentId: number): string {
-  const baseUrl = configManager.getApiUrl();
-  const token = tokenManager.getAccessToken();
-
-  // Формируем URL с токеном авторизации в query параметре
-  // Это позволит браузеру скачивать файлы напрямую
-  const url = `${baseUrl}/marketplace/chat/attachments/${attachmentId}/download`;
-
-  // Для изображений и других файлов, которые нужно отображать inline,
-  // добавляем токен в URL для прямого доступа
-  if (token) {
-    return `${url}?token=${encodeURIComponent(token)}`;
-  }
-
-  return url;
+  // Используем BFF proxy - автоматически добавит cookies для авторизации
+  return `/api/v2/marketplace/chat/attachments/${attachmentId}/download`;
 }
 
 /**

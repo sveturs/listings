@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface Shipment {
   id: number;
@@ -43,19 +43,13 @@ export default function DeliveryShipments() {
         ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(
-        `/api/v1/admin/delivery/shipments?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/admin/delivery/shipments?${params}`
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setShipments(data.data?.shipments || []);
-        const total = data.data?.total || 0;
+      if (response.data) {
+        setShipments(response.data.data?.shipments || []);
+        const total = response.data.data?.total || 0;
         setTotalPages(Math.ceil(total / 20));
       }
     } catch (error) {
@@ -145,19 +139,12 @@ export default function DeliveryShipments() {
 
   const handleShipmentAction = async (id: number, action: string) => {
     try {
-      const response = await fetch(
-        `/api/v1/admin/delivery/shipments/${id}/action`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ action }),
-        }
+      const response = await apiClient.post(
+        `/admin/delivery/shipments/${id}/action`,
+        { action }
       );
 
-      if (response.ok) {
+      if (response.data) {
         fetchShipments();
       }
     } catch (error) {

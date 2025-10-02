@@ -1,5 +1,4 @@
-import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from './api-client';
 
 export interface Category {
   id: number;
@@ -19,30 +18,8 @@ export interface Category {
 
 export class CategoryService {
   static async getCategories(): Promise<Category[]> {
-    const baseUrl = configManager.getApiUrl({ internal: true });
-    const url = `${baseUrl}/api/v1/marketplace/categories`;
-
-    const token = await tokenManager.getAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch categories: ${response.status}`);
-    }
-
-    const result = await response.json();
-    return result.data || [];
+    const response = await apiClient.get('/marketplace/categories');
+    return response.data?.data || [];
   }
 
   static async getCategoryTree(): Promise<Category[]> {
@@ -81,30 +58,14 @@ export class CategoryService {
   static async getCategoryWithCounts(
     locale: string = 'en'
   ): Promise<Category[]> {
-    const baseUrl = configManager.getApiUrl({ internal: true });
-    const url = `${baseUrl}/api/v1/marketplace/categories?locale=${locale}`;
-
-    const token = await tokenManager.getAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get(
+        `/marketplace/categories?locale=${locale}`
+      );
+      return response.data?.data || [];
+    } catch (error) {
       // Fallback to regular categories if with-counts endpoint doesn't exist
       return this.getCategories();
     }
-
-    const result = await response.json();
-    return result.data || [];
   }
 }

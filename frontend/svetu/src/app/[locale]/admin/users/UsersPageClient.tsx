@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import config from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 import { createAdminHeaders } from '@/utils/csrf';
+import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
 type UserProfile =
@@ -90,32 +89,18 @@ export default function UsersPageClient() {
         params.append('status', statusFilter);
       }
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
+      const response = await apiClient.get(`/admin/users?${params}`);
+
+      if (response.error) {
+        throw new Error(`Failed to fetch users: ${response.error.message}`);
       }
-
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/users?${params}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch users: ${response.status}`);
-      }
-
-      const data = await response.json();
 
       // API возвращает структуру: { data: { data: [...], total: 9, ... }, success: true }
-      const apiResponse = data.data;
+      const apiResponse = response.data?.data;
 
       // Преобразуем ответ API в ожидаемый формат
-      const users = apiResponse.data || [];
-      const totalCount = apiResponse.total || 0;
+      const users = apiResponse?.data || [];
+      const totalCount = apiResponse?.total || 0;
 
       setUsers(users);
       setTotalCount(totalCount);
@@ -130,23 +115,13 @@ export default function UsersPageClient() {
 
   const fetchRoles = useCallback(async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
+      const response = await apiClient.get('/admin/roles');
+
+      if (response.error) {
+        throw new Error(`Failed to fetch roles: ${response.error.message}`);
       }
 
-      const response = await fetch(`${config.getApiUrl()}/api/v1/admin/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch roles: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setRoles(data.data || []);
+      setRoles(response.data?.data || []);
     } catch (err) {
       console.error('Error fetching roles:', err);
     }
@@ -193,24 +168,12 @@ export default function UsersPageClient() {
     try {
       setUpdatingStatus(userId);
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const response = await apiClient.put(`/admin/users/${userId}/status`, {
+        status: newStatus,
+      });
 
-      const headers = await createAdminHeaders(token);
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/users/${userId}/status`,
-        {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to update status: ${response.status}`);
+      if (response.error) {
+        throw new Error(`Failed to update status: ${response.error.message}`);
       }
 
       // Update local state
@@ -236,24 +199,12 @@ export default function UsersPageClient() {
     try {
       setUpdatingRole(userId);
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const response = await apiClient.put(`/admin/users/${userId}/role`, {
+        role_id: newRoleId,
+      });
 
-      const headers = await createAdminHeaders(token);
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/users/${userId}/role`,
-        {
-          method: 'PUT',
-          headers,
-          credentials: 'include', // Важно для отправки cookies
-          body: JSON.stringify({ role_id: newRoleId }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to update role: ${response.status}`);
+      if (response.error) {
+        throw new Error(`Failed to update role: ${response.error.message}`);
       }
 
       // Update local state
@@ -297,23 +248,10 @@ export default function UsersPageClient() {
     try {
       setDeleting(userToDelete.id);
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const response = await apiClient.delete(`/admin/users/${userToDelete.id}`);
 
-      const headers = await createAdminHeaders(token);
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/users/${userToDelete.id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete user: ${response.status}`);
+      if (response.error) {
+        throw new Error(`Failed to delete user: ${response.error.message}`);
       }
 
       // Remove from local state

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { storefrontAI } from '@/services/ai/storefronts.service';
-import { tokenManager } from '@/utils/tokenManager';
 
 interface ProcessViewProps {
   storefrontSlug: string;
@@ -49,13 +48,8 @@ export default function ProcessView({
       setError(null);
 
       try {
-        // Установить JWT токен для AI запросов
-        const token = tokenManager.getAccessToken();
-        if (token) {
-          storefrontAI.setAuthToken(token);
-        } else {
-          throw new Error('Authentication required. Please log in.');
-        }
+        // AI сервис теперь использует BFF proxy с credentials: 'include'
+        // Токен передается автоматически через httpOnly cookies
 
         // Step 1: Analyze main image
         updateStepStatus('analyze', 'processing');

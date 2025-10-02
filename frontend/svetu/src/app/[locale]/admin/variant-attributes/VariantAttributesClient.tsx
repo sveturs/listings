@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
+import { apiClient } from '@/services/api-client';
 import Link from 'next/link';
-import { tokenManager } from '@/utils/tokenManager';
 import VariantAttributeForm from './components/VariantAttributeForm';
 import type {
   VariantAttributeFull,
   VariantMapping,
 } from '@/types/variant-attributes';
-
-import configManager from '@/config';
 
 export default function VariantAttributesClient() {
   const _t = useTranslations('admin');
@@ -37,20 +35,13 @@ export default function VariantAttributesClient() {
 
   const fetchVariantAttributes = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/attributes/variant-compatible`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setAttributes(data.data || []);
+      const response = await apiClient.get('/admin/attributes/variant-compatible');
+
+      if (response.error) {
+        throw new Error(response.error.message);
       }
+
+      setAttributes(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching variant attributes:', error);
       toast.error('Ошибка загрузки вариативных атрибутов');
@@ -61,20 +52,13 @@ export default function VariantAttributesClient() {
 
   const fetchCategories = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/marketplace/category-tree`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.data || []);
+      const response = await apiClient.get('/marketplace/category-tree');
+
+      if (response.error) {
+        throw new Error(response.error.message);
       }
+
+      setCategories(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -82,20 +66,15 @@ export default function VariantAttributesClient() {
 
   const fetchCategoryMappings = async (categoryId: number) => {
     try {
-      const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/variant-attributes/mappings?category_id=${categoryId}`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
+      const response = await apiClient.get(
+        `/admin/variant-attributes/mappings?category_id=${categoryId}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setMappings(data.data || []);
+
+      if (response.error) {
+        throw new Error(response.error.message);
       }
+
+      setMappings(response.data?.data || []);
     } catch (error) {
       console.error('Error fetching mappings:', error);
     }
@@ -111,24 +90,15 @@ export default function VariantAttributesClient() {
     }
 
     try {
-      const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/variant-attributes/${attr.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
+      const response = await apiClient.delete(
+        `/admin/variant-attributes/${attr.id}`
       );
 
-      if (response.ok) {
+      if (response.error) {
+        toast.error(response.error.message || 'Ошибка удаления атрибута');
+      } else {
         toast.success('Атрибут удален');
         fetchVariantAttributes();
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'Ошибка удаления атрибута');
       }
     } catch (error) {
       console.error('Error deleting variant attribute:', error);
@@ -143,29 +113,22 @@ export default function VariantAttributesClient() {
   ) => {
     try {
       if (isEnabled) {
-        const token = tokenManager.getAccessToken();
-        const apiUrl = configManager.getApiUrl();
-        const response = await fetch(
-          `${apiUrl}/api/v1/admin/variant-attributes/mappings`,
+        const response = await apiClient.post(
+          '/admin/variant-attributes/mappings',
           {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: token ? `Bearer ${token}` : '',
-            },
-            body: JSON.stringify({
-              variant_attribute_id: attribute.id,
-              category_id: categoryId,
-              sort_order: 0,
-              is_required: false,
-            }),
+            variant_attribute_id: attribute.id,
+            category_id: categoryId,
+            sort_order: 0,
+            is_required: false,
           }
         );
 
-        if (response.ok) {
-          toast.success('Атрибут добавлен к категории');
-          fetchCategoryMappings(categoryId);
+        if (response.error) {
+          throw new Error(response.error.message);
         }
+
+        toast.success('Атрибут добавлен к категории');
+        fetchCategoryMappings(categoryId);
       } else {
         const mapping = mappings.find(
           (m) =>
@@ -173,22 +136,16 @@ export default function VariantAttributesClient() {
             m.category_id === categoryId
         );
         if (mapping) {
-          const token = tokenManager.getAccessToken();
-          const apiUrl = configManager.getApiUrl();
-          const response = await fetch(
-            `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
-            {
-              method: 'DELETE',
-              headers: {
-                Authorization: token ? `Bearer ${token}` : '',
-              },
-            }
+          const response = await apiClient.delete(
+            `/admin/variant-attributes/mappings/${mapping.id}`
           );
 
-          if (response.ok) {
-            toast.success('Атрибут удален из категории');
-            fetchCategoryMappings(categoryId);
+          if (response.error) {
+            throw new Error(response.error.message);
           }
+
+          toast.success('Атрибут удален из категории');
+          fetchCategoryMappings(categoryId);
         }
       }
     } catch (error) {
@@ -383,28 +340,14 @@ export default function VariantAttributesClient() {
                                     checked={mapping.is_required}
                                     onChange={async (e) => {
                                       try {
-                                        const token =
-                                          tokenManager.getAccessToken();
-                                        const apiUrl =
-                                          configManager.getApiUrl();
-                                        const response = await fetch(
-                                          `${apiUrl}/api/v1/admin/variant-attributes/mappings/${mapping.id}`,
+                                        const response = await apiClient.patch(
+                                          `/admin/variant-attributes/mappings/${mapping.id}`,
                                           {
-                                            method: 'PATCH',
-                                            headers: {
-                                              'Content-Type':
-                                                'application/json',
-                                              Authorization: token
-                                                ? `Bearer ${token}`
-                                                : '',
-                                            },
-                                            body: JSON.stringify({
-                                              is_required: e.target.checked,
-                                            }),
+                                            is_required: e.target.checked,
                                           }
                                         );
 
-                                        if (response.ok) {
+                                        if (!response.error) {
                                           fetchCategoryMappings(
                                             selectedCategory
                                           );

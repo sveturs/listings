@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface TranslationConflict {
   id: number;
@@ -60,18 +60,10 @@ export default function ConflictResolver({
   const fetchConflicts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/conflicts',
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
-      );
+      const response = await apiClient.get('/admin/translations/sync/conflicts');
 
-      if (response.ok) {
-        const data = await response.json();
-        setConflicts(data.data || []);
+      if (response.data) {
+        setConflicts(response.data.data || []);
       } else {
         toast.error('Ошибка загрузки конфликтов');
       }
@@ -131,19 +123,12 @@ export default function ConflictResolver({
         resolution,
       }));
 
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/conflicts/resolve',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({ resolutions: conflictResolutions }),
-        }
+      const response = await apiClient.post(
+        '/admin/translations/sync/conflicts/resolve',
+        { resolutions: conflictResolutions }
       );
 
-      if (response.ok) {
+      if (response.data) {
         toast.success(`Разрешено ${selectedConflicts.size} конфликтов`);
         setSelectedConflicts(new Set());
         await fetchConflicts();
@@ -173,27 +158,20 @@ export default function ConflictResolver({
 
     setIsResolving(true);
     try {
-      const response = await fetch(
-        '/api/v1/admin/translations/sync/conflicts/resolve',
+      const response = await apiClient.post(
+        '/admin/translations/sync/conflicts/resolve',
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            resolutions: [
-              {
-                conflict_id: conflictId,
-                resolution: resolution.resolution,
-                custom_value: resolution.custom_value,
-              },
-            ],
-          }),
+          resolutions: [
+            {
+              conflict_id: conflictId,
+              resolution: resolution.resolution,
+              custom_value: resolution.custom_value,
+            },
+          ],
         }
       );
 
-      if (response.ok) {
+      if (response.data) {
         toast.success('Конфликт разрешен');
         await fetchConflicts();
         onConflictResolved?.();
