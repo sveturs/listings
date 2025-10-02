@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 	"backend/internal/proj/translation_admin/ratelimit"
@@ -15,15 +16,16 @@ import (
 
 // Module represents the translation admin module
 type Module struct {
-	handler   *Handler
-	aiHandler *AITranslationHandler
-	service   *Service
-	repo      *Repository
-	logger    zerolog.Logger
+	handler     *Handler
+	aiHandler   *AITranslationHandler
+	service     *Service
+	repo        *Repository
+	logger      zerolog.Logger
+	jwtParserMW fiber.Handler
 }
 
 // NewModule creates a new translation admin module
-func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontendPath string, redisClient *redis.Client, translationService interface{}) *Module {
+func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontendPath string, redisClient *redis.Client, translationService interface{}, jwtParserMW fiber.Handler) *Module {
 	// Create repository
 	repo := NewRepository(db, logger)
 
@@ -48,11 +50,12 @@ func NewModule(ctx context.Context, db *sqlx.DB, logger zerolog.Logger, frontend
 	}
 
 	return &Module{
-		handler:   handler,
-		aiHandler: aiHandler,
-		service:   service,
-		repo:      repo,
-		logger:    logger,
+		handler:     handler,
+		aiHandler:   aiHandler,
+		service:     service,
+		repo:        repo,
+		logger:      logger,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
@@ -63,8 +66,8 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 
 	// Admin-only endpoints for translation management
 	admin := app.Group("/api/v1/admin/translations",
-		middleware.AuthRequiredJWT,
-		middleware.AdminRequired,
+		m.jwtParserMW,
+		authMiddleware.RequireAuth("admin"),
 	)
 
 	// Register all translation admin routes

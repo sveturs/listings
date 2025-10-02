@@ -4,6 +4,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
@@ -21,14 +22,16 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	if h.allsecure != nil {
 		// Группа для обычных платежных операций
 		authenticated := app.Group("/api/v1/payments",
-			mw.AuthRequiredJWT,
+			h.jwtParserMW,
+			authMiddleware.RequireAuth(),
 			mw.PaymentAPIRateLimit())
 		authenticated.Post("/create", h.allsecure.CreatePayment)
 		authenticated.Get("/:id/status", h.allsecure.GetPaymentStatus)
 
 		// Группа для критических операций с более строгим rate limiting
 		criticalOps := app.Group("/api/v1/payments",
-			mw.AuthRequiredJWT,
+			h.jwtParserMW,
+			authMiddleware.RequireAuth(),
 			mw.StrictPaymentRateLimit())
 		criticalOps.Post("/:id/capture", h.allsecure.CapturePayment)
 		criticalOps.Post("/:id/refund", h.allsecure.RefundPayment)
