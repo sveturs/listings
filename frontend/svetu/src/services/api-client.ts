@@ -47,7 +47,7 @@ class ApiClient {
     if (typeof window === 'undefined') {
       // SSR: используем полный URL
       const frontendUrl =
-        process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3001';
+        process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:32341';
       return `${frontendUrl}/api/v2`;
     }
 

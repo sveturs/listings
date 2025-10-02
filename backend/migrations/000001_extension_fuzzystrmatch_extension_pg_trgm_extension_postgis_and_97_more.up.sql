@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
@@ -150,13 +151,6 @@ CREATE TYPE public.storefront_geo_strategy AS ENUM (
     'individual_location'
 );
 CREATE SEQUENCE public.address_change_log_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.admin_users_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE

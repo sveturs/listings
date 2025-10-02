@@ -77,6 +77,7 @@ INSERT INTO public.search_queries (id, query, normalized_query, search_count, la
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (340, 'высокого', 'высокого', 1, '2025-09-30 08:42:43.076246', 'ru', 1, '2025-09-30 08:42:43.076246', '2025-09-30 08:42:43.076246');
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (341, 'песок', 'песок', 7, '2025-09-30 08:52:52.519632', 'ru', 1, '2025-09-30 08:47:29.862566', '2025-09-30 08:52:52.519632');
 INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (348, 'высого', 'высого', 1, '2025-09-30 09:01:17.222775', 'ru', 1, '2025-09-30 09:01:17.222775', '2025-09-30 09:01:17.222775');
+INSERT INTO public.search_queries (id, query, normalized_query, search_count, last_searched, language, results_count, created_at, updated_at) VALUES (349, 'Poseduje digitalni ekran, višestruke', 'Poseduje digitalni ekran, višestruke', 1, '2025-10-01 19:22:55.575392', 'ru', 3, '2025-10-01 19:22:55.575392', '2025-10-01 19:22:55.575392');
 
 
 --

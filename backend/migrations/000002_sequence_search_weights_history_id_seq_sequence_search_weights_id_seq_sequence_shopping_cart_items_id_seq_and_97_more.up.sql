@@ -488,11 +488,19 @@ CREATE FUNCTION public.refresh_rating_distributions() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Обновляем все материализованные представления
-    REFRESH MATERIALIZED VIEW CONCURRENTLY user_ratings;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_ratings;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_distribution;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_rating_distribution;
+    -- Update materialized views if they exist
+    IF EXISTS (SELECT 1 FROM pg_matviews WHERE schemaname = 'public' AND matviewname = 'user_ratings') THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY user_ratings;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_matviews WHERE schemaname = 'public' AND matviewname = 'storefront_ratings') THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_ratings;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_matviews WHERE schemaname = 'public' AND matviewname = 'user_rating_distribution') THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_distribution;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_matviews WHERE schemaname = 'public' AND matviewname = 'storefront_rating_distribution') THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_rating_distribution;
+    END IF;
     RETURN NULL;
 END;
 $$;
@@ -500,8 +508,20 @@ CREATE FUNCTION public.refresh_rating_summaries() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_summary;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_rating_summary;
+    -- Refresh storefront_rating_summary if it exists
+    IF EXISTS (
+        SELECT 1 FROM pg_matviews
+        WHERE schemaname = 'public' AND matviewname = 'storefront_rating_summary'
+    ) THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_rating_summary;
+    END IF;
+    -- Refresh user_rating_summary if it exists
+    IF EXISTS (
+        SELECT 1 FROM pg_matviews
+        WHERE schemaname = 'public' AND matviewname = 'user_rating_summary'
+    ) THEN
+        REFRESH MATERIALIZED VIEW CONCURRENTLY user_rating_summary;
+    END IF;
     RETURN NULL;
 END;
 $$;
@@ -509,22 +529,30 @@ CREATE FUNCTION public.refresh_rating_views() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Обновляем только затронутые строки, а не всё представление
     IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
-        -- Для пользователей
-        IF NEW.entity_origin_type = 'user' THEN
+        IF NEW.entity_origin_type = 'user' AND EXISTS (
+            SELECT 1 FROM pg_matviews
+            WHERE schemaname = 'public' AND matviewname = 'user_ratings'
+        ) THEN
             REFRESH MATERIALIZED VIEW CONCURRENTLY user_ratings;
         END IF;
-        -- Для магазинов
-        IF NEW.entity_origin_type = 'storefront' THEN
+        IF NEW.entity_origin_type = 'storefront' AND EXISTS (
+            SELECT 1 FROM pg_matviews
+            WHERE schemaname = 'public' AND matviewname = 'storefront_ratings'
+        ) THEN
             REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_ratings;
         END IF;
     ELSIF TG_OP = 'DELETE' THEN
-        -- При удалении также обновляем
-        IF OLD.entity_origin_type = 'user' THEN
+        IF OLD.entity_origin_type = 'user' AND EXISTS (
+            SELECT 1 FROM pg_matviews
+            WHERE schemaname = 'public' AND matviewname = 'user_ratings'
+        ) THEN
             REFRESH MATERIALIZED VIEW CONCURRENTLY user_ratings;
         END IF;
-        IF OLD.entity_origin_type = 'storefront' THEN
+        IF OLD.entity_origin_type = 'storefront' AND EXISTS (
+            SELECT 1 FROM pg_matviews
+            WHERE schemaname = 'public' AND matviewname = 'storefront_ratings'
+        ) THEN
             REFRESH MATERIALIZED VIEW CONCURRENTLY storefront_ratings;
         END IF;
     END IF;

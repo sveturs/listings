@@ -62,6 +62,8 @@ CREATE INDEX idx_storefront_products_sku ON public.storefront_products USING btr
 CREATE INDEX idx_storefront_products_stock_status ON public.storefront_products USING btree (stock_status);
 CREATE INDEX idx_storefront_products_storefront_id ON public.storefront_products USING btree (storefront_id);
 CREATE INDEX idx_storefront_products_storefront_id_view_count ON public.storefront_products USING btree (storefront_id, view_count);
+CREATE INDEX idx_storefront_ratings_average ON public.storefront_ratings USING btree (average_rating DESC);
+CREATE INDEX idx_storefront_ratings_owner ON public.storefront_ratings USING btree (owner_id);
 CREATE INDEX idx_storefronts_city ON public.storefronts USING btree (city);
 CREATE INDEX idx_storefronts_coordinates ON public.storefronts USING btree (latitude, longitude) WHERE ((latitude IS NOT NULL) AND (longitude IS NOT NULL));
 CREATE INDEX idx_storefronts_geo_strategy ON public.storefronts USING btree (geo_strategy);
@@ -96,5 +98,3 @@ CREATE INDEX idx_ui_comp_usage_context ON public.custom_ui_component_usage USING
 CREATE INDEX idx_unified_attr_stats_attr_id ON public.unified_attribute_stats USING btree (attribute_id);
 CREATE INDEX idx_unified_attr_stats_category_id ON public.unified_attribute_stats USING btree (category_id);
 CREATE INDEX idx_unified_attr_stats_usage ON public.unified_attribute_stats USING btree (usage_count DESC);
-CREATE INDEX idx_unified_attr_values_numeric_ranges ON public.unified_attribute_values USING btree (attribute_id, numeric_value) WHERE (numeric_value IS NOT NULL);
-CREATE INDEX idx_unified_attr_values_text_trgm ON public.unified_attribute_values USING gin (text_value public.gin_trgm_ops) WHERE (text_value IS NOT NULL);

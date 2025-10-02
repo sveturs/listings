@@ -39,8 +39,8 @@ CREATE TABLE public.deliveries (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT deliveries_customer_rating_check CHECK (((customer_rating >= 1) AND (customer_rating <= 5))),
-    CONSTRAINT deliveries_package_size_check CHECK (((package_size)::text = ANY ((ARRAY['small'::character varying, 'medium'::character varying, 'large'::character varying, 'xl'::character varying])::text[]))),
-    CONSTRAINT delivery_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'assigned'::character varying, 'accepted'::character varying, 'picked_up'::character varying, 'in_transit'::character varying, 'delivered'::character varying, 'cancelled'::character varying, 'failed'::character varying])::text[])))
+    CONSTRAINT deliveries_package_size_check CHECK (((package_size)::text = ANY (ARRAY[('small'::character varying)::text, ('medium'::character varying)::text, ('large'::character varying)::text, ('xl'::character varying)::text]))),
+    CONSTRAINT delivery_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('assigned'::character varying)::text, ('accepted'::character varying)::text, ('picked_up'::character varying)::text, ('in_transit'::character varying)::text, ('delivered'::character varying)::text, ('cancelled'::character varying)::text, ('failed'::character varying)::text])))
 );
 CREATE TABLE public.delivery_category_defaults (
     id integer NOT NULL,
@@ -1306,7 +1306,7 @@ CREATE TABLE public.tracking_websocket_connections (
     last_ping_at timestamp with time zone,
     ip_address inet,
     user_agent text,
-    CONSTRAINT tracking_websocket_connections_client_type_check CHECK (((client_type)::text = ANY ((ARRAY['customer'::character varying, 'courier'::character varying, 'merchant'::character varying, 'admin'::character varying])::text[])))
+    CONSTRAINT tracking_websocket_connections_client_type_check CHECK (((client_type)::text = ANY (ARRAY[('customer'::character varying)::text, ('courier'::character varying)::text, ('merchant'::character varying)::text, ('admin'::character varying)::text])))
 );
 CREATE TABLE public.translation_audit_log (
     id integer NOT NULL,

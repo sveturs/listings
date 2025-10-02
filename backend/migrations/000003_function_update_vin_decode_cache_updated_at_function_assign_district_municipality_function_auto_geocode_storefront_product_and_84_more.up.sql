@@ -1460,13 +1460,6 @@ CREATE TABLE public.address_change_log (
     user_agent text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-CREATE TABLE public.admin_users (
-    id integer NOT NULL,
-    email character varying(255) NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    created_by integer,
-    notes text
-);
 CREATE TABLE public.ai_category_decisions (
     id integer NOT NULL,
     title_hash character varying(64) NOT NULL,
@@ -1488,7 +1481,7 @@ CREATE TABLE public.ai_category_decisions (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     entity_type character varying(20) DEFAULT 'listing'::character varying NOT NULL,
     CONSTRAINT ai_category_decisions_confidence_check CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric))),
-    CONSTRAINT ai_category_decisions_entity_type_check CHECK (((entity_type)::text = ANY ((ARRAY['listing'::character varying, 'product'::character varying])::text[])))
+    CONSTRAINT ai_category_decisions_entity_type_check CHECK (((entity_type)::text = ANY (ARRAY[('listing'::character varying)::text, ('product'::character varying)::text])))
 );
 CREATE TABLE public.attribute_group_items (
     id integer NOT NULL,
@@ -1949,7 +1942,7 @@ CREATE TABLE public.couriers (
     working_hours jsonb DEFAULT '{}'::jsonb,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT couriers_vehicle_type_check CHECK (((vehicle_type)::text = ANY ((ARRAY['bike'::character varying, 'car'::character varying, 'scooter'::character varying, 'on_foot'::character varying, 'van'::character varying])::text[])))
+    CONSTRAINT couriers_vehicle_type_check CHECK (((vehicle_type)::text = ANY (ARRAY[('bike'::character varying)::text, ('car'::character varying)::text, ('scooter'::character varying)::text, ('on_foot'::character varying)::text, ('van'::character varying)::text])))
 );
 CREATE TABLE public.custom_ui_component_usage (
     id integer NOT NULL,

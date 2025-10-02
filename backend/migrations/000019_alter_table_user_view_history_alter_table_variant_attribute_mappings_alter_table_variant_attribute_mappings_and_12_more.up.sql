@@ -1,7 +1,3 @@
-ALTER TABLE ONLY public.user_subscriptions
-    ADD CONSTRAINT user_subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.subscription_plans(id);
-ALTER TABLE ONLY public.user_view_history
-    ADD CONSTRAINT user_view_history_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id);
 ALTER TABLE ONLY public.user_view_history
     ADD CONSTRAINT user_view_history_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES public.marketplace_listings(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.variant_attribute_mappings
