@@ -422,3 +422,392 @@ git commit -m "fix(marketplace): remove JOIN with non-existent users table"
 **Автор:** Claude Code Analysis
 **Базовый план:** AUTH_MIGRATION_PLAN.md (100% выполнен локально)
 **Цель:** Исправить 1-2 реальные проблемы на dev.svetu.rs
+
+---
+
+## 🔧 Phase 5: Замена устаревшего AuthRequiredJWT на библиотечный middleware
+
+**Дата обнаружения:** 2025-10-02
+**Проблема:** Обнаружено использование локального `middleware.AuthRequiredJWT` в 4 модулях
+
+### 📍 Найденные использования
+
+#### 1. ❌ `translation_admin` module
+**Файл:** `backend/internal/proj/translation_admin/module.go:66`
+
+**Текущий код:**
+```go
+admin := app.Group("/api/v1/admin/translations",
+    middleware.AuthRequiredJWT,  // ❌ Локальный middleware
+    middleware.AdminRequired,
+)
+```
+
+**Проблема:**
+- Не использует auth library
+- Не совместимо с новой архитектурой
+- Может вызвать 401 ошибки
+
+**Решение:**
+```go
+// Изменить RegisterRoutes signature
+func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware, jwtParserMW fiber.Handler) error {
+    admin := app.Group("/api/v1/admin/translations",
+        jwtParserMW,                              // ✅ Библиотечный JWT parser
+        authMiddleware.RequireAuth("admin"),      // ✅ Требует admin роль
+    )
+
+    // Register routes...
+}
+```
+
+**Изменения:**
+1. Добавить import: `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+2. Добавить параметр `jwtParserMW fiber.Handler` в `RegisterRoutes`
+3. Заменить middleware chain
+4. Обновить вызов в `server.go` для передачи `jwtParserMW`
+
+---
+
+#### 2. ❌ `behavior_tracking` module
+**Файл:** `backend/internal/proj/behavior_tracking/module.go:49,55`
+
+**Текущий код:**
+```go
+// Protected endpoints
+protected := api.Group("/", middleware.AuthRequiredJWT)  // ❌ Строка 49
+protected.Get("/users/:user_id/events", m.handler.GetUserEvents)
+
+// Admin endpoints
+admin := api.Group("/", middleware.AuthRequiredJWT, middleware.AdminRequired)  // ❌ Строка 55
+admin.Post("/metrics/update", m.handler.UpdateMetrics)
+```
+
+**Проблема:**
+- Использует устаревший middleware
+- Не может получить user_id через auth library хелперы
+
+**Решение:**
+```go
+// Изменить RegisterRoutes signature
+func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware, jwtParserMW fiber.Handler) error {
+    api := app.Group("/api/v1/analytics")
+
+    // Public endpoints
+    api.Post("/track", m.handler.TrackEvent)
+    api.Get("/sessions/:session_id/events", m.handler.GetSessionEvents)
+
+    // Protected endpoints (require auth)
+    protected := api.Group("/",
+        jwtParserMW,                         // ✅ Библиотечный JWT parser
+        authMiddleware.RequireAuth())        // ✅ Требует аутентификацию
+    protected.Get("/users/:user_id/events", m.handler.GetUserEvents)
+
+    // Admin endpoints (require admin role)
+    admin := api.Group("/",
+        jwtParserMW,                         // ✅ Библиотечный JWT parser
+        authMiddleware.RequireAuth("admin")) // ✅ Требует admin роль
+    admin.Post("/metrics/update", m.handler.UpdateMetrics)
+
+    return nil
+}
+```
+
+**Изменения:**
+1. Добавить import: `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+2. Добавить параметр `jwtParserMW fiber.Handler` в `RegisterRoutes`
+3. Заменить оба middleware chains
+4. Обновить вызов в `server.go`
+
+---
+
+#### 3. ❌ `payments` module
+**Файл:** `backend/internal/proj/payments/handler/routes.go:24,31`
+
+**Текущий код:**
+```go
+// Payment operations
+authenticated := app.Group("/api/v1/payments",
+    mw.AuthRequiredJWT,        // ❌ Строка 24
+    mw.PaymentAPIRateLimit())
+authenticated.Post("/create", h.allsecure.CreatePayment)
+authenticated.Get("/:id/status", h.allsecure.GetPaymentStatus)
+
+// Critical operations
+criticalOps := app.Group("/api/v1/payments",
+    mw.AuthRequiredJWT,        // ❌ Строка 31
+    mw.StrictPaymentRateLimit())
+criticalOps.Post("/:id/capture", h.allsecure.CapturePayment)
+criticalOps.Post("/:id/refund", h.allsecure.RefundPayment)
+```
+
+**Проблема:**
+- Критичный модуль платежей использует устаревший middleware
+- Риск проблем с аутентификацией при платежах
+
+**Решение:**
+```go
+// Изменить Handler struct
+type Handler struct {
+    webhook    *WebhookHandler
+    allsecure  *AllSecureHandler
+    jwtParserMW fiber.Handler  // ✅ Добавить поле
+}
+
+// Обновить constructor
+func NewHandler(webhook *WebhookHandler, allsecure *AllSecureHandler, jwtParserMW fiber.Handler) *Handler {
+    return &Handler{
+        webhook:     webhook,
+        allsecure:   allsecure,
+        jwtParserMW: jwtParserMW,
+    }
+}
+
+// Обновить routes
+func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
+    // Webhooks (no auth)
+    webhooks := app.Group("/api/v1", mw.WebhookRateLimit())
+    webhooks.Post("/payments/stripe/webhook", h.HandleWebhook)
+    if h.webhook != nil {
+        webhooks.Post("/webhooks/allsecure", h.webhook.HandleAllSecureWebhook)
+    }
+
+    // AllSecure routes (authenticated + rate limited)
+    if h.allsecure != nil {
+        // Normal payment operations
+        authenticated := app.Group("/api/v1/payments",
+            h.jwtParserMW,                    // ✅ Библиотечный JWT parser
+            authMiddleware.RequireAuth(),     // ✅ Требует аутентификацию
+            mw.PaymentAPIRateLimit())
+        authenticated.Post("/create", h.allsecure.CreatePayment)
+        authenticated.Get("/:id/status", h.allsecure.GetPaymentStatus)
+
+        // Critical operations
+        criticalOps := app.Group("/api/v1/payments",
+            h.jwtParserMW,                    // ✅ Библиотечный JWT parser
+            authMiddleware.RequireAuth(),     // ✅ Требует аутентификацию
+            mw.StrictPaymentRateLimit())
+        criticalOps.Post("/:id/capture", h.allsecure.CapturePayment)
+        criticalOps.Post("/:id/refund", h.allsecure.RefundPayment)
+    }
+
+    return nil
+}
+```
+
+**Изменения:**
+1. Добавить import: `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+2. Добавить поле `jwtParserMW` в `Handler` struct
+3. Обновить constructor для приёма `jwtParserMW`
+4. Заменить оба middleware chains
+5. Обновить создание handler в модуле/server.go
+
+---
+
+#### 4. ⚠️ `search_optimization` module (закомментировано)
+**Файл:** `backend/internal/proj/search_optimization/module.go:42`
+
+**Текущий код:**
+```go
+admin := app.Group("/api/v1/search-admin")
+// Временно убираем авторизацию для тестирования
+// admin.Use(middleware.AuthRequiredJWT)  // ⚠️ Закомментировано
+// admin.Use(middleware.AdminRequired)
+```
+
+**Статус:** Закомментировано для тестирования
+
+**Решение (когда будет готово включить auth):**
+```go
+// Изменить RegisterRoutes signature
+func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware, jwtParserMW fiber.Handler) error {
+    // Admin endpoints для поисковой оптимизации
+    admin := app.Group("/api/v1/search-admin",
+        jwtParserMW,                         // ✅ Библиотечный JWT parser
+        authMiddleware.RequireAuth("admin")) // ✅ Требует admin роль
+
+    // Register routes...
+}
+```
+
+**Изменения:**
+1. Добавить import: `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+2. Добавить параметр `jwtParserMW fiber.Handler` в `RegisterRoutes`
+3. Раскомментировать и заменить middleware
+4. Обновить вызов в `server.go`
+
+---
+
+### 📋 План замены по приоритету
+
+#### Приоритет 1 (КРИТИЧНО): Payments module 🔴
+**Почему критично:** Модуль платежей - критичная функциональность
+
+**Файлы для изменения:**
+1. `backend/internal/proj/payments/handler/routes.go`
+2. `backend/internal/proj/payments/handler/handler.go` (если есть)
+3. `backend/internal/proj/payments/module.go` (обновить создание handler)
+4. `backend/internal/server/server.go` (передать jwtParserMW)
+
+**Тестирование:**
+```bash
+# Проверить что payment endpoints работают
+TOKEN=$(cat /tmp/jwt_token.txt)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/payments/test
+```
+
+---
+
+#### Приоритет 2 (ВЫСОКИЙ): Translation Admin module 🟡
+**Почему важно:** Админская функциональность
+
+**Файлы для изменения:**
+1. `backend/internal/proj/translation_admin/module.go:60` (RegisterRoutes)
+2. `backend/internal/server/server.go` (передать jwtParserMW)
+
+**Тестирование:**
+```bash
+# Проверить что admin translation endpoints работают
+TOKEN=$(cat /tmp/jwt_token.txt)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/admin/translations
+```
+
+---
+
+#### Приоритет 3 (СРЕДНИЙ): Behavior Tracking module 🟢
+**Почему средний:** Аналитика, не критичная функциональность
+
+**Файлы для изменения:**
+1. `backend/internal/proj/behavior_tracking/module.go:38` (RegisterRoutes)
+2. `backend/internal/server/server.go` (передать jwtParserMW)
+
+**Тестирование:**
+```bash
+# Проверить что analytics endpoints работают
+TOKEN=$(cat /tmp/jwt_token.txt)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/analytics/users/6/events
+```
+
+---
+
+#### Приоритет 4 (НИЗКИЙ): Search Optimization module ⚪
+**Почему низкий:** Уже закомментировано, не используется
+
+**Файлы для изменения:**
+1. `backend/internal/proj/search_optimization/module.go:38` (RegisterRoutes)
+2. `backend/internal/server/server.go` (передать jwtParserMW)
+
+**Действие:** Исправить когда будет готово включить auth
+
+---
+
+### 🎯 Быстрый старт замены
+
+```bash
+cd /data/hostel-booking-system/backend
+
+# 1. Найти все использования AuthRequiredJWT (кроме определения)
+grep -rn "AuthRequiredJWT" internal/proj/ | grep -v "func.*AuthRequiredJWT"
+
+# 2. Для каждого модуля:
+#    - Добавить import authMiddleware
+#    - Добавить параметр jwtParserMW в RegisterRoutes
+#    - Заменить middleware.AuthRequiredJWT на jwtParserMW + authMiddleware.RequireAuth()
+#    - Обновить server.go для передачи jwtParserMW
+
+# 3. Тестирование после каждого модуля
+/home/dim/.local/bin/kill-port-3000.sh
+screen -dmS backend-3000 bash -c 'go run ./cmd/api/main.go 2>&1 | tee /tmp/backend.log'
+sleep 3
+tail -50 /tmp/backend.log | grep -i error
+
+# 4. Проверка endpoints
+TOKEN=$(cat /tmp/jwt_token.txt)
+# Тестировать каждый изменённый endpoint
+
+# 5. Линтер
+make lint && make format
+```
+
+---
+
+### 🔍 Checklist для каждого модуля
+
+**Before:**
+- [ ] Нашли все использования `middleware.AuthRequiredJWT` в модуле
+- [ ] Понимаем какие endpoints защищены
+- [ ] Определили нужны ли разные уровни доступа (user/admin)
+
+**During:**
+- [ ] Добавили import `authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"`
+- [ ] Добавили параметр `jwtParserMW fiber.Handler` в `RegisterRoutes` (или в Handler struct)
+- [ ] Заменили `middleware.AuthRequiredJWT` на `jwtParserMW, authMiddleware.RequireAuth()`
+- [ ] Для admin endpoints использовали `authMiddleware.RequireAuth("admin")`
+- [ ] Обновили `server.go` для передачи `jwtParserMW`
+
+**After:**
+- [ ] Backend компилируется без ошибок
+- [ ] Backend запускается без ошибок
+- [ ] Защищённые endpoints возвращают 401 без токена
+- [ ] Защищённые endpoints возвращают 200 с валидным токеном
+- [ ] Admin endpoints возвращают 403 для non-admin пользователей
+- [ ] `make lint` - 0 ошибок
+- [ ] Создан коммит с описанием изменений
+
+---
+
+### 📝 Шаблон коммита
+
+```bash
+git commit -m "fix({module}): migrate from AuthRequiredJWT to auth library middleware
+
+- Replace middleware.AuthRequiredJWT with jwtParserMW + authMiddleware.RequireAuth()
+- Add jwtParserMW parameter to RegisterRoutes
+- Update server.go to pass jwtParserMW to module
+- Tested: all protected endpoints work correctly with JWT tokens
+
+Related: docs/README_PROBLEM_ROUTE.md
+Part of: Phase 5 auth library migration"
+```
+
+---
+
+### ⏱️ Оценка времени
+
+- **Payments module:** ~30 минут (с тестированием)
+- **Translation Admin module:** ~20 минут (с тестированием)
+- **Behavior Tracking module:** ~20 минут (с тестированием)
+- **Search Optimization module:** ~15 минут (когда будет готово)
+
+**Итого:** ~1.5 часа для всех модулей
+
+---
+
+### 🚨 Важные замечания
+
+1. **Не трогать `middleware.go`** - там определён `AuthRequiredJWT` как алиас для совместимости
+2. **Использовать правильную цепочку:**
+   - GET: `jwtParserMW, authMiddleware.RequireAuth()`
+   - POST/PUT/DELETE: `jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection()`
+3. **Для admin endpoints:** `authMiddleware.RequireAuth("admin")` вместо отдельного `AdminRequired`
+4. **Тестировать каждый модуль отдельно** перед переходом к следующему
+
+---
+
+**Дата обновления:** 2025-10-02
+**Статус Phase 5:** ✅ ЗАВЕРШЕНА (3 из 3 критичных модулей мигрированы)
+
+### ✅ Phase 5 Результаты (коммит 1e0c3fa6):
+
+**Мигрированные модули:**
+1. ✅ **payments module** (КРИТИЧНО) - `/api/v1/payments/*`
+2. ✅ **translation_admin module** - `/api/v1/admin/translations/*`
+3. ✅ **behavior_tracking module** - `/api/v1/analytics/*`
+
+**search_optimization module** - закомментирован, миграция не требуется
+
+**Тестирование:**
+- ✅ Компиляция без ошибок
+- ✅ Линтер: 0 issues
+- ✅ Все endpoints возвращают 200 status
+- ✅ Browser testing успешно
