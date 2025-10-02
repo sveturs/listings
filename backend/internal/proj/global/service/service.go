@@ -275,6 +275,6 @@ func (s *Service) NewImageService(fileStorage filestorage.FileStorageInterface, 
 }
 
 // AuthUserService возвращает UserService из auth библиотеки
-func (s *Service) AuthUserService() interface{} {
+func (s *Service) AuthUserService() *authService.UserService {
 	return s.authUserService
 }

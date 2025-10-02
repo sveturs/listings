@@ -61,28 +61,17 @@ type Storage struct {
 	userService        *authservice.UserService
 }
 
-func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface, userService interface{}) *Storage {
-	var authUserSvc *authservice.UserService
-	if userService != nil {
-		if svc, ok := userService.(*authservice.UserService); ok {
-			authUserSvc = svc
-		}
-	}
-
+func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface, userService *authservice.UserService) *Storage {
 	return &Storage{
 		pool:               pool,
 		translationService: translationService,
-		userService:        authUserSvc,
+		userService:        userService,
 	}
 }
 
 // SetUserService устанавливает UserService для Storage
-func (s *Storage) SetUserService(userService interface{}) {
-	if userService != nil {
-		if svc, ok := userService.(*authservice.UserService); ok {
-			s.userService = svc
-		}
-	}
+func (s *Storage) SetUserService(userService *authservice.UserService) {
+	s.userService = userService
 }
 
 // buildFullImageURL преобразует относительный URL в полный URL с базовым адресом

@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	authservice "github.com/sveturs/auth/pkg/http/service"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -1888,7 +1889,7 @@ func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) err
 }
 
 // SetMarketplaceUserService устанавливает UserService для marketplace storage
-func (db *Database) SetMarketplaceUserService(userService interface{}) {
+func (db *Database) SetMarketplaceUserService(userService *authservice.UserService) {
 	if db.marketplaceDB != nil {
 		db.marketplaceDB.SetUserService(userService)
 	}

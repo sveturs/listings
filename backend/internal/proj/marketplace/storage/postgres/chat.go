@@ -19,7 +19,8 @@ import (
 func (s *Storage) getUserInfo(ctx context.Context, userIDs []int) (map[int]struct {
 	Name       string
 	PictureURL string
-}, error) {
+}, error,
+) {
 	result := make(map[int]struct {
 		Name       string
 		PictureURL string
