@@ -225,15 +225,13 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 			SELECT
 				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
-				sender.name as sender_name,
-				sender.picture_url as sender_picture,
-				receiver.name as receiver_name,
-				receiver.picture_url as receiver_picture,
+				'' as sender_name,
+				'' as sender_picture,
+				'' as receiver_name,
+				'' as receiver_picture,
 				m.has_attachments, m.attachments_count
 			FROM marketplace_messages m
 			JOIN marketplace_chats c ON m.chat_id = c.id
-			JOIN users sender ON m.sender_id = sender.id
-			JOIN users receiver ON m.receiver_id = receiver.id
 			WHERE m.chat_id = $1
 			AND (c.buyer_id = $2 OR c.seller_id = $2)
 			ORDER BY m.created_at DESC
@@ -285,15 +283,13 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 			SELECT
 				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
-				sender.name as sender_name,
-				sender.picture_url as sender_picture,
-				receiver.name as receiver_name,
-				receiver.picture_url as receiver_picture,
+				'' as sender_name,
+				'' as sender_picture,
+				'' as receiver_name,
+				'' as receiver_picture,
 				m.has_attachments, m.attachments_count
 			FROM marketplace_messages m
 			JOIN chat c ON m.chat_id = c.id
-			JOIN users sender ON m.sender_id = sender.id
-			JOIN users receiver ON m.receiver_id = receiver.id
 			ORDER BY m.created_at DESC
 			LIMIT $3 OFFSET $4
 		),

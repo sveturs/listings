@@ -924,6 +924,78 @@ func (h *ListingsHandler) GetPriceHistory(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, priceHistory)
 }
 
+// GetMyListings returns current user's listings
+// @Summary Get my listings
+// @Description Returns all listings created by the authenticated user
+// @Tags marketplace
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit" default(20)
+// @Param offset query int false "Offset" default(0)
+// @Param status query string false "Filter by status (active, sold, draft)"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "User's listings"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.listError"
+// @Security BearerAuth
+// @Router /api/v1/marketplace/my-listings [get]
+func (h *ListingsHandler) GetMyListings(c *fiber.Ctx) error {
+	// Получаем ID текущего пользователя из контекста
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		logger.Warn().Msg("User ID not found in context for my-listings")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.required")
+	}
+
+	// Значения по умолчанию для пагинации
+	limit := 20
+	offset := 0
+
+	// Получаем лимит и смещение из запроса
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	if offsetStr := c.Query("offset"); offsetStr != "" {
+		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+
+	// Формируем фильтры
+	filters := map[string]string{
+		"user_id": strconv.Itoa(userID),
+	}
+
+	// Добавляем фильтр по статусу если указан
+	if status := c.Query("status"); status != "" {
+		filters["status"] = status
+	}
+
+	// Получаем список объявлений пользователя
+	listings, total, err := h.marketplaceService.GetListings(c.Context(), filters, limit, offset)
+	if err != nil {
+		logger.Error().Err(err).Int("userId", userID).Msg("Failed to get user listings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.listError")
+	}
+
+	// Проверяем, что listings не nil
+	if listings == nil {
+		listings = []models.MarketplaceListing{}
+	}
+
+	// Загружаем информацию о пользователе из auth-service
+	h.loadUserInfoForListings(c.Context(), listings)
+
+	// Возвращаем объявления с общим количеством
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    listings,
+		"total":   total,
+	})
+}
+
 // SynchronizeDiscounts синхронизирует данные о скидках
 // @Summary Synchronize discount data
 // @Description Synchronizes discount data for all listings (Admin only)

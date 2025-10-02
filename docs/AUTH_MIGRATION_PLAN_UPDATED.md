@@ -1,0 +1,425 @@
+# ✅ Актуализированный план завершения миграции auth library
+
+**Дата актуализации:** 2025-10-02
+**Базовый документ:** AUTH_MIGRATION_PLAN.md
+**Статус базового плана:** Phase 1-3 ✅ ЗАВЕРШЕНЫ, Phase 4 ✅ ЗАВЕРШЕНА
+**Текущий статус:** 🟢 ГОТОВО К PRODUCTION (осталась 1 реальная проблема на dev сервере)
+
+---
+промежуточные статусы озвучивай голосом - выполняй команду say "привет дима" и проблемы и успехи - я не смотрю в монитор, но хочу слышать прогресс
+## 📊 Текущее состояние (на основе аудита)
+
+### ✅ ЧТО УЖЕ СДЕЛАНО (локально):
+
+1. **Phase 1:** Критические исправления ✅
+   - Неправильный ключ контекста "userID" → "user_id" (4 модуля)
+   - Устаревший middleware в subscriptions
+   - Добавлен RequireAuth в marketplace admin routes
+   - **Коммит:** 40690270
+
+2. **Phase 2:** Рефакторинг прямого доступа к c.Locals ✅
+   - Phase 2.1: admin/logistics - 20 мест (коммит 9e003b54)
+   - Phase 2.2-2.3: payments & orders - 11 мест (коммит d1916cf6)
+   - Phase 2.4: marketplace, subscriptions, etc - 46 мест (коммит a722832e)
+   - **Итого:** 77/77 мест (100%)
+
+3. **Phase 3:** Стандартизация ✅
+   - Унификация импортов на `authMiddleware`
+   - Удаление дубликатов из pkg/utils
+   - **Коммит:** 87fff13a
+
+4. **Phase 4:** Финальная очистка ✅
+   - Исправление hardcoded adminID (2 места)
+   - **Коммит:** 02f77800
+
+### 🔴 ЧТО РЕАЛЬНО НУЖНО ИСПРАВИТЬ (на основе dev.svetu.rs):
+
+#### Проблема #1: `/api/v1/marketplace/my-listings` возвращает пустой массив
+
+**Описание из отчета тестировщика:**
+```
+/api/v1/marketplace/my-listings - 200 OK, но пустой массив []
+При этом в БД есть 18 listings с user_id = 6
+```
+
+**Причина (из моего анализа):**
+SQL запрос пытается сделать JOIN с несуществующей таблицей `users`:
+```sql
+SELECT ml.* FROM marketplace_listings ml
+JOIN users u ON ml.user_id = u.id  -- ❌ Таблица не существует!
+WHERE u.id = $1
+```
+
+**Решение:**
+Изменить SQL запрос, чтобы использовать только `marketplace_listings.user_id`:
+```sql
+SELECT * FROM marketplace_listings
+WHERE user_id = $1 AND status = 'active'
+ORDER BY created_at DESC
+```
+
+**Файлы для проверки:**
+- `backend/internal/proj/marketplace/storage/postgres/*.go`
+- Поиск по паттерну: `GetUserListings|GetMyListings|my-listings`
+
+**Тестирование после исправления:**
+```bash
+# 1. Локально
+TOKEN=$(cat /tmp/token)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/marketplace/my-listings | jq '.data | length'
+# Ожидаем: количество listings пользователя (не 0!)
+
+# 2. На dev сервере (после deploy)
+ssh svetu@svetu.rs 'bash -c "TOKEN=\$(cat /tmp/token); curl -s -H \"Authorization: Bearer \$TOKEN\" https://devapi.svetu.rs/api/v1/marketplace/my-listings | jq \".data | length\""'
+```
+
+**Приоритет:** 🔴 КРИТИЧЕСКИЙ (блокирует функционал личного кабинета)
+
+---
+
+#### Проблема #2: ~~`/api/v1/admin/storefronts` - 404 Not Found~~ ❓ ТРЕБУЕТ УТОЧНЕНИЯ
+
+**Описание из отчета:**
+```
+Cannot GET /api/v1/admin/storefronts
+```
+
+**Вопрос:** Должен ли этот endpoint вообще существовать?
+
+**Проверка:**
+```bash
+# Локально
+grep -r "admin/storefronts" backend/internal/proj/storefronts/
+
+# Проверить swagger
+grep -A 10 "/admin/storefronts" backend/docs/swagger.json
+```
+
+**Варианты решения:**
+
+**A) Если endpoint ДОЛЖЕН быть:**
+```go
+// backend/internal/proj/storefronts/module.go
+admin := api.Group("/admin/storefronts",
+    mw.JWTParser(),
+    authMiddleware.RequireAuthString("admin"))
+
+admin.Get("/", m.storefrontHandler.GetAllStorefronts)
+admin.Put("/:id/status", m.storefrontHandler.UpdateStorefrontStatus)
+admin.Delete("/:id", m.storefrontHandler.DeleteStorefront)
+```
+
+**B) Если endpoint НЕ нужен:**
+Обновить документацию тестировщика, что это ожидаемое поведение.
+
+**Приоритет:** 🟡 СРЕДНИЙ (зависит от требований)
+
+---
+
+### ⚠️ ЛОЖНЫЕ ТРЕВОГИ (не требуют исправления):
+
+1. ❌ "Отсутствие таблицы `users`" - это ПРАВИЛЬНО, мы используем Auth Service
+2. ❌ "Таблица `categories` должна быть `marketplace_categories`" - правильное название уже используется
+3. ❌ "`created_at: 0001-01-01`" - нормально для данных из Auth Service
+4. ❌ "OpenSearch yellow status" - нормально для single-node кластера
+
+---
+
+## 🎯 Минимальный план действий
+
+### Шаг 1: Исправить `/api/v1/marketplace/my-listings` 🔴
+
+**Файл:** `/data/hostel-booking-system/backend/internal/proj/marketplace/storage/postgres/marketplace.go`
+
+**Задача:**
+1. Найти метод, который обрабатывает `my-listings`
+2. Убрать JOIN с таблицей `users`
+3. Использовать только `marketplace_listings.user_id`
+
+**Поиск метода:**
+```bash
+cd /data/hostel-booking-system/backend
+grep -rn "GetUserListings\|GetMyListings" internal/proj/marketplace/storage/
+```
+
+**Паттерн исправления:**
+```go
+// ❌ СТАРЫЙ КОД (неправильный):
+query := `
+    SELECT ml.*
+    FROM marketplace_listings ml
+    JOIN users u ON ml.user_id = u.id
+    WHERE u.id = $1 AND ml.status = 'active'
+    ORDER BY ml.created_at DESC
+`
+
+// ✅ НОВЫЙ КОД (правильный):
+query := `
+    SELECT *
+    FROM marketplace_listings
+    WHERE user_id = $1 AND status = 'active'
+    ORDER BY created_at DESC
+`
+```
+
+**Тестирование (ОБЯЗАТЕЛЬНО!):**
+```bash
+# 1. Запустить backend
+/home/dim/.local/bin/kill-port-3000.sh
+screen -dmS backend-3000 bash -c 'cd /data/hostel-booking-system/backend && go run ./cmd/api/main.go 2>&1 | tee /tmp/backend.log'
+
+# 2. Проверить логи
+tail -50 /tmp/backend.log | grep -i error
+
+# 3. Тестировать endpoint
+TOKEN=$(cat /tmp/token)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/marketplace/my-listings | jq '{total: (.data | length), user_id: .data[0].user_id}'
+
+# Ожидаемый результат:
+# {
+#   "total": <количество объявлений>,
+#   "user_id": 6
+# }
+
+# 4. Линтер
+cd /data/hostel-booking-system/backend && make lint
+
+# 5. ТОЛЬКО ПОСЛЕ УСПЕШНЫХ ТЕСТОВ:
+git add internal/proj/marketplace/storage/postgres/marketplace.go
+git commit -m "fix(marketplace): remove JOIN with non-existent users table in my-listings
+
+- Remove JOIN with users table (table doesn't exist after auth-service migration)
+- Use direct user_id check from marketplace_listings table
+- Tested: my-listings now returns correct data for user_id=6
+
+Fixes: DEV_SERVER_TEST_REPORT.md Problem #4"
+```
+
+**Время:** ~30 минут (включая тестирование)
+
+---
+
+### Шаг 2: Уточнить про `/api/v1/admin/storefronts` 🟡
+
+**Вопрос к пользователю:**
+> Должен ли существовать endpoint `/api/v1/admin/storefronts` для управления витринами в админке?
+
+**Если ДА:**
+- Добавить admin роуты в `backend/internal/proj/storefronts/module.go`
+- Создать методы в handler
+- Протестировать с admin токеном
+
+**Если НЕТ:**
+- Обновить документацию тестировщика
+- Добавить комментарий в код, почему endpoint не нужен
+
+**Время:** ~1-2 часа (если нужен endpoint)
+
+---
+
+### Шаг 3: Deploy на dev.svetu.rs
+
+**После успешного локального тестирования:**
+
+```bash
+# 1. Коммит изменений (уже сделан на шаге 1)
+
+# 2. Push в репозиторий
+git push origin feature/fix-oauth-redirect-20251001-212712
+
+# 3. Deploy на dev сервер
+./deploy-to-dev.sh
+
+# 4. Проверка на dev сервере
+токен пользователя voroshilovdo@gmail.com
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguc3ZldHUucnMiLCJzdWIiOiI2IiwiYXVkIjpbImh0dHBzOi8vc3ZldHUucnMiXSwiZXhwIjoxNzU5NTI2MTc3LCJuYmYiOjE3NTkzNTMzNzcsImlhdCI6MTc1OTM1MzM3NywianRpIjoiYzQ3MzJiZTEtMDRkYi00YWY1LTkyYzEtMThiZjEyNDQwODUwIiwidXNlcl9pZCI6NiwiZW1haWwiOiJ2b3Jvc2hpbG92ZG9AZ21haWwuY29tIiwibmFtZSI6IkRtaXRyeSBWb3Jvc2hpbG92Iiwicm9sZXMiOlsiYWRtaW4iLCJ1c2VyIl0sInByb3ZpZGVyIjoiZ29vZ2xlIiwiZW1haWxfdmVyaWZpZWQiOnRydWV9.VmAdSEGYN4XoK9rGmsPTd6kNziE7GRuU68P7nqncAVsG2rPoQEL7SSrIflqW12bBSZJrdWi8H4KhaomO-j_Ayb4_PT0lsrywITr_Y4y0nIm28c5X2id9yCzDna0Hw5qoOAiORh5Cn5LJjoc8BdgkTyfsY_KwxlyRz7uay_KqOyXZ1cYNVQCeDclGWDL-zI9TT6sLNwJMMBcy_9602y5JAKXgaAk9sZpQEAOVu5bpn7KPO1r4Iwk6qLF54j_y6NMbqwEOd4UAKbiZ1wvvoeAprKr5X_xV4LRuMu32LP-JCEpCQb9F_H8N2ZzQ5sf69hNU5y88AsUXAm_o78zOiVGO3w
+
+ssh svetu@svetu.rs 'bash -c "
+  # Проверить что backend запущен
+  docker ps | grep svetu-dev || echo \"Backend not running!\"
+
+  # Проверить логи на ошибки
+  tail -50 /opt/svetu-dev/logs/backend.log | grep -i error || echo \"No errors\"
+
+  # Тестировать endpoint
+  TOKEN=\$(cat /tmp/token)
+  curl -s -H \"Authorization: Bearer \$TOKEN\" https://devapi.svetu.rs/api/v1/marketplace/my-listings | jq \"{total: (.data | length), first_item_id: (.data[0].id // null)}\"
+"'
+```
+
+---
+
+## 📝 Итоговый чек-лист
+
+### Перед локальным коммитом:
+- [ ] Найден и исправлен SQL запрос в my-listings
+- [ ] Backend запускается без ошибок
+- [ ] Endpoint `/api/v1/marketplace/my-listings` возвращает данные (не пустой массив)
+- [ ] `make lint` - 0 ошибок
+- [ ] `make format` - выполнено
+- [ ] Коммит создан с правильным сообщением
+
+### Перед deploy на dev.svetu.rs:
+- [ ] Изменения запушены в git
+- [ ] Создан дамп локальной БД (если нужно)
+- [ ] Backup текущего состояния dev сервера (опционально)
+
+### После deploy на dev.svetu.rs:
+- [ ] Backend запущен и работает
+- [ ] Endpoint `/api/v1/marketplace/my-listings` возвращает корректные данные
+- [ ] Нет новых ошибок в логах
+- [ ] Обновлен `DEV_SERVER_TEST_REPORT.md` со статусом "Fixed"
+
+---
+
+## 🎓 Объяснение для тестировщика
+
+**Создать файл: `/opt/svetu-dev/AUTH_ARCHITECTURE_EXPLANATION.md`**
+
+```markdown
+# Архитектура аутентификации svetu marketplace
+
+## ❌ ЧТО НЕ ЯВЛЯЕТСЯ ОШИБКОЙ
+
+### 1. Отсутствие таблицы `users` в локальной БД
+
+**Это правильная архитектура!**
+
+Мы используем внешний микросервис Auth Service (`github.com/sveturs/auth`) для управления пользователями.
+
+**Где хранятся пользователи:**
+- Auth Service (микросервис на https://authpreprod.svetu.rs)
+- Локальная БД содержит только связанные данные: `user_balances`, `user_contacts`, etc.
+
+**Как это работает:**
+```
+1. Пользователь логинится → Auth Service выдает JWT токен
+2. Backend валидирует токен → Auth Service подтверждает
+3. Backend использует user_id из токена → прямая связь по ID
+```
+
+**Проверка пользователя:**
+```bash
+# НЕ ищи в локальной БД!
+psql -c "SELECT * FROM users" # ❌ Таблица не существует
+
+# Вместо этого:
+curl -H "Authorization: Bearer $TOKEN" https://authpreprod.svetu.rs/api/v1/users/me
+```
+
+### 2. Таблица называется `marketplace_categories`, а не `categories`
+
+**Это правильное название!**
+
+В коде везде используется `marketplace_categories`. Если API возвращает данные - всё работает корректно.
+
+### 3. `created_at: "0001-01-01T00:00:00Z"` в данных пользователя
+
+**Это нормально!**
+
+Данные пользователя приходят из Auth Service, где `created_at` может не передаваться в некоторых API ответах.
+
+## ✅ ЧТО ДЕЙСТВИТЕЛЬНО ЯВЛЯЕТСЯ ПРОБЛЕМОЙ
+
+### 1. `/api/v1/marketplace/my-listings` возвращает пустой массив
+
+**ЭТО РЕАЛЬНАЯ ПРОБЛЕМА!**
+
+Код пытается сделать JOIN с несуществующей таблицей `users`.
+
+**Статус:** Исправляется в этом PR.
+
+### 2. `/api/v1/admin/storefronts` - 404 Not Found
+
+**Требует уточнения:** должен ли этот endpoint вообще существовать?
+
+**Статус:** Ожидает решения от разработчиков.
+```
+
+---
+
+## 🔍 Дополнительная диагностика (опционально)
+
+Если потребуется глубже разобраться:
+
+```bash
+# 1. Найти все SQL запросы с JOIN users
+grep -rn "JOIN users\|users u ON" backend/internal/proj/marketplace/storage/postgres/
+
+# 2. Проверить swagger для my-listings
+grep -A 20 "my-listings" backend/docs/swagger.json | jq
+
+# 3. Проверить handler для my-listings
+grep -rn "my-listings\|GetMyListings" backend/internal/proj/marketplace/handler/
+
+# 4. Проверить роуты
+grep -rn "my-listings" backend/internal/proj/marketplace/handler/handler.go
+```
+
+---
+
+## 📊 Ожидаемый результат
+
+### До исправления (на dev.svetu.rs сейчас):
+```json
+GET /api/v1/marketplace/my-listings
+{
+  "data": [],
+  "total": 0
+}
+```
+
+### После исправления:
+```json
+GET /api/v1/marketplace/my-listings
+{
+  "data": [
+    {
+      "id": 297,
+      "user_id": 6,
+      "title": "Test Product",
+      "status": "active",
+      ...
+    },
+    ...
+  ],
+  "total": 18
+}
+```
+
+---
+
+## 🚀 Быстрый старт
+
+**Если нужно ТОЛЬКО исправить критическую проблему my-listings:**
+
+```bash
+# 1. Найти проблемный метод
+cd /data/hostel-booking-system/backend
+grep -rn "FROM marketplace_listings.*JOIN users" internal/proj/marketplace/storage/postgres/
+
+# 2. Исправить JOIN на прямую проверку user_id
+# (редактировать найденный файл)
+
+# 3. Тестировать
+/home/dim/.local/bin/kill-port-3000.sh
+screen -dmS backend-3000 bash -c 'cd /data/hostel-booking-system/backend && go run ./cmd/api/main.go 2>&1 | tee /tmp/backend.log'
+sleep 5
+TOKEN=$(cat /tmp/token)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/marketplace/my-listings | jq '.data | length'
+
+# 4. Если работает - коммит и deploy
+make lint && make format
+git add .
+git commit -m "fix(marketplace): remove JOIN with non-existent users table"
+./deploy-to-dev.sh
+```
+
+**Время:** 15-30 минут
+
+---
+
+**Дата создания:** 2025-10-02
+**Автор:** Claude Code Analysis
+**Базовый план:** AUTH_MIGRATION_PLAN.md (100% выполнен локально)
+**Цель:** Исправить 1-2 реальные проблемы на dev.svetu.rs

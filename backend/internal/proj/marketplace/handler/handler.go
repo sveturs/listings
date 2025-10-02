@@ -380,6 +380,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Post("/api/v1/marketplace/listings/:id/images", append(authMW, h.Images.UploadImages)...)
 	app.Delete("/api/v1/marketplace/listings/:id/images/:image_id", append(authMW, h.Images.DeleteImage)...)
 
+	// My listings route - protected
+	app.Get("/api/v1/marketplace/my-listings", append(authMW, h.Listings.GetMyListings)...)
+
 	// Favorites routes - поддерживаем оба варианта для совместимости
 	// Старый формат через listings
 	app.Post("/api/v1/marketplace/listings/:id/favorite", append(authMW, h.Favorites.AddToFavorites)...)
