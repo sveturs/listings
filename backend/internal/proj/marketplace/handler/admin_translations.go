@@ -620,15 +620,15 @@ func isLikelyCyrillic(text string) bool {
 
 // Типы для Swagger документации
 type BatchTranslateCategoriesRequest struct {
-	CategoryIDs     []int    `json:"category_ids" example:"[1,2,3]"`
-	TargetLanguages []string `json:"target_languages" example:"[\"en\",\"ru\",\"sr\"]"`
+	CategoryIDs     []int    `json:"category_ids"`
+	TargetLanguages []string `json:"target_languages"`
 	Provider        string   `json:"provider" example:"google"`
 	AutoTranslate   bool     `json:"auto_translate" example:"true"`
 }
 
 type BatchTranslateAttributesRequest struct {
-	AttributeIDs     []int    `json:"attribute_ids" example:"[1,2,3]"`
-	TargetLanguages  []string `json:"target_languages" example:"[\"en\",\"ru\",\"sr\"]"`
+	AttributeIDs     []int    `json:"attribute_ids"`
+	TargetLanguages  []string `json:"target_languages"`
 	Provider         string   `json:"provider" example:"google"`
 	TranslateOptions bool     `json:"translate_options" example:"true"`
 }

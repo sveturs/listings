@@ -260,7 +260,7 @@
   "createListing": "Создать объявление",
   "priceAnalysis": "Анализ цен",
   "priceAnalysisDescription": "Получите аналитику рынка и рекомендации по ценам",
-  "vinDecoder": {
+  "vinDecoderFields": {
     "title": "VIN декодер",
     "description": "Декодируйте информацию о транспорте по VIN номеру",
     "enterVin": "Введите VIN номер",
@@ -287,7 +287,7 @@
     "country": "Страна",
     "autoFill": "Заполнить форму"
   },
-  "vinDecoderOld": "VIN декодер",
+  "vinDecoder": "VIN декодер",
   "vinDecoderDescription": "Декодируйте информацию о транспорте по VIN номеру",
   "enterVIN": "Введите VIN",
   "showExamples": "Показать примеры",

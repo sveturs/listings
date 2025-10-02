@@ -1024,6 +1024,15 @@ export interface paths {
             'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
+        /** @description marketplace.authRequired */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
         /** @description marketplace.internalServerError */
         500: {
           headers: {
@@ -1129,6 +1138,15 @@ export interface paths {
         };
         /** @description marketplace.invalidId or marketplace.invalidData */
         400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description marketplace.authRequired */
+        401: {
           headers: {
             [name: string]: unknown;
           };
@@ -11594,7 +11612,7 @@ export interface paths {
     put?: never;
     /**
      * Refresh access token
-     * @description Refreshes the access token using a refresh token
+     * @description Refreshes the access token using a refresh token from body or cookie
      */
     post: {
       parameters: {
@@ -11603,8 +11621,8 @@ export interface paths {
         path?: never;
         cookie?: never;
       };
-      /** @description Refresh token request */
-      requestBody: {
+      /** @description Refresh token request (optional if using cookie) */
+      requestBody?: {
         content: {
           'application/json': {
             [key: string]: unknown;
@@ -11621,6 +11639,15 @@ export interface paths {
             'application/json': {
               [key: string]: unknown;
             };
+          };
+        };
+        /** @description No refresh token provided */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
           };
         };
         /** @description Invalid refresh token */
@@ -29598,7 +29625,7 @@ export interface paths {
     };
     /**
      * List storefronts
-     * @description Returns paginated list of storefronts with filters
+     * @description Returns paginated list of storefronts with filters. Public endpoint that shows only active storefronts by default. Admins can see all storefronts.
      */
     get: {
       parameters: {
@@ -38504,6 +38531,7 @@ export interface components {
       | 'product'
       | 'product_variant';
     'backend_internal_domain_models.AttributeGroup': {
+      code?: string;
       created_at?: string;
       description?: string;
       display_name?: string;
@@ -40803,6 +40831,8 @@ export interface components {
       country?: string;
       /** @description Радиус поиска */
       distance?: string;
+      /** @description Тип документа для фильтрации: "listing" или "product" */
+      documentType?: string;
       /** @description Уровень нечеткости (AUTO, 1, 2, ...) */
       fuzziness?: string;
       /** @description Язык для поиска */
@@ -42734,14 +42764,22 @@ export interface components {
       /** @example true */
       success?: boolean;
     };
-    'internal_proj_marketplace_handler.BatchTranslateAttributesRequest': Record<
-      string,
-      never
-    >;
-    'internal_proj_marketplace_handler.BatchTranslateCategoriesRequest': Record<
-      string,
-      never
-    >;
+    'internal_proj_marketplace_handler.BatchTranslateAttributesRequest': {
+      attribute_ids?: number[];
+      /** @example google */
+      provider?: string;
+      target_languages?: string[];
+      /** @example true */
+      translate_options?: boolean;
+    };
+    'internal_proj_marketplace_handler.BatchTranslateCategoriesRequest': {
+      /** @example true */
+      auto_translate?: boolean;
+      category_ids?: number[];
+      /** @example google */
+      provider?: string;
+      target_languages?: string[];
+    };
     'internal_proj_marketplace_handler.BatchTranslateData': {
       /** @example 3 */
       listing_count?: number;

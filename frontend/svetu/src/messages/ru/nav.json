@@ -1,0 +1,12 @@
+{
+  "home": "Главная",
+  "search": "Поиск",
+  "categories": "Категории",
+  "favorites": "Избранное",
+  "messages": "Сообщения",
+  "profile": "Профиль",
+  "admin": "Админ",
+  "login": "Вход",
+  "logout": "Выход",
+  "register": "Регистрация"
+}
