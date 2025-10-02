@@ -10,6 +10,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
+	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // ViewStatistics represents view statistics for a listing
@@ -155,12 +156,15 @@ type ViewHistoryRequest struct {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [post]
 func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
-	// Пытаемся получить userID из контекста
-	userID, ok := c.Locals("userID").(int64)
+	// Пытаемся получить userID из контекста через библиотечный helper
+	userID, ok := authmw.GetUserID(c)
 	if !ok || userID == 0 {
 		// Если нет авторизации, пропускаем сохранение истории
 		return utils.SendSuccessResponse(c, map[string]string{"status": "ok", "message": "anonymous"}, "success")
 	}
+
+	// Преобразуем в int64 для базы данных
+	userID64 := int64(userID)
 
 	var req ViewHistoryRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -172,7 +176,7 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 		INSERT INTO universal_view_history
 		(user_id, listing_id, category_id, interaction_type, view_duration_seconds, created_at)
 		VALUES ($1, $2, $3, $4, $5, NOW())
-	`, userID, req.ListingID, req.CategoryID, req.InteractionType, req.ViewDurationSeconds)
+	`, userID64, req.ListingID, req.CategoryID, req.InteractionType, req.ViewDurationSeconds)
 	if err != nil {
 		return utils.SendErrorResponse(c, http.StatusInternalServerError, "error.serverError", nil)
 	}
@@ -201,12 +205,15 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [get]
 func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
-	// Пытаемся получить userID из контекста
-	userID, ok := c.Locals("userID").(int64)
+	// Пытаемся получить userID из контекста через библиотечный helper
+	userID, ok := authmw.GetUserID(c)
 	if !ok || userID == 0 {
 		// Если нет авторизации, возвращаем пустой список
 		return utils.SendSuccessResponse(c, []models.MarketplaceListing{}, "success")
 	}
+
+	// Преобразуем в int64 для базы данных
+	userID64 := int64(userID)
 
 	limit := c.QueryInt("limit", 20)
 	offset := c.QueryInt("offset", 0)
@@ -220,7 +227,7 @@ func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
 		LIMIT $2 OFFSET $3
 	`
 
-	err := h.db.GetSQLXDB().Select(&listings, query, userID, limit, offset)
+	err := h.db.GetSQLXDB().Select(&listings, query, userID64, limit, offset)
 	if err != nil {
 		return utils.SendErrorResponse(c, http.StatusInternalServerError, "error.serverError", nil)
 	}

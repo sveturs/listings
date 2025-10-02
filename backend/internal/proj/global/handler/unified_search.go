@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/behavior"
 	"backend/internal/domain/models"
@@ -324,11 +325,9 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 			ipAddress: c.IP(),
 		}
 
-		// Получаем userID если пользователь авторизован
-		if c.Locals("userID") != nil {
-			if uid, ok := c.Locals("userID").(int); ok && uid > 0 {
-				trackCtx.userID = &uid
-			}
+		// Получаем userID если пользователь авторизован через библиотечный helper
+		if uid, ok := authmw.GetUserID(c); ok && uid > 0 {
+			trackCtx.userID = &uid
 		}
 
 		// Получаем session_id из заголовков или query параметров

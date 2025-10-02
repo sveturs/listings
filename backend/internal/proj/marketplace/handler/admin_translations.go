@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/gofiber/fiber/v2"
+	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -532,13 +533,10 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 		translationProvider = service.OpenAI
 	}
 
-	// Получаем user_id из контекста
-	userID := c.Locals("userID")
+	// Получаем user_id из контекста через библиотечный helper
 	var userIDInt int
-	if userID != nil {
-		if uid, ok := userID.(int); ok {
-			userIDInt = uid
-		}
+	if uid, ok := authmw.GetUserID(c); ok {
+		userIDInt = uid
 	}
 
 	// Обновляем переводы для каждого языка

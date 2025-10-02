@@ -2,18 +2,19 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 )
 
 // RegisterRoutes registers subscription routes
-func (h *SubscriptionHandler) RegisterRoutes(app *fiber.App, authMiddleware *middleware.Middleware) {
+func (h *SubscriptionHandler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) {
 	// Public routes
 	public := app.Group("/api/v1/subscriptions")
 	public.Get("/plans", h.GetPlans)
 
-	// Protected routes - require authentication
-	protected := app.Group("/api/v1/subscriptions", authMiddleware.RequireAuth())
+	// Protected routes - require authentication (using library middleware)
+	protected := app.Group("/api/v1/subscriptions", mw.JWTParser(), authmw.RequireAuth())
 	protected.Get("/current", h.GetCurrentSubscription)
 	protected.Post("/", h.CreateSubscription)
 	protected.Post("/upgrade", h.UpgradeSubscription)
@@ -22,7 +23,7 @@ func (h *SubscriptionHandler) RegisterRoutes(app *fiber.App, authMiddleware *mid
 	protected.Post("/initiate-payment", h.InitiatePayment)
 	protected.Post("/complete-payment", h.CompletePayment)
 
-	// Admin routes
-	admin := app.Group("/api/v1/admin/subscriptions", authMiddleware.RequireAuth(), authMiddleware.RequireAdmin())
+	// Admin routes (using library middleware with admin role)
+	admin := app.Group("/api/v1/admin/subscriptions", mw.JWTParser(), authmw.RequireAuthString("admin"))
 	admin.Get("/users/:user_id/subscription", h.AdminGetUserSubscription)
 }
