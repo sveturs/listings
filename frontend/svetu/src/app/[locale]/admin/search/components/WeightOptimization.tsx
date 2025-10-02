@@ -107,7 +107,10 @@ export default function WeightOptimization() {
   const startOptimization = async () => {
     try {
       setIsOptimizing(true);
-      const response = await apiClient.post('/admin/search/optimize-weights', params);
+      const response = await apiClient.post(
+        '/admin/search/optimize-weights',
+        params
+      );
 
       if (response.data?.data?.session_id) {
         // Получаем статус сессии

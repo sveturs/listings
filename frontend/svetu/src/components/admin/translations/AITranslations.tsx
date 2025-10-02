@@ -140,7 +140,9 @@ export default function AITranslations({
 
   const fetchModules = async () => {
     try {
-      const response = await apiClient.get('/admin/translations/frontend/modules');
+      const response = await apiClient.get(
+        '/admin/translations/frontend/modules'
+      );
 
       if (!response.error && response.data?.data) {
         setModules(response.data.data.map((m: any) => m.name));
@@ -194,15 +196,18 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const response = await apiClient.post('/admin/translations/ai/translate', {
-        provider: activeProvider,
-        text: singleText,
-        key: singleKey,
-        module: singleModule,
-        source_language: sourceLanguage,
-        target_languages: targetLanguages,
-        context: singleContext || undefined,
-      });
+      const response = await apiClient.post(
+        '/admin/translations/ai/translate',
+        {
+          provider: activeProvider,
+          text: singleText,
+          key: singleKey,
+          module: singleModule,
+          source_language: sourceLanguage,
+          target_languages: targetLanguages,
+          context: singleContext || undefined,
+        }
+      );
 
       if (response.error) {
         toast.error('Ошибка при переводе');
@@ -243,7 +248,9 @@ export default function AITranslations({
         toast.error('Ошибка при массовом переводе');
       } else {
         setResults(response.data?.data?.results || []);
-        toast.success(`Переведено ${response.data?.data?.translated_count} текстов`);
+        toast.success(
+          `Переведено ${response.data?.data?.translated_count} текстов`
+        );
         onTranslationComplete?.();
       }
     } catch (error) {

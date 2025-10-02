@@ -52,7 +52,9 @@ export default function ModuleExplorer({
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/admin/translations/frontend/modules');
+      const response = await apiClient.get(
+        '/admin/translations/frontend/modules'
+      );
 
       if (!response.data) {
         throw new Error('Failed to fetch modules');

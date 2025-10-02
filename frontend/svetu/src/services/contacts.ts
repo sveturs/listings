@@ -1,4 +1,3 @@
-import configManager from '@/config';
 import { apiClient } from '@/services/api-client';
 
 export interface UserContact {
@@ -108,13 +107,14 @@ class ContactsService {
 
     // Создаём promise для запроса
     const requestPromise = (async () => {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(options?.headers as Record<string, string>),
-      };
-
-      const method = (options?.method || 'GET').toLowerCase() as 'get' | 'post' | 'put' | 'delete';
-      const body = options?.body ? JSON.parse(options.body as string) : undefined;
+      const method = (options?.method || 'GET').toLowerCase() as
+        | 'get'
+        | 'post'
+        | 'put'
+        | 'delete';
+      const body = options?.body
+        ? JSON.parse(options.body as string)
+        : undefined;
 
       let response;
       if (method === 'get') {

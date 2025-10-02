@@ -699,7 +699,6 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 
 // getCategoryAttributesFromDB получает атрибуты категории из БД
 func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-
 	// Обновленный запрос, который получает атрибуты из обоих источников:
 	// 1. Из прямого маппинга (category_attribute_mapping)
 	// 2. Из групп атрибутов (через category_attribute_groups -> attribute_group_items)
@@ -764,7 +763,6 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 			&attribute.IsVariantCompatible,
 			&finalSortOrder,
 		)
-
 		// Добавляем отладку сразу после сканирования
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)

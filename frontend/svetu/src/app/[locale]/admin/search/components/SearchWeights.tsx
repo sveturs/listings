@@ -54,9 +54,12 @@ export default function SearchWeights() {
 
   const updateWeight = async (weightId: number, newWeight: number) => {
     try {
-      const response = await apiClient.put(`/admin/search/weights/${weightId}`, {
-        weight: newWeight,
-      });
+      const response = await apiClient.put(
+        `/admin/search/weights/${weightId}`,
+        {
+          weight: newWeight,
+        }
+      );
 
       if (response.data) {
         await loadWeights();

@@ -38,7 +38,10 @@ async function proxyRequest(
     // Debug: логируем CSRF токен для мутирующих запросов
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
       const csrfFromClient = request.headers.get('X-CSRF-Token');
-      console.log(`[BFF Proxy] X-CSRF-Token from client:`, csrfFromClient ? 'present' : 'MISSING');
+      console.log(
+        `[BFF Proxy] X-CSRF-Token from client:`,
+        csrfFromClient ? 'present' : 'MISSING'
+      );
     }
 
     // Подготавливаем заголовки

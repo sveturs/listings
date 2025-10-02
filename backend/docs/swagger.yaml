@@ -23869,6 +23869,53 @@ paths:
       summary: Moderate image content
       tags:
       - marketplace-images
+  /api/v1/marketplace/my-listings:
+    get:
+      consumes:
+      - application/json
+      description: Returns all listings created by the authenticated user
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Filter by status (active, sold, draft)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User's listings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/backend_internal_domain_models.MarketplaceListing'
+                  type: array
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: marketplace.listError
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get my listings
+      tags:
+      - marketplace
   /api/v1/marketplace/neighborhood-stats:
     get:
       consumes:

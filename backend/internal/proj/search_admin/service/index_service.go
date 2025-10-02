@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	marketplaceIndex        = "marketplace_listings"  // Индекс для listings (C2C)
-	marketplaceListingIndex = "marketplace_listings"  // Listings индексируются сюда
-	storefrontProductsIndex = "storefront_products"   // Индекс для storefront products (B2C)
-	storefrontsIndex        = "storefronts"           // Индекс для самих витрин
+	marketplaceIndex        = "marketplace_listings" // Индекс для listings (C2C)
+	marketplaceListingIndex = "marketplace_listings" // Listings индексируются сюда
+	storefrontProductsIndex = "storefront_products"  // Индекс для storefront products (B2C)
+	storefrontsIndex        = "storefronts"          // Индекс для самих витрин
 	listingType             = "listing"
 	productType             = "product"
 )
@@ -88,7 +88,6 @@ func (s *Service) GetIndexInfo(ctx context.Context) ([]IndexInfo, error) {
 }
 
 func (s *Service) getIndexInfoForName(ctx context.Context, indexName string) (*IndexInfo, error) {
-
 	// Получаем статистику индекса
 	statsPath := fmt.Sprintf("/%s/_stats", indexName)
 	statsResp, err := s.osClient.Execute(ctx, "GET", statsPath, nil)

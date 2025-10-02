@@ -7,7 +7,9 @@
 
 // Используем BFF proxy (/api/v2/*) вместо прямого обращения к backend
 const USE_BFF_PROXY = process.env.NEXT_PUBLIC_USE_API_V2 !== 'false'; // по умолчанию true
-const API_BASE_URL = USE_BFF_PROXY ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+const API_BASE_URL = USE_BFF_PROXY
+  ? ''
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface ApiClientOptions {
   headers?: Record<string, string>;
@@ -25,7 +27,9 @@ async function getCSRFToken(): Promise<string> {
   }
 
   try {
-    const url = USE_BFF_PROXY ? '/api/v2/csrf-token' : `${API_BASE_URL}/api/v1/csrf-token`;
+    const url = USE_BFF_PROXY
+      ? '/api/v2/csrf-token'
+      : `${API_BASE_URL}/api/v1/csrf-token`;
     const response = await fetch(url, {
       method: 'GET',
       credentials: USE_BFF_PROXY ? 'include' : 'omit',
@@ -125,7 +129,10 @@ export const apiClient = {
   async delete(path: string, options?: ApiClientOptions) {
     const url = USE_BFF_PROXY ? transformPath(path) : `${API_BASE_URL}${path}`;
     const token = await getCSRFToken();
-    console.log('[apiClient DELETE] CSRF token obtained:', token ? 'present' : 'MISSING');
+    console.log(
+      '[apiClient DELETE] CSRF token obtained:',
+      token ? 'present' : 'MISSING'
+    );
     console.log('[apiClient DELETE] URL:', url);
     const response = await fetch(url, {
       method: 'DELETE',

@@ -414,7 +414,6 @@ class ChatService {
     ws: WebSocket,
     onMessage: (event: MessageEvent) => void
   ): WebSocket {
-
     ws.onopen = () => {
       // Сбрасываем счетчик попыток при успешном подключении
       this.reconnectAttempts = 0;

@@ -234,7 +234,9 @@ class TranslationAdminApi {
         | 'post'
         | 'put'
         | 'delete';
-      const body = options?.body ? JSON.parse(options.body as string) : undefined;
+      const body = options?.body
+        ? JSON.parse(options.body as string)
+        : undefined;
 
       let response;
       if (method === 'get') {

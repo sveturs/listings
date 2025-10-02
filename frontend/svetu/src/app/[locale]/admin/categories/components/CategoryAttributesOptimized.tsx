@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Category,
   AttributeGroup,
+  Attribute,
   adminApi,
   // CategoryAttributeMapping, // Will be used in future updates
 } from '@/services/admin';
@@ -61,9 +62,7 @@ export default function CategoryAttributesOptimized({
   } = useAttributesPagination({}, 50);
 
   // Category attributes (loaded separately from API)
-  const [categoryAttributes, setCategoryAttributes] = useState<
-    Array<{ id: number; display_name: string; attribute_type: string }>
-  >([]);
+  const [categoryAttributes, setCategoryAttributes] = useState<Attribute[]>([]);
   const [categoryAttributeIds, setCategoryAttributeIds] = useState<Set<number>>(
     new Set()
   );
@@ -119,7 +118,9 @@ export default function CategoryAttributesOptimized({
       await adminApi.categories.addAttribute(category.id, selectedAttribute);
 
       // Find the added attribute in allAttributes
-      const addedAttr = allAttributes.find((attr) => attr.id === selectedAttribute);
+      const addedAttr = allAttributes.find(
+        (attr) => attr.id === selectedAttribute
+      );
       if (addedAttr) {
         setCategoryAttributes((prev) => [...prev, addedAttr]);
       }
