@@ -5,6 +5,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
+	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // DashboardHandler обработчик для dashboard метрик
@@ -33,8 +34,8 @@ func NewDashboardHandler(monitoringService *service.MonitoringService) *Dashboar
 // @Router /api/v1/admin/logistics/dashboard [get]
 func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	_, ok := authmw.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -62,8 +63,8 @@ func (h *DashboardHandler) GetDashboardStats(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/dashboard/chart [get]
 func (h *DashboardHandler) GetWeeklyChart(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	_, ok := authmw.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
