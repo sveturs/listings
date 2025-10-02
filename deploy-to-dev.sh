@@ -100,6 +100,9 @@ log "🔄 Deploying on server..."
 ssh "$SERVER" /bin/bash <<ENDSSH
 set -euo pipefail
 
+# Enable verbose error tracking
+trap 'echo "❌ Error on line \$LINENO. Exit code: \$?" >&2' ERR
+
 # Colors for remote logging
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -111,6 +114,7 @@ log() { echo -e "\${GREEN}[Server \$(date +'%H:%M:%S')]\${NC} \$1"; }
 error() { echo -e "\${RED}[Server \$(date +'%H:%M:%S')] ERROR:\${NC} \$1" >&2; }
 warn() { echo -e "\${YELLOW}[Server \$(date +'%H:%M:%S')] WARNING:\${NC} \$1"; }
 info() { echo -e "\${BLUE}[Server \$(date +'%H:%M:%S')] INFO:\${NC} \$1"; }
+debug() { echo -e "\${BLUE}[Server \$(date +'%H:%M:%S')] DEBUG:\${NC} \$1"; }
 
 # Check Go version
 log "🔍 Checking Go version..."
@@ -219,11 +223,18 @@ fi
 
 # Clean Go module cache to force re-download of private repos
 log "🧹 Cleaning Go module cache..."
-cd "$DEPLOY_DIR/backend"
+cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
+debug "Current directory: \$(pwd)"
 go clean -modcache 2>/dev/null || true
+
+# Kill old backend processes before restart
+log "🔪 Killing old backend processes..."
+pkill -9 -f "bin/api_dev" 2>/dev/null || true
+sleep 2
 
 # Restart backend
 log "🔄 Restarting backend..."
+debug "Running make dev-restart in \$(pwd)"
 if ! timeout 120 make dev-restart &>/tmp/backend_restart.log; then
     error "Failed to restart backend (timeout or error)"
     tail -50 /tmp/backend_restart.log
@@ -246,11 +257,27 @@ else
     log "✅ Backend restarted"
 fi
 
+# Kill old frontend processes before restart
+log "🔪 Killing old frontend processes..."
+pkill -9 -f "yarn dev -p 3003" 2>/dev/null || true
+pkill -9 -f "next dev.*3003" 2>/dev/null || true
+pkill -9 -f "next-server" 2>/dev/null || true
+sleep 3
+
+# Verify port 3003 is free
+if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
+    warn "Port 3003 still occupied, forcing cleanup..."
+    fuser -k 3003/tcp 2>/dev/null || true
+    sleep 2
+fi
+
 # Restart frontend
 log "🔄 Restarting frontend..."
-cd "$DEPLOY_DIR/frontend/svetu"
-if ! timeout 60 make dev-restart &>/tmp/frontend_restart.log; then
-    error "Failed to restart frontend"
+cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
+debug "Current directory: \$(pwd)"
+
+if ! timeout 90 make dev-restart &>/tmp/frontend_restart.log; then
+    error "Failed to restart frontend (timeout or error)"
     tail -50 /tmp/frontend_restart.log
     exit 1
 fi
@@ -260,13 +287,19 @@ log "✅ Frontend restarted"
 log "🧹 Cleaning old dumps..."
 ls -t /tmp/svetubd_dump_*.sql 2>/dev/null | tail -n +4 | xargs rm -f 2>/dev/null || true
 
+# Wait for services to fully start
+log "⏳ Waiting for services to initialize..."
+sleep 5
+
 # Health checks with retries
 log "🏥 Checking services health..."
 check_service() {
     local name=\$1
     local url=\$2
     local retries=$HEALTH_CHECK_RETRIES
-    local wait=5
+    local wait=10
+
+    debug "Checking \$name at \$url"
 
     for i in \$(seq 1 \$retries); do
         HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" "\$url" 2>/dev/null || echo "000")
@@ -277,12 +310,14 @@ check_service() {
             return 0
         fi
 
-        warn "\$name not ready yet (HTTP \$HTTP_CODE, attempt \$i/\$retries)..."
-        sleep \$wait
+        if [ \$i -lt \$retries ]; then
+            warn "\$name not ready yet (HTTP \$HTTP_CODE, attempt \$i/\$retries)..."
+            sleep \$wait
+        else
+            error "\$name failed health check after \$retries attempts (last HTTP: \$HTTP_CODE)"
+            return 1
+        fi
     done
-
-    error "\$name failed health check after \$retries attempts (last HTTP: \$HTTP_CODE)"
-    return 1
 }
 
 HEALTH_OK=true
@@ -294,9 +329,15 @@ if [ "\$HEALTH_OK" = "false" ]; then
     warn "Check logs for details:"
     echo "  ssh $SERVER 'tail -100 /tmp/backend-dev.log'"
     echo "  ssh $SERVER 'tail -100 /tmp/frontend-dev.log'"
+    echo "  ssh $SERVER 'cd /opt/svetu-dev/backend && tail -50 api_dev.log'"
+    echo "  ssh $SERVER 'cd /opt/svetu-dev/frontend/svetu && tail -50 frontend-dev.log'"
+    echo ""
+    warn "Manual restart commands:"
+    echo "  ssh $SERVER 'cd /opt/svetu-dev/backend && make dev-restart'"
+    echo "  ssh $SERVER 'cd /opt/svetu-dev/frontend/svetu && make dev-restart'"
     echo ""
     warn "If needed, rollback with:"
-    echo "  cd $DEPLOY_DIR && git reset --hard \$PREVIOUS_COMMIT"
+    echo "  ssh $SERVER 'cd $DEPLOY_DIR && git reset --hard \$PREVIOUS_COMMIT'"
     exit 1
 fi
 
@@ -304,6 +345,11 @@ fi
 BACKEND_VERSION=\$(curl -s http://localhost:$BACKEND_PORT/ 2>/dev/null | head -1 || echo "unknown")
 log "🎯 Deployed backend version: \$BACKEND_VERSION"
 log "🎯 Deployed commit: \${NEW_COMMIT:0:8}"
+
+# Show process info
+log "📊 Process status:"
+info "  Backend PID: \$(pgrep -f 'bin/api_dev' || echo 'not found')"
+info "  Frontend PID: \$(pgrep -f 'yarn dev -p 3003' || echo 'not found')"
 
 log "🎉 Deployment completed successfully!"
 ENDSSH
