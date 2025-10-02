@@ -45,7 +45,11 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     isLoading: statsLoading,
     refetch: refetchStats,
   } = useReviewStats(entityType, entityId);
-  const { data: canReviewData } = useCanReview(entityType, entityId, user?.id);
+  const { data: canReviewData } = useCanReview(
+    entityType,
+    entityId,
+    user?.id ?? undefined
+  );
 
   // Check if user can write a review
   const canWriteReview =

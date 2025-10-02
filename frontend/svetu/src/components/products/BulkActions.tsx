@@ -78,7 +78,7 @@ export function BulkActions({
                 disabled={isProcessing}
               >
                 <FiToggleLeft className="w-4 h-4" />
-                {t('status')}
+                {t('statusLabel')}
               </button>
               <ul
                 tabIndex={0}

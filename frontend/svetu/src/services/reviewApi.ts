@@ -88,15 +88,15 @@ export const reviewApi = {
   ): Promise<CanReviewResponse> {
     try {
       const response = await apiClient.get<{ data: CanReviewResponse }>(
-        `/reviews/can-review/${entityType}/${entityId}`
+        `/review-permission/${entityType}/${entityId}`
       );
       if (!response.data) {
         throw new Error('No data received');
       }
       return response.data.data;
     } catch (error: any) {
-      // Return default response instead of throwing error for 401
-      if (error.response?.status === 401) {
+      // Return default response instead of throwing error for 401 or 404
+      if (error.response?.status === 401 || error.response?.status === 404) {
         return { can_review: false, reason: 'unauthorized' };
       }
       throw error;

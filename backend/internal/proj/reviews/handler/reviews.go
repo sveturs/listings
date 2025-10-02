@@ -989,6 +989,69 @@ func (h *ReviewHandler) CanReview(c *fiber.Ctx) error {
 	return utils.SuccessResponse(c, response)
 }
 
+// CanReviewListing проверяет может ли пользователь оставить отзыв на listing
+func (h *ReviewHandler) CanReviewListing(c *fiber.Ctx) error {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
+
+	entityID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
+	}
+
+	response, err := h.services.Review().CanUserReviewEntity(c.Context(), userID, "listing", entityID)
+	if err != nil {
+		log.Printf("Error checking review permission for listing: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.permission.error.check_failed")
+	}
+
+	return utils.SuccessResponse(c, response)
+}
+
+// CanReviewUser проверяет может ли пользователь оставить отзыв на user
+func (h *ReviewHandler) CanReviewUser(c *fiber.Ctx) error {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
+
+	entityID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
+	}
+
+	response, err := h.services.Review().CanUserReviewEntity(c.Context(), userID, "user", entityID)
+	if err != nil {
+		log.Printf("Error checking review permission for user: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.permission.error.check_failed")
+	}
+
+	return utils.SuccessResponse(c, response)
+}
+
+// CanReviewStorefront проверяет может ли пользователь оставить отзыв на storefront
+func (h *ReviewHandler) CanReviewStorefront(c *fiber.Ctx) error {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok || userID == 0 {
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "reviews.error.unauthorized")
+	}
+
+	entityID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "reviews.error.invalid_entity_id")
+	}
+
+	response, err := h.services.Review().CanUserReviewEntity(c.Context(), userID, "storefront", entityID)
+	if err != nil {
+		log.Printf("Error checking review permission for storefront: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "reviews.permission.error.check_failed")
+	}
+
+	return utils.SuccessResponse(c, response)
+}
+
 // ConfirmReview подтверждает отзыв продавцом
 // @Summary Confirm review
 // @Description Allows seller to confirm or dispute a review

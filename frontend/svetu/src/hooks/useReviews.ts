@@ -95,7 +95,7 @@ export const useCanReview = (
   return useQuery({
     queryKey: QUERY_KEYS.canReview(entityType, entityId),
     queryFn: () => reviewApi.canReview(entityType, entityId),
-    enabled: !!entityType && !!entityId && !!userId, // Only run if user is authenticated
+    enabled: !!entityType && !!entityId && userId !== undefined && userId > 0, // Only run if user is authenticated
     staleTime: 60 * 1000, // 1 minute
   });
 };

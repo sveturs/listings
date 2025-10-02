@@ -33,6 +33,7 @@ async function proxyRequest(
     const backendUrl = `${BACKEND_URL}/api/v1/${backendPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log(`[BFF Proxy] ${method} /api/v2/${backendPath} → ${backendUrl}`);
+    console.log(`[BFF Proxy] Has access_token:`, !!accessToken);
 
     // Подготавливаем заголовки
     const headers: HeadersInit = {};
