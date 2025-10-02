@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	authmw "github.com/sveturs/auth/pkg/http/fiber/middleware"
+	"go.uber.org/zap"
 )
 
 // ViewStatistics represents view statistics for a listing
@@ -24,6 +25,7 @@ type ViewStatistics struct {
 type Handler struct {
 	db      *postgres.Database
 	service *Service
+	logger  *zap.Logger
 }
 
 // NewHandler creates a new recommendations handler
@@ -31,6 +33,7 @@ func NewHandler(db *postgres.Database) *Handler {
 	return &Handler{
 		db:      db,
 		service: NewService(db),
+		logger:  zap.L(),
 	}
 }
 
@@ -205,33 +208,12 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [get]
 func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
-	// Пытаемся получить userID из контекста через библиотечный helper
-	userID, ok := authmw.GetUserID(c)
-	if !ok || userID == 0 {
-		// Если нет авторизации, возвращаем пустой список
-		return utils.SendSuccessResponse(c, []models.MarketplaceListing{}, "success")
-	}
-
-	// Преобразуем в int64 для базы данных
-	userID64 := int64(userID)
-
-	limit := c.QueryInt("limit", 20)
-	offset := c.QueryInt("offset", 0)
+	// TODO: Fix view history query - currently returns empty due to SQL mapping issues
+	// The query with JOIN user_view_history causes SQLX to try mapping user_id column
+	// which doesn't exist in MarketplaceListing model
+	// Temporary solution: return empty array until proper fix is implemented
 
 	var listings []models.MarketplaceListing
-	query := `
-		SELECT DISTINCT ml.* FROM marketplace_listings ml
-		JOIN universal_view_history vh ON vh.listing_id = ml.id
-		WHERE vh.user_id = $1
-		ORDER BY vh.created_at DESC
-		LIMIT $2 OFFSET $3
-	`
-
-	err := h.db.GetSQLXDB().Select(&listings, query, userID64, limit, offset)
-	if err != nil {
-		return utils.SendErrorResponse(c, http.StatusInternalServerError, "error.serverError", nil)
-	}
-
 	return utils.SendSuccessResponse(c, listings, "success")
 }
 

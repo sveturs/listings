@@ -138,8 +138,8 @@ func (h *PaymentHandler) CreatePayment(c *fiber.Ctx) error {
 // @Router /payments/{id}/capture [post]
 func (h *PaymentHandler) CapturePayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
-	userID := c.Locals("user_id")
-	if userID == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, 401, "user not authenticated")
 	}
 
@@ -153,11 +153,11 @@ func (h *PaymentHandler) CapturePayment(c *fiber.Ctx) error {
 	// Захватываем платеж
 	err = h.service.CapturePayment(c.Context(), transactionID)
 	if err != nil {
-		h.logger.Error("Failed to capture payment: %v (transactionID: %d, userID: %v)", err, transactionID, userID)
+		h.logger.Error("Failed to capture payment: %v (transactionID: %d, userID: %d)", err, transactionID, userID)
 		return utils.ErrorResponse(c, 500, "payment capture failed")
 	}
 
-	h.logger.Info("Payment captured successfully (transactionID: %d, userID: %v)", transactionID, userID)
+	h.logger.Info("Payment captured successfully (transactionID: %d, userID: %d)", transactionID, userID)
 
 	return utils.SuccessResponse(c, "payment captured")
 }
@@ -185,8 +185,8 @@ type RefundPaymentRequest struct {
 // @Router /payments/{id}/refund [post]
 func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
-	userID := c.Locals("user_id")
-	if userID == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, 401, "user not authenticated")
 	}
 
@@ -217,11 +217,11 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 	// Возвращаем средства
 	err = h.service.RefundPayment(c.Context(), transactionID, amount)
 	if err != nil {
-		h.logger.Error("Failed to refund payment: %v (transactionID: %d, userID: %v)", err, transactionID, userID)
+		h.logger.Error("Failed to refund payment: %v (transactionID: %d, userID: %d)", err, transactionID, userID)
 		return utils.ErrorResponse(c, 500, "payment refund failed")
 	}
 
-	h.logger.Info("Payment refunded successfully (transactionID: %d, amount: %s, userID: %v)", transactionID, amount.String(), userID)
+	h.logger.Info("Payment refunded successfully (transactionID: %d, amount: %s, userID: %d)", transactionID, amount.String(), userID)
 
 	return utils.SuccessResponse(c, "payment refunded")
 }
@@ -240,8 +240,8 @@ func (h *PaymentHandler) RefundPayment(c *fiber.Ctx) error {
 // @Router /payments/{id}/status [get]
 func (h *PaymentHandler) GetPaymentStatus(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
-	userID := c.Locals("user_id")
-	if userID == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, 401, "user not authenticated")
 	}
 
@@ -259,7 +259,7 @@ func (h *PaymentHandler) GetPaymentStatus(c *fiber.Ctx) error {
 	// }
 
 	// Временно возвращаем простой ответ
-	h.logger.Info("Payment status requested (transactionID: %d, userID: %v)", transactionID, userID)
+	h.logger.Info("Payment status requested (transactionID: %d, userID: %d)", transactionID, userID)
 
 	return utils.SuccessResponse(c, map[string]interface{}{
 		"transaction_id": transactionID,

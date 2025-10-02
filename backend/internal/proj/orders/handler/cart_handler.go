@@ -3,6 +3,8 @@ package handler
 import (
 	"strconv"
 
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
+
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/pkg/utils"
@@ -42,8 +44,7 @@ func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
 	var userID *int
 	var sessionID *string
 
-	if userIDRaw := c.Locals("user_id"); userIDRaw != nil {
-		userIDVal := userIDRaw.(int)
+	if userIDVal, ok := authMiddleware.GetUserID(c); ok {
 		userID = &userIDVal
 	} else {
 		sessionIDVal := c.Get("X-Session-ID")
@@ -110,8 +111,7 @@ func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
 	var userID *int
 	var sessionID *string
 
-	if userIDRaw := c.Locals("user_id"); userIDRaw != nil {
-		userIDVal := userIDRaw.(int)
+	if userIDVal, ok := authMiddleware.GetUserID(c); ok {
 		userID = &userIDVal
 	} else {
 		sessionIDVal := c.Get("X-Session-ID")
@@ -161,8 +161,7 @@ func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
 	var userID *int
 	var sessionID *string
 
-	if userIDRaw := c.Locals("user_id"); userIDRaw != nil {
-		userIDVal := userIDRaw.(int)
+	if userIDVal, ok := authMiddleware.GetUserID(c); ok {
 		userID = &userIDVal
 	} else {
 		sessionIDVal := c.Get("X-Session-ID")
@@ -204,8 +203,7 @@ func (h *OrdersHandler) GetCart(c *fiber.Ctx) error {
 	var userID *int
 	var sessionID *string
 
-	if userIDRaw := c.Locals("user_id"); userIDRaw != nil {
-		userIDVal := userIDRaw.(int)
+	if userIDVal, ok := authMiddleware.GetUserID(c); ok {
 		userID = &userIDVal
 	} else {
 		sessionIDVal := c.Get("X-Session-ID")
@@ -248,8 +246,7 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 	var userID *int
 	var sessionID *string
 
-	if userIDRaw := c.Locals("user_id"); userIDRaw != nil {
-		userIDVal := userIDRaw.(int)
+	if userIDVal, ok := authMiddleware.GetUserID(c); ok {
 		userID = &userIDVal
 	} else {
 		sessionIDVal := c.Get("X-Session-ID")
@@ -280,12 +277,10 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 // @Router /api/v1/user/carts [get]
 func (h *OrdersHandler) GetUserCarts(c *fiber.Ctx) error {
 	// Получаем user_id из контекста (только для авторизованных)
-	userIDRaw := c.Locals("user_id")
-	if userIDRaw == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
-
-	userID := userIDRaw.(int)
 
 	carts, err := h.orderService.GetUserCarts(c.Context(), userID)
 	if err != nil {
