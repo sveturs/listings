@@ -2690,8 +2690,9 @@ func (s *Storage) GetCategories(ctx context.Context) ([]models.MarketplaceCatego
 
 			// Применяем перевод к названию категории если он есть для запрашиваемого языка
 			if translatedName, ok := translations[locale]; ok && translatedName != "" {
-				log.Printf("GetCategories: Applying translation for category %d: %s -> %s (locale: %s)",
-					cat.ID, cat.Name, translatedName, locale)
+				// Debug log закомментирован - слишком шумный
+				// log.Printf("GetCategories: Applying translation for category %d: %s -> %s (locale: %s)",
+				// 	cat.ID, cat.Name, translatedName, locale)
 				cat.Name = translatedName
 			}
 		}
