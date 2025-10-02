@@ -609,7 +609,7 @@ func (r *cartRepository) GetAllUserCarts(ctx context.Context, userID int) ([]*mo
 	}
 	defer rows.Close()
 
-	var carts []*models.ShoppingCart
+	carts := make([]*models.ShoppingCart, 0)
 	for rows.Next() {
 		cart := &models.ShoppingCart{}
 		var storefrontName string

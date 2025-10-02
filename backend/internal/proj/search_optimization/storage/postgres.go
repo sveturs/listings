@@ -102,11 +102,66 @@ func (r *PostgresSearchOptimizationRepository) GetRecentOptimizationSessions(ctx
 
 // Управление синонимами
 func (r *PostgresSearchOptimizationRepository) GetSynonyms(ctx context.Context, language, search string, offset, limit int) ([]*SynonymData, int, error) {
-	return []*SynonymData{}, 0, nil
+	var synonyms []*SynonymData
+	var total int
+
+	// Подсчет общего количества
+	countQuery := `
+		SELECT COUNT(*) FROM search_synonyms
+		WHERE ($1 = '' OR language = $1)
+		AND ($2 = '' OR term ILIKE '%' || $2 || '%' OR synonym ILIKE '%' || $2 || '%')
+	`
+	err := r.pool.QueryRow(ctx, countQuery, language, search).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Получение данных с пагинацией
+	query := `
+		SELECT id, term, synonym, language, is_active, created_at, updated_at
+		FROM search_synonyms
+		WHERE ($1 = '' OR language = $1)
+		AND ($2 = '' OR term ILIKE '%' || $2 || '%' OR synonym ILIKE '%' || $2 || '%')
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4
+	`
+
+	rows, err := r.pool.Query(ctx, query, language, search, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var s SynonymData
+		err := rows.Scan(&s.ID, &s.Term, &s.Synonym, &s.Language, &s.IsActive, &s.CreatedAt, &s.UpdatedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		synonyms = append(synonyms, &s)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return synonyms, total, nil
 }
 
 func (r *PostgresSearchOptimizationRepository) CreateSynonym(ctx context.Context, synonym *SynonymData) (int64, error) {
-	return 1, nil
+	query := `
+		INSERT INTO search_synonyms (term, synonym, language, is_active)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`
+
+	var id int64
+	err := r.pool.QueryRow(ctx, query, synonym.Term, synonym.Synonym, synonym.Language, synonym.IsActive).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 func (r *PostgresSearchOptimizationRepository) UpdateSynonym(ctx context.Context, synonymID int64, synonym *SynonymData) error {

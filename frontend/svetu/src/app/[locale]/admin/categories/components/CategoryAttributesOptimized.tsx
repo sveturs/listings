@@ -60,14 +60,13 @@ export default function CategoryAttributesOptimized({
     refresh: refreshAttributes,
   } = useAttributesPagination({}, 50);
 
-  // Category attributes (filtered from all attributes)
+  // Category attributes (loaded separately from API)
+  const [categoryAttributes, setCategoryAttributes] = useState<
+    Array<{ id: number; display_name: string; attribute_type: string }>
+  >([]);
   const [categoryAttributeIds, setCategoryAttributeIds] = useState<Set<number>>(
     new Set()
   );
-
-  const categoryAttributes = useMemo(() => {
-    return allAttributes.filter((attr) => categoryAttributeIds.has(attr.id));
-  }, [allAttributes, categoryAttributeIds]);
 
   useEffect(() => {
     loadInitialData();
@@ -93,14 +92,16 @@ export default function CategoryAttributesOptimized({
         setCategoryGroups([]);
       }
 
-      // Load category attributes IDs
+      // Load category attributes (full data, not just IDs)
       try {
         const categoryAttrs = await adminApi.categories.getAttributes(
           category.id
         );
+        setCategoryAttributes(categoryAttrs);
         setCategoryAttributeIds(new Set(categoryAttrs.map((attr) => attr.id)));
       } catch (error) {
         console.error('Failed to load category attributes:', error);
+        setCategoryAttributes([]);
         setCategoryAttributeIds(new Set());
       }
     } catch (error) {
@@ -116,6 +117,13 @@ export default function CategoryAttributesOptimized({
 
     try {
       await adminApi.categories.addAttribute(category.id, selectedAttribute);
+
+      // Find the added attribute in allAttributes
+      const addedAttr = allAttributes.find((attr) => attr.id === selectedAttribute);
+      if (addedAttr) {
+        setCategoryAttributes((prev) => [...prev, addedAttr]);
+      }
+
       setCategoryAttributeIds((prev) => new Set([...prev, selectedAttribute]));
       setSelectedAttribute(null);
       toast.success(t('categories.attributeAdded'));
@@ -129,6 +137,12 @@ export default function CategoryAttributesOptimized({
   const handleRemoveAttribute = async (attributeId: number) => {
     try {
       await adminApi.categories.removeAttribute(category.id, attributeId);
+
+      // Remove from category attributes list
+      setCategoryAttributes((prev) =>
+        prev.filter((attr) => attr.id !== attributeId)
+      );
+
       setCategoryAttributeIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(attributeId);

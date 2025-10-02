@@ -49,7 +49,8 @@ export default function SearchIndexManager() {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'documents' | 'mappings'
   >('overview');
-  const [indexInfo, setIndexInfo] = useState<IndexInfo | null>(null);
+  const [indices, setIndices] = useState<IndexInfo[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<string>('marketplace_listings');
   const [statistics, setStatistics] = useState<IndexStatistics | null>(null);
   const [documents, setDocuments] = useState<IndexedDocument[]>([]);
   const [documentsTotal, setDocumentsTotal] = useState(0);
@@ -63,13 +64,16 @@ export default function SearchIndexManager() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
 
+  // Получить текущий выбранный индекс
+  const indexInfo = indices.find(idx => idx.index_name === selectedIndex) || null;
+
   // Загрузка информации об индексе
   const fetchIndexInfo = async () => {
     try {
       const response = await apiClient.get('/admin/search/index/info');
 
-      if (response.data) {
-        setIndexInfo(response.data.data);
+      if (response.data && Array.isArray(response.data.data)) {
+        setIndices(response.data.data);
       }
     } catch (error) {
       console.error('Failed to fetch index info:', error);
@@ -225,12 +229,35 @@ export default function SearchIndexManager() {
 
       {/* Контент */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Основная информация */}
+        <div className="space-y-6">
+          {/* Селектор индекса */}
           <div className="card bg-base-100">
             <div className="card-body">
-              <h3 className="card-title">{t('search.index.info')}</h3>
-              {indexInfo && (
+              <label className="label">
+                <span className="label-text font-semibold">
+                  {t('search.index.selectIndex')}
+                </span>
+              </label>
+              <select
+                className="select select-bordered w-full max-w-xs"
+                value={selectedIndex}
+                onChange={(e) => setSelectedIndex(e.target.value)}
+              >
+                {indices.map((idx) => (
+                  <option key={idx.index_name} value={idx.index_name}>
+                    {idx.index_name} ({idx.document_count.toLocaleString()} docs)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Основная информация */}
+            <div className="card bg-base-100">
+              <div className="card-body">
+                <h3 className="card-title">{t('search.index.info')}</h3>
+                {indexInfo && (
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-base-content/70">
@@ -325,12 +352,13 @@ export default function SearchIndexManager() {
               )}
             </div>
           </div>
+          </div>
 
           {/* Документы по категориям */}
           {statistics &&
             statistics.documents_by_category &&
             Object.keys(statistics.documents_by_category).length > 0 && (
-              <div className="card bg-base-100 lg:col-span-2">
+              <div className="card bg-base-100">
                 <div className="card-body">
                   <h3 className="card-title">{t('search.index.byCategory')}</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -355,7 +383,7 @@ export default function SearchIndexManager() {
           {statistics &&
             statistics.searchable_fields &&
             statistics.searchable_fields.length > 0 && (
-              <div className="card bg-base-100 lg:col-span-2">
+              <div className="card bg-base-100">
                 <div className="card-body">
                   <h3 className="card-title">
                     {t('search.index.searchableFields')}

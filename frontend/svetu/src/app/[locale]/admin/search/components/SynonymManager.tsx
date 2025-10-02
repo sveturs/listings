@@ -316,7 +316,7 @@ export default function SynonymManager() {
                     <th>{t('term')}</th>
                     <th>{t('synonym')}</th>
                     <th>{t('language')}</th>
-                    <th>{t('status')}</th>
+                    <th>{t('statusLabel')}</th>
                     <th>{t('created')}</th>
                     <th>{t('actions')}</th>
                   </tr>

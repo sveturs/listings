@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"backend/internal/cache"
@@ -700,7 +699,6 @@ func (s *MarketplaceService) GetCategoryAttributes(ctx context.Context, category
 
 // getCategoryAttributesFromDB получает атрибуты категории из БД
 func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, categoryID int) ([]models.CategoryAttribute, error) {
-	log.Printf("DEBUG getCategoryAttributesFromDB called for category %d", categoryID)
 
 	// Обновленный запрос, который получает атрибуты из обоих источников:
 	// 1. Из прямого маппинга (category_attribute_mapping)
@@ -768,10 +766,6 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		)
 
 		// Добавляем отладку сразу после сканирования
-		if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
-			log.Printf("DEBUG SCAN: Attribute %s (ID: %d) - raw options valid: %v, content: %s",
-				attribute.Name, attribute.ID, optionsJSON.Valid, optionsJSON.String)
-		}
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочитать атрибут: %w", err)
 		}
@@ -788,16 +782,9 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		// Устанавливаем Options и ValidRules
 		if optionsJSON.Valid && len(optionsJSON.String) > 0 {
 			attribute.Options = json.RawMessage(optionsJSON.String)
-			// Добавляем логирование для отладки
-			if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
-				log.Printf("DEBUG: Attribute %s (ID: %d) options set to: %s", attribute.Name, attribute.ID, optionsJSON.String)
-			}
 		} else {
 			// Если options пустой, устанавливаем пустой JSON объект
 			attribute.Options = json.RawMessage(`{}`)
-			if attribute.AttributeType == attributeTypeSelect || attribute.AttributeType == attributeTypeMultiselect {
-				log.Printf("DEBUG: Attribute %s (ID: %d) has empty options, setting to {}", attribute.Name, attribute.ID)
-			}
 		}
 
 		if validRulesJSON.Valid && len(validRulesJSON.String) > 0 {
@@ -851,13 +838,6 @@ func (s *MarketplaceService) getCategoryAttributesFromDB(ctx context.Context, ca
 		}
 
 		attributes = append(attributes, attribute)
-	}
-
-	log.Printf("DEBUG getCategoryAttributesFromDB returning %d attributes for category %d", len(attributes), categoryID)
-	for _, attr := range attributes {
-		if attr.AttributeType == attributeTypeSelect || attr.AttributeType == attributeTypeMultiselect {
-			log.Printf("DEBUG - Attribute %s: options=%s", attr.Name, string(attr.Options))
-		}
 	}
 
 	return attributes, nil

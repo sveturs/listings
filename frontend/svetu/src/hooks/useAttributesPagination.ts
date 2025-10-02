@@ -64,17 +64,17 @@ export function useAttributesPagination(
   }, [paginatedState.data, localFilters.categoryId, localFilters.groupId]);
 
   const updateFilters = useCallback(
-    (newFilters: Partial<AttributeFilters>) => {
+    async (newFilters: Partial<AttributeFilters>) => {
       setLocalFilters((prev) => ({ ...prev, ...newFilters }));
       // Reset pagination when filters change
-      paginatedActions.reset();
+      await paginatedActions.reset();
     },
     [paginatedActions]
   );
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = useCallback(async () => {
     setLocalFilters({});
-    paginatedActions.reset();
+    await paginatedActions.reset();
   }, [paginatedActions]);
 
   return {

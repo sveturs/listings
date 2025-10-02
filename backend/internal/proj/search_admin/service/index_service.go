@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	marketplaceIndex        = "marketplace_listings" // Единый индекс для listings и products
-	marketplaceListingIndex = "marketplace_listings" // Listings индексируются сюда
-	storefrontProductsIndex = "marketplace_listings" // Products тоже в общий индекс
+	marketplaceIndex        = "marketplace_listings"  // Индекс для listings (C2C)
+	marketplaceListingIndex = "marketplace_listings"  // Listings индексируются сюда
+	storefrontProductsIndex = "storefront_products"   // Индекс для storefront products (B2C)
+	storefrontsIndex        = "storefronts"           // Индекс для самих витрин
 	listingType             = "listing"
 	productType             = "product"
 )
@@ -61,12 +62,32 @@ type IndexStatistics struct {
 }
 
 // GetIndexInfo возвращает информацию об индексе
-func (s *Service) GetIndexInfo(ctx context.Context) (*IndexInfo, error) {
+func (s *Service) GetIndexInfo(ctx context.Context) ([]IndexInfo, error) {
 	if s.osClient == nil {
 		return nil, fmt.Errorf("OpenSearch client not initialized")
 	}
 
-	indexName := marketplaceIndex // TODO: получать из конфига
+	// Получаем информацию о всех основных индексах
+	indices := []string{marketplaceIndex, storefrontProductsIndex, storefrontsIndex}
+	var results []IndexInfo
+
+	for _, indexName := range indices {
+		info, err := s.getIndexInfoForName(ctx, indexName)
+		if err != nil {
+			// Пропускаем индексы с ошибками (могут не существовать)
+			continue
+		}
+		results = append(results, *info)
+	}
+
+	if len(results) == 0 {
+		return nil, fmt.Errorf("no indices found")
+	}
+
+	return results, nil
+}
+
+func (s *Service) getIndexInfoForName(ctx context.Context, indexName string) (*IndexInfo, error) {
 
 	// Получаем статистику индекса
 	statsPath := fmt.Sprintf("/%s/_stats", indexName)
@@ -366,7 +387,7 @@ func (s *Service) SearchIndexedDocuments(ctx context.Context, searchQuery string
 		return nil, fmt.Errorf("OpenSearch client not initialized")
 	}
 
-	indexName := "marketplace"
+	indexName := marketplaceIndex // "marketplace_listings"
 
 	if limit <= 0 {
 		limit = 20

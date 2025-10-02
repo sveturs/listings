@@ -30,31 +30,12 @@ export default function CategoriesPage() {
   }, []);
 
   const loadCategories = async () => {
-    console.log('=== loadCategories called ===');
     try {
-      console.log('Setting loading to true');
       setLoading(true);
-      console.log('Loading categories...');
-      console.log('About to call adminApi.categories.getAll()');
-
-      let data;
-      try {
-        data = await adminApi.categories.getAll();
-        console.log('adminApi.categories.getAll() completed successfully');
-      } catch (apiError) {
-        console.error('ERROR in adminApi.categories.getAll():', apiError);
-        throw apiError;
-      }
-
-      console.log('Raw API response:', data);
-      console.log('Response type:', typeof data);
-      console.log('Is array:', Array.isArray(data));
-      console.log('Response keys:', Object.keys(data || {}));
+      const data = await adminApi.categories.getAll();
 
       // Убеждаемся, что data это массив
       const categoriesArray = Array.isArray(data) ? data : [];
-      console.log('Final categories array:', categoriesArray);
-      console.log('Categories count:', categoriesArray.length);
       setCategories(categoriesArray);
     } catch (error) {
       toast.error(t('common.error'));

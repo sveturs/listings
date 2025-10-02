@@ -678,6 +678,7 @@
         "documents": "Документы",
         "mappings": "Маппинги"
       },
+      "selectIndex": "Выберите индекс",
       "info": "Информация об индексе",
       "name": "Имя индекса",
       "documents": "Документов",
@@ -965,6 +966,14 @@
   "synonymPlaceholder": "Например: айфон",
   "created": "Создано",
   "create": "Создать",
+  "delete": "Удалить",
+  "active": "Активный",
+  "inactive": "Неактивный",
+  "statusLabel": "Статус",
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "edit": "Редактировать",
+  "analyzing": "Анализ...",
   "checkError": "[MISSING_RU] checkError",
   "required": "[MISSING_RU] required",
   "logistics": {

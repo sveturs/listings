@@ -19,20 +19,11 @@ export default function AdminGuard({ children, loading }: AdminGuardProps) {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        console.log('[AdminGuard] No user found, showing auth modal');
         setShowAuthModal(true);
         setIsChecking(false);
       } else if (!user.is_admin) {
-        console.log('[AdminGuard] User is not admin', {
-          user_id: user.id,
-          is_admin: user.is_admin,
-        });
         setIsChecking(false);
       } else {
-        console.log('[AdminGuard] Admin access granted', {
-          user_id: user.id,
-          is_admin: user.is_admin,
-        });
         setIsChecking(false);
       }
     }

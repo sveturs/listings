@@ -13,7 +13,7 @@ export interface PaginatedDataState<T> {
 export interface PaginatedDataActions {
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
-  reset: () => void;
+  reset: () => Promise<void>;
 }
 
 export interface PaginatedDataConfig {
@@ -84,7 +84,7 @@ export function usePaginatedData<T>(
     await loadData(initialPage, false);
   }, [loadData, initialPage]);
 
-  const reset = useCallback(() => {
+  const reset = useCallback(async () => {
     setState({
       data: [],
       loading: false,
@@ -94,7 +94,9 @@ export function usePaginatedData<T>(
       totalPages: 0,
       totalItems: 0,
     });
-  }, [initialPage]);
+    // Reload data after reset
+    await loadData(initialPage, false);
+  }, [initialPage, loadData]);
 
   useEffect(() => {
     loadData(initialPage, false);

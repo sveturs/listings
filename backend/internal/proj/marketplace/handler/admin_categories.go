@@ -611,6 +611,11 @@ func (h *AdminCategoriesHandler) GetCategoryAttributeGroups(c *fiber.Ctx) error 
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getCategoryGroupsError")
 	}
 
+	// Если groups == nil, возвращаем пустой массив для корректной сериализации
+	if groups == nil {
+		groups = []*models.AttributeGroup{}
+	}
+
 	return utils.SuccessResponse(c, groups)
 }
 
