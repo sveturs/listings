@@ -25,7 +25,7 @@ func main() {
 	// Инициализируем логгер
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 
-	fmt.Println("🔐 Генерация токена через Auth Service\n")
+	fmt.Println("🔐 Генерация токена через Auth Service")
 	fmt.Println("⚠️  ВАЖНО: Этот скрипт требует email и пароль пользователя.")
 	fmt.Println("    Убедитесь, что пользователь существует в Auth Service.")
 	fmt.Println()
@@ -39,12 +39,16 @@ func main() {
 	// Если не заданы в env, запрашиваем у пользователя
 	if email == "" {
 		fmt.Print("📧 Введите email пользователя: ")
-		fmt.Scanln(&email)
+		if _, err := fmt.Scanln(&email); err != nil {
+			log.Fatalf("❌ Ошибка ввода email: %v", err)
+		}
 	}
 
 	if password == "" {
 		fmt.Print("🔑 Введите пароль: ")
-		fmt.Scanln(&password)
+		if _, err := fmt.Scanln(&password); err != nil {
+			log.Fatalf("❌ Ошибка ввода пароля: %v", err)
+		}
 	}
 
 	if email == "" || password == "" {

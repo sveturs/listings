@@ -43,7 +43,7 @@ export async function POST(_request: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 60 * 15, // 15 минут
+        maxAge: 60 * 60 * 48, // 48 hours (соответствует времени жизни токена)
       });
 
       // Если вернулся новый refresh_token, обновляем и его

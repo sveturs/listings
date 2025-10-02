@@ -1160,8 +1160,26 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			Msg("No inventory data found in OpenSearch response")
 	}
 
-	// Изображения
-	if images, ok := source["images"].([]interface{}); ok {
+	// Изображения - сначала пробуем новый формат (image_urls), потом старый (images)
+	if imageURLsArray, ok := source["image_urls"].([]interface{}); ok && len(imageURLsArray) > 0 {
+		// Получаем primary_image_url если есть
+		var primaryImageURL string
+		if primaryURL, ok := source["primary_image_url"].(string); ok {
+			primaryImageURL = primaryURL
+		}
+
+		for idx, urlI := range imageURLsArray {
+			if url, ok := urlI.(string); ok {
+				image := ProductImage{
+					ID:       idx + 1,
+					URL:      url,
+					IsMain:   url == primaryImageURL,
+					Position: idx,
+				}
+				item.Images = append(item.Images, image)
+			}
+		}
+	} else if images, ok := source["images"].([]interface{}); ok {
 		for _, img := range images {
 			if imgMap, ok := img.(map[string]interface{}); ok {
 				image := ProductImage{}
@@ -1183,6 +1201,21 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 				item.Images = append(item.Images, image)
 			}
 		}
+	} else {
+		logger.Warn().
+			Int("product_id", item.ProductID).
+			Msg("No image_urls or images found in storefront product document")
+	}
+
+	// Адрес на верхнем уровне (из витрины)
+	if v, ok := source["city"].(string); ok {
+		item.City = v
+	}
+	if v, ok := source["country"].(string); ok {
+		item.Country = v
+	}
+	if v, ok := source["address"].(string); ok {
+		item.Address = v
 	}
 
 	// Витрина
@@ -1696,13 +1729,50 @@ func (r *ProductRepository) SearchSimilarProducts(ctx context.Context, productID
 
 		score, _ := hit["_score"].(float64)
 
+		// Получаем ID товара - может быть как product_id, так и просто id
+		var productID int
+		if pid, ok := source["product_id"].(float64); ok {
+			productID = int(pid)
+		} else if id, ok := source["id"].(float64); ok {
+			productID = int(id)
+		} else {
+			logger.Warn().Interface("source", source).Msg("Cannot extract product_id from search result")
+			continue
+		}
+
+		// Получаем название - может быть как name, так и title
+		var title string
+		if name, ok := source["name"].(string); ok {
+			title = name
+		} else if t, ok := source["title"].(string); ok {
+			title = t
+		}
+
+		// Получаем описание
+		var description string
+		if desc, ok := source["description"].(string); ok {
+			description = desc
+		}
+
+		// Получаем цену
+		var price float64
+		if p, ok := source["price"].(float64); ok {
+			price = p
+		}
+
+		// Получаем category_id
+		var categoryID int
+		if cid, ok := source["category_id"].(float64); ok {
+			categoryID = int(cid)
+		}
+
 		// Преобразуем документ товара витрины в MarketplaceListing
 		listing := &models.MarketplaceListing{
-			ID:          int(source["product_id"].(float64)),
-			Title:       source["name"].(string),
-			Description: source["description"].(string),
-			Price:       source["price"].(float64),
-			CategoryID:  int(source["category_id"].(float64)),
+			ID:          productID,
+			Title:       title,
+			Description: description,
+			Price:       price,
+			CategoryID:  categoryID,
 			Status:      "active",   // Товары витрин всегда активны
 			CreatedAt:   time.Now(), // TODO: использовать реальную дату
 			UpdatedAt:   time.Now(),

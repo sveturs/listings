@@ -102,6 +102,9 @@ type ProductSearchItem struct {
 	SoldCount         int                 // Количество продаж
 	CreatedAt         *time.Time          // Дата создания товара
 	UpdatedAt         *time.Time          // Дата обновления товара
+	City              string              // Город (из storefront)
+	Country           string              // Страна (из storefront)
+	Address           string              // Адрес (из storefront)
 }
 
 // ProductImage изображение товара

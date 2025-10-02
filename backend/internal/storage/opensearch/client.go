@@ -2,6 +2,7 @@
 package opensearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -352,6 +353,16 @@ func (c *OpenSearchClient) Execute(ctx context.Context, method, path string, bod
 		strings.Contains(path, "/_alias") || strings.Contains(path, "/_count") {
 		// Для запросов к служебным API используем Cat API или Indices API
 		switch {
+		case path == "/_bulk":
+			// Bulk операции - ВАЖНО: обрабатываем до других проверок
+			var bodyReader io.Reader
+			if body != nil {
+				bodyReader = bytes.NewReader(body)
+			}
+			req := opensearchapi.BulkRequest{
+				Body: bodyReader,
+			}
+			res, err = req.Do(ctx, c.client)
 		case strings.Contains(path, "/_stats"):
 			// Индексная статистика
 			indexName := strings.TrimSuffix(path, "/_stats")

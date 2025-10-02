@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"backend/internal/logger"
 )
 
 const (
-	marketplaceIndex        = "marketplace"
-	marketplaceListingIndex = "marketplace_listings"
-	storefrontProductsIndex = "storefront_products"
+	marketplaceIndex        = "marketplace_listings" // Единый индекс для listings и products
+	marketplaceListingIndex = "marketplace_listings" // Listings индексируются сюда
+	storefrontProductsIndex = "marketplace_listings" // Products тоже в общий индекс
 	listingType             = "listing"
 	productType             = "product"
 )
@@ -534,6 +536,8 @@ func (s *Service) SearchIndexedDocuments(ctx context.Context, searchQuery string
 
 // ReindexDocuments запускает переиндексацию документов
 func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
+	logger.Info().Msgf("Starting reindexing, docType: %s", docType)
+
 	if s.osClient == nil {
 		return fmt.Errorf("OpenSearch client not initialized")
 	}
@@ -548,6 +552,8 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 	// Определяем какие типы документов нужно переиндексировать
 	shouldIndexListings := docType == "" || docType == "listing"
 	shouldIndexProducts := docType == "" || docType == "product"
+
+	logger.Info().Msgf("Should index listings: %v, products: %v", shouldIndexListings, shouldIndexProducts)
 
 	// Временно отключено удаление документов - документы будут перезаписываться по ID
 	// TODO: Исправить bulk индексацию и снова включить очистку индексов
@@ -583,7 +589,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 	if shouldIndexListings {
 		// Получаем все активные объявления напрямую из БД
 		query := `
-			SELECT 
+			SELECT
 				ml.id,
 				ml.title,
 				ml.description,
@@ -593,10 +599,11 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				ml.status,
 				ml.created_at,
 				mc.name as category_name,
-				u.name as user_name
+				ml.address_city,
+				ml.address_country,
+				ml.address_multilingual
 			FROM marketplace_listings ml
 			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
-			LEFT JOIN users u ON ml.user_id = u.id
 			WHERE ml.status = 'active'
 			ORDER BY ml.id
 		`
@@ -616,16 +623,18 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		for rows.Next() {
 			var listing struct {
-				ID           int       `db:"id"`
-				Title        string    `db:"title"`
-				Description  string    `db:"description"`
-				CategoryID   int       `db:"category_id"`
-				UserID       int       `db:"user_id"`
-				Price        float64   `db:"price"`
-				Status       string    `db:"status"`
-				CreatedAt    time.Time `db:"created_at"`
-				CategoryName *string   `db:"category_name"`
-				UserName     *string   `db:"user_name"`
+				ID                  int       `db:"id"`
+				Title               string    `db:"title"`
+				Description         string    `db:"description"`
+				CategoryID          int       `db:"category_id"`
+				UserID              int       `db:"user_id"`
+				Price               float64   `db:"price"`
+				Status              string    `db:"status"`
+				CreatedAt           time.Time `db:"created_at"`
+				CategoryName        *string   `db:"category_name"`
+				AddressCity         *string   `db:"address_city"`
+				AddressCountry      *string   `db:"address_country"`
+				AddressMultilingual *string   `db:"address_multilingual"`
 			}
 
 			if err := rows.Scan(
@@ -638,11 +647,38 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				&listing.Status,
 				&listing.CreatedAt,
 				&listing.CategoryName,
-				&listing.UserName,
+				&listing.AddressCity,
+				&listing.AddressCountry,
+				&listing.AddressMultilingual,
 			); err != nil {
 				fmt.Printf("Error scanning listing: %v\n", err)
 				totalErrors++
 				continue
+			}
+
+			// Загружаем изображения для listing
+			imageURLs := make([]string, 0)
+			var primaryImageURL *string
+
+			imgQuery := `
+				SELECT public_url, is_main
+				FROM marketplace_images
+				WHERE listing_id = $1
+				ORDER BY is_main DESC, id ASC
+			`
+			imgRows, err := s.db.QueryContext(ctx, imgQuery, listing.ID)
+			if err == nil {
+				for imgRows.Next() {
+					var imgURL string
+					var isMain bool
+					if err := imgRows.Scan(&imgURL, &isMain); err == nil {
+						imageURLs = append(imageURLs, imgURL)
+						if isMain && primaryImageURL == nil {
+							primaryImageURL = &imgURL
+						}
+					}
+				}
+				_ = imgRows.Close()
 			}
 
 			// Создаем документ для индексации
@@ -661,8 +697,30 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 			if listing.CategoryName != nil {
 				doc["category_name"] = *listing.CategoryName
 			}
-			if listing.UserName != nil {
-				doc["user_name"] = *listing.UserName
+
+			// Добавляем адресные данные
+			if listing.AddressCity != nil {
+				doc["address_city"] = *listing.AddressCity
+			}
+			if listing.AddressCountry != nil {
+				doc["address_country"] = *listing.AddressCountry
+			}
+			if listing.AddressMultilingual != nil {
+				// Парсим JSON строку в объект
+				var addressMultilingual map[string]interface{}
+				if err := json.Unmarshal([]byte(*listing.AddressMultilingual), &addressMultilingual); err == nil {
+					doc["address_multilingual"] = addressMultilingual
+				} else {
+					logger.Warn().Err(err).Str("address_multilingual", *listing.AddressMultilingual).Msg("Failed to parse address_multilingual JSON")
+				}
+			}
+
+			// Добавляем изображения
+			if len(imageURLs) > 0 {
+				doc["image_urls"] = imageURLs
+			}
+			if primaryImageURL != nil {
+				doc["primary_image_url"] = *primaryImageURL
 			}
 
 			batch = append(batch, doc)
@@ -697,7 +755,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 	if shouldIndexProducts {
 		// Получаем все активные товары витрин
 		query := `
-			SELECT 
+			SELECT
 				sp.id,
 				sp.storefront_id,
 				sp.name,
@@ -707,7 +765,10 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				'active' as status,
 				sp.created_at,
 				sf.name as storefront_name,
-				mc.name as category_name
+				mc.name as category_name,
+				sf.city,
+				sf.country,
+				sf.address
 			FROM storefront_products sp
 			LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
 			LEFT JOIN marketplace_categories mc ON sp.category_id = mc.id
@@ -737,6 +798,9 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				CreatedAt      time.Time `db:"created_at"`
 				StorefrontName *string   `db:"storefront_name"`
 				CategoryName   *string   `db:"category_name"`
+				City           *string   `db:"city"`
+				Country        *string   `db:"country"`
+				Address        *string   `db:"address"`
 			}
 
 			if err := rows.Scan(
@@ -750,17 +814,47 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				&product.CreatedAt,
 				&product.StorefrontName,
 				&product.CategoryName,
+				&product.City,
+				&product.Country,
+				&product.Address,
 			); err != nil {
 				fmt.Printf("Error scanning product: %v\n", err)
 				totalErrors++
 				continue
 			}
 
+			// Загружаем изображения для продукта
+			imageURLs := make([]string, 0)
+			var primaryImageURL *string
+
+			imgQuery := `
+				SELECT image_url, is_default
+				FROM storefront_product_images
+				WHERE storefront_product_id = $1
+				ORDER BY is_default DESC, display_order ASC, id ASC
+			`
+			imgRows, err := s.db.QueryContext(ctx, imgQuery, product.ID)
+			if err == nil {
+				for imgRows.Next() {
+					var imgURL string
+					var isDefault bool
+					if err := imgRows.Scan(&imgURL, &isDefault); err == nil {
+						imageURLs = append(imageURLs, imgURL)
+						if isDefault && primaryImageURL == nil {
+							primaryImageURL = &imgURL
+						}
+					}
+				}
+				_ = imgRows.Close()
+			}
+
 			// Создаем документ для индексации
 			doc := map[string]interface{}{
-				"id":            fmt.Sprintf("sp_%d", product.ID),
+				"_doc_id":       fmt.Sprintf("sp_%d", product.ID), // Используется для _id в OpenSearch
+				"id":            product.ID,                       // Используем числовой ID для совместимости с mapping
 				"product_id":    product.ID,
-				"name":          product.Name,
+				"name":          product.Name, // Название продукта
+				"title":         product.Name, // Используем title для единообразия с listings
 				"description":   product.Description,
 				"storefront_id": product.StorefrontID,
 				"price":         product.Price,
@@ -777,6 +871,25 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 			}
 			if product.CategoryName != nil {
 				doc["category_name"] = *product.CategoryName
+			}
+
+			// Добавляем адресные данные
+			if product.City != nil {
+				doc["city"] = *product.City
+			}
+			if product.Country != nil {
+				doc["country"] = *product.Country
+			}
+			if product.Address != nil {
+				doc["address"] = *product.Address
+			}
+
+			// Добавляем изображения
+			if len(imageURLs) > 0 {
+				doc["image_urls"] = imageURLs
+			}
+			if primaryImageURL != nil {
+				doc["primary_image_url"] = *primaryImageURL
 			}
 
 			batch = append(batch, doc)
@@ -824,13 +937,17 @@ func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{},
 	// Формируем bulk запрос для OpenSearch
 	var bulkBody []byte
 	for _, doc := range docs {
-		// Определяем ID документа
+		// Определяем ID документа (приоритет _doc_id для товаров витрин)
 		docID := ""
-		if id, ok := doc["id"].(int); ok {
+		if customID, ok := doc["_doc_id"].(string); ok {
+			docID = customID
+		} else if id, ok := doc["id"].(int); ok {
 			docID = fmt.Sprintf("%d", id)
 		} else if id, ok := doc["id"].(string); ok {
 			docID = id
 		}
+		// Удаляем _doc_id из документа, чтобы он не попал в индекс
+		delete(doc, "_doc_id")
 
 		// Добавляем команду индексации
 		action := map[string]interface{}{
@@ -851,19 +968,47 @@ func (s *Service) indexBatch(ctx context.Context, docs []map[string]interface{},
 	}
 
 	// Отправляем bulk запрос
+	logger.Info().
+		Str("index", indexName).
+		Int("docs_count", len(docs)).
+		Int("bulk_body_size", len(bulkBody)).
+		Msg("Sending bulk request to OpenSearch")
+
 	response, err := s.osClient.Execute(ctx, "POST", "/_bulk", bulkBody)
 	if err != nil {
+		logger.Error().Err(err).Msg("Bulk indexing error")
 		fmt.Printf("Bulk indexing error: %v\n", err)
 		return err
 	}
 
+	// ВСЕГДА логируем полный ответ для отладки
+	logger.Info().
+		Str("response", string(response)).
+		Int("response_size", len(response)).
+		Msg("OpenSearch bulk response")
+
 	// Проверяем ответ на ошибки
 	var bulkResponse map[string]interface{}
-	if err := json.Unmarshal(response, &bulkResponse); err == nil {
-		if errors, ok := bulkResponse["errors"].(bool); ok && errors {
-			fmt.Printf("Bulk indexing had errors. Response: %s\n", string(response))
-		}
+	if err := json.Unmarshal(response, &bulkResponse); err != nil {
+		logger.Error().
+			Err(err).
+			Str("raw_response", string(response)).
+			Msg("Failed to parse bulk response")
+		return fmt.Errorf("failed to parse bulk response: %w", err)
 	}
+
+	if errors, ok := bulkResponse["errors"].(bool); ok && errors {
+		logger.Error().
+			Str("response", string(response)).
+			Msg("Bulk indexing had errors")
+		fmt.Printf("Bulk indexing had errors. Response: %s\n", string(response))
+		return fmt.Errorf("bulk indexing had errors")
+	}
+
+	logger.Info().
+		Interface("took", bulkResponse["took"]).
+		Bool("errors", bulkResponse["errors"] != nil).
+		Msg("Bulk indexing completed")
 
 	return nil
 }

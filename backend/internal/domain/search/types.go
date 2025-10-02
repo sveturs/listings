@@ -32,6 +32,7 @@ type SearchParams struct {
 	Status             string                 // Статус объявления (active, inactive и т.д.)
 	UseSynonyms        bool                   // Использовать расширение запроса синонимами
 	StorefrontFilter   string                 // Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая строка = exclude_b2c по умолчанию
+	DocumentType       string                 // Тип документа для фильтрации: "listing" или "product"
 }
 
 // SearchParams параметры поиска для OpenSearch
@@ -60,6 +61,7 @@ type ServiceParams struct {
 	Status             string
 	UseSynonyms        bool   // Использовать расширение запроса синонимами
 	StorefrontFilter   string // Фильтр для B2C объявлений: "include_b2c", "exclude_b2c", пустая строка = exclude_b2c по умолчанию
+	DocumentType       string // Тип документа для фильтрации: "listing" или "product"
 
 	// Расширенные геофильтры
 	AdvancedGeoFilters *AdvancedGeoFilters `json:"advanced_geo_filters,omitempty"`

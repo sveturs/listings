@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || 'http://localhost:33423';
+const BACKEND_URL =
+  process.env.BACKEND_INTERNAL_URL || 'http://localhost:33423';
 
 /**
  * Универсальный BFF прокси для всех backend API запросов

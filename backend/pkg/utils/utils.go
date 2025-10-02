@@ -76,6 +76,7 @@ func IsAdmin(c *fiber.Ctx) bool {
 }
 
 func SuccessResponse(c *fiber.Ctx, data interface{}) error {
+	c.Status(fiber.StatusOK)
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    data,

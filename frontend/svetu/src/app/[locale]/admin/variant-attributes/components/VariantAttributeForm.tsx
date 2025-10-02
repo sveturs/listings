@@ -5,19 +5,10 @@ import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
 import { tokenManager } from '@/utils/tokenManager';
 import configManager from '@/config';
-
-interface VariantAttribute {
-  id?: number;
-  name: string;
-  display_name: string;
-  type: string;
-  is_required: boolean;
-  sort_order: number;
-  affects_stock: boolean;
-}
+import type { VariantAttributeFull } from '@/types/variant-attributes';
 
 interface VariantAttributeFormProps {
-  attribute?: VariantAttribute;
+  attribute?: VariantAttributeFull;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -29,10 +20,10 @@ export default function VariantAttributeForm({
 }: VariantAttributeFormProps) {
   const _t = useTranslations('admin');
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<VariantAttribute>({
+  const [formData, setFormData] = useState<Partial<VariantAttributeFull>>({
     name: '',
     display_name: '',
-    type: 'text',
+    attribute_type: 'text',
     is_required: false,
     sort_order: 0,
     affects_stock: false,
@@ -143,8 +134,10 @@ export default function VariantAttributeForm({
           <span className="label-text">Тип атрибута*</span>
         </label>
         <select
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          value={formData.attribute_type}
+          onChange={(e) =>
+            setFormData({ ...formData, attribute_type: e.target.value })
+          }
           className="select select-bordered"
           required
         >

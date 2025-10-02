@@ -94,6 +94,8 @@ func (h *Handler) SearchIndexedDocuments(c *fiber.Ctx) error {
 // @Failure      500 {object} backend_pkg_utils.ErrorResponseSwag
 // @Router       /api/v1/admin/search/index/reindex [post]
 func (h *Handler) ReindexDocuments(c *fiber.Ctx) error {
+	h.logger.Info("=== REINDEX HANDLER CALLED ===")
+
 	// Получаем тип документов для переиндексации
 	var req struct {
 		Type string `json:"type"` // "listing", "product" или пустая строка для всех
@@ -104,15 +106,18 @@ func (h *Handler) ReindexDocuments(c *fiber.Ctx) error {
 		req.Type = ""
 	}
 
-	// Запускаем переиндексацию в фоне
-	go func() {
-		if err := h.service.ReindexDocuments(context.Background(), req.Type); err != nil {
-			// Логирование ошибки должно быть в сервисе
-			h.logger.Error("Failed to reindex documents: %v", err)
-		}
-	}()
+	h.logger.Info("Request type: %s", req.Type)
+
+	// ВРЕМЕННО: Запускаем синхронно для отладки
+	// TODO: Вернуть асинхронное выполнение после fix логирования
+	h.logger.Info("Starting reindexing synchronously for debugging")
+	if err := h.service.ReindexDocuments(context.Background(), req.Type); err != nil {
+		h.logger.Error("Failed to reindex documents: %v", err)
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "search.reindexError")
+	}
+	h.logger.Info("Reindexing completed successfully")
 
 	return utils.SuccessResponse(c, map[string]string{
-		"message": "Reindexing started",
+		"message": "Reindexing completed",
 	})
 }

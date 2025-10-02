@@ -77,30 +77,33 @@ func (m *Middleware) AdminRequired(c *fiber.Ctx) error {
 	}
 
 	// ПЕРВЫМ ДЕЛОМ проверяем роли из JWT токена (установлены в JWTParser из sveturs/auth)
+	hasAdminRole := false
 	if roles, ok := c.Locals("roles").([]string); ok {
 		for _, role := range roles {
 			if role == "admin" {
+				hasAdminRole = true
 				logger.Info().
 					Int("user_id", userID).
 					Str("source", "jwt_token").
 					Strs("roles", roles).
 					Msg("AdminRequired: Access granted - user has admin role in JWT")
-				c.Locals("admin_id", userID)
-				// ИСПРАВЛЕНИЕ: не возвращаем результат c.Next(), а просто вызываем его
-				return nil
+				break
 			}
 		}
 	}
 
 	// Затем проверяем ID пользователя (для обратной совместимости)
-	if userID == 1 || userID == 2 || userID == 3 || userID == 6 || userID == 11 {
-		logger.Info().
-			Int("user_id", userID).
-			Msg("AdminRequired: Access granted for hardcoded user ID")
-		// Устанавливаем admin_id для использования в handlers
+	hardcodedAdmin := userID == 1 || userID == 2 || userID == 3 || userID == 6 || userID == 11
+
+	// Если пользователь админ по роли ИЛИ по hardcoded ID, даём доступ
+	if hasAdminRole || hardcodedAdmin {
+		if hardcodedAdmin && !hasAdminRole {
+			logger.Info().
+				Int("user_id", userID).
+				Msg("AdminRequired: Access granted for hardcoded user ID")
+		}
 		c.Locals("admin_id", userID)
-		// ИСПРАВЛЕНИЕ: не возвращаем результат c.Next(), а просто вызываем его
-		return nil
+		return c.Next()
 	}
 
 	logger.Info().

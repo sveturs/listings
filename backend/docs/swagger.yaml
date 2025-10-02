@@ -722,6 +722,8 @@ definitions:
     - AttributeEntityTypeProductVariant
   backend_internal_domain_models.AttributeGroup:
     properties:
+      code:
+        type: string
       created_at:
         type: string
       description:
@@ -5266,6 +5268,9 @@ definitions:
         type: string
       distance:
         description: Радиус поиска
+        type: string
+      documentType:
+        description: 'Тип документа для фильтрации: "listing" или "product"'
         type: string
       fuzziness:
         description: Уровень нечеткости (AUTO, 1, 2, ...)
@@ -18413,12 +18418,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Refreshes the access token using a refresh token
+      description: Refreshes the access token using a refresh token from body or cookie
       parameters:
-      - description: Refresh token request
+      - description: Refresh token request (optional if using cookie)
         in: body
         name: request
-        required: true
         schema:
           additionalProperties: true
           type: object
@@ -18430,6 +18434,10 @@ paths:
           schema:
             additionalProperties: true
             type: object
+        "400":
+          description: No refresh token provided
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
         "401":
           description: Invalid refresh token
           schema:
@@ -29148,7 +29156,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns paginated list of storefronts with filters
+      description: Returns paginated list of storefronts with filters. Public endpoint
+        that shows only active storefronts by default. Admins can see all storefronts.
       parameters:
       - description: Filter by user ID
         in: query

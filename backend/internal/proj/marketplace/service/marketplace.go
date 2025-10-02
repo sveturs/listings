@@ -283,6 +283,7 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 
 	// Пытаемся найти похожие объявления с разными уровнями строгости
 	var similarListings []*models.MarketplaceListing
+	seenIDs := make(map[int]bool) // Для эффективной дедупликации
 	triesCount := 0
 	maxTries := 4
 
@@ -298,38 +299,30 @@ func (s *MarketplaceService) GetSimilarListings(ctx context.Context, listingID i
 
 		// Фильтруем и сортируем результаты по похожести
 		for _, candidate := range results.Items {
-			if candidate.ID != listingID {
-				// Проверяем, что кандидат еще не добавлен
-				found := false
-				for _, existing := range similarListings {
-					if existing.ID == candidate.ID {
-						found = true
-						break
-					}
-				}
-				if found {
-					continue
-				}
-
-				// Вычисляем похожесть
-				score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
-
-				// Добавляем информацию о скоре в метаданные (для отладки)
-				if candidate.Metadata == nil {
-					candidate.Metadata = make(map[string]interface{})
-				}
-				candidate.Metadata["similarity_score"] = map[string]interface{}{
-					"total":      score.TotalScore,
-					"category":   score.CategoryScore,
-					"attributes": score.AttributeScore,
-					"price":      score.PriceScore,
-					"location":   score.LocationScore,
-					"text":       score.TextScore,
-					"search_try": triesCount,
-				}
-
-				similarListings = append(similarListings, candidate)
+			// Пропускаем текущее объявление и дубликаты
+			if candidate.ID == listingID || seenIDs[candidate.ID] {
+				continue
 			}
+
+			// Вычисляем похожесть
+			score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
+
+			// Добавляем информацию о скоре в метаданные (для отладки)
+			if candidate.Metadata == nil {
+				candidate.Metadata = make(map[string]interface{})
+			}
+			candidate.Metadata["similarity_score"] = map[string]interface{}{
+				"total":      score.TotalScore,
+				"category":   score.CategoryScore,
+				"attributes": score.AttributeScore,
+				"price":      score.PriceScore,
+				"location":   score.LocationScore,
+				"text":       score.TextScore,
+				"search_try": triesCount,
+			}
+
+			similarListings = append(similarListings, candidate)
+			seenIDs[candidate.ID] = true // Помечаем как обработанный
 		}
 
 		triesCount++
@@ -1558,6 +1551,7 @@ func (s *MarketplaceService) SearchListingsAdvanced(ctx context.Context, params 
 		UseSynonyms:      params.UseSynonyms,
 		Fuzziness:        params.Fuzziness,
 		StorefrontFilter: params.StorefrontFilter,
+		DocumentType:     params.DocumentType,
 	}
 	// Преобразуем числовые значения в указатели для SearchParams
 	// Обрабатываем массив категорий
@@ -2396,6 +2390,7 @@ func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, lis
 
 	// Пытаемся найти похожие объявления с разными уровнями строгости
 	var similarListings []*models.MarketplaceListing
+	seenIDs := make(map[int]bool) // Для эффективной дедупликации
 	triesCount := 0
 	maxTries := 4
 
@@ -2411,38 +2406,30 @@ func (s *MarketplaceService) getFallbackSimilarListings(ctx context.Context, lis
 
 		// Фильтруем и сортируем результаты по похожести
 		for _, candidate := range results.Items {
-			if candidate.ID != listingID {
-				// Проверяем, что кандидат еще не добавлен
-				found := false
-				for _, existing := range similarListings {
-					if existing.ID == candidate.ID {
-						found = true
-						break
-					}
-				}
-				if found {
-					continue
-				}
-
-				// Вычисляем похожесть
-				score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
-
-				// Добавляем информацию о скоре в метаданные (для отладки)
-				if candidate.Metadata == nil {
-					candidate.Metadata = make(map[string]interface{})
-				}
-				candidate.Metadata["similarity_score"] = map[string]interface{}{
-					"total":      score.TotalScore,
-					"category":   score.CategoryScore,
-					"attributes": score.AttributeScore,
-					"price":      score.PriceScore,
-					"location":   score.LocationScore,
-					"text":       score.TextScore,
-					"search_try": triesCount,
-				}
-
-				similarListings = append(similarListings, candidate)
+			// Пропускаем текущее объявление и дубликаты
+			if candidate.ID == listingID || seenIDs[candidate.ID] {
+				continue
 			}
+
+			// Вычисляем похожесть
+			score, _ := calculator.CalculateSimilarity(ctx, listing, candidate)
+
+			// Добавляем информацию о скоре в метаданные (для отладки)
+			if candidate.Metadata == nil {
+				candidate.Metadata = make(map[string]interface{})
+			}
+			candidate.Metadata["similarity_score"] = map[string]interface{}{
+				"total":      score.TotalScore,
+				"category":   score.CategoryScore,
+				"attributes": score.AttributeScore,
+				"price":      score.PriceScore,
+				"location":   score.LocationScore,
+				"text":       score.TextScore,
+				"search_try": triesCount,
+			}
+
+			similarListings = append(similarListings, candidate)
+			seenIDs[candidate.ID] = true // Помечаем как обработанный
 		}
 
 		triesCount++
