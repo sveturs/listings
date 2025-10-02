@@ -59,7 +59,7 @@ func (h *ImagesHandler) UploadImages(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Error getting user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 	logger.Info().Int("userId", userID).Msg("Authenticated user")
@@ -220,7 +220,7 @@ func (h *ImagesHandler) DeleteImage(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -281,7 +281,7 @@ func (h *ImagesHandler) ModerateImage(c *fiber.Ctx) error {
 	// Проверяем, является ли пользователь администратором
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -365,7 +365,7 @@ func (h *ImagesHandler) EnhancePreview(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 
@@ -432,7 +432,7 @@ func (h *ImagesHandler) EnhanceImages(c *fiber.Ctx) error {
 	// Получаем ID пользователя из контекста
 	userID, ok := authMiddleware.GetUserID(c)
 	if !ok {
-		logger.Error().Interface("userId", c.Locals("user_id")).Msg("Failed to get user_id from context")
+		logger.Warn().Msg("User ID not found in context")
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
 	}
 

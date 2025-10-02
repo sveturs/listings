@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
+
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
@@ -340,7 +342,7 @@ func (h *SearchHandler) SearchListingsAdvanced(c *fiber.Ctx) error {
 
 		// Извлекаем данные из контекста Fiber ДО запуска горутины
 		var userID *int
-		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+		if uid, ok := authMiddleware.GetUserID(c); ok && uid > 0 {
 			userID = &uid
 		}
 
@@ -470,7 +472,7 @@ func (h *SearchHandler) GetSuggestions(c *fiber.Ctx) error {
 	if searchLogsSvc := h.services.SearchLogs(); searchLogsSvc != nil {
 		// Извлекаем данные из контекста Fiber ДО запуска горутины
 		var userID *int
-		if uid, ok := c.Locals("user_id").(int); ok && uid > 0 {
+		if uid, ok := authMiddleware.GetUserID(c); ok && uid > 0 {
 			userID = &uid
 		}
 

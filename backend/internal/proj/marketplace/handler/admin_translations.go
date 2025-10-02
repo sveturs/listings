@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -532,13 +533,10 @@ func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {
 		translationProvider = service.OpenAI
 	}
 
-	// Получаем user_id из контекста
-	userID := c.Locals("userID")
+	// Получаем user_id из контекста через библиотечный helper
 	var userIDInt int
-	if userID != nil {
-		if uid, ok := userID.(int); ok {
-			userIDInt = uid
-		}
+	if uid, ok := authMiddleware.GetUserID(c); ok {
+		userIDInt = uid
 	}
 
 	// Обновляем переводы для каждого языка
@@ -622,15 +620,15 @@ func isLikelyCyrillic(text string) bool {
 
 // Типы для Swagger документации
 type BatchTranslateCategoriesRequest struct {
-	CategoryIDs     []int    `json:"category_ids" example:"[1,2,3]"`
-	TargetLanguages []string `json:"target_languages" example:"[\"en\",\"ru\",\"sr\"]"`
+	CategoryIDs     []int    `json:"category_ids"`
+	TargetLanguages []string `json:"target_languages"`
 	Provider        string   `json:"provider" example:"google"`
 	AutoTranslate   bool     `json:"auto_translate" example:"true"`
 }
 
 type BatchTranslateAttributesRequest struct {
-	AttributeIDs     []int    `json:"attribute_ids" example:"[1,2,3]"`
-	TargetLanguages  []string `json:"target_languages" example:"[\"en\",\"ru\",\"sr\"]"`
+	AttributeIDs     []int    `json:"attribute_ids"`
+	TargetLanguages  []string `json:"target_languages"`
 	Provider         string   `json:"provider" example:"google"`
 	TranslateOptions bool     `json:"translate_options" example:"true"`
 }

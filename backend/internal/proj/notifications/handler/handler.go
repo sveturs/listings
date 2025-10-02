@@ -543,16 +543,9 @@ func (h *Handler) UpdateSettings(c *fiber.Ctx) error {
 // @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.unauthorized"
 // @Router /api/v1/notifications/telegram/status [get]
 func (h *Handler) GetTelegramStatus(c *fiber.Ctx) error {
-	// Добавить безопасное получение userID и проверку на авторизацию
-	var userID int
-	if uidVal := c.Locals("user_id"); uidVal != nil {
-		if uid, ok := uidVal.(int); ok {
-			userID = uid
-		} else {
-			// Если user_id есть, но неверного типа, возвращаем ошибку авторизации
-			return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
-		}
-	} else {
+	// Получаем userID с помощью библиотечного helper
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		// Для неавторизованных запросов просто возвращаем отсутствие подключения
 		return utils.SuccessResponse(c, TelegramStatusResponse{
 			Connected: false,

@@ -52,7 +52,7 @@ func (h *BehaviorTrackingHandler) TrackEvent(c *fiber.Ctx) error {
 
 	// Получаем user_id из контекста (если пользователь авторизован)
 	var userID *int
-	if uid, ok := c.Locals("user_id").(int); ok {
+	if uid, ok := authMiddleware.GetUserID(c); ok {
 		userID = &uid
 	}
 
@@ -207,7 +207,7 @@ func (h *BehaviorTrackingHandler) GetUserEvents(c *fiber.Ctx) error {
 	}
 
 	// Проверяем права доступа (пользователь может смотреть только свои события или админ)
-	currentUserID, ok := c.Locals("user_id").(int)
+	currentUserID, ok := authMiddleware.GetUserID(c)
 	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "errors.unauthorized")
 	}

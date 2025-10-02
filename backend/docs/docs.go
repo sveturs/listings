@@ -1220,6 +1220,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
                     },
+                    "401": {
+                        "description": "marketplace.authRequired",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
                     "500": {
                         "description": "marketplace.internalServerError",
                         "schema": {
@@ -1610,6 +1616,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "marketplace.invalidId or marketplace.invalidData",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "marketplace.authRequired",
                         "schema": {
                             "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
                         }
@@ -50391,10 +50403,54 @@ const docTemplate = `{
             }
         },
         "internal_proj_marketplace_handler.BatchTranslateAttributesRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "attribute_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "translate_options": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
         },
         "internal_proj_marketplace_handler.BatchTranslateCategoriesRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "auto_translate": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "category_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "target_languages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "internal_proj_marketplace_handler.BatchTranslateData": {
             "type": "object",

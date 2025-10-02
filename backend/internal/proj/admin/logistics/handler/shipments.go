@@ -10,6 +10,7 @@ import (
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // ShipmentsHandler обработчик для управления отправлениями
@@ -53,8 +54,8 @@ func NewShipmentsHandler(monitoringService *service.MonitoringService, problemSe
 // @Router /api/v1/admin/logistics/shipments [get]
 func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	_, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -140,8 +141,8 @@ func (h *ShipmentsHandler) GetShipments(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{provider}/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	_, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -185,8 +186,8 @@ func (h *ShipmentsHandler) GetShipmentDetailsByProvider(c *fiber.Ctx) error {
 // @Router /api/v1/admin/logistics/shipments/{id} [get]
 func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	_, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -226,9 +227,9 @@ func (h *ShipmentsHandler) GetShipmentDetails(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{id}/status [put]
 func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
-	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	// Проверка прав доступа и получение ID администратора
+	adminID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -248,9 +249,6 @@ func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 	if err := c.BodyParser(&request); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.invalid_request_body")
 	}
-
-	// Получаем ID администратора из контекста (мок для тестирования)
-	adminID := 1 // TODO: Получать реальный ID администратора из JWT токена
 
 	// Обновляем статус через сервис
 	err = h.monitoringService.UpdateShipmentStatus(c.Context(), shipmentID, request.ShipmentType, request.Status, adminID, request.Comment)
@@ -282,9 +280,9 @@ func (h *ShipmentsHandler) UpdateShipmentStatus(c *fiber.Ctx) error {
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/shipments/{id}/action [post]
 func (h *ShipmentsHandler) PerformShipmentAction(c *fiber.Ctx) error {
-	// Проверка прав доступа
-	userID := c.Locals("user_id")
-	if userID == nil {
+	// Проверка прав доступа и получение ID администратора
+	adminID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
 	}
 
@@ -304,9 +302,6 @@ func (h *ShipmentsHandler) PerformShipmentAction(c *fiber.Ctx) error {
 	if err := c.BodyParser(&request); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.invalid_request_body")
 	}
-
-	// Получаем ID администратора из контекста (мок для тестирования)
-	adminID := 1 // TODO: Получать реальный ID администратора из JWT токена
 
 	// Выполняем действие через сервис
 	err = h.monitoringService.PerformShipmentAction(c.Context(), shipmentID, request.ShipmentType, request.Action, adminID, request.Parameters)

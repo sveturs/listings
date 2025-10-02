@@ -132,8 +132,8 @@ func (h *OrderPaymentHandler) CreateOrderPayment(c *fiber.Ctx) error {
 // @Router /api/v1/orders/{id}/payment/status [get]
 func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
-	userID := c.Locals("user_id")
-	if userID == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, 401, "user not authenticated")
 	}
 
@@ -144,7 +144,7 @@ func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "invalid order ID")
 	}
 
-	h.logger.Info("Order payment status requested (orderID: %d, userID: %v)", orderID, userID)
+	h.logger.Info("Order payment status requested (orderID: %d, userID: %d)", orderID, userID)
 
 	// TODO: Реализовать получение статуса платежа заказа из базы данных
 	return utils.SuccessResponse(c, map[string]interface{}{
@@ -168,8 +168,8 @@ func (h *OrderPaymentHandler) GetOrderPaymentStatus(c *fiber.Ctx) error {
 // @Router /api/v1/orders/{id}/payment/cancel [post]
 func (h *OrderPaymentHandler) CancelOrderPayment(c *fiber.Ctx) error {
 	// Получаем пользователя из контекста
-	userID := c.Locals("user_id")
-	if userID == nil {
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
 		return utils.ErrorResponse(c, 401, "user not authenticated")
 	}
 
@@ -180,7 +180,7 @@ func (h *OrderPaymentHandler) CancelOrderPayment(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, 400, "invalid order ID")
 	}
 
-	h.logger.Info("Order payment cancellation requested (orderID: %d, userID: %v)", orderID, userID)
+	h.logger.Info("Order payment cancellation requested (orderID: %d, userID: %d)", orderID, userID)
 
 	// TODO: Реализовать отмену платежа заказа
 	return utils.SuccessResponse(c, "payment canceled")

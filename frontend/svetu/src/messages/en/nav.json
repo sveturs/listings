@@ -1,0 +1,12 @@
+{
+  "home": "Home",
+  "search": "Search",
+  "categories": "Categories",
+  "favorites": "Favorites",
+  "messages": "Messages",
+  "profile": "Profile",
+  "admin": "Admin",
+  "login": "Login",
+  "logout": "Logout",
+  "register": "Register"
+}

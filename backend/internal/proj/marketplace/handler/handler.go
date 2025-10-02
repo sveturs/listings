@@ -344,7 +344,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		v2Protected.Put("/listings/:listing_id/attributes", h.UnifiedAttributes.UpdateListingAttributeValues)
 
 		// Административные эндпоинты v2
-		v2Admin := app.Group("/api/v2/admin", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired, featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Admin := app.Group("/api/v2/admin", mw.JWTParser(), authMiddleware.RequireAuthString("admin"), featureFlagsMiddleware.CheckUnifiedAttributes())
 		v2Admin.Post("/attributes", h.UnifiedAttributes.CreateAttribute)
 		v2Admin.Put("/attributes/:attribute_id", h.UnifiedAttributes.UpdateAttribute)
 		v2Admin.Delete("/attributes/:attribute_id", h.UnifiedAttributes.DeleteAttribute)
@@ -418,7 +418,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
-	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuth("admin"))
+	// Используем JWTParser + библиотечный RequireAuthString("admin") для защиты admin роутов
+	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)

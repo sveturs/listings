@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -34,11 +35,16 @@ func NewCustomComponentHandler(storage postgres.CustomComponentStorage) *CustomC
 // @Param component body backend_internal_domain_models.CreateCustomComponentRequest true "Component data"
 // @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponent}
 // @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
 // @Router /api/admin/custom-components [post]
 func (h *CustomComponentHandler) CreateComponent(c *fiber.Ctx) error {
-	userID, _ := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		logger.Warn().Msg("User ID not found in context")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
+	}
 
 	var req models.CreateCustomComponentRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -102,11 +108,16 @@ func (h *CustomComponentHandler) GetComponent(c *fiber.Ctx) error {
 // @Param component body backend_internal_domain_models.UpdateCustomComponentRequest true "Component data"
 // @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.CustomUIComponent}
 // @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidId or marketplace.invalidData"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
 // @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.internalServerError"
 // @Security BearerAuth
 // @Router /api/admin/custom-components/{id} [put]
 func (h *CustomComponentHandler) UpdateComponent(c *fiber.Ctx) error {
-	userID, _ := c.Locals("user_id").(int)
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		logger.Warn().Msg("User ID not found in context")
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "marketplace.authRequired")
+	}
 
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
@@ -222,7 +233,7 @@ func (h *CustomComponentHandler) ListComponents(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/admin/custom-components/usage [post]
 func (h *CustomComponentHandler) AddComponentUsage(c *fiber.Ctx) error {
-	userID, _ := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.CreateComponentUsageRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -345,7 +356,7 @@ func (h *CustomComponentHandler) GetCategoryComponents(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router /api/admin/custom-components/templates [post]
 func (h *CustomComponentHandler) CreateTemplate(c *fiber.Ctx) error {
-	userID, _ := c.Locals("user_id").(int)
+	userID, _ := authMiddleware.GetUserID(c)
 
 	var req models.CreateTemplateRequest
 	if err := c.BodyParser(&req); err != nil {
