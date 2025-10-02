@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ru, enUS, sr } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface StorefrontProduct {
   id: number;
@@ -84,36 +84,19 @@ export default function AdminStorefrontProductsTable() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // Получаем токен авторизации для админского доступа
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
       // Для админ панели загружаем ВСЕ витрины (включая неактивные)
-      const storefrontsResponse = await fetch(
-        `http://localhost:3000/api/v1/storefronts?include_inactive=true`,
-        {
-          credentials: 'include',
-          headers,
-        }
+      const storefrontsResponse = await apiClient.get(
+        `/storefronts?include_inactive=true`
       );
 
-      if (!storefrontsResponse.ok) {
-        console.error(
-          'Failed to fetch storefronts:',
-          storefrontsResponse.status
-        );
+      if (!storefrontsResponse.data) {
+        console.error('Failed to fetch storefronts');
         setProducts([]);
         setLoading(false);
         return;
       }
 
-      const storefrontsData = await storefrontsResponse.json();
+      const storefrontsData = storefrontsResponse.data;
 
       // API возвращает витрины в поле storefronts или data
       const storefronts =
@@ -146,16 +129,12 @@ export default function AdminStorefrontProductsTable() {
         // (не передаем параметр is_active вообще, чтобы получить и активные и неактивные)
 
         // Используем правильный эндпоинт с slug в пути
-        const response = await fetch(
-          `http://localhost:3000/api/v1/storefronts/slug/${storefront.slug}/products?${params}`,
-          {
-            credentials: 'include',
-            headers,
-          }
+        const response = await apiClient.get(
+          `/storefronts/slug/${storefront.slug}/products?${params}`
         );
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.data) {
+          const data = response.data;
           // API возвращает массив товаров напрямую, а не в поле data
           // Обрабатываем случай когда API возвращает null для пустых результатов
           let products = [];
@@ -319,32 +298,14 @@ export default function AdminStorefrontProductsTable() {
         return;
       }
 
-      // Получаем токен авторизации
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(
-        `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
+      const response = await apiClient.delete(
+        `/storefronts/slug/${slug}/products/${id}`
       );
 
-      if (response.ok) {
+      if (response.data) {
         await fetchProducts();
         setDeleteModalOpen(false);
         setProductToDelete(null);
-      } else if (response.status === 401) {
-        console.error('Unauthorized: Please login as admin');
-        // Можно добавить редирект на страницу логина или показать уведомление
       }
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -360,15 +321,6 @@ export default function AdminStorefrontProductsTable() {
     if (!confirmed) return;
 
     try {
-      // Получаем токен один раз для всех запросов
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
       // Деактивируем все товары параллельно
       const deactivatePromises = Array.from(selectedProducts).map(
         async (id) => {
@@ -383,23 +335,13 @@ export default function AdminStorefrontProductsTable() {
           }
 
           try {
-            const response = await fetch(
-              `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}`,
-              {
-                method: 'PUT',
-                headers,
-                credentials: 'include',
-                body: JSON.stringify({
-                  is_active: false,
-                }),
-              }
+            const response = await apiClient.put(
+              `/storefronts/slug/${slug}/products/${id}`,
+              { is_active: false }
             );
 
-            if (!response.ok) {
-              console.error(
-                `Failed to deactivate product ${id}:`,
-                response.status
-              );
+            if (!response.data) {
+              console.error(`Failed to deactivate product ${id}`);
               return false;
             }
             return true;
@@ -433,15 +375,6 @@ export default function AdminStorefrontProductsTable() {
     if (!confirmed) return;
 
     try {
-      // Получаем токен один раз для всех запросов
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
       // Удаляем все товары параллельно с параметром ?hard=true
       const deletePromises = Array.from(selectedProducts).map(async (id) => {
         const product = products.find((p) => p.id === id);
@@ -455,19 +388,14 @@ export default function AdminStorefrontProductsTable() {
         }
 
         try {
-          const response = await fetch(
-            `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}?hard=true`,
-            {
-              method: 'DELETE',
-              headers,
-              credentials: 'include',
-            }
+          const response = await apiClient.delete(
+            `/storefronts/slug/${slug}/products/${id}?hard=true`
           );
 
-          if (!response.ok) {
-            console.error(`Failed to delete product ${id}:`, response.status);
+          if (!response.data) {
+            console.error(`Failed to delete product ${id}`);
           }
-          return response.ok;
+          return !!response.data;
         } catch (error) {
           console.error(`Error deleting product ${id}:`, error);
           return false;
@@ -499,30 +427,13 @@ export default function AdminStorefrontProductsTable() {
         return;
       }
 
-      // Получаем токен авторизации
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(
-        `http://localhost:3000/api/v1/storefronts/slug/${slug}/products/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ is_active: !isActive }),
-        }
+      const response = await apiClient.put(
+        `/storefronts/slug/${slug}/products/${id}`,
+        { is_active: !isActive }
       );
 
-      if (response.ok) {
+      if (response.data) {
         await fetchProducts();
-      } else if (response.status === 401) {
-        console.error('Unauthorized: Please login as admin');
       }
     } catch (error) {
       console.error('Error toggling product status:', error);

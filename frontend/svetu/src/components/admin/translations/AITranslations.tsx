@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface AIProvider {
   id: string;
@@ -125,24 +124,13 @@ export default function AITranslations({
 
   const fetchProviders = async () => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/ai/providers`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
-      );
+      const response = await apiClient.get('/admin/translations/ai/providers');
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data) {
-          setProviders(data.data);
-          const active = data.data.find((p: AIProvider) => p.enabled);
-          if (active) {
-            setActiveProvider(active.id);
-          }
+      if (!response.error && response.data?.data) {
+        setProviders(response.data.data);
+        const active = response.data.data.find((p: AIProvider) => p.enabled);
+        if (active) {
+          setActiveProvider(active.id);
         }
       }
     } catch (error) {
@@ -152,21 +140,10 @@ export default function AITranslations({
 
   const fetchModules = async () => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/frontend/modules`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
-      );
+      const response = await apiClient.get('/admin/translations/frontend/modules');
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data) {
-          setModules(data.data.map((m: any) => m.name));
-        }
+      if (!response.error && response.data?.data) {
+        setModules(response.data.data.map((m: any) => m.name));
       }
     } catch (error) {
       console.error('Error fetching modules:', error);
@@ -175,20 +152,14 @@ export default function AITranslations({
 
   const handleProviderUpdate = async (provider: AIProvider) => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/ai/providers/${provider.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify(provider),
-        }
+      const response = await apiClient.put(
+        `/admin/translations/ai/providers/${provider.id}`,
+        provider
       );
 
-      if (response.ok) {
+      if (response.error) {
+        toast.error('Ошибка обновления провайдера');
+      } else {
         toast.success('Провайдер обновлен');
         setProviders((prev) =>
           prev.map((p) => (p.id === provider.id ? provider : p))
@@ -203,8 +174,6 @@ export default function AITranslations({
           );
         }
         setEditingProvider(null);
-      } else {
-        toast.error('Ошибка обновления провайдера');
       }
     } catch (error) {
       console.error('Error updating provider:', error);
@@ -225,33 +194,21 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/ai/translate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            provider: activeProvider,
-            text: singleText,
-            key: singleKey,
-            module: singleModule,
-            source_language: sourceLanguage,
-            target_languages: targetLanguages,
-            context: singleContext || undefined,
-          }),
-        }
-      );
+      const response = await apiClient.post('/admin/translations/ai/translate', {
+        provider: activeProvider,
+        text: singleText,
+        key: singleKey,
+        module: singleModule,
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+        context: singleContext || undefined,
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setResults([data.data]);
-        toast.success('Перевод выполнен успешно');
-      } else {
+      if (response.error) {
         toast.error('Ошибка при переводе');
+      } else {
+        setResults([response.data?.data]);
+        toast.success('Перевод выполнен успешно');
       }
     } catch (error) {
       console.error('Error translating:', error);
@@ -274,32 +231,20 @@ export default function AITranslations({
 
     setIsTranslating(true);
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/ai/batch`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            provider: activeProvider,
-            modules: batchMode ? modules : [selectedModule],
-            source_language: sourceLanguage,
-            target_languages: targetLanguages,
-            missing_only: missingOnly,
-          }),
-        }
-      );
+      const response = await apiClient.post('/admin/translations/ai/batch', {
+        provider: activeProvider,
+        modules: batchMode ? modules : [selectedModule],
+        source_language: sourceLanguage,
+        target_languages: targetLanguages,
+        missing_only: missingOnly,
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data.data.results || []);
-        toast.success(`Переведено ${data.data.translated_count} текстов`);
-        onTranslationComplete?.();
-      } else {
+      if (response.error) {
         toast.error('Ошибка при массовом переводе');
+      } else {
+        setResults(response.data?.data?.results || []);
+        toast.success(`Переведено ${response.data?.data?.translated_count} текстов`);
+        onTranslationComplete?.();
       }
     } catch (error) {
       console.error('Error batch translating:', error);
@@ -325,25 +270,16 @@ export default function AITranslations({
         }))
       );
 
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/translations/ai/apply`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({ translations: updates }),
-        }
-      );
+      const response = await apiClient.post('/admin/translations/ai/apply', {
+        translations: updates,
+      });
 
-      if (response.ok) {
+      if (response.error) {
+        toast.error('Ошибка при применении переводов');
+      } else {
         toast.success('Переводы применены успешно');
         setResults([]);
         onTranslationComplete?.();
-      } else {
-        toast.error('Ошибка при применении переводов');
       }
     } catch (error) {
       console.error('Error applying translations:', error);

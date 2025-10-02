@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from '@/utils/toast';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
 import type { VariantAttributeFull } from '@/types/variant-attributes';
+import { apiClient } from '@/services/api-client';
 
 interface VariantAttributeFormProps {
   attribute?: VariantAttributeFull;
@@ -41,33 +40,23 @@ export default function VariantAttributeForm({
     setLoading(true);
 
     try {
-      const token = tokenManager.getAccessToken();
-      const apiUrl = configManager.getApiUrl();
       const isEdit = !!formData.id;
 
       const url = isEdit
-        ? `${apiUrl}/api/v1/admin/variant-attributes/${formData.id}`
-        : `${apiUrl}/api/v1/admin/variant-attributes`;
+        ? `/admin/variant-attributes/${formData.id}`
+        : `/admin/variant-attributes`;
 
-      const method = isEdit ? 'PUT' : 'POST';
+      const response = isEdit
+        ? await apiClient.put(url, formData)
+        : await apiClient.post(url, formData);
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
+      if (response.data) {
         toast.success(
           isEdit ? 'Вариативный атрибут обновлен' : 'Вариативный атрибут создан'
         );
         onSuccess?.();
       } else {
-        const error = await response.json();
-        toast.error(error.error || 'Ошибка сохранения атрибута');
+        toast.error('Ошибка сохранения атрибута');
       }
     } catch (error) {
       console.error('Error saving variant attribute:', error);

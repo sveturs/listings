@@ -1,4 +1,4 @@
-import api from './api';
+import { apiClient } from './api-client';
 import { toast } from 'react-hot-toast';
 
 export interface FavoriteItem {
@@ -29,7 +29,7 @@ class FavoritesService {
     if (this.isInitialized) return;
 
     try {
-      const response = await api.get('/api/v1/marketplace/favorites');
+      const response = await apiClient.get('/marketplace/favorites');
       if (response.data?.success && Array.isArray(response.data.data)) {
         this.favoriteIds = new Set(
           response.data.data.map((item: any) => item.id)
@@ -59,7 +59,7 @@ class FavoritesService {
 
     try {
       // Получаем избранные объявления (включая товары витрин)
-      const response = await api.get('/api/v1/marketplace/favorites');
+      const response = await apiClient.get('/marketplace/favorites');
       if (response.data?.success) {
         const rawFavorites = response.data.data || [];
         // Преобразуем backend данные в FavoriteItem
@@ -135,10 +135,10 @@ class FavoritesService {
 
       // Для товаров витрин передаем специальный параметр type
       const endpoint = isStorefrontProduct
-        ? `/api/v1/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
-        : `/api/v1/marketplace/favorites/${listingId}`;
+        ? `/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
+        : `/marketplace/favorites/${listingId}`;
 
-      const response = await api.post(endpoint);
+      const response = await apiClient.post(endpoint);
       if (response.data?.success) {
         // Для хранения используем числовой ID
         const numericId = isStorefrontProduct
@@ -171,10 +171,10 @@ class FavoritesService {
       const isStorefrontProduct =
         typeof listingId === 'string' && listingId.startsWith('sp_');
       const endpoint = isStorefrontProduct
-        ? `/api/v1/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
-        : `/api/v1/marketplace/favorites/${listingId}`;
+        ? `/marketplace/favorites/${listingId.replace('sp_', '')}?type=storefront`
+        : `/marketplace/favorites/${listingId}`;
 
-      const response = await api.delete(endpoint);
+      const response = await apiClient.delete(endpoint);
       if (response.data?.success) {
         // Для хранения используем числовой ID
         const numericId = isStorefrontProduct
@@ -226,8 +226,8 @@ class FavoritesService {
   // Проверить статус на сервере
   async checkFavoriteStatus(listingId: number): Promise<boolean> {
     try {
-      const response = await api.get(
-        `/api/v1/marketplace/favorites/${listingId}/check`
+      const response = await apiClient.get(
+        `/marketplace/favorites/${listingId}/check`
       );
       if (response.data?.success) {
         const isInFavorites = response.data.data?.isInFavorites || false;
@@ -248,7 +248,7 @@ class FavoritesService {
   // Получить количество избранных
   async getFavoritesCount(): Promise<number> {
     try {
-      const response = await api.get('/api/v1/marketplace/favorites/count');
+      const response = await apiClient.get('/marketplace/favorites/count');
       if (response.data?.success) {
         return response.data.data?.count || 0;
       }

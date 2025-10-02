@@ -7,8 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface Listing {
   id: number;
@@ -97,26 +96,12 @@ export default function AdminListingsTable() {
       params.append('offset', ((page - 1) * limit).toString());
       params.append('sort_by', sortBy);
 
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {};
+      const response = await apiClient.get(`/marketplace/listings?${params}`);
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/marketplace/listings?${params}`,
-        {
-          headers,
-          credentials: 'include',
-        }
-      );
-      const data = await response.json();
-
-      if (data.success && data.data) {
+      if (response.data?.success && response.data.data) {
         // API возвращает data.data для массива объявлений и data.meta для метаданных
-        setListings(data.data.data || []);
-        setTotal(data.data.meta?.total || 0);
+        setListings(response.data.data.data || []);
+        setTotal(response.data.data.meta?.total || 0);
       }
     } catch (error) {
       console.error('Error fetching listings:', error);
@@ -145,38 +130,12 @@ export default function AdminListingsTable() {
   // Обработчики действий
   const handleDelete = async (id: number) => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.delete(`/marketplace/listings/${id}`);
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/marketplace/listings/${id}`,
-        {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (response.ok) {
+      if (response.data) {
         await fetchListings();
         setDeleteModalOpen(false);
         setListingToDelete(null);
-      } else if (response.status === 401) {
-        console.error('Unauthorized: Please login as admin');
-        alert(
-          'Недостаточно прав для удаления. Требуются права администратора.'
-        );
-      } else if (response.status === 403) {
-        console.error('Forbidden: Only owner or admin can delete');
-        alert(
-          'Вы можете удалять только свои объявления или иметь права администратора.'
-        );
       }
     } catch (error) {
       console.error('Error deleting listing:', error);
@@ -193,37 +152,12 @@ export default function AdminListingsTable() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.put(`/marketplace/listings/${id}`, {
+        is_active: !isActive,
+      });
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${configManager.getApiUrl()}/api/v1/marketplace/listings/${id}`,
-        {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ is_active: !isActive }),
-        }
-      );
-
-      if (response.ok) {
+      if (response.data) {
         await fetchListings();
-      } else if (response.status === 401) {
-        console.error('Unauthorized: Please login as admin');
-        alert(
-          'Недостаточно прав для изменения статуса. Требуются права администратора.'
-        );
-      } else if (response.status === 403) {
-        console.error('Forbidden: Only owner or admin can modify');
-        alert(
-          'Вы можете изменять только свои объявления или иметь права администратора.'
-        );
       }
     } catch (error) {
       console.error('Error toggling listing status:', error);

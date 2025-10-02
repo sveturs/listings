@@ -1,4 +1,4 @@
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
 // Type aliases for better readability
@@ -46,7 +46,7 @@ class SubscriptionService {
    */
   async getPlans(): Promise<SubscriptionPlan[]> {
     try {
-      const response = await api.get('/api/v1/subscriptions/plans');
+      const response = await apiClient.get('/subscriptions/plans');
       return response.data.data;
     } catch (error) {
       console.error('Failed to get subscription plans:', error);
@@ -59,7 +59,7 @@ class SubscriptionService {
    */
   async getCurrentSubscription(): Promise<UserSubscriptionInfo | null> {
     try {
-      const response = await api.get('/api/v1/subscriptions/current');
+      const response = await apiClient.get('/subscriptions/current');
       return response.data.data;
     } catch (error: any) {
       if (error.response?.status === 401) {
@@ -78,7 +78,7 @@ class SubscriptionService {
     request: CreateSubscriptionRequest
   ): Promise<UserSubscription> {
     try {
-      const response = await api.post('/api/v1/subscriptions', request);
+      const response = await apiClient.post('/subscriptions', request);
       return response.data.data;
     } catch (error) {
       console.error('Failed to create subscription:', error);
@@ -93,7 +93,7 @@ class SubscriptionService {
     request: UpgradeSubscriptionRequest
   ): Promise<UserSubscription> {
     try {
-      const response = await api.post('/api/v1/subscriptions/upgrade', request);
+      const response = await apiClient.post('/subscriptions/upgrade', request);
       return response.data.data;
     } catch (error) {
       console.error('Failed to upgrade subscription:', error);
@@ -106,7 +106,7 @@ class SubscriptionService {
    */
   async cancelSubscription(reason?: string): Promise<void> {
     try {
-      await api.post('/api/v1/subscriptions/cancel', { reason });
+      await apiClient.post('/subscriptions/cancel', { reason });
     } catch (error) {
       console.error('Failed to cancel subscription:', error);
       throw error;
@@ -118,8 +118,8 @@ class SubscriptionService {
    */
   async checkLimits(request: CheckLimitRequest): Promise<CheckLimitResponse> {
     try {
-      const response = await api.post(
-        '/api/v1/subscriptions/check-limits',
+      const response = await apiClient.post(
+        '/subscriptions/check-limits',
         request
       );
       return response.data.data;
@@ -136,8 +136,8 @@ class SubscriptionService {
     request: InitiatePaymentRequest
   ): Promise<PaymentInitiationResponse> {
     try {
-      const response = await api.post(
-        '/api/v1/subscriptions/initiate-payment',
+      const response = await apiClient.post(
+        '/subscriptions/initiate-payment',
         request
       );
       return response.data.data;
@@ -152,8 +152,8 @@ class SubscriptionService {
    */
   async completePayment(paymentIntentId: string): Promise<UserSubscription> {
     try {
-      const response = await api.post(
-        `/api/v1/subscriptions/complete-payment?payment_intent=${paymentIntentId}`,
+      const response = await apiClient.post(
+        `/subscriptions/complete-payment?payment_intent=${paymentIntentId}`,
         {}
       );
       return response.data.data;

@@ -1,4 +1,5 @@
 import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 export interface UserContact {
   id: number;
@@ -61,7 +62,7 @@ class ContactsService {
   private pendingRequests = new Map<string, Promise<any>>();
 
   constructor() {
-    this.baseUrl = `${configManager.getApiUrl()}/api/v1/contacts`;
+    this.baseUrl = `/contacts`;
   }
 
   private getCacheKey(endpoint: string, options?: RequestInit): string {
@@ -107,57 +108,30 @@ class ContactsService {
 
     // Создаём promise для запроса
     const requestPromise = (async () => {
-      // Добавляем JWT токен в заголовки через tokenManager
-      const { tokenManager } = await import('@/utils/tokenManager');
-      const token = await tokenManager.getAccessToken();
-
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...(options?.headers as Record<string, string>),
       };
 
-      if (token) {
-        (headers as any)['Authorization'] = `Bearer ${token}`;
-      } else {
-        console.warn('[ContactsService] No access token available');
+      const method = (options?.method || 'GET').toLowerCase() as 'get' | 'post' | 'put' | 'delete';
+      const body = options?.body ? JSON.parse(options.body as string) : undefined;
+
+      let response;
+      if (method === 'get') {
+        response = await apiClient.get(`${this.baseUrl}${endpoint}`);
+      } else if (method === 'post') {
+        response = await apiClient.post(`${this.baseUrl}${endpoint}`, body);
+      } else if (method === 'put') {
+        response = await apiClient.put(`${this.baseUrl}${endpoint}`, body);
+      } else if (method === 'delete') {
+        response = await apiClient.delete(`${this.baseUrl}${endpoint}`);
       }
 
-      // Добавляем CSRF токен для небезопасных методов
-      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-        try {
-          const { AuthService } = await import('./auth');
-          const csrfToken = await AuthService.getCsrfToken();
-          if (csrfToken) {
-            (headers as any)['X-CSRF-Token'] = csrfToken;
-          }
-        } catch (error) {
-          console.warn('[ContactsService] Failed to get CSRF token:', error);
-        }
+      if (!response?.data) {
+        throw new Error('Request failed');
       }
 
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        credentials: 'include',
-        headers,
-        ...options,
-      });
-
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
-        }
-        if (response.status === 401) {
-          errorMessage = 'Unauthorized';
-        }
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      return data.data || data;
+      return response.data.data || response.data;
     })();
 
     // Сохраняем promise для GET запросов

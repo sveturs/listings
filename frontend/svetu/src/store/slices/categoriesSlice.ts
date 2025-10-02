@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 
 // Типы
 export interface Category {
@@ -73,7 +73,7 @@ const colorMap: { [key: string]: string } = {
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async () => {
-    const response = await api.get('/api/v1/marketplace/categories');
+    const response = await apiClient.get('/marketplace/categories');
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -101,8 +101,8 @@ export const fetchPopularCategories = createAsyncThunk(
       return state.categories.popularCategories;
     }
 
-    const response = await api.get(
-      `/api/v1/marketplace/popular-categories?lang=${locale}&limit=8`
+    const response = await apiClient.get(
+      `/marketplace/popular-categories?lang=${locale}&limit=8`
     );
 
     if (response.data.success && response.data.data) {

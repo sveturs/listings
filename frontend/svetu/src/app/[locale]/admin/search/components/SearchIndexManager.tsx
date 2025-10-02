@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
-import config from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface IndexInfo {
   index_name: string;
@@ -67,26 +66,10 @@ export default function SearchIndexManager() {
   // Загрузка информации об индексе
   const fetchIndexInfo = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.get('/admin/search/index/info');
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/search/index/info`,
-        {
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setIndexInfo(data.data);
+      if (response.data) {
+        setIndexInfo(response.data.data);
       }
     } catch (error) {
       console.error('Failed to fetch index info:', error);
@@ -96,26 +79,10 @@ export default function SearchIndexManager() {
   // Загрузка статистики
   const fetchStatistics = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.get('/admin/search/index/statistics');
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/search/index/statistics`,
-        {
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setStatistics(data.data);
+      if (response.data) {
+        setStatistics(response.data.data);
       }
     } catch (error) {
       console.error('Failed to fetch statistics:', error);
@@ -126,15 +93,6 @@ export default function SearchIndexManager() {
   const searchDocuments = useCallback(async () => {
     setLoading(true);
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: pageSize.toString(),
@@ -144,19 +102,14 @@ export default function SearchIndexManager() {
       if (docType) params.append('type', docType);
       if (categoryId) params.append('category_id', categoryId);
 
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/search/index/documents?${params}`,
-        {
-          headers,
-          credentials: 'include',
-        }
+      const response = await apiClient.get(
+        `/admin/search/index/documents?${params}`
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data) {
         // API возвращает массив документов прямо в data.data
-        setDocuments(data.data || []);
-        setDocumentsTotal(data.data?.length || 0);
+        setDocuments(response.data.data || []);
+        setDocumentsTotal(response.data.data?.length || 0);
       }
     } catch (error) {
       console.error('Failed to search documents:', error);
@@ -173,25 +126,9 @@ export default function SearchIndexManager() {
 
     setReindexing(true);
     try {
-      const token = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
+      const response = await apiClient.post('/admin/search/index/reindex');
 
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/admin/search/index/reindex`,
-        {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-        }
-      );
-
-      if (response.ok) {
+      if (response.data) {
         alert(t('search.index.reindexStarted'));
         // Обновляем статистику через 5 секунд
         setTimeout(() => {

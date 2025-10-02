@@ -20,6 +20,8 @@ public.pem
 # MinIO dev storage
 data/minio_dev/
 
+.playwright-mcp/*
+
 *.log
 *.txt
 Screenshot.png

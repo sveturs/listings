@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'react-hot-toast';
-import { tokenManager } from '@/utils/tokenManager';
 import {
   ChartBarIcon,
   LanguageIcon,
@@ -18,6 +17,7 @@ import StatisticsPanel from './StatisticsPanel';
 import SyncManager from './SyncManager';
 import ConflictResolver from './ConflictResolver';
 import AITranslations from './AITranslations';
+import { apiClient } from '@/services/api-client';
 
 interface TranslationStats {
   total_translations: number;
@@ -48,26 +48,13 @@ export default function TranslationsDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
+      const response = await apiClient.get('/admin/translations/stats/overview');
 
-      const response = await fetch(
-        '/api/v1/admin/translations/stats/overview',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
+      if (!response.data) {
         throw new Error('Failed to fetch statistics');
       }
 
-      const data = await response.json();
-      setStatistics(data.data);
+      setStatistics(response.data.data);
     } catch (err) {
       setError((err as Error).message);
       toast.error(t('translations.fetchError'));

@@ -56,6 +56,7 @@ import LocationPicker from '@/components/GIS/LocationPicker';
 import LocationPrivacySettingsWithAddress, {
   LocationPrivacyLevel,
 } from '@/components/GIS/LocationPrivacySettingsWithAddress';
+import { apiClient } from '@/services/api-client';
 import { CarSelectorCompact, CarAttributesForm } from '@/components/cars';
 import { Car, Copy } from 'lucide-react';
 
@@ -171,29 +172,10 @@ export default function AIPoweredListingCreationPage() {
     // Загружаем профиль пользователя для получения адреса по умолчанию
     const loadUserProfile = async () => {
       try {
-        const { tokenManager } = await import('@/utils/tokenManager');
-        const token = tokenManager.getAccessToken();
+        const response = await apiClient.get('/users/profile');
 
-        if (!token) {
-          console.log('No access token available, skipping profile load');
-          return;
-        }
-
-        // Используем абсолютный API URL
-        const apiUrl = configManager.getApiUrl();
-        console.log(
-          'Making profile request to:',
-          `${apiUrl}/api/v1/users/profile`
-        );
-
-        const response = await fetch(`${apiUrl}/api/v1/users/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const profileData = await response.json();
+        if (response.data) {
+          const profileData = response.data;
           if (profileData.data?.city && profileData.data?.country) {
             console.log(
               'Using default address from user profile:',
@@ -453,19 +435,10 @@ export default function AIPoweredListingCreationPage() {
 
       try {
         // Загружаем список марок
-        const apiUrl = configManager.getApiUrl();
+        const makesResponse = await apiClient.get('/cars/makes');
+        if (!makesResponse.data) return;
 
-        // Получаем токен авторизации
-        const { tokenManager } = await import('@/utils/tokenManager');
-        const token = tokenManager.getAccessToken();
-
-        const makesResponse = await fetch(`${apiUrl}/api/v1/cars/makes`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!makesResponse.ok) return;
-
-        const makesData = await makesResponse.json();
-        const makes = makesData.data || [];
+        const makes = makesResponse.data.data || [];
 
         // Ищем марку по названию из AI атрибутов
         const brandName = aiData.attributes.brand?.toLowerCase() || '';
@@ -485,9 +458,10 @@ export default function AIPoweredListingCreationPage() {
         if (matchedMake) {
           // Загружаем модели для найденной марки (используем slug вместо id)
           const modelsResponse = await fetch(
-            `${apiUrl}/api/v1/cars/makes/${matchedMake.slug}/models`,
+            `/api/v2/cars/makes/${matchedMake.slug}/models`,
             {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
             }
           );
           if (!modelsResponse.ok) return;

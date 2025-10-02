@@ -1,7 +1,5 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
-import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 
 // Типы из сгенерированного API
 type BulkCreateProductsRequest =
@@ -86,12 +84,11 @@ export const productApi = {
    */
   exportToCSV: async (storefrontSlug: string, productIds?: number[]) => {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/products/export/csv${params}`,
+      `/api/v2/storefronts/slug/${storefrontSlug}/products/export/csv${params}`,
       {
-        headers: {
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
+        credentials: 'include', // Включаем cookies
       }
     );
 
@@ -120,12 +117,11 @@ export const productApi = {
    */
   exportToXML: async (storefrontSlug: string, productIds?: number[]) => {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/storefronts/slug/${storefrontSlug}/products/export/xml${params}`,
+      `/api/v2/storefronts/slug/${storefrontSlug}/products/export/xml${params}`,
       {
-        headers: {
-          Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-        },
+        credentials: 'include', // Включаем cookies
       }
     );
 

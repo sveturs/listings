@@ -1,6 +1,5 @@
-import configManager from '@/config';
-import { tokenManager } from '@/utils/tokenManager';
 import { logger } from '@/utils/logger';
+import { apiClient } from '@/services/api-client';
 
 // Типы для унифицированного поиска
 export interface UnifiedSearchParams {
@@ -160,21 +159,19 @@ export class UnifiedSearchService {
   static async search(
     params: UnifiedSearchParams
   ): Promise<UnifiedSearchResult> {
-    const baseUrl = configManager.getApiUrl({ internal: true });
-
-    // Используем правильный эндпоинт в зависимости от наличия геокоординат
+    // Используем BFF proxy - автоматически добавит cookies для авторизации
     const endpoint =
       params.latitude && params.longitude
-        ? '/api/v1/gis/search'
-        : '/api/v1/search';
-    const fullUrl = baseUrl ? `${baseUrl}${endpoint}` : endpoint; // Для development proxy
-
-    const url = new URL(fullUrl, baseUrl || window.location.origin);
+        ? '/gis/search'
+        : '/search';
 
     // Debug logging
     logger.search.debug('UnifiedSearchService - params received:', params);
 
-    // Добавляем параметры в URL
+    // Создаем URL параметры
+    const searchParams = new URLSearchParams();
+
+    // Добавляем параметры
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (key === 'advanced_geo_filters') {
@@ -199,52 +196,37 @@ export class UnifiedSearchService {
               `UnifiedSearchService - adding array param ${key}:`,
               value
             );
-            url.searchParams.append(paramKey, value.join(','));
+            searchParams.append(paramKey, value.join(','));
           } else {
-            value.forEach((v) => url.searchParams.append(paramKey, v));
+            value.forEach((v) => searchParams.append(paramKey, v));
           }
         } else {
-          url.searchParams.append(paramKey, value.toString());
+          searchParams.append(paramKey, value.toString());
         }
       }
     });
 
-    logger.search.debug('UnifiedSearchService - final URL:', url.toString());
-
-    // Получаем токен авторизации
-    const token = await tokenManager.getAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    logger.search.debug('UnifiedSearchService - params:', searchParams.toString());
 
     // Если есть расширенные геофильтры, используем POST запрос
     const hasAdvancedFilters =
       params.advanced_geo_filters &&
       Object.keys(params.advanced_geo_filters).length > 0;
 
-    const fetchOptions: RequestInit = {
-      method: hasAdvancedFilters ? 'POST' : 'GET',
-      headers,
-      credentials: 'include',
-    };
-
+    let response;
     if (hasAdvancedFilters) {
-      fetchOptions.body = JSON.stringify({
+      response = await apiClient.post(`${endpoint}?${searchParams.toString()}`, {
         advanced_geo_filters: params.advanced_geo_filters,
       });
+    } else {
+      response = await apiClient.get(`${endpoint}?${searchParams.toString()}`);
     }
 
-    const response = await fetch(url.toString(), fetchOptions);
-
-    if (!response.ok) {
-      throw new Error(`Search failed: ${response.status}`);
+    if (!response.data) {
+      throw new Error('Search failed');
     }
 
-    const data = await response.json();
+    const data = response.data;
 
     // Адаптируем ответ к унифицированному формату
     let result: UnifiedSearchResult;
@@ -328,34 +310,21 @@ export class UnifiedSearchService {
     prefix: string,
     size: number = 10
   ): Promise<(SearchSuggestion | EnhancedSuggestion)[]> {
-    const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/enhanced-suggestions`;
     const params = new URLSearchParams({
       query: prefix,
       limit: size.toString(),
     });
 
-    // Получаем токен авторизации
-    const token = await tokenManager.getAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    const response = await apiClient.get(
+      `/marketplace/enhanced-suggestions?${params}`
+    );
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${url}?${params}`, {
-      method: 'GET',
-      headers,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      console.error('Failed to load suggestions:', response.status);
+    if (!response.data) {
+      console.error('Failed to load suggestions');
       return [];
     }
 
-    const data = await response.json();
+    const data = response;
 
     // Обрабатываем ответ от enhanced-suggestions endpoint
     // который возвращает объект с полями: suggestions, categories, popular_items
@@ -471,68 +440,51 @@ export class UnifiedSearchService {
       language?: string;
     }
   ): Promise<EnhancedSuggestion[]> {
-    const baseUrl = configManager.getApiUrl({ internal: true });
-    const url = new URL(
-      `${baseUrl}/api/v1/marketplace/enhanced-suggestions`,
-      baseUrl || window.location.origin
-    );
+    const searchParams = new URLSearchParams();
 
     // Добавляем параметры
-    url.searchParams.append('query', prefix);
-    url.searchParams.append('limit', (options?.size || 10).toString());
+    searchParams.append('query', prefix);
+    searchParams.append('limit', (options?.size || 10).toString());
 
     if (options?.include_categories !== undefined) {
-      url.searchParams.append(
+      searchParams.append(
         'include_categories',
         options.include_categories.toString()
       );
     }
     if (options?.include_products !== undefined) {
-      url.searchParams.append(
+      searchParams.append(
         'include_products',
         options.include_products.toString()
       );
     }
     if (options?.include_brands !== undefined) {
-      url.searchParams.append(
+      searchParams.append(
         'include_brands',
         options.include_brands.toString()
       );
     }
     if (options?.include_locations !== undefined) {
-      url.searchParams.append(
+      searchParams.append(
         'include_locations',
         options.include_locations.toString()
       );
     }
     if (options?.language) {
-      url.searchParams.append('language', options.language);
-    }
-
-    // Получаем токен авторизации
-    const token = await tokenManager.getAccessToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      searchParams.append('language', options.language);
     }
 
     try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers,
-        credentials: 'include',
-      });
+      const response = await apiClient.get(
+        `/marketplace/enhanced-suggestions?${searchParams.toString()}`
+      );
 
-      if (!response.ok) {
-        console.error('Failed to load enhanced suggestions:', response.status);
+      if (!response.data) {
+        console.error('Failed to load enhanced suggestions');
         return [];
       }
 
-      const data = await response.json();
-      const rawSuggestions = data.data || [];
+      const rawSuggestions = response.data.data || [];
 
       // Преобразуем данные от backend в нужный формат для frontend
       return rawSuggestions.map((item: any): EnhancedSuggestion => {

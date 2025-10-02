@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Loader2, Tags, TrendingUp, Languages, Trash2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface CategoryKeyword {
   id: number;
@@ -45,29 +45,18 @@ export default function CategoryKeywordsModal({
 
     try {
       setLoading(true);
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {};
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
 
-      const response = await fetch(
-        `/api/v1/admin/categories/${categoryId}/keywords`,
-        { headers }
+      const response = await apiClient.get(
+        `/admin/categories/${categoryId}/keywords`
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        // Обрабатываем разные форматы ответа API
-        if (Array.isArray(data)) {
-          setKeywords(data);
-        } else if (data && Array.isArray(data.data)) {
-          setKeywords(data.data);
-        } else {
-          setKeywords([]);
-        }
+      // Обрабатываем разные форматы ответа API
+      if (Array.isArray(response.data)) {
+        setKeywords(response.data);
+      } else if (response.data && Array.isArray(response.data.data)) {
+        setKeywords(response.data.data);
       } else {
-        throw new Error('Failed to load keywords');
+        setKeywords([]);
       }
     } catch (error) {
       console.error('Error loading keywords:', error);
@@ -90,36 +79,21 @@ export default function CategoryKeywordsModal({
 
     try {
       setSaving(true);
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
 
-      const response = await fetch(
-        `/api/v1/admin/categories/${categoryId}/keywords`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(newKeyword),
-        }
+      await apiClient.post(
+        `/admin/categories/${categoryId}/keywords`,
+        newKeyword
       );
 
-      if (response.ok) {
-        await loadKeywords();
-        setNewKeyword({
-          keyword: '',
-          language: 'ru',
-          weight: 1.0,
-          keyword_type: 'main',
-          is_negative: false,
-        });
-        toast.success(t('addSuccess'));
-      } else {
-        throw new Error('Failed to add keyword');
-      }
+      await loadKeywords();
+      setNewKeyword({
+        keyword: '',
+        language: 'ru',
+        weight: 1.0,
+        keyword_type: 'main',
+        is_negative: false,
+      });
+      toast.success(t('addSuccess'));
     } catch (error) {
       console.error('Error adding keyword:', error);
       toast.error(t('addError'));
@@ -132,26 +106,9 @@ export default function CategoryKeywordsModal({
     if (!confirm(t('deleteConfirm'))) return;
 
     try {
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {};
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/categories/keywords/${keywordId}`,
-        {
-          method: 'DELETE',
-          headers,
-        }
-      );
-
-      if (response.ok) {
-        await loadKeywords();
-        toast.success(t('deleteSuccess'));
-      } else {
-        throw new Error('Failed to delete keyword');
-      }
+      await apiClient.delete(`/admin/categories/keywords/${keywordId}`);
+      await loadKeywords();
+      toast.success(t('deleteSuccess'));
     } catch (error) {
       console.error('Error deleting keyword:', error);
       toast.error(t('deleteError'));
@@ -160,27 +117,11 @@ export default function CategoryKeywordsModal({
 
   const updateWeight = async (keywordId: number, newWeight: number) => {
     try {
-      const accessToken = tokenManager.getAccessToken();
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch(
-        `/api/v1/admin/categories/keywords/${keywordId}`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify({ weight: newWeight }),
-        }
-      );
-
-      if (response.ok) {
-        await loadKeywords();
-        toast.success(t('updateSuccess'));
-      }
+      await apiClient.put(`/admin/categories/keywords/${keywordId}`, {
+        weight: newWeight,
+      });
+      await loadKeywords();
+      toast.success(t('updateSuccess'));
     } catch (error) {
       console.error('Error updating weight:', error);
       toast.error(t('updateError'));

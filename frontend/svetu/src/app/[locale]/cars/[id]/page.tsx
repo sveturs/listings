@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import api from '@/services/api';
 import CarDetailClient from './CarDetailClient';
 import type { components } from '@/types/generated/api';
 
@@ -15,9 +14,23 @@ interface CarDetailPageProps {
 
 async function getCarDetails(id: string): Promise<MarketplaceListing | null> {
   try {
-    const response = await api.get(`/api/v1/marketplace/listings/${id}`);
-    if (response.data?.data) {
-      return response.data.data;
+    // Server Component - используем прямой fetch к backend
+    const backendUrl =
+      process.env.BACKEND_INTERNAL_URL || 'http://localhost:3000';
+    const response = await fetch(
+      `${backendUrl}/api/v1/marketplace/listings/${id}`,
+      {
+        cache: 'no-store', // Всегда получаем свежие данные
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    if (data?.data) {
+      return data.data;
     }
     return null;
   } catch (error) {

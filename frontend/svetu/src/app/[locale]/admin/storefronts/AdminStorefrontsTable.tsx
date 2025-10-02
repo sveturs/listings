@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { tokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api-client';
 
 interface Storefront {
   id: number;
@@ -78,16 +78,10 @@ export default function AdminStorefrontsTable() {
       // Добавляем параметр для получения всех витрин, включая неактивные
       params.append('include_inactive', 'true');
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/storefronts?${params}`,
-        {
-          credentials: 'include',
-        }
-      );
+      const response = await apiClient.get(`/storefronts?${params}`);
 
-      if (response.ok) {
-        const data = await response.json();
-        let storefrontsList = data.storefronts || data.data || [];
+      if (response.data) {
+        let storefrontsList = response.data.storefronts || response.data.data || [];
 
         // Применяем фильтры
         if (statusFilter) {
@@ -160,21 +154,14 @@ export default function AdminStorefrontsTable() {
   // Обработка удаления
   const handleDelete = async (id: number, type: 'soft' | 'hard' = 'soft') => {
     try {
-      const token = tokenManager.getAccessToken();
       const url =
         type === 'hard'
-          ? `http://localhost:3000/api/v1/storefronts/${id}?hard_delete=true`
-          : `http://localhost:3000/api/v1/storefronts/${id}`;
+          ? `/storefronts/${id}?hard_delete=true`
+          : `/storefronts/${id}`;
 
-      const response = await fetch(url, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.delete(url);
 
-      if (response.ok) {
+      if (response.data) {
         fetchStorefronts();
         setDeleteModalOpen(false);
         setStorefrontToDelete(null);
@@ -188,19 +175,9 @@ export default function AdminStorefrontsTable() {
   // Обработка восстановления
   const handleRestore = async (id: number) => {
     try {
-      const token = tokenManager.getAccessToken();
-      const response = await fetch(
-        `http://localhost:3000/api/v1/storefronts/${id}/restore`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.post(`/storefronts/${id}/restore`);
 
-      if (response.ok) {
+      if (response.data) {
         fetchStorefronts();
       }
     } catch (error) {
@@ -222,20 +199,13 @@ export default function AdminStorefrontsTable() {
       if (!confirmed) return;
 
       try {
-        const token = tokenManager.getAccessToken();
         for (const id of selectedStorefronts) {
           const url =
             deleteType === 'hard'
-              ? `http://localhost:3000/api/v1/storefronts/${id}?hard_delete=true`
-              : `http://localhost:3000/api/v1/storefronts/${id}`;
+              ? `/storefronts/${id}?hard_delete=true`
+              : `/storefronts/${id}`;
 
-          await fetch(url, {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          await apiClient.delete(url);
         }
         setSelectedStorefronts(new Set());
         fetchStorefronts();
@@ -244,19 +214,10 @@ export default function AdminStorefrontsTable() {
       }
     } else if (action === 'activate' || action === 'deactivate') {
       try {
-        const token = tokenManager.getAccessToken();
         const isActive = action === 'activate';
 
         for (const id of selectedStorefronts) {
-          await fetch(`http://localhost:3000/api/v1/storefronts/${id}`, {
-            method: 'PUT',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ is_active: isActive }),
-          });
+          await apiClient.put(`/storefronts/${id}`, { is_active: isActive });
         }
         setSelectedStorefronts(new Set());
         fetchStorefronts();

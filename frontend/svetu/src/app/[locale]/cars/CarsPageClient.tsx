@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/services/api';
+import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 import { Car, TrendingUp, Calendar, Filter } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -77,7 +77,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       setLoading(true);
 
       // Загружаем статистику автомобилей
-      const statsResponse = await api.get('/api/v1/marketplace/cars/stats');
+      const statsResponse = await apiClient.get('/marketplace/cars/stats');
       if (statsResponse.data?.data) {
         setStats({
           totalListings: statsResponse.data.data.totalListings || 0,
@@ -87,9 +87,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       }
 
       // Загружаем популярные марки
-      const makesResponse = await api.get('/api/v1/cars/makes', {
-        params: { limit: 12 },
-      });
+      const makesResponse = await apiClient.get('/cars/makes?limit=12');
       if (makesResponse.data?.data) {
         setPopularMakes(makesResponse.data.data.slice(0, 12));
       }
@@ -102,8 +100,8 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         sort: 'created_at_desc',
       };
 
-      const listingsResponse = await api.post(
-        '/api/v1/marketplace/search',
+      const listingsResponse = await apiClient.post(
+        '/marketplace/search',
         searchParams
       );
 
@@ -206,8 +204,8 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         }
       });
 
-      const response = await api.post(
-        '/api/v1/marketplace/search',
+      const response = await apiClient.post(
+        '/marketplace/search',
         searchParams
       );
 

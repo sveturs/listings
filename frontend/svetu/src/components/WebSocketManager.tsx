@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChat } from '@/hooks/useChat';
-import { tokenManager } from '@/utils/tokenManager';
 
 // Глобальный флаг для предотвращения множественных инициализаций
 let globalWebSocketInitialized = false;
@@ -38,15 +37,9 @@ export default function WebSocketManager() {
 
       // Инициализируем только если еще не инициализировано
       if (!globalWebSocketInitialized && !localInitRef.current) {
-        // Небольшая задержка для того, чтобы токен успел сохраниться
+        // Небольшая задержка для обеспечения корректной инициализации
         initTimeoutRef.current = setTimeout(() => {
-          const hasToken = tokenManager.getAccessToken() !== null;
-
-          if (
-            hasToken &&
-            !globalWebSocketInitialized &&
-            !localInitRef.current
-          ) {
+          if (!globalWebSocketInitialized && !localInitRef.current) {
             globalWebSocketInitialized = true;
             localInitRef.current = true;
             // Инициализируем WebSocket с функцией получения ID пользователя

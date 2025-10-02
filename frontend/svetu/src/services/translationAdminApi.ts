@@ -1,4 +1,4 @@
-import configManager from '@/config';
+import { apiClient } from './api-client';
 
 // Types для новой системы переводов
 export interface Translation {
@@ -216,22 +216,11 @@ interface ApiResponse<T> {
 }
 
 // Translation Admin API Client
-import { tokenManager } from '@/utils/tokenManager';
-
-// Удалена неиспользуемая константа API_BASE_URL (используется configManager.getApiUrl())
+// Используем BFF proxy для всех запросов
 
 class TranslationAdminApi {
   private getBaseUrl(): string {
-    const apiUrl = configManager.getApiUrl();
-    return `${apiUrl}/api/v1/admin/translations`;
-  }
-
-  private getAuthHeaders(): HeadersInit {
-    const token = tokenManager.getAccessToken();
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
+    return '/admin/translations';
   }
 
   private async request<T>(
@@ -240,41 +229,29 @@ class TranslationAdminApi {
   ): Promise<ApiResponse<T>> {
     try {
       const baseUrl = this.getBaseUrl();
-      const response = await fetch(`${baseUrl}${path}`, {
-        ...options,
-        headers: {
-          ...this.getAuthHeaders(),
-          ...options?.headers,
-        },
-      });
+      const method = (options?.method || 'GET').toLowerCase() as
+        | 'get'
+        | 'post'
+        | 'put'
+        | 'delete';
+      const body = options?.body ? JSON.parse(options.body as string) : undefined;
 
-      // Handle 401 - Unauthorized
-      if (response.status === 401) {
-        // Try to refresh token
-        const refreshed = await this.refreshToken();
-        if (refreshed) {
-          // Retry request with new token
-          const baseUrl = this.getBaseUrl();
-          const retryResponse = await fetch(`${baseUrl}${path}`, {
-            ...options,
-            headers: {
-              ...this.getAuthHeaders(),
-              ...options?.headers,
-            },
-          });
-          return retryResponse.json();
-        }
-        throw new Error('Authentication required');
+      let response;
+      if (method === 'get') {
+        response = await apiClient.get(`${baseUrl}${path}`);
+      } else if (method === 'post') {
+        response = await apiClient.post(`${baseUrl}${path}`, body);
+      } else if (method === 'put') {
+        response = await apiClient.put(`${baseUrl}${path}`, body);
+      } else if (method === 'delete') {
+        response = await apiClient.delete(`${baseUrl}${path}`);
       }
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          error.message || `HTTP error! status: ${response.status}`
-        );
+      if (!response?.data) {
+        throw new Error('API request failed');
       }
 
-      return response.json();
+      return response.data;
     } catch (error) {
       console.error('API request failed:', error);
       return {
@@ -282,17 +259,6 @@ class TranslationAdminApi {
         error:
           error instanceof Error ? error.message : 'Unknown error occurred',
       };
-    }
-  }
-
-  private async refreshToken(): Promise<boolean> {
-    try {
-      // Use tokenManager's refresh functionality
-      const newToken = await tokenManager.refreshAccessToken();
-      return !!newToken;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      return false;
     }
   }
 

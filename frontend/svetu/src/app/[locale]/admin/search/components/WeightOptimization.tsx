@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface OptimizationParams {
   field_names?: string[];
@@ -76,13 +75,10 @@ export default function WeightOptimization() {
     if (currentSession && currentSession.status === 'running') {
       interval = setInterval(async () => {
         try {
-          const apiUrl = configManager.getApiUrl();
           const response = await fetch(
-            `${apiUrl}/api/v1/admin/search/optimization-status/${currentSession.id}`,
+            `/api/v2/admin/search/optimization-status/${currentSession.id}`,
             {
-              headers: {
-                Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-              },
+              credentials: 'include',
             }
           );
 
@@ -111,38 +107,17 @@ export default function WeightOptimization() {
   const startOptimization = async () => {
     try {
       setIsOptimizing(true);
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/optimize-weights`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify(params),
+      const response = await apiClient.post('/admin/search/optimize-weights', params);
+
+      if (response.data?.data?.session_id) {
+        // Получаем статус сессии
+        const sessionResponse = await apiClient.get(
+          `/admin/search/optimization-status/${response.data.data.session_id}`
+        );
+
+        if (sessionResponse.data) {
+          setCurrentSession(sessionResponse.data.data);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to start optimization');
-      }
-
-      const data = await response.json();
-
-      // Получаем статус сессии
-      const sessionResponse = await fetch(
-        `${apiUrl}/api/v1/admin/search/optimization-status/${data.data.session_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-        }
-      );
-
-      if (sessionResponse.ok) {
-        const sessionData = await sessionResponse.json();
-        setCurrentSession(sessionData.data);
       }
     } catch (error) {
       console.error('Failed to start optimization:', error);
@@ -154,14 +129,11 @@ export default function WeightOptimization() {
     if (!currentSession) return;
 
     try {
-      const apiUrl = configManager.getApiUrl();
       await fetch(
-        `${apiUrl}/api/v1/admin/search/optimization-cancel/${currentSession.id}`,
+        `/api/v2/admin/search/optimization-cancel/${currentSession.id}`,
         {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
+          credentials: 'include',
         }
       );
 
@@ -176,28 +148,15 @@ export default function WeightOptimization() {
     if (!currentSession || selectedResults.length === 0) return;
 
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/apply-weights`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            session_id: currentSession.id,
-            selected_results: selectedResults,
-          }),
-        }
-      );
+      const response = await apiClient.post('/admin/search/apply-weights', {
+        session_id: currentSession.id,
+        selected_results: selectedResults,
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to apply weights');
+      if (response.data) {
+        alert(t('messages.weightsApplied'));
+        setSelectedResults([]);
       }
-
-      alert(t('messages.weightsApplied'));
-      setSelectedResults([]);
     } catch (error) {
       console.error('Failed to apply weights:', error);
       alert(t('messages.weightsApplyError'));
@@ -210,30 +169,16 @@ export default function WeightOptimization() {
       const fromDate = new Date();
       fromDate.setDate(fromDate.getDate() - params.analysis_period_days);
 
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/admin/search/analyze-weights`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenManager.getAccessToken()}`,
-          },
-          body: JSON.stringify({
-            item_type: params.item_type,
-            category_id: params.category_id,
-            from_date: fromDate.toISOString().split('T')[0],
-            to_date: new Date().toISOString().split('T')[0],
-          }),
-        }
-      );
+      const response = await apiClient.post('/admin/search/analyze-weights', {
+        item_type: params.item_type,
+        category_id: params.category_id,
+        from_date: fromDate.toISOString().split('T')[0],
+        to_date: new Date().toISOString().split('T')[0],
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze weights');
+      if (response.data) {
+        setAnalysisResults(response.data.data?.results || []);
       }
-
-      const data = await response.json();
-      setAnalysisResults(data.data.results || []);
     } catch (error) {
       console.error('Failed to analyze weights:', error);
     } finally {

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { tokenManager } from '@/utils/tokenManager';
-import config from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface Role {
   id: number;
@@ -47,18 +46,10 @@ export default function RoleManager({
 
   const fetchAvailableRoles = async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) return;
+      const response = await apiClient.get('/roles');
 
-      const response = await fetch(`${config.getApiUrl()}/api/v1/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableRoles(data.roles || []);
+      if (!response.error) {
+        setAvailableRoles(response.data?.roles || []);
       }
     } catch (err) {
       console.error('Failed to fetch roles:', err);
@@ -67,21 +58,10 @@ export default function RoleManager({
 
   const fetchUserRoles = useCallback(async () => {
     try {
-      const token = tokenManager.getAccessToken();
-      if (!token) return;
+      const response = await apiClient.get(`/users/${userId}/roles`);
 
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/users/${userId}/roles`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserRoles(data.roles || []);
+      if (!response.error) {
+        setUserRoles(response.data?.roles || []);
       }
     } catch (err) {
       console.error('Failed to fetch user roles:', err);
@@ -105,30 +85,14 @@ export default function RoleManager({
       setLoading(true);
       setError(null);
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token');
-      }
+      const response = await apiClient.post('/roles/assign', {
+        user_id: userId,
+        role_name: roleName,
+        notes: `Assigned via admin panel by admin`,
+      });
 
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/roles/assign`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            role_name: roleName,
-            notes: `Assigned via admin panel by admin`,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to assign role');
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to assign role');
       }
 
       // Refresh roles
@@ -155,30 +119,14 @@ export default function RoleManager({
       setLoading(true);
       setError(null);
 
-      const token = tokenManager.getAccessToken();
-      if (!token) {
-        throw new Error('No authentication token');
-      }
+      const response = await apiClient.post('/roles/revoke', {
+        user_id: userId,
+        role_name: roleName,
+        reason: 'Revoked via admin panel',
+      });
 
-      const response = await fetch(
-        `${config.getApiUrl()}/api/v1/roles/revoke`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            role_name: roleName,
-            reason: 'Revoked via admin panel',
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to revoke role');
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to revoke role');
       }
 
       // Refresh roles
