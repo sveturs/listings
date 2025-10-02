@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	authservice "github.com/sveturs/auth/pkg/http/service"
 
 	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
@@ -102,7 +103,7 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		pool:             pool,
 		db:               stdDB,
 		sqlxDB:           sqlxDB,
-		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService),
+		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
 		osClient:         osClient,      // Сохраняем клиент OpenSearch
@@ -1885,4 +1886,11 @@ func (db *Database) DeleteListingVariant(ctx context.Context, variantID int) err
 	}
 
 	return nil
+}
+
+// SetMarketplaceUserService устанавливает UserService для marketplace storage
+func (db *Database) SetMarketplaceUserService(userService *authservice.UserService) {
+	if db.marketplaceDB != nil {
+		db.marketplaceDB.SetUserService(userService)
+	}
 }

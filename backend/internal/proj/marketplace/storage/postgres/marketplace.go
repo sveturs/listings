@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	// "time"
 	"github.com/jackc/pgx/v5"
+	authservice "github.com/sveturs/auth/pkg/http/service"
 )
 
 const (
@@ -57,13 +58,20 @@ func init() {
 type Storage struct {
 	pool               *pgxpool.Pool
 	translationService service.TranslationServiceInterface
+	userService        *authservice.UserService
 }
 
-func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface) *Storage {
+func NewStorage(pool *pgxpool.Pool, translationService service.TranslationServiceInterface, userService *authservice.UserService) *Storage {
 	return &Storage{
 		pool:               pool,
 		translationService: translationService,
+		userService:        userService,
 	}
+}
+
+// SetUserService устанавливает UserService для Storage
+func (s *Storage) SetUserService(userService *authservice.UserService) {
+	s.userService = userService
 }
 
 // buildFullImageURL преобразует относительный URL в полный URL с базовым адресом

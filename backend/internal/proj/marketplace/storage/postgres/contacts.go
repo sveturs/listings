@@ -67,9 +67,8 @@ func (s *Storage) GetContact(ctx context.Context, userID, contactUserID int) (*m
 		SELECT 
 			uc.id, uc.user_id, uc.contact_user_id, uc.status, 
 			uc.created_at, uc.updated_at, uc.notes, uc.added_from_chat_id,
-			u.name as contact_name, u.email as contact_email, u.picture_url as contact_picture
+			'' as contact_name, '' as contact_email, '' as contact_picture
 		FROM user_contacts uc
-		JOIN users u ON uc.contact_user_id = u.id
 		WHERE uc.user_id = $1 AND uc.contact_user_id = $2
 	`
 
@@ -163,21 +162,10 @@ func (s *Storage) GetUserContacts(ctx context.Context, userID int, status string
 			)
 				uc.id, uc.user_id, uc.contact_user_id, uc.status, 
 				uc.created_at, uc.updated_at, uc.notes, uc.added_from_chat_id,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.name
-					ELSE u1.name
-				END as contact_name,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.email
-					ELSE u1.email
-				END as contact_email,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.picture_url
-					ELSE u1.picture_url
-				END as contact_picture
+				'' as contact_name,
+				'' as contact_email,
+				'' as contact_picture
 			FROM user_contacts uc
-			JOIN users u1 ON uc.user_id = u1.id
-			JOIN users u2 ON uc.contact_user_id = u2.id
 			%s
 			ORDER BY 
 				CASE 
@@ -193,21 +181,10 @@ func (s *Storage) GetUserContacts(ctx context.Context, userID int, status string
 			SELECT 
 				uc.id, uc.user_id, uc.contact_user_id, uc.status, 
 				uc.created_at, uc.updated_at, uc.notes, uc.added_from_chat_id,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.name
-					ELSE u1.name
-				END as contact_name,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.email
-					ELSE u1.email
-				END as contact_email,
-				CASE 
-					WHEN uc.user_id = $1 THEN u2.picture_url
-					ELSE u1.picture_url
-				END as contact_picture
+				'' as contact_name,
+				'' as contact_email,
+				'' as contact_picture
 			FROM user_contacts uc
-			JOIN users u1 ON uc.user_id = u1.id
-			JOIN users u2 ON uc.contact_user_id = u2.id
 			%s
 			ORDER BY uc.updated_at DESC
 			LIMIT $%d OFFSET $%d
@@ -432,11 +409,10 @@ func (s *Storage) GetIncomingContactRequests(ctx context.Context, userID int, pa
 		SELECT
 			uc.id, uc.user_id, uc.contact_user_id, uc.status,
 			uc.created_at, uc.updated_at, uc.notes, uc.added_from_chat_id,
-			u.name as sender_name,
-			u.email as sender_email,
-			u.picture_url as sender_picture
+			'' as sender_name,
+			'' as sender_email,
+			'' as sender_picture
 		FROM user_contacts uc
-		JOIN users u ON uc.user_id = u.id
 		WHERE uc.contact_user_id = $1 AND uc.status = 'pending'
 		ORDER BY uc.created_at DESC
 		LIMIT $2 OFFSET $3

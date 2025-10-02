@@ -4,14 +4,15 @@ import Image, { ImageProps } from 'next/image';
 import { useState } from 'react';
 import { getSafeImageUrl } from '@/utils/imageUtils';
 
-interface SafeImageProps extends Omit<ImageProps, 'src'> {
+interface SafeImageProps extends Omit<ImageProps, 'src' | 'alt'> {
   src: string | null | undefined;
+  alt?: string; // Optional with default value
   fallback?: React.ReactNode;
 }
 
 export default function SafeImage({
   src,
-  alt,
+  alt = 'Image', // Default alt text for accessibility
   fallback,
   onError,
   ...props

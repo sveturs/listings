@@ -4,6 +4,8 @@ package service
 import (
 	"context"
 
+	authService "github.com/sveturs/auth/pkg/http/service"
+
 	"backend/internal/config"
 	balanceService "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
@@ -63,4 +65,7 @@ type ServicesInterface interface {
 
 	// NewImageService создает новый ImageService
 	NewImageService(fileStorage filestorage.FileStorageInterface, repo interfaces.ImageRepositoryInterface, cfg services.ImageServiceConfig) *services.ImageService
+
+	// AuthUserService возвращает UserService из auth библиотеки
+	AuthUserService() *authService.UserService
 }

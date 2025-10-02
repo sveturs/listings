@@ -15,6 +15,59 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// getUserInfo получает информацию о пользователях через Auth Service API
+func (s *Storage) getUserInfo(ctx context.Context, userIDs []int) (map[int]struct {
+	Name       string
+	PictureURL string
+}, error,
+) {
+	result := make(map[int]struct {
+		Name       string
+		PictureURL string
+	})
+
+	if s.userService == nil {
+		return result, fmt.Errorf("userService is not initialized")
+	}
+
+	for _, userID := range userIDs {
+		user, err := s.userService.GetUser(ctx, userID)
+		if err != nil {
+			log.Printf("Warning: failed to get user %d info: %v", userID, err)
+			// Продолжаем с пустыми значениями
+			result[userID] = struct {
+				Name       string
+				PictureURL string
+			}{
+				Name:       "",
+				PictureURL: "",
+			}
+			continue
+		}
+
+		// Проверяем, что user не nil и содержит данные
+		if user != nil {
+			result[userID] = struct {
+				Name       string
+				PictureURL string
+			}{
+				Name:       user.Name,
+				PictureURL: user.PictureURL,
+			}
+		} else {
+			result[userID] = struct {
+				Name       string
+				PictureURL string
+			}{
+				Name:       "",
+				PictureURL: "",
+			}
+		}
+	}
+
+	return result, nil
+}
+
 // Реализуем методы хранилища
 func (s *Storage) GetChat(ctx context.Context, chatID int, userID int) (*models.MarketplaceChat, error) {
 	chat := &models.MarketplaceChat{}
@@ -225,15 +278,13 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 			SELECT
 				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
-				sender.name as sender_name,
-				sender.picture_url as sender_picture,
-				receiver.name as receiver_name,
-				receiver.picture_url as receiver_picture,
+				'' as sender_name,
+				'' as sender_picture,
+				'' as receiver_name,
+				'' as receiver_picture,
 				m.has_attachments, m.attachments_count
 			FROM marketplace_messages m
 			JOIN marketplace_chats c ON m.chat_id = c.id
-			JOIN users sender ON m.sender_id = sender.id
-			JOIN users receiver ON m.receiver_id = receiver.id
 			WHERE m.chat_id = $1
 			AND (c.buyer_id = $2 OR c.seller_id = $2)
 			ORDER BY m.created_at DESC
@@ -285,15 +336,13 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 			SELECT
 				m.id, m.chat_id, m.listing_id, m.storefront_product_id, m.sender_id, m.receiver_id,
 				m.content, m.is_read, m.created_at,
-				sender.name as sender_name,
-				sender.picture_url as sender_picture,
-				receiver.name as receiver_name,
-				receiver.picture_url as receiver_picture,
+				'' as sender_name,
+				'' as sender_picture,
+				'' as receiver_name,
+				'' as receiver_picture,
 				m.has_attachments, m.attachments_count
 			FROM marketplace_messages m
 			JOIN chat c ON m.chat_id = c.id
-			JOIN users sender ON m.sender_id = sender.id
-			JOIN users receiver ON m.receiver_id = receiver.id
 			ORDER BY m.created_at DESC
 			LIMIT $3 OFFSET $4
 		),
@@ -625,26 +674,19 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 			return fmt.Errorf("error updating chat: %w", err)
 		}
 
-		// Получаем информацию о пользователях
-		err = tx.QueryRow(ctx, `
-            WITH user_info AS (
-                SELECT id, name, picture_url
-                FROM users
-                WHERE id IN ($1, $2)
-            )
-            SELECT
-                (SELECT name FROM user_info WHERE id = $1),
-                (SELECT picture_url FROM user_info WHERE id = $1),
-                (SELECT name FROM user_info WHERE id = $2),
-                (SELECT picture_url FROM user_info WHERE id = $2)
-        `, msg.SenderID, msg.ReceiverID).Scan(
-			&senderInfo.name,
-			&senderInfo.pictureURL,
-			&receiverInfo.name,
-			&receiverInfo.pictureURL,
-		)
+		// Получаем информацию о пользователях через Auth Service API
+		userInfoMap, err := s.getUserInfo(ctx, []int{msg.SenderID, msg.ReceiverID})
 		if err != nil {
 			return fmt.Errorf("error getting user info: %w", err)
+		}
+
+		if info, ok := userInfoMap[msg.SenderID]; ok {
+			senderInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+			senderInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
+		}
+		if info, ok := userInfoMap[msg.ReceiverID]; ok {
+			receiverInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+			receiverInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
 		}
 	} else {
 		// Создаем новый чат или получаем существующий
@@ -652,82 +694,69 @@ func (s *Storage) CreateMessage(ctx context.Context, msg *models.MarketplaceMess
 		if msg.StorefrontProductID > 0 {
 			// Для товаров витрин создаем чат с storefront_product_id
 			err = tx.QueryRow(ctx, `
-				WITH user_info AS (
-					SELECT id, name, picture_url
-					FROM users
-					WHERE id IN ($1, $2)
-				),
-				chat_insert AS (
-					INSERT INTO marketplace_chats (
-						storefront_product_id,
-						buyer_id,
-						seller_id,
-						last_message_at
-					) VALUES ($3, $4, $5, CURRENT_TIMESTAMP)
-					ON CONFLICT (storefront_product_id, buyer_id, seller_id) WHERE storefront_product_id IS NOT NULL
-					DO UPDATE SET
-						last_message_at = CURRENT_TIMESTAMP,
-						is_archived = false
-					RETURNING id
-				)
-				SELECT
-					ci.id,
-					(SELECT name FROM user_info WHERE id = $1),
-					(SELECT picture_url FROM user_info WHERE id = $1),
-					(SELECT name FROM user_info WHERE id = $2),
-					(SELECT picture_url FROM user_info WHERE id = $2)
-				FROM chat_insert ci
-			`,
-				msg.SenderID, msg.ReceiverID,
-				msg.StorefrontProductID, buyerID, sellerID,
-			).Scan(
-				&msg.ChatID,
-				&senderInfo.name,
-				&senderInfo.pictureURL,
-				&receiverInfo.name,
-				&receiverInfo.pictureURL,
-			)
+				INSERT INTO marketplace_chats (
+					storefront_product_id,
+					buyer_id,
+					seller_id,
+					last_message_at
+				) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+				ON CONFLICT (storefront_product_id, buyer_id, seller_id) WHERE storefront_product_id IS NOT NULL
+				DO UPDATE SET
+					last_message_at = CURRENT_TIMESTAMP,
+					is_archived = false
+				RETURNING id
+			`, msg.StorefrontProductID, buyerID, sellerID).Scan(&msg.ChatID)
+			if err != nil {
+				return fmt.Errorf("error creating/getting storefront chat: %w", err)
+			}
+
+			// Получаем информацию о пользователях через Auth Service API
+			userInfoMap, err := s.getUserInfo(ctx, []int{msg.SenderID, msg.ReceiverID})
+			if err != nil {
+				return fmt.Errorf("error getting user info: %w", err)
+			}
+
+			if info, ok := userInfoMap[msg.SenderID]; ok {
+				senderInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+				senderInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
+			}
+			if info, ok := userInfoMap[msg.ReceiverID]; ok {
+				receiverInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+				receiverInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
+			}
 		} else {
 			// Для обычных листингов или прямых сообщений
 			err = tx.QueryRow(ctx, `
-				WITH user_info AS (
-					SELECT id, name, picture_url
-					FROM users
-					WHERE id IN ($1, $2)
-				),
-				chat_insert AS (
-					INSERT INTO marketplace_chats (
-						listing_id,
-						buyer_id,
-						seller_id,
-						last_message_at
-					) VALUES (NULLIF($3, 0), $4, $5, CURRENT_TIMESTAMP)
-					ON CONFLICT (listing_id, buyer_id, seller_id)
-					DO UPDATE SET
-						last_message_at = CURRENT_TIMESTAMP,
-						is_archived = false
-					RETURNING id
-				)
-				SELECT
-					ci.id,
-					(SELECT name FROM user_info WHERE id = $1),
-					(SELECT picture_url FROM user_info WHERE id = $1),
-					(SELECT name FROM user_info WHERE id = $2),
-					(SELECT picture_url FROM user_info WHERE id = $2)
-				FROM chat_insert ci
-			`,
-				msg.SenderID, msg.ReceiverID,
-				msg.ListingID, buyerID, sellerID,
-			).Scan(
-				&msg.ChatID,
-				&senderInfo.name,
-				&senderInfo.pictureURL,
-				&receiverInfo.name,
-				&receiverInfo.pictureURL,
-			)
-		}
-		if err != nil {
-			return fmt.Errorf("error creating/getting chat: %w", err)
+				INSERT INTO marketplace_chats (
+					listing_id,
+					buyer_id,
+					seller_id,
+					last_message_at
+				) VALUES (NULLIF($1, 0), $2, $3, CURRENT_TIMESTAMP)
+				ON CONFLICT (listing_id, buyer_id, seller_id)
+				DO UPDATE SET
+					last_message_at = CURRENT_TIMESTAMP,
+					is_archived = false
+				RETURNING id
+			`, msg.ListingID, buyerID, sellerID).Scan(&msg.ChatID)
+			if err != nil {
+				return fmt.Errorf("error creating/getting chat: %w", err)
+			}
+
+			// Получаем информацию о пользователях через Auth Service API
+			userInfoMap, err := s.getUserInfo(ctx, []int{msg.SenderID, msg.ReceiverID})
+			if err != nil {
+				return fmt.Errorf("error getting user info: %w", err)
+			}
+
+			if info, ok := userInfoMap[msg.SenderID]; ok {
+				senderInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+				senderInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
+			}
+			if info, ok := userInfoMap[msg.ReceiverID]; ok {
+				receiverInfo.name = sql.NullString{String: info.Name, Valid: info.Name != ""}
+				receiverInfo.pictureURL = sql.NullString{String: info.PictureURL, Valid: info.PictureURL != ""}
+			}
 		}
 	}
 

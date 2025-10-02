@@ -624,7 +624,7 @@ export default function HomePageClient({
             `Mixed selection: ${selectedListings.filter((l: any) => !l.storefrontId).length} C2C + ${selectedListings.filter((l: any) => l.storefrontId).length} B2C`
           );
 
-          const apiListings = selectedListings.map((listing: any) => {
+          const apiListings = selectedListings.map((listing: any, index: number) => {
             // Логируем структуру данных для отладки
             logger.debug('Processing listing:', {
               id: listing.id,
@@ -675,11 +675,14 @@ export default function HomePageClient({
               user_id_direct: listing.user_id,
             });
 
+            // Формируем уникальный ключ для React
+            // API уже возвращает listing.id с префиксом (sp_XXX или ml_XXX)
+            // Добавляем index как fallback для гарантии уникальности
+            const uniqueKey =
+              listing.id || `${listing.product_type || 'item'}_${index}`;
+
             const mappedListing = {
-              id:
-                listing.product_type === 'storefront'
-                  ? `sp_${listing.product_id}` // Добавляем префикс для уникальности
-                  : `ml_${listing.id}`,
+              id: uniqueKey, // Используем уникальный ключ
               product_id:
                 listing.product_type === 'storefront'
                   ? listing.product_id

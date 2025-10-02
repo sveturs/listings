@@ -374,21 +374,46 @@ class ChatService {
   }
 
   // WebSocket соединение
-  connectWebSocket(onMessage: (event: MessageEvent) => void): WebSocket | null {
+  async connectWebSocket(
+    onMessage: (event: MessageEvent) => void
+  ): Promise<WebSocket | null> {
     // WebSocket подключается напрямую к backend
-    // Аутентификация через cookie автоматически передаётся браузером
-    // TODO: В будущем можно добавить WebSocket proxy через BFF, но сейчас работает напрямую
+    // Получаем токен из BFF endpoint (httpOnly cookie не доступен из JS)
+    try {
+      const tokenResponse = await fetch('/api/v2/ws-token', {
+        credentials: 'include',
+      });
 
-    // Определяем WebSocket URL на основе текущего протокола
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
+      if (!tokenResponse.ok) {
+        console.error('Failed to get WebSocket token:', tokenResponse.status);
+        return null;
+      }
 
-    // Для development используем backend порт напрямую
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const wsHost = isDevelopment ? 'localhost:3000' : host;
+      const { token } = await tokenResponse.json();
 
-    const wsUrl = `${protocol}//${wsHost}/ws/chat`;
-    const ws = new WebSocket(wsUrl);
+      // Определяем WebSocket URL на основе текущего протокола
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+
+      // Для development используем backend порт напрямую
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const wsHost = isDevelopment ? 'localhost:3000' : host;
+
+      // Добавляем токен в query параметр
+      const wsUrl = `${protocol}//${wsHost}/ws/chat?token=${token}`;
+      const ws = new WebSocket(wsUrl);
+
+      return this.setupWebSocketHandlers(ws, onMessage);
+    } catch (error) {
+      console.error('Failed to establish WebSocket connection:', error);
+      return null;
+    }
+  }
+
+  private setupWebSocketHandlers(
+    ws: WebSocket,
+    onMessage: (event: MessageEvent) => void
+  ): WebSocket {
 
     ws.onopen = () => {
       // Сбрасываем счетчик попыток при успешном подключении
@@ -425,8 +450,8 @@ class ChatService {
       const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
       this.reconnectAttempts++;
 
-      setTimeout(() => {
-        this.connectWebSocket(onMessage);
+      setTimeout(async () => {
+        await this.connectWebSocket(onMessage);
       }, delay);
     };
 

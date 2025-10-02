@@ -35,9 +35,7 @@ async function proxyRequest(
     console.log(`[BFF Proxy] ${method} /api/v2/${backendPath} → ${backendUrl}`);
 
     // Подготавливаем заголовки
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+    const headers: HeadersInit = {};
 
     // Добавляем Authorization header если есть токен
     if (accessToken) {
@@ -51,14 +49,25 @@ async function proxyRequest(
     }
 
     // Подготавливаем body для методов с телом запроса
-    let body: string | undefined;
+    let body: BodyInit | undefined;
+    const contentType = request.headers.get('Content-Type');
+
     if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      try {
-        const requestBody = await request.json();
-        body = JSON.stringify(requestBody);
-      } catch {
-        // Если не удалось распарсить JSON, пропускаем body
-        body = undefined;
+      // Если это multipart/form-data (загрузка файлов)
+      if (contentType?.includes('multipart/form-data')) {
+        // Передаем FormData напрямую, НЕ устанавливаем Content-Type
+        // (fetch сам добавит правильный boundary)
+        body = await request.formData();
+      } else {
+        // Для обычных JSON запросов
+        headers['Content-Type'] = 'application/json';
+        try {
+          const requestBody = await request.json();
+          body = JSON.stringify(requestBody);
+        } catch {
+          // Если не удалось распарсить JSON, пропускаем body
+          body = undefined;
+        }
       }
     }
 
@@ -71,10 +80,10 @@ async function proxyRequest(
     });
 
     // Получаем данные ответа
-    const contentType = response.headers.get('content-type');
+    const responseContentType = response.headers.get('content-type');
     let data;
 
-    if (contentType?.includes('application/json')) {
+    if (responseContentType?.includes('application/json')) {
       const text = await response.text();
       if (text) {
         try {
