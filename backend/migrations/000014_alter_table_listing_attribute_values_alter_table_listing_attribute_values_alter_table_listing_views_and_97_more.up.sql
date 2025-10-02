@@ -1,3 +1,9 @@
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_listing_id_attribute_id_key UNIQUE (listing_id, attribute_id);
+ALTER TABLE ONLY public.listing_attribute_values
+    ADD CONSTRAINT listing_attribute_values_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.listing_views
+    ADD CONSTRAINT listing_view_uniqueness UNIQUE (listing_id, user_id);
 ALTER TABLE ONLY public.listing_views
     ADD CONSTRAINT listing_views_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.listings_geo
@@ -192,9 +198,3 @@ ALTER TABLE ONLY public.translation_providers
     ADD CONSTRAINT translation_providers_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.translation_quality_metrics
     ADD CONSTRAINT translation_quality_metrics_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_sync_conflicts
-    ADD CONSTRAINT translation_sync_conflicts_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translation_tasks
-    ADD CONSTRAINT translation_tasks_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.translations
-    ADD CONSTRAINT translations_entity_type_entity_id_language_field_name_key UNIQUE (entity_type, entity_id, language, field_name);

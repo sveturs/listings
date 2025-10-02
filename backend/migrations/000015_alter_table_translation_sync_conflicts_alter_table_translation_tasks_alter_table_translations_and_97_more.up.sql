@@ -1,3 +1,9 @@
+ALTER TABLE ONLY public.translation_sync_conflicts
+    ADD CONSTRAINT translation_sync_conflicts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translation_tasks
+    ADD CONSTRAINT translation_tasks_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.translations
+    ADD CONSTRAINT translations_entity_type_entity_id_language_field_name_key UNIQUE (entity_type, entity_id, language, field_name);
 ALTER TABLE ONLY public.translations
     ADD CONSTRAINT translations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.transliteration_rules
@@ -151,6 +157,3 @@ CREATE TRIGGER trigger_update_search_synonyms_updated_at BEFORE UPDATE ON public
 CREATE TRIGGER trigger_update_search_weights_updated_at BEFORE UPDATE ON public.search_weights FOR EACH ROW EXECUTE FUNCTION public.update_search_weights_updated_at();
 CREATE TRIGGER trigger_update_storefront_product_variants_updated_at BEFORE UPDATE ON public.storefront_product_variants FOR EACH ROW EXECUTE FUNCTION public.update_product_variants_updated_at();
 CREATE TRIGGER trigger_update_storefront_products_count AFTER INSERT OR DELETE OR UPDATE ON public.storefront_products FOR EACH ROW EXECUTE FUNCTION public.update_storefront_products_count();
-CREATE TRIGGER trigger_update_storefront_products_geo AFTER UPDATE ON public.storefronts FOR EACH ROW EXECUTE FUNCTION public.update_storefront_products_geo();
-CREATE TRIGGER trigger_update_transliteration_rules_updated_at BEFORE UPDATE ON public.transliteration_rules FOR EACH ROW EXECUTE FUNCTION public.update_transliteration_rules_updated_at();
-CREATE TRIGGER trigger_update_unified_geo_updated_at BEFORE UPDATE ON public.unified_geo FOR EACH ROW EXECUTE FUNCTION public.update_unified_geo_updated_at();

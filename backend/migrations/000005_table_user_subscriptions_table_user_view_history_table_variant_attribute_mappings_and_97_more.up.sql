@@ -65,7 +65,7 @@ CREATE TABLE public.viber_messages (
     is_billable boolean DEFAULT false,
     status character varying(20),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT viber_messages_direction_check CHECK (((direction)::text = ANY ((ARRAY['incoming'::character varying, 'outgoing'::character varying])::text[])))
+    CONSTRAINT viber_messages_direction_check CHECK (((direction)::text = ANY (ARRAY[('incoming'::character varying)::text, ('outgoing'::character varying)::text])))
 );
 CREATE TABLE public.viber_sessions (
     id integer NOT NULL,
@@ -208,7 +208,6 @@ CREATE TABLE public.vin_recalls (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE ONLY public.address_change_log ALTER COLUMN id SET DEFAULT nextval('public.address_change_log_id_seq'::regclass);
-ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.admin_users_id_seq'::regclass);
 ALTER TABLE ONLY public.ai_category_decisions ALTER COLUMN id SET DEFAULT nextval('public.ai_category_decisions_id_seq'::regclass);
 ALTER TABLE ONLY public.attribute_group_items ALTER COLUMN id SET DEFAULT nextval('public.attribute_group_items_id_seq'::regclass);
 ALTER TABLE ONLY public.attribute_groups ALTER COLUMN id SET DEFAULT nextval('public.attribute_groups_id_seq'::regclass);
@@ -294,3 +293,4 @@ ALTER TABLE ONLY public.search_optimization_sessions ALTER COLUMN id SET DEFAULT
 ALTER TABLE ONLY public.search_queries ALTER COLUMN id SET DEFAULT nextval('public.search_queries_id_seq'::regclass);
 ALTER TABLE ONLY public.search_statistics ALTER COLUMN id SET DEFAULT nextval('public.search_statistics_id_seq'::regclass);
 ALTER TABLE ONLY public.search_synonyms ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_id_seq'::regclass);
+ALTER TABLE ONLY public.search_synonyms_config ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_config_id_seq'::regclass);

@@ -1,3 +1,6 @@
+CREATE TRIGGER trigger_update_storefront_products_geo AFTER UPDATE ON public.storefronts FOR EACH ROW EXECUTE FUNCTION public.update_storefront_products_geo();
+CREATE TRIGGER trigger_update_transliteration_rules_updated_at BEFORE UPDATE ON public.transliteration_rules FOR EACH ROW EXECUTE FUNCTION public.update_transliteration_rules_updated_at();
+CREATE TRIGGER trigger_update_unified_geo_updated_at BEFORE UPDATE ON public.unified_geo FOR EACH ROW EXECUTE FUNCTION public.update_unified_geo_updated_at();
 CREATE TRIGGER update_bex_configuration_updated_at BEFORE UPDATE ON public.bex_configuration FOR EACH ROW EXECUTE FUNCTION public.update_bex_updated_at();
 CREATE TRIGGER update_bex_shipments_updated_at BEFORE UPDATE ON public.bex_shipments FOR EACH ROW EXECUTE FUNCTION public.update_bex_updated_at();
 CREATE TRIGGER update_car_generations_updated_at BEFORE UPDATE ON public.car_generations FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -42,7 +45,6 @@ CREATE TRIGGER update_user_privacy_settings_updated_at BEFORE UPDATE ON public.u
 CREATE TRIGGER update_viber_users_updated_at BEFORE UPDATE ON public.viber_users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE TRIGGER update_vin_decode_cache_timestamp BEFORE UPDATE ON public.vin_decode_cache FOR EACH ROW EXECUTE FUNCTION public.update_vin_decode_cache_updated_at();
 ALTER SEQUENCE public.address_change_log_id_seq OWNED BY public.address_change_log.id;
-ALTER SEQUENCE public.admin_users_id_seq OWNED BY public.admin_users.id;
 ALTER SEQUENCE public.ai_category_decisions_id_seq OWNED BY public.ai_category_decisions.id;
 ALTER SEQUENCE public.attribute_group_items_id_seq OWNED BY public.attribute_group_items.id;
 ALTER SEQUENCE public.attribute_groups_id_seq OWNED BY public.attribute_groups.id;
@@ -96,5 +98,3 @@ ALTER SEQUENCE public.marketplace_categories_id_seq OWNED BY public.marketplace_
 ALTER SEQUENCE public.marketplace_chats_id_seq OWNED BY public.marketplace_chats.id;
 ALTER SEQUENCE public.marketplace_images_id_seq OWNED BY public.marketplace_images.id;
 ALTER SEQUENCE public.marketplace_listing_variants_id_seq OWNED BY public.marketplace_listing_variants.id;
-ALTER SEQUENCE public.marketplace_messages_id_seq OWNED BY public.marketplace_messages.id;
-ALTER SEQUENCE public.marketplace_orders_id_seq OWNED BY public.marketplace_orders.id;

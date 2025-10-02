@@ -1,3 +1,5 @@
+ALTER SEQUENCE public.marketplace_messages_id_seq OWNED BY public.marketplace_messages.id;
+ALTER SEQUENCE public.marketplace_orders_id_seq OWNED BY public.marketplace_orders.id;
 ALTER SEQUENCE public.merchant_payouts_id_seq OWNED BY public.merchant_payouts.id;
 ALTER SEQUENCE public.notification_templates_id_seq OWNED BY public.notification_templates.id;
 ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
@@ -110,7 +112,3 @@ ALTER TABLE ONLY public.category_variant_attributes
     ADD CONSTRAINT category_variant_attributes_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.component_templates
     ADD CONSTRAINT component_templates_component_id_fkey FOREIGN KEY (component_id) REFERENCES public.custom_ui_components(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.courier_location_history
-    ADD CONSTRAINT courier_location_history_courier_id_fkey FOREIGN KEY (courier_id) REFERENCES public.couriers(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.courier_location_history
-    ADD CONSTRAINT courier_location_history_delivery_id_fkey FOREIGN KEY (delivery_id) REFERENCES public.deliveries(id) ON DELETE CASCADE;

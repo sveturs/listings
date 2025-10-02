@@ -1,4 +1,3 @@
-ALTER TABLE ONLY public.search_synonyms_config ALTER COLUMN id SET DEFAULT nextval('public.search_synonyms_config_id_seq'::regclass);
 ALTER TABLE ONLY public.search_weights ALTER COLUMN id SET DEFAULT nextval('public.search_weights_id_seq'::regclass);
 ALTER TABLE ONLY public.search_weights_history ALTER COLUMN id SET DEFAULT nextval('public.search_weights_history_id_seq'::regclass);
 ALTER TABLE ONLY public.shopping_cart_items ALTER COLUMN id SET DEFAULT nextval('public.shopping_cart_items_id_seq'::regclass);
@@ -270,24 +269,154 @@ CREATE MATERIALIZED VIEW public.storefront_rating_summary AS
      LEFT JOIN review_stats rs ON ((s.id = rs.storefront_id)))
   WITH NO DATA;
 CREATE MATERIALIZED VIEW public.storefront_ratings AS
- SELECT reviews.entity_origin_id AS storefront_id,
-    count(*) AS total_reviews,
-    avg(reviews.rating) AS average_rating,
-    count(*) FILTER (WHERE ((reviews.entity_type)::text = 'storefront'::text)) AS direct_reviews,
-    count(*) FILTER (WHERE ((reviews.entity_type)::text = 'listing'::text)) AS listing_reviews,
-    count(*) FILTER (WHERE (reviews.is_verified_purchase = true)) AS verified_reviews,
-    count(*) FILTER (WHERE (array_length(reviews.photos, 1) > 0)) AS photo_reviews,
-    count(*) FILTER (WHERE (reviews.rating = 1)) AS rating_1,
-    count(*) FILTER (WHERE (reviews.rating = 2)) AS rating_2,
-    count(*) FILTER (WHERE (reviews.rating = 3)) AS rating_3,
-    count(*) FILTER (WHERE (reviews.rating = 4)) AS rating_4,
-    count(*) FILTER (WHERE (reviews.rating = 5)) AS rating_5,
-    avg(reviews.rating) FILTER (WHERE (reviews.created_at >= (now() - '30 days'::interval))) AS recent_rating,
-    count(*) FILTER (WHERE (reviews.created_at >= (now() - '30 days'::interval))) AS recent_reviews,
-    max(reviews.created_at) AS last_review_at
-   FROM public.reviews
-  WHERE (((reviews.entity_origin_type)::text = 'storefront'::text) AND ((reviews.status)::text = 'published'::text))
-  GROUP BY reviews.entity_origin_id
+ SELECT s.id AS storefront_id,
+    count(DISTINCT r.id) AS total_reviews,
+    COALESCE(avg(r.rating), (0)::numeric) AS average_rating,
+    count(DISTINCT
+        CASE
+            WHEN ((r.entity_type)::text = 'storefront'::text) THEN r.id
+            ELSE NULL::integer
+        END) AS direct_reviews,
+    count(DISTINCT
+        CASE
+            WHEN ((r.entity_type)::text = 'marketplace_listing'::text) THEN r.id
+            ELSE NULL::integer
+        END) AS listing_reviews,
+    count(DISTINCT
+        CASE
+            WHEN r.is_verified_purchase THEN r.id
+            ELSE NULL::integer
+        END) AS verified_reviews,
+    count(
+        CASE
+            WHEN (r.rating = 1) THEN 1
+            ELSE NULL::integer
+        END) AS rating_1,
+    count(
+        CASE
+            WHEN (r.rating = 2) THEN 1
+            ELSE NULL::integer
+        END) AS rating_2,
+    count(
+        CASE
+            WHEN (r.rating = 3) THEN 1
+            ELSE NULL::integer
+        END) AS rating_3,
+    count(
+        CASE
+            WHEN (r.rating = 4) THEN 1
+            ELSE NULL::integer
+        END) AS rating_4,
+    count(
+        CASE
+            WHEN (r.rating = 5) THEN 1
+            ELSE NULL::integer
+        END) AS rating_5,
+    avg(
+        CASE
+            WHEN (r.created_at > (now() - '30 days'::interval)) THEN r.rating
+            ELSE NULL::integer
+        END) AS recent_rating,
+    count(
+        CASE
+            WHEN (r.created_at > (now() - '30 days'::interval)) THEN 1
+            ELSE NULL::integer
+        END) AS recent_reviews,
+    max(r.created_at) AS last_review_at,
+    s.user_id AS owner_id
+   FROM (public.user_storefronts s
+     LEFT JOIN public.reviews r ON ((((((r.entity_type)::text = 'storefront'::text) AND (r.entity_id = s.id)) OR (((r.entity_origin_type)::text = 'storefront'::text) AND (r.entity_origin_id = s.id))) AND ((r.status)::text = 'published'::text))))
+  GROUP BY s.id, s.user_id
+  WITH NO DATA;
+CREATE MATERIALIZED VIEW public.user_rating_summary AS
+ WITH review_stats AS (
+         SELECT r.entity_id AS user_id,
+            count(*) AS total_reviews,
+            avg(r.rating) AS average_rating,
+            count(*) FILTER (WHERE (r.rating = 1)) AS rating_1,
+            count(*) FILTER (WHERE (r.rating = 2)) AS rating_2,
+            count(*) FILTER (WHERE (r.rating = 3)) AS rating_3,
+            count(*) FILTER (WHERE (r.rating = 4)) AS rating_4,
+            count(*) FILTER (WHERE (r.rating = 5)) AS rating_5
+           FROM public.reviews r
+          WHERE (((r.entity_type)::text = 'user'::text) AND ((r.status)::text = 'published'::text))
+          GROUP BY r.entity_id
+        )
+ SELECT review_stats.user_id,
+    review_stats.total_reviews,
+    review_stats.average_rating,
+    review_stats.rating_1,
+    review_stats.rating_2,
+    review_stats.rating_3,
+    review_stats.rating_4,
+    review_stats.rating_5
+   FROM review_stats
+  WITH NO DATA;
+CREATE MATERIALIZED VIEW public.user_ratings AS
+ SELECT users.user_id,
+    count(DISTINCT r.id) AS total_reviews,
+    COALESCE(avg(r.rating), (0)::numeric) AS average_rating,
+    count(DISTINCT
+        CASE
+            WHEN ((r.entity_type)::text = 'user'::text) THEN r.id
+            ELSE NULL::integer
+        END) AS direct_reviews,
+    count(DISTINCT
+        CASE
+            WHEN ((r.entity_type)::text = 'marketplace_listing'::text) THEN r.id
+            ELSE NULL::integer
+        END) AS listing_reviews,
+    count(DISTINCT
+        CASE
+            WHEN ((r.entity_type)::text = 'storefront'::text) THEN r.id
+            ELSE NULL::integer
+        END) AS storefront_reviews,
+    count(DISTINCT
+        CASE
+            WHEN r.is_verified_purchase THEN r.id
+            ELSE NULL::integer
+        END) AS verified_reviews,
+    count(
+        CASE
+            WHEN (r.rating = 1) THEN 1
+            ELSE NULL::integer
+        END) AS rating_1,
+    count(
+        CASE
+            WHEN (r.rating = 2) THEN 1
+            ELSE NULL::integer
+        END) AS rating_2,
+    count(
+        CASE
+            WHEN (r.rating = 3) THEN 1
+            ELSE NULL::integer
+        END) AS rating_3,
+    count(
+        CASE
+            WHEN (r.rating = 4) THEN 1
+            ELSE NULL::integer
+        END) AS rating_4,
+    count(
+        CASE
+            WHEN (r.rating = 5) THEN 1
+            ELSE NULL::integer
+        END) AS rating_5,
+    avg(
+        CASE
+            WHEN (r.created_at > (now() - '30 days'::interval)) THEN r.rating
+            ELSE NULL::integer
+        END) AS recent_rating,
+    count(
+        CASE
+            WHEN (r.created_at > (now() - '30 days'::interval)) THEN 1
+            ELSE NULL::integer
+        END) AS recent_reviews,
+    max(r.created_at) AS last_review_at
+   FROM (( SELECT DISTINCT COALESCE(reviews.entity_origin_id, reviews.entity_id) AS user_id
+           FROM public.reviews
+          WHERE ((((reviews.entity_type)::text = 'user'::text) OR ((reviews.entity_origin_type)::text = 'user'::text)) AND ((reviews.status)::text = 'published'::text))) users
+     LEFT JOIN public.reviews r ON ((((((r.entity_type)::text = 'user'::text) AND (r.entity_id = users.user_id)) OR (((r.entity_origin_type)::text = 'user'::text) AND (r.entity_origin_id = users.user_id))) AND ((r.status)::text = 'published'::text))))
+  GROUP BY users.user_id
   WITH NO DATA;
 CREATE INDEX idx_address_log_change_reason ON public.address_change_log USING btree (change_reason);
 CREATE INDEX idx_address_log_new_location ON public.address_change_log USING gist (new_location);
@@ -306,7 +435,6 @@ CREATE INDEX idx_search_weights_version ON public.search_weights USING btree (ve
 CREATE INDEX idx_storefront_products_individual_location ON public.storefront_products USING btree (has_individual_location);
 CREATE INDEX idx_unified_geo_location ON public.unified_geo USING gist (location);
 CREATE INDEX idx_viber_messages_user_session ON public.viber_messages USING btree (viber_user_id, session_id, created_at DESC);
-CREATE INDEX admin_users_email_idx ON public.admin_users USING btree (email);
 CREATE INDEX idx_address_log_confidence_after ON public.address_change_log USING btree (confidence_after);
 CREATE INDEX idx_address_log_created_at ON public.address_change_log USING btree (created_at);
 CREATE INDEX idx_address_log_listing_id ON public.address_change_log USING btree (listing_id);

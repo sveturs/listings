@@ -1,3 +1,7 @@
+ALTER TABLE ONLY public.courier_location_history
+    ADD CONSTRAINT courier_location_history_courier_id_fkey FOREIGN KEY (courier_id) REFERENCES public.couriers(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.courier_location_history
+    ADD CONSTRAINT courier_location_history_delivery_id_fkey FOREIGN KEY (delivery_id) REFERENCES public.deliveries(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.courier_zones
     ADD CONSTRAINT courier_zones_courier_id_fkey FOREIGN KEY (courier_id) REFERENCES public.couriers(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.custom_ui_component_usage
@@ -108,16 +112,8 @@ ALTER TABLE ONLY public.role_permissions
     ADD CONSTRAINT role_permissions_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.saved_search_notifications
     ADD CONSTRAINT saved_search_notifications_saved_search_id_fkey FOREIGN KEY (saved_search_id) REFERENCES public.saved_searches(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.search_optimization_sessions
-    ADD CONSTRAINT search_optimization_sessions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.admin_users(id) ON DELETE RESTRICT;
-ALTER TABLE ONLY public.search_weights
-    ADD CONSTRAINT search_weights_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.admin_users(id) ON DELETE SET NULL;
-ALTER TABLE ONLY public.search_weights_history
-    ADD CONSTRAINT search_weights_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.admin_users(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.search_weights_history
     ADD CONSTRAINT search_weights_history_weight_id_fkey FOREIGN KEY (weight_id) REFERENCES public.search_weights(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.search_weights
-    ADD CONSTRAINT search_weights_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.admin_users(id) ON DELETE SET NULL;
 ALTER TABLE ONLY public.shopping_cart_items
     ADD CONSTRAINT shopping_cart_items_cart_id_fkey FOREIGN KEY (cart_id) REFERENCES public.shopping_carts(id) ON DELETE CASCADE;
 ALTER TABLE ONLY public.shopping_cart_items
@@ -198,3 +194,7 @@ ALTER TABLE ONLY public.user_storefronts
     ADD CONSTRAINT user_storefronts_creation_transaction_id_fkey FOREIGN KEY (creation_transaction_id) REFERENCES public.balance_transactions(id);
 ALTER TABLE ONLY public.user_subscriptions
     ADD CONSTRAINT user_subscriptions_last_payment_id_fkey FOREIGN KEY (last_payment_id) REFERENCES public.payment_transactions(id);
+ALTER TABLE ONLY public.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_plan_id_fkey FOREIGN KEY (plan_id) REFERENCES public.subscription_plans(id);
+ALTER TABLE ONLY public.user_view_history
+    ADD CONSTRAINT user_view_history_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.marketplace_categories(id);

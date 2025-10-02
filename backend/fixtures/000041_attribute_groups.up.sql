@@ -4,6 +4,8 @@ INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is
 INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is_active, created_at, updated_at, display_name, icon, is_system) VALUES (4, 'appearance', 'Внешний вид', 'Цвет, материал и другие визуальные характеристики', 4, true, '2025-09-09 22:06:08.808983', '2025-09-09 22:06:08.808983', 'Внешний вид', NULL, false);
 INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is_active, created_at, updated_at, display_name, icon, is_system) VALUES (5, 'features', 'Особенности', 'Дополнительные функции и возможности', 5, true, '2025-09-09 22:06:08.808983', '2025-09-09 22:06:08.808983', 'Особенности', NULL, false);
 INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is_active, created_at, updated_at, display_name, icon, is_system) VALUES (6, 'package', 'Комплектация', 'Комплект поставки', 6, true, '2025-09-09 22:06:08.808983', '2025-09-09 22:06:08.808983', 'Комплектация', NULL, false);
+INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is_active, created_at, updated_at, display_name, icon, is_system) VALUES (23, 'cubikrubika', 'cubikrubika', 'cubikrubikacubikrubikacubikrubika', 1, true, '2025-10-01 14:04:00.260033', '2025-10-01 14:04:00.260033', 'cubikrubika', 'cubikrubika', false);
+INSERT INTO public.attribute_groups (id, code, name, description, sort_order, is_active, created_at, updated_at, display_name, icon, is_system) VALUES (24, 'test123', 'test123', 'test', 10, true, '2025-10-01 14:08:39.852324', '2025-10-01 14:08:39.852324', 'Test Group', NULL, false);
 
 
 --

@@ -50,9 +50,3 @@ INSERT INTO public.ai_category_decisions (id, title_hash, title, description, ca
 --
 -- Data for Name: attribute_group_items; Type: TABLE DATA; Schema: public; Owner: -
 --
-
-
-
---
--- Data for Name: attribute_groups; Type: TABLE DATA; Schema: public; Owner: -
---

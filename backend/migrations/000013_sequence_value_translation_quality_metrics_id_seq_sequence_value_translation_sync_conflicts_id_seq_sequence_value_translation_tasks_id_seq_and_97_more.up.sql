@@ -1,9 +1,14 @@
+SELECT pg_catalog.setval('public.translation_quality_metrics_id_seq', 1, false);
+SELECT pg_catalog.setval('public.translation_sync_conflicts_id_seq', 1, false);
+SELECT pg_catalog.setval('public.translation_tasks_id_seq', 1, false);
+SELECT pg_catalog.setval('public.translations_id_seq', 5254, true);
+SELECT pg_catalog.setval('public.transliteration_rules_id_seq', 52, false);
 SELECT pg_catalog.setval('public.unified_attribute_stats_id_seq', 1, false);
 SELECT pg_catalog.setval('public.unified_attribute_values_id_seq', 31, true);
 SELECT pg_catalog.setval('public.unified_attributes_id_seq', 333, true);
 SELECT pg_catalog.setval('public.unified_category_attributes_id_seq', 2306, true);
-SELECT pg_catalog.setval('public.unified_geo_id_seq', 624, true);
-SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 2783, true);
+SELECT pg_catalog.setval('public.unified_geo_id_seq', 629, true);
+SELECT pg_catalog.setval('public.user_behavior_events_id_seq', 2784, true);
 SELECT pg_catalog.setval('public.user_car_view_history_id_seq', 1, false);
 SELECT pg_catalog.setval('public.user_contacts_id_seq', 32, true);
 SELECT pg_catalog.setval('public.user_notification_contacts_id_seq', 1, false);
@@ -24,10 +29,6 @@ SELECT pg_catalog.setval('public.vin_ownership_history_id_seq', 1, false);
 SELECT pg_catalog.setval('public.vin_recalls_id_seq', 1, false);
 ALTER TABLE ONLY public.address_change_log
     ADD CONSTRAINT address_change_log_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.admin_users
-    ADD CONSTRAINT admin_users_email_key UNIQUE (email);
-ALTER TABLE ONLY public.admin_users
-    ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.ai_category_decisions
     ADD CONSTRAINT ai_category_decisions_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.ai_category_decisions
@@ -168,9 +169,3 @@ ALTER TABLE ONLY public.inventory_reservations
     ADD CONSTRAINT inventory_reservations_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY public.item_performance_metrics
     ADD CONSTRAINT item_performance_metrics_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.listing_attribute_values
-    ADD CONSTRAINT listing_attribute_values_listing_id_attribute_id_key UNIQUE (listing_id, attribute_id);
-ALTER TABLE ONLY public.listing_attribute_values
-    ADD CONSTRAINT listing_attribute_values_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.listing_views
-    ADD CONSTRAINT listing_view_uniqueness UNIQUE (listing_id, user_id);

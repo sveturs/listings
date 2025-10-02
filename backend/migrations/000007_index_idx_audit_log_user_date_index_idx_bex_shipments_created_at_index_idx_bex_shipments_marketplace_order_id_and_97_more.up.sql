@@ -58,7 +58,7 @@ CREATE INDEX idx_custom_ui_components_type ON public.custom_ui_components USING 
 CREATE INDEX idx_custom_ui_templates_name ON public.custom_ui_templates USING btree (name);
 CREATE INDEX idx_deliveries_courier ON public.deliveries USING btree (courier_id, status);
 CREATE INDEX idx_deliveries_order ON public.deliveries USING btree (order_id);
-CREATE INDEX idx_deliveries_status ON public.deliveries USING btree (status) WHERE ((status)::text = ANY ((ARRAY['assigned'::character varying, 'accepted'::character varying, 'picked_up'::character varying, 'in_transit'::character varying])::text[]));
+CREATE INDEX idx_deliveries_status ON public.deliveries USING btree (status) WHERE ((status)::text = ANY (ARRAY[('assigned'::character varying)::text, ('accepted'::character varying)::text, ('picked_up'::character varying)::text, ('in_transit'::character varying)::text]));
 CREATE INDEX idx_deliveries_tracking_token ON public.deliveries USING btree (tracking_token);
 CREATE INDEX idx_delivery_category_defaults_category ON public.delivery_category_defaults USING btree (category_id);
 CREATE INDEX idx_delivery_is_active ON public.storefront_delivery_options USING btree (is_active);
