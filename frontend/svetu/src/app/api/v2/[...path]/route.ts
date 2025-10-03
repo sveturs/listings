@@ -82,7 +82,7 @@ async function proxyRequest(
           const clonedRequest = request.clone();
           const requestBody = await clonedRequest.json();
           body = JSON.stringify(requestBody);
-        } catch (err) {
+        } catch {
           // Если не удалось распарсить JSON, пробуем прочитать как text
           try {
             const textBody = await request.text();

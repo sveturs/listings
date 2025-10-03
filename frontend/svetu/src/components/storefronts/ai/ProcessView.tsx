@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { storefrontAI } from '@/services/ai/storefronts.service';
+import { extractLocationFromImages } from '@/utils/exifUtils';
+import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 
 interface ProcessViewProps {
   storefrontSlug: string;
@@ -20,11 +22,23 @@ export default function ProcessView({
   storefrontSlug: _storefrontSlug,
 }: ProcessViewProps) {
   const t = useTranslations('storefronts');
+  const locale = useLocale();
   const { state, setAIData, setView, setError, setProcessing } =
     useCreateAIProduct();
 
+  // Геокодирование для преобразования координат в адрес
+  const geocoding = useAddressGeocoding({
+    country: ['rs'],
+    language: locale,
+  });
+
   const [steps, setSteps] = useState<ProcessStep[]>([
     { id: 'analyze', label: t('analyzingImages'), status: 'pending' },
+    {
+      id: 'exif',
+      label: t('detectingLocationFromExif') || 'Определение адреса из EXIF',
+      status: 'pending',
+    },
     { id: 'category', label: t('detectingCategory'), status: 'pending' },
     { id: 'titles', label: t('generatingTitleVariants'), status: 'pending' },
     { id: 'translations', label: t('creatingTranslations'), status: 'pending' },
@@ -70,7 +84,54 @@ export default function ProcessView({
 
         updateStepStatus('analyze', 'completed', 'Image analyzed successfully');
 
-        // Step 2: Detect category
+        // Step 2: Extract location from EXIF
+        updateStepStatus('exif', 'processing');
+
+        let locationData = null;
+        try {
+          const exifLocation = await extractLocationFromImages(
+            state.imageFiles
+          );
+          if (exifLocation) {
+            console.log('[ProcessView] EXIF location found:', exifLocation);
+
+            // Геокодируем координаты в адрес
+            const geocodedAddress = await geocoding.reverseGeocode(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+
+            console.log('[ProcessView] Geocoded address:', geocodedAddress);
+
+            if (geocodedAddress) {
+              locationData = {
+                latitude: exifLocation.latitude,
+                longitude: exifLocation.longitude,
+                address: geocodedAddress.display_name || '',
+                city: geocodedAddress.address?.city || '',
+                region: geocodedAddress.address?.state || '',
+                source: 'exif' as const,
+              };
+
+              updateStepStatus(
+                'exif',
+                'completed',
+                `${geocodedAddress.address?.city || 'Location'} detected`
+              );
+            } else {
+              updateStepStatus('exif', 'completed', 'No address found');
+            }
+          } else {
+            updateStepStatus('exif', 'completed', 'No GPS data in photos');
+          }
+        } catch (exifError) {
+          console.error('[ProcessView] EXIF extraction error:', exifError);
+          updateStepStatus('exif', 'completed', 'No location data available');
+        }
+
+        if (isCancelled) return;
+
+        // Step 3: Detect category
         updateStepStatus('category', 'processing');
 
         // Определение категории также на английском
@@ -167,7 +228,7 @@ export default function ProcessView({
           condition: analysisResult.condition || 'new',
           keywords: analysisResult.keywords || [],
           translations: translations,
-          location: analysisResult.location || null,
+          location: locationData || analysisResult.location || null,
         });
 
         // Small delay to show completion

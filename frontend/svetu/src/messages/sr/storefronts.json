@@ -320,6 +320,7 @@
     "salesByAttribute": "Prodaja po atributu"
   },
   "analyzingImages": "Analiza slika",
+  "detectingLocationFromExif": "Detekcija lokacije iz EXIF metapodataka fotografije",
   "detectingCategory": "Detekcija kategorije",
   "generatingTitleVariants": "Generisanje varijanti naslova",
   "creatingTranslations": "Kreiranje prevoda",
@@ -586,6 +587,7 @@
   "locationDescription": "Navedite gde se proizvod nalazi za kupce",
   "locationType": "Tip lokacije",
   "useStorefrontLocation": "Koristi adresu prodavnice",
+  "useExifLocation": "Koristi adresu iz metapodataka fotografije",
   "useIndividualLocation": "Navedi posebnu adresu",
   "individualLocationExample": "Proizvod je u magacinu ili na drugoj lokaciji",
   "storefrontLocationExample": "Proizvod je u prodavnici",

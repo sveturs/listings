@@ -78,7 +78,8 @@ interface AIProductState {
 
   // Настройки
   useStorefrontLocation: boolean;
-  locationPrivacyLevel: 'exact' | 'street' | 'city';
+  locationPrivacyLevel: 'exact' | 'street' | 'district' | 'city';
+  showOnMap: boolean;
   previewLanguage: string;
 }
 
@@ -90,6 +91,11 @@ type AIProductAction =
   | { type: 'SET_AI_DATA'; payload: Partial<AIProductState['aiData']> }
   | { type: 'SELECT_TITLE_VARIANT'; payload: number }
   | { type: 'SET_USE_STOREFRONT_LOCATION'; payload: boolean }
+  | {
+      type: 'SET_LOCATION_PRIVACY_LEVEL';
+      payload: 'exact' | 'street' | 'district' | 'city';
+    }
+  | { type: 'SET_SHOW_ON_MAP'; payload: boolean }
   | { type: 'SET_HAS_VARIANTS'; payload: boolean }
   | { type: 'SET_VARIANTS'; payload: ProductVariantCreate[] }
   | { type: 'ADD_VARIANT'; payload: ProductVariantCreate }
@@ -139,6 +145,7 @@ const initialState: AIProductState = {
   },
   useStorefrontLocation: true,
   locationPrivacyLevel: 'exact',
+  showOnMap: true,
   previewLanguage: 'ru',
 };
 
@@ -180,6 +187,12 @@ function aiProductReducer(
 
     case 'SET_USE_STOREFRONT_LOCATION':
       return { ...state, useStorefrontLocation: action.payload };
+
+    case 'SET_LOCATION_PRIVACY_LEVEL':
+      return { ...state, locationPrivacyLevel: action.payload };
+
+    case 'SET_SHOW_ON_MAP':
+      return { ...state, showOnMap: action.payload };
 
     case 'SET_HAS_VARIANTS':
       return {
@@ -257,6 +270,12 @@ interface CreateAIProductContextType {
   setAIData: (data: Partial<AIProductState['aiData']>) => void;
   selectTitleVariant: (index: number) => void;
   reset: () => void;
+  // Location methods
+  setUseStorefrontLocation: (use: boolean) => void;
+  setLocationPrivacyLevel: (
+    level: 'exact' | 'street' | 'district' | 'city'
+  ) => void;
+  setShowOnMap: (show: boolean) => void;
   // Variant methods
   setHasVariants: (hasVariants: boolean) => void;
   setVariants: (variants: ProductVariantCreate[]) => void;
@@ -286,6 +305,15 @@ export function CreateAIProductProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SELECT_TITLE_VARIANT', payload: index });
   const reset = () => dispatch({ type: 'RESET' });
 
+  // Location methods
+  const setUseStorefrontLocation = (use: boolean) =>
+    dispatch({ type: 'SET_USE_STOREFRONT_LOCATION', payload: use });
+  const setLocationPrivacyLevel = (
+    level: 'exact' | 'street' | 'district' | 'city'
+  ) => dispatch({ type: 'SET_LOCATION_PRIVACY_LEVEL', payload: level });
+  const setShowOnMap = (show: boolean) =>
+    dispatch({ type: 'SET_SHOW_ON_MAP', payload: show });
+
   // Variant methods
   const setHasVariants = (hasVariants: boolean) =>
     dispatch({ type: 'SET_HAS_VARIANTS', payload: hasVariants });
@@ -310,6 +338,9 @@ export function CreateAIProductProvider({ children }: { children: ReactNode }) {
     setAIData,
     selectTitleVariant,
     reset,
+    setUseStorefrontLocation,
+    setLocationPrivacyLevel,
+    setShowOnMap,
     setHasVariants,
     setVariants,
     addVariant,

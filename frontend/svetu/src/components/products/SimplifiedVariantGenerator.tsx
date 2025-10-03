@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { adminApi } from '@/services/admin';
 import VariantStockManager from './VariantStockManager';
 import configManager from '@/config';
 
