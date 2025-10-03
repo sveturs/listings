@@ -160,6 +160,13 @@ export default function ListingPage({ params }: Props) {
     // Если есть переводы, ищем перевод для текущей локали
     if (listing.translations && listing.translations[locale]) {
       const translation = listing.translations[locale][field];
+
+      console.log(`[getTranslatedValue] field=${field}, locale=${locale}`, {
+        originalValue,
+        translation,
+        willUseTranslation: translation && translation !== originalValue,
+      });
+
       // Возвращаем перевод если он есть и отличается от оригинала
       // (если совпадает, значит это язык оригинала и дубликат)
       if (translation && translation !== originalValue) {
@@ -256,6 +263,26 @@ export default function ListingPage({ params }: Props) {
           return;
         }
         isStorefrontProduct = true;
+      } else {
+        // Проверяем, не является ли это товаром витрины (они тоже индексируются в marketplace)
+        const tempResult = await response.json();
+        const tempData = tempResult.data || tempResult;
+
+        // Если у объявления есть storefront_id, это товар витрины - загружаем его через storefront API для получения переводов
+        if (tempData.storefront_id) {
+          response = await fetch(
+            `${config.getApiUrl()}/api/v1/storefronts/products/${id}`
+          );
+          if (response.ok) {
+            isStorefrontProduct = true;
+          } else {
+            // Если не удалось загрузить через storefront API, используем данные из marketplace
+            response = { ok: true, json: async () => tempResult } as Response;
+          }
+        } else {
+          // Это обычное объявление, используем уже загруженные данные
+          response = { ok: true, json: async () => tempResult } as Response;
+        }
       }
 
       const result = await response.json();
