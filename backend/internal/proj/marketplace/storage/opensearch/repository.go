@@ -1614,11 +1614,37 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, map[string]interface{}{
 			"term": map[string]interface{}{
-				"document_type": params.DocumentType, // ИСПРАВЛЕНО: было "type", должно быть "document_type"
+				"type": params.DocumentType, // Используем поле "type" как в индексе OpenSearch
 			},
 		})
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
+
+	// Исключаем storefront products из marketplace search (они должны искаться только через storefront search)
+	// Это гарантирует что обычные объявления и витринные товары не смешиваются
+	filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+	filter = append(filter, map[string]interface{}{
+		"bool": map[string]interface{}{
+			"should": []interface{}{
+				map[string]interface{}{
+					"bool": map[string]interface{}{
+						"must_not": map[string]interface{}{
+							"exists": map[string]interface{}{
+								"field": "is_storefront",
+							},
+						},
+					},
+				},
+				map[string]interface{}{
+					"term": map[string]interface{}{
+						"is_storefront": false,
+					},
+				},
+			},
+			"minimum_should_match": 1,
+		},
+	})
+	query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 
 	if params.Query != "" {
 		logger.Info().Msgf("Текстовый поиск по запросу: '%s'", params.Query)
