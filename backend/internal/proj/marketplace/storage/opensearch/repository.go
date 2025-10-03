@@ -759,7 +759,8 @@ func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []s
 func (r *Repository) listingToDoc(ctx context.Context, listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
 		"id":                   listing.ID,
-		"document_type":        "listing", // Критически важно для фильтрации в унифицированном поиске
+		"type":                 "listing",       // Для фильтрации marketplace vs storefront
+		"document_type":        "listing",       // Для обратной совместимости
 		"title":                listing.Title,
 		"description":          listing.Description,
 		"title_suggest":        listing.Title,
@@ -767,7 +768,7 @@ func (r *Repository) listingToDoc(ctx context.Context, listing *models.Marketpla
 		fieldNamePrice:         listing.Price,
 		"condition":            listing.Condition,
 		"status":               listing.Status,
-		"location":             listing.Location,
+		// НЕ отправляем listing.Location - поле "location" в OpenSearch это geo_point!
 		"city":                 listing.City,
 		"country":              listing.Country,
 		"address_multilingual": listing.AddressMultilingual,
@@ -1313,9 +1314,6 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 				}
 				if listing.Country == "" && storefront.Country != nil && *storefront.Country != "" {
 					doc["country"] = *storefront.Country
-				}
-				if listing.Location == "" && storefront.Address != nil && *storefront.Address != "" {
-					doc["location"] = *storefront.Address
 				}
 				if (listing.Latitude == nil || listing.Longitude == nil ||
 					*listing.Latitude == 0 || *listing.Longitude == 0) &&
