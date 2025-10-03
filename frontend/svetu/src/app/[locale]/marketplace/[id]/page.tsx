@@ -155,7 +155,8 @@ export default function ListingPage({ params }: Props) {
     if (translation) return translation;
 
     // Если нет перевода, возвращаем оригинальное значение
-    return listing[field];
+    // Для title используем name, для description используем description
+    return field === 'title' ? listing.name : listing.description;
   };
 
   // Функция для обработки нажатия на кнопку "Добавить в корзину" - отключена для marketplace
