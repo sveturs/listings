@@ -10,6 +10,13 @@ export interface ApiClientOptions extends RequestInit {
   retries?: number;
   // Использовать прямой доступ к backend (минуя BFF прокси) - только для специальных случаев
   direct?: boolean;
+  // Управление Next.js кешированием (по умолчанию 'no-store' для client-side)
+  // 'force-cache' - максимальное кеширование
+  // 'no-store' - без кеширования (по умолчанию)
+  // number - revalidate через N секунд
+  nextCache?: RequestCache | number;
+  // Теги для Next.js revalidation
+  nextTags?: string[];
 }
 
 export interface ApiResponse<T = any> {
@@ -137,6 +144,8 @@ class ApiClient {
       direct = false,
       timeout = this.defaultTimeout,
       retries = this.defaultRetries,
+      nextCache,
+      nextTags,
       ...fetchOptions
     } = options;
 
@@ -193,6 +202,16 @@ class ApiClient {
       headers,
       // Добавляем credentials для CORS
       credentials: fetchOptions.credentials || 'include',
+      // Настройки Next.js кеширования
+      cache:
+        typeof nextCache === 'number'
+          ? undefined
+          : nextCache || fetchOptions.cache || 'no-store',
+      next: {
+        ...(fetchOptions as any).next,
+        revalidate: typeof nextCache === 'number' ? nextCache : undefined,
+        tags: nextTags,
+      },
     };
 
     try {

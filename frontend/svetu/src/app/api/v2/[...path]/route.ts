@@ -78,11 +78,18 @@ async function proxyRequest(
         // Для обычных JSON запросов
         headers['Content-Type'] = 'application/json';
         try {
-          const requestBody = await request.json();
+          // Клонируем request для избежания проблем с повторным чтением body
+          const clonedRequest = request.clone();
+          const requestBody = await clonedRequest.json();
           body = JSON.stringify(requestBody);
-        } catch {
-          // Если не удалось распарсить JSON, пропускаем body
-          body = undefined;
+        } catch (err) {
+          // Если не удалось распарсить JSON, пробуем прочитать как text
+          try {
+            const textBody = await request.text();
+            body = textBody || undefined;
+          } catch {
+            body = undefined;
+          }
         }
       }
     }
