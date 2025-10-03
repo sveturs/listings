@@ -277,6 +277,11 @@ func (s *NotificationService) sendTelegramNotification(ctx context.Context, user
 		message,
 		listingID)
 
+	// Проверяем, что Telegram bot инициализирован
+	if s.bot == nil {
+		return fmt.Errorf("telegram bot not configured")
+	}
+
 	chatID, _ := strconv.ParseInt(conn.TelegramChatID, 10, 64)
 	msg := tgbotapi.NewMessage(chatID, messageWithLink)
 	_, err = s.bot.Send(msg)
