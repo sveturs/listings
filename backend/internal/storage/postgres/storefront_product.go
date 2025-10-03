@@ -450,6 +450,21 @@ func (s *Database) GetStorefrontProductByID(ctx context.Context, productID int) 
 	}
 	p.Variants = variants
 
+	// Load translations
+	translations, err := s.GetTranslationsForEntity(ctx, "storefront_product", p.ID)
+	if err != nil {
+		logger.Error().Err(err).Int("product_id", p.ID).Msg("Failed to load product translations")
+	} else if len(translations) > 0 {
+		// Convert []Translation to map[language]map[field]text
+		p.Translations = make(map[string]map[string]string)
+		for _, t := range translations {
+			if p.Translations[t.Language] == nil {
+				p.Translations[t.Language] = make(map[string]string)
+			}
+			p.Translations[t.Language][t.FieldName] = t.TranslatedText
+		}
+	}
+
 	return p, nil
 }
 
