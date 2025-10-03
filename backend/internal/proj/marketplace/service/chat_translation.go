@@ -35,6 +35,7 @@ func (s *ChatTranslationService) TranslateMessage(
 	ctx context.Context,
 	message *models.MarketplaceMessage,
 	targetLanguage string,
+	moderateTone bool,
 ) error {
 	// Если язык не установлен, определяем его
 	if message.OriginalLanguage == "" || message.OriginalLanguage == "unknown" {
@@ -83,13 +84,15 @@ func (s *ChatTranslationService) TranslateMessage(
 		Int("messageId", message.ID).
 		Str("from", message.OriginalLanguage).
 		Str("to", targetLanguage).
+		Bool("moderate", moderateTone).
 		Msg("Translation cache MISS - calling API")
 
-	translated, err := s.translationSvc.Translate(
+	translated, err := s.translationSvc.TranslateWithToneModeration(
 		ctx,
 		message.Content,
 		message.OriginalLanguage,
 		targetLanguage,
+		moderateTone,
 	)
 	if err != nil {
 		logger.Error().
@@ -134,6 +137,7 @@ func (s *ChatTranslationService) TranslateBatch(
 	ctx context.Context,
 	messages []*models.MarketplaceMessage,
 	targetLanguage string,
+	moderateTone bool,
 ) error {
 	if len(messages) == 0 {
 		return nil
@@ -150,7 +154,7 @@ func (s *ChatTranslationService) TranslateBatch(
 		go func(m *models.MarketplaceMessage) {
 			defer func() { <-semaphore }() // Release
 
-			err := s.TranslateMessage(ctx, m, targetLanguage)
+			err := s.TranslateMessage(ctx, m, targetLanguage, moderateTone)
 			if err != nil {
 				errChan <- err
 			}

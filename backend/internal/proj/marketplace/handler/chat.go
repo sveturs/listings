@@ -904,6 +904,9 @@ func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.targetLanguageRequired")
 	}
 
+	// Получаем параметр смягчения (по умолчанию true)
+	moderateTone := c.QueryBool("moderate_tone", true)
+
 	// Валидация языка
 	if !isValidLanguage(targetLang) {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLanguage")
@@ -935,7 +938,7 @@ func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
 	}
 
 	// Переводим
-	err = chatTranslationSvc.TranslateMessage(c.Context(), message, targetLang)
+	err = chatTranslationSvc.TranslateMessage(c.Context(), message, targetLang, moderateTone)
 	if err != nil {
 		logger.Error().Err(err).Int("messageId", messageID).Str("targetLang", targetLang).Msg("Translation failed")
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationError")

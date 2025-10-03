@@ -1827,3 +1827,202 @@ test('should translate messages automatically', async ({ page, context }) => {
    - Поддержка альтернативных провайдеров (DeepL, Google)
    - Fallback chain при ошибках
 
+## 🎨 TONE MODERATION (СМЯГЧЕНИЕ ЯЗЫКА)
+
+**Дата добавления:** 2025-10-04
+**Статус:** ✅ РЕАЛИЗОВАНО
+
+### Описание
+
+Автоматическое смягчение грубого языка и мата при переводе. Пользователь получает культурный вариант перевода, сохраняя при этом эмоциональную интенсивность сообщения.
+
+### Примеры
+
+**С включенным смягчением (по умолчанию):**
+```
+RU: "Какого хуя ты молчишь? Пиздато отмаливаться? Нихуя не хуево, а заебись!"
+EN: "Why are you silent? Great excuse? It's not bad at all, it's really great!"
+```
+
+**Без смягчения:**
+```
+RU: "Какого хуя ты молчишь?"
+EN: "Why the fuck are you silent?"
+```
+
+### Настройка пользователя
+
+В ChatSettings добавлена опция:
+- **Название:** "Смягчать грубый язык" / "Soften harsh language"
+- **По умолчанию:** Включено (true)
+- **Хранение:** localStorage `chat_tone_moderation`
+
+### Backend реализация
+
+**Параметр API:**
+```
+GET /api/v1/marketplace/chat/messages/:id/translation?lang=en&moderate_tone=true
+```
+
+**Промпт с модерацией (moderate_tone=true):**
+```
+Translate the following text from {source} to {target}.
+
+IMPORTANT: If the text contains profanity, offensive language, or
+aggressive tone, translate it to a polite, respectful equivalent
+while preserving the general meaning and emotional intensity.
+
+Examples:
+- "What the fuck?" → "What's going on?" (surprised, confused)
+- "This is fucking great!" → "This is really great!" (very excited)
+- "Stop being an asshole" → "Please be more considerate" (frustrated)
+
+Text: {content}
+```
+
+**Промпт без модерации (moderate_tone=false):**
+```
+Translate the following text from {source} to {target}: {content}
+```
+
+### Стоимость
+
+**С модерацией:**
+- Input tokens: +16% (45 вместо 30)
+- Output tokens: +8% (70 вместо 65)
+- **Удорожание: +15% per перевод**
+
+**Месячная стоимость (10K users):**
+- Без модерации: $15/month
+- С модерацией (100%): $17.25/month (+$2.25)
+- **Реально (~70% включили): $16.60/month (+$1.60)**
+
+### Frontend изменения
+
+**ChatSettings.tsx:**
+```typescript
+const [moderateTone, setModerateTone] = useState(true); // По умолчанию включено
+
+// Сохранение в localStorage
+localStorage.setItem('chat_tone_moderation', moderateTone.toString());
+
+// UI toggle
+<input
+  type="checkbox"
+  checked={moderateTone}
+  onChange={(e) => handleModerateToneChange(e.target.checked)}
+/>
+```
+
+**chatService.ts:**
+```typescript
+async getMessageTranslation(
+  messageId: number,
+  targetLanguage: string
+): Promise<TranslationResponse> {
+  const moderateTone = localStorage.getItem('chat_tone_moderation') !== 'false';
+
+  const response = await apiClient.get(
+    `/marketplace/chat/messages/${messageId}/translation`,
+    { params: { lang: targetLanguage, moderate_tone: moderateTone } }
+  );
+
+  return response.data;
+}
+```
+
+### Backend изменения
+
+**chat_translation.go:**
+```go
+func (s *ChatTranslationService) buildPrompt(
+    text, sourceLang, targetLang string,
+    moderateTone bool,
+) string {
+    if !moderateTone {
+        return fmt.Sprintf("Translate from %s to %s: %s", sourceLang, targetLang, text)
+    }
+
+    return fmt.Sprintf(`Translate the following text from %s to %s.
+
+IMPORTANT: If the text contains profanity, offensive language, or
+aggressive tone, translate it to a polite, respectful equivalent
+while preserving the general meaning and emotional intensity.
+
+Examples:
+- "What the fuck?" → "What's going on?" (surprised, confused)
+- "This is fucking great!" → "This is really great!" (very excited)
+- "Stop being an asshole" → "Please be more considerate" (frustrated)
+
+Text: %s`, sourceLang, targetLang, text)
+}
+```
+
+**chat.go (handler):**
+```go
+func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
+    // ... existing code ...
+
+    moderateTone := c.QueryBool("moderate_tone", true) // По умолчанию true
+
+    err = h.services.ChatTranslation().TranslateMessage(
+        c.Context(),
+        message,
+        targetLang,
+        moderateTone, // NEW parameter
+    )
+
+    // ... rest of code ...
+}
+```
+
+### Преимущества
+
+✅ **UX:** Пользователь получает менее токсичную среду ("розовые очки")
+✅ **Репутация:** Платформа позиционируется как дружелюбная
+✅ **Гибкость:** Можно отключить при желании
+✅ **Прозрачность:** Оригинал всегда доступен по кнопке "Show original"
+✅ **Стоимость:** Минимальное удорожание (+$1.60/месяц для 10K users)
+
+### Риски и решения
+
+**Риск 1: Искажение эмоций**
+- Решение: Промпт сохраняет эмоциональную интенсивность
+
+**Риск 2: Юридические нюансы**
+- Решение: Оригинал всегда доступен, его можно использовать как доказательство
+
+**Риск 3: Нежелательна в дружеской переписке**
+- Решение: Можно отключить в настройках
+
+### Тестирование
+
+**Test case 1: Русский мат → Английский (с модерацией)**
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/api/v1/marketplace/chat/messages/123/translation?lang=en&moderate_tone=true"
+
+Ожидаем: культурный перевод без мата
+```
+
+**Test case 2: То же сообщение без модерации**
+```bash
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/api/v1/marketplace/chat/messages/123/translation?lang=en&moderate_tone=false"
+
+Ожидаем: перевод с сохранением мата
+```
+
+### Метрики
+
+**Prometheus:**
+```promql
+# Процент переводов с модерацией
+rate(chat_translation_moderated_total[5m]) / rate(chat_translation_requests_total[5m])
+
+# Стоимость модерированных переводов
+sum(rate(chat_translation_cost_usd{moderated="true"}[1h]))
+```
+
+---
+

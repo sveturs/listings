@@ -398,3 +398,16 @@ func (s *DeepLTranslationService) GetUsage(ctx context.Context) (map[string]inte
 
 	return usage, nil
 }
+
+// TranslateWithToneModeration переводит текст (DeepL не поддерживает модерацию тона)
+func (s *DeepLTranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	// DeepL не поддерживает модерацию тона, поэтому используем обычный перевод
+	logger.Debug().Bool("moderateTone", moderateTone).Msg("DeepL doesn't support tone moderation, using regular translation")
+	return s.Translate(ctx, text, sourceLanguage, targetLanguage)
+}

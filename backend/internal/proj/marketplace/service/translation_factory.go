@@ -426,6 +426,16 @@ func (f *TranslationServiceFactory) ModerateText(ctx context.Context, text strin
 	return service.ModerateText(ctx, text, language)
 }
 
+// TranslateWithToneModeration переводит текст с опцией смягчения грубого языка
+func (f *TranslationServiceFactory) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
+	service, err := f.GetTranslationService(f.defaultProvider)
+	if err != nil {
+		return "", fmt.Errorf("ошибка получения сервиса перевода: %w", err)
+	}
+
+	return service.TranslateWithToneModeration(ctx, text, sourceLanguage, targetLanguage, moderateTone)
+}
+
 // UpdateTranslation обновляет перевод с информацией о провайдере
 func (f *TranslationServiceFactory) UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error {
 	// Создаем отдельное поле или метаданные для хранения информации о провайдере перевода

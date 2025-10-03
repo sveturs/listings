@@ -396,3 +396,102 @@ func getLanguageName(code string) string {
 	}
 	return code
 }
+
+// TranslateWithToneModeration переводит текст с опциональным смягчением тона
+func (s *ClaudeTranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	if text == "" {
+		return "", nil
+	}
+
+	var prompt string
+
+	if moderateTone {
+		// Промпт с модерацией тона
+		prompt = fmt.Sprintf(`Translate the following text from %s to %s.
+
+IMPORTANT: If the text contains profanity, offensive language, or
+aggressive tone, translate it to a polite, respectful equivalent
+while preserving the general meaning and emotional intensity.
+
+Examples:
+- "What the fuck?" → "What's going on?" (surprised, confused)
+- "This is fucking great!" → "This is really great!" (very excited)
+- "Stop being an asshole" → "Please be more considerate" (frustrated)
+
+Return ONLY the translated text without any explanations or additional content.
+Do not add quotes or any formatting.
+
+Text to translate:
+%s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
+	} else {
+		// Обычный промпт без модерации
+		prompt = fmt.Sprintf(`Translate the following text from %s to %s.
+Return ONLY the translated text without any explanations or additional content.
+Do not add quotes or any formatting.
+
+Text to translate:
+%s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
+	}
+
+	// Создаем запрос к Claude API
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 1024,
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+	}
+
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", s.apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to call Claude API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("claude API error: status %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if claudeResp.Error.Message != "" {
+		return "", fmt.Errorf("claude API error: %s", claudeResp.Error.Message)
+	}
+
+	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == "text" {
+		return strings.TrimSpace(claudeResp.Content[0].Text), nil
+	}
+
+	return "", fmt.Errorf("unexpected Claude API response format")
+}

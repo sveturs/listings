@@ -450,3 +450,16 @@ func (s *TranslationService) ModerateText(ctx context.Context, text string, lang
 
 	return moderatedText, nil
 }
+
+// TranslateWithToneModeration переводит текст (OpenAI не поддерживает модерацию тона в рамках перевода)
+func (s *TranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	// OpenAI Translation API не поддерживает модерацию тона напрямую
+	log.Printf("OpenAI doesn't support tone moderation in translation API (moderateTone=%v), using regular translation", moderateTone)
+	return s.Translate(ctx, text, sourceLanguage, targetLanguage)
+}

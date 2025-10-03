@@ -141,6 +141,12 @@
     "targetLanguage": "Target language",
     "translating": "Translating...",
     "translationError": "Translation failed",
+    "autoTranslateDescription": "Automatically translate incoming messages to your preferred language",
+    "targetLanguageDescription": "Messages will be translated to this language",
+    "poweredByClaudeAI": "Translations are powered by Claude AI",
+    "showOriginalHint": "You can always view the original message by clicking \"Show original\"",
+    "moderateTone": "Soften harsh language",
+    "moderateToneDescription": "Convert profanity and aggressive language to polite equivalents while preserving emotional intensity",
     "languages": {
       "en": "English",
       "ru": "Russian",

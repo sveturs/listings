@@ -379,10 +379,15 @@ class ChatService {
   async getMessageTranslation(
     params: GetTranslationParams
   ): Promise<TranslationResponse> {
+    // Получаем настройку смягчения из localStorage (по умолчанию true)
+    const moderateTone = localStorage.getItem('chat_tone_moderation') !== 'false';
+
     const response = await this.request<{
       data: TranslationResponse;
       success: boolean;
-    }>(`/messages/${params.messageId}/translation?lang=${params.language}`);
+    }>(
+      `/messages/${params.messageId}/translation?lang=${params.language}&moderate_tone=${moderateTone}`
+    );
     return response.data || (response as unknown as TranslationResponse);
   }
 

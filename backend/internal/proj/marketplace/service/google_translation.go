@@ -447,3 +447,16 @@ func (s *GoogleTranslationService) ModerateText(ctx context.Context, text string
 	log.Printf("Google Translate не поддерживает модерацию контента, возвращаем оригинальный текст")
 	return text, nil
 }
+
+// TranslateWithToneModeration переводит текст (Google Translate не поддерживает модерацию тона)
+func (s *GoogleTranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	// Google Translate не поддерживает модерацию тона, поэтому используем обычный перевод
+	logger.Debug().Bool("moderateTone", moderateTone).Msg("Google Translate doesn't support tone moderation, using regular translation")
+	return s.Translate(ctx, text, sourceLanguage, targetLanguage)
+}

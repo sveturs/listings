@@ -88,7 +88,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translatedText, setTranslatedText] = useState<string>('');
   const [translationError, setTranslationError] = useState<string | null>(null);
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [autoTranslate, setAutoTranslate] = useState(true); // По умолчанию ВКЛЮЧЕН
 
   // Определяем, нужна ли кнопка перевода
   const shouldShowTranslateButton =
@@ -97,11 +97,50 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
     message.content && // Есть текст
     message.content.trim().length > 0; // Не пустой текст
 
+  // Функция перевода (объявлена ДО useEffect, чтобы избежать ошибки инициализации)
+  const handleTranslate = useCallback(async () => {
+    if (showTranslation) {
+      // Переключаемся обратно на оригинал
+      setShowTranslation(false);
+      return;
+    }
+
+    // Если уже есть перевод, просто показываем его
+    if (translatedText) {
+      setShowTranslation(true);
+      return;
+    }
+
+    // Запрашиваем перевод
+    setIsTranslating(true);
+    setTranslationError(null);
+
+    try {
+      const response = await chatService.getMessageTranslation({
+        messageId: message.id,
+        language: locale,
+      });
+
+      setTranslatedText(response.translated_text);
+      setShowTranslation(true);
+    } catch (error) {
+      console.error('Translation error:', error);
+      setTranslationError(t('translation.translationError'));
+    } finally {
+      setIsTranslating(false);
+    }
+  }, [showTranslation, translatedText, message.id, locale, t]);
+
   // Загрузка настроек и автоматический перевод
   useEffect(() => {
     // Загружаем настройки из localStorage
     const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
-    const isAutoTranslateEnabled = savedAutoTranslate === 'true';
+
+    // Если настройка не сохранена, включаем автоперевод по умолчанию
+    const isAutoTranslateEnabled = savedAutoTranslate !== null
+      ? savedAutoTranslate === 'true'
+      : true; // По умолчанию ВКЛЮЧЕН
+
     setAutoTranslate(isAutoTranslateEnabled);
 
     // Если автоперевод включен и это входящее сообщение
@@ -146,39 +185,6 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
       console.error('Error deleting attachment:', error);
     }
   };
-
-  const handleTranslate = useCallback(async () => {
-    if (showTranslation) {
-      // Переключаемся обратно на оригинал
-      setShowTranslation(false);
-      return;
-    }
-
-    // Если уже есть перевод, просто показываем его
-    if (translatedText) {
-      setShowTranslation(true);
-      return;
-    }
-
-    // Запрашиваем перевод
-    setIsTranslating(true);
-    setTranslationError(null);
-
-    try {
-      const response = await chatService.getMessageTranslation({
-        messageId: message.id,
-        language: locale,
-      });
-
-      setTranslatedText(response.translated_text);
-      setShowTranslation(true);
-    } catch (error) {
-      console.error('Translation error:', error);
-      setTranslationError(t('translation.translationError'));
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [showTranslation, translatedText, message.id, locale, t]);
 
   // Современный DaisyUI chat bubble компонент
   return (
@@ -238,30 +244,6 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                   ),
                 }}
               />
-              {/* Кнопка перевода */}
-              {shouldShowTranslateButton && (
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    onClick={handleTranslate}
-                    disabled={isTranslating}
-                    className="btn btn-xs btn-ghost opacity-70 hover:opacity-100"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <span className="loading loading-spinner loading-xs"></span>
-                        {t('translation.translating')}
-                      </>
-                    ) : showTranslation ? (
-                      t('translation.showOriginal')
-                    ) : (
-                      t('translation.translate')
-                    )}
-                  </button>
-                  {translationError && (
-                    <span className="text-xs text-error">{translationError}</span>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         ) : (
@@ -319,33 +301,34 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                           }}
                         />
                       </p>
-                      {/* Кнопка перевода */}
-                      {shouldShowTranslateButton && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <button
-                            onClick={handleTranslate}
-                            disabled={isTranslating}
-                            className="btn btn-xs btn-ghost opacity-70 hover:opacity-100"
-                          >
-                            {isTranslating ? (
-                              <>
-                                <span className="loading loading-spinner loading-xs"></span>
-                                {t('translation.translating')}
-                              </>
-                            ) : showTranslation ? (
-                              t('translation.showOriginal')
-                            ) : (
-                              t('translation.translate')
-                            )}
-                          </button>
-                          {translationError && (
-                            <span className="text-xs text-error">
-                              {translationError}
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </>
+                  )}
+                </div>
+              )}
+
+              {/* Кнопка перевода - ВЫНЕСЕНА ЗА ПРЕДЕЛЫ СООБЩЕНИЯ */}
+              {shouldShowTranslateButton && (
+                <div className="mt-1 flex items-center gap-2">
+                  <button
+                    onClick={handleTranslate}
+                    disabled={isTranslating}
+                    className="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content/80 opacity-60 hover:opacity-100 transition-opacity"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        {t('translation.translating')}
+                      </>
+                    ) : showTranslation ? (
+                      t('translation.showOriginal')
+                    ) : (
+                      t('translation.translate')
+                    )}
+                  </button>
+                  {translationError && (
+                    <span className="text-xs text-error/70">
+                      {translationError}
+                    </span>
                   )}
                 </div>
               )}

@@ -21,4 +21,7 @@ type TranslationServiceInterface interface {
 
 	// Перевод с учетом контекста
 	TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error)
+
+	// Перевод с смягчением тона (модерация мата и агрессивных выражений)
+	TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error)
 }

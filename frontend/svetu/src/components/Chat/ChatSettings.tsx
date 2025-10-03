@@ -13,23 +13,38 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
   const t = useTranslations('chat');
   const locale = useLocale();
 
-  // Настройки из localStorage
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  // Настройки из localStorage (автоперевод ВКЛЮЧЕН по умолчанию)
+  const [autoTranslate, setAutoTranslate] = useState(true);
   const [preferredLanguage, setPreferredLanguage] = useState(locale);
+  const [moderateTone, setModerateTone] = useState(true); // Смягчение ВКЛЮЧЕНО по умолчанию
 
   // Загрузка настроек из localStorage при монтировании
   useEffect(() => {
     const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
     const savedLanguage = localStorage.getItem('chat_preferred_language');
+    const savedModerateTone = localStorage.getItem('chat_tone_moderation');
 
+    // Если настройка не сохранена, включаем автоперевод по умолчанию
     if (savedAutoTranslate !== null) {
       setAutoTranslate(savedAutoTranslate === 'true');
+    } else {
+      // Устанавливаем по умолчанию включенным
+      setAutoTranslate(true);
+      localStorage.setItem('chat_auto_translate', 'true');
     }
 
     if (savedLanguage) {
       setPreferredLanguage(savedLanguage);
     } else {
       setPreferredLanguage(locale);
+    }
+
+    // Смягчение включено по умолчанию
+    if (savedModerateTone !== null) {
+      setModerateTone(savedModerateTone === 'true');
+    } else {
+      setModerateTone(true);
+      localStorage.setItem('chat_tone_moderation', 'true');
     }
   }, [locale]);
 
@@ -53,7 +68,19 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
     // Событие для уведомления других компонентов
     window.dispatchEvent(
       new CustomEvent('chat-settings-changed', {
-        detail: { autoTranslate, preferredLanguage: lang },
+        detail: { autoTranslate, preferredLanguage: lang, moderateTone },
+      })
+    );
+  };
+
+  const handleModerateToneChange = (checked: boolean) => {
+    setModerateTone(checked);
+    localStorage.setItem('chat_tone_moderation', checked.toString());
+
+    // Событие для уведомления других компонентов
+    window.dispatchEvent(
+      new CustomEvent('chat-settings-changed', {
+        detail: { autoTranslate, preferredLanguage, moderateTone: checked },
       })
     );
   };
@@ -62,14 +89,15 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop с анимацией */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fade-in"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Settings Modal */}
-      <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-base-100 shadow-xl z-50 transform transition-transform duration-300">
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-base-100 shadow-2xl z-50 transform transition-transform duration-300 ease-out animate-slide-in-right overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-base-300">
           <div className="flex items-center gap-2">
@@ -103,8 +131,7 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
               />
             </label>
             <p className="text-sm text-base-content/70 mt-1">
-              Automatically translate incoming messages to your preferred
-              language
+              {t('translation.autoTranslateDescription')}
             </p>
           </div>
 
@@ -125,7 +152,25 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
               <option value="sr">{t('translation.languages.sr')}</option>
             </select>
             <p className="text-sm text-base-content/70 mt-1">
-              Messages will be translated to this language
+              {t('translation.targetLanguageDescription')}
+            </p>
+          </div>
+
+          {/* Tone moderation toggle */}
+          <div className="form-control">
+            <label className="label cursor-pointer">
+              <span className="label-text font-medium">
+                {t('translation.moderateTone')}
+              </span>
+              <input
+                type="checkbox"
+                className="toggle toggle-primary"
+                checked={moderateTone}
+                onChange={(e) => handleModerateToneChange(e.target.checked)}
+              />
+            </label>
+            <p className="text-sm text-base-content/70 mt-1">
+              {t('translation.moderateToneDescription')}
             </p>
           </div>
 
@@ -145,11 +190,8 @@ export default function ChatSettings({ isOpen, onClose }: ChatSettingsProps) {
               />
             </svg>
             <div className="text-sm">
-              <p>Translations are powered by Claude AI</p>
-              <p className="mt-1">
-                You can always view the original message by clicking "Show
-                original"
-              </p>
+              <p>{t('translation.poweredByClaudeAI')}</p>
+              <p className="mt-1">{t('translation.showOriginalHint')}</p>
             </div>
           </div>
         </div>

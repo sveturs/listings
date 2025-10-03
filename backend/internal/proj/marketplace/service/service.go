@@ -104,3 +104,7 @@ func (d *dummyTranslationService) ModerateText(ctx context.Context, text string,
 func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
 	return text, nil
 }
+
+func (d *dummyTranslationService) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
+	return text, nil
+}
