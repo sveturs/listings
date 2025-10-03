@@ -412,11 +412,30 @@ class ChatService {
 
       // Определяем WebSocket URL на основе текущего протокола
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
 
       // Для development используем backend порт напрямую
       const isDevelopment = process.env.NODE_ENV === 'development';
-      const wsHost = isDevelopment ? 'localhost:3000' : host;
+
+      // Получаем WebSocket URL из переменной окружения или используем дефолтный хост
+      let wsHost: string;
+      if (isDevelopment) {
+        wsHost = 'localhost:3000';
+      } else {
+        // На production используем NEXT_PUBLIC_WEBSOCKET_URL или выводим из API URL
+        const wsUrlEnv = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (wsUrlEnv) {
+          // Извлекаем хост из wss://devapi.svetu.rs
+          wsHost = wsUrlEnv.replace(/^wss?:\/\//, '');
+        } else if (apiUrl) {
+          // Извлекаем хост из https://devapi.svetu.rs
+          wsHost = apiUrl.replace(/^https?:\/\//, '');
+        } else {
+          // Fallback на текущий хост (не должно случиться)
+          wsHost = window.location.host;
+        }
+      }
 
       // Добавляем токен в query параметр
       const wsUrl = `${protocol}//${wsHost}/ws/chat?token=${token}`;
