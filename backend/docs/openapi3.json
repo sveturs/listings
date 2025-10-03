@@ -45634,6 +45634,16 @@
                         "type": "integer",
                         "minimum": 0
                     },
+                    "translations": {
+                        "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "variant_settings": {
                         "$ref": "#/components/schemas/backend_internal_domain_models.VariantSettings"
                     },
@@ -48957,6 +48967,16 @@
                     },
                     "storefront_id": {
                         "type": "integer"
+                    },
+                    "translations": {
+                        "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     },
                     "updated_at": {
                         "type": "string"
@@ -56307,6 +56327,16 @@
                     "storefront_slug": {
                         "description": "Slug витрины для правильного URL",
                         "type": "string"
+                    },
+                    "translations": {
+                        "description": "Переводы (локаль -> поле -> значение)",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     },
                     "user": {
                         "description": "Информация о продавце",

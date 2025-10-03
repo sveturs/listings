@@ -171,16 +171,9 @@ func createTestService(
 
 	logger := logger.New()
 
-	// Создаем настоящий клиент для тестов
-	realClient := allsecure.NewClient(allsecure.Config{
-		BaseURL:  config.BaseURL,
-		Username: config.Username,
-		Password: config.Password,
-		Timeout:  30, // 30 seconds
-	})
-
+	// Используем переданный mock клиент вместо реального
 	service := &AllSecureService{
-		client:         realClient,
+		client:         client,
 		repository:     paymentRepo,
 		userRepo:       userRepo,
 		listingRepo:    listingRepo,
@@ -200,6 +193,7 @@ func TestCreatePaymentSuccess(t *testing.T) {
 			Success:     true,
 			UUID:        "test-uuid-123",
 			Status:      "pending",
+			ReturnType:  "REDIRECT",
 			RedirectURL: "https://payment.allsecure.rs/redirect/123",
 		},
 	}
@@ -421,7 +415,7 @@ func TestCapturePaymentSuccess(t *testing.T) {
 		getTransactionResponse: &models.PaymentTransaction{
 			ID:                   1,
 			GatewayTransactionID: stringPtr("test-uuid-123"),
-			Status:               PaymentStatusPending,
+			Status:               PaymentStatusAuthorized, // Должен быть authorized для capture
 			Amount:               decimal.NewFromFloat(100.00),
 		},
 	}
@@ -471,7 +465,7 @@ func TestRefundPaymentSuccess(t *testing.T) {
 		getTransactionResponse: &models.PaymentTransaction{
 			ID:                   1,
 			GatewayTransactionID: stringPtr("test-uuid-123"),
-			Status:               PaymentStatusSuccess,
+			Status:               PaymentStatusCaptured, // Должен быть captured для refund
 			Amount:               decimal.NewFromFloat(100.00),
 		},
 	}

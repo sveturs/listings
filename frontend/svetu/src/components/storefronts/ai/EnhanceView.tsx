@@ -70,15 +70,18 @@ export default function EnhanceView({
   const [useExifLocation, setUseExifLocation] = useState(
     state.aiData.location?.source === 'exif'
   );
-  const [individualLocation, setIndividualLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    address: string;
-    city: string;
-    region: string;
-    country: string;
-    confidence: number;
-  } | null>(
+  const [individualLocation, setIndividualLocation] = useState<
+    | {
+        latitude: number;
+        longitude: number;
+        address: string;
+        city: string;
+        region: string;
+        country: string;
+        confidence: number;
+      }
+    | undefined
+  >(
     state.aiData.location && state.aiData.location.source !== 'storefront'
       ? {
           latitude: state.aiData.location.latitude,
@@ -89,7 +92,7 @@ export default function EnhanceView({
           country: 'Србија',
           confidence: 0.9,
         }
-      : null
+      : undefined
   );
   const [localPrivacyLevel, setLocalPrivacyLevel] = useState<
     'exact' | 'street' | 'district' | 'city'

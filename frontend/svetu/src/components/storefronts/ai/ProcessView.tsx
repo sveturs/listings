@@ -107,9 +107,9 @@ export default function ProcessView({
               locationData = {
                 latitude: exifLocation.latitude,
                 longitude: exifLocation.longitude,
-                address: geocodedAddress.display_name || '',
-                city: geocodedAddress.address?.city || '',
-                region: geocodedAddress.address?.state || '',
+                address: (geocodedAddress as any).display_name || '',
+                city: (geocodedAddress as any).address?.city || '',
+                region: (geocodedAddress as any).address?.state || '',
                 source: 'exif' as const,
               };
 

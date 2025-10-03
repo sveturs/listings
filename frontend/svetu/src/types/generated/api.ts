@@ -39025,6 +39025,12 @@ export interface components {
       show_on_map?: boolean;
       sku?: string;
       stock_quantity?: number;
+      /** @description Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}} */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       variant_settings?: components['schemas']['backend_internal_domain_models.VariantSettings'];
       variants?: components['schemas']['backend_internal_domain_models.CreateVariantInline'][];
     };
@@ -40176,6 +40182,12 @@ export interface components {
       /** @description in_stock, low_stock, out_of_stock */
       stock_status?: string;
       storefront_id?: number;
+      /** @description Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}} */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       updated_at?: string;
       variants?: components['schemas']['backend_internal_domain_models.StorefrontProductVariant'][];
       view_count?: number;
@@ -42723,6 +42735,12 @@ export interface components {
       storefront_id?: number;
       /** @description Slug витрины для правильного URL */
       storefront_slug?: string;
+      /** @description Переводы (локаль -> поле -> значение) */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       /** @description Информация о продавце */
       user?: components['schemas']['internal_proj_global_handler.UnifiedUserInfo'];
       /** @description Для расчета популярности */

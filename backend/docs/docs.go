@@ -39518,6 +39518,16 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 0
                 },
+                "translations": {
+                    "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "variant_settings": {
                     "$ref": "#/definitions/backend_internal_domain_models.VariantSettings"
                 },
@@ -42841,6 +42851,16 @@ const docTemplate = `{
                 },
                 "storefront_id": {
                     "type": "integer"
+                },
+                "translations": {
+                    "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "updated_at": {
                     "type": "string"
@@ -50191,6 +50211,16 @@ const docTemplate = `{
                 "storefront_slug": {
                     "description": "Slug витрины для правильного URL",
                     "type": "string"
+                },
+                "translations": {
+                    "description": "Переводы (локаль -\u003e поле -\u003e значение)",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "user": {
                     "description": "Информация о продавце",

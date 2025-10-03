@@ -150,10 +150,10 @@ export default function ListingPage({ params }: Props) {
   const getTranslatedValue = (field: 'title' | 'description') => {
     if (!listing) return '';
 
-    // Для title: сначала пробуем name (storefront products), потом title (marketplace listings)
+    // Для title: используем title (marketplace listings)
     // Для description: всегда используем description
     const originalValue =
-      field === 'title' ? listing.name || listing.title : listing.description;
+      field === 'title' ? listing.title : listing.description;
 
     // Если есть переводы, ищем перевод для текущей локали
     if (listing.translations && listing.translations[locale]) {

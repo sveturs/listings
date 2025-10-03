@@ -258,7 +258,7 @@ export default function SimplifiedVariantGenerator({
         } else if (typeof selectedAttr.values === 'string') {
           values = selectedAttr.values
             .split(',')
-            .map((v) => v.trim())
+            .map((v: string) => v.trim())
             .filter(Boolean);
         }
       }

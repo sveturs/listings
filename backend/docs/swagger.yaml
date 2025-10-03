@@ -1647,6 +1647,14 @@ definitions:
       stock_quantity:
         minimum: 0
         type: integer
+      translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        description: 'Translations - map[language]map[field]text, e.g. {"ru": {"title":
+          "...", "description": "..."}}'
+        type: object
       variant_settings:
         $ref: '#/definitions/backend_internal_domain_models.VariantSettings'
       variants:
@@ -3894,6 +3902,14 @@ definitions:
         type: string
       storefront_id:
         type: integer
+      translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        description: 'Translations - map[language]map[field]text, e.g. {"ru": {"title":
+          "...", "description": "..."}}'
+        type: object
       updated_at:
         type: string
       variants:
@@ -8834,6 +8850,13 @@ definitions:
       storefront_slug:
         description: Slug витрины для правильного URL
         type: string
+      translations:
+        additionalProperties:
+          additionalProperties:
+            type: string
+          type: object
+        description: Переводы (локаль -> поле -> значение)
+        type: object
       user:
         allOf:
         - $ref: '#/definitions/internal_proj_global_handler.UnifiedUserInfo'

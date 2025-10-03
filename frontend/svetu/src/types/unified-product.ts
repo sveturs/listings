@@ -121,6 +121,16 @@ export interface UnifiedProduct {
     [key: string]: any;
   };
 
+  // Переводы
+  translations?: Record<
+    string,
+    {
+      title?: string;
+      description?: string;
+      [key: string]: any;
+    }
+  >;
+
   // Дополнительные поля для поиска
   score?: number;
   highlights?: Record<string, string[]>;
