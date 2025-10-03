@@ -42,6 +42,7 @@ export interface UnifiedLocationInfo {
   latitude?: number;
   longitude?: number;
   privacy?: 'exact' | 'street' | 'district' | 'city';
+  address_multilingual?: Record<string, string>; // Мультиязычные адреса из геокодирования
   translations?: {
     address?: Record<string, string>;
     city?: Record<string, string>;

@@ -298,6 +298,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
         location: product.location.address,
         city: product.location.city,
         country: product.location.country,
+        address_multilingual: product.location.address_multilingual,
         translations: product.location.translations,
       },
       locale
