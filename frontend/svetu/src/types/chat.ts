@@ -59,8 +59,8 @@ export interface MarketplaceMessage {
   storefront_product?: any; // TODO: добавить тип StorefrontProduct
 
   // Мультиязычность
-  original_language: string;
-  translations?: Record<string, Record<string, string>>;
+  original_language?: string;
+  translations?: Record<string, string>; // { "en": "Hello", "sr": "Здраво" }
 
   // Поля для вложений
   has_attachments?: boolean;
@@ -166,4 +166,27 @@ export interface WSUserStatus {
     status: 'online' | 'offline';
     last_seen?: string;
   };
+}
+
+// Типы для переводов сообщений
+export interface TranslationMetadata {
+  translated_from: string;
+  translated_to: string;
+  translated_at: string;
+  cache_hit: boolean;
+  provider: string;
+}
+
+export interface TranslationResponse {
+  message_id: number;
+  original_text: string;
+  translated_text: string;
+  source_language: string;
+  target_language: string;
+  metadata: TranslationMetadata;
+}
+
+export interface GetTranslationParams {
+  messageId: number;
+  language: string;
 }

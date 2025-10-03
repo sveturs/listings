@@ -129,5 +129,23 @@
     "animals": "Animals & Nature",
     "food": "Food & Drink",
     "objects": "Objects"
+  },
+  "translation": {
+    "translate": "Translate",
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation",
+    "translatedFrom": "Translated from {language}",
+    "autoTranslate": "Auto-translate messages",
+    "translationSettings": "Translation settings",
+    "originalLanguage": "Original language",
+    "targetLanguage": "Target language",
+    "translating": "Translating...",
+    "translationError": "Translation failed",
+    "languages": {
+      "en": "English",
+      "ru": "Russian",
+      "sr": "Serbian",
+      "auto": "Auto-detect"
+    }
   }
 }

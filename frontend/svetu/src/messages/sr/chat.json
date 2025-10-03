@@ -129,5 +129,23 @@
     "animals": "Животиње и природа",
     "food": "Храна и пиће",
     "objects": "Предмети"
+  },
+  "translation": {
+    "translate": "Преведи",
+    "showOriginal": "Прикажи оригинал",
+    "showTranslation": "Прикажи превод",
+    "translatedFrom": "Преведено са {language}",
+    "autoTranslate": "Аутоматско превођење порука",
+    "translationSettings": "Подешавања превођења",
+    "originalLanguage": "Оригинални језик",
+    "targetLanguage": "Циљни језик",
+    "translating": "Превођење...",
+    "translationError": "Превођење није успело",
+    "languages": {
+      "en": "Енглески",
+      "ru": "Руски",
+      "sr": "Српски",
+      "auto": "Аутоматско препознавање"
+    }
   }
 }

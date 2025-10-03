@@ -129,5 +129,23 @@
     "animals": "Животные и природа",
     "food": "Еда и напитки",
     "objects": "Предметы"
+  },
+  "translation": {
+    "translate": "Перевести",
+    "showOriginal": "Показать оригинал",
+    "showTranslation": "Показать перевод",
+    "translatedFrom": "Переведено с {language}",
+    "autoTranslate": "Автоматический перевод сообщений",
+    "translationSettings": "Настройки перевода",
+    "originalLanguage": "Исходный язык",
+    "targetLanguage": "Целевой язык",
+    "translating": "Перевожу...",
+    "translationError": "Не удалось перевести",
+    "languages": {
+      "en": "Английский",
+      "ru": "Русский",
+      "sr": "Сербский",
+      "auto": "Авто-определение"
+    }
   }
 }

@@ -45,6 +45,7 @@ type Service struct {
 	geocode          geocodeService.GeocodeServiceInterface
 	fileStorage      filestorage.FileStorageInterface
 	chatAttachment   *marketplaceService.ChatAttachmentService
+	chatTranslation  *marketplaceService.ChatTranslationService
 	unifiedSearch    UnifiedSearchServiceInterface
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 	unifiedCar       *marketplaceService.UnifiedCarService
@@ -134,6 +135,12 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Установка сервиса вложений в marketplace сервис
 	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
 
+	// Инициализация сервиса переводов чата
+	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient)
+
+	// Установка сервиса переводов в marketplace сервис
+	marketplaceSvc.SetChatTranslationService(chatTranslationSvc)
+
 	// Создаем UnifiedCarService
 	carServiceConfig := &marketplaceService.CarServiceConfig{
 		CacheTTL:          24 * time.Hour,
@@ -159,6 +166,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 		geocode:          geocodeSvc,
 		fileStorage:      fileStorageSvc,
 		chatAttachment:   chatAttachmentSvc,
+		chatTranslation:  chatTranslationSvc,
 		behaviorTracking: behaviorTrackingSvc,
 		unifiedCar:       unifiedCarSvc,
 		authUserService:  userSvc, // Сохраняем auth UserService
@@ -247,6 +255,10 @@ func (s *Service) Contacts() marketplaceService.ContactsServiceInterface {
 
 func (s *Service) ChatAttachment() marketplaceService.ChatAttachmentServiceInterface {
 	return s.chatAttachment
+}
+
+func (s *Service) ChatTranslation() *marketplaceService.ChatTranslationService {
+	return s.chatTranslation
 }
 
 func (s *Service) UnifiedSearch() UnifiedSearchServiceInterface {

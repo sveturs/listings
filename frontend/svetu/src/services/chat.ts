@@ -7,6 +7,8 @@ import {
   ChatListResponse,
   MessagesResponse,
   ChatAttachment,
+  TranslationResponse,
+  GetTranslationParams,
 } from '@/types/chat';
 
 class ChatService {
@@ -371,6 +373,17 @@ class ChatService {
     await this.request<void>(`/attachments/${attachmentId}`, {
       method: 'DELETE',
     });
+  }
+
+  // Получить перевод сообщения
+  async getMessageTranslation(
+    params: GetTranslationParams
+  ): Promise<TranslationResponse> {
+    const response = await this.request<{
+      data: TranslationResponse;
+      success: boolean;
+    }>(`/messages/${params.messageId}/translation?lang=${params.language}`);
+    return response.data || (response as unknown as TranslationResponse);
   }
 
   // WebSocket соединение

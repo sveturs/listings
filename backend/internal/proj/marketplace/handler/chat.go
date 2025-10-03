@@ -23,14 +23,16 @@ import (
 )
 
 type ChatHandler struct {
-	services globalService.ServicesInterface
-	config   *config.Config
+	services    globalService.ServicesInterface
+	config      *config.Config
+	jwtParserMW fiber.Handler
 }
 
-func NewChatHandler(services globalService.ServicesInterface, config *config.Config) *ChatHandler {
+func NewChatHandler(services globalService.ServicesInterface, config *config.Config, jwtParserMW fiber.Handler) *ChatHandler {
 	return &ChatHandler{
-		services: services,
-		config:   config,
+		services:    services,
+		config:      config,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
@@ -874,4 +876,97 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 			return
 		}
 	}
+}
+
+// TranslateMessage переводит конкретное сообщение на указанный язык
+// @Summary Translate a specific message
+// @Description Translates a chat message to the specified language
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param id path int true "Message ID"
+// @Param lang query string true "Target language code (ru, en, sr)"
+// @Success 200 {object} TranslationResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/chat/messages/{id}/translation [get]
+func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
+	userID, _ := authMiddleware.GetUserID(c)
+	messageID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidMessageId")
+	}
+
+	targetLang := c.Query("lang")
+	if targetLang == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.targetLanguageRequired")
+	}
+
+	// Валидация языка
+	if !isValidLanguage(targetLang) {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLanguage")
+	}
+
+	// Получаем сообщение
+	message, err := h.services.Storage().GetMessageByID(c.Context(), messageID)
+	if err != nil {
+		logger.Error().Err(err).Int("messageId", messageID).Msg("Failed to get message")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
+	}
+
+	// Проверяем права доступа (пользователь должен быть участником чата)
+	if message.SenderID != userID && message.ReceiverID != userID {
+		logger.Warn().
+			Int("userId", userID).
+			Int("messageId", messageID).
+			Int("senderId", message.SenderID).
+			Int("receiverId", message.ReceiverID).
+			Msg("Access denied - user is not a participant")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.accessDenied")
+	}
+
+	// Получаем сервис переводов через globalService
+	chatTranslationSvc := h.services.ChatTranslation()
+	if chatTranslationSvc == nil {
+		logger.Error().Msg("ChatTranslation service is not initialized")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationServiceNotAvailable")
+	}
+
+	// Переводим
+	err = chatTranslationSvc.TranslateMessage(c.Context(), message, targetLang)
+	if err != nil {
+		logger.Error().Err(err).Int("messageId", messageID).Str("targetLang", targetLang).Msg("Translation failed")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationError")
+	}
+
+	// Возвращаем перевод
+	return utils.SuccessResponse(c, TranslationResponse{
+		MessageID:      messageID,
+		OriginalText:   message.Content,
+		TranslatedText: message.Translations[targetLang],
+		SourceLanguage: message.OriginalLanguage,
+		TargetLanguage: targetLang,
+		Metadata:       message.ChatTranslationMetadata,
+	})
+}
+
+// TranslationResponse структура ответа перевода
+type TranslationResponse struct {
+	MessageID      int                          `json:"message_id"`
+	OriginalText   string                       `json:"original_text"`
+	TranslatedText string                       `json:"translated_text"`
+	SourceLanguage string                       `json:"source_language"`
+	TargetLanguage string                       `json:"target_language"`
+	Metadata       *models.ChatTranslationMetadata `json:"metadata,omitempty"`
+}
+
+func isValidLanguage(lang string) bool {
+	validLanguages := map[string]bool{
+		"ru": true,
+		"en": true,
+		"sr": true,
+	}
+	return validLanguages[lang]
 }
