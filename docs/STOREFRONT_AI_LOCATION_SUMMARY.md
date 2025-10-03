@@ -302,6 +302,555 @@ setShowOnMap(show: boolean): void;
 
 ---
 
-**Статус:** Production Ready ✅
-**Проверки:** ESLint ✅ | Prettier ✅ | TypeScript ✅
-**Документация:** Полная ✅
+## ⚠️ КРИТИЧЕСКАЯ ПРОБЛЕМА: Данные не попадают в поисковый индекс!
+
+**Дата обнаружения:** 2025-10-03
+**Статус:** 🔴 **БЛОКЕР ДЛЯ ПРОДАКШНА**
+
+### 📊 Анализ текущего состояния
+
+#### ✅ Что **работает** (БД уровень):
+
+1. **Сохранение в `storefront_products`**:
+   ```sql
+   individual_latitude    DECIMAL(10,8)  ✅ Данные сохраняются
+   individual_longitude   DECIMAL(11,8)  ✅ Данные сохраняются
+   individual_address     TEXT           ✅ Данные сохраняются
+   location_privacy       ENUM           ✅ Данные сохраняются
+   show_on_map           BOOLEAN         ✅ Данные сохраняются
+   ```
+
+2. **Автоматическая синхронизация в `unified_geo`**:
+   ```sql
+   -- Триггер auto_geocode_storefront_product работает
+   SELECT id, source_type, source_id, formatted_address
+   FROM unified_geo WHERE source_type = 'storefront_product';
+
+   -- Результат: Данные успешно копируются ✅
+   id=733, source_id=366, formatted_address='Марка Миљанова 14, Нови-Сад 21101...'
+   ```
+
+3. **Мультиязычные переводы в `geocoding_cache`**:
+   ```sql
+   SELECT language, formatted_address FROM geocoding_cache;
+
+   -- Результат: Переводы сохраняются ✅
+   language='en' → "Vase Stajica, Novi Sad 21101, South Bačka District, Serbia"
+   language='ru' → "Васе Стајића, Нови-Сад 21101, Южно-Бачский округ, Сербия"
+   language='sr' → "Обилазница Нови Сад, Нови Сад 21127, Јужнобачки..."
+   ```
+
+#### ❌ Что **НЕ работает** (OpenSearch индексация):
+
+1. **Координаты отсутствуют в индексе**:
+   ```bash
+   curl "http://localhost:9200/storefront_products/_search"
+
+   # Результат:
+   {
+     "location": null,  // ❌ ДОЛЖНО БЫТЬ: {"lat": 45.26, "lon": 19.85}
+     "address": "Марка Миљанова 14...",  // ⚠️ Только один язык
+   }
+   ```
+
+2. **Мультиязычные адреса не индексируются**:
+   ```bash
+   # Текущее состояние OpenSearch маппинга:
+   "address": {"type": "text"},        // ✅ Есть
+   "address_en": null,                 // ❌ НЕТ
+   "address_ru": null,                 // ❌ НЕТ
+   "address_sr": null,                 // ❌ НЕТ
+   "location": {"type": "geo_point"}   // ✅ Есть, но не заполняется!
+   ```
+
+3. **Поиск по геолокации НЕ работает**:
+   - Невозможен geo_distance query (нет координат)
+   - Невозможен мультиязычный поиск по адресу
+   - Карта маркетплейса не отображает товары
+
+---
+
+## 🚨 ПЛАН ИСПРАВЛЕНИЯ ДЛЯ ПРОДАКШНА
+
+### Фаза 1: Исправление индексации (КРИТИЧНО)
+
+#### Задача 1.1: Дополнить функцию `productToDoc()`
+**Файл:** `backend/internal/proj/storefronts/storage/opensearch/product_repository.go:90`
+
+**Текущий код (строки 90-397):**
+```go
+func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[string]interface{} {
+    doc := map[string]interface{}{
+        "id": product.ID,
+        "name": product.Name,
+        // ... другие поля
+    }
+
+    // ❌ ОТСУТСТВУЕТ: Добавление координат и адресов
+
+    return doc
+}
+```
+
+**Требуемые изменения:**
+```go
+// ДОБАВИТЬ ПОСЛЕ СТРОКИ 370 (перед return doc):
+
+// ========== LOCATION & ADDRESS DATA ==========
+// 1. Добавляем координаты для geo_point поиска
+if product.IndividualLatitude != nil && product.IndividualLongitude != nil {
+    doc["location"] = map[string]interface{}{
+        "lat": *product.IndividualLatitude,
+        "lon": *product.IndividualLongitude,
+    }
+    logger.Debug().
+        Int("product_id", product.ID).
+        Float64("lat", *product.IndividualLatitude).
+        Float64("lon", *product.IndividualLongitude).
+        Msg("Added location to OpenSearch document")
+} else {
+    // Fallback к координатам витрины (через JOIN или отдельный запрос)
+    // TODO: Реализовать загрузку координат витрины
+    doc["location"] = nil
+}
+
+// 2. Добавляем основной адрес (из individual_address или unified_geo)
+if product.IndividualAddress != nil && *product.IndividualAddress != "" {
+    doc["address"] = *product.IndividualAddress
+} else {
+    doc["address"] = ""
+}
+
+// 3. Добавляем настройки приватности
+doc["location_privacy"] = product.LocationPrivacy
+doc["show_on_map"] = product.ShowOnMap
+doc["has_individual_location"] = product.HasIndividualLocation
+```
+
+**Проверка:**
+```bash
+# После изменений запустить переиндексацию
+curl -X POST "http://localhost:3000/api/v1/admin/search/reindex/storefront-products"
+
+# Проверить результат
+curl "http://localhost:9200/storefront_products/_search?q=id:366" | jq '.hits.hits[0]._source.location'
+# Ожидаем: {"lat": 45.26129998, "lon": 19.85233199}
+```
+
+---
+
+#### Задача 1.2: Добавить загрузку мультиязычных адресов
+**Файл:** `backend/internal/storage/postgres/storefront_product.go`
+
+**Требуется:**
+1. Добавить JOIN к `geocoding_cache` при получении продукта
+2. Загружать переводы адресов для всех языков (en, ru, sr)
+3. Добавить поля в модель `StorefrontProduct`:
+
+```go
+// В backend/internal/domain/models/storefront_product.go
+type StorefrontProduct struct {
+    // ... существующие поля
+
+    // ДОБАВИТЬ:
+    AddressTranslations map[string]string `json:"address_translations,omitempty" db:"-"`
+    // Формат: {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад", "sr": "..."}
+}
+```
+
+**SQL запрос для загрузки переводов:**
+```sql
+-- Добавить в GetStorefrontProducts() и GetStorefrontProductByID()
+LEFT JOIN LATERAL (
+    SELECT
+        jsonb_object_agg(gc.language, gc.formatted_address) as address_translations
+    FROM geocoding_cache gc
+    WHERE gc.normalized_address = p.individual_address
+    GROUP BY p.id
+) translations ON true
+```
+
+**Обновить `productToDoc()`:**
+```go
+// ДОБАВИТЬ после блока "address":
+// 4. Добавляем мультиязычные адреса
+if product.AddressTranslations != nil && len(product.AddressTranslations) > 0 {
+    for lang, address := range product.AddressTranslations {
+        doc[fmt.Sprintf("address_%s", lang)] = address
+    }
+    logger.Debug().
+        Int("product_id", product.ID).
+        Int("translations_count", len(product.AddressTranslations)).
+        Msg("Added address translations to OpenSearch document")
+}
+```
+
+---
+
+#### Задача 1.3: Обновить OpenSearch маппинг
+**Файл:** `backend/internal/proj/storefronts/storage/opensearch/mapping.go`
+
+**Текущий маппинг (строка ~1608):**
+```go
+const storefrontProductMapping = `{
+  "mappings": {
+    "properties": {
+      "location": {"type": "geo_point"},
+      "address": {"type": "text"}
+      // ❌ ОТСУТСТВУЮТ мультиязычные поля
+    }
+  }
+}`
+```
+
+**Требуемые изменения:**
+```go
+const storefrontProductMapping = `{
+  "mappings": {
+    "properties": {
+      // ... существующие поля
+
+      "location": {
+        "type": "geo_point"
+      },
+      "address": {
+        "type": "text",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+
+      // ДОБАВИТЬ:
+      "address_en": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_ru": {
+        "type": "text",
+        "analyzer": "russian",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_sr": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+
+      "location_privacy": {
+        "type": "keyword"
+      },
+      "show_on_map": {
+        "type": "boolean"
+      },
+      "has_individual_location": {
+        "type": "boolean"
+      }
+    }
+  }
+}`
+```
+
+**Применение изменений:**
+```bash
+# 1. Удалить старый индекс (ОСТОРОЖНО: потеря данных!)
+curl -X DELETE "http://localhost:9200/storefront_products"
+
+# 2. Пересоздать с новым маппингом
+# Автоматически при следующем запуске backend
+
+# 3. Переиндексировать все продукты
+curl -X POST "http://localhost:3000/api/v1/admin/search/reindex/storefront-products"
+```
+
+---
+
+### Фаза 2: Тестирование индексации
+
+#### Тест 2.1: Проверка координат в индексе
+```bash
+# 1. Создать тестовый продукт с координатами через AI
+# (через frontend: загрузить фото с GPS)
+
+# 2. Проверить OpenSearch
+curl "http://localhost:9200/storefront_products/_search" -H 'Content-Type: application/json' -d'{
+  "query": {"match": {"name": "тестовый продукт"}},
+  "_source": ["id", "name", "location", "address", "address_en", "address_ru", "address_sr"]
+}'
+
+# 3. Ожидаемый результат:
+{
+  "_source": {
+    "id": 123,
+    "name": "Тестовый продукт",
+    "location": {"lat": 45.26, "lon": 19.85},  // ✅ Заполнено
+    "address": "Марка Миљанова 14, Нови-Сад",
+    "address_en": "Marka Miljanova 14, Novi Sad",  // ✅ Заполнено
+    "address_ru": "Марка Миљанова 14, Нови-Сад",  // ✅ Заполнено
+    "address_sr": "Марка Миљанова 14, Нови Сад"   // ✅ Заполнено
+  }
+}
+```
+
+#### Тест 2.2: Проверка geo_distance поиска
+```bash
+curl "http://localhost:9200/storefront_products/_search" -H 'Content-Type: application/json' -d'{
+  "query": {
+    "bool": {
+      "filter": {
+        "geo_distance": {
+          "distance": "5km",
+          "location": {"lat": 45.26, "lon": 19.85}
+        }
+      }
+    }
+  }
+}'
+
+# Ожидаем: список продуктов в радиусе 5км
+```
+
+#### Тест 2.3: Проверка мультиязычного поиска
+```bash
+# Поиск на русском
+curl "http://localhost:9200/storefront_products/_search" -d'{
+  "query": {"match": {"address_ru": "Нови-Сад"}}
+}'
+
+# Поиск на английском
+curl "http://localhost:9200/storefront_products/_search" -d'{
+  "query": {"match": {"address_en": "Novi Sad"}}
+}'
+
+# Поиск на сербском
+curl "http://localhost:9200/storefront_products/_search" -d'{
+  "query": {"match": {"address_sr": "Нови Сад"}}
+}'
+```
+
+---
+
+### Фаза 3: Frontend интеграция (опционально)
+
+#### Задача 3.1: Отображение товаров на карте маркетплейса
+**Файл:** `frontend/svetu/src/components/marketplace/MapView.tsx` (если существует)
+
+**Требуется:**
+- Фильтровать только товары с `show_on_map = true`
+- Учитывать `location_privacy` для отображения точности маркера
+- Использовать `address_{locale}` для popup'ов на карте
+
+#### Задача 3.2: Geo-фильтр в поиске
+**Файл:** `frontend/svetu/src/components/marketplace/SearchFilters.tsx`
+
+**Добавить фильтр:**
+- "Показать товары рядом со мной" (использует геолокацию браузера)
+- Радиус поиска: 1км, 5км, 10км, 50км
+- Визуализация на карте
+
+---
+
+### Фаза 4: Переиндексация продакшна
+
+#### Шаг 4.1: Подготовка на dev.svetu.rs
+```bash
+# 1. SSH на dev сервер
+ssh svetu@svetu.rs
+
+# 2. Обновить код
+cd /opt/svetu-dev
+git pull
+
+# 3. Пересоздать OpenSearch индекс
+docker exec svetu-dev_opensearch_1 curl -X DELETE "http://localhost:9200/storefront_products"
+
+# 4. Перезапустить backend (автоматически создаст новый маппинг)
+cd backend && make dev-restart
+
+# 5. Переиндексировать
+curl -X POST "https://devapi.svetu.rs/api/v1/admin/search/reindex/storefront-products" \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# 6. Проверить результат
+curl "https://devapi.svetu.rs/api/v1/search?q=&near=45.26,19.85&radius=10km"
+```
+
+#### Шаг 4.2: Развертывание на продакшн
+```bash
+# 1. Создать бэкап индекса (если нужно)
+ssh production
+curl -X POST "http://localhost:9200/_snapshot/backup/storefront_products_$(date +%Y%m%d)"
+
+# 2. Выполнить обновление (аналогично dev)
+
+# 3. Мониторинг
+tail -f /var/log/backend.log | grep -i "location\|address\|opensearch"
+```
+
+---
+
+## 📋 CHECKLIST ДЛЯ ПРОДАКШНА
+
+### Backend изменения:
+- [x] **Задача 1.1**: Дополнить `productToDoc()` координатами и адресами ✅ **ВЫПОЛНЕНО**
+- [x] **Задача 1.2**: Добавить загрузку `AddressTranslations` из `geocoding_cache` ✅ **ВЫПОЛНЕНО**
+- [x] **Задача 1.3**: Обновить OpenSearch маппинг (`address_en/ru/sr`) ✅ **ВЫПОЛНЕНО**
+- [ ] **Тест 2.1**: Координаты попадают в индекс ⚠️ **ТРЕБУЕТ ПЕРЕИНДЕКСАЦИИ**
+- [ ] **Тест 2.2**: Geo_distance поиск работает ⚠️ **ТРЕБУЕТ ТЕСТИРОВАНИЯ**
+- [ ] **Тест 2.3**: Мультиязычный поиск по адресу работает ⚠️ **ТРЕБУЕТ ТЕСТИРОВАНИЯ**
+
+### Database:
+- [x] Проверить индексы на `unified_geo` (performance) ✅ **В НАЛИЧИИ**
+- [x] Проверить индексы на `geocoding_cache` (для JOIN'ов) ✅ **В НАЛИЧИИ**
+- [x] Убедиться что триггер `auto_geocode_storefront_product` работает ✅ **РАБОТАЕТ**
+
+### OpenSearch:
+- [x] Удалить старый индекс `storefront_products` ✅ **УДАЛЁН**
+- [x] Применить новый маппинг с `address_en/ru/sr` ✅ **ПРИМЕНЁН**
+- [ ] Переиндексировать все продукты ⚠️ **ТРЕБУЕТСЯ СОЗДАТЬ МЕТОД**
+- [ ] Проверить размер индекса и производительность
+
+### Тестирование:
+- [ ] Создать 5+ тестовых продуктов с разными адресами
+- [ ] Проверить geo_distance запросы (1км, 5км, 10км)
+- [ ] Проверить мультиязычный поиск (en, ru, sr)
+- [ ] Проверить приватность (`exact`, `street`, `district`, `city`)
+- [ ] Проверить `show_on_map = false` (не отображается на карте)
+
+### Production:
+- [ ] Развернуть на `dev.svetu.rs`
+- [ ] QA тестирование на dev
+- [ ] Развернуть на `svetu.rs` (production)
+- [ ] Smoke тесты на продакшне
+- [ ] Мониторинг логов в течение 24 часов
+
+---
+
+## 🎯 КРИТЕРИИ ГОТОВНОСТИ К ПРОДАКШНУ
+
+### ✅ Обязательные критерии:
+1. **Координаты индексируются** → `location` не `null` в OpenSearch
+2. **Мультиязычные адреса индексируются** → `address_en/ru/sr` заполнены
+3. **Geo-поиск работает** → поиск в радиусе возвращает правильные результаты
+4. **Приватность работает** → координаты размыты согласно `location_privacy`
+5. **Все тесты проходят** → 100% success rate
+
+### 🔍 Дополнительные критерии (Nice to have):
+- [ ] Frontend карта маркетплейса отображает товары
+- [ ] Geo-фильтр в поиске работает
+- [ ] Performance: geo_distance запросы < 100ms
+- [ ] Документация обновлена (этот файл)
+
+---
+
+## 📊 МЕТРИКИ ДЛЯ МОНИТОРИНГА
+
+После развертывания отслеживать:
+
+1. **OpenSearch индексация**:
+   - Количество документов с `location != null`
+   - Количество документов с заполненными `address_en/ru/sr`
+   - Время индексации одного продукта (должно быть < 500ms)
+
+2. **Поисковые запросы**:
+   - Частота использования geo_distance фильтра
+   - Средняя латентность geo-запросов
+   - Количество результатов в среднем на geo-запрос
+
+3. **Ошибки**:
+   - `location = null` для продуктов с `individual_latitude IS NOT NULL`
+   - Пустые `address_*` поля при наличии данных в `geocoding_cache`
+   - Ошибки геокодирования (rate limit Nominatim API)
+
+---
+
+## 📚 Связанные задачи
+
+- **Issue #XXX**: OpenSearch индексация координат и адресов (создать в GitHub)
+- **Issue #YYY**: Мультиязычный поиск по адресам (создать в GitHub)
+- **PR #ZZZ**: Fix storefront products location indexing (создать после исправления)
+
+---
+
+---
+
+## 🎉 СТАТУС РЕАЛИЗАЦИИ
+
+**Дата завершения:** 2025-10-03 17:35
+**Статус:** 🟡 **ГОТОВО К ТЕСТИРОВАНИЮ** (80% выполнено)
+
+### ✅ Что реализовано:
+
+#### Backend (100%):
+1. ✅ **Модель данных** - добавлено поле `AddressTranslations`
+2. ✅ **Загрузка переводов** - функции `loadAddressTranslations()` и `loadAddressTranslationsForProduct()`
+3. ✅ **OpenSearch индексация** - `productToDoc()` дополнен координатами и адресами
+4. ✅ **Маппинг** - добавлены поля `address_en/ru/sr`, `location`, `location_privacy`, `show_on_map`
+
+#### Database (100%):
+1. ✅ **Структура БД** - таблицы готовы (`storefront_products`, `unified_geo`, `geocoding_cache`)
+2. ✅ **Триггеры** - `auto_geocode_storefront_product` работает
+3. ✅ **Индексы** - производительность оптимизирована
+
+#### Файлы изменены:
+```
+backend/internal/proj/storefronts/storage/opensearch/product_repository.go
+  - productToDoc(): добавлена индексация location/address (строки 397-448)
+  - storefrontProductMapping: добавлены поля address_en/ru/sr (строки 1660-1689)
+
+backend/internal/domain/models/storefront_product.go
+  - AddressTranslations map[string]string (строка 47)
+
+backend/internal/storage/postgres/storefront_product.go
+  - loadAddressTranslations() (строки 1544-1614)
+  - loadAddressTranslationsForProduct() (строки 1616-1656)
+  - Вызовы в GetStorefrontProducts() (строки 211-215)
+  - Вызовы в GetStorefrontProduct() (строки 316-320)
+```
+
+### ⚠️ Что осталось (20%):
+
+1. **Переиндексация** - нужно добавить метод `ReindexAllStorefrontProducts()` в `cmd/reindex/main.go`
+2. **Тестирование** - создать продукт с GPS координатами и протестировать geo-поиск
+3. **Pre-check** - запустить `make format && make lint`
+
+### 🚀 Следующие шаги:
+
+```bash
+# 1. Pre-check
+cd /data/hostel-booking-system/backend
+make format && make lint
+
+# 2. Создать тестовый продукт через AI с GPS фото
+
+# 3. Протестировать geo-поиск
+curl "http://localhost:9200/storefront_products/_search" -H 'Content-Type: application/json' -d'{
+  "query": {"geo_distance": {"distance": "10km", "location": {"lat": 45.26, "lon": 19.85}}}
+}'
+
+# 4. Коммит
+git add -A
+git commit -m "feat: add OpenSearch location indexing for storefront products
+
+- Add coordinates (lat/lon) to productToDoc() for geo_point search
+- Add AddressTranslations field to load multilingual addresses
+- Update OpenSearch mapping with address_en/ru/sr fields
+- Implement loadAddressTranslations() from geocoding_cache
+- Add location_privacy, show_on_map fields to mapping"
+```
+
+---
+
+**Предыдущий статус:** ~~🔴 БЛОКЕР ДЛЯ ПРОДАКШНА~~ (исправлено)
+**Текущий статус:** 🟡 **Готово к тестированию**
+**Следующий этап:** Тестирование → QA → Production
+
+**Проверки Frontend:** ESLint ✅ | Prettier ✅ | TypeScript ✅
+**Проверки Backend:** ⏳ Требуется `make format && make lint`
+**Документация:** ✅ Актуализирована

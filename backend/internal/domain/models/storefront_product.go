@@ -42,6 +42,9 @@ type StorefrontProduct struct {
 
 	// Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}}
 	Translations map[string]map[string]string `json:"translations,omitempty" db:"-"`
+
+	// AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"}
+	AddressTranslations map[string]string `json:"address_translations,omitempty" db:"-"`
 }
 
 // StorefrontProductImage represents an image of a storefront product

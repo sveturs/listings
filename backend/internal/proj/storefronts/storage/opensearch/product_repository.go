@@ -95,6 +95,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"storefront_id":  product.StorefrontID,
 		"category_id":    product.CategoryID,
 		"name":           product.Name,
+		"title":          product.Name,           // Добавляем title как алиас для name для совместимости с marketplace listings
 		"name_lowercase": strings.ToLower(product.Name),
 		"description":    product.Description,
 		"price":          product.Price,
@@ -103,8 +104,9 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
-		"views_count":    product.ViewCount,           // Добавляем счетчик просмотров для единообразия с marketplace
-		"sold_count":     product.SoldCount,           // Добавляем количество продаж
+		"is_storefront":  true,                      // Добавляем флаг что это товар витрины
+		"views_count":    product.ViewCount,         // Добавляем счетчик просмотров для единообразия с marketplace
+		"sold_count":     product.SoldCount,         // Добавляем количество продаж
 		"status":         r.getProductStatus(product), // Устанавливаем статус на основе реального состояния товара
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
@@ -392,6 +394,57 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			Bool("is_nil", product.Translations == nil).
 			Int("len", len(product.Translations)).
 			Msg("DEBUG: productToDoc() - NO translations to index!")
+	}
+
+	// ========== LOCATION & ADDRESS DATA ==========
+	// Добавляем координаты для geo_point поиска в поле location (как в mapping)
+	if product.IndividualLatitude != nil && product.IndividualLongitude != nil {
+		doc["location"] = map[string]interface{}{
+			"lat": *product.IndividualLatitude,
+			"lon": *product.IndividualLongitude,
+		}
+		logger.Debug().
+			Int("product_id", product.ID).
+			Float64("lat", *product.IndividualLatitude).
+			Float64("lon", *product.IndividualLongitude).
+			Msg("Added location coordinates to OpenSearch document")
+	} else {
+		doc["location"] = nil
+		logger.Debug().
+			Int("product_id", product.ID).
+			Msg("No individual location coordinates for product")
+	}
+
+	// Добавляем основной адрес
+	if product.IndividualAddress != nil && *product.IndividualAddress != "" {
+		doc["address"] = *product.IndividualAddress
+		logger.Debug().
+			Int("product_id", product.ID).
+			Str("address", *product.IndividualAddress).
+			Msg("Added address to OpenSearch document")
+	} else {
+		doc["address"] = ""
+	}
+
+	// Добавляем настройки приватности и видимости
+	if product.LocationPrivacy != nil {
+		doc["location_privacy"] = *product.LocationPrivacy
+	} else {
+		doc["location_privacy"] = "exact"
+	}
+	doc["show_on_map"] = product.ShowOnMap
+	doc["has_individual_location"] = product.HasIndividualLocation
+
+	// Добавляем мультиязычные адреса (если есть)
+	if product.AddressTranslations != nil && len(product.AddressTranslations) > 0 {
+		for lang, address := range product.AddressTranslations {
+			doc[fmt.Sprintf("address_%s", lang)] = address
+		}
+		logger.Debug().
+			Int("product_id", product.ID).
+			Int("translations_count", len(product.AddressTranslations)).
+			Interface("translations", product.AddressTranslations).
+			Msg("Added address translations to OpenSearch document")
 	}
 
 	return doc
@@ -1340,6 +1393,16 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 				if description, ok := translationMap["description"].(string); ok {
 					item.Translations[lang]["description"] = description
 				}
+				// Добавляем поддержку перевода адреса
+				if address, ok := translationMap["address"].(string); ok {
+					item.Translations[lang]["address"] = address
+				}
+				if city, ok := translationMap["city"].(string); ok {
+					item.Translations[lang]["city"] = city
+				}
+				if region, ok := translationMap["region"].(string); ok {
+					item.Translations[lang]["region"] = region
+				}
 			}
 		}
 	}
@@ -1606,13 +1669,44 @@ const storefrontProductMapping = `{
       },
       "category_path": {"type": "text"},
       "location": {"type": "geo_point"},
+      "address": {
+        "type": "text",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_en": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_ru": {
+        "type": "text",
+        "analyzer": "russian_analyzer",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_sr": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "location_privacy": {"type": "keyword"},
+      "show_on_map": {"type": "boolean"},
+      "has_individual_location": {"type": "boolean"},
       "city": {"type": "text"},
       "country": {"type": "keyword"},
       "search_keywords": {"type": "text"},
       "popularity_score": {"type": "float"},
       "quality_score": {"type": "float"},
       "created_at": {"type": "date"},
-      "updated_at": {"type": "date"}
+      "updated_at": {"type": "date"},
+      "translations": {"type": "object", "enabled": true}
     }
   },
   "settings": {

@@ -207,6 +207,12 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 				p.Images = append(p.Images, img)
 			}
 		}
+
+		// Load address translations from geocoding_cache
+		if err := s.loadAddressTranslations(ctx, products); err != nil {
+			logger.Warn().Err(err).Msg("Failed to load address translations")
+			// Не фатальная ошибка, продолжаем без переводов
+		}
 	}
 
 	return products, nil
@@ -305,6 +311,12 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 			}
 			p.Translations[t.Language][t.FieldName] = t.TranslatedText
 		}
+	}
+
+	// Load address translations from geocoding_cache
+	if err := s.loadAddressTranslationsForProduct(ctx, p); err != nil {
+		logger.Warn().Err(err).Int("product_id", p.ID).Msg("Failed to load address translations for product")
+		// Не фатальная ошибка, продолжаем без переводов
 	}
 
 	return p, nil
@@ -1539,4 +1551,109 @@ func (s *Database) BulkUpdateStatus(ctx context.Context, storefrontID int, produ
 	}
 
 	return updatedIDs, errors
+}
+
+// loadAddressTranslations загружает переводы адресов из таблицы translations для списка продуктов
+func (s *Database) loadAddressTranslations(ctx context.Context, products []*models.StorefrontProduct) error {
+	if len(products) == 0 {
+		return nil
+	}
+
+	// Собираем ID продуктов
+	productIDs := make([]int, len(products))
+	productMap := make(map[int]*models.StorefrontProduct)
+	for i, p := range products {
+		productIDs[i] = p.ID
+		productMap[p.ID] = p
+		// Инициализируем Translations если нужно
+		if p.Translations == nil {
+			p.Translations = make(map[string]map[string]string)
+		}
+	}
+
+	// Запрашиваем переводы из таблицы translations
+	query := `
+		SELECT entity_id, language, field_name, translated_text
+		FROM translations
+		WHERE entity_type = 'storefront_product'
+		  AND entity_id = ANY($1)
+		  AND language IN ('en', 'ru', 'sr')
+		ORDER BY entity_id, language, field_name`
+
+	rows, err := s.pool.Query(ctx, query, pq.Array(productIDs))
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to load translations")
+		return nil // Не фатальная ошибка, продолжаем без переводов
+	}
+	defer rows.Close()
+
+	// Группируем переводы по продукту и языку
+	for rows.Next() {
+		var entityID int
+		var language, fieldName, translatedText string
+		if err := rows.Scan(&entityID, &language, &fieldName, &translatedText); err != nil {
+			logger.Warn().Err(err).Msg("Failed to scan translation")
+			continue
+		}
+
+		if p, ok := productMap[entityID]; ok {
+			if p.Translations[language] == nil {
+				p.Translations[language] = make(map[string]string)
+			}
+			p.Translations[language][fieldName] = translatedText
+		}
+	}
+
+	logger.Debug().
+		Int("products_count", len(products)).
+		Int("product_ids", len(productIDs)).
+		Msg("Loaded product translations")
+
+	return nil
+}
+
+// loadAddressTranslationsForProduct загружает переводы для одного продукта из таблицы translations
+func (s *Database) loadAddressTranslationsForProduct(ctx context.Context, product *models.StorefrontProduct) error {
+	// Инициализируем Translations если нужно
+	if product.Translations == nil {
+		product.Translations = make(map[string]map[string]string)
+	}
+
+	query := `
+		SELECT language, field_name, translated_text
+		FROM translations
+		WHERE entity_type = 'storefront_product'
+		  AND entity_id = $1
+		  AND language IN ('en', 'ru', 'sr')
+		ORDER BY language, field_name`
+
+	rows, err := s.pool.Query(ctx, query, product.ID)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to load translations for product")
+		return nil // Не фатальная ошибка
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var language, fieldName, translatedText string
+		if err := rows.Scan(&language, &fieldName, &translatedText); err != nil {
+			logger.Warn().Err(err).Msg("Failed to scan translation")
+			continue
+		}
+
+		if product.Translations[language] == nil {
+			product.Translations[language] = make(map[string]string)
+		}
+		product.Translations[language][fieldName] = translatedText
+	}
+
+	if len(product.Translations) > 0 {
+		logger.Debug().
+			Int("product_id", product.ID).
+			Int("languages_count", len(product.Translations)).
+			Interface("translations", product.Translations).
+			Msg("Loaded translations for product")
+	}
+
+	return nil
 }

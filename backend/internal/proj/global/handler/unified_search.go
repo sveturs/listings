@@ -964,14 +964,26 @@ func (h *UnifiedSearchHandler) convertStorefrontLocation(product *storefrontOpen
 		return nil
 	}
 
-	// Для storefront products адрес берется из витрины
+	// Для storefront products адрес берется из индивидуального местоположения или витрины
 	location := &UnifiedLocationInfo{
 		City:    product.City,
 		Country: product.Country,
 	}
 
-	// Адрес как простая строка (не мультиязычная)
-	if product.Address != "" {
+	// Заполняем мультиязычные адреса из translations (если есть)
+	// Формат: Translations[locale][field] = value
+	// Например: Translations["ru"]["address"] = "Адрес на русском"
+	if product.Translations != nil && len(product.Translations) > 0 {
+		location.AddressMultilingual = make(map[string]string)
+		for lang, fields := range product.Translations {
+			if address, ok := fields["address"]; ok && address != "" {
+				location.AddressMultilingual[lang] = address
+			}
+		}
+	}
+
+	// Если мультиязычных адресов нет, но есть основной адрес
+	if len(location.AddressMultilingual) == 0 && product.Address != "" {
 		location.AddressMultilingual = map[string]string{
 			"default": product.Address,
 		}

@@ -292,6 +292,17 @@ export default function PublishView({
                           </span>
                           <p className="text-sm">{translation.description}</p>
                         </div>
+                        {translation.address && (
+                          <div>
+                            <span className="text-xs text-base-content/60">
+                              {t('address') || 'Address'}:
+                            </span>
+                            <p className="text-sm">
+                              {translation.address}
+                              {translation.city && ` (${translation.city})`}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -202,6 +202,51 @@ const ListingMapping = `
       "coordinates": {
         "type": "geo_point"
       },
+      "address": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "address_en": {
+        "type": "text",
+        "analyzer": "english_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "address_ru": {
+        "type": "text",
+        "analyzer": "russian_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "address_sr": {
+        "type": "text",
+        "analyzer": "serbian_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "location_privacy": {
+        "type": "keyword"
+      },
+      "has_individual_location": {
+        "type": "boolean"
+      },
       "city": {
         "type": "text",
         "fields": {

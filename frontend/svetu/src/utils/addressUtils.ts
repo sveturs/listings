@@ -102,15 +102,22 @@ export function getFullLocalizedAddress(
   let country = item.country || '';
 
   if (item.translations) {
-    // Проверяем формат 1: { [locale]: { location, city, country } }
+    // Проверяем формат 1: { [locale]: { address, city, country } }
+    // Используется в storefront products
     if (
       item.translations[locale] &&
-      typeof item.translations[locale] === 'object' &&
-      'location' in item.translations[locale]
+      typeof item.translations[locale] === 'object'
     ) {
-      location = item.translations[locale].location || location;
-      city = item.translations[locale].city || city;
-      country = item.translations[locale].country || country;
+      // Для storefront products - используем поле address напрямую
+      if ('address' in item.translations[locale] && item.translations[locale].address) {
+        return item.translations[locale].address;
+      }
+      // Для marketplace listings - собираем из location, city, country
+      if ('location' in item.translations[locale]) {
+        location = item.translations[locale].location || location;
+        city = item.translations[locale].city || city;
+        country = item.translations[locale].country || country;
+      }
     }
     // Проверяем формат 2: { location: { [locale]: string }, ... }
     else {

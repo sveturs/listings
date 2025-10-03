@@ -64,12 +64,12 @@ export default function EnhanceView({
   });
 
   // Location states
+  const hasExifLocation = state.aiData.location?.source === 'exif';
+  // ВАЖНО: Если есть EXIF, ВСЕГДА используем его по умолчанию (игнорируем state.useStorefrontLocation)
   const [localUseStorefrontLocation, setLocalUseStorefrontLocation] = useState(
-    state.useStorefrontLocation ?? true
+    hasExifLocation ? false : (state.useStorefrontLocation ?? true)
   );
-  const [useExifLocation, setUseExifLocation] = useState(
-    state.aiData.location?.source === 'exif'
-  );
+  const [useExifLocation, setUseExifLocation] = useState(hasExifLocation);
   const [individualLocation, setIndividualLocation] = useState<
     | {
         latitude: number;
@@ -188,33 +188,54 @@ export default function EnhanceView({
   };
 
   const handleSave = () => {
-    // Сохраняем основные данные
+    console.log('[EnhanceView] handleSave - state.aiData.location:', state.aiData.location);
+    console.log('[EnhanceView] handleSave - localUseStorefrontLocation:', localUseStorefrontLocation);
+    console.log('[EnhanceView] handleSave - useExifLocation:', useExifLocation);
+
+    // Определяем location данные
+    let locationData = null;
+    if (localUseStorefrontLocation) {
+      // Используем адрес витрины - location = null (будет использоваться storefront.address)
+      locationData = null;
+      console.log('[EnhanceView] Using storefront location, setting location to null');
+    } else if (useExifLocation && state.aiData.location) {
+      // Используем EXIF location
+      locationData = {
+        ...state.aiData.location,
+        source: 'exif' as const,
+      };
+      console.log('[EnhanceView] Using EXIF location:', locationData);
+    } else if (individualLocation) {
+      // Используем manually entered location
+      locationData = {
+        ...individualLocation,
+        source: 'manual' as const,
+      };
+      console.log('[EnhanceView] Using manual location:', locationData);
+    } else if (state.aiData.location) {
+      // Сохраняем существующий location
+      locationData = state.aiData.location;
+      console.log('[EnhanceView] Preserving existing location:', locationData);
+    }
+
+    console.log('[EnhanceView] Final locationData to save:', locationData);
+
+    // Сохраняем основные данные (сохраняем translations и другие существующие поля)
     setAIData({
+      ...state.aiData, // Сохраняем все существующие поля
       title: editedData.title,
       description: editedData.description,
       price: editedData.price,
       stockQuantity: editedData.stockQuantity,
       categoryId: editedData.categoryId,
       category: editedData.category,
-      // Обновляем location если выбран индивидуальный или EXIF адрес
-      location: localUseStorefrontLocation
-        ? null
-        : useExifLocation && state.aiData.location
-          ? {
-              ...state.aiData.location,
-              source: 'exif' as const,
-            }
-          : individualLocation
-            ? {
-                ...individualLocation,
-                source: 'manual' as const,
-              }
-            : state.aiData.location,
+      location: locationData,
     });
 
     // Сохраняем настройки локации
     setLocationPrivacyLevel(localPrivacyLevel);
     setShowOnMap(localShowOnMap);
+    setUseStorefrontLocation(localUseStorefrontLocation);
 
     setView('variants');
   };

@@ -3104,13 +3104,29 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.StorefrontID = &id
 	}
 
-	// Обрабатываем координаты
+	// Обрабатываем флаг is_storefront для различия типа товара
+	if isStorefront, ok := doc["is_storefront"].(bool); ok {
+		listing.IsStorefrontProduct = isStorefront
+	}
+
+	// Обрабатываем координаты (проверяем оба варианта: coordinates и location)
 	if coordinates, ok := doc["coordinates"].(map[string]interface{}); ok {
 		if lat, ok := coordinates["lat"].(float64); ok {
 			listing.Latitude = &lat
 		}
 
 		if lon, ok := coordinates["lon"].(float64); ok {
+			listing.Longitude = &lon
+		}
+	}
+
+	// Также проверяем поле location (используется в storefront products с geo_point типом)
+	if location, ok := doc["location"].(map[string]interface{}); ok {
+		if lat, ok := location["lat"].(float64); ok {
+			listing.Latitude = &lat
+		}
+
+		if lon, ok := location["lon"].(float64); ok {
 			listing.Longitude = &lon
 		}
 	}
@@ -3282,6 +3298,29 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 				if description, ok := langTranslations["description"]; ok && description != "" {
 					listing.Description = description
 				}
+
+				// Применяем переводы адреса
+				if address, ok := langTranslations["address"]; ok && address != "" {
+					listing.Location = address
+				}
+				if city, ok := langTranslations["city"]; ok && city != "" {
+					listing.City = city
+				}
+				if country, ok := langTranslations["country"]; ok && country != "" {
+					listing.Country = country
+				}
+			}
+		}
+	}
+
+	// Также заполняем AddressMultilingual для всех языков из translations
+	if listing.Translations != nil && len(listing.Translations) > 0 {
+		if listing.AddressMultilingual == nil {
+			listing.AddressMultilingual = make(map[string]string)
+		}
+		for lang, langTranslations := range listing.Translations {
+			if address, ok := langTranslations["address"]; ok && address != "" {
+				listing.AddressMultilingual[lang] = address
 			}
 		}
 	}
