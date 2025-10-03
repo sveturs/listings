@@ -711,7 +711,9 @@ export default function HomePageClient({
                   typeof listing.location === 'object' && listing.location
                     ? listing.location.country
                     : listing.country || listing.address_country,
-                address_multilingual: listing.address_multilingual,
+                address_multilingual:
+                  listing.location?.address_multilingual ||
+                  listing.address_multilingual,
                 translations: listing.translations,
                 image: (() => {
                   // Проверяем наличие изображений
@@ -1164,47 +1166,24 @@ export default function HomePageClient({
                         <FiMapPin className="w-3 h-3" />
                         <span className="text-base-content/60">
                           {(() => {
-                            // Try to get translated location from various possible structures
-                            if (deal.translations?.[locale]?.location) {
-                              return deal.translations[locale].location;
-                            }
+                            // Приоритет 1: Мультиязычный адрес из unified search
                             if (deal.address_multilingual?.[locale]) {
                               return deal.address_multilingual[locale];
                             }
 
-                            // Temporary hardcoded translations for known addresses
-                            const city = deal.city || '';
-                            const country = deal.country || '';
-
-                            // Handle known Serbian addresses with translations
-                            if (city.includes('Васе Стајића')) {
-                              if (locale === 'en') {
-                                return 'Vase Stajica 20, Novi Sad, Serbia';
-                              } else if (locale === 'ru') {
-                                return 'Васе Стаича 20, Нови-Сад, Сербия';
-                              }
-                            } else if (
-                              city === 'Novi Sad' ||
-                              city === 'Нови Сад'
-                            ) {
-                              const translations = {
-                                en: `Novi Sad, Serbia`,
-                                ru: `Нови-Сад, Сербия`,
-                                sr: `Нови Сад, Србија`,
-                              };
-                              return (
-                                translations[
-                                  locale as keyof typeof translations
-                                ] || `${city}, ${country}`
-                              );
+                            // Приоритет 2: Перевод локации из translations
+                            if (deal.translations?.[locale]?.location) {
+                              return deal.translations[locale].location;
                             }
 
-                            // Fallback to default location
+                            // Приоритет 3: Fallback на строковое значение location
                             if (typeof deal.location === 'string') {
                               return deal.location;
                             }
 
-                            // Build from city and country
+                            // Приоритет 4: Составляем из city и country
+                            const city = deal.city || '';
+                            const country = deal.country || '';
                             return (
                               `${city}${city && country ? ', ' : ''}${country}`.trim() ||
                               'Location not specified'
