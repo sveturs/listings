@@ -35,7 +35,9 @@ export default function VariantAttributesClient() {
 
   const fetchVariantAttributes = async () => {
     try {
-      const response = await apiClient.get('/admin/attributes/variant-compatible');
+      const response = await apiClient.get(
+        '/admin/attributes/variant-compatible'
+      );
 
       if (response.error) {
         throw new Error(response.error.message);

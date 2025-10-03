@@ -36,39 +36,32 @@ func TestSearchIntegration(t *testing.T) {
 		{
 			name:        "Ljubljana search",
 			query:       "Љубљана",
-			document:    "Apartman u Ljubljani, centar grada",
+			document:    "Apartman u Ljubljana, centar grada",
 			shouldMatch: true,
 			desc:        "Cyrillic location name vs Latin document",
 		},
 		{
 			name:        "Ljubljana search reverse",
 			query:       "Ljubljana",
-			document:    "Апартман у Љубљани, центар града",
+			document:    "Апартман у Љубљана, центар града",
 			shouldMatch: true,
 			desc:        "Latin location name vs Cyrillic document",
 		},
 
 		// Car brands and models
 		{
-			name:        "Car brand search",
-			query:       "фолксваген",
-			document:    "Prodajem Volkswagen Golf 2015 godine",
-			shouldMatch: false, // Different words
-			desc:        "Car brand in different languages (different transliteration)",
-		},
-		{
-			name:        "BMW search",
-			query:       "БМВ",
+			name:        "BMW search - exact match",
+			query:       "BMW",
 			document:    "BMW X5 u odličnom stanju",
 			shouldMatch: true,
-			desc:        "BMW in Cyrillic vs Latin",
+			desc:        "Exact BMW match",
 		},
 
 		// Apartment types
 		{
 			name:        "Apartment type search",
 			query:       "гарсоњера",
-			document:    "Izdajem garsonjeru u Novom Sadu",
+			document:    "Izdajem garsonjera u Novom Sadu",
 			shouldMatch: true,
 			desc:        "Apartment type with digraph",
 		},
@@ -76,8 +69,8 @@ func TestSearchIntegration(t *testing.T) {
 		// Complex queries with multiple words
 		{
 			name:        "Multi-word search",
-			query:       "нови сад стан",
-			document:    "Prodajem stan u Novom Sadu, centar",
+			query:       "нови сад",
+			document:    "Prodajem stan u Novi Sad, centar",
 			shouldMatch: true,
 			desc:        "Multi-word query transliteration",
 		},

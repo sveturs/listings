@@ -28,7 +28,9 @@ export default function AIProductWizard({
         storefrontSlug
       );
       try {
-        const response = await apiClient.get(`/storefronts/slug/${storefrontSlug}`);
+        const response = await apiClient.get(
+          `/storefronts/slug/${storefrontSlug}`
+        );
         console.log('[AIProductWizard] Response:', response);
 
         if (response.data) {

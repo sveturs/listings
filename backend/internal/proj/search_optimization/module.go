@@ -36,34 +36,26 @@ func NewModule(db *postgres.Database, logger logger.Logger) *Module {
 
 // RegisterRoutes регистрирует маршруты модуля поисковой оптимизации
 func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware) error {
-	// Группа для админских эндпоинтов поиска (избегаем конфликта с users admin)
-	admin := app.Group("/api/v1/search-admin")
-	// Временно убираем авторизацию для тестирования
-	// admin.Use(middleware.AuthRequiredJWT)
-	// admin.Use(middleware.AdminRequired)
-
-	// Группа для поисковой оптимизации
-	search := admin.Group("/search")
+	// Группа для админских эндпоинтов поиска
+	admin := app.Group("/api/v1/admin/search", middleware.JWTParser(), middleware.AdminRequired)
 
 	// Эндпоинты для управления синонимами
-	synonyms := search.Group("/synonyms")
-	synonyms.Get("/", m.Handler.GetSynonyms)
-	synonyms.Post("/", m.Handler.CreateSynonym)
-	synonyms.Put("/:id", m.Handler.UpdateSynonym)
-	synonyms.Delete("/:id", m.Handler.DeleteSynonym)
+	admin.Get("/synonyms", m.Handler.GetSynonyms)
+	admin.Post("/synonyms", m.Handler.CreateSynonym)
+	admin.Put("/synonyms/:id", m.Handler.UpdateSynonym)
+	admin.Delete("/synonyms/:id", m.Handler.DeleteSynonym)
 
 	// Эндпоинты для оптимизации
-	optimization := search.Group("/optimization")
-	optimization.Post("/start", m.Handler.StartOptimization)
-	optimization.Get("/status/:id", m.Handler.GetOptimizationStatus)
-	optimization.Post("/cancel/:id", m.Handler.CancelOptimization)
-	optimization.Post("/apply/:id", m.Handler.ApplyOptimizedWeights)
-	optimization.Get("/analyze", m.Handler.AnalyzeCurrentWeights)
-	optimization.Get("/history", m.Handler.GetOptimizationHistory)
-	optimization.Get("/config", m.Handler.GetOptimizationConfig)
-	optimization.Put("/config", m.Handler.UpdateOptimizationConfig)
-	optimization.Post("/backup", m.Handler.CreateWeightBackup)
-	optimization.Post("/rollback/:id", m.Handler.RollbackWeights)
+	admin.Post("/optimize-weights", m.Handler.StartOptimization)
+	admin.Get("/optimization-status/:session_id", m.Handler.GetOptimizationStatus)
+	admin.Post("/optimization-cancel/:session_id", m.Handler.CancelOptimization)
+	admin.Post("/apply-weights", m.Handler.ApplyOptimizedWeights)
+	admin.Post("/analyze-weights", m.Handler.AnalyzeCurrentWeights)
+	admin.Get("/optimization-history", m.Handler.GetOptimizationHistory)
+	admin.Get("/optimization-config", m.Handler.GetOptimizationConfig)
+	admin.Put("/optimization-config", m.Handler.UpdateOptimizationConfig)
+	admin.Post("/backup-weights", m.Handler.CreateWeightBackup)
+	admin.Post("/rollback-weights", m.Handler.RollbackWeights)
 
 	return nil
 }

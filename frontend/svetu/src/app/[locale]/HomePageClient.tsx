@@ -83,7 +83,7 @@ export default function HomePageClient({
 }: HomePageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, refreshSession } = useAuth();
+  const { user } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const t = useTranslations('marketplace');
   const _tCommon = useTranslations('common');
@@ -624,173 +624,175 @@ export default function HomePageClient({
             `Mixed selection: ${selectedListings.filter((l: any) => !l.storefrontId).length} C2C + ${selectedListings.filter((l: any) => l.storefrontId).length} B2C`
           );
 
-          const apiListings = selectedListings.map((listing: any, index: number) => {
-            // Логируем структуру данных для отладки
-            logger.debug('Processing listing:', {
-              id: listing.id,
-              name: listing.name,
-              images: listing.images,
-              hasImages: listing.images && listing.images.length > 0,
-              firstImage: listing.images && listing.images[0],
-            });
+          const apiListings = selectedListings.map(
+            (listing: any, index: number) => {
+              // Логируем структуру данных для отладки
+              logger.debug('Processing listing:', {
+                id: listing.id,
+                name: listing.name,
+                images: listing.images,
+                hasImages: listing.images && listing.images.length > 0,
+                firstImage: listing.images && listing.images[0],
+              });
 
-            // Вычисляем скидку если есть старая цена
-            let discount = null;
-            let oldPrice = null;
+              // Вычисляем скидку если есть старая цена
+              let discount = null;
+              let oldPrice = null;
 
-            // Проверяем наличие скидки из API или вычисляем из старой цены
-            if (listing.has_discount && listing.old_price) {
-              oldPrice = `${listing.old_price} ${listing.currency || 'РСД'}`;
-              if (listing.discount_percentage) {
-                discount = `-${listing.discount_percentage}%`;
-              } else if (listing.old_price > listing.price) {
+              // Проверяем наличие скидки из API или вычисляем из старой цены
+              if (listing.has_discount && listing.old_price) {
+                oldPrice = `${listing.old_price} ${listing.currency || 'РСД'}`;
+                if (listing.discount_percentage) {
+                  discount = `-${listing.discount_percentage}%`;
+                } else if (listing.old_price > listing.price) {
+                  const discountPercent = Math.round(
+                    ((listing.old_price - listing.price) / listing.old_price) *
+                      100
+                  );
+                  discount = `-${discountPercent}%`;
+                }
+              } else if (
+                listing.originalPrice &&
+                listing.price &&
+                listing.originalPrice > listing.price
+              ) {
                 const discountPercent = Math.round(
-                  ((listing.old_price - listing.price) / listing.old_price) *
+                  ((listing.originalPrice - listing.price) /
+                    listing.originalPrice) *
                     100
                 );
                 discount = `-${discountPercent}%`;
+                oldPrice = `${listing.originalPrice} РСД`;
               }
-            } else if (
-              listing.originalPrice &&
-              listing.price &&
-              listing.originalPrice > listing.price
-            ) {
-              const discountPercent = Math.round(
-                ((listing.originalPrice - listing.price) /
-                  listing.originalPrice) *
-                  100
-              );
-              discount = `-${discountPercent}%`;
-              oldPrice = `${listing.originalPrice} РСД`;
-            }
 
-            // Добавляем подробное логирование для отладки
-            logger.debug('Mapping listing with storefront data:', {
-              listing_id: listing.id,
-              product_id: listing.product_id,
-              product_type: listing.product_type,
-              storefront_from_api: listing.storefront,
-              storefront_id_direct: listing.storefront_id,
-              user_from_api: listing.user,
-              user_id_direct: listing.user_id,
-            });
+              // Добавляем подробное логирование для отладки
+              logger.debug('Mapping listing with storefront data:', {
+                listing_id: listing.id,
+                product_id: listing.product_id,
+                product_type: listing.product_type,
+                storefront_from_api: listing.storefront,
+                storefront_id_direct: listing.storefront_id,
+                user_from_api: listing.user,
+                user_id_direct: listing.user_id,
+              });
 
-            // Формируем уникальный ключ для React
-            // API уже возвращает listing.id с префиксом (sp_XXX или ml_XXX)
-            // Добавляем index как fallback для гарантии уникальности
-            const uniqueKey =
-              listing.id || `${listing.product_type || 'item'}_${index}`;
+              // Формируем уникальный ключ для React
+              // API уже возвращает listing.id с префиксом (sp_XXX или ml_XXX)
+              // Добавляем index как fallback для гарантии уникальности
+              const uniqueKey =
+                listing.id || `${listing.product_type || 'item'}_${index}`;
 
-            const mappedListing = {
-              id: uniqueKey, // Используем уникальный ключ
-              product_id:
-                listing.product_type === 'storefront'
-                  ? listing.product_id
-                  : null,
-              title: listing.name || listing.title,
-              price: `${listing.price} ${listing.currency || 'РСД'}`,
-              oldPrice,
-              discount,
-              // Сохраняем все данные для локализации
-              // Обрабатываем разные форматы location из search API и marketplace API
-              location:
-                typeof listing.location === 'object' && listing.location
-                  ? `${listing.location.city || ''}, ${listing.location.country || ''}`
-                      .trim()
-                      .replace(/^,\s*|\s*,$/, '')
-                  : listing.location ||
-                    listing.address_city ||
-                    listing.city ||
-                    'Сербия',
-              city:
-                typeof listing.location === 'object' && listing.location
-                  ? listing.location.city
-                  : listing.city || listing.address_city,
-              country:
-                typeof listing.location === 'object' && listing.location
-                  ? listing.location.country
-                  : listing.country || listing.address_country,
-              address_multilingual: listing.address_multilingual,
-              translations: listing.translations,
-              image: (() => {
-                // Проверяем наличие изображений
-                if (listing.images && listing.images.length > 0) {
-                  const firstImage = listing.images[0];
+              const mappedListing = {
+                id: uniqueKey, // Используем уникальный ключ
+                product_id:
+                  listing.product_type === 'storefront'
+                    ? listing.product_id
+                    : null,
+                title: listing.name || listing.title,
+                price: `${listing.price} ${listing.currency || 'РСД'}`,
+                oldPrice,
+                discount,
+                // Сохраняем все данные для локализации
+                // Обрабатываем разные форматы location из search API и marketplace API
+                location:
+                  typeof listing.location === 'object' && listing.location
+                    ? `${listing.location.city || ''}, ${listing.location.country || ''}`
+                        .trim()
+                        .replace(/^,\s*|\s*,$/, '')
+                    : listing.location ||
+                      listing.address_city ||
+                      listing.city ||
+                      'Сербия',
+                city:
+                  typeof listing.location === 'object' && listing.location
+                    ? listing.location.city
+                    : listing.city || listing.address_city,
+                country:
+                  typeof listing.location === 'object' && listing.location
+                    ? listing.location.country
+                    : listing.country || listing.address_country,
+                address_multilingual: listing.address_multilingual,
+                translations: listing.translations,
+                image: (() => {
+                  // Проверяем наличие изображений
+                  if (listing.images && listing.images.length > 0) {
+                    const firstImage = listing.images[0];
 
-                  // Извлекаем URL из объекта изображения или используем как строку
-                  let imageUrl: string;
-                  if (typeof firstImage === 'object' && firstImage !== null) {
-                    imageUrl = firstImage.url || firstImage.public_url || '';
-                  } else if (typeof firstImage === 'string') {
-                    imageUrl = firstImage;
-                  } else {
-                    imageUrl = '';
-                  }
-
-                  // Логируем для отладки
-                  logger.debug(
-                    'Building image URL for listing',
-                    listing.id,
-                    ':',
-                    imageUrl,
-                    'firstImage:',
-                    firstImage
-                  );
-
-                  // Если у нас есть валидный URL
-                  if (imageUrl) {
-                    // Если URL уже полный (начинается с http), используем как есть
-                    if (imageUrl.startsWith('http')) {
-                      return imageUrl;
+                    // Извлекаем URL из объекта изображения или используем как строку
+                    let imageUrl: string;
+                    if (typeof firstImage === 'object' && firstImage !== null) {
+                      imageUrl = firstImage.url || firstImage.public_url || '';
+                    } else if (typeof firstImage === 'string') {
+                      imageUrl = firstImage;
+                    } else {
+                      imageUrl = '';
                     }
 
-                    // Иначе строим URL через configManager
-                    return configManager.buildImageUrl(imageUrl);
+                    // Логируем для отладки
+                    logger.debug(
+                      'Building image URL for listing',
+                      listing.id,
+                      ':',
+                      imageUrl,
+                      'firstImage:',
+                      firstImage
+                    );
+
+                    // Если у нас есть валидный URL
+                    if (imageUrl) {
+                      // Если URL уже полный (начинается с http), используем как есть
+                      if (imageUrl.startsWith('http')) {
+                        return imageUrl;
+                      }
+
+                      // Иначе строим URL через configManager
+                      return configManager.buildImageUrl(imageUrl);
+                    }
                   }
-                }
 
-                // Fallback изображение только если действительно нет изображений
-                logger.debug(
-                  'No images for listing',
-                  listing.id,
-                  ', using fallback'
-                );
-                return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop';
-              })(),
-              rating: listing.rating || null, // Используем реальный рейтинг из API
-              reviews: listing.reviewCount || listing.review_count || null, // Используем реальные отзывы из API
-              viewsCount: listing.view_count ?? listing.views_count ?? null, // Используем реальные просмотры из API, включая 0
-              isNew:
-                new Date(listing.created_at || listing.createdAt) >
-                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Новое если создано за последнюю неделю
-              isPremium: listing.isPremium || false,
-              isFavorite: favoriteIds.has(listing.id),
-              category: listing.category?.name || listing.categoryName,
-              isStorefront: listing.product_type === 'storefront',
-              // Извлекаем user_id из объекта user (search API) или напрямую (marketplace API)
-              user_id: listing.user?.id || listing.user_id,
-              // Извлекаем storefront_id из объекта storefront (search API) или напрямую
-              storefront_id: listing.storefront?.id || listing.storefront_id,
-              // Сохраняем оригинальный listing_id для C2C товаров (удаляем префикс ml_ если есть)
-              listing_id:
-                listing.product_type !== 'storefront'
-                  ? typeof listing.id === 'string' &&
-                    listing.id.startsWith('ml_')
-                    ? listing.id.replace('ml_', '')
-                    : listing.id
-                  : null,
-            };
+                  // Fallback изображение только если действительно нет изображений
+                  logger.debug(
+                    'No images for listing',
+                    listing.id,
+                    ', using fallback'
+                  );
+                  return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop';
+                })(),
+                rating: listing.rating || null, // Используем реальный рейтинг из API
+                reviews: listing.reviewCount || listing.review_count || null, // Используем реальные отзывы из API
+                viewsCount: listing.view_count ?? listing.views_count ?? null, // Используем реальные просмотры из API, включая 0
+                isNew:
+                  new Date(listing.created_at || listing.createdAt) >
+                  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Новое если создано за последнюю неделю
+                isPremium: listing.isPremium || false,
+                isFavorite: favoriteIds.has(listing.id),
+                category: listing.category?.name || listing.categoryName,
+                isStorefront: listing.product_type === 'storefront',
+                // Извлекаем user_id из объекта user (search API) или напрямую (marketplace API)
+                user_id: listing.user?.id || listing.user_id,
+                // Извлекаем storefront_id из объекта storefront (search API) или напрямую
+                storefront_id: listing.storefront?.id || listing.storefront_id,
+                // Сохраняем оригинальный listing_id для C2C товаров (удаляем префикс ml_ если есть)
+                listing_id:
+                  listing.product_type !== 'storefront'
+                    ? typeof listing.id === 'string' &&
+                      listing.id.startsWith('ml_')
+                      ? listing.id.replace('ml_', '')
+                      : listing.id
+                    : null,
+              };
 
-            // Логирование для отладки
-            if (!mappedListing.user_id && !mappedListing.storefront_id) {
-              console.warn('Listing missing user_id and storefront_id:', {
-                original_listing: listing,
-                mapped_listing: mappedListing,
-              });
+              // Логирование для отладки
+              if (!mappedListing.user_id && !mappedListing.storefront_id) {
+                console.warn('Listing missing user_id and storefront_id:', {
+                  original_listing: listing,
+                  mapped_listing: mappedListing,
+                });
+              }
+
+              return mappedListing;
             }
-
-            return mappedListing;
-          });
+          );
 
           setListings(apiListings);
           logger.debug(

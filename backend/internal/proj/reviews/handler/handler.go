@@ -4,19 +4,22 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/middleware"
 	globalService "backend/internal/proj/global/service"
 )
 
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(services globalService.ServicesInterface, jwtParserMW fiber.Handler) *Handler {
 	return &Handler{
-		Review: NewReviewHandler(services),
+		Review:      NewReviewHandler(services),
+		jwtParserMW: jwtParserMW,
 	}
 }
 
 type Handler struct {
-	Review *ReviewHandler
+	Review      *ReviewHandler
+	jwtParserMW fiber.Handler
 }
 
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
@@ -31,37 +34,37 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Get("/api/v1/users/:id/aggregated-rating", h.Review.GetUserAggregatedRating)
 	app.Get("/api/v1/storefronts/:id/aggregated-rating", h.Review.GetStorefrontAggregatedRating)
 
-	// Endpoint для проверки возможности оставить отзыв
-	app.Get("/api/v1/reviews/can-review/:type/:id", mw.AuthRequiredJWT, h.Review.CanReview)
+	// Protected GET endpoints (требуют только Auth, БЕЗ CSRF так как это GET)
+	app.Get("/api/v1/users/:id/reviews", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetUserReviews)
+	app.Get("/api/v1/users/:id/rating", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetUserRatingSummary)
+	app.Get("/api/v1/storefronts/:id/reviews", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontReviews)
+	app.Get("/api/v1/storefronts/:id/rating", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.GetStorefrontRatingSummary)
 
-	review := app.Group("/api/v1/reviews")
-	review.Get("/", h.Review.GetReviews)
-	review.Get("/:id", h.Review.GetReviewByID)
-	review.Get("/stats", h.Review.GetStats)
+	// Публичные GET endpoints (без middleware)
+	app.Get("/api/v1/reviews", h.Review.GetReviews)
+	app.Get("/api/v1/reviews/stats", h.Review.GetStats)
 
-	app.Get("/api/v1/users/:id/reviews", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetUserReviews)
-	app.Get("/api/v1/users/:id/rating", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetUserRatingSummary)
-	app.Get("/api/v1/storefronts/:id/reviews", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetStorefrontReviews)
-	app.Get("/api/v1/storefronts/:id/rating", mw.AuthRequiredJWT, mw.CSRFProtection(), h.Review.GetStorefrontRatingSummary)
+	// can-review endpoint - отдельные роуты для каждого типа чтобы избежать Fiber routing багов
+	app.Get("/api/v1/review-permission/listing/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.CanReviewListing)
+	app.Get("/api/v1/review-permission/user/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.CanReviewUser)
+	app.Get("/api/v1/review-permission/storefront/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.CanReviewStorefront)
 
-	protectedReviews := app.Group("/api/v1/reviews", mw.AuthRequiredJWT, mw.CSRFProtection())
-	// Двухэтапный процесс создания отзывов
-	protectedReviews.Post("/draft", h.Review.CreateDraftReview)   // Этап 1: создание черновика
-	protectedReviews.Post("/:id/photos", h.Review.UploadPhotos)   // Этап 2a: загрузка фотографий
-	protectedReviews.Post("/:id/publish", h.Review.PublishReview) // Этап 2b: публикация отзыва
+	// ⚠️ ВАЖНО: Параметризованный роут /reviews/:id должен быть ПОСЛЕДНИМ среди GET
+	// Fiber может ошибочно матчить /review-permission/listing/351 как /reviews/:id
+	// если этот роут зарегистрирован раньше
+	app.Get("/api/v1/reviews/:id", h.Review.GetReviewByID)
 
-	// Управление отзывами
-	protectedReviews.Put("/:id", h.Review.UpdateReview)
-	protectedReviews.Delete("/:id", h.Review.DeleteReview)
-	protectedReviews.Post("/:id/vote", h.Review.VoteForReview)
-	protectedReviews.Post("/:id/response", h.Review.AddResponse)
-
-	// Временная загрузка фотографий (для старого API)
-	protectedReviews.Post("/upload-photos", h.Review.UploadPhotosForNewReview)
-
-	// Новые endpoints для подтверждений и споров
-	protectedReviews.Post("/:id/confirm", h.Review.ConfirmReview)
-	protectedReviews.Post("/:id/dispute", h.Review.DisputeReview)
+	// Protected POST/PUT/DELETE endpoints (требуют и Auth и CSRF)
+	app.Post("/api/v1/reviews/draft", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.CreateDraftReview)
+	app.Post("/api/v1/reviews/:id/photos", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UploadPhotos)
+	app.Post("/api/v1/reviews/:id/publish", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.PublishReview)
+	app.Put("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UpdateReview)
+	app.Delete("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.DeleteReview)
+	app.Post("/api/v1/reviews/:id/vote", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.VoteForReview)
+	app.Post("/api/v1/reviews/:id/response", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.AddResponse)
+	app.Post("/api/v1/reviews/upload-photos", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UploadPhotosForNewReview)
+	app.Post("/api/v1/reviews/:id/confirm", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.ConfirmReview)
+	app.Post("/api/v1/reviews/:id/dispute", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.DisputeReview)
 
 	return nil
 }

@@ -343,6 +343,14 @@
     "importResults": "Import Results",
     "noRecordsFound": "No records found"
   },
+  "delete": "Delete",
+  "active": "Active",
+  "inactive": "Inactive",
+  "statusLabel": "Status",
+  "cancel": "Cancel",
+  "save": "Save",
+  "edit": "Edit",
+  "analyzing": "Analyzing...",
   "common": {
     "back": "Back",
     "translate": "Translate",
@@ -720,6 +728,7 @@
         "documents": "Documents",
         "mappings": "Mappings"
       },
+      "selectIndex": "Select Index",
       "info": "Index Information",
       "name": "Index Name",
       "documents": "Documents",

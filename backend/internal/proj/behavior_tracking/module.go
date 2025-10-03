@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/interfaces"
 	"backend/internal/middleware"
@@ -15,11 +16,12 @@ import (
 
 // Module представляет модуль поведенческой аналитики
 type Module struct {
-	handler *handler.BehaviorTrackingHandler
+	handler     *handler.BehaviorTrackingHandler
+	jwtParserMW fiber.Handler
 }
 
 // NewModule создает новый модуль поведенческой аналитики
-func NewModule(ctx context.Context, pool *pgxpool.Pool) *Module {
+func NewModule(ctx context.Context, pool *pgxpool.Pool, jwtParserMW fiber.Handler) *Module {
 	// Создаем репозиторий
 	repo := postgres.NewBehaviorTrackingRepository(pool)
 
@@ -30,7 +32,8 @@ func NewModule(ctx context.Context, pool *pgxpool.Pool) *Module {
 	h := handler.NewBehaviorTrackingHandler(svc)
 
 	return &Module{
-		handler: h,
+		handler:     h,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
@@ -46,13 +49,17 @@ func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewar
 	api.Get("/sessions/:session_id/events", m.handler.GetSessionEvents)
 
 	// Защищенные endpoints (требуют авторизации)
-	protected := api.Group("/", middleware.AuthRequiredJWT)
+	protected := api.Group("/",
+		m.jwtParserMW,
+		authMiddleware.RequireAuth())
 
 	// События пользователя (доступны самому пользователю и админам)
 	protected.Get("/users/:user_id/events", m.handler.GetUserEvents)
 
 	// Админские endpoints
-	admin := api.Group("/", middleware.AuthRequiredJWT, middleware.AdminRequired)
+	admin := api.Group("/",
+		m.jwtParserMW,
+		authMiddleware.RequireAuth("admin"))
 
 	// Обновление агрегированных метрик
 	admin.Post("/metrics/update", m.handler.UpdateMetrics)

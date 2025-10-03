@@ -63,7 +63,7 @@ export class CategoryService {
         `/marketplace/categories?locale=${locale}`
       );
       return response.data?.data || [];
-    } catch (error) {
+    } catch {
       // Fallback to regular categories if with-counts endpoint doesn't exist
       return this.getCategories();
     }

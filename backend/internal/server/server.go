@@ -181,7 +181,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	jwtParserMW := authMiddleware.JWTParser(authServiceInstance)
 	usersHandler := userHandler.NewHandler(services, authHandler, jwtParserMW)
 
-	reviewHandler := reviewHandler.NewHandler(services)
+	reviewHandler := reviewHandler.NewHandler(services, jwtParserMW)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services)
 	balanceHandler := balanceHandler.NewHandler(services)
@@ -195,7 +195,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
 	contactsHandler := contactsHandler.NewHandler(services)
-	paymentsHandler := paymentHandler.NewHandler(services)
+	paymentsHandler := paymentHandler.NewHandler(services, jwtParserMW)
 
 	// Post Express инициализация
 	postexpressRepo := postexpressRepository.NewRepository(db.GetSQLXDB())
@@ -266,8 +266,8 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
 	analyticsModule := analytics.NewModule(db, osClient)
-	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool())
-	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService)
+	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool(), jwtParserMW)
+	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService, jwtParserMW)
 	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New())
 	// TODO: После рефакторинга передать storage или services для переиндексации
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())

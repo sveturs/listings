@@ -60,7 +60,9 @@ export default function ConflictResolver({
   const fetchConflicts = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get('/admin/translations/sync/conflicts');
+      const response = await apiClient.get(
+        '/admin/translations/sync/conflicts'
+      );
 
       if (response.data) {
         setConflicts(response.data.data || []);

@@ -330,7 +330,7 @@ func (s *MarketplaceService) getCategoryAttributeGroupsFromDB(ctx context.Contex
 		}
 	}()
 
-	var groups []*models.AttributeGroup
+	groups := make([]*models.AttributeGroup, 0)
 	for rows.Next() {
 		group := &models.AttributeGroup{}
 		err := rows.Scan(

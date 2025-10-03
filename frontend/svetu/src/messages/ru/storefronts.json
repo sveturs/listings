@@ -664,5 +664,15 @@
   "apply": "Применить",
   "categoriesLoadError": "Не удалось загрузить категории",
   "noCategoriesFound": "Категории не найдены",
-  "willGenerateVariants": "Будет создано {count} вариантов"
+  "willGenerateVariants": "Будет создано {count} вариантов",
+  "selected": "{count, plural, one {Выбрано # элемент} few {Выбрано # элемента} many {Выбрано # элементов} other {Выбрано # элементов}}",
+  "clearSelection": "Снять выбор",
+  "statusLabel": "Статус",
+  "activate": "Активировать",
+  "deactivate": "Деактивировать",
+  "export": "Экспорт",
+  "delete": "Удалить",
+  "confirmDelete": "Подтвердить удаление",
+  "edit": "Редактировать",
+  "processing": "Обработка..."
 }

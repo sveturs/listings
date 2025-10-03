@@ -35,8 +35,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Admin check остается локальным (использует нашу БД)
 	app.Get("/api/v1/admin-check/:email", h.User.IsAdminPublic)
 
-	// User profile endpoints
-	users := app.Group("/api/v1/users", h.jwtParserMW, authMiddleware.RequireAuthString(), mw.CSRFProtection())
+	// User profile endpoints (БЕЗ CSRF - используем BFF proxy архитектуру)
+	users := app.Group("/api/v1/users", h.jwtParserMW, authMiddleware.RequireAuthString())
 	users.Get("/me", h.User.GetProfile)    // TODO: remove
 	users.Put("/me", h.User.UpdateProfile) // TODO: remove
 	users.Get("/profile", h.User.GetProfile)
@@ -48,8 +48,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Roles endpoints for specific users
 	users.Get("/:userId/roles", h.Auth.GetUserRoles)
 
-	// Admin endpoints
-	adminUsersRoutes := app.Group("/api/v1/admin/users", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), mw.CSRFProtection())
+	// Admin endpoints (БЕЗ CSRF - используем BFF proxy архитектуру)
+	adminUsersRoutes := app.Group("/api/v1/admin/users", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	adminUsersRoutes.Get("/", h.User.GetAllUsers)
 	adminUsersRoutes.Get("/:id", h.User.GetUserByIDAdmin)
 	adminUsersRoutes.Put("/:id", h.User.UpdateUserAdmin)
@@ -62,15 +62,15 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Roles management (general endpoints)
 	rolesRoutes := app.Group("/api/v1/roles", h.jwtParserMW, authMiddleware.RequireAuthString())
 	rolesRoutes.Get("/", h.Auth.GetRoles)
-	rolesRoutes.Post("/assign", mw.CSRFProtection(), h.Auth.AssignRole)
-	rolesRoutes.Post("/revoke", mw.CSRFProtection(), h.Auth.RevokeRole)
+	rolesRoutes.Post("/assign", h.Auth.AssignRole)
+	rolesRoutes.Post("/revoke", h.Auth.RevokeRole)
 
 	// Admin roles management
 	adminRolesRoutes := app.Group("/api/v1/admin/roles", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	adminRolesRoutes.Get("/", h.User.GetAllRoles)
 
-	// Admin management
-	adminAdminsRoutes := app.Group("/api/v1/admin/admins", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), mw.CSRFProtection())
+	// Admin management (БЕЗ CSRF - используем BFF proxy архитектуру)
+	adminAdminsRoutes := app.Group("/api/v1/admin/admins", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	adminAdminsRoutes.Get("/", h.User.GetAllAdmins)
 	adminAdminsRoutes.Post("/", h.User.AddAdmin)
 	adminAdminsRoutes.Delete("/:email", h.User.RemoveAdmin)

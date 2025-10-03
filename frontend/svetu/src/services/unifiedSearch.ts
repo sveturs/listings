@@ -161,9 +161,7 @@ export class UnifiedSearchService {
   ): Promise<UnifiedSearchResult> {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
     const endpoint =
-      params.latitude && params.longitude
-        ? '/gis/search'
-        : '/search';
+      params.latitude && params.longitude ? '/gis/search' : '/search';
 
     // Debug logging
     logger.search.debug('UnifiedSearchService - params received:', params);
@@ -206,7 +204,10 @@ export class UnifiedSearchService {
       }
     });
 
-    logger.search.debug('UnifiedSearchService - params:', searchParams.toString());
+    logger.search.debug(
+      'UnifiedSearchService - params:',
+      searchParams.toString()
+    );
 
     // Если есть расширенные геофильтры, используем POST запрос
     const hasAdvancedFilters =
@@ -215,9 +216,12 @@ export class UnifiedSearchService {
 
     let response;
     if (hasAdvancedFilters) {
-      response = await apiClient.post(`${endpoint}?${searchParams.toString()}`, {
-        advanced_geo_filters: params.advanced_geo_filters,
-      });
+      response = await apiClient.post(
+        `${endpoint}?${searchParams.toString()}`,
+        {
+          advanced_geo_filters: params.advanced_geo_filters,
+        }
+      );
     } else {
       response = await apiClient.get(`${endpoint}?${searchParams.toString()}`);
     }
@@ -459,10 +463,7 @@ export class UnifiedSearchService {
       );
     }
     if (options?.include_brands !== undefined) {
-      searchParams.append(
-        'include_brands',
-        options.include_brands.toString()
-      );
+      searchParams.append('include_brands', options.include_brands.toString());
     }
     if (options?.include_locations !== undefined) {
       searchParams.append(

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
-import { createAdminHeaders } from '@/utils/csrf';
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
@@ -248,7 +247,9 @@ export default function UsersPageClient() {
     try {
       setDeleting(userToDelete.id);
 
-      const response = await apiClient.delete(`/admin/users/${userToDelete.id}`);
+      const response = await apiClient.delete(
+        `/admin/users/${userToDelete.id}`
+      );
 
       if (response.error) {
         throw new Error(`Failed to delete user: ${response.error.message}`);

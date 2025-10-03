@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import configManager from '@/config';
 import { apiClient } from '@/services/api-client';
 
 interface UserContact {
@@ -142,10 +141,13 @@ export default function UserContactsPage() {
     notes: string = ''
   ) => {
     try {
-      const response = await apiClient.put(`/contacts/${contactUserID}/status`, {
-        status,
-        notes,
-      });
+      const response = await apiClient.put(
+        `/contacts/${contactUserID}/status`,
+        {
+          status,
+          notes,
+        }
+      );
 
       if (!response.data) {
         throw new Error('Failed to update contact status');

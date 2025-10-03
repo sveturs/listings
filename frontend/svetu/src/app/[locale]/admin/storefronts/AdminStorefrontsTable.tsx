@@ -81,7 +81,8 @@ export default function AdminStorefrontsTable() {
       const response = await apiClient.get(`/storefronts?${params}`);
 
       if (response.data) {
-        let storefrontsList = response.data.storefronts || response.data.data || [];
+        let storefrontsList =
+          response.data.storefronts || response.data.data || [];
 
         // Применяем фильтры
         if (statusFilter) {
@@ -136,7 +137,7 @@ export default function AdminStorefrontsTable() {
         });
 
         setStorefronts(storefrontsList);
-        setTotal(data.total || storefrontsList.length);
+        setTotal(response.data.total || storefrontsList.length);
       }
     } catch (error) {
       console.error('Error fetching storefronts:', error);

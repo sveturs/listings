@@ -25,12 +25,6 @@ export function VisibleCitiesProvider({
 }: VisibleCitiesProviderProps) {
   const visibleCitiesData = useVisibleCities();
 
-  console.log('🌍 VisibleCitiesProvider render:', {
-    availableDistricts: visibleCitiesData.availableDistricts.length,
-    closestCity: visibleCitiesData.closestCity?.city.name,
-    loading: visibleCitiesData.loading,
-  });
-
   return (
     <VisibleCitiesContext.Provider value={visibleCitiesData}>
       {children}

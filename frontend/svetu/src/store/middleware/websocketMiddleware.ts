@@ -165,50 +165,50 @@ export const websocketMiddleware: Middleware =
 
           store.dispatch(setWebSocket(ws));
 
-      // Запрашиваем статус всех пользователей при подключении
-      ws.addEventListener('open', () => {
-        isConnecting = false; // Сбрасываем флаг подключения
-        if (process.env.NODE_ENV === 'development') {
-          console.log('WebSocket connected, requesting user statuses');
-        }
+          // Запрашиваем статус всех пользователей при подключении
+          ws.addEventListener('open', () => {
+            isConnecting = false; // Сбрасываем флаг подключения
+            if (process.env.NODE_ENV === 'development') {
+              console.log('WebSocket connected, requesting user statuses');
+            }
 
-        // Получаем ID всех пользователей из чатов
-        const state = store.getState() as RootState;
-        const userIds = new Set<number>();
+            // Получаем ID всех пользователей из чатов
+            const state = store.getState() as RootState;
+            const userIds = new Set<number>();
 
-        state.chat.chats.forEach((chat) => {
-          if (chat.buyer) userIds.add(chat.buyer.id);
-          if (chat.seller) userIds.add(chat.seller.id);
-          if (chat.other_user) userIds.add(chat.other_user.id);
-        });
+            state.chat.chats.forEach((chat) => {
+              if (chat.buyer) userIds.add(chat.buyer.id);
+              if (chat.seller) userIds.add(chat.seller.id);
+              if (chat.other_user) userIds.add(chat.other_user.id);
+            });
 
-        // Запрашиваем статус для каждого пользователя
-        userIds.forEach((userId) => {
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(
-              JSON.stringify({
-                type: 'get_user_status',
-                payload: { user_id: userId },
-              })
-            );
-          }
-        });
+            // Запрашиваем статус для каждого пользователя
+            userIds.forEach((userId) => {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                  JSON.stringify({
+                    type: 'get_user_status',
+                    payload: { user_id: userId },
+                  })
+                );
+              }
+            });
 
-        // Heartbeat для поддержания соединения
-        heartbeatInterval = setInterval(() => {
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'ping' }));
-          }
-        }, 30000);
-      });
+            // Heartbeat для поддержания соединения
+            heartbeatInterval = setInterval(() => {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+              }
+            }, 30000);
+          });
 
-      ws.addEventListener('close', () => {
-        isConnecting = false; // Сбрасываем флаг при закрытии
-        if (heartbeatInterval) {
-          clearInterval(heartbeatInterval);
-          heartbeatInterval = null;
-        }
-      });
+          ws.addEventListener('close', () => {
+            isConnecting = false; // Сбрасываем флаг при закрытии
+            if (heartbeatInterval) {
+              clearInterval(heartbeatInterval);
+              heartbeatInterval = null;
+            }
+          });
 
           ws.addEventListener('error', () => {
             isConnecting = false; // Сбрасываем флаг при ошибке

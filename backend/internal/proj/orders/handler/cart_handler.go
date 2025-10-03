@@ -288,5 +288,10 @@ func (h *OrdersHandler) GetUserCarts(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "cart.error.get_user_carts_failed")
 	}
 
+	// Если carts == nil, возвращаем пустой массив для корректной сериализации
+	if carts == nil {
+		carts = []*models.ShoppingCart{}
+	}
+
 	return utils.SuccessResponse(c, carts)
 }

@@ -33,6 +33,16 @@ async function proxyRequest(
     const backendUrl = `${BACKEND_URL}/api/v1/${backendPath}${searchParams ? `?${searchParams}` : ''}`;
 
     console.log(`[BFF Proxy] ${method} /api/v2/${backendPath} → ${backendUrl}`);
+    console.log(`[BFF Proxy] Has access_token:`, !!accessToken);
+
+    // Debug: логируем CSRF токен для мутирующих запросов
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const csrfFromClient = request.headers.get('X-CSRF-Token');
+      console.log(
+        `[BFF Proxy] X-CSRF-Token from client:`,
+        csrfFromClient ? 'present' : 'MISSING'
+      );
+    }
 
     // Подготавливаем заголовки
     const headers: HeadersInit = {};
@@ -46,6 +56,12 @@ async function proxyRequest(
     const acceptLanguage = request.headers.get('Accept-Language');
     if (acceptLanguage) {
       headers['Accept-Language'] = acceptLanguage;
+    }
+
+    // Передаем CSRF токен для мутирующих запросов
+    const csrfToken = request.headers.get('X-CSRF-Token');
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
     }
 
     // Подготавливаем body для методов с телом запроса

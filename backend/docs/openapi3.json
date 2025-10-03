@@ -23783,6 +23783,95 @@
                 }
             }
         },
+        "/api/v1/marketplace/my-listings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all listings created by the authenticated user",
+                "tags": [
+                    "marketplace"
+                ],
+                "summary": "Get my listings",
+                "parameters": [
+                    {
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "description": "Filter by status (active, sold, draft)",
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User's listings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/backend_internal_domain_models.MarketplaceListing"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "marketplace.listError",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/neighborhood-stats": {
             "get": {
                 "description": "Get statistics about listings in user's neighborhood",

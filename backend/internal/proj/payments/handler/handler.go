@@ -14,16 +14,18 @@ import (
 )
 
 type Handler struct {
-	payment   paymentService.PaymentServiceInterface
-	allsecure *PaymentHandler // AllSecure payment handler
-	webhook   *WebhookHandler // AllSecure webhook handler
+	payment     paymentService.PaymentServiceInterface
+	allsecure   *PaymentHandler // AllSecure payment handler
+	webhook     *WebhookHandler // AllSecure webhook handler
+	jwtParserMW fiber.Handler   // JWT parser middleware from auth library
 }
 
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(services globalService.ServicesInterface, jwtParserMW fiber.Handler) *Handler {
 	return &Handler{
-		payment:   services.Payment(),
-		allsecure: nil, // Будет инициализирован через InitAllSecure
-		webhook:   nil, // Будет инициализирован через InitAllSecure
+		payment:     services.Payment(),
+		allsecure:   nil, // Будет инициализирован через InitAllSecure
+		webhook:     nil, // Будет инициализирован через InitAllSecure
+		jwtParserMW: jwtParserMW,
 	}
 }
 

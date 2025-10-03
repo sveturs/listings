@@ -48,7 +48,9 @@ export default function TranslationsDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/admin/translations/stats/overview');
+      const response = await apiClient.get(
+        '/admin/translations/stats/overview'
+      );
 
       if (!response.data) {
         throw new Error('Failed to fetch statistics');

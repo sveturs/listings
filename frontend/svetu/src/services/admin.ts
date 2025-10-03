@@ -131,24 +131,13 @@ export const adminApi = {
   categories: {
     async getAll(): Promise<Category[]> {
       try {
-        console.log(
-          'adminApi.categories.getAll: Making request to admin categories API'
-        );
-
         const currentLocale = getCurrentLocale();
         const response = await apiClient.get(
           `/admin/categories-all?lang=${currentLocale}`
         );
 
-        console.log('Response:', response);
-
         // Backend возвращает данные в поле data
         const result = response.data?.data || response.data || [];
-        console.log('Final categories array:', result);
-        console.log(
-          'Categories count:',
-          Array.isArray(result) ? result.length : 'not array'
-        );
         return Array.isArray(result) ? result : [];
       } catch (error) {
         console.error('Failed to load categories:', error);
@@ -337,11 +326,6 @@ export const adminApi = {
       filterType?: string
     ): Promise<PaginatedResponse<Attribute>> {
       try {
-        console.log(
-          'adminApi.attributes.getAll: Making request to admin attributes API with pagination',
-          { page, pageSize, search, filterType }
-        );
-
         const params = new URLSearchParams({
           page: page.toString(),
           page_size: pageSize.toString(),
@@ -359,8 +343,6 @@ export const adminApi = {
           `/admin/attributes?${params.toString()}`
         );
 
-        console.log('Response:', result);
-
         if (result.error) {
           console.error('API error:', result.error);
           return {
@@ -376,12 +358,27 @@ export const adminApi = {
         // apiClient уже распаковал внешний wrapper, проверяем структуру
         const responseData = result.data;
 
+        // Проверяем структуру ответа - может быть двойная вложенность
         if (
           responseData &&
           responseData.data &&
-          typeof responseData.page !== 'undefined'
+          typeof responseData.data.page !== 'undefined'
         ) {
-          // Ответ уже содержит структуру пагинации
+          // Backend вернул {success: true, data: {data: [...], page: 1, ...}}
+          const paginatedData = responseData.data;
+          return {
+            data: paginatedData.data || [],
+            page: paginatedData.page || page,
+            page_size: paginatedData.page_size || pageSize,
+            total: paginatedData.total || 0,
+            total_pages: paginatedData.total_pages || 0,
+          };
+        } else if (
+          responseData &&
+          typeof responseData.page !== 'undefined' &&
+          Array.isArray(responseData.data)
+        ) {
+          // Ответ уже содержит структуру пагинации напрямую
           return {
             data: responseData.data || [],
             page: responseData.page || page,
@@ -447,21 +444,10 @@ export const adminApi = {
     },
 
     async update(id: number, attribute: Partial<Attribute>): Promise<any> {
-      console.log(
-        '[adminApi.attributes.update] Starting update for attribute:',
-        id,
-        attribute
-      );
-
       const response = await apiClient.request(`/admin/attributes/${id}`, {
         method: 'PUT',
         body: JSON.stringify(attribute),
       });
-
-      console.log(
-        '[adminApi.attributes.update] Response status:',
-        response.status
-      );
 
       if (response.error) {
         console.error(
@@ -470,11 +456,6 @@ export const adminApi = {
         );
         throw new Error(response.error.message);
       }
-
-      console.log(
-        '[adminApi.attributes.update] Success response:',
-        response.data
-      );
       return response.data;
     },
 
