@@ -973,7 +973,7 @@ func (h *UnifiedSearchHandler) convertStorefrontLocation(product *storefrontOpen
 	// Заполняем мультиязычные адреса из translations (если есть)
 	// Формат: Translations[locale][field] = value
 	// Например: Translations["ru"]["address"] = "Адрес на русском"
-	if product.Translations != nil && len(product.Translations) > 0 {
+	if len(product.Translations) > 0 {
 		location.AddressMultilingual = make(map[string]string)
 		for lang, fields := range product.Translations {
 			if address, ok := fields["address"]; ok && address != "" {

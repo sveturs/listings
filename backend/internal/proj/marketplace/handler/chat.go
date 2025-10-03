@@ -957,11 +957,11 @@ func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
 
 // TranslationResponse структура ответа перевода
 type TranslationResponse struct {
-	MessageID      int                          `json:"message_id"`
-	OriginalText   string                       `json:"original_text"`
-	TranslatedText string                       `json:"translated_text"`
-	SourceLanguage string                       `json:"source_language"`
-	TargetLanguage string                       `json:"target_language"`
+	MessageID      int                             `json:"message_id"`
+	OriginalText   string                          `json:"original_text"`
+	TranslatedText string                          `json:"translated_text"`
+	SourceLanguage string                          `json:"source_language"`
+	TargetLanguage string                          `json:"target_language"`
 	Metadata       *models.ChatTranslationMetadata `json:"metadata,omitempty"`
 }
 

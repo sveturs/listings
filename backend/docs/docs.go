@@ -18385,6 +18385,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/marketplace/chat/messages/{id}/translation": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates a chat message to the specified language",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "marketplace-chat"
+                ],
+                "summary": "Translate a specific message",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target language code (ru, en, sr)",
+                        "name": "lang",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_marketplace_handler.TranslationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/chats/{chat_id}/archive": {
             "post": {
                 "security": [
@@ -39144,6 +39206,31 @@ const docTemplate = `{
                 }
             }
         },
+        "backend_internal_domain_models.ChatTranslationMetadata": {
+            "type": "object",
+            "properties": {
+                "cache_hit": {
+                    "description": "From Redis cache?",
+                    "type": "boolean"
+                },
+                "provider": {
+                    "description": "\"claude-haiku\"",
+                    "type": "string"
+                },
+                "translated_at": {
+                    "description": "Timestamp",
+                    "type": "string"
+                },
+                "translated_from": {
+                    "description": "\"ru\"",
+                    "type": "string"
+                },
+                "translated_to": {
+                    "description": "\"en\"",
+                    "type": "string"
+                }
+            }
+        },
         "backend_internal_domain_models.CheckLimitRequest": {
             "type": "object",
             "required": [
@@ -40856,7 +40943,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "original_language": {
-                    "description": "Добавляем поля для мультиязычности",
+                    "description": "Мультиязычность",
                     "type": "string"
                 },
                 "receiver": {
@@ -40888,13 +40975,14 @@ const docTemplate = `{
                     "description": "Новое поле для товаров витрин",
                     "type": "integer"
                 },
+                "translation_metadata": {
+                    "$ref": "#/definitions/backend_internal_domain_models.ChatTranslationMetadata"
+                },
                 "translations": {
+                    "description": "{\"en\": \"Hello\", \"ru\": \"Привет\"}",
                     "type": "object",
                     "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        }
+                        "type": "string"
                     }
                 },
                 "updated_at": {
@@ -42773,6 +42861,13 @@ const docTemplate = `{
         "backend_internal_domain_models.StorefrontProduct": {
             "type": "object",
             "properties": {
+                "address_translations": {
+                    "description": "AddressTranslations - map[language]address, e.g. {\"en\": \"Street 12, Novi Sad\", \"ru\": \"Улица 12, Нови-Сад\"}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "attributes": {
                     "$ref": "#/definitions/backend_internal_domain_models.JSONB"
                 },
@@ -51511,6 +51606,29 @@ const docTemplate = `{
                 "used_today": {
                     "type": "integer",
                     "example": 3450
+                }
+            }
+        },
+        "internal_proj_marketplace_handler.TranslationResponse": {
+            "type": "object",
+            "properties": {
+                "message_id": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/backend_internal_domain_models.ChatTranslationMetadata"
+                },
+                "original_text": {
+                    "type": "string"
+                },
+                "source_language": {
+                    "type": "string"
+                },
+                "target_language": {
+                    "type": "string"
+                },
+                "translated_text": {
+                    "type": "string"
                 }
             }
         },

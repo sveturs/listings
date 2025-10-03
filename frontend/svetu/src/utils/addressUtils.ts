@@ -109,7 +109,10 @@ export function getFullLocalizedAddress(
       typeof item.translations[locale] === 'object'
     ) {
       // Для storefront products - используем поле address напрямую
-      if ('address' in item.translations[locale] && item.translations[locale].address) {
+      if (
+        'address' in item.translations[locale] &&
+        item.translations[locale].address
+      ) {
         return item.translations[locale].address;
       }
       // Для marketplace listings - собираем из location, city, country

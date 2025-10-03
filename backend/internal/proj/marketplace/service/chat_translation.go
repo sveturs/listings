@@ -13,6 +13,10 @@ import (
 	"backend/internal/logger"
 )
 
+const (
+	languageUnknown = "unknown"
+)
+
 // ChatTranslationService обрабатывает переводы сообщений чата
 type ChatTranslationService struct {
 	translationSvc TranslationServiceInterface
@@ -38,7 +42,7 @@ func (s *ChatTranslationService) TranslateMessage(
 	moderateTone bool,
 ) error {
 	// Если язык не установлен, определяем его
-	if message.OriginalLanguage == "" || message.OriginalLanguage == "unknown" {
+	if message.OriginalLanguage == "" || message.OriginalLanguage == languageUnknown {
 		err := s.DetectAndSetLanguage(ctx, message)
 		if err != nil {
 			logger.Warn().Err(err).Msg("Failed to detect language, will try to translate anyway")
@@ -202,7 +206,7 @@ func (s *ChatTranslationService) DetectAndSetLanguage(
 	lang, confidence, err := s.translationSvc.DetectLanguage(ctx, message.Content)
 	if err != nil {
 		logger.Warn().Err(err).Msg("Language detection failed, defaulting to 'unknown'")
-		message.OriginalLanguage = "unknown"
+		message.OriginalLanguage = languageUnknown
 		return nil
 	}
 
@@ -211,7 +215,7 @@ func (s *ChatTranslationService) DetectAndSetLanguage(
 		logger.Warn().
 			Float64("confidence", confidence).
 			Msg("Low confidence in language detection")
-		message.OriginalLanguage = "unknown"
+		message.OriginalLanguage = languageUnknown
 		return nil
 	}
 

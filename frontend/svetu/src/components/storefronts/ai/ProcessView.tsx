@@ -88,7 +88,10 @@ export default function ProcessView({
         updateStepStatus('exif', 'processing');
 
         let locationData = null;
-        let locationTranslations: Record<string, { address: string; city: string; region: string }> = {};
+        const locationTranslations: Record<
+          string,
+          { address: string; city: string; region: string }
+        > = {};
         try {
           const exifLocation = await extractLocationFromImages(
             state.imageFiles
@@ -108,7 +111,10 @@ export default function ProcessView({
               locationData = {
                 latitude: exifLocation.latitude,
                 longitude: exifLocation.longitude,
-                address: (geocodedAddress as any).place_name || (geocodedAddress as any).display_name || '',
+                address:
+                  (geocodedAddress as any).place_name ||
+                  (geocodedAddress as any).display_name ||
+                  '',
                 city: (geocodedAddress as any).address?.city || '',
                 region: (geocodedAddress as any).address?.state || '',
                 source: 'exif' as const,
@@ -126,8 +132,14 @@ export default function ProcessView({
                     const data = geocoded.data || geocoded;
                     locationTranslations[lang] = {
                       address: data.place_name || data.display_name || '',
-                      city: data.address?.city || data.address_components?.city || '',
-                      region: data.address?.state || data.address_components?.district || '',
+                      city:
+                        data.address?.city ||
+                        data.address_components?.city ||
+                        '',
+                      region:
+                        data.address?.state ||
+                        data.address_components?.district ||
+                        '',
                     };
                   }
                 } catch (err) {
@@ -138,7 +150,7 @@ export default function ProcessView({
               updateStepStatus(
                 'exif',
                 'completed',
-                `${geocodedAddress.address?.city || 'Location'} detected`
+                `${locationData.city || 'Location'} detected`
               );
             } else {
               updateStepStatus('exif', 'completed', 'No address found');
@@ -230,7 +242,7 @@ export default function ProcessView({
         if (Object.keys(locationTranslations).length > 0) {
           Object.keys(translations).forEach((lang) => {
             if (locationTranslations[lang]) {
-              translations[lang] = {
+              (translations as any)[lang] = {
                 ...translations[lang],
                 address: locationTranslations[lang].address,
                 city: locationTranslations[lang].city,
@@ -242,7 +254,10 @@ export default function ProcessView({
 
         console.log('[ProcessView] Final translations:', translations);
         console.log('[ProcessView] Final locationData to save:', locationData);
-        console.log('[ProcessView] analysisResult.location:', analysisResult.location);
+        console.log(
+          '[ProcessView] analysisResult.location:',
+          analysisResult.location
+        );
 
         // Update AI data in context
         const aiDataToSave = {
@@ -269,7 +284,10 @@ export default function ProcessView({
           location: locationData || analysisResult.location || null,
         };
 
-        console.log('[ProcessView] Saving aiData with location:', aiDataToSave.location);
+        console.log(
+          '[ProcessView] Saving aiData with location:',
+          aiDataToSave.location
+        );
         setAIData(aiDataToSave);
 
         // Small delay to show completion

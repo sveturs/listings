@@ -97,7 +97,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"storefront_id":  product.StorefrontID,
 		"category_id":    product.CategoryID,
 		"name":           product.Name,
-		"title":          product.Name,           // Добавляем title как алиас для name для совместимости с marketplace listings
+		"title":          product.Name, // Добавляем title как алиас для name для совместимости с marketplace listings
 		"name_lowercase": strings.ToLower(product.Name),
 		"description":    product.Description,
 		"price":          product.Price,
@@ -106,9 +106,9 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
-		"is_storefront":  true,                      // Добавляем флаг что это товар витрины
-		"views_count":    product.ViewCount,         // Добавляем счетчик просмотров для единообразия с marketplace
-		"sold_count":     product.SoldCount,         // Добавляем количество продаж
+		"is_storefront":  true,                        // Добавляем флаг что это товар витрины
+		"views_count":    product.ViewCount,           // Добавляем счетчик просмотров для единообразия с marketplace
+		"sold_count":     product.SoldCount,           // Добавляем количество продаж
 		"status":         r.getProductStatus(product), // Устанавливаем статус на основе реального состояния товара
 		"created_at":     product.CreatedAt.Format(time.RFC3339),
 		"updated_at":     product.UpdatedAt.Format(time.RFC3339),
@@ -438,7 +438,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 	doc["has_individual_location"] = product.HasIndividualLocation
 
 	// Добавляем мультиязычные адреса (если есть)
-	if product.AddressTranslations != nil && len(product.AddressTranslations) > 0 {
+	if len(product.AddressTranslations) > 0 {
 		for lang, address := range product.AddressTranslations {
 			doc[fmt.Sprintf("address_%s", lang)] = address
 		}

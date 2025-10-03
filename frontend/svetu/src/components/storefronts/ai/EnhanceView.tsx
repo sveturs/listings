@@ -188,8 +188,14 @@ export default function EnhanceView({
   };
 
   const handleSave = () => {
-    console.log('[EnhanceView] handleSave - state.aiData.location:', state.aiData.location);
-    console.log('[EnhanceView] handleSave - localUseStorefrontLocation:', localUseStorefrontLocation);
+    console.log(
+      '[EnhanceView] handleSave - state.aiData.location:',
+      state.aiData.location
+    );
+    console.log(
+      '[EnhanceView] handleSave - localUseStorefrontLocation:',
+      localUseStorefrontLocation
+    );
     console.log('[EnhanceView] handleSave - useExifLocation:', useExifLocation);
 
     // Определяем location данные
@@ -197,7 +203,9 @@ export default function EnhanceView({
     if (localUseStorefrontLocation) {
       // Используем адрес витрины - location = null (будет использоваться storefront.address)
       locationData = null;
-      console.log('[EnhanceView] Using storefront location, setting location to null');
+      console.log(
+        '[EnhanceView] Using storefront location, setting location to null'
+      );
     } else if (useExifLocation && state.aiData.location) {
       // Используем EXIF location
       locationData = {

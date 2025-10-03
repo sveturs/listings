@@ -158,8 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       dispatch(closeWebSocket());
 
       // Очищаем Redux store
-      dispatch(resetChat());      // Чаты, сообщения, счетчики
-      dispatch(resetCart());      // Корзина, заказы
+      dispatch(resetChat()); // Чаты, сообщения, счетчики
+      dispatch(resetCart()); // Корзина, заказы
 
       // Выполняем logout на backend
       await authService.logout();

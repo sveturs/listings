@@ -21,8 +21,8 @@ type MarketplaceMessage struct {
 	Listing           *MarketplaceListing `json:"listing,omitempty"`
 	StorefrontProduct *StorefrontProduct  `json:"storefront_product,omitempty"` // Новое поле для товара витрины
 	// Мультиязычность
-	OriginalLanguage       string                    `json:"original_language"`
-	Translations           map[string]string         `json:"translations,omitempty"` // {"en": "Hello", "ru": "Привет"}
+	OriginalLanguage        string                   `json:"original_language"`
+	Translations            map[string]string        `json:"translations,omitempty"` // {"en": "Hello", "ru": "Привет"}
 	ChatTranslationMetadata *ChatTranslationMetadata `json:"translation_metadata,omitempty"`
 
 	// Поля для поддержки вложений
@@ -95,6 +95,6 @@ type ChatTranslationMetadata struct {
 // ChatUserSettings содержит настройки чата пользователя
 type ChatUserSettings struct {
 	AutoTranslate     bool   `json:"auto_translate_chat"`
-	PreferredLanguage string `json:"preferred_language"`              // "ru", "en", "sr"
+	PreferredLanguage string `json:"preferred_language"` // "ru", "en", "sr"
 	ShowLanguageBadge bool   `json:"show_original_language_badge"`
 }

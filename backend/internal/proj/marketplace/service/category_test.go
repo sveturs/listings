@@ -1271,6 +1271,10 @@ func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text
 	return text, nil
 }
 
+func (d *dummyTranslationService) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
+	return text, nil
+}
+
 // memoryCache - простой вариант кеша в памяти
 type memoryCache struct {
 	data map[string][]byte
@@ -1350,6 +1354,13 @@ func (m *mockTranslationService) TranslateEntityFields(ctx context.Context, sour
 }
 
 func (m *mockTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
+	if translated, ok := m.translations[targetLanguage]; ok {
+		return translated, nil
+	}
+	return text, nil
+}
+
+func (m *mockTranslationService) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
 	if translated, ok := m.translations[targetLanguage]; ok {
 		return translated, nil
 	}

@@ -58,6 +58,10 @@ func (m *mockTranslationServiceWithAddresses) TranslateWithContext(ctx context.C
 	return targetLanguage + "_" + text, nil
 }
 
+func (m *mockTranslationServiceWithAddresses) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
+	return targetLanguage + "_" + text, nil
+}
+
 // TestTranslateEntityFields тестирует правильность вызова метода перевода полей
 func TestTranslateEntityFields(t *testing.T) {
 	// Создаем мок сервис перевода

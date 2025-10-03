@@ -18436,6 +18436,78 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/chat/messages/{id}/translation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Translate a specific message
+     * @description Translates a chat message to the specified language
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Target language code (ru, en, sr) */
+          lang: string;
+        };
+        header?: never;
+        path: {
+          /** @description Message ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_marketplace_handler.TranslationResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/chats/{chat_id}/archive': {
     parameters: {
       query?: never;
@@ -38920,6 +38992,18 @@ export interface components {
       /** @description URL превью для видео */
       thumbnail_url?: string;
     };
+    'backend_internal_domain_models.ChatTranslationMetadata': {
+      /** @description From Redis cache? */
+      cache_hit?: boolean;
+      /** @description "claude-haiku" */
+      provider?: string;
+      /** @description Timestamp */
+      translated_at?: string;
+      /** @description "ru" */
+      translated_from?: string;
+      /** @description "en" */
+      translated_to?: string;
+    };
     'backend_internal_domain_models.CheckLimitRequest': {
       count?: number;
       /** @enum {string} */
@@ -39493,7 +39577,7 @@ export interface components {
       is_read?: boolean;
       listing?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
       listing_id?: number;
-      /** @description Добавляем поля для мультиязычности */
+      /** @description Мультиязычность */
       original_language?: string;
       receiver?: components['schemas']['backend_internal_domain_models.User'];
       receiver_id?: number;
@@ -39504,10 +39588,10 @@ export interface components {
       storefront_product?: components['schemas']['backend_internal_domain_models.StorefrontProduct'];
       /** @description Новое поле для товаров витрин */
       storefront_product_id?: number;
+      translation_metadata?: components['schemas']['backend_internal_domain_models.ChatTranslationMetadata'];
+      /** @description {"en": "Hello", "ru": "Привет"} */
       translations?: {
-        [key: string]: {
-          [key: string]: string;
-        };
+        [key: string]: string;
       };
       updated_at?: string;
     };
@@ -40154,6 +40238,10 @@ export interface components {
       transaction_fee?: number;
     };
     'backend_internal_domain_models.StorefrontProduct': {
+      /** @description AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"} */
+      address_translations?: {
+        [key: string]: string;
+      };
       attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       barcode?: string;
       category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -43247,6 +43335,14 @@ export interface components {
       remaining?: number;
       /** @example 3450 */
       used_today?: number;
+    };
+    'internal_proj_marketplace_handler.TranslationResponse': {
+      message_id?: number;
+      metadata?: components['schemas']['backend_internal_domain_models.ChatTranslationMetadata'];
+      original_text?: string;
+      source_language?: string;
+      target_language?: string;
+      translated_text?: string;
     };
     'internal_proj_marketplace_handler.TranslationResult': {
       /** @example 123 */

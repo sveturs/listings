@@ -88,7 +88,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translatedText, setTranslatedText] = useState<string>('');
   const [translationError, setTranslationError] = useState<string | null>(null);
-  const [autoTranslate, setAutoTranslate] = useState(true); // По умолчанию ВКЛЮЧЕН
+  const [_autoTranslate, setAutoTranslate] = useState(true); // По умолчанию ВКЛЮЧЕН
 
   // Определяем, нужна ли кнопка перевода
   const shouldShowTranslateButton =
@@ -137,14 +137,17 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
     const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
 
     // Если настройка не сохранена, включаем автоперевод по умолчанию
-    const isAutoTranslateEnabled = savedAutoTranslate !== null
-      ? savedAutoTranslate === 'true'
-      : true; // По умолчанию ВКЛЮЧЕН
+    const isAutoTranslateEnabled =
+      savedAutoTranslate !== null ? savedAutoTranslate === 'true' : true; // По умолчанию ВКЛЮЧЕН
 
     setAutoTranslate(isAutoTranslateEnabled);
 
     // Если автоперевод включен и это входящее сообщение
-    if (isAutoTranslateEnabled && shouldShowTranslateButton && !translatedText) {
+    if (
+      isAutoTranslateEnabled &&
+      shouldShowTranslateButton &&
+      !translatedText
+    ) {
       handleTranslate();
     }
 
@@ -292,7 +295,9 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                         <span
                           dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(
-                              showTranslation ? translatedText : message.content,
+                              showTranslation
+                                ? translatedText
+                                : message.content,
                               {
                                 ALLOWED_TAGS: [],
                                 KEEP_CONTENT: true,
@@ -306,32 +311,32 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                 </div>
               )}
 
-              {/* Кнопка перевода - ВЫНЕСЕНА ЗА ПРЕДЕЛЫ СООБЩЕНИЯ */}
-              {shouldShowTranslateButton && (
-                <div className="mt-1 flex items-center gap-2">
-                  <button
-                    onClick={handleTranslate}
-                    disabled={isTranslating}
-                    className="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content/80 opacity-60 hover:opacity-100 transition-opacity"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <span className="loading loading-spinner loading-xs"></span>
-                        {t('translation.translating')}
-                      </>
-                    ) : showTranslation ? (
-                      t('translation.showOriginal')
-                    ) : (
-                      t('translation.translate')
-                    )}
-                  </button>
-                  {translationError && (
-                    <span className="text-xs text-error/70">
-                      {translationError}
-                    </span>
+            {/* Кнопка перевода - ВЫНЕСЕНА ЗА ПРЕДЕЛЫ СООБЩЕНИЯ */}
+            {shouldShowTranslateButton && (
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content/80 opacity-60 hover:opacity-100 transition-opacity"
+                >
+                  {isTranslating ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      {t('translation.translating')}
+                    </>
+                  ) : showTranslation ? (
+                    t('translation.showOriginal')
+                  ) : (
+                    t('translation.translate')
                   )}
-                </div>
-              )}
+                </button>
+                {translationError && (
+                  <span className="text-xs text-error/70">
+                    {translationError}
+                  </span>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

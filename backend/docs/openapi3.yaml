@@ -12497,6 +12497,53 @@ paths:
       summary: Get chat messages
       tags:
         - marketplace-chat
+  "/api/v1/marketplace/chat/messages/{id}/translation":
+    get:
+      description: Translates a chat message to the specified language
+      parameters:
+        - description: Message ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - description: Target language code (ru, en, sr)
+          in: query
+          name: lang
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/internal_proj_marketplace_handler.TranslationRespon\
+                  se"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+      security:
+        - BearerAuth: []
+      summary: Translate a specific message
+      tags:
+        - marketplace-chat
   "/api/v1/marketplace/chats/{chat_id}/archive":
     post:
       description: Archives a chat for the user
@@ -27081,6 +27128,24 @@ components:
           description: URL превью для видео
           type: string
       type: object
+    backend_internal_domain_models.ChatTranslationMetadata:
+      properties:
+        cache_hit:
+          description: From Redis cache?
+          type: boolean
+        provider:
+          description: '"claude-haiku"'
+          type: string
+        translated_at:
+          description: Timestamp
+          type: string
+        translated_from:
+          description: '"ru"'
+          type: string
+        translated_to:
+          description: '"en"'
+          type: string
+      type: object
     backend_internal_domain_models.CheckLimitRequest:
       properties:
         count:
@@ -28251,7 +28316,7 @@ components:
         listing_id:
           type: integer
         original_language:
-          description: Добавляем поля для мультиязычности
+          description: Мультиязычность
           type: string
         receiver:
           $ref: "#/components/schemas/backend_internal_domain_models.User"
@@ -28270,11 +28335,13 @@ components:
         storefront_product_id:
           description: Новое поле для товаров витрин
           type: integer
+        translation_metadata:
+          $ref: "#/components/schemas/backend_internal_domain_models.ChatTranslationMetad\
+            ata"
         translations:
           additionalProperties:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
+          description: '{"en": "Hello", "ru": "Привет"}'
           type: object
         updated_at:
           type: string
@@ -29538,6 +29605,12 @@ components:
       type: object
     backend_internal_domain_models.StorefrontProduct:
       properties:
+        address_translations:
+          additionalProperties:
+            type: string
+          description: 'AddressTranslations - map[language]address, e.g. {"en": "Street
+            12, Novi Sad", "ru": "Улица 12, Нови-Сад"}'
+          type: object
         attributes:
           $ref: "#/components/schemas/backend_internal_domain_models.JSONB"
         barcode:
@@ -35461,6 +35534,22 @@ components:
         used_today:
           example: 3450
           type: integer
+      type: object
+    internal_proj_marketplace_handler.TranslationResponse:
+      properties:
+        message_id:
+          type: integer
+        metadata:
+          $ref: "#/components/schemas/backend_internal_domain_models.ChatTranslationMetad\
+            ata"
+        original_text:
+          type: string
+        source_language:
+          type: string
+        target_language:
+          type: string
+        translated_text:
+          type: string
       type: object
     internal_proj_marketplace_handler.TranslationResult:
       properties:
