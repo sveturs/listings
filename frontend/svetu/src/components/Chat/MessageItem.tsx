@@ -92,10 +92,9 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
   // Определяем, нужна ли кнопка перевода
   const shouldShowTranslateButton =
     !isOwn && // Только для чужих сообщений
-    message.original_language && // Есть оригинальный язык
-    message.original_language !== locale && // Не совпадает с текущим языком
     !isEmojiOnly && // Не для emoji
-    message.content; // Есть текст
+    message.content && // Есть текст
+    message.content.trim().length > 0; // Не пустой текст
 
   const formatTime = (date: string) => {
     return format(new Date(date), 'HH:mm', {
