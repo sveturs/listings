@@ -67,7 +67,9 @@ func (r *ProductRepository) BulkIndexProducts(ctx context.Context, products []*m
 	docs := make([]map[string]interface{}, 0, len(products))
 	for _, product := range products {
 		doc := r.productToDoc(product)
-		// ID уже добавлен в productToDoc
+		// BulkIndex использует doc["id"] как _id документа в OpenSearch
+		// Поэтому устанавливаем правильный формат sp_XXX
+		doc["id"] = fmt.Sprintf("sp_%d", product.ID)
 		docs = append(docs, doc)
 	}
 

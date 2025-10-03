@@ -4,6 +4,10 @@ import { cookies } from 'next/headers';
 const BACKEND_URL =
   process.env.BACKEND_INTERNAL_URL || 'http://localhost:33423';
 
+// Отключаем кэширование Next.js для всех API запросов
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * Универсальный BFF прокси для всех backend API запросов
  *
