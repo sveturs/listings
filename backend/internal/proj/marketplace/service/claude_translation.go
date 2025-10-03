@@ -412,7 +412,8 @@ func (s *ClaudeTranslationService) TranslateWithToneModeration(
 	var prompt string
 
 	// Особый случай: одинаковый язык + модерация (смягчение без перевода)
-	if sourceLanguage == targetLanguage && moderateTone {
+	switch {
+	case sourceLanguage == targetLanguage && moderateTone:
 		prompt = fmt.Sprintf(`You are a professional text moderator for %s language.
 
 CRITICAL RULES:
@@ -440,7 +441,7 @@ REMEMBER: Output ONLY the moderated text in %s. Do not add quotes, formatting, o
 
 Text to moderate:
 %s`, getLanguageName(targetLanguage), getLanguageName(targetLanguage), getLanguageName(targetLanguage), text)
-	} else if moderateTone {
+	case moderateTone:
 		// Промпт с модерацией тона И переводом
 		prompt = fmt.Sprintf(`You are a professional translator. Your task is to translate text from %s to %s.
 
@@ -459,7 +460,7 @@ REMEMBER: Output ONLY the translated text. Do not add quotes, formatting, or any
 
 Text to translate:
 %s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
-	} else {
+	default:
 		// Обычный промпт без модерации
 		prompt = fmt.Sprintf(`Translate the following text from %s to %s.
 Return ONLY the translated text without any explanations or additional content.
