@@ -9,7 +9,7 @@ import { ChatAttachments } from '@/components/Chat/ChatAttachments';
 import { useChat } from '@/hooks/useChat';
 import DOMPurify from 'isomorphic-dompurify';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { chatService } from '@/services/chat';
 
 // Динамически импортируем AnimatedEmoji, чтобы избежать проблем с SSR
@@ -88,6 +88,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translatedText, setTranslatedText] = useState<string>('');
   const [translationError, setTranslationError] = useState<string | null>(null);
+  const [autoTranslate, setAutoTranslate] = useState(false);
 
   // Определяем, нужна ли кнопка перевода
   const shouldShowTranslateButton =
@@ -95,6 +96,42 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
     !isEmojiOnly && // Не для emoji
     message.content && // Есть текст
     message.content.trim().length > 0; // Не пустой текст
+
+  // Загрузка настроек и автоматический перевод
+  useEffect(() => {
+    // Загружаем настройки из localStorage
+    const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
+    const isAutoTranslateEnabled = savedAutoTranslate === 'true';
+    setAutoTranslate(isAutoTranslateEnabled);
+
+    // Если автоперевод включен и это входящее сообщение
+    if (isAutoTranslateEnabled && shouldShowTranslateButton && !translatedText) {
+      handleTranslate();
+    }
+
+    // Слушаем изменения настроек
+    const handleSettingsChange = (event: CustomEvent) => {
+      const { autoTranslate: newAutoTranslate } = event.detail;
+      setAutoTranslate(newAutoTranslate);
+
+      // Если включили автоперевод и еще нет перевода - переводим
+      if (newAutoTranslate && shouldShowTranslateButton && !translatedText) {
+        handleTranslate();
+      }
+    };
+
+    window.addEventListener(
+      'chat-settings-changed',
+      handleSettingsChange as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        'chat-settings-changed',
+        handleSettingsChange as EventListener
+      );
+    };
+  }, [message.id, shouldShowTranslateButton, translatedText, handleTranslate]);
 
   const formatTime = (date: string) => {
     return format(new Date(date), 'HH:mm', {
@@ -110,7 +147,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
     }
   };
 
-  const handleTranslate = async () => {
+  const handleTranslate = useCallback(async () => {
     if (showTranslation) {
       // Переключаемся обратно на оригинал
       setShowTranslation(false);
@@ -141,7 +178,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
     } finally {
       setIsTranslating(false);
     }
-  };
+  }, [showTranslation, translatedText, message.id, locale, t]);
 
   // Современный DaisyUI chat bubble компонент
   return (

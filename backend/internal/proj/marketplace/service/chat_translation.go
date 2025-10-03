@@ -36,20 +36,22 @@ func (s *ChatTranslationService) TranslateMessage(
 	message *models.MarketplaceMessage,
 	targetLanguage string,
 ) error {
-	// Пропускаем если язык совпадает
+	// Если язык не установлен, определяем его
+	if message.OriginalLanguage == "" || message.OriginalLanguage == "unknown" {
+		err := s.DetectAndSetLanguage(ctx, message)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to detect language, will try to translate anyway")
+			// Продолжаем перевод даже если определение языка не удалось
+			message.OriginalLanguage = "auto"
+		}
+	}
+
+	// Пропускаем если язык совпадает с целевым
 	if message.OriginalLanguage == targetLanguage {
 		logger.Debug().
 			Int("messageId", message.ID).
 			Str("lang", targetLanguage).
 			Msg("Skipping translation - same language")
-		return nil
-	}
-
-	// Пропускаем если язык unknown
-	if message.OriginalLanguage == "unknown" || message.OriginalLanguage == "" {
-		logger.Debug().
-			Int("messageId", message.ID).
-			Msg("Skipping translation - unknown language")
 		return nil
 	}
 
