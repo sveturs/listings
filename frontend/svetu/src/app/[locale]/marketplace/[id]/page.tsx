@@ -150,13 +150,20 @@ export default function ListingPage({ params }: Props) {
   const getTranslatedValue = (field: 'title' | 'description') => {
     if (!listing) return '';
 
-    // Пробуем получить перевод для текущего языка
-    const translation = listing.translations?.[locale]?.[field];
-    if (translation) return translation;
+    const originalValue = field === 'title' ? listing.name : listing.description;
 
-    // Если нет перевода, возвращаем оригинальное значение
-    // Для title используем name, для description используем description
-    return field === 'title' ? listing.name : listing.description;
+    // Если есть переводы, ищем перевод для текущей локали
+    if (listing.translations && listing.translations[locale]) {
+      const translation = listing.translations[locale][field];
+      // Возвращаем перевод если он есть и отличается от оригинала
+      // (если совпадает, значит это язык оригинала и дубликат)
+      if (translation && translation !== originalValue) {
+        return translation;
+      }
+    }
+
+    // Возвращаем оригинальное значение из БД
+    return originalValue;
   };
 
   // Функция для обработки нажатия на кнопку "Добавить в корзину" - отключена для marketplace
