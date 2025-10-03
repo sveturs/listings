@@ -944,11 +944,24 @@ func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationError")
 	}
 
+	// Получаем переведенный текст, если он есть
+	translatedText := message.Translations[targetLang]
+
+	// Если перевод не был выполнен (например, язык совпадает), возвращаем оригинал
+	if translatedText == "" {
+		translatedText = message.Content
+		logger.Debug().
+			Int("messageId", messageID).
+			Str("sourceLang", message.OriginalLanguage).
+			Str("targetLang", targetLang).
+			Msg("Translation not needed - same language, returning original text")
+	}
+
 	// Возвращаем перевод
 	return utils.SuccessResponse(c, TranslationResponse{
 		MessageID:      messageID,
 		OriginalText:   message.Content,
-		TranslatedText: message.Translations[targetLang],
+		TranslatedText: translatedText,
 		SourceLanguage: message.OriginalLanguage,
 		TargetLanguage: targetLang,
 		Metadata:       message.ChatTranslationMetadata,

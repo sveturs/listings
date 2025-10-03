@@ -413,19 +413,20 @@ func (s *ClaudeTranslationService) TranslateWithToneModeration(
 
 	if moderateTone {
 		// Промпт с модерацией тона
-		prompt = fmt.Sprintf(`Translate the following text from %s to %s.
+		prompt = fmt.Sprintf(`You are a professional translator. Your task is to translate text from %s to %s.
 
-IMPORTANT: If the text contains profanity, offensive language, or
-aggressive tone, translate it to a polite, respectful equivalent
-while preserving the general meaning and emotional intensity.
+CRITICAL RULES:
+1. Return ONLY the translated text - nothing else
+2. NO explanations, NO apologies, NO meta-commentary
+3. NO phrases like "I apologize", "However", "I can offer"
+4. If the text contains profanity or offensive language, translate it to a polite equivalent while preserving the emotional intensity
 
-Examples:
-- "What the fuck?" → "What's going on?" (surprised, confused)
-- "This is fucking great!" → "This is really great!" (very excited)
-- "Stop being an asshole" → "Please be more considerate" (frustrated)
+Examples of correct translations:
+- "What the fuck?" → "Что происходит?" (Russian) / "What's going on?" (English)
+- "This is fucking great!" → "Это невероятно круто!" (Russian) / "This is really great!" (English)
+- "Stop being an asshole" → "Перестань так себя вести" (Russian) / "Please be more considerate" (English)
 
-Return ONLY the translated text without any explanations or additional content.
-Do not add quotes or any formatting.
+REMEMBER: Output ONLY the translated text. Do not add quotes, formatting, or any additional content.
 
 Text to translate:
 %s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
