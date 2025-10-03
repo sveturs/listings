@@ -68,27 +68,29 @@ func (s *ChatTranslationService) TranslateMessage(
 			Msg("Same language but moderation requested - will moderate tone")
 	}
 
-	// Проверяем кеш Redis
-	cacheKey := s.getCacheKey(message.ID, targetLanguage)
-	cached, err := s.redisClient.Get(ctx, cacheKey).Result()
-	if err == nil {
-		// Cache HIT
-		if message.Translations == nil {
-			message.Translations = make(map[string]string)
+	// Проверяем кеш Redis (если Redis доступен)
+	if s.redisClient != nil {
+		cacheKey := s.getCacheKey(message.ID, targetLanguage)
+		cached, err := s.redisClient.Get(ctx, cacheKey).Result()
+		if err == nil {
+			// Cache HIT
+			if message.Translations == nil {
+				message.Translations = make(map[string]string)
+			}
+			message.Translations[targetLanguage] = cached
+			message.ChatTranslationMetadata = &models.ChatTranslationMetadata{
+				TranslatedFrom: message.OriginalLanguage,
+				TranslatedTo:   targetLanguage,
+				TranslatedAt:   time.Now(),
+				CacheHit:       true,
+				Provider:       "claude-haiku",
+			}
+			logger.Debug().
+				Int("messageId", message.ID).
+				Str("targetLang", targetLanguage).
+				Msg("Translation cache HIT")
+			return nil
 		}
-		message.Translations[targetLanguage] = cached
-		message.ChatTranslationMetadata = &models.ChatTranslationMetadata{
-			TranslatedFrom: message.OriginalLanguage,
-			TranslatedTo:   targetLanguage,
-			TranslatedAt:   time.Now(),
-			CacheHit:       true,
-			Provider:       "claude-haiku",
-		}
-		logger.Debug().
-			Int("messageId", message.ID).
-			Str("targetLang", targetLanguage).
-			Msg("Translation cache HIT")
-		return nil
 	}
 
 	// Cache MISS - вызываем API
@@ -115,10 +117,13 @@ func (s *ChatTranslationService) TranslateMessage(
 		return fmt.Errorf("translation failed: %w", err)
 	}
 
-	// Сохраняем в кеш (TTL 30 дней)
-	err = s.redisClient.Set(ctx, cacheKey, translated, 30*24*time.Hour).Err()
-	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to cache translation")
+	// Сохраняем в кеш (TTL 30 дней) если Redis доступен
+	if s.redisClient != nil {
+		cacheKey := s.getCacheKey(message.ID, targetLanguage)
+		err = s.redisClient.Set(ctx, cacheKey, translated, 30*24*time.Hour).Err()
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to cache translation")
+		}
 	}
 
 	// Обновляем сообщение
