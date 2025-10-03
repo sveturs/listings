@@ -411,8 +411,37 @@ func (s *ClaudeTranslationService) TranslateWithToneModeration(
 
 	var prompt string
 
-	if moderateTone {
-		// Промпт с модерацией тона
+	// Особый случай: одинаковый язык + модерация (смягчение без перевода)
+	if sourceLanguage == targetLanguage && moderateTone {
+		prompt = fmt.Sprintf(`You are a professional text moderator for %s language.
+
+CRITICAL RULES:
+1. Return ONLY the moderated text - nothing else
+2. NO explanations, NO apologies, NO meta-commentary
+3. NO phrases like "I apologize", "However", "I can offer"
+4. Keep the SAME language (%s)
+5. If the text contains profanity or offensive language, replace it with polite equivalents while preserving the emotional intensity and meaning
+
+Examples for Russian:
+- "Какого хуя?" → "Что происходит?" (surprised, confused)
+- "Это охуенно круто!" → "Это невероятно круто!" (very excited)
+- "Перестань быть мудаком" → "Перестань так себя вести" (frustrated)
+
+Examples for English:
+- "What the fuck?" → "What's going on?" (surprised)
+- "This is fucking great!" → "This is really great!" (excited)
+- "Stop being an asshole" → "Please be more considerate" (frustrated)
+
+Examples for Serbian:
+- "Шта, бре?" → "Шта се дешава?" (surprised)
+- "Ово је јебено одлично!" → "Ово је невероватно одлично!" (excited)
+
+REMEMBER: Output ONLY the moderated text in %s. Do not add quotes, formatting, or any additional content.
+
+Text to moderate:
+%s`, getLanguageName(targetLanguage), getLanguageName(targetLanguage), getLanguageName(targetLanguage), text)
+	} else if moderateTone {
+		// Промпт с модерацией тона И переводом
 		prompt = fmt.Sprintf(`You are a professional translator. Your task is to translate text from %s to %s.
 
 CRITICAL RULES:

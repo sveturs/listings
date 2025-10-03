@@ -51,13 +51,21 @@ func (s *ChatTranslationService) TranslateMessage(
 		}
 	}
 
-	// Пропускаем если язык совпадает с целевым
-	if message.OriginalLanguage == targetLanguage {
+	// Если язык совпадает с целевым и НЕ требуется смягчение - пропускаем
+	if message.OriginalLanguage == targetLanguage && !moderateTone {
 		logger.Debug().
 			Int("messageId", message.ID).
 			Str("lang", targetLanguage).
-			Msg("Skipping translation - same language")
+			Msg("Skipping translation - same language, no moderation needed")
 		return nil
+	}
+
+	// Если язык совпадает, но требуется смягчение - будем смягчать
+	if message.OriginalLanguage == targetLanguage && moderateTone {
+		logger.Debug().
+			Int("messageId", message.ID).
+			Str("lang", targetLanguage).
+			Msg("Same language but moderation requested - will moderate tone")
 	}
 
 	// Проверяем кеш Redis
