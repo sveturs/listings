@@ -88,10 +88,8 @@ func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.S
 
 // productToDoc преобразует модель товара витрины в документ для индексации
 func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[string]interface{} {
-	productID := fmt.Sprintf("sp_%d", product.ID)
-
 	doc := map[string]interface{}{
-		"id":             productID, // ID в формате sp_XXX для унифицированного поиска
+		"id":             product.ID, // Числовой ID для совместимости с типом integer
 		"product_id":     product.ID,
 		"product_type":   "storefront",
 		"storefront_id":  product.StorefrontID,
@@ -369,6 +367,31 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		}
 	} else {
 		doc["ai_generated"] = false
+	}
+
+	// Переводы из таблицы translations (новая архитектура)
+	if len(product.Translations) > 0 {
+		logger.Info().
+			Int("product_id", product.ID).
+			Interface("translations", product.Translations).
+			Msg("DEBUG: productToDoc() - Adding translations to document")
+
+		doc["translations"] = product.Translations
+		// Индексируем переводы для full-text search
+		for lang, fields := range product.Translations {
+			if title, ok := fields["title"]; ok && title != "" {
+				doc[fmt.Sprintf("name_%s", lang)] = title
+			}
+			if description, ok := fields["description"]; ok && description != "" {
+				doc[fmt.Sprintf("description_%s", lang)] = description
+			}
+		}
+	} else {
+		logger.Warn().
+			Int("product_id", product.ID).
+			Bool("is_nil", product.Translations == nil).
+			Int("len", len(product.Translations)).
+			Msg("DEBUG: productToDoc() - NO translations to index!")
 	}
 
 	return doc
@@ -850,7 +873,7 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 
 	// Всегда добавляем ID для стабильной сортировки
 	sort = append(sort, map[string]interface{}{
-		"product_id": map[string]interface{}{
+		"id": map[string]interface{}{
 			"order": "asc",
 		},
 	})
@@ -1285,6 +1308,40 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 			info.Slug = v
 		}
 		item.Category = info
+	}
+
+	// Переводы (AI translations) - старая архитектура
+	if translations, ok := source["ai_translations"].(map[string]interface{}); ok {
+		item.Translations = make(map[string]map[string]string)
+		for lang, translation := range translations {
+			if translationMap, ok := translation.(map[string]interface{}); ok {
+				item.Translations[lang] = make(map[string]string)
+				if title, ok := translationMap["title"].(string); ok {
+					item.Translations[lang]["title"] = title
+				}
+				if description, ok := translationMap["description"].(string); ok {
+					item.Translations[lang]["description"] = description
+				}
+			}
+		}
+	}
+
+	// Переводы из таблицы translations (новая архитектура) - приоритет выше
+	if translations, ok := source["translations"].(map[string]interface{}); ok {
+		if item.Translations == nil {
+			item.Translations = make(map[string]map[string]string)
+		}
+		for lang, translation := range translations {
+			if translationMap, ok := translation.(map[string]interface{}); ok {
+				item.Translations[lang] = make(map[string]string)
+				if title, ok := translationMap["title"].(string); ok {
+					item.Translations[lang]["title"] = title
+				}
+				if description, ok := translationMap["description"].(string); ok {
+					item.Translations[lang]["description"] = description
+				}
+			}
+		}
 	}
 
 	// Атрибуты

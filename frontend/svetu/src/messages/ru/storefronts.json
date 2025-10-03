@@ -244,6 +244,8 @@
     "low_stock": "Мало товара"
   },
   "variants": {
+    "selectOption": "Выберите {attribute}",
+    "itemsAvailable": "{count, plural, =0 {Нет в наличии} one {# шт. в наличии} few {# шт. в наличии} many {# шт. в наличии} other {# шт. в наличии}}",
     "outOfStock": "Нет в наличии",
     "lowStock": "Мало на складе",
     "inStock": "В наличии",

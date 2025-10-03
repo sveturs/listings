@@ -40,11 +40,15 @@ export default function AIVariantsView({
   // Load variant attributes for the selected category
   useEffect(() => {
     const loadAttributes = async () => {
+      console.log(
+        '[AIVariantsView] Loading attributes for category:',
+        state.aiData.categoryId
+      );
       setLoadingAttributes(true);
       try {
         // Сначала получаем slug категории по ID
         const categoriesResponse = await fetch(
-          `/api/v1/marketplace/categories?page=1&limit=1000`
+          `/api/v2/marketplace/categories?page=1&limit=1000`
         );
 
         if (!categoriesResponse.ok) {
@@ -52,35 +56,70 @@ export default function AIVariantsView({
         }
 
         const categoriesData = await categoriesResponse.json();
+        console.log(
+          '[AIVariantsView] Categories loaded:',
+          categoriesData.data?.length
+        );
+
         const category = categoriesData.data?.find(
           (cat: any) => cat.id === state.aiData.categoryId
         );
 
         if (!category || !category.slug) {
-          console.warn('Category not found or has no slug');
+          console.warn('[AIVariantsView] Category not found or has no slug:', {
+            categoryId: state.aiData.categoryId,
+            found: !!category,
+            slug: category?.slug,
+          });
           setAvailableAttributes([]);
           return;
         }
 
+        console.log('[AIVariantsView] Category found:', category.slug);
+
         // Загружаем variant attributes для этой категории
         const variantAttrsResponse = await fetch(
-          `/api/v1/marketplace/categories/${category.slug}/variant-attributes`
+          `/api/v2/marketplace/categories/${category.slug}/variant-attributes`
         );
 
         if (variantAttrsResponse.ok) {
           const variantAttrsData = await variantAttrsResponse.json();
+          console.log('[AIVariantsView] Variant attributes loaded:', {
+            slug: category.slug,
+            count: variantAttrsData.data?.length || 0,
+            attributes: variantAttrsData.data,
+          });
           setAvailableAttributes(variantAttrsData.data || []);
         } else {
-          console.warn('No variant attributes found for category');
+          console.warn(
+            '[AIVariantsView] No variant attributes found for category:',
+            {
+              slug: category.slug,
+              status: variantAttrsResponse.status,
+            }
+          );
           setAvailableAttributes([]);
         }
       } catch (error) {
-        console.error('Failed to load variant attributes:', error);
+        console.error(
+          '[AIVariantsView] Failed to load variant attributes:',
+          error
+        );
         setAvailableAttributes([]);
       } finally {
         setLoadingAttributes(false);
       }
     };
+
+    console.log('[AIVariantsView] useEffect triggered:', {
+      hasVariants: state.aiData.hasVariants,
+      activeMode,
+      categoryId: state.aiData.categoryId,
+      shouldLoad:
+        state.aiData.hasVariants &&
+        activeMode === 'simple' &&
+        state.aiData.categoryId,
+    });
 
     if (
       state.aiData.hasVariants &&

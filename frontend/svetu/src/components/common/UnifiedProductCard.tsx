@@ -398,12 +398,13 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
                       )}
 
                       <h2 className="text-lg font-semibold line-clamp-1">
-                        {product.name}
+                        {product.translations?.[locale]?.title || product.name}
                       </h2>
 
                       {product.description && (
                         <p className="text-sm text-base-content/70 line-clamp-2 mt-1">
-                          {product.description}
+                          {product.translations?.[locale]?.description ||
+                            product.description}
                         </p>
                       )}
 
@@ -821,7 +822,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
               gridColumns === 3 ? 'text-xs' : 'text-sm'
             } line-clamp-2 min-h-[2.5rem]`}
           >
-            {product.name}
+            {product.translations?.[locale]?.title || product.name}
           </h3>
 
           {/* Продавец/Витрина - скрываем при 3 столбцах */}

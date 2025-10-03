@@ -538,7 +538,7 @@ export default function HomePageClient({
         searchParams.append('page', '1');
         searchParams.append('sort', 'created_at');
         searchParams.append('sortDirection', 'desc');
-        searchParams.append('language', locale);
+        searchParams.append('lang', locale);
         searchParams.append('status', 'active');
         searchParams.append('product_types[]', 'marketplace');
         searchParams.append('product_types[]', 'storefront');
@@ -1065,7 +1065,7 @@ export default function HomePageClient({
                     <figure className="relative h-48 overflow-hidden">
                       <SafeImage
                         src={deal.image}
-                        alt={deal.title}
+                        alt={deal.translations?.[locale]?.title || deal.title}
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
@@ -1158,7 +1158,7 @@ export default function HomePageClient({
                     </figure>
                     <div className="card-body p-4">
                       <h3 className="card-title text-base line-clamp-2">
-                        {deal.title}
+                        {deal.translations?.[locale]?.title || deal.title}
                       </h3>
                       <div className="flex items-center gap-2 text-sm">
                         <FiMapPin className="w-3 h-3" />
@@ -1401,7 +1401,7 @@ export default function HomePageClient({
                         item.location?.lng ||
                         20.4612 + (Math.random() - 0.5) * 0.02,
                       price: item.price,
-                      title: item.title,
+                      title: item.translations?.[locale]?.title || item.title,
                       category: item.category,
                       imageUrl: item.image,
                       isStorefront: item.isStorefront,
@@ -1616,7 +1616,7 @@ export default function HomePageClient({
                       <figure className="h-40 overflow-hidden relative">
                         <SafeImage
                           src={deal.image}
-                          alt={deal.title}
+                          alt={deal.translations?.[locale]?.title || deal.title}
                           fill
                           className="object-cover hover:scale-110 transition-transform duration-300"
                           sizes="280px"
@@ -1672,7 +1672,7 @@ export default function HomePageClient({
                       </figure>
                       <div className="card-body p-4">
                         <h3 className="font-medium text-sm line-clamp-2 mb-2">
-                          {deal.title}
+                          {deal.translations?.[locale]?.title || deal.title}
                         </h3>
 
                         {/* Цена и скидка */}

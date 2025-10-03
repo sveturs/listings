@@ -303,12 +303,20 @@ func (r *VariantRepository) BulkCreateVariantsTx(ctx context.Context, tx *sqlx.T
 // GetVariantByID returns a variant by ID with images
 func (r *VariantRepository) GetVariantByID(ctx context.Context, id int) (*types.ProductVariant, error) {
 	query := `
-		SELECT id, product_id, sku, barcode, price, compare_at_price, cost_price,
-			   stock_quantity, reserved_quantity, available_quantity, stock_status, low_stock_threshold, variant_attributes,
-			   weight, dimensions, is_active, is_default, view_count, sold_count,
-			   created_at, updated_at
-		FROM storefront_product_variants
-		WHERE id = $1`
+		SELECT v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity,
+			   COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			   (v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
+		WHERE v.id = $1
+		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity, v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at`
 
 	var variant types.ProductVariant
 	var variantAttrsJSON, dimensionsJSON []byte
@@ -352,13 +360,21 @@ func (r *VariantRepository) GetVariantByID(ctx context.Context, id int) (*types.
 // GetVariantsByProductID returns all variants for a product
 func (r *VariantRepository) GetVariantsByProductID(ctx context.Context, productID int) ([]types.ProductVariant, error) {
 	query := `
-		SELECT id, product_id, sku, barcode, price, compare_at_price, cost_price,
-			   stock_quantity, reserved_quantity, available_quantity, stock_status, low_stock_threshold, variant_attributes,
-			   weight, dimensions, is_active, is_default, view_count, sold_count,
-			   created_at, updated_at
-		FROM storefront_product_variants
-		WHERE product_id = $1 AND is_active = true
-		ORDER BY is_default DESC, created_at ASC`
+		SELECT v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity,
+			   COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			   (v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
+		WHERE v.product_id = $1 AND v.is_active = true
+		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity, v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		ORDER BY v.is_default DESC, v.created_at ASC`
 
 	rows, err := r.db.QueryContext(ctx, query, productID)
 	if err != nil {
@@ -929,13 +945,21 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 
 	// Find best seller
 	bestSellerQuery := `
-		SELECT id, product_id, sku, barcode, price, compare_at_price, cost_price,
-			   stock_quantity, reserved_quantity, available_quantity, stock_status, low_stock_threshold, variant_attributes,
-			   weight, dimensions, is_active, is_default, view_count, sold_count,
-			   created_at, updated_at
-		FROM storefront_product_variants 
-		WHERE product_id = $1 AND is_active = true 
-		ORDER BY sold_count DESC 
+		SELECT v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity,
+			   COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			   (v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
+		WHERE v.product_id = $1 AND v.is_active = true
+		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity, v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		ORDER BY v.sold_count DESC
 		LIMIT 1`
 
 	var bestSeller types.ProductVariant
@@ -968,13 +992,21 @@ func (r *VariantRepository) GetVariantAnalytics(ctx context.Context, productID i
 
 	// Find low stock variants
 	lowStockQuery := `
-		SELECT id, product_id, sku, barcode, price, compare_at_price, cost_price,
-			   stock_quantity, reserved_quantity, available_quantity, stock_status, low_stock_threshold, variant_attributes,
-			   weight, dimensions, is_active, is_default, view_count, sold_count,
-			   created_at, updated_at
-		FROM storefront_product_variants 
-		WHERE product_id = $1 AND is_active = true 
-		AND available_quantity <= COALESCE(low_stock_threshold, 5)
+		SELECT v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity,
+			   COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			   (v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			   v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		FROM storefront_product_variants v
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
+		WHERE v.product_id = $1 AND v.is_active = true
+		GROUP BY v.id, v.product_id, v.sku, v.barcode, v.price, v.compare_at_price, v.cost_price,
+			   v.stock_quantity, v.stock_status, v.low_stock_threshold, v.variant_attributes,
+			   v.weight, v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			   v.created_at, v.updated_at
+		HAVING (v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)) <= COALESCE(v.low_stock_threshold, 5)
 		ORDER BY available_quantity ASC`
 
 	rows, err := r.db.QueryContext(ctx, lowStockQuery, productID)
@@ -1346,13 +1378,21 @@ func (r *VariantRepository) GetVariantsByProductIDPublic(ctx context.Context, pr
 	}
 
 	query := `
-		SELECT 
+		SELECT
 			v.id, v.product_id, v.sku, v.price, v.compare_at_price,
-			v.stock_quantity, v.reserved_quantity, v.available_quantity, v.stock_status,
+			v.stock_quantity,
+			COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			(v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			v.stock_status,
 			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
 			v.view_count, v.sold_count, v.created_at, v.updated_at
 		FROM storefront_product_variants v
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
 		WHERE v.product_id = $1 AND v.is_active = true
+		GROUP BY v.id, v.product_id, v.sku, v.price, v.compare_at_price,
+			v.stock_quantity, v.stock_status, v.variant_attributes, v.weight,
+			v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			v.created_at, v.updated_at
 		ORDER BY v.is_default DESC, v.id`
 
 	var rows []VariantRow
@@ -1477,13 +1517,21 @@ func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, p
 // GetVariantByIDPublic returns a specific variant for public viewing
 func (r *VariantRepository) GetVariantByIDPublic(ctx context.Context, variantID int) (*types.ProductVariant, error) {
 	query := `
-		SELECT 
+		SELECT
 			v.id, v.product_id, v.sku, v.price, v.compare_at_price,
-			v.stock_quantity, v.reserved_quantity, v.available_quantity, v.stock_status,
+			v.stock_quantity,
+			COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0)::int as reserved_quantity,
+			(v.stock_quantity - COALESCE(SUM(ir.quantity) FILTER (WHERE ir.status = 'active' AND ir.expires_at > CURRENT_TIMESTAMP), 0))::int as available_quantity,
+			v.stock_status,
 			v.variant_attributes, v.weight, v.dimensions, v.is_active, v.is_default,
 			v.view_count, v.sold_count, v.created_at, v.updated_at
 		FROM storefront_product_variants v
-		WHERE v.id = $1 AND v.is_active = true`
+		LEFT JOIN inventory_reservations ir ON ir.variant_id = v.id
+		WHERE v.id = $1 AND v.is_active = true
+		GROUP BY v.id, v.product_id, v.sku, v.price, v.compare_at_price,
+			v.stock_quantity, v.stock_status, v.variant_attributes, v.weight,
+			v.dimensions, v.is_active, v.is_default, v.view_count, v.sold_count,
+			v.created_at, v.updated_at`
 
 	var variant types.ProductVariant
 	err := r.db.GetContext(ctx, &variant, query, variantID)

@@ -243,6 +243,8 @@
     "low_stock": "Malo na stanju"
   },
   "variants": {
+    "selectOption": "Izaberite {attribute}",
+    "itemsAvailable": "{count, plural, =0 {Nema na stanju} one {# komad dostupan} few {# komada dostupna} other {# komada dostupno}}",
     "outOfStock": "Nema na stanju",
     "lowStock": "Malo zaliha",
     "inStock": "Na lageru",

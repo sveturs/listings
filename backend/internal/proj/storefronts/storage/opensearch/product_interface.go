@@ -75,36 +75,37 @@ type ProductSearchResult struct {
 
 // ProductSearchItem элемент результата поиска
 type ProductSearchItem struct {
-	ID                string              // Уникальный ID документа (sp_123)
-	ProductID         int                 // ID товара
-	StorefrontID      int                 // ID витрины
-	Name              string              // Название товара
-	Description       string              // Описание
-	Price             float64             // Цена
-	PriceMin          float64             // Минимальная цена (с учетом вариантов)
-	PriceMax          float64             // Максимальная цена (с учетом вариантов)
-	Currency          string              // Валюта
-	SKU               string              // Артикул
-	Brand             string              // Бренд
-	InStock           bool                // В наличии
-	AvailableQuantity int                 // Доступное количество
-	Images            []ProductImage      // Изображения
-	Storefront        StorefrontInfo      // Информация о витрине
-	Category          CategoryInfo        // Информация о категории
-	Attributes        []ProductAttribute  // Атрибуты
-	Variants          []ProductVariant    // Варианты
-	Score             float64             // Релевантность
-	Distance          *float64            // Расстояние в км (если есть)
-	Highlights        map[string][]string // Подсвеченные фрагменты
-	PopularityScore   float64             // Показатель популярности
-	QualityScore      float64             // Показатель качества
-	ViewsCount        int                 // Количество просмотров
-	SoldCount         int                 // Количество продаж
-	CreatedAt         *time.Time          // Дата создания товара
-	UpdatedAt         *time.Time          // Дата обновления товара
-	City              string              // Город (из storefront)
-	Country           string              // Страна (из storefront)
-	Address           string              // Адрес (из storefront)
+	ID                string                       // Уникальный ID документа (sp_123)
+	ProductID         int                          // ID товара
+	StorefrontID      int                          // ID витрины
+	Name              string                       // Название товара
+	Description       string                       // Описание
+	Price             float64                      // Цена
+	PriceMin          float64                      // Минимальная цена (с учетом вариантов)
+	PriceMax          float64                      // Максимальная цена (с учетом вариантов)
+	Currency          string                       // Валюта
+	SKU               string                       // Артикул
+	Brand             string                       // Бренд
+	InStock           bool                         // В наличии
+	AvailableQuantity int                          // Доступное количество
+	Images            []ProductImage               // Изображения
+	Storefront        StorefrontInfo               // Информация о витрине
+	Category          CategoryInfo                 // Информация о категории
+	Attributes        []ProductAttribute           // Атрибуты
+	Variants          []ProductVariant             // Варианты
+	Score             float64                      // Релевантность
+	Distance          *float64                     // Расстояние в км (если есть)
+	Highlights        map[string][]string          // Подсвеченные фрагменты
+	PopularityScore   float64                      // Показатель популярности
+	QualityScore      float64                      // Показатель качества
+	ViewsCount        int                          // Количество просмотров
+	SoldCount         int                          // Количество продаж
+	CreatedAt         *time.Time                   // Дата создания товара
+	UpdatedAt         *time.Time                   // Дата обновления товара
+	City              string                       // Город (из storefront)
+	Country           string                       // Страна (из storefront)
+	Address           string                       // Адрес (из storefront)
+	Translations      map[string]map[string]string // Переводы (локаль -> поле -> значение)
 }
 
 // ProductImage изображение товара

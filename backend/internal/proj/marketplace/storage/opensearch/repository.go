@@ -727,6 +727,20 @@ func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID
 	return translations, nil
 }
 
+// convertDBTranslationsToMap преобразует массив DBTranslation в структуру map[язык]map[поле]значение
+func (r *Repository) convertDBTranslationsToMap(translations []DBTranslation) map[string]map[string]string {
+	result := make(map[string]map[string]string)
+
+	for _, t := range translations {
+		if _, exists := result[t.Language]; !exists {
+			result[t.Language] = make(map[string]string)
+		}
+		result[t.Language][t.FieldName] = t.TranslatedText
+	}
+
+	return result
+}
+
 // extractSupportedLanguages извлекает список поддерживаемых языков из переводов
 func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []string {
 	langMap := make(map[string]bool)
@@ -745,6 +759,7 @@ func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []s
 func (r *Repository) listingToDoc(ctx context.Context, listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
 		"id":                   listing.ID,
+		"document_type":        "listing", // Критически важно для фильтрации в унифицированном поиске
 		"title":                listing.Title,
 		"description":          listing.Description,
 		"title_suggest":        listing.Title,
@@ -768,14 +783,16 @@ func (r *Repository) listingToDoc(ctx context.Context, listing *models.Marketpla
 		"review_count":         listing.ReviewCount,
 	}
 
-	// Загружаем переводы из таблицы translations в новое поле db_translations
+	// Загружаем переводы из таблицы translations и преобразуем в правильный формат
 	dbTranslations, err := r.getListingTranslationsFromDB(ctx, listing.ID)
 	if err != nil {
 		logger.Error().Msgf("Ошибка загрузки переводов для объявления %d: %v", listing.ID, err)
 	} else if len(dbTranslations) > 0 {
-		doc["db_translations"] = dbTranslations
+		// Преобразуем []DBTranslation в map[язык]map[поле]значение
+		translationsMap := r.convertDBTranslationsToMap(dbTranslations)
+		doc["translations"] = translationsMap
 		doc["supported_languages"] = r.extractSupportedLanguages(dbTranslations)
-		logger.Info().Msgf("Загружено %d переводов из БД для объявления %d", len(dbTranslations), listing.ID)
+		logger.Info().Msgf("Загружено %d переводов из БД для объявления %d, преобразовано в структуру translations", len(dbTranslations), listing.ID)
 	}
 
 	logger.Info().Msgf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
@@ -1597,7 +1614,7 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, map[string]interface{}{
 			"term": map[string]interface{}{
-				"type": params.DocumentType,
+				"document_type": params.DocumentType, // ИСПРАВЛЕНО: было "type", должно быть "document_type"
 			},
 		})
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter

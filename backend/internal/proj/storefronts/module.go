@@ -960,6 +960,11 @@ func (s *storageAdapter) GetStorefrontByID(ctx context.Context, id int) (*models
 	return storefrontRepo.GetByID(ctx, id)
 }
 
+// SaveTranslation delegates to database
+func (s *storageAdapter) SaveTranslation(ctx context.Context, translation *models.Translation) error {
+	return s.db.SaveTranslation(ctx, translation)
+}
+
 // BeginTx starts a new transaction
 func (s *storageAdapter) BeginTx(ctx context.Context) (storefrontService.Transaction, error) {
 	// Get sqlx.DB from database

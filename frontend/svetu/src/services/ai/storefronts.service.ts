@@ -253,9 +253,7 @@ class StorefrontAIService {
    * Получить метрики AI для товаров витрин
    */
   async getMetrics(): Promise<AIMetrics> {
-    const response = await apiClient.get<AIMetrics>(
-      '/storefronts/ai/metrics'
-    );
+    const response = await apiClient.get<AIMetrics>('/storefronts/ai/metrics');
 
     if (response.error) {
       throw new Error(response.error.message || 'Failed to get metrics');

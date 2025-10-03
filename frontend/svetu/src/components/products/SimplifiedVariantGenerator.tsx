@@ -80,53 +80,55 @@ export default function SimplifiedVariantGenerator({
   React.useEffect(() => {
     const fetchVariantAttributes = async () => {
       try {
-        console.log('Loading variant attributes for category:', categorySlug);
+        console.log(
+          '[SimplifiedVariantGenerator] Loading variant attributes for category:',
+          categorySlug
+        );
 
-        // Загружаем вариативные атрибуты через API
-        const response = await adminApi.variantAttributes.getAll(1, 100);
+        // Загружаем вариативные атрибуты для конкретной категории
+        const response = await fetch(
+          `/api/v2/marketplace/categories/${categorySlug}/variant-attributes`
+        );
 
-        console.log('Available variant attributes from API:', response.data);
-
-        // Фильтруем атрибуты которые уже выбраны в selectedAttributes
-        // и имеют соответствующие атрибуты в категории
-        const relevantAttributes = response.data.filter((variantAttr) => {
-          // Ищем соответствующий атрибут в selectedAttributes по названию
-          const matchingCategoryAttr = categoryAttributes.find(
-            (catAttr) =>
-              catAttr.name.toLowerCase() === variantAttr.name.toLowerCase() ||
-              catAttr.display_name
-                .toLowerCase()
-                .includes(variantAttr.name.toLowerCase()) ||
-              variantAttr.name
-                .toLowerCase()
-                .includes(catAttr.name.toLowerCase())
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch variant attributes: ${response.status}`
           );
+        }
 
-          if (matchingCategoryAttr) {
-            // Проверяем, есть ли выбранные значения для этого атрибута
-            const selectedAttr = selectedAttributes[matchingCategoryAttr.id];
-            const hasSelectedValues =
-              selectedAttr &&
-              selectedAttr.values &&
-              selectedAttr.values.length > 0;
+        const data = await response.json();
+        console.log(
+          '[SimplifiedVariantGenerator] Variant attributes from API:',
+          data.data
+        );
 
-            console.log(
-              `Variant attribute "${variantAttr.name}" matches category attribute "${matchingCategoryAttr.name}", has selected values:`,
-              hasSelectedValues
-            );
-            return hasSelectedValues;
-          }
+        // Фильтруем только те атрибуты, которые выбраны пользователем
+        const relevantAttributes = data.data.filter((variantAttr: any) => {
+          // Ищем соответствующий выбранный атрибут по ID
+          const selectedAttr = selectedAttributes[variantAttr.id];
+          const hasSelectedValues =
+            selectedAttr &&
+            selectedAttr.values &&
+            selectedAttr.values.length > 0;
 
-          return false;
+          console.log(
+            `[SimplifiedVariantGenerator] Variant attribute "${variantAttr.display_name}" (ID: ${variantAttr.id}), has selected values:`,
+            hasSelectedValues,
+            selectedAttr?.values
+          );
+          return hasSelectedValues;
         });
 
         console.log(
-          'Relevant variant attributes for category:',
+          '[SimplifiedVariantGenerator] Relevant variant attributes for category:',
           relevantAttributes
         );
         setAvailableVariantAttributes(relevantAttributes);
       } catch (error) {
-        console.error('Failed to load variant attributes:', error);
+        console.error(
+          '[SimplifiedVariantGenerator] Failed to load variant attributes:',
+          error
+        );
         // Fallback к пустому массиву
         setAvailableVariantAttributes([]);
       } finally {
@@ -135,7 +137,10 @@ export default function SimplifiedVariantGenerator({
     };
 
     if (categorySlug && categoryAttributes.length > 0) {
-      console.log('categorySlug effect triggered:', categorySlug);
+      console.log(
+        '[SimplifiedVariantGenerator] categorySlug effect triggered:',
+        categorySlug
+      );
       fetchVariantAttributes();
     }
   }, [categorySlug, categoryAttributes, selectedAttributes]);
@@ -227,30 +232,63 @@ export default function SimplifiedVariantGenerator({
     const variants: any[] = [];
     const attributesWithValues: any[] = [];
 
+    console.log('[SimplifiedVariantGenerator] generateVariants called');
+    console.log(
+      '[SimplifiedVariantGenerator] variantAttributes:',
+      variantAttributes
+    );
+    console.log(
+      '[SimplifiedVariantGenerator] selectedAttributes:',
+      selectedAttributes
+    );
+
     // Подготавливаем атрибуты и их значения
     variantAttributes.forEach((attr) => {
-      const value = selectedAttributes[attr.id];
+      const selectedAttr = selectedAttributes[attr.id];
+      console.log(
+        `[SimplifiedVariantGenerator] Processing attribute ${attr.id} (${attr.display_name}):`,
+        selectedAttr
+      );
+
       let values: string[] = [];
 
-      if (Array.isArray(value)) {
-        values = value;
-      } else if (typeof value === 'string') {
-        if (value.includes(',')) {
-          values = value.split(',').filter(Boolean);
-        } else {
-          values = [value];
+      // selectedAttr is an object like {id: number, name: string, values: string[]}
+      if (selectedAttr && selectedAttr.values) {
+        if (Array.isArray(selectedAttr.values)) {
+          values = selectedAttr.values;
+        } else if (typeof selectedAttr.values === 'string') {
+          values = selectedAttr.values
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean);
         }
       }
+
+      console.log(
+        `[SimplifiedVariantGenerator] Extracted values for ${attr.display_name}:`,
+        values
+      );
 
       if (values.length > 0) {
         attributesWithValues.push({
           name: attr.display_name || attr.name,
+          attributeId: attr.id,
           values: values,
         });
       }
     });
 
-    if (attributesWithValues.length === 0) return;
+    console.log(
+      '[SimplifiedVariantGenerator] attributesWithValues:',
+      attributesWithValues
+    );
+
+    if (attributesWithValues.length === 0) {
+      console.warn(
+        '[SimplifiedVariantGenerator] No attributes with values found, cannot generate variants'
+      );
+      return;
+    }
 
     // Добавляем уникальный суффикс для избежания дубликатов SKU
     const timestamp = Date.now();
