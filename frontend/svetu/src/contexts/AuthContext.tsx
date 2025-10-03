@@ -9,8 +9,11 @@ import React, {
   useMemo,
 } from 'react';
 import { useRouter } from '@/i18n/routing';
+import { useDispatch } from 'react-redux';
 import authService from '@/services/auth';
 import type { User, UpdateProfileRequest } from '@/types/auth';
+import { reset as resetChat, closeWebSocket } from '@/store/slices/chatSlice';
+import { resetCart } from '@/store/slices/cartSlice';
 
 interface AuthContextType {
   user: User | null;
@@ -32,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -150,8 +154,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoggingOut(true);
     setError(null);
     try {
+      // Закрываем WebSocket соединение
+      dispatch(closeWebSocket());
+
+      // Очищаем Redux store
+      dispatch(resetChat());      // Чаты, сообщения, счетчики
+      dispatch(resetCart());      // Корзина, заказы
+
+      // Выполняем logout на backend
       await authService.logout();
+
+      // Очищаем user state
       setUser(null);
+
+      // Редирект на главную
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -159,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoggingOut(false);
     }
-  }, [router]);
+  }, [router, dispatch]);
 
   const updateProfile = useCallback(
     async (_data: UpdateProfileRequest): Promise<boolean> => {

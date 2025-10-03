@@ -316,6 +316,12 @@ const chatSlice = createSlice({
       state.pendingChatId = action.payload;
     },
 
+    // Закрытие WebSocket соединения (используется middleware)
+    closeWebSocket: (_state) => {
+      // Этот action обрабатывается в middleware
+      // Middleware закроет WebSocket и очистит таймеры
+    },
+
     // Очистка всех данных при логауте
     clearAllData: (state) => {
       // Закрываем WebSocket если он открыт
@@ -403,6 +409,12 @@ const chatSlice = createSlice({
             (sum, chat) => sum + (chat.unread_count || 0),
             0
           );
+        }
+      } else {
+        // Чат не найден в списке - пользователь не загружал страницу чата
+        // Но все равно нужно увеличить общий счетчик непрочитанных
+        if (state.currentUserId && message.sender_id !== state.currentUserId) {
+          state.unreadCount += 1;
         }
       }
 
@@ -669,6 +681,7 @@ export const {
   selectLatestChat,
   setWebSocket,
   setUserTyping,
+  closeWebSocket,
   clearAllData,
   addUploadingFile,
   updateUploadProgress,
