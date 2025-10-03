@@ -271,17 +271,17 @@ if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
     sleep 2
 fi
 
-# Restart frontend
-log "🔄 Restarting frontend..."
+# Restart frontend with production build
+log "🔄 Restarting frontend (production build)..."
 cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
 debug "Current directory: \$(pwd)"
 
-if ! timeout 90 make dev-restart &>/tmp/frontend_restart.log; then
+if ! timeout 180 make dev-build-restart &>/tmp/frontend_restart.log; then
     error "Failed to restart frontend (timeout or error)"
     tail -50 /tmp/frontend_restart.log
     exit 1
 fi
-log "✅ Frontend restarted"
+log "✅ Frontend restarted (production mode)"
 
 # Clean up old dumps (keep last 3)
 log "🧹 Cleaning old dumps..."

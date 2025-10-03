@@ -117,3 +117,16 @@ dev-restart:
 	@nohup yarn dev -p 3003 > frontend-dev.log 2>&1 &
 	@sleep 2
 	@echo "✅ Frontend running! Logs: tail -f frontend-dev.log"
+
+# Production build and restart for dev server
+.PHONY: dev-build-restart
+dev-build-restart:
+	@echo "🔪 Stopping frontend on port 3003..."
+	@lsof -ti:3003 | xargs -r kill 2>/dev/null || true
+	@sleep 1
+	@echo "🏗️  Building production version..."
+	@yarn build
+	@echo "🚀 Starting production server on port 3003..."
+	@nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+	@sleep 3
+	@echo "✅ Production frontend running! Logs: tail -f frontend-dev.log"
