@@ -203,8 +203,8 @@ tail -5 /tmp/db_load.log | sed 's/^/  /'
 debug "📍 Checkpoint 1: After DB restore"
 
 # Fix dirty migrations
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
-    -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
+docker exec svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
+    -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" >/dev/null 2>&1 || true
 
 debug "📍 Checkpoint 2: After dirty migrations fix"
 
