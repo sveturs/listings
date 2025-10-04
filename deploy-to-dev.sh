@@ -200,11 +200,16 @@ fi
 log "✅ Database restored successfully"
 tail -5 /tmp/db_load.log | sed 's/^/  /'
 
+debug "📍 Checkpoint 1: After DB restore"
+
 # Fix dirty migrations
 docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
     -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
 
+debug "📍 Checkpoint 2: After dirty migrations fix"
+
 # Sync Mapbox token if provided
+debug "📍 Checkpoint 3: Before Mapbox check (token='$MAPBOX_TOKEN')"
 if [ -n "$MAPBOX_TOKEN" ]; then
     log "🗺️  Syncing Mapbox token..."
     ENV_FILE="$DEPLOY_DIR/frontend/svetu/.env.local"
@@ -220,6 +225,8 @@ if [ -n "$MAPBOX_TOKEN" ]; then
         warn "Env file not found: \$ENV_FILE"
     fi
 fi
+
+debug "📍 Checkpoint 4: After Mapbox sync"
 
 # Kill old backend processes before restart
 cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
