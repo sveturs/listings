@@ -221,13 +221,9 @@ if [ -n "$MAPBOX_TOKEN" ]; then
     fi
 fi
 
-# Clean Go module cache to force re-download of private repos
-log "🧹 Cleaning Go module cache..."
+# Kill old backend processes before restart
 cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
 debug "Current directory: \$(pwd)"
-go clean -modcache 2>/dev/null || true
-
-# Kill old backend processes before restart
 log "🔪 Killing old backend processes..."
 pkill -9 -f "bin/api_dev" 2>/dev/null || true
 sleep 2
