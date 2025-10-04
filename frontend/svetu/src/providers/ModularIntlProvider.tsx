@@ -22,17 +22,6 @@ export function ModularIntlProvider({
 }: ModularIntlProviderProps) {
   const pathname = usePathname();
 
-  // Debug: проверяем наличие chat переводов
-  if (typeof window !== 'undefined' && pathname.includes('/chat')) {
-    console.log('[ModularIntlProvider] Chat translations check:', {
-      hasChatNamespace: !!messages.chat,
-      hasTranslationKey: !!messages.chat?.translation,
-      hasTranslatingKey: !!messages.chat?.translation?.translating,
-      translatingValue: messages.chat?.translation?.translating,
-      chatKeys: messages.chat ? Object.keys(messages.chat).slice(0, 10) : [],
-    });
-  }
-
   useEffect(() => {
     // Предзагружаем модули для возможных переходов
     const preloadNextModules = async () => {
