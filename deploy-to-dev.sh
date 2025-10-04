@@ -259,29 +259,78 @@ fi
 
 # Kill old frontend processes before restart
 log "🔪 Killing old frontend processes..."
-pkill -9 -f "yarn dev -p 3003" 2>/dev/null || true
+# Убиваем все возможные варианты процессов Next.js
+pkill -9 -f "yarn dev.*3003" 2>/dev/null || true
+pkill -9 -f "yarn start.*3003" 2>/dev/null || true
 pkill -9 -f "next dev.*3003" 2>/dev/null || true
-pkill -9 -f "next-server" 2>/dev/null || true
+pkill -9 -f "next start.*3003" 2>/dev/null || true
+pkill -9 -f "next-server.*3003" 2>/dev/null || true
+pkill -9 -f "node.*next.*3003" 2>/dev/null || true
 sleep 3
 
-# Verify port 3003 is free
-if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
-    warn "Port 3003 still occupied, forcing cleanup..."
+# Verify port 3003 is free (более надежная проверка)
+log "🔍 Checking if port 3003 is free..."
+PORT_CHECK_ATTEMPTS=0
+MAX_PORT_ATTEMPTS=5
+
+while netstat -tlnp 2>/dev/null | grep -q ":3003 " && [ \$PORT_CHECK_ATTEMPTS -lt \$MAX_PORT_ATTEMPTS ]; do
+    warn "Port 3003 still occupied (attempt \$((PORT_CHECK_ATTEMPTS + 1))/\$MAX_PORT_ATTEMPTS), forcing cleanup..."
     fuser -k 3003/tcp 2>/dev/null || true
     sleep 2
+    PORT_CHECK_ATTEMPTS=\$((PORT_CHECK_ATTEMPTS + 1))
+done
+
+if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
+    error "Failed to free port 3003 after \$MAX_PORT_ATTEMPTS attempts"
+    warn "Processes still using port 3003:"
+    fuser -v 3003/tcp 2>&1 || true
+    warn "You may need to manually kill the process or reboot"
+    exit 1
 fi
+
+log "✅ Port 3003 is free"
 
 # Restart frontend with production build
 log "🔄 Restarting frontend (production build)..."
 cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
 debug "Current directory: \$(pwd)"
 
-if ! timeout 180 make dev-build-restart &>/tmp/frontend_restart.log; then
+# Используем make dev-build-restart который делает build и запускает yarn start
+if ! timeout 300 make dev-build-restart &>/tmp/frontend_restart.log; then
     error "Failed to restart frontend (timeout or error)"
+    tail -100 /tmp/frontend_restart.log
+
+    # Проверяем, не занят ли порт снова
+    if grep -q "EADDRINUSE.*3003" /tmp/frontend_restart.log; then
+        error "Port 3003 was occupied during restart"
+        warn "Attempting emergency cleanup..."
+        fuser -k 3003/tcp 2>/dev/null || true
+        sleep 3
+
+        # Пробуем ещё раз
+        warn "Retrying frontend start..."
+        if timeout 120 make dev-start &>/tmp/frontend_retry.log; then
+            log "✅ Frontend started on retry"
+        else
+            error "Frontend start failed on retry too"
+            tail -50 /tmp/frontend_retry.log
+            exit 1
+        fi
+    else
+        exit 1
+    fi
+else
+    log "✅ Frontend restarted (production mode)"
+fi
+
+# Проверяем что frontend действительно запустился
+sleep 5
+if ! pgrep -f "next.*3003" > /dev/null; then
+    error "Frontend process not found after restart"
     tail -50 /tmp/frontend_restart.log
     exit 1
 fi
-log "✅ Frontend restarted (production mode)"
+log "✅ Frontend process is running"
 
 # Clean up old dumps (keep last 3)
 log "🧹 Cleaning old dumps..."
@@ -349,7 +398,7 @@ log "🎯 Deployed commit: \${NEW_COMMIT:0:8}"
 # Show process info
 log "📊 Process status:"
 info "  Backend PID: \$(pgrep -f 'bin/api_dev' || echo 'not found')"
-info "  Frontend PID: \$(pgrep -f 'yarn dev -p 3003' || echo 'not found')"
+info "  Frontend PID: \$(pgrep -f 'next.*3003' || echo 'not found')"
 
 log "🎉 Deployment completed successfully!"
 ENDSSH
