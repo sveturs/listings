@@ -200,16 +200,11 @@ fi
 log "✅ Database restored successfully"
 tail -5 /tmp/db_load.log | sed 's/^/  /'
 
-debug "📍 Checkpoint 1: After DB restore"
-
 # Fix dirty migrations
 docker exec svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
     -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" >/dev/null 2>&1 || true
 
-debug "📍 Checkpoint 2: After dirty migrations fix"
-
 # Sync Mapbox token if provided
-debug "📍 Checkpoint 3: Before Mapbox check (token='$MAPBOX_TOKEN')"
 if [ -n "$MAPBOX_TOKEN" ]; then
     log "🗺️  Syncing Mapbox token..."
     ENV_FILE="$DEPLOY_DIR/frontend/svetu/.env.local"
@@ -226,18 +221,14 @@ if [ -n "$MAPBOX_TOKEN" ]; then
     fi
 fi
 
-debug "📍 Checkpoint 4: After Mapbox sync"
-
 # Kill old backend processes before restart
 cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
-debug "Current directory: \$(pwd)"
 log "🔪 Killing old backend processes..."
 pkill -9 -f "bin/api_dev" 2>/dev/null || true
 sleep 2
 
 # Restart backend
 log "🔄 Restarting backend..."
-debug "Running make dev-restart in \$(pwd)"
 if ! timeout 120 make dev-restart &>/tmp/backend_restart.log; then
     error "Failed to restart backend (timeout or error)"
     tail -50 /tmp/backend_restart.log
@@ -296,7 +287,6 @@ log "✅ Port 3003 is free"
 # Restart frontend with production build
 log "🔄 Restarting frontend (production build)..."
 cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
-debug "Current directory: \$(pwd)"
 
 # Используем make dev-build-restart который делает build и запускает yarn start
 if ! timeout 300 make dev-build-restart &>/tmp/frontend_restart.log; then
@@ -350,8 +340,6 @@ check_service() {
     local url=\$2
     local retries=$HEALTH_CHECK_RETRIES
     local wait=10
-
-    debug "Checking \$name at \$url"
 
     for i in \$(seq 1 \$retries); do
         HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" "\$url" 2>/dev/null || echo "000")
