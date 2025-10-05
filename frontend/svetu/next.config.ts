@@ -12,12 +12,6 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
   },
-  // Настройки для API routes
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb', // Увеличиваем лимит до 10MB для base64 изображений
-    },
-  },
   eslint: {
     // During production builds, do not run ESLint
     ignoreDuringBuilds: true,

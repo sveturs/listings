@@ -321,22 +321,17 @@ sleep 2
 
 # Запускаем production сервер
 log "🚀 Starting production server on port 3003..."
-if ! nohup yarn start -p 3003 > frontend-dev.log 2>&1 & then
-    error "Failed to start frontend server"
-    tail -50 frontend-dev.log
-    exit 1
-fi
+nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
 sleep 3
-log "✅ Frontend restarted (production mode with FRESH build)"
 
 # Проверяем что frontend действительно запустился
 sleep 5
 if ! pgrep -f "next.*3003" > /dev/null; then
     error "Frontend process not found after restart"
-    tail -50 /tmp/frontend_restart.log
+    tail -50 frontend-dev.log
     exit 1
 fi
-log "✅ Frontend process is running"
+log "✅ Frontend restarted (production mode with FRESH build)"
 
 # Clean up old dumps (keep last 3)
 log "🧹 Cleaning old dumps..."
