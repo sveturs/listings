@@ -34,6 +34,9 @@ export type TranslationModule =
   | 'subscription'; // Подписки и тарифы
 
 // Кэш для загруженных модулей
+// ⚠️ ВАЖНО: Кэш живет в памяти процесса Node.js!
+// В production режиме кэш НЕ очищается автоматически.
+// При деплое ОБЯЗАТЕЛЬНО перезапускать процесс Next.js для очистки кэша!
 const moduleCache = new Map<string, any>();
 
 /**
@@ -58,6 +61,7 @@ export async function loadMessages(
     const cacheKey = `${locale}-${mod}`;
 
     // Проверяем кэш (отключаем в development для hot reload)
+    // ⚠️ В production кэш НЕ очищается! Нужен полный перезапуск процесса для обновления переводов
     if (process.env.NODE_ENV !== 'development' && moduleCache.has(cacheKey)) {
       Object.assign(messages, moduleCache.get(cacheKey));
       continue;

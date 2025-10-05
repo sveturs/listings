@@ -253,13 +253,16 @@ fi
 
 # Kill old frontend processes before restart
 log "🔪 Killing old frontend processes..."
-# Убиваем все возможные варианты процессов Next.js
+# Убиваем ВСЕ процессы Next.js (не только на порту 3003)
+# Это необходимо т.к. старые процессы хранят кэш переводов в памяти
 pkill -9 -f "yarn dev.*3003" 2>/dev/null || true
 pkill -9 -f "yarn start.*3003" 2>/dev/null || true
 pkill -9 -f "next dev.*3003" 2>/dev/null || true
 pkill -9 -f "next start.*3003" 2>/dev/null || true
 pkill -9 -f "next-server.*3003" 2>/dev/null || true
 pkill -9 -f "node.*next.*3003" 2>/dev/null || true
+# Убиваем также старые процессы Next.js без привязки к порту
+pkill -9 -f "next-server.*v15" 2>/dev/null || true
 sleep 3
 
 # Verify port 3003 is free (более надежная проверка)
@@ -313,13 +316,23 @@ if [ "\$NEXT_AGE" -eq 0 ]; then
 fi
 log "✅ .next is fresh (created within last 2 minutes)"
 
-# Останавливаем старый процесс
-log "🔪 Stopping old frontend process..."
-lsof -ti:3003 | xargs -r kill 2>/dev/null || true
-fuser -k 3003/tcp 2>/dev/null || true
-sleep 2
+# Останавливаем старый процесс (критично для очистки кэша переводов!)
+log "🔪 Stopping ALL old Next.js processes..."
+# Убиваем по порту
+lsof -ti:3003 | xargs -r kill -9 2>/dev/null || true
+fuser -k -9 3003/tcp 2>/dev/null || true
+# Убиваем все процессы Next.js для гарантии
+pkill -9 -f "next-server" 2>/dev/null || true
+pkill -9 -f "yarn start.*3003" 2>/dev/null || true
+sleep 3
 
-# Запускаем production сервер
+# Финальная проверка что порт свободен
+if lsof -i:3003 2>/dev/null; then
+    error "Port 3003 is still occupied!"
+    exit 1
+fi
+
+# Запускаем production сервер (новый кэш переводов!)
 log "🚀 Starting production server on port 3003..."
 nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
 sleep 3
