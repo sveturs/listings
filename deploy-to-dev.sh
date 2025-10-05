@@ -288,33 +288,46 @@ log "✅ Port 3003 is free"
 log "🔄 Restarting frontend (production build)..."
 cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
 
-# Используем make dev-build-restart который делает build и запускает yarn start
-if ! timeout 300 make dev-build-restart &>/tmp/frontend_restart.log; then
-    error "Failed to restart frontend (timeout or error)"
-    tail -100 /tmp/frontend_restart.log
+# КРИТИЧНО: Удаляем старый .next чтобы не использовать недельный билд!
+log "🧹 Removing old .next build directory..."
+rm -rf .next
+log "✅ Old build removed"
 
-    # Проверяем, не занят ли порт снова
-    if grep -q "EADDRINUSE.*3003" /tmp/frontend_restart.log; then
-        error "Port 3003 was occupied during restart"
-        warn "Attempting emergency cleanup..."
-        fuser -k 3003/tcp 2>/dev/null || true
-        sleep 3
-
-        # Пробуем ещё раз
-        warn "Retrying frontend start..."
-        if timeout 120 make dev-start &>/tmp/frontend_retry.log; then
-            log "✅ Frontend started on retry"
-        else
-            error "Frontend start failed on retry too"
-            tail -50 /tmp/frontend_retry.log
-            exit 1
-        fi
-    else
-        exit 1
-    fi
-else
-    log "✅ Frontend restarted (production mode)"
+# Билд с увеличенным таймаутом (10 минут вместо 5)
+log "🏗️  Building fresh production version (timeout: 10 min)..."
+if ! timeout 600 yarn build &>/tmp/frontend_build.log; then
+    error "Failed to build frontend (timeout or error)"
+    tail -100 /tmp/frontend_build.log
+    error "BUILD IS MANDATORY - deployment aborted!"
+    error "Old .next was deleted, cannot fallback to old build"
+    exit 1
 fi
+log "✅ Frontend built successfully"
+
+# Проверяем свежесть .next (должна быть не старше 2 минут)
+NEXT_AGE=\$(find .next -maxdepth 0 -mmin -2 2>/dev/null | wc -l)
+if [ "\$NEXT_AGE" -eq 0 ]; then
+    error ".next directory is too old or missing!"
+    error "Build might have failed silently"
+    exit 1
+fi
+log "✅ .next is fresh (created within last 2 minutes)"
+
+# Останавливаем старый процесс
+log "🔪 Stopping old frontend process..."
+lsof -ti:3003 | xargs -r kill 2>/dev/null || true
+fuser -k 3003/tcp 2>/dev/null || true
+sleep 2
+
+# Запускаем production сервер
+log "🚀 Starting production server on port 3003..."
+if ! nohup yarn start -p 3003 > frontend-dev.log 2>&1 & then
+    error "Failed to start frontend server"
+    tail -50 frontend-dev.log
+    exit 1
+fi
+sleep 3
+log "✅ Frontend restarted (production mode with FRESH build)"
 
 # Проверяем что frontend действительно запустился
 sleep 5
