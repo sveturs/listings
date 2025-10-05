@@ -682,6 +682,10 @@ func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) err
 	return db.marketplaceDB.ArchiveChat(ctx, chatID, userID)
 }
 
+func (db *Database) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
+	return db.marketplaceDB.UpdateMessageTranslations(ctx, messageID, translations)
+}
+
 func (db *Database) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
 	return db.marketplaceDB.CreateMessage(ctx, msg)
 }

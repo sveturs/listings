@@ -3,7 +3,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	"backend/internal/storage"
 	userService "backend/internal/proj/users/service"
 )
 
@@ -23,6 +23,7 @@ type ChatTranslationService struct {
 	translationSvc TranslationServiceInterface
 	redisClient    *redis.Client
 	userSvc        userService.UserServiceInterface
+	storage        storage.Storage
 }
 
 // NewChatTranslationService создает новый сервис переводов чатов
@@ -30,11 +31,13 @@ func NewChatTranslationService(
 	translationSvc TranslationServiceInterface,
 	redisClient *redis.Client,
 	userSvc userService.UserServiceInterface,
+	stor storage.Storage,
 ) *ChatTranslationService {
 	return &ChatTranslationService{
 		translationSvc: translationSvc,
 		redisClient:    redisClient,
 		userSvc:        userSvc,
+		storage:        stor,
 	}
 }
 
@@ -89,6 +92,17 @@ func (s *ChatTranslationService) TranslateMessage(
 				CacheHit:       true,
 				Provider:       "claude-haiku",
 			}
+
+			// Сохраняем перевод в БД даже при cache hit
+			if s.storage != nil && message.ID > 0 {
+				err = s.storage.UpdateMessageTranslations(ctx, message.ID, message.Translations)
+				if err != nil {
+					logger.Warn().Err(err).Int("messageId", message.ID).Msg("Failed to save cached translation to DB")
+				} else {
+					logger.Debug().Int("messageId", message.ID).Msg("Cached translation saved to DB")
+				}
+			}
+
 			logger.Debug().
 				Int("messageId", message.ID).
 				Str("targetLang", targetLanguage).
@@ -141,6 +155,17 @@ func (s *ChatTranslationService) TranslateMessage(
 		TranslatedAt:   time.Now(),
 		CacheHit:       false,
 		Provider:       "claude-haiku",
+	}
+
+	// Сохраняем перевод в БД для персистентности
+	if s.storage != nil && message.ID > 0 {
+		err = s.storage.UpdateMessageTranslations(ctx, message.ID, message.Translations)
+		if err != nil {
+			logger.Warn().Err(err).Int("messageId", message.ID).Msg("Failed to save translation to DB")
+			// Не возвращаем ошибку, т.к. перевод уже выполнен и закеширован
+		} else {
+			logger.Debug().Int("messageId", message.ID).Msg("Translation saved to DB")
+		}
 	}
 
 	logger.Info().
@@ -250,28 +275,6 @@ func (s *ChatTranslationService) getCacheKey(messageID int, targetLang string) s
 	return fmt.Sprintf("chat:translation:%d:%s", messageID, targetLang)
 }
 
-// SaveTranslationToDB сохраняет перевод в БД (для персистентности)
-func (s *ChatTranslationService) SaveTranslationToDB(
-	ctx context.Context,
-	messageID int,
-	translations map[string]string,
-) error {
-	// Конвертируем в JSONB
-	translationsJSON, err := json.Marshal(translations)
-	if err != nil {
-		return fmt.Errorf("failed to marshal translations: %w", err)
-	}
-
-	logger.Debug().
-		Int("messageId", messageID).
-		Str("translations", string(translationsJSON)).
-		Msg("Translation would be saved to DB (not implemented yet)")
-
-	// TODO: Интегрировать с storage layer
-	// Временно только логируем
-
-	return nil
-}
 
 // GetUserTranslationSettings получает настройки перевода пользователя из БД
 func (s *ChatTranslationService) GetUserTranslationSettings(

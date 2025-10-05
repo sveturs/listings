@@ -125,6 +125,7 @@ type Storage interface {
 	MarkMessagesAsRead(ctx context.Context, messageIDs []int, userID int) error
 	ArchiveChat(ctx context.Context, chatID int, userID int) error
 	GetUnreadMessagesCount(ctx context.Context, userID int) (int, error)
+	UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error
 
 	// Chat attachments methods
 	CreateChatAttachment(ctx context.Context, attachment *models.ChatAttachment) error

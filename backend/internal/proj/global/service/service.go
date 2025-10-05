@@ -138,8 +138,8 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Создаем userService для chatTranslation (с доступом к storage для chat settings)
 	usersSvc := userService.NewService(authSvc, userSvc, storage)
 
-	// Инициализация сервиса переводов чата (теперь с доступом к userService)
-	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient, usersSvc.User)
+	// Инициализация сервиса переводов чата (теперь с доступом к userService и storage)
+	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient, usersSvc.User, storage)
 
 	// Установка сервиса переводов в marketplace сервис
 	marketplaceSvc.SetChatTranslationService(chatTranslationSvc)
