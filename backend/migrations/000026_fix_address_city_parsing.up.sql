@@ -64,14 +64,70 @@ SET
     address_country = extract_country_from_location(location)
 WHERE location IS NOT NULL AND location != '';
 
+-- Обновляем переводы city и country в таблице translations
+-- Используем значение из location для каждого языка
+UPDATE translations t
+SET translated_text = extract_city_from_location(
+    COALESCE(
+        (SELECT translated_text FROM translations t2
+         WHERE t2.entity_type = 'listing'
+         AND t2.entity_id = t.entity_id
+         AND t2.language = t.language
+         AND t2.field_name = 'location'
+         LIMIT 1),
+        (SELECT location FROM marketplace_listings WHERE id = t.entity_id)
+    )
+)
+WHERE t.entity_type = 'listing'
+AND t.field_name = 'city'
+AND EXISTS (
+    SELECT 1 FROM marketplace_listings ml
+    WHERE ml.id = t.entity_id
+    AND ml.location IS NOT NULL
+    AND ml.location != ''
+);
+
+UPDATE translations t
+SET translated_text = extract_country_from_location(
+    COALESCE(
+        (SELECT translated_text FROM translations t2
+         WHERE t2.entity_type = 'listing'
+         AND t2.entity_id = t.entity_id
+         AND t2.language = t.language
+         AND t2.field_name = 'location'
+         LIMIT 1),
+        (SELECT location FROM marketplace_listings WHERE id = t.entity_id)
+    )
+)
+WHERE t.entity_type = 'listing'
+AND t.field_name = 'country'
+AND EXISTS (
+    SELECT 1 FROM marketplace_listings ml
+    WHERE ml.id = t.entity_id
+    AND ml.location IS NOT NULL
+    AND ml.location != ''
+);
+
 -- Логируем результат
 DO $$
 DECLARE
-    updated_count INTEGER;
+    updated_listings INTEGER;
+    updated_translations_city INTEGER;
+    updated_translations_country INTEGER;
 BEGIN
-    SELECT COUNT(*) INTO updated_count
+    SELECT COUNT(*) INTO updated_listings
     FROM marketplace_listings
     WHERE location IS NOT NULL AND location != '';
 
-    RAISE NOTICE 'Updated % listings with corrected city/country parsing', updated_count;
+    SELECT COUNT(*) INTO updated_translations_city
+    FROM translations
+    WHERE entity_type = 'listing' AND field_name = 'city';
+
+    SELECT COUNT(*) INTO updated_translations_country
+    FROM translations
+    WHERE entity_type = 'listing' AND field_name = 'country';
+
+    RAISE NOTICE 'Updated % listings with corrected city/country parsing', updated_listings;
+    RAISE NOTICE 'Updated % city translations', updated_translations_city;
+    RAISE NOTICE 'Updated % country translations', updated_translations_country;
 END $$;

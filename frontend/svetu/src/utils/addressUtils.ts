@@ -136,8 +136,14 @@ export function getFullLocalizedAddress(
     }
   }
 
-  // Собираем полный адрес из непустых компонентов
-  const parts = [location, city, country].filter(Boolean);
+  // Если есть полный адрес в location - возвращаем его (он уже содержит город и страну)
+  // Только если location пустой - собираем из city и country
+  if (location) {
+    return location;
+  }
+
+  // Fallback: собираем из city и country если location отсутствует
+  const parts = [city, country].filter(Boolean);
   return parts.join(', ');
 }
 
