@@ -684,6 +684,10 @@ func (ts *testStorage) GetUserProfile(ctx context.Context, id int) (*models.User
 func (ts *testStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
 	return nil
 }
+
+func (ts *testStorage) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return nil
+}
 func (ts *testStorage) UpdateLastSeen(ctx context.Context, id int) error { return nil }
 func (ts *testStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	return nil, ErrNotImplemented

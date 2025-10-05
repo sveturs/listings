@@ -1414,6 +1414,19 @@ definitions:
         description: '"en"'
         type: string
     type: object
+  backend_internal_domain_models.ChatUserSettings:
+    properties:
+      auto_translate_chat:
+        type: boolean
+      chat_tone_moderation:
+        description: Модерация тона сообщений
+        type: boolean
+      preferred_language:
+        description: '"ru", "en", "sr"'
+        type: string
+      show_original_language_badge:
+        type: boolean
+    type: object
   backend_internal_domain_models.CheckLimitRequest:
     properties:
       count:
@@ -4856,6 +4869,10 @@ definitions:
         type: boolean
       created_at:
         type: string
+      settings:
+        additionalProperties: true
+        description: JSONB поле для расширяемых настроек (chat settings и др.)
+        type: object
       updated_at:
         type: string
       user_id:
@@ -32760,6 +32777,76 @@ paths:
       security:
       - BearerAuth: []
       summary: Check admin status (simple)
+      tags:
+      - users
+  /api/v1/users/chat-settings:
+    get:
+      consumes:
+      - application/json
+      description: Returns chat settings for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Chat settings
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ChatUserSettings'
+              type: object
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: users.chat.error.fetch
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Get chat settings
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates chat settings for the authenticated user
+      parameters:
+      - description: Chat settings
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/backend_internal_domain_models.ChatUserSettings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Settings updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/backend_internal_domain_models.ChatUserSettings'
+              type: object
+        "400":
+          description: users.chat.error.invalid_data or users.chat.error.invalid_language
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "401":
+          description: auth.required
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: users.chat.error.update
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      security:
+      - BearerAuth: []
+      summary: Update chat settings
       tags:
       - users
   /api/v1/users/me:

@@ -40051,6 +40051,141 @@
                 }
             }
         },
+        "/api/v1/users/chat-settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns chat settings for the authenticated user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get chat settings",
+                "responses": {
+                    "200": {
+                        "description": "Chat settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.fetch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates chat settings for the authenticated user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update chat settings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                            }
+                        }
+                    },
+                    "description": "Chat settings",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Settings updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "users.chat.error.invalid_data or users.chat.error.invalid_language",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.update",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me": {
             "get": {
                 "security": [
@@ -45361,6 +45496,25 @@
                     }
                 }
             },
+            "backend_internal_domain_models.ChatUserSettings": {
+                "type": "object",
+                "properties": {
+                    "auto_translate_chat": {
+                        "type": "boolean"
+                    },
+                    "chat_tone_moderation": {
+                        "description": "Модерация тона сообщений",
+                        "type": "boolean"
+                    },
+                    "preferred_language": {
+                        "description": "\"ru\", \"en\", \"sr\"",
+                        "type": "string"
+                    },
+                    "show_original_language_badge": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "backend_internal_domain_models.CheckLimitRequest": {
                 "type": "object",
                 "required": [
@@ -50463,6 +50617,11 @@
                     },
                     "created_at": {
                         "type": "string"
+                    },
+                    "settings": {
+                        "description": "JSONB поле для расширяемых настроек (chat settings и др.)",
+                        "type": "object",
+                        "additionalProperties": true
                     },
                     "updated_at": {
                         "type": "string"

@@ -34400,6 +34400,125 @@
                 }
             }
         },
+        "/api/v1/users/chat-settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns chat settings for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get chat settings",
+                "responses": {
+                    "200": {
+                        "description": "Chat settings",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ChatUserSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.fetch",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates chat settings for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update chat settings",
+                "parameters": [
+                    {
+                        "description": "Chat settings",
+                        "name": "settings",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/backend_internal_domain_models.ChatUserSettings"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Settings updated",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/backend_internal_domain_models.ChatUserSettings"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "users.chat.error.invalid_data or users.chat.error.invalid_language",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.update",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me": {
             "get": {
                 "security": [
@@ -39222,6 +39341,25 @@
                 "translated_to": {
                     "description": "\"en\"",
                     "type": "string"
+                }
+            }
+        },
+        "backend_internal_domain_models.ChatUserSettings": {
+            "type": "object",
+            "properties": {
+                "auto_translate_chat": {
+                    "type": "boolean"
+                },
+                "chat_tone_moderation": {
+                    "description": "Модерация тона сообщений",
+                    "type": "boolean"
+                },
+                "preferred_language": {
+                    "description": "\"ru\", \"en\", \"sr\"",
+                    "type": "string"
+                },
+                "show_original_language_badge": {
+                    "type": "boolean"
                 }
             }
         },
@@ -44327,6 +44465,11 @@
                 },
                 "created_at": {
                     "type": "string"
+                },
+                "settings": {
+                    "description": "JSONB поле для расширяемых настроек (chat settings и др.)",
+                    "type": "object",
+                    "additionalProperties": true
                 },
                 "updated_at": {
                     "type": "string"

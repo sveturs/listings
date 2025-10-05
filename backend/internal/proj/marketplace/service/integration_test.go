@@ -102,6 +102,10 @@ func (m *MockStorage) GetUserProfile(ctx context.Context, id int) (*models.UserP
 func (m *MockStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
 	return nil
 }
+
+func (m *MockStorage) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return nil
+}
 func (m *MockStorage) UpdateLastSeen(ctx context.Context, id int) error { return nil }
 func (m *MockStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	return nil, ErrNotImplemented

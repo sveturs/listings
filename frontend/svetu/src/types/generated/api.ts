@@ -35456,6 +35456,122 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/users/chat-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get chat settings
+     * @description Returns chat settings for the authenticated user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Chat settings */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+            };
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description users.chat.error.fetch */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update chat settings
+     * @description Updates chat settings for the authenticated user
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Chat settings */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+        };
+      };
+      responses: {
+        /** @description Settings updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+            };
+          };
+        };
+        /** @description users.chat.error.invalid_data or users.chat.error.invalid_language */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description users.chat.error.update */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/me': {
     parameters: {
       query?: never;
@@ -39004,6 +39120,14 @@ export interface components {
       /** @description "en" */
       translated_to?: string;
     };
+    'backend_internal_domain_models.ChatUserSettings': {
+      auto_translate_chat?: boolean;
+      /** @description Модерация тона сообщений */
+      chat_tone_moderation?: boolean;
+      /** @description "ru", "en", "sr" */
+      preferred_language?: string;
+      show_original_language_badge?: boolean;
+    };
     'backend_internal_domain_models.CheckLimitRequest': {
       count?: number;
       /** @enum {string} */
@@ -40755,6 +40879,10 @@ export interface components {
       allow_contact_requests?: boolean;
       allow_messages_from_contacts_only?: boolean;
       created_at?: string;
+      /** @description JSONB поле для расширяемых настроек (chat settings и др.) */
+      settings?: {
+        [key: string]: unknown;
+      };
       updated_at?: string;
       user_id?: number;
     };

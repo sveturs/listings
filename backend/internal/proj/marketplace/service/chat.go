@@ -26,14 +26,14 @@ const (
 )
 
 type ChatService struct {
-	storage              storage.Storage
-	notificationService  notificationService.NotificationServiceInterface
-	subscribers          sync.Map
-	statusSubscribers    sync.Map
-	onlineUsers          sync.Map
-	userLastSeen         sync.Map
-	chatTranslationSvc   *ChatTranslationService
-	userService          userService.UserServiceInterface
+	storage             storage.Storage
+	notificationService notificationService.NotificationServiceInterface
+	subscribers         sync.Map
+	statusSubscribers   sync.Map
+	onlineUsers         sync.Map
+	userLastSeen        sync.Map
+	chatTranslationSvc  *ChatTranslationService
+	userService         userService.UserServiceInterface
 }
 
 func NewChatService(storage storage.Storage, notifService notificationService.NotificationServiceInterface) *ChatService {
