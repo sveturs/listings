@@ -74,6 +74,7 @@ export class MarketplaceService {
     if (params.maxPrice !== undefined)
       searchParams.append('maxPrice', params.maxPrice.toString());
     if (params.search) searchParams.append('search', params.search);
+    if (params.locale) searchParams.append('lang', params.locale);
 
     const url = `${configManager.getApiUrl({ internal: true })}/api/v1/marketplace/search?${searchParams.toString()}`;
     console.log('MarketplaceService.search - URL:', url);

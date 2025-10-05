@@ -129,5 +129,29 @@
     "animals": "Животиње и природа",
     "food": "Храна и пиће",
     "objects": "Предмети"
+  },
+  "translation": {
+    "translate": "Преведи",
+    "showOriginal": "Прикажи оригинал",
+    "showTranslation": "Прикажи превод",
+    "translatedFrom": "Преведено са {language}",
+    "autoTranslate": "Аутоматско превођење порука",
+    "translationSettings": "Подешавања превођења",
+    "originalLanguage": "Оригинални језик",
+    "targetLanguage": "Циљни језик",
+    "translating": "Превођење...",
+    "translationError": "Превођење није успело",
+    "autoTranslateDescription": "Аутоматски преводи долазне поруке на ваш жељени језик",
+    "targetLanguageDescription": "Поруке ће бити преведене на овај језик",
+    "poweredByClaudeAI": "Преводи су покретани Claude AI технологијом",
+    "showOriginalHint": "Увек можете видети оригиналну поруку кликом на \"Прикажи оригинал\"",
+    "moderateTone": "Ублажити груб језик",
+    "moderateToneDescription": "Претварати псовке и агресивне изразе у учтиве еквиваленте, чувајући емоционални интензитет",
+    "languages": {
+      "en": "Енглески",
+      "ru": "Руски",
+      "sr": "Српски",
+      "auto": "Аутоматско препознавање"
+    }
   }
 }

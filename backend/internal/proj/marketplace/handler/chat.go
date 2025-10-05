@@ -23,14 +23,16 @@ import (
 )
 
 type ChatHandler struct {
-	services globalService.ServicesInterface
-	config   *config.Config
+	services    globalService.ServicesInterface
+	config      *config.Config
+	jwtParserMW fiber.Handler
 }
 
-func NewChatHandler(services globalService.ServicesInterface, config *config.Config) *ChatHandler {
+func NewChatHandler(services globalService.ServicesInterface, config *config.Config, jwtParserMW fiber.Handler) *ChatHandler {
 	return &ChatHandler{
-		services: services,
-		config:   config,
+		services:    services,
+		config:      config,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
@@ -237,6 +239,35 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	total := -1 // По умолчанию -1 означает, что количество неизвестно
 	// TODO: добавить метод в сервис для получения общего количества сообщений по chat_id
 	// Пока что используем -1, что заставит фронтенд определять hasMore по количеству возвращенных сообщений
+
+	// ✅ НОВЫЙ КОД: Автоматический server-side перевод сообщений
+	userSettings, err := h.services.User().GetChatSettings(c.Context(), userID)
+	if err != nil {
+		logger.Warn().Err(err).Int("userId", userID).Msg("Failed to get user chat settings")
+	} else if userSettings != nil && userSettings.AutoTranslate && userSettings.PreferredLanguage != "" {
+		logger.Debug().
+			Int("userId", userID).
+			Str("preferredLang", userSettings.PreferredLanguage).
+			Int("messagesCount", len(messages)).
+			Msg("Auto-translating messages batch")
+
+		// Конвертируем []models.MarketplaceMessage в []*models.MarketplaceMessage
+		messagePtrs := make([]*models.MarketplaceMessage, len(messages))
+		for i := range messages {
+			messagePtrs[i] = &messages[i]
+		}
+
+		// Batch перевод с использованием Redis кеша
+		err = h.services.ChatTranslation().TranslateBatch(
+			c.Context(),
+			messagePtrs,
+			userSettings.PreferredLanguage,
+			userSettings.ModerateTone,
+		)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Batch translation failed")
+		}
+	}
 
 	// Возвращаем структурированный ответ
 	response := ChatMessagesResponse{
@@ -468,9 +499,9 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 			updatedMessage.HasAttachments = true
 			updatedMessage.AttachmentsCount = len(attachments)
 
-			logger.Info().Int("attachmentsCount", len(updatedMessage.Attachments)).Msg("UploadAttachments: broadcasting message")
-			// Отправляем обновленное сообщение через WebSocket
-			h.services.Chat().BroadcastMessage(updatedMessage)
+			logger.Info().Int("attachmentsCount", len(updatedMessage.Attachments)).Msg("UploadAttachments: broadcasting message with translations")
+			// Отправляем обновленное сообщение через WebSocket с персонализированными переводами
+			h.services.Chat().BroadcastMessageWithTranslations(c.Context(), updatedMessage)
 		} else {
 			logger.Error().Err(err).Msg("UploadAttachments: error getting message by ID")
 		}
@@ -874,4 +905,113 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 			return
 		}
 	}
+}
+
+// TranslateMessage переводит конкретное сообщение на указанный язык
+// @Summary Translate a specific message
+// @Description Translates a chat message to the specified language
+// @Tags marketplace-chat
+// @Accept json
+// @Produce json
+// @Param id path int true "Message ID"
+// @Param lang query string true "Target language code (ru, en, sr)"
+// @Success 200 {object} TranslationResponse
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 401 {object} utils.ErrorResponseSwag
+// @Failure 404 {object} utils.ErrorResponseSwag
+// @Security BearerAuth
+// @Router /api/v1/marketplace/chat/messages/{id}/translation [get]
+func (h *ChatHandler) TranslateMessage(c *fiber.Ctx) error {
+	userID, _ := authMiddleware.GetUserID(c)
+	messageID, err := c.ParamsInt("id")
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidMessageId")
+	}
+
+	targetLang := c.Query("lang")
+	if targetLang == "" {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.targetLanguageRequired")
+	}
+
+	// Получаем параметр смягчения (по умолчанию true)
+	moderateTone := c.QueryBool("moderate_tone", true)
+
+	// Валидация языка
+	if !isValidLanguage(targetLang) {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "marketplace.invalidLanguage")
+	}
+
+	// Получаем сообщение
+	message, err := h.services.Storage().GetMessageByID(c.Context(), messageID)
+	if err != nil {
+		logger.Error().Err(err).Int("messageId", messageID).Msg("Failed to get message")
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "marketplace.messageNotFound")
+	}
+
+	// Проверяем права доступа (пользователь должен быть участником чата)
+	if message.SenderID != userID && message.ReceiverID != userID {
+		logger.Warn().
+			Int("userId", userID).
+			Int("messageId", messageID).
+			Int("senderId", message.SenderID).
+			Int("receiverId", message.ReceiverID).
+			Msg("Access denied - user is not a participant")
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "marketplace.accessDenied")
+	}
+
+	// Получаем сервис переводов через globalService
+	chatTranslationSvc := h.services.ChatTranslation()
+	if chatTranslationSvc == nil {
+		logger.Error().Msg("ChatTranslation service is not initialized")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationServiceNotAvailable")
+	}
+
+	// Переводим
+	err = chatTranslationSvc.TranslateMessage(c.Context(), message, targetLang, moderateTone)
+	if err != nil {
+		logger.Error().Err(err).Int("messageId", messageID).Str("targetLang", targetLang).Msg("Translation failed")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.translationError")
+	}
+
+	// Получаем переведенный текст, если он есть
+	translatedText := message.Translations[targetLang]
+
+	// Если перевод не был выполнен (например, язык совпадает), возвращаем оригинал
+	if translatedText == "" {
+		translatedText = message.Content
+		logger.Debug().
+			Int("messageId", messageID).
+			Str("sourceLang", message.OriginalLanguage).
+			Str("targetLang", targetLang).
+			Msg("Translation not needed - same language, returning original text")
+	}
+
+	// Возвращаем перевод
+	return utils.SuccessResponse(c, TranslationResponse{
+		MessageID:      messageID,
+		OriginalText:   message.Content,
+		TranslatedText: translatedText,
+		SourceLanguage: message.OriginalLanguage,
+		TargetLanguage: targetLang,
+		Metadata:       message.ChatTranslationMetadata,
+	})
+}
+
+// TranslationResponse структура ответа перевода
+type TranslationResponse struct {
+	MessageID      int                             `json:"message_id"`
+	OriginalText   string                          `json:"original_text"`
+	TranslatedText string                          `json:"translated_text"`
+	SourceLanguage string                          `json:"source_language"`
+	TargetLanguage string                          `json:"target_language"`
+	Metadata       *models.ChatTranslationMetadata `json:"metadata,omitempty"`
+}
+
+func isValidLanguage(lang string) bool {
+	validLanguages := map[string]bool{
+		"ru": true,
+		"en": true,
+		"sr": true,
+	}
+	return validLanguages[lang]
 }

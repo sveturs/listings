@@ -9,17 +9,20 @@ import (
 	authService "github.com/sveturs/auth/pkg/http/service"
 
 	"backend/internal/domain/models"
+	"backend/internal/storage"
 )
 
 type UserService struct {
 	authService *authService.AuthService
 	userService *authService.UserService
+	storage     storage.Storage
 }
 
-func NewUserService(authSvc *authService.AuthService, userSvc *authService.UserService) *UserService {
+func NewUserService(authSvc *authService.AuthService, userSvc *authService.UserService, storage storage.Storage) *UserService {
 	return &UserService{
 		authService: authSvc,
 		userService: userSvc,
+		storage:     storage,
 	}
 }
 
@@ -265,4 +268,45 @@ func (s *UserService) GetPrivacySettings(ctx context.Context, userID int) (*mode
 func (s *UserService) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
 	// TODO: Реализовать
 	return fmt.Errorf("privacy settings not implemented yet")
+}
+
+// GetChatSettings возвращает настройки чата пользователя из JSONB поля settings
+func (s *UserService) GetChatSettings(ctx context.Context, userID int) (*models.ChatUserSettings, error) {
+	// Сначала получаем privacy settings (создаст запись если не существует)
+	privacySettings, err := s.storage.GetUserPrivacySettings(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get privacy settings: %w", err)
+	}
+
+	// Парсим JSONB settings
+	settings := &models.ChatUserSettings{
+		// Defaults
+		AutoTranslate:     true,
+		PreferredLanguage: "en",
+		ShowLanguageBadge: true,
+		ModerateTone:      true,
+	}
+
+	// Если есть сохраненные настройки в JSONB
+	if privacySettings.Settings != nil {
+		if autoTranslate, ok := privacySettings.Settings["auto_translate_chat"].(bool); ok {
+			settings.AutoTranslate = autoTranslate
+		}
+		if preferredLang, ok := privacySettings.Settings["preferred_language"].(string); ok {
+			settings.PreferredLanguage = preferredLang
+		}
+		if showBadge, ok := privacySettings.Settings["show_original_language_badge"].(bool); ok {
+			settings.ShowLanguageBadge = showBadge
+		}
+		if moderateTone, ok := privacySettings.Settings["chat_tone_moderation"].(bool); ok {
+			settings.ModerateTone = moderateTone
+		}
+	}
+
+	return settings, nil
+}
+
+// UpdateChatSettings обновляет настройки чата пользователя в JSONB поле settings
+func (s *UserService) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return s.storage.UpdateChatSettings(ctx, userID, settings)
 }

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCreateAIProduct } from '@/contexts/CreateAIProductContext';
 import { storefrontAI } from '@/services/ai/storefronts.service';
+import { extractLocationFromImages } from '@/utils/exifUtils';
+import { useAddressGeocoding } from '@/hooks/useAddressGeocoding';
 
 interface ProcessViewProps {
   storefrontSlug: string;
@@ -20,11 +22,23 @@ export default function ProcessView({
   storefrontSlug: _storefrontSlug,
 }: ProcessViewProps) {
   const t = useTranslations('storefronts');
+  const locale = useLocale();
   const { state, setAIData, setView, setError, setProcessing } =
     useCreateAIProduct();
 
+  // Геокодирование для преобразования координат в адрес
+  const geocoding = useAddressGeocoding({
+    country: ['rs'],
+    language: locale,
+  });
+
   const [steps, setSteps] = useState<ProcessStep[]>([
     { id: 'analyze', label: t('analyzingImages'), status: 'pending' },
+    {
+      id: 'exif',
+      label: t('detectingLocationFromExif') || 'Определение адреса из EXIF',
+      status: 'pending',
+    },
     { id: 'category', label: t('detectingCategory'), status: 'pending' },
     { id: 'titles', label: t('generatingTitleVariants'), status: 'pending' },
     { id: 'translations', label: t('creatingTranslations'), status: 'pending' },
@@ -70,7 +84,88 @@ export default function ProcessView({
 
         updateStepStatus('analyze', 'completed', 'Image analyzed successfully');
 
-        // Step 2: Detect category
+        // Step 2: Extract location from EXIF
+        updateStepStatus('exif', 'processing');
+
+        let locationData = null;
+        const locationTranslations: Record<
+          string,
+          { address: string; city: string; region: string }
+        > = {};
+        try {
+          const exifLocation = await extractLocationFromImages(
+            state.imageFiles
+          );
+          if (exifLocation) {
+            console.log('[ProcessView] EXIF location found:', exifLocation);
+
+            // Геокодируем координаты в адрес для текущей локали
+            const geocodedAddress = await geocoding.reverseGeocode(
+              exifLocation.latitude,
+              exifLocation.longitude
+            );
+
+            console.log('[ProcessView] Geocoded address:', geocodedAddress);
+
+            if (geocodedAddress) {
+              locationData = {
+                latitude: exifLocation.latitude,
+                longitude: exifLocation.longitude,
+                address:
+                  (geocodedAddress as any).place_name ||
+                  (geocodedAddress as any).display_name ||
+                  '',
+                city: (geocodedAddress as any).address?.city || '',
+                region: (geocodedAddress as any).address?.state || '',
+                source: 'exif' as const,
+              };
+
+              // Геокодируем для всех языков (en, ru, sr)
+              const languages = ['en', 'ru', 'sr'];
+              for (const lang of languages) {
+                try {
+                  const response = await fetch(
+                    `/api/v1/gis/geocode/reverse?lat=${exifLocation.latitude}&lng=${exifLocation.longitude}&language=${lang}`
+                  );
+                  if (response.ok) {
+                    const geocoded = await response.json();
+                    const data = geocoded.data || geocoded;
+                    locationTranslations[lang] = {
+                      address: data.place_name || data.display_name || '',
+                      city:
+                        data.address?.city ||
+                        data.address_components?.city ||
+                        '',
+                      region:
+                        data.address?.state ||
+                        data.address_components?.district ||
+                        '',
+                    };
+                  }
+                } catch (err) {
+                  console.error(`Failed to geocode for ${lang}:`, err);
+                }
+              }
+
+              updateStepStatus(
+                'exif',
+                'completed',
+                `${locationData.city || 'Location'} detected`
+              );
+            } else {
+              updateStepStatus('exif', 'completed', 'No address found');
+            }
+          } else {
+            updateStepStatus('exif', 'completed', 'No GPS data in photos');
+          }
+        } catch (exifError) {
+          console.error('[ProcessView] EXIF extraction error:', exifError);
+          updateStepStatus('exif', 'completed', 'No location data available');
+        }
+
+        if (isCancelled) return;
+
+        // Step 3: Detect category
         updateStepStatus('category', 'processing');
 
         // Определение категории также на английском
@@ -143,10 +238,29 @@ export default function ProcessView({
           description: analysisResult.description,
         };
 
+        // Добавляем переводы адресов к каждому языку
+        if (Object.keys(locationTranslations).length > 0) {
+          Object.keys(translations).forEach((lang) => {
+            if (locationTranslations[lang]) {
+              (translations as any)[lang] = {
+                ...translations[lang],
+                address: locationTranslations[lang].address,
+                city: locationTranslations[lang].city,
+                region: locationTranslations[lang].region,
+              };
+            }
+          });
+        }
+
         console.log('[ProcessView] Final translations:', translations);
+        console.log('[ProcessView] Final locationData to save:', locationData);
+        console.log(
+          '[ProcessView] analysisResult.location:',
+          analysisResult.location
+        );
 
         // Update AI data in context
-        setAIData({
+        const aiDataToSave = {
           title: analysisResult.title,
           titleVariants: analysisResult.titleVariants,
           selectedTitleIndex: titleResult.bestVariantIndex || 0,
@@ -167,8 +281,14 @@ export default function ProcessView({
           condition: analysisResult.condition || 'new',
           keywords: analysisResult.keywords || [],
           translations: translations,
-          location: analysisResult.location || null,
-        });
+          location: locationData || analysisResult.location || null,
+        };
+
+        console.log(
+          '[ProcessView] Saving aiData with location:',
+          aiDataToSave.location
+        );
+        setAIData(aiDataToSave);
 
         // Small delay to show completion
         setTimeout(() => {

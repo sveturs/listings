@@ -104,6 +104,8 @@ func main() {
 			p.price, p.currency, p.sku, p.barcode, p.stock_quantity,
 			p.stock_status, p.is_active, p.attributes, p.created_at, p.updated_at,
 			p.sold_count, p.view_count,
+			p.has_individual_location, p.individual_latitude, p.individual_longitude,
+			p.individual_address, p.show_on_map, p.location_privacy,
 			c.id as cat_id, c.name as cat_name, c.slug as cat_slug
 		FROM storefront_products p
 		LEFT JOIN marketplace_categories c ON c.id = p.category_id
@@ -137,6 +139,8 @@ func main() {
 			&p.Price, &p.Currency, &p.SKU, &p.Barcode, &p.StockQuantity,
 			&p.StockStatus, &p.IsActive, &attributesJSON, &p.CreatedAt, &p.UpdatedAt,
 			&p.SoldCount, &p.ViewCount,
+			&p.HasIndividualLocation, &p.IndividualLatitude, &p.IndividualLongitude,
+			&p.IndividualAddress, &p.ShowOnMap, &p.LocationPrivacy,
 			&catID, &catName, &catSlug,
 		)
 		if err != nil {
@@ -209,6 +213,34 @@ func main() {
 			}
 			if err := varRows.Close(); err != nil {
 				fmt.Printf("Warning: failed to close variant rows: %v\n", err)
+			}
+		}
+
+		// Get product translations
+		transQuery := `
+			SELECT language, field_name, translated_text
+			FROM translations
+			WHERE entity_type = 'storefront_product' AND entity_id = $1
+			ORDER BY language, field_name
+		`
+		transRows, err := storage.Query(ctx, transQuery, p.ID)
+		if err == nil {
+			// Build translations map: {"en": {"title": "...", "description": "..."}, ...}
+			if p.Translations == nil {
+				p.Translations = make(map[string]map[string]string)
+			}
+			for transRows.Next() {
+				var lang, fieldName, translatedText string
+				err := transRows.Scan(&lang, &fieldName, &translatedText)
+				if err == nil {
+					if p.Translations[lang] == nil {
+						p.Translations[lang] = make(map[string]string)
+					}
+					p.Translations[lang][fieldName] = translatedText
+				}
+			}
+			if err := transRows.Close(); err != nil {
+				fmt.Printf("Warning: failed to close translation rows: %v\n", err)
 			}
 		}
 

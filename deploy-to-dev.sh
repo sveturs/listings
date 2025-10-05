@@ -201,8 +201,8 @@ log "✅ Database restored successfully"
 tail -5 /tmp/db_load.log | sed 's/^/  /'
 
 # Fix dirty migrations
-docker exec -i svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
-    -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" 2>/dev/null || true
+docker exec svetu-dev_db_1 psql -U svetu_dev_user -d svetu_dev_db \
+    -c "UPDATE schema_migrations SET dirty = false WHERE dirty = true;" >/dev/null 2>&1 || true
 
 # Sync Mapbox token if provided
 if [ -n "$MAPBOX_TOKEN" ]; then
@@ -221,20 +221,14 @@ if [ -n "$MAPBOX_TOKEN" ]; then
     fi
 fi
 
-# Clean Go module cache to force re-download of private repos
-log "🧹 Cleaning Go module cache..."
-cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
-debug "Current directory: \$(pwd)"
-go clean -modcache 2>/dev/null || true
-
 # Kill old backend processes before restart
+cd "$DEPLOY_DIR/backend" || { error "Failed to cd to backend dir"; exit 1; }
 log "🔪 Killing old backend processes..."
 pkill -9 -f "bin/api_dev" 2>/dev/null || true
 sleep 2
 
 # Restart backend
 log "🔄 Restarting backend..."
-debug "Running make dev-restart in \$(pwd)"
 if ! timeout 120 make dev-restart &>/tmp/backend_restart.log; then
     error "Failed to restart backend (timeout or error)"
     tail -50 /tmp/backend_restart.log
@@ -259,29 +253,85 @@ fi
 
 # Kill old frontend processes before restart
 log "🔪 Killing old frontend processes..."
-pkill -9 -f "yarn dev -p 3003" 2>/dev/null || true
+# Убиваем все возможные варианты процессов Next.js
+pkill -9 -f "yarn dev.*3003" 2>/dev/null || true
+pkill -9 -f "yarn start.*3003" 2>/dev/null || true
 pkill -9 -f "next dev.*3003" 2>/dev/null || true
-pkill -9 -f "next-server" 2>/dev/null || true
+pkill -9 -f "next start.*3003" 2>/dev/null || true
+pkill -9 -f "next-server.*3003" 2>/dev/null || true
+pkill -9 -f "node.*next.*3003" 2>/dev/null || true
 sleep 3
 
-# Verify port 3003 is free
-if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
-    warn "Port 3003 still occupied, forcing cleanup..."
+# Verify port 3003 is free (более надежная проверка)
+log "🔍 Checking if port 3003 is free..."
+PORT_CHECK_ATTEMPTS=0
+MAX_PORT_ATTEMPTS=5
+
+while netstat -tlnp 2>/dev/null | grep -q ":3003 " && [ \$PORT_CHECK_ATTEMPTS -lt \$MAX_PORT_ATTEMPTS ]; do
+    warn "Port 3003 still occupied (attempt \$((PORT_CHECK_ATTEMPTS + 1))/\$MAX_PORT_ATTEMPTS), forcing cleanup..."
     fuser -k 3003/tcp 2>/dev/null || true
     sleep 2
-fi
+    PORT_CHECK_ATTEMPTS=\$((PORT_CHECK_ATTEMPTS + 1))
+done
 
-# Restart frontend
-log "🔄 Restarting frontend..."
-cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
-debug "Current directory: \$(pwd)"
-
-if ! timeout 90 make dev-restart &>/tmp/frontend_restart.log; then
-    error "Failed to restart frontend (timeout or error)"
-    tail -50 /tmp/frontend_restart.log
+if netstat -tlnp 2>/dev/null | grep -q ":3003 "; then
+    error "Failed to free port 3003 after \$MAX_PORT_ATTEMPTS attempts"
+    warn "Processes still using port 3003:"
+    fuser -v 3003/tcp 2>&1 || true
+    warn "You may need to manually kill the process or reboot"
     exit 1
 fi
-log "✅ Frontend restarted"
+
+log "✅ Port 3003 is free"
+
+# Restart frontend with production build
+log "🔄 Restarting frontend (production build)..."
+cd "$DEPLOY_DIR/frontend/svetu" || { error "Failed to cd to frontend dir"; exit 1; }
+
+# КРИТИЧНО: Удаляем старый .next чтобы не использовать недельный билд!
+log "🧹 Removing old .next build directory..."
+rm -rf .next
+log "✅ Old build removed"
+
+# Билд с увеличенным таймаутом (10 минут вместо 5)
+log "🏗️  Building fresh production version (timeout: 10 min)..."
+if ! timeout 600 yarn build &>/tmp/frontend_build.log; then
+    error "Failed to build frontend (timeout or error)"
+    tail -100 /tmp/frontend_build.log
+    error "BUILD IS MANDATORY - deployment aborted!"
+    error "Old .next was deleted, cannot fallback to old build"
+    exit 1
+fi
+log "✅ Frontend built successfully"
+
+# Проверяем свежесть .next (должна быть не старше 2 минут)
+NEXT_AGE=\$(find .next -maxdepth 0 -mmin -2 2>/dev/null | wc -l)
+if [ "\$NEXT_AGE" -eq 0 ]; then
+    error ".next directory is too old or missing!"
+    error "Build might have failed silently"
+    exit 1
+fi
+log "✅ .next is fresh (created within last 2 minutes)"
+
+# Останавливаем старый процесс
+log "🔪 Stopping old frontend process..."
+lsof -ti:3003 | xargs -r kill 2>/dev/null || true
+fuser -k 3003/tcp 2>/dev/null || true
+sleep 2
+
+# Запускаем production сервер
+log "🚀 Starting production server on port 3003..."
+nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+sleep 3
+
+# Проверяем что frontend действительно запустился
+sleep 5
+if ! pgrep -f "next.*3003" > /dev/null; then
+    error "Frontend process not found after restart"
+    tail -50 frontend-dev.log
+    exit 1
+fi
+log "✅ Frontend restarted (production mode with FRESH build)"
 
 # Clean up old dumps (keep last 3)
 log "🧹 Cleaning old dumps..."
@@ -298,8 +348,6 @@ check_service() {
     local url=\$2
     local retries=$HEALTH_CHECK_RETRIES
     local wait=10
-
-    debug "Checking \$name at \$url"
 
     for i in \$(seq 1 \$retries); do
         HTTP_CODE=\$(curl -s -o /dev/null -w "%{http_code}" "\$url" 2>/dev/null || echo "000")
@@ -349,7 +397,7 @@ log "🎯 Deployed commit: \${NEW_COMMIT:0:8}"
 # Show process info
 log "📊 Process status:"
 info "  Backend PID: \$(pgrep -f 'bin/api_dev' || echo 'not found')"
-info "  Frontend PID: \$(pgrep -f 'yarn dev -p 3003' || echo 'not found')"
+info "  Frontend PID: \$(pgrep -f 'next.*3003' || echo 'not found')"
 
 log "🎉 Deployment completed successfully!"
 ENDSSH

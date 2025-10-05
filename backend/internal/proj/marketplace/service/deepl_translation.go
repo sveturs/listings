@@ -325,23 +325,42 @@ func (s *DeepLTranslationService) translateBatch(ctx context.Context, texts []st
 	return results, nil
 }
 
-// DetectLanguage определяет язык текста
+// DetectLanguage определяет язык текста используя Claude API (если доступен)
 func (s *DeepLTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
 	if text == "" {
 		return "", 0, fmt.Errorf("empty text")
 	}
 
-	// DeepL автоматически определяет язык при переводе
-	// Но можно использовать простую эвристику
-	// Используем функции из claude_translation.go
-	if containsCyrillic(text) {
-		if containsSerbian(text) {
-			return "sr", 0.9, nil
-		}
-		return "ru", 0.9, nil
+	// Пытаемся использовать Claude API для точного определения
+	// (требует наличия CLAUDE_API_KEY в окружении)
+	lang, conf, err := detectLanguageWithClaude(ctx, text)
+	if err == nil {
+		logger.Info().
+			Str("text", text).
+			Str("detected_lang", lang).
+			Float64("confidence", conf).
+			Msg("Language detected via Claude API")
+		return lang, conf, nil
 	}
 
-	return "en", 0.9, nil
+	// Логируем ошибку Claude API
+	logger.Warn().
+		Err(err).
+		Str("text", text).
+		Msg("Claude API language detection failed, using fallback heuristics")
+
+	// Fallback: используем эвристику
+	if containsCyrillic(text) {
+		if containsSerbian(text) {
+			logger.Debug().Str("text", text).Msg("Detected Serbian via heuristics")
+			return "sr", 0.8, nil
+		}
+		logger.Debug().Str("text", text).Msg("Detected Russian via heuristics (no Serbian-specific chars)")
+		return "ru", 0.8, nil
+	}
+
+	logger.Debug().Str("text", text).Msg("Detected English via heuristics (no Cyrillic)")
+	return "en", 0.8, nil
 }
 
 // ModerateText выполняет модерацию текста
@@ -397,4 +416,17 @@ func (s *DeepLTranslationService) GetUsage(ctx context.Context) (map[string]inte
 	}
 
 	return usage, nil
+}
+
+// TranslateWithToneModeration переводит текст (DeepL не поддерживает модерацию тона)
+func (s *DeepLTranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	// DeepL не поддерживает модерацию тона, поэтому используем обычный перевод
+	logger.Debug().Bool("moderateTone", moderateTone).Msg("DeepL doesn't support tone moderation, using regular translation")
+	return s.Translate(ctx, text, sourceLanguage, targetLanguage)
 }

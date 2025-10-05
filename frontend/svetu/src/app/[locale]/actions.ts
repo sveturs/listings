@@ -61,7 +61,7 @@ export async function getHomePageData(locale: string) {
 
     // Получаем новые объявления для featured секции через унифицированный поиск
     const featuredResponse = await apiClientServer.get(
-      '/api/v1/search?sort=created_at&sortDirection=desc&limit=1'
+      `/api/v1/search?lang=${locale}&sort=created_at&sortDirection=desc&limit=1`
     );
     console.log(
       '[getHomePageData] Featured listing response:',
@@ -103,7 +103,11 @@ export async function getHomePageData(locale: string) {
 
       featuredListing = {
         id: listing.id,
-        title: listing.title || 'Без названия',
+        title:
+          listing.translations?.[locale]?.title ||
+          listing.name ||
+          listing.title ||
+          'Без названия',
         price: listing.price
           ? `${listing.price.toLocaleString()} ${currencySymbol}`
           : 'Цена не указана',
@@ -123,7 +127,7 @@ export async function getHomePageData(locale: string) {
 
     // Получаем все объявления для анализа статистики через унифицированный поиск
     const allListingsResponse = await apiClientServer.get(
-      '/api/v1/search?limit=100'
+      `/api/v1/search?lang=${locale}&limit=100`
     );
 
     const allListings =

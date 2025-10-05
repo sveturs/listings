@@ -682,6 +682,10 @@ func (db *Database) ArchiveChat(ctx context.Context, chatID int, userID int) err
 	return db.marketplaceDB.ArchiveChat(ctx, chatID, userID)
 }
 
+func (db *Database) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
+	return db.marketplaceDB.UpdateMessageTranslations(ctx, messageID, translations)
+}
+
 func (db *Database) CreateMessage(ctx context.Context, msg *models.MarketplaceMessage) error {
 	return db.marketplaceDB.CreateMessage(ctx, msg)
 }
@@ -1142,6 +1146,10 @@ func (db *Database) GetPrivacySettings(ctx context.Context, userID int) (*models
 
 func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error {
 	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
+}
+
+func (db *Database) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
 }
 
 func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {

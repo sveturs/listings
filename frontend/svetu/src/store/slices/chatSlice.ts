@@ -316,6 +316,12 @@ const chatSlice = createSlice({
       state.pendingChatId = action.payload;
     },
 
+    // Закрытие WebSocket соединения (используется middleware)
+    closeWebSocket: (_state) => {
+      // Этот action обрабатывается в middleware
+      // Middleware закроет WebSocket и очистит таймеры
+    },
+
     // Очистка всех данных при логауте
     clearAllData: (state) => {
       // Закрываем WebSocket если он открыт
@@ -403,6 +409,12 @@ const chatSlice = createSlice({
             (sum, chat) => sum + (chat.unread_count || 0),
             0
           );
+        }
+      } else {
+        // Чат не найден в списке - пользователь не загружал страницу чата
+        // Но все равно нужно увеличить общий счетчик непрочитанных
+        if (state.currentUserId && message.sender_id !== state.currentUserId) {
+          state.unreadCount += 1;
         }
       }
 
@@ -522,16 +534,29 @@ const chatSlice = createSlice({
       .addCase(loadMessages.fulfilled, (state, action) => {
         state.isLoading = false;
         const chatId = action.payload.chatId!;
+        const requestedPage = action.payload.page;
 
-        if (!state.messagesPage[chatId] || state.messagesPage[chatId] === 1) {
+        // Создаём Set для быстрого поиска существующих ID
+        const existingIds = new Set(
+          state.messages[chatId]?.map((m) => m.id) || []
+        );
+
+        // Фильтруем только новые сообщения
+        const newMessages = action.payload.messages.filter(
+          (m) => !existingIds.has(m.id)
+        );
+
+        // Если это первая загрузка (нет сообщений) - просто устанавливаем
+        if (!state.messages[chatId] || state.messages[chatId].length === 0) {
           state.messages[chatId] = action.payload.messages;
+        } else if (requestedPage === 1) {
+          // Page 1: добавляем новые сообщения В КОНЕЦ (они свежие)
+          state.messages[chatId] = [
+            ...(state.messages[chatId] || []),
+            ...newMessages,
+          ];
         } else {
-          const existingIds = new Set(
-            state.messages[chatId]?.map((m) => m.id) || []
-          );
-          const newMessages = action.payload.messages.filter(
-            (m) => !existingIds.has(m.id)
-          );
+          // Page > 1: добавляем старые сообщения В НАЧАЛО
           state.messages[chatId] = [
             ...newMessages,
             ...(state.messages[chatId] || []),
@@ -669,6 +694,7 @@ export const {
   selectLatestChat,
   setWebSocket,
   setUserTyping,
+  closeWebSocket,
   clearAllData,
   addUploadingFile,
   updateUploadProgress,

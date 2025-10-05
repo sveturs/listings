@@ -12,11 +12,12 @@ import (
 )
 
 type Service struct {
-	Marketplace    MarketplaceServiceInterface
-	Chat           ChatServiceInterface
-	ChatAttachment ChatAttachmentServiceInterface
-	Order          *OrderService
-	UnifiedCar     *UnifiedCarService
+	Marketplace     MarketplaceServiceInterface
+	Chat            ChatServiceInterface
+	ChatAttachment  ChatAttachmentServiceInterface
+	ChatTranslation *ChatTranslationService
+	Order           *OrderService
+	UnifiedCar      *UnifiedCarService
 }
 
 func NewService(storage storage.Storage, notifService service.NotificationServiceInterface, searchWeights *config.SearchWeights, cache CacheInterface) *Service {
@@ -53,11 +54,12 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 	unifiedCarService := NewUnifiedCarService(storage, nil, carServiceConfig)
 
 	return &Service{
-		Marketplace:    NewMarketplaceService(storage, dummyTranslation, searchWeights, cache),
-		Chat:           NewChatService(storage, notifService),
-		ChatAttachment: nil, // Will be set by global service
-		Order:          orderService,
-		UnifiedCar:     unifiedCarService,
+		Marketplace:     NewMarketplaceService(storage, dummyTranslation, searchWeights, cache),
+		Chat:            NewChatService(storage, notifService),
+		ChatAttachment:  nil, // Will be set by global service
+		ChatTranslation: nil, // Will be set by global service
+		Order:           orderService,
+		UnifiedCar:      unifiedCarService,
 	}
 }
 
@@ -65,6 +67,12 @@ func NewService(storage storage.Storage, notifService service.NotificationServic
 // This is called by the global service after all dependencies are initialized
 func (s *Service) SetChatAttachmentService(attachmentService ChatAttachmentServiceInterface) {
 	s.ChatAttachment = attachmentService
+}
+
+// SetChatTranslationService sets the chat translation service
+// This is called by the global service after all dependencies are initialized
+func (s *Service) SetChatTranslationService(translationService *ChatTranslationService) {
+	s.ChatTranslation = translationService
 }
 
 // dummyTranslationService is a minimal implementation that does nothing
@@ -94,5 +102,9 @@ func (d *dummyTranslationService) ModerateText(ctx context.Context, text string,
 }
 
 func (d *dummyTranslationService) TranslateWithContext(ctx context.Context, text string, sourceLanguage string, targetLanguage string, context string, fieldName string) (string, error) {
+	return text, nil
+}
+
+func (d *dummyTranslationService) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
 	return text, nil
 }

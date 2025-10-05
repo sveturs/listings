@@ -57,6 +57,9 @@ type Storage interface {
 	// Storefront operations
 	GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error)
 
+	// Translation operations
+	SaveTranslation(ctx context.Context, translation *models.Translation) error
+
 	// Transaction support
 	BeginTx(ctx context.Context) (Transaction, error)
 
@@ -293,7 +296,50 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// Index product in OpenSearch (after transaction is committed)
+	// Save translations if provided (CRITICAL: Before indexing!)
+	if len(req.Translations) > 0 {
+		for language, fields := range req.Translations {
+			for fieldName, translatedText := range fields {
+				translation := &models.Translation{
+					EntityType:          "storefront_product",
+					EntityID:            product.ID,
+					Language:            language,
+					FieldName:           fieldName,
+					TranslatedText:      translatedText,
+					IsMachineTranslated: true,
+					IsVerified:          false,
+				}
+				if err := s.storage.SaveTranslation(ctx, translation); err != nil {
+					logger.Error().Err(err).
+						Int("product_id", product.ID).
+						Str("language", language).
+						Str("field", fieldName).
+						Msg("Failed to save translation")
+				}
+			}
+		}
+
+		// Reload product from DB to get translations and other related data
+		productWithRelations, err := s.storage.GetStorefrontProduct(ctx, storefrontID, product.ID)
+		if err != nil {
+			logger.Error().Err(err).Msgf("Failed to reload product %d after creation", product.ID)
+		} else {
+			// ОТЛАДКА: проверяем что переводы загрузились
+			if len(productWithRelations.Translations) > 0 {
+				logger.Info().
+					Int("product_id", productWithRelations.ID).
+					Interface("translations", productWithRelations.Translations).
+					Msg("DEBUG: Product reloaded with translations in CreateProduct")
+			} else {
+				logger.Warn().
+					Int("product_id", productWithRelations.ID).
+					Msg("DEBUG: Product reloaded but translations are empty in CreateProduct!")
+			}
+			product = productWithRelations
+		}
+	}
+
+	// Index product in OpenSearch (after transaction is committed and translations saved)
 	if s.searchRepo != nil {
 		go s.indexProductWithVariants(ctx, product)
 	}
@@ -455,17 +501,68 @@ func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontI
 		return nil, fmt.Errorf("failed to create product: %w", err)
 	}
 
-	// Index product in OpenSearch
-	if s.searchRepo != nil {
-		if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
-			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", product.ID)
-			// Не возвращаем ошибку, так как товар уже создан в БД
-		} else {
-			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", product.ID)
+	// Save translations if provided
+	if len(req.Translations) > 0 {
+		for language, fields := range req.Translations {
+			for fieldName, translatedText := range fields {
+				translation := &models.Translation{
+					EntityType:          "storefront_product",
+					EntityID:            product.ID,
+					Language:            language,
+					FieldName:           fieldName,
+					TranslatedText:      translatedText,
+					IsMachineTranslated: true,
+					IsVerified:          false,
+				}
+				if err := s.storage.SaveTranslation(ctx, translation); err != nil {
+					logger.Error().Err(err).
+						Int("product_id", product.ID).
+						Str("language", language).
+						Str("field", fieldName).
+						Msg("Failed to save translation")
+					// Don't fail the request if translation save fails
+				}
+			}
 		}
 	}
 
-	return product, nil
+	// Reload product from DB to get translations and other related data
+	productWithRelations, err := s.storage.GetStorefrontProduct(ctx, storefrontID, product.ID)
+	if err != nil {
+		logger.Error().Err(err).Msgf("Failed to reload product %d after creation", product.ID)
+		// Используем старый объект product без связанных данных
+		productWithRelations = product
+	} else {
+		// ОТЛАДКА: проверяем что переводы загрузились
+		if len(productWithRelations.Translations) > 0 {
+			logger.Info().
+				Int("product_id", productWithRelations.ID).
+				Interface("translations", productWithRelations.Translations).
+				Msg("DEBUG: Product reloaded with translations")
+		} else {
+			logger.Warn().
+				Int("product_id", productWithRelations.ID).
+				Msg("DEBUG: Product reloaded but translations are empty!")
+		}
+	}
+
+	// Index product in OpenSearch (with translations if loaded)
+	if s.searchRepo != nil {
+		// ОТЛАДКА: Логируем перед индексацией
+		logger.Info().
+			Int("product_id", productWithRelations.ID).
+			Bool("has_translations", len(productWithRelations.Translations) > 0).
+			Msg("DEBUG: About to index product in OpenSearch")
+
+		if err := s.searchRepo.IndexProduct(ctx, productWithRelations); err != nil {
+			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", productWithRelations.ID)
+			// Не возвращаем ошибку, так как товар уже создан в БД
+		} else {
+			logger.Info().Msgf("Successfully indexed product %d in OpenSearch", productWithRelations.ID)
+		}
+	}
+
+	return productWithRelations, nil
 }
 
 // UpdateProductForImport updates a product without ownership validation (for system imports)

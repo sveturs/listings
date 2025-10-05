@@ -129,5 +129,29 @@
     "animals": "Животные и природа",
     "food": "Еда и напитки",
     "objects": "Предметы"
+  },
+  "translation": {
+    "translate": "Перевести",
+    "showOriginal": "Показать оригинал",
+    "showTranslation": "Показать перевод",
+    "translatedFrom": "Переведено с {language}",
+    "autoTranslate": "Автоматический перевод сообщений",
+    "translationSettings": "Настройки перевода",
+    "originalLanguage": "Исходный язык",
+    "targetLanguage": "Целевой язык",
+    "translating": "Перевожу...",
+    "translationError": "Не удалось перевести",
+    "autoTranslateDescription": "Автоматически переводить входящие сообщения на ваш предпочитаемый язык",
+    "targetLanguageDescription": "Сообщения будут переведены на этот язык",
+    "poweredByClaudeAI": "Переводы работают на основе Claude AI",
+    "showOriginalHint": "Вы всегда можете посмотреть оригинальное сообщение, нажав \"Показать оригинал\"",
+    "moderateTone": "Смягчать грубый язык",
+    "moderateToneDescription": "Преобразовывать мат и агрессивные выражения в вежливые эквиваленты, сохраняя эмоциональную интенсивность",
+    "languages": {
+      "en": "Английский",
+      "ru": "Русский",
+      "sr": "Сербский",
+      "auto": "Авто-определение"
+    }
   }
 }

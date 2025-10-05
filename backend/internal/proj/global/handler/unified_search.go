@@ -75,29 +75,30 @@ type UnifiedSearchResult struct {
 
 // UnifiedSearchItem унифицированный элемент поиска
 type UnifiedSearchItem struct {
-	ID                 string                 `json:"id"`           // Уникальный ID (ml_123 или sp_456)
-	ProductType        string                 `json:"product_type"` // "marketplace" или "storefront"
-	ProductID          int                    `json:"product_id"`
-	Name               string                 `json:"name"`
-	Description        string                 `json:"description"`
-	Price              float64                `json:"price"`
-	Currency           string                 `json:"currency"`
-	Images             []UnifiedProductImage  `json:"images"`
-	Category           UnifiedCategoryInfo    `json:"category"`
-	Location           *UnifiedLocationInfo   `json:"location,omitempty"`
-	User               *UnifiedUserInfo       `json:"user,omitempty"`            // Информация о продавце
-	Storefront         *UnifiedStorefrontInfo `json:"storefront,omitempty"`      // Только для storefront товаров
-	StorefrontID       *int                   `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
-	StorefrontSlug     string                 `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
-	Score              float64                `json:"score"`
-	Highlights         map[string][]string    `json:"highlights,omitempty"`
-	ViewsCount         int                    `json:"views_count,omitempty"`         // Для расчета популярности
-	CreatedAt          *time.Time             `json:"created_at,omitempty"`          // Для расчета свежести
-	StockQuantity      *int                   `json:"stock_quantity,omitempty"`      // Остатки товара
-	StockStatus        string                 `json:"stock_status,omitempty"`        // Статус наличия
-	HasDiscount        bool                   `json:"has_discount"`                  // Есть ли скидка
-	OldPrice           *float64               `json:"old_price,omitempty"`           // Старая цена (до скидки)
-	DiscountPercentage *int                   `json:"discount_percentage,omitempty"` // Процент скидки
+	ID                 string                       `json:"id"`           // Уникальный ID (ml_123 или sp_456)
+	ProductType        string                       `json:"product_type"` // "marketplace" или "storefront"
+	ProductID          int                          `json:"product_id"`
+	Name               string                       `json:"name"`
+	Description        string                       `json:"description"`
+	Price              float64                      `json:"price"`
+	Currency           string                       `json:"currency"`
+	Images             []UnifiedProductImage        `json:"images"`
+	Category           UnifiedCategoryInfo          `json:"category"`
+	Location           *UnifiedLocationInfo         `json:"location,omitempty"`
+	User               *UnifiedUserInfo             `json:"user,omitempty"`            // Информация о продавце
+	Storefront         *UnifiedStorefrontInfo       `json:"storefront,omitempty"`      // Только для storefront товаров
+	StorefrontID       *int                         `json:"storefront_id,omitempty"`   // ID витрины для товаров маркетплейса
+	StorefrontSlug     string                       `json:"storefront_slug,omitempty"` // Slug витрины для правильного URL
+	Score              float64                      `json:"score"`
+	Highlights         map[string][]string          `json:"highlights,omitempty"`
+	ViewsCount         int                          `json:"views_count,omitempty"`         // Для расчета популярности
+	CreatedAt          *time.Time                   `json:"created_at,omitempty"`          // Для расчета свежести
+	StockQuantity      *int                         `json:"stock_quantity,omitempty"`      // Остатки товара
+	StockStatus        string                       `json:"stock_status,omitempty"`        // Статус наличия
+	HasDiscount        bool                         `json:"has_discount"`                  // Есть ли скидка
+	OldPrice           *float64                     `json:"old_price,omitempty"`           // Старая цена (до скидки)
+	DiscountPercentage *int                         `json:"discount_percentage,omitempty"` // Процент скидки
+	Translations       map[string]map[string]string `json:"translations,omitempty"`        // Переводы (локаль -> поле -> значение)
 }
 
 // UnifiedProductImage изображение товара
@@ -254,6 +255,8 @@ func (h *UnifiedSearchHandler) UnifiedSearch(c *fiber.Ctx) error {
 		params.City = city
 	}
 	if lang := c.Query("language"); lang != "" {
+		params.Language = lang
+	} else if lang := c.Query("lang"); lang != "" {
 		params.Language = lang
 	}
 
@@ -654,10 +657,11 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 				Name: product.Category.Name,
 				Slug: product.Category.Slug,
 			},
-			Location:   h.convertStorefrontLocation(product),
-			Score:      product.Score,
-			ViewsCount: product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
-			CreatedAt:  product.CreatedAt,
+			Location:     h.convertStorefrontLocation(product),
+			Score:        product.Score,
+			ViewsCount:   product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
+			CreatedAt:    product.CreatedAt,
+			Translations: product.Translations, // Добавляем переводы из OpenSearch
 		}
 
 		// Debug code removed
@@ -960,14 +964,26 @@ func (h *UnifiedSearchHandler) convertStorefrontLocation(product *storefrontOpen
 		return nil
 	}
 
-	// Для storefront products адрес берется из витрины
+	// Для storefront products адрес берется из индивидуального местоположения или витрины
 	location := &UnifiedLocationInfo{
 		City:    product.City,
 		Country: product.Country,
 	}
 
-	// Адрес как простая строка (не мультиязычная)
-	if product.Address != "" {
+	// Заполняем мультиязычные адреса из translations (если есть)
+	// Формат: Translations[locale][field] = value
+	// Например: Translations["ru"]["address"] = "Адрес на русском"
+	if len(product.Translations) > 0 {
+		location.AddressMultilingual = make(map[string]string)
+		for lang, fields := range product.Translations {
+			if address, ok := fields["address"]; ok && address != "" {
+				location.AddressMultilingual[lang] = address
+			}
+		}
+	}
+
+	// Если мультиязычных адресов нет, но есть основной адрес
+	if len(location.AddressMultilingual) == 0 && product.Address != "" {
 		location.AddressMultilingual = map[string]string{
 			"default": product.Address,
 		}

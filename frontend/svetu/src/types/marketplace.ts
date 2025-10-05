@@ -154,6 +154,7 @@ export interface MarketplaceSearchParams {
   minPrice?: number;
   maxPrice?: number;
   search?: string;
+  locale?: string;
 }
 
 export interface ListingCardData {

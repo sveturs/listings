@@ -3,12 +3,13 @@
 import { MarketplaceMessage } from '@/types/chat';
 import { format } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { ChatAttachments } from '@/components/Chat/ChatAttachments';
 import { useChat } from '@/hooks/useChat';
 import DOMPurify from 'isomorphic-dompurify';
 import Image from 'next/image';
+import { useState } from 'react';
 
 // Динамически импортируем AnimatedEmoji, чтобы избежать проблем с SSR
 const AnimatedEmoji = dynamic(() => import('./AnimatedEmoji'), {
@@ -77,8 +78,27 @@ const getInitials = (name: string) => {
 
 export default function MessageItem({ message, isOwn }: MessageItemProps) {
   const locale = useLocale();
+  const t = useTranslations('chat');
   const isEmojiOnly = isOnlyEmoji(message.content);
   const { deleteAttachment } = useChat();
+
+  // ✅ УПРОЩЕНО: Просто показываем готовый перевод из backend (БЕЗ API запросов!)
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  // Проверяем готовый перевод из backend
+  const hasTranslation = message.translations && message.translations[locale];
+
+  // Отображаемый текст:
+  // - Если это своё сообщение (isOwn), всегда показываем оригинал
+  // - Если чужое сообщение, показываем перевод (если есть) или оригинал
+  const displayText = isOwn
+    ? message.content
+    : showOriginal
+      ? message.content
+      : hasTranslation || message.content;
+
+  // Кнопка переключения только если есть перевод
+  const shouldShowToggleButton = !isOwn && !isEmojiOnly && hasTranslation;
 
   const formatTime = (date: string) => {
     return format(new Date(date), 'HH:mm', {
@@ -143,7 +163,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
               <p
                 className="whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(message.content, {
+                  __html: DOMPurify.sanitize(displayText, {
                     ALLOWED_TAGS: [],
                     KEEP_CONTENT: true,
                   }),
@@ -192,19 +212,35 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                       </span>
                     )
                   ) : (
-                    <p className="whitespace-pre-wrap">
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(message.content, {
-                            ALLOWED_TAGS: [],
-                            KEEP_CONTENT: true,
-                          }),
-                        }}
-                      />
-                    </p>
+                    <>
+                      <p className="whitespace-pre-wrap">
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(displayText, {
+                              ALLOWED_TAGS: [],
+                              KEEP_CONTENT: true,
+                            }),
+                          }}
+                        />
+                      </p>
+                    </>
                   )}
                 </div>
               )}
+
+            {/* ✅ УПРОЩЕНО: Кнопка только для переключения (БЕЗ API!) */}
+            {shouldShowToggleButton && (
+              <div className="mt-1 flex items-center gap-2">
+                <button
+                  onClick={() => setShowOriginal(!showOriginal)}
+                  className="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content/80 opacity-60 hover:opacity-100 transition-opacity"
+                >
+                  {showOriginal
+                    ? t('translation.showTranslation')
+                    : t('translation.showOriginal')}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -7,6 +7,8 @@ import {
   ChatListResponse,
   MessagesResponse,
   ChatAttachment,
+  TranslationResponse,
+  GetTranslationParams,
 } from '@/types/chat';
 
 class ChatService {
@@ -373,6 +375,23 @@ class ChatService {
     });
   }
 
+  // Получить перевод сообщения
+  async getMessageTranslation(
+    params: GetTranslationParams
+  ): Promise<TranslationResponse> {
+    // Получаем настройку смягчения из localStorage (по умолчанию true)
+    const moderateTone =
+      localStorage.getItem('chat_tone_moderation') !== 'false';
+
+    const response = await this.request<{
+      data: TranslationResponse;
+      success: boolean;
+    }>(
+      `/messages/${params.messageId}/translation?lang=${params.language}&moderate_tone=${moderateTone}`
+    );
+    return response.data || (response as unknown as TranslationResponse);
+  }
+
   // WebSocket соединение
   async connectWebSocket(
     onMessage: (event: MessageEvent) => void
@@ -393,11 +412,30 @@ class ChatService {
 
       // Определяем WebSocket URL на основе текущего протокола
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
 
       // Для development используем backend порт напрямую
       const isDevelopment = process.env.NODE_ENV === 'development';
-      const wsHost = isDevelopment ? 'localhost:3000' : host;
+
+      // Получаем WebSocket URL из переменной окружения или используем дефолтный хост
+      let wsHost: string;
+      if (isDevelopment) {
+        wsHost = 'localhost:3000';
+      } else {
+        // На production используем NEXT_PUBLIC_WEBSOCKET_URL или выводим из API URL
+        const wsUrlEnv = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        if (wsUrlEnv) {
+          // Извлекаем хост из wss://devapi.svetu.rs
+          wsHost = wsUrlEnv.replace(/^wss?:\/\//, '');
+        } else if (apiUrl) {
+          // Извлекаем хост из https://devapi.svetu.rs
+          wsHost = apiUrl.replace(/^https?:\/\//, '');
+        } else {
+          // Fallback на текущий хост (не должно случиться)
+          wsHost = window.location.host;
+        }
+      }
 
       // Добавляем токен в query параметр
       const wsUrl = `${protocol}//${wsHost}/ws/chat?token=${token}`;
@@ -455,6 +493,54 @@ class ChatService {
     };
 
     return ws;
+  }
+
+  // ✅ НОВЫЕ МЕТОДЫ: Получить настройки чата пользователя
+  async getChatSettings(): Promise<{
+    auto_translate_chat: boolean;
+    preferred_language: 'ru' | 'en' | 'sr';
+    show_original_language_badge: boolean;
+    chat_tone_moderation: boolean;
+  }> {
+    // Используем прямой fetch к /api/v2/users/chat-settings (через BFF proxy)
+    const response = await fetch('/api/v2/users/chat-settings', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get chat settings');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  // Обновить настройки чата пользователя
+  async updateChatSettings(settings: {
+    auto_translate_chat: boolean;
+    preferred_language: 'ru' | 'en' | 'sr';
+    show_original_language_badge: boolean;
+    chat_tone_moderation: boolean;
+  }): Promise<void> {
+    const csrfToken = await this.getCsrfToken();
+
+    const response = await fetch('/api/v2/users/chat-settings', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update chat settings');
+    }
   }
 }
 

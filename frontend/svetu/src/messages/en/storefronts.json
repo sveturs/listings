@@ -243,6 +243,8 @@
     "low_stock": "Low Stock"
   },
   "variants": {
+    "selectOption": "Select {attribute}",
+    "itemsAvailable": "{count, plural, =0 {Out of stock} one {# item available} other {# items available}}",
     "outOfStock": "Out Of Stock",
     "lowStock": "Low Stock",
     "inStock": "In Stock",
@@ -318,6 +320,7 @@
     "salesByAttribute": "Sales By Attribute"
   },
   "analyzingImages": "Analyzing images",
+  "detectingLocationFromExif": "Detecting location from EXIF photo metadata",
   "detectingCategory": "Detecting category",
   "generatingTitleVariants": "Generating title variants",
   "creatingTranslations": "Creating translations",
@@ -587,6 +590,7 @@
   "locationDescription": "Specify where the product is located for buyers",
   "locationType": "Location Type",
   "useStorefrontLocation": "Use storefront address",
+  "useExifLocation": "Use address from photo metadata",
   "useIndividualLocation": "Specify individual address",
   "individualLocationExample": "Product is in warehouse or another location",
   "storefrontLocationExample": "Product is in the store",

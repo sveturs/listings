@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -283,22 +284,104 @@ func (s *ClaudeTranslationService) TranslateEntityFields(ctx context.Context, so
 	return result, nil
 }
 
-// DetectLanguage определяет язык текста
+// DetectLanguage определяет язык текста используя Claude API
 func (s *ClaudeTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
 	if text == "" {
 		return "", 0, fmt.Errorf("empty text")
 	}
 
-	// Простая эвристика для определения языка
-	// Можно улучшить, используя Claude для определения языка
-	if containsCyrillic(text) {
-		if containsSerbian(text) {
-			return "sr", 0.9, nil
-		}
-		return "ru", 0.9, nil
+	// Используем Claude для точного определения языка
+	prompt := fmt.Sprintf(`Determine the language of the following text.
+Respond with ONLY the ISO 639-1 language code (sr for Serbian, ru for Russian, en for English).
+Do not include any explanations, just the two-letter code.
+
+Text:
+%s`, text)
+
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 10, // Нужно всего 2 символа
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
 	}
 
-	return "en", 0.9, nil
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to marshal detect language request")
+		// Fallback to heuristic
+		return s.detectLanguageHeuristic(text)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonData))
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to create detect language request")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", s.apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to execute detect language request")
+		return s.detectLanguageHeuristic(text)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to read detect language response")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		logger.Warn().Err(err).Msg("Failed to unmarshal detect language response")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	if len(claudeResp.Content) == 0 {
+		logger.Warn().Msg("Empty detect language response from Claude")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	// Получаем код языка и очищаем от пробелов
+	detectedLang := strings.TrimSpace(strings.ToLower(claudeResp.Content[0].Text))
+
+	// Валидация: проверяем что это один из поддерживаемых языков
+	supportedLangs := map[string]bool{
+		"sr": true,
+		"ru": true,
+		"en": true,
+	}
+
+	if !supportedLangs[detectedLang] {
+		logger.Warn().Str("detected", detectedLang).Msg("Unsupported language detected, using heuristic")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	logger.Debug().
+		Str("text", text[:min(50, len(text))]).
+		Str("detected", detectedLang).
+		Msg("Language detected successfully via Claude API")
+
+	return detectedLang, 0.95, nil
+}
+
+// detectLanguageHeuristic - fallback эвристика для определения языка
+func (s *ClaudeTranslationService) detectLanguageHeuristic(text string) (string, float64, error) {
+	if containsCyrillic(text) {
+		if containsSerbian(text) {
+			return "sr", 0.8, nil
+		}
+		return "ru", 0.8, nil
+	}
+	return "en", 0.8, nil
 }
 
 // ModerateText выполняет модерацию текста
@@ -395,4 +478,220 @@ func getLanguageName(code string) string {
 		return name
 	}
 	return code
+}
+
+// TranslateWithToneModeration переводит текст с опциональным смягчением тона
+func (s *ClaudeTranslationService) TranslateWithToneModeration(
+	ctx context.Context,
+	text string,
+	sourceLanguage string,
+	targetLanguage string,
+	moderateTone bool,
+) (string, error) {
+	if text == "" {
+		return "", nil
+	}
+
+	var prompt string
+
+	// Особый случай: одинаковый язык + модерация (смягчение без перевода)
+	switch {
+	case sourceLanguage == targetLanguage && moderateTone:
+		prompt = fmt.Sprintf(`You are a professional text moderator for %s language.
+
+CRITICAL RULES:
+1. Return ONLY the moderated text - nothing else
+2. NO explanations, NO apologies, NO meta-commentary
+3. NO phrases like "I apologize", "However", "I can offer"
+4. Keep the SAME language (%s)
+5. If the text contains profanity or offensive language, replace it with polite equivalents while preserving the emotional intensity and meaning
+
+Examples for Russian:
+- "Какого хуя?" → "Что происходит?" (surprised, confused)
+- "Это охуенно круто!" → "Это невероятно круто!" (very excited)
+- "Перестань быть мудаком" → "Перестань так себя вести" (frustrated)
+
+Examples for English:
+- "What the fuck?" → "What's going on?" (surprised)
+- "This is fucking great!" → "This is really great!" (excited)
+- "Stop being an asshole" → "Please be more considerate" (frustrated)
+
+Examples for Serbian:
+- "Шта, бре?" → "Шта се дешава?" (surprised)
+- "Ово је јебено одлично!" → "Ово је невероватно одлично!" (excited)
+
+REMEMBER: Output ONLY the moderated text in %s. Do not add quotes, formatting, or any additional content.
+
+Text to moderate:
+%s`, getLanguageName(targetLanguage), getLanguageName(targetLanguage), getLanguageName(targetLanguage), text)
+	case moderateTone:
+		// Промпт с модерацией тона И переводом
+		prompt = fmt.Sprintf(`You are a professional translator. Your task is to translate text from %s to %s.
+
+CRITICAL RULES:
+1. Return ONLY the translated text - nothing else
+2. NO explanations, NO apologies, NO meta-commentary
+3. NO phrases like "I apologize", "However", "I can offer"
+4. If the text contains profanity or offensive language, translate it to a polite equivalent while preserving the emotional intensity
+
+Examples of correct translations:
+- "What the fuck?" → "Что происходит?" (Russian) / "What's going on?" (English)
+- "This is fucking great!" → "Это невероятно круто!" (Russian) / "This is really great!" (English)
+- "Stop being an asshole" → "Перестань так себя вести" (Russian) / "Please be more considerate" (English)
+
+REMEMBER: Output ONLY the translated text. Do not add quotes, formatting, or any additional content.
+
+Text to translate:
+%s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
+	default:
+		// Обычный промпт без модерации
+		prompt = fmt.Sprintf(`Translate the following text from %s to %s.
+Return ONLY the translated text without any explanations or additional content.
+Do not add quotes or any formatting.
+
+Text to translate:
+%s`, getLanguageName(sourceLanguage), getLanguageName(targetLanguage), text)
+	}
+
+	// Создаем запрос к Claude API
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 1024,
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+	}
+
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", s.apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to call Claude API: %w", err)
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("claude API error: status %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if claudeResp.Error.Message != "" {
+		return "", fmt.Errorf("claude API error: %s", claudeResp.Error.Message)
+	}
+
+	if len(claudeResp.Content) > 0 && claudeResp.Content[0].Type == "text" {
+		return strings.TrimSpace(claudeResp.Content[0].Text), nil
+	}
+
+	return "", fmt.Errorf("unexpected Claude API response format")
+}
+
+// detectLanguageWithClaude - глобальная helper функция для определения языка через Claude API
+// Используется всеми translation провайдерами для точного определения языка
+func detectLanguageWithClaude(ctx context.Context, text string) (string, float64, error) {
+	// Получаем API ключ из окружения
+	apiKey := os.Getenv("CLAUDE_API_KEY")
+	if apiKey == "" {
+		return "", 0, fmt.Errorf("CLAUDE_API_KEY not set")
+	}
+
+	// Создаем временный HTTP клиент
+	httpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Промпт для определения языка
+	prompt := fmt.Sprintf(`Determine the language of the following text.
+Respond with ONLY the ISO 639-1 language code (sr for Serbian, ru for Russian, en for English).
+Do not include any explanations, just the two-letter code.
+
+Text:
+%s`, text)
+
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 10,
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		return "", 0, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if len(claudeResp.Content) == 0 {
+		return "", 0, fmt.Errorf("empty response from Claude")
+	}
+
+	// Получаем код языка и очищаем
+	detectedLang := strings.TrimSpace(strings.ToLower(claudeResp.Content[0].Text))
+
+	// Валидация
+	supportedLangs := map[string]bool{
+		"sr": true,
+		"ru": true,
+		"en": true,
+	}
+
+	if !supportedLangs[detectedLang] {
+		return "", 0, fmt.Errorf("unsupported language detected: %s", detectedLang)
+	}
+
+	return detectedLang, 0.95, nil
 }

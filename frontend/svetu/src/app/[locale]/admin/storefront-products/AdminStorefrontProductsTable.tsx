@@ -304,6 +304,7 @@ export default function AdminStorefrontProductsTable() {
 
       if (response.data) {
         await fetchProducts();
+        router.refresh(); // Инвалидировать серверный кеш
         setDeleteModalOpen(false);
         setProductToDelete(null);
       }
@@ -361,6 +362,7 @@ export default function AdminStorefrontProductsTable() {
       // Очищаем выбранные товары и обновляем список
       setSelectedProducts(new Set());
       await fetchProducts();
+      router.refresh(); // Инвалидировать серверный кеш
     } catch (error) {
       console.error('Error during bulk deactivate:', error);
     }
@@ -411,6 +413,7 @@ export default function AdminStorefrontProductsTable() {
       // Очищаем выбранные товары и обновляем список
       setSelectedProducts(new Set());
       await fetchProducts();
+      router.refresh(); // Инвалидировать серверный кеш
     } catch (error) {
       console.error('Error during bulk delete:', error);
     }
@@ -434,6 +437,7 @@ export default function AdminStorefrontProductsTable() {
 
       if (response.data) {
         await fetchProducts();
+        router.refresh(); // Инвалидировать серверный кеш
       }
     } catch (error) {
       console.error('Error toggling product status:', error);

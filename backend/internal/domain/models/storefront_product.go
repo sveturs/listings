@@ -39,6 +39,12 @@ type StorefrontProduct struct {
 	Images   []StorefrontProductImage   `json:"images" db:"-"`
 	Category *MarketplaceCategory       `json:"category,omitempty" db:"-"`
 	Variants []StorefrontProductVariant `json:"variants,omitempty" db:"-"`
+
+	// Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}}
+	Translations map[string]map[string]string `json:"translations,omitempty" db:"-"`
+
+	// AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"}
+	AddressTranslations map[string]string `json:"address_translations,omitempty" db:"-"`
 }
 
 // StorefrontProductImage represents an image of a storefront product
@@ -254,6 +260,9 @@ type CreateProductRequest struct {
 	HasVariants     bool                  `json:"has_variants"`
 	Variants        []CreateVariantInline `json:"variants,omitempty" validate:"omitempty,dive"`
 	VariantSettings *VariantSettings      `json:"variant_settings,omitempty"`
+
+	// Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}}
+	Translations map[string]map[string]string `json:"translations,omitempty"`
 }
 
 // UpdateProductRequest represents a request to update a product

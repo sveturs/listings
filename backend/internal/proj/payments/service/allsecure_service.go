@@ -28,9 +28,18 @@ const (
 	PaymentStatusCanceled  = "canceled"
 )
 
+// AllSecureClientInterface определяет интерфейс для AllSecure клиента
+type AllSecureClientInterface interface {
+	Preauthorize(ctx context.Context, req allsecure.TransactionRequest) (*allsecure.TransactionResponse, error)
+	Capture(ctx context.Context, uuid string, amount string) (*allsecure.TransactionResponse, error)
+	Refund(ctx context.Context, uuid string, amount string) (*allsecure.TransactionResponse, error)
+	Debit(ctx context.Context, req allsecure.TransactionRequest) (*allsecure.TransactionResponse, error)
+	Void(ctx context.Context, uuid string) (*allsecure.TransactionResponse, error)
+}
+
 // AllSecureService представляет сервис для работы с AllSecure
 type AllSecureService struct {
-	client         *allsecure.Client
+	client         AllSecureClientInterface
 	repository     repository.PaymentRepositoryInterface
 	userRepo       UserRepositoryInterface
 	listingRepo    ListingRepositoryInterface

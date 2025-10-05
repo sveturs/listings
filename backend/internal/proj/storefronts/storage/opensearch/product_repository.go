@@ -67,7 +67,9 @@ func (r *ProductRepository) BulkIndexProducts(ctx context.Context, products []*m
 	docs := make([]map[string]interface{}, 0, len(products))
 	for _, product := range products {
 		doc := r.productToDoc(product)
-		// ID уже добавлен в productToDoc
+		// BulkIndex использует doc["id"] как _id документа в OpenSearch
+		// Поэтому устанавливаем правильный формат sp_XXX
+		doc["id"] = fmt.Sprintf("sp_%d", product.ID)
 		docs = append(docs, doc)
 	}
 
@@ -88,15 +90,14 @@ func (r *ProductRepository) UpdateProduct(ctx context.Context, product *models.S
 
 // productToDoc преобразует модель товара витрины в документ для индексации
 func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[string]interface{} {
-	productID := fmt.Sprintf("sp_%d", product.ID)
-
 	doc := map[string]interface{}{
-		"id":             productID, // ID в формате sp_XXX для унифицированного поиска
+		"id":             product.ID, // Числовой ID для совместимости с типом integer
 		"product_id":     product.ID,
 		"product_type":   "storefront",
 		"storefront_id":  product.StorefrontID,
 		"category_id":    product.CategoryID,
 		"name":           product.Name,
+		"title":          product.Name, // Добавляем title как алиас для name для совместимости с marketplace listings
 		"name_lowercase": strings.ToLower(product.Name),
 		"description":    product.Description,
 		"price":          product.Price,
@@ -105,6 +106,7 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		"barcode":        product.Barcode,
 		"stock_status":   product.StockStatus,
 		"is_active":      product.IsActive,
+		"is_storefront":  true,                        // Добавляем флаг что это товар витрины
 		"views_count":    product.ViewCount,           // Добавляем счетчик просмотров для единообразия с marketplace
 		"sold_count":     product.SoldCount,           // Добавляем количество продаж
 		"status":         r.getProductStatus(product), // Устанавливаем статус на основе реального состояния товара
@@ -369,6 +371,82 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 		}
 	} else {
 		doc["ai_generated"] = false
+	}
+
+	// Переводы из таблицы translations (новая архитектура)
+	if len(product.Translations) > 0 {
+		logger.Info().
+			Int("product_id", product.ID).
+			Interface("translations", product.Translations).
+			Msg("DEBUG: productToDoc() - Adding translations to document")
+
+		doc["translations"] = product.Translations
+		// Индексируем переводы для full-text search
+		for lang, fields := range product.Translations {
+			if title, ok := fields["title"]; ok && title != "" {
+				doc[fmt.Sprintf("name_%s", lang)] = title
+			}
+			if description, ok := fields["description"]; ok && description != "" {
+				doc[fmt.Sprintf("description_%s", lang)] = description
+			}
+		}
+	} else {
+		logger.Warn().
+			Int("product_id", product.ID).
+			Bool("is_nil", product.Translations == nil).
+			Int("len", len(product.Translations)).
+			Msg("DEBUG: productToDoc() - NO translations to index!")
+	}
+
+	// ========== LOCATION & ADDRESS DATA ==========
+	// Добавляем координаты для geo_point поиска в поле location (как в mapping)
+	if product.IndividualLatitude != nil && product.IndividualLongitude != nil {
+		doc["location"] = map[string]interface{}{
+			"lat": *product.IndividualLatitude,
+			"lon": *product.IndividualLongitude,
+		}
+		logger.Debug().
+			Int("product_id", product.ID).
+			Float64("lat", *product.IndividualLatitude).
+			Float64("lon", *product.IndividualLongitude).
+			Msg("Added location coordinates to OpenSearch document")
+	} else {
+		doc["location"] = nil
+		logger.Debug().
+			Int("product_id", product.ID).
+			Msg("No individual location coordinates for product")
+	}
+
+	// Добавляем основной адрес
+	if product.IndividualAddress != nil && *product.IndividualAddress != "" {
+		doc["address"] = *product.IndividualAddress
+		logger.Debug().
+			Int("product_id", product.ID).
+			Str("address", *product.IndividualAddress).
+			Msg("Added address to OpenSearch document")
+	} else {
+		doc["address"] = ""
+	}
+
+	// Добавляем настройки приватности и видимости
+	if product.LocationPrivacy != nil {
+		doc["location_privacy"] = *product.LocationPrivacy
+	} else {
+		doc["location_privacy"] = "exact"
+	}
+	doc["show_on_map"] = product.ShowOnMap
+	doc["has_individual_location"] = product.HasIndividualLocation
+
+	// Добавляем мультиязычные адреса (если есть)
+	if len(product.AddressTranslations) > 0 {
+		for lang, address := range product.AddressTranslations {
+			doc[fmt.Sprintf("address_%s", lang)] = address
+		}
+		logger.Debug().
+			Int("product_id", product.ID).
+			Int("translations_count", len(product.AddressTranslations)).
+			Interface("translations", product.AddressTranslations).
+			Msg("Added address translations to OpenSearch document")
 	}
 
 	return doc
@@ -850,7 +928,7 @@ func (r *ProductRepository) buildSort(params *ProductSearchParams) []map[string]
 
 	// Всегда добавляем ID для стабильной сортировки
 	sort = append(sort, map[string]interface{}{
-		"product_id": map[string]interface{}{
+		"id": map[string]interface{}{
 			"order": "asc",
 		},
 	})
@@ -1287,6 +1365,50 @@ func (r *ProductRepository) parseProductSource(source map[string]interface{}, it
 		item.Category = info
 	}
 
+	// Переводы (AI translations) - старая архитектура
+	if translations, ok := source["ai_translations"].(map[string]interface{}); ok {
+		item.Translations = make(map[string]map[string]string)
+		for lang, translation := range translations {
+			if translationMap, ok := translation.(map[string]interface{}); ok {
+				item.Translations[lang] = make(map[string]string)
+				if title, ok := translationMap["title"].(string); ok {
+					item.Translations[lang]["title"] = title
+				}
+				if description, ok := translationMap["description"].(string); ok {
+					item.Translations[lang]["description"] = description
+				}
+			}
+		}
+	}
+
+	// Переводы из таблицы translations (новая архитектура) - приоритет выше
+	if translations, ok := source["translations"].(map[string]interface{}); ok {
+		if item.Translations == nil {
+			item.Translations = make(map[string]map[string]string)
+		}
+		for lang, translation := range translations {
+			if translationMap, ok := translation.(map[string]interface{}); ok {
+				item.Translations[lang] = make(map[string]string)
+				if title, ok := translationMap["title"].(string); ok {
+					item.Translations[lang]["title"] = title
+				}
+				if description, ok := translationMap["description"].(string); ok {
+					item.Translations[lang]["description"] = description
+				}
+				// Добавляем поддержку перевода адреса
+				if address, ok := translationMap["address"].(string); ok {
+					item.Translations[lang]["address"] = address
+				}
+				if city, ok := translationMap["city"].(string); ok {
+					item.Translations[lang]["city"] = city
+				}
+				if region, ok := translationMap["region"].(string); ok {
+					item.Translations[lang]["region"] = region
+				}
+			}
+		}
+	}
+
 	// Атрибуты
 	if attributes, ok := source["attributes"].([]interface{}); ok {
 		for _, attr := range attributes {
@@ -1549,13 +1671,44 @@ const storefrontProductMapping = `{
       },
       "category_path": {"type": "text"},
       "location": {"type": "geo_point"},
+      "address": {
+        "type": "text",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_en": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_ru": {
+        "type": "text",
+        "analyzer": "russian_analyzer",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "address_sr": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": {"type": "keyword", "ignore_above": 256}
+        }
+      },
+      "location_privacy": {"type": "keyword"},
+      "show_on_map": {"type": "boolean"},
+      "has_individual_location": {"type": "boolean"},
       "city": {"type": "text"},
       "country": {"type": "keyword"},
       "search_keywords": {"type": "text"},
       "popularity_score": {"type": "float"},
       "quality_score": {"type": "float"},
       "created_at": {"type": "date"},
-      "updated_at": {"type": "date"}
+      "updated_at": {"type": "date"},
+      "translations": {"type": "object", "enabled": true}
     }
   },
   "settings": {

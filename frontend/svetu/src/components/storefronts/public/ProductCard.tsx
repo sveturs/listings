@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import SafeImage from '@/components/SafeImage';
 import AddToCartButton from '@/components/cart/AddToCartButton';
 import type { components } from '@/types/generated/api';
+import { MapPin } from 'lucide-react';
+import {
+  formatAddressWithPrivacy,
+  getFullLocalizedAddress,
+} from '@/utils/addressUtils';
 
 type StorefrontProduct = components['schemas']['backend_internal_domain_models.StorefrontProduct'];
 
@@ -14,12 +19,13 @@ interface ProductCardProps {
   viewMode?: 'grid' | 'list';
 }
 
-export default function ProductCard({ 
-  product, 
-  storefrontId, 
-  viewMode = 'grid' 
+export default function ProductCard({
+  product,
+  storefrontId,
+  viewMode = 'grid'
 }: ProductCardProps) {
   const t = useTranslations('storefronts');
+  const locale = useLocale();
 
   const mainImage = product.images?.find(img => img.is_default) || product.images?.[0];
   
@@ -59,6 +65,19 @@ export default function ProductCard({
                 <p className="text-sm text-base-content/70 line-clamp-2 mt-1">
                   {product.description}
                 </p>
+              )}
+
+              {/* Location */}
+              {product.has_individual_location && product.translations && (
+                <div className="flex items-center gap-1 text-xs text-base-content/60 mt-1">
+                  <MapPin className="w-3 h-3" />
+                  <span>
+                    {formatAddressWithPrivacy(
+                      getFullLocalizedAddress(product as any, locale),
+                      product.location_privacy as any
+                    )}
+                  </span>
+                </div>
               )}
 
               <div className="flex items-center gap-4 mt-2">
@@ -140,6 +159,19 @@ export default function ProductCard({
           <p className="text-sm text-base-content/70 line-clamp-2">
             {product.description}
           </p>
+        )}
+
+        {/* Location */}
+        {product.has_individual_location && product.translations && (
+          <div className="flex items-center gap-1 text-xs text-base-content/60 mt-1">
+            <MapPin className="w-3 h-3" />
+            <span>
+              {formatAddressWithPrivacy(
+                getFullLocalizedAddress(product as any, locale),
+                product.location_privacy as any
+              )}
+            </span>
+          </div>
         )}
 
         {/* Price */}

@@ -21198,6 +21198,82 @@
                 }
             }
         },
+        "/api/v1/marketplace/chat/messages/{id}/translation": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Translates a chat message to the specified language",
+                "tags": [
+                    "marketplace-chat"
+                ],
+                "summary": "Translate a specific message",
+                "parameters": [
+                    {
+                        "description": "Message ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Target language code (ru, en, sr)",
+                        "name": "lang",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/internal_proj_marketplace_handler.TranslationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/chats/{chat_id}/archive": {
             "post": {
                 "security": [
@@ -39975,6 +40051,141 @@
                 }
             }
         },
+        "/api/v1/users/chat-settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns chat settings for the authenticated user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get chat settings",
+                "responses": {
+                    "200": {
+                        "description": "Chat settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.fetch",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates chat settings for the authenticated user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update chat settings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                            }
+                        }
+                    },
+                    "description": "Chat settings",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Settings updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/backend_pkg_utils.SuccessResponseSwag"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/backend_internal_domain_models.ChatUserSettings"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "users.chat.error.invalid_data or users.chat.error.invalid_language",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "auth.required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "users.chat.error.update",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/backend_pkg_utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/me": {
             "get": {
                 "security": [
@@ -45260,6 +45471,50 @@
                     }
                 }
             },
+            "backend_internal_domain_models.ChatTranslationMetadata": {
+                "type": "object",
+                "properties": {
+                    "cache_hit": {
+                        "description": "From Redis cache?",
+                        "type": "boolean"
+                    },
+                    "provider": {
+                        "description": "\"claude-haiku\"",
+                        "type": "string"
+                    },
+                    "translated_at": {
+                        "description": "Timestamp",
+                        "type": "string"
+                    },
+                    "translated_from": {
+                        "description": "\"ru\"",
+                        "type": "string"
+                    },
+                    "translated_to": {
+                        "description": "\"en\"",
+                        "type": "string"
+                    }
+                }
+            },
+            "backend_internal_domain_models.ChatUserSettings": {
+                "type": "object",
+                "properties": {
+                    "auto_translate_chat": {
+                        "type": "boolean"
+                    },
+                    "chat_tone_moderation": {
+                        "description": "Модерация тона сообщений",
+                        "type": "boolean"
+                    },
+                    "preferred_language": {
+                        "description": "\"ru\", \"en\", \"sr\"",
+                        "type": "string"
+                    },
+                    "show_original_language_badge": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "backend_internal_domain_models.CheckLimitRequest": {
                 "type": "object",
                 "required": [
@@ -45633,6 +45888,16 @@
                     "stock_quantity": {
                         "type": "integer",
                         "minimum": 0
+                    },
+                    "translations": {
+                        "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     },
                     "variant_settings": {
                         "$ref": "#/components/schemas/backend_internal_domain_models.VariantSettings"
@@ -46962,7 +47227,7 @@
                         "type": "integer"
                     },
                     "original_language": {
-                        "description": "Добавляем поля для мультиязычности",
+                        "description": "Мультиязычность",
                         "type": "string"
                     },
                     "receiver": {
@@ -46994,13 +47259,14 @@
                         "description": "Новое поле для товаров витрин",
                         "type": "integer"
                     },
+                    "translation_metadata": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.ChatTranslationMetadata"
+                    },
                     "translations": {
+                        "description": "{\"en\": \"Hello\", \"ru\": \"Привет\"}",
                         "type": "object",
                         "additionalProperties": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     },
                     "updated_at": {
@@ -48879,6 +49145,13 @@
             "backend_internal_domain_models.StorefrontProduct": {
                 "type": "object",
                 "properties": {
+                    "address_translations": {
+                        "description": "AddressTranslations - map[language]address, e.g. {\"en\": \"Street 12, Novi Sad\", \"ru\": \"Улица 12, Нови-Сад\"}",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
                     "attributes": {
                         "$ref": "#/components/schemas/backend_internal_domain_models.JSONB"
                     },
@@ -48957,6 +49230,16 @@
                     },
                     "storefront_id": {
                         "type": "integer"
+                    },
+                    "translations": {
+                        "description": "Translations - map[language]map[field]text, e.g. {\"ru\": {\"title\": \"...\", \"description\": \"...\"}}",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     },
                     "updated_at": {
                         "type": "string"
@@ -50334,6 +50617,11 @@
                     },
                     "created_at": {
                         "type": "string"
+                    },
+                    "settings": {
+                        "description": "JSONB поле для расширяемых настроек (chat settings и др.)",
+                        "type": "object",
+                        "additionalProperties": true
                     },
                     "updated_at": {
                         "type": "string"
@@ -56308,6 +56596,16 @@
                         "description": "Slug витрины для правильного URL",
                         "type": "string"
                     },
+                    "translations": {
+                        "description": "Переводы (локаль -> поле -> значение)",
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "user": {
                         "description": "Информация о продавце",
                         "allOf": [
@@ -57597,6 +57895,29 @@
                     "used_today": {
                         "type": "integer",
                         "example": 3450
+                    }
+                }
+            },
+            "internal_proj_marketplace_handler.TranslationResponse": {
+                "type": "object",
+                "properties": {
+                    "message_id": {
+                        "type": "integer"
+                    },
+                    "metadata": {
+                        "$ref": "#/components/schemas/backend_internal_domain_models.ChatTranslationMetadata"
+                    },
+                    "original_text": {
+                        "type": "string"
+                    },
+                    "source_language": {
+                        "type": "string"
+                    },
+                    "target_language": {
+                        "type": "string"
+                    },
+                    "translated_text": {
+                        "type": "string"
                     }
                 }
             },

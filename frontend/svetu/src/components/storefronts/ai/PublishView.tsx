@@ -80,6 +80,9 @@ export default function PublishView({
         // Variants
         has_variants: state.aiData.hasVariants,
         variants: state.aiData.hasVariants ? state.aiData.variants : undefined,
+
+        // Translations - convert from {"en": {"title": "...", "description": "..."}} to same format
+        translations: state.aiData.translations || {},
       };
 
       const createResponse = await apiClient.post(
@@ -110,14 +113,11 @@ export default function PublishView({
         }
         formData.append('display_order', String(index));
 
+        // НЕ устанавливаем Content-Type вручную для FormData!
+        // Браузер сам добавит правильный заголовок с boundary
         return apiClient.post(
           `/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
+          formData
         );
       });
 
@@ -292,6 +292,17 @@ export default function PublishView({
                           </span>
                           <p className="text-sm">{translation.description}</p>
                         </div>
+                        {translation.address && (
+                          <div>
+                            <span className="text-xs text-base-content/60">
+                              {t('address') || 'Address'}:
+                            </span>
+                            <p className="text-sm">
+                              {translation.address}
+                              {translation.city && ` (${translation.city})`}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

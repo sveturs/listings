@@ -45,6 +45,7 @@ type Service struct {
 	geocode          geocodeService.GeocodeServiceInterface
 	fileStorage      filestorage.FileStorageInterface
 	chatAttachment   *marketplaceService.ChatAttachmentService
+	chatTranslation  *marketplaceService.ChatTranslationService
 	unifiedSearch    UnifiedSearchServiceInterface
 	behaviorTracking behaviorTrackingService.BehaviorTrackingService
 	unifiedCar       *marketplaceService.UnifiedCarService
@@ -134,6 +135,22 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Установка сервиса вложений в marketplace сервис
 	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
 
+	// Создаем userService для chatTranslation (с доступом к storage для chat settings)
+	usersSvc := userService.NewService(authSvc, userSvc, storage)
+
+	// Инициализация сервиса переводов чата (теперь с доступом к userService и storage)
+	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient, usersSvc.User, storage)
+
+	// Установка сервиса переводов в marketplace сервис
+	marketplaceSvc.SetChatTranslationService(chatTranslationSvc)
+
+	// Установка зависимостей в ChatService для поддержки персонализированных переводов в WebSocket
+	if chatSvc, ok := marketplaceSvc.Chat.(*marketplaceService.ChatService); ok {
+		chatSvc.SetChatTranslationService(chatTranslationSvc)
+		chatSvc.SetUserService(usersSvc.User)
+		log.Println("ChatService dependencies set (translation & user service)")
+	}
+
 	// Создаем UnifiedCarService
 	carServiceConfig := &marketplaceService.CarServiceConfig{
 		CacheTTL:          24 * time.Hour,
@@ -144,7 +161,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:            userService.NewService(authSvc, userSvc),
+		users:            usersSvc,
 		marketplace:      marketplaceSvc,
 		review:           reviewService.NewService(storage),
 		chat:             marketplaceSvc, // Reuse the same service for chat
@@ -159,6 +176,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 		geocode:          geocodeSvc,
 		fileStorage:      fileStorageSvc,
 		chatAttachment:   chatAttachmentSvc,
+		chatTranslation:  chatTranslationSvc,
 		behaviorTracking: behaviorTrackingSvc,
 		unifiedCar:       unifiedCarSvc,
 		authUserService:  userSvc, // Сохраняем auth UserService
@@ -247,6 +265,10 @@ func (s *Service) Contacts() marketplaceService.ContactsServiceInterface {
 
 func (s *Service) ChatAttachment() marketplaceService.ChatAttachmentServiceInterface {
 	return s.chatAttachment
+}
+
+func (s *Service) ChatTranslation() *marketplaceService.ChatTranslationService {
+	return s.chatTranslation
 }
 
 func (s *Service) UnifiedSearch() UnifiedSearchServiceInterface {

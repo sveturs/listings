@@ -244,6 +244,8 @@
     "low_stock": "Мало товара"
   },
   "variants": {
+    "selectOption": "Выберите {attribute}",
+    "itemsAvailable": "{count, plural, =0 {Нет в наличии} one {# шт. в наличии} few {# шт. в наличии} many {# шт. в наличии} other {# шт. в наличии}}",
     "outOfStock": "Нет в наличии",
     "lowStock": "Мало на складе",
     "inStock": "В наличии",
@@ -319,6 +321,7 @@
     "salesByAttribute": "Продажи по атрибутам"
   },
   "analyzingImages": "Анализ изображений",
+  "detectingLocationFromExif": "Определение адреса из EXIF данных фотографии",
   "detectingCategory": "Определение категории",
   "generatingTitleVariants": "Генерация вариантов названия",
   "creatingTranslations": "Создание переводов",
@@ -590,6 +593,7 @@
   "locationDescription": "Укажите, где находится товар для покупателей",
   "locationType": "Тип местоположения",
   "useStorefrontLocation": "Использовать адрес витрины",
+  "useExifLocation": "Использовать адрес из метаданных фото",
   "useIndividualLocation": "Указать отдельный адрес",
   "individualLocationExample": "Товар находится на складе или в другом месте",
   "storefrontLocationExample": "Товар находится в магазине",

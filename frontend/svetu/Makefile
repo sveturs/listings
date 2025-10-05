@@ -117,3 +117,39 @@ dev-restart:
 	@nohup yarn dev -p 3003 > frontend-dev.log 2>&1 &
 	@sleep 2
 	@echo "✅ Frontend running! Logs: tail -f frontend-dev.log"
+
+# Production build and restart for dev server
+.PHONY: dev-build-restart
+dev-build-restart:
+	@echo "🔪 Stopping frontend on port 3003..."
+	@lsof -ti:3003 | xargs -r kill 2>/dev/null || true
+	@fuser -k 3003/tcp 2>/dev/null || true
+	@sleep 2
+	@echo "🧹 Removing old .next build..."
+	@rm -rf .next
+	@echo "🏗️  Building production version..."
+	@yarn build
+	@echo "🚀 Starting production server on port 3003..."
+	@nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+	@sleep 3
+	@echo "✅ Production frontend running! Logs: tail -f frontend-dev.log"
+
+# Start production server (without build) - USE WITH CAUTION!
+# WARNING: This will use existing .next directory which might be outdated!
+# Prefer using dev-build-restart for deployments
+.PHONY: dev-start
+dev-start:
+	@echo "⚠️  WARNING: Starting without rebuild - using existing .next"
+	@if [ ! -d ".next" ]; then \
+		echo "❌ ERROR: .next directory not found! Run 'make dev-build-restart' first"; \
+		exit 1; \
+	fi
+	@NEXT_AGE=$$(find .next -maxdepth 0 -mmin -30 2>/dev/null | wc -l); \
+	if [ "$$NEXT_AGE" -eq 0 ]; then \
+		echo "⚠️  WARNING: .next is older than 30 minutes!"; \
+		echo "Consider running 'make dev-build-restart' for fresh build"; \
+	fi
+	@echo "🚀 Starting production server on port 3003..."
+	@nohup yarn start -p 3003 > frontend-dev.log 2>&1 &
+	@sleep 3
+	@echo "✅ Production frontend running! Logs: tail -f frontend-dev.log"

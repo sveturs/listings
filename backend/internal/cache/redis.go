@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,9 +25,28 @@ func (r *RedisCache) GetClient() *redis.Client {
 }
 
 // NewRedisCache создает новый экземпляр Redis кеша
-func NewRedisCache(ctx context.Context, url string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
+func NewRedisCache(ctx context.Context, redisURL string, password string, db int, poolSize int, logger *logrus.Logger) (*RedisCache, error) {
+	// Парсим Redis URL для извлечения host:port
+	addr := redisURL
+
+	// Если URL начинается с redis://, парсим его
+	if strings.HasPrefix(redisURL, "redis://") {
+		parsedURL, err := url.Parse(redisURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
+		}
+		addr = parsedURL.Host
+
+		// Если в URL есть пароль, используем его
+		if parsedURL.User != nil && password == "" {
+			if pass, ok := parsedURL.User.Password(); ok {
+				password = pass
+			}
+		}
+	}
+
 	options := &redis.Options{
-		Addr:     url,
+		Addr:     addr,
 		Password: password,
 		DB:       db,
 		PoolSize: poolSize,

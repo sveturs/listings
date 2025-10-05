@@ -102,6 +102,10 @@ func (m *MockStorage) GetUserProfile(ctx context.Context, id int) (*models.UserP
 func (m *MockStorage) UpdateUserProfile(ctx context.Context, id int, update *models.UserProfileUpdate) error {
 	return nil
 }
+
+func (m *MockStorage) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return nil
+}
 func (m *MockStorage) UpdateLastSeen(ctx context.Context, id int) error { return nil }
 func (m *MockStorage) GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error) {
 	return nil, ErrNotImplemented
@@ -599,6 +603,11 @@ func (m *MockStorage) RemoveStorefrontFromFavorites(ctx context.Context, userID 
 
 func (m *MockStorage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([]models.MarketplaceListing, error) {
 	return []models.MarketplaceListing{}, nil
+}
+
+// UpdateMessageTranslations - обновление переводов сообщения
+func (m *MockStorage) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
+	return nil
 }
 
 // GetCarListingsCount - недостающий метод для подсчета автомобильных объявлений

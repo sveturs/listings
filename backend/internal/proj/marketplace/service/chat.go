@@ -13,7 +13,8 @@ import (
 	"backend/internal/storage"
 	"backend/pkg/utils"
 
-	"backend/internal/proj/notifications/service"
+	notificationService "backend/internal/proj/notifications/service"
+	userService "backend/internal/proj/users/service"
 )
 
 // ChatContextKey is a type for context keys to avoid collisions
@@ -26,22 +27,36 @@ const (
 
 type ChatService struct {
 	storage             storage.Storage
-	notificationService service.NotificationServiceInterface
+	notificationService notificationService.NotificationServiceInterface
 	subscribers         sync.Map
 	statusSubscribers   sync.Map
 	onlineUsers         sync.Map
 	userLastSeen        sync.Map
+	chatTranslationSvc  *ChatTranslationService
+	userService         userService.UserServiceInterface
 }
 
-func NewChatService(storage storage.Storage, notificationService service.NotificationServiceInterface) *ChatService {
+func NewChatService(storage storage.Storage, notifService notificationService.NotificationServiceInterface) *ChatService {
 	return &ChatService{
 		storage:             storage,
-		notificationService: notificationService,
+		notificationService: notifService,
 		subscribers:         sync.Map{},
 		statusSubscribers:   sync.Map{},
 		onlineUsers:         sync.Map{},
 		userLastSeen:        sync.Map{},
 	}
+}
+
+// SetChatTranslationService sets the chat translation service
+// This is called by the global service after all dependencies are initialized
+func (s *ChatService) SetChatTranslationService(translationService *ChatTranslationService) {
+	s.chatTranslationSvc = translationService
+}
+
+// SetUserService sets the user service
+// This is called by the global service after all dependencies are initialized
+func (s *ChatService) SetUserService(usrService userService.UserServiceInterface) {
+	s.userService = usrService
 }
 
 // Реализация методов для сообщений
@@ -120,12 +135,19 @@ func (s *ChatService) SendMessage(ctx context.Context, msg *models.MarketplaceMe
 	// Это будет использовано в CreateMessage
 	ctx = context.WithValue(ctx, ChatContextKeyListingExists, listingExists)
 
+	// Определяем язык сообщения для переводов (если ещё не определён и есть сервис переводов)
+	if msg.OriginalLanguage == "" && s.chatTranslationSvc != nil {
+		if err := s.chatTranslationSvc.DetectAndSetLanguage(ctx, msg); err != nil {
+			logger.Warn().Err(err).Msg("Failed to detect message language")
+		}
+	}
+
 	if err := s.storage.CreateMessage(ctx, msg); err != nil {
 		return err
 	}
 
-	// Отправляем сообщение через WebSocket сразу, не дожидаясь отправки уведомлений
-	s.BroadcastMessage(msg)
+	// Отправляем сообщение через WebSocket с персонализированными переводами
+	s.BroadcastMessageWithTranslations(ctx, msg)
 
 	// Асинхронная отправка уведомлений
 	if msg.ReceiverID != msg.SenderID {
@@ -236,6 +258,91 @@ func (s *ChatService) BroadcastMessage(msg *models.MarketplaceMessage) {
 			default:
 				// Канал полный или закрыт, пропускаем
 			}
+		}
+	}
+}
+
+// BroadcastMessageWithTranslations отправляет персонализированные сообщения с переводами
+// каждому участнику чата согласно их языковым настройкам
+func (s *ChatService) BroadcastMessageWithTranslations(ctx context.Context, msg *models.MarketplaceMessage) {
+	log.Printf("BroadcastMessageWithTranslations called: messageID=%d, senderID=%d, receiverID=%d, originalLang=%s",
+		msg.ID, msg.SenderID, msg.ReceiverID, msg.OriginalLanguage)
+
+	// Если зависимости не установлены - используем старый механизм
+	if s.chatTranslationSvc == nil || s.userService == nil {
+		logger.Warn().
+			Bool("hasChatTranslationSvc", s.chatTranslationSvc != nil).
+			Bool("hasUserService", s.userService != nil).
+			Msg("BroadcastMessageWithTranslations: dependencies not set, falling back to BroadcastMessage")
+		s.BroadcastMessage(msg)
+		return
+	}
+
+	logger.Debug().
+		Int("messageId", msg.ID).
+		Str("originalLang", msg.OriginalLanguage).
+		Msg("BroadcastMessageWithTranslations: starting personalized broadcast")
+
+	// Список участников чата
+	participants := []int{msg.SenderID, msg.ReceiverID}
+
+	for _, participantID := range participants {
+		// Клонируем сообщение для каждого участника
+		msgCopy := *msg
+
+		// Получаем настройки участника
+		settings, err := s.userService.GetChatSettings(ctx, participantID)
+		if err != nil {
+			logger.Warn().Err(err).Int("userId", participantID).Msg("Failed to get chat settings")
+			// Используем defaults если не удалось загрузить настройки
+			settings = &models.ChatUserSettings{
+				AutoTranslate:     false,
+				PreferredLanguage: "en",
+				ShowLanguageBadge: true,
+				ModerateTone:      true,
+			}
+		}
+
+		// Если нужен перевод (автоперевод включен И язык отличается от оригинала)
+		if settings.AutoTranslate &&
+			msgCopy.OriginalLanguage != "" &&
+			msgCopy.OriginalLanguage != settings.PreferredLanguage {
+
+			logger.Debug().
+				Int("userId", participantID).
+				Str("originalLang", msgCopy.OriginalLanguage).
+				Str("preferredLang", settings.PreferredLanguage).
+				Msg("Translating WebSocket message")
+
+			// Переводим сообщение (используя Redis кеш!)
+			err = s.chatTranslationSvc.TranslateMessage(
+				ctx,
+				&msgCopy,
+				settings.PreferredLanguage,
+				settings.ModerateTone,
+			)
+			if err != nil {
+				logger.Warn().Err(err).Msg("WebSocket translation failed")
+				// Продолжаем с оригинальным сообщением при ошибке перевода
+			}
+		}
+
+		// Отправляем персонализированное сообщение через существующий механизм
+		if participantCh, ok := s.subscribers.Load(participantID); ok {
+			if ch, ok := participantCh.(chan *models.MarketplaceMessage); ok {
+				select {
+				case ch <- &msgCopy:
+					logger.Debug().
+						Int("participantId", participantID).
+						Str("preferredLang", settings.PreferredLanguage).
+						Msg("Personalized message sent to participant")
+				default:
+					// Канал полный или закрыт, пропускаем
+					logger.Warn().Int("participantId", participantID).Msg("Failed to send message - channel full or closed")
+				}
+			}
+		} else {
+			logger.Debug().Int("participantId", participantID).Msg("No subscriber found for participant")
 		}
 	}
 }

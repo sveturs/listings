@@ -183,7 +183,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	reviewHandler := reviewHandler.NewHandler(services, jwtParserMW)
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
-	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services)
+	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
 	balanceHandler := balanceHandler.NewHandler(services)
 	storefrontModule := storefronts.NewModule(ctx, services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{

@@ -1,4 +1,4 @@
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 // Types for AI Storefront Service
 export interface AnalyzeProductImageRequest {
@@ -108,37 +108,10 @@ export interface AIMetrics {
 /**
  * StorefrontAIService - AI-powered сервис для работы с товарами витрин
  * Переиспользует marketplace AI infrastructure для products
+ *
+ * ВАЖНО: Все запросы идут через BFF proxy /api/v2 с автоматической передачей JWT из httpOnly cookies
  */
 class StorefrontAIService {
-  private baseUrl: string;
-  private authToken: string | null = null;
-
-  constructor() {
-    this.baseUrl = configManager.getApiUrl();
-  }
-
-  /**
-   * Установить токен авторизации
-   */
-  setAuthToken(token: string) {
-    this.authToken = token;
-  }
-
-  /**
-   * Получить заголовки для запроса
-   */
-  private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
-    }
-
-    return headers;
-  }
-
   /**
    * Анализ изображения товара через AI
    * @param imageBase64 - base64 encoded image
@@ -148,29 +121,26 @@ class StorefrontAIService {
     imageBase64: string,
     language: string = 'ru'
   ): Promise<ProductAnalysisResult> {
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/storefronts/ai/analyze-product-image`,
+    // Используем apiClient для автоматической передачи JWT через BFF proxy
+    const response = await apiClient.post<ProductAnalysisResult>(
+      '/storefronts/ai/analyze-product-image',
       {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          imageData: imageBase64,
-          language,
-        }),
+        imageData: imageBase64,
+        language,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        errorData.message || `AI analysis failed: ${response.statusText}`
-      );
+    if (response.error) {
+      throw new Error(response.error.message || 'AI analysis failed');
     }
 
-    const data = await response.json();
-    return data.data || data;
+    // Backend возвращает {data: {data: ...}} - извлекаем вложенный data
+    const result = response.data as any;
+    if (result?.data) {
+      return result.data;
+    }
+
+    return response.data!;
   }
 
   /**
@@ -190,31 +160,27 @@ class StorefrontAIService {
     },
     language: string = 'ru'
   ): Promise<CategoryDetectionResult> {
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/storefronts/ai/detect-category`,
+    const response = await apiClient.post<CategoryDetectionResult>(
+      '/storefronts/ai/detect-category',
       {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          title,
-          description,
-          aiHints: categoryHints,
-          language,
-        }),
+        title,
+        description,
+        aiHints: categoryHints,
+        language,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        errorData.message || `Category detection failed: ${response.statusText}`
-      );
+    if (response.error) {
+      throw new Error(response.error.message || 'Category detection failed');
     }
 
-    const data = await response.json();
-    return data.data || data;
+    // Извлекаем вложенный data если есть
+    const result = response.data as any;
+    if (result?.data) {
+      return result.data;
+    }
+
+    return response.data!;
   }
 
   /**
@@ -226,28 +192,24 @@ class StorefrontAIService {
       throw new Error('At least 2 title variants are required for A/B testing');
     }
 
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/storefronts/ai/ab-test-titles`,
+    const response = await apiClient.post<ABTestResult>(
+      '/storefronts/ai/ab-test-titles',
       {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          titleVariants,
-        }),
+        titleVariants,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        errorData.message || `A/B testing failed: ${response.statusText}`
-      );
+    if (response.error) {
+      throw new Error(response.error.message || 'A/B testing failed');
     }
 
-    const data = await response.json();
-    return data.data || data;
+    // Извлекаем вложенный data если есть
+    const result = response.data as any;
+    if (result?.data) {
+      return result.data;
+    }
+
+    return response.data!;
   }
 
   /**
@@ -265,55 +227,39 @@ class StorefrontAIService {
       throw new Error('At least one target language is required');
     }
 
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/storefronts/ai/translate-content`,
+    const response = await apiClient.post<TranslationResult>(
+      '/storefronts/ai/translate-content',
       {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          content,
-          targetLanguages,
-          sourceLanguage,
-        }),
+        content,
+        targetLanguages,
+        sourceLanguage,
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        errorData.message || `Translation failed: ${response.statusText}`
-      );
+    if (response.error) {
+      throw new Error(response.error.message || 'Translation failed');
     }
 
-    const data = await response.json();
-    return data.data || data;
+    // Извлекаем вложенный data если есть
+    const result = response.data as any;
+    if (result?.data) {
+      return result.data;
+    }
+
+    return response.data!;
   }
 
   /**
    * Получить метрики AI для товаров витрин
    */
   async getMetrics(): Promise<AIMetrics> {
-    const response = await fetch(
-      `${this.baseUrl}/api/v1/storefronts/ai/metrics`,
-      {
-        method: 'GET',
-        headers: this.getHeaders(),
-      }
-    );
+    const response = await apiClient.get<AIMetrics>('/storefronts/ai/metrics');
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ message: response.statusText }));
-      throw new Error(
-        errorData.message || `Failed to get metrics: ${response.statusText}`
-      );
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to get metrics');
     }
 
-    const data = await response.json();
-    return data.data || data;
+    return response.data!;
   }
 
   /**

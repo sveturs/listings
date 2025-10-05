@@ -727,6 +727,20 @@ func (r *Repository) getListingTranslationsFromDB(ctx context.Context, listingID
 	return translations, nil
 }
 
+// convertDBTranslationsToMap преобразует массив DBTranslation в структуру map[язык]map[поле]значение
+func (r *Repository) convertDBTranslationsToMap(translations []DBTranslation) map[string]map[string]string {
+	result := make(map[string]map[string]string)
+
+	for _, t := range translations {
+		if _, exists := result[t.Language]; !exists {
+			result[t.Language] = make(map[string]string)
+		}
+		result[t.Language][t.FieldName] = t.TranslatedText
+	}
+
+	return result
+}
+
 // extractSupportedLanguages извлекает список поддерживаемых языков из переводов
 func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []string {
 	langMap := make(map[string]bool)
@@ -744,15 +758,17 @@ func (r *Repository) extractSupportedLanguages(translations []DBTranslation) []s
 
 func (r *Repository) listingToDoc(ctx context.Context, listing *models.MarketplaceListing) map[string]interface{} {
 	doc := map[string]interface{}{
-		"id":                   listing.ID,
-		"title":                listing.Title,
-		"description":          listing.Description,
-		"title_suggest":        listing.Title,
-		"title_variations":     []string{listing.Title, strings.ToLower(listing.Title)},
-		fieldNamePrice:         listing.Price,
-		"condition":            listing.Condition,
-		"status":               listing.Status,
-		"location":             listing.Location,
+		"id":               listing.ID,
+		"type":             "listing", // Для фильтрации marketplace vs storefront
+		"document_type":    "listing", // Для обратной совместимости
+		"title":            listing.Title,
+		"description":      listing.Description,
+		"title_suggest":    listing.Title,
+		"title_variations": []string{listing.Title, strings.ToLower(listing.Title)},
+		fieldNamePrice:     listing.Price,
+		"condition":        listing.Condition,
+		"status":           listing.Status,
+		// НЕ отправляем listing.Location - поле "location" в OpenSearch это geo_point!
 		"city":                 listing.City,
 		"country":              listing.Country,
 		"address_multilingual": listing.AddressMultilingual,
@@ -768,14 +784,16 @@ func (r *Repository) listingToDoc(ctx context.Context, listing *models.Marketpla
 		"review_count":         listing.ReviewCount,
 	}
 
-	// Загружаем переводы из таблицы translations в новое поле db_translations
+	// Загружаем переводы из таблицы translations и преобразуем в правильный формат
 	dbTranslations, err := r.getListingTranslationsFromDB(ctx, listing.ID)
 	if err != nil {
 		logger.Error().Msgf("Ошибка загрузки переводов для объявления %d: %v", listing.ID, err)
 	} else if len(dbTranslations) > 0 {
-		doc["db_translations"] = dbTranslations
+		// Преобразуем []DBTranslation в map[язык]map[поле]значение
+		translationsMap := r.convertDBTranslationsToMap(dbTranslations)
+		doc["translations"] = translationsMap
 		doc["supported_languages"] = r.extractSupportedLanguages(dbTranslations)
-		logger.Info().Msgf("Загружено %d переводов из БД для объявления %d", len(dbTranslations), listing.ID)
+		logger.Info().Msgf("Загружено %d переводов из БД для объявления %d, преобразовано в структуру translations", len(dbTranslations), listing.ID)
 	}
 
 	logger.Info().Msgf("Обработка местоположения для листинга %d: город=%s, страна=%s, адрес=%s",
@@ -1297,9 +1315,6 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 				if listing.Country == "" && storefront.Country != nil && *storefront.Country != "" {
 					doc["country"] = *storefront.Country
 				}
-				if listing.Location == "" && storefront.Address != nil && *storefront.Address != "" {
-					doc["location"] = *storefront.Address
-				}
 				if (listing.Latitude == nil || listing.Longitude == nil ||
 					*listing.Latitude == 0 || *listing.Longitude == 0) &&
 					storefront.Latitude != nil && storefront.Longitude != nil &&
@@ -1597,11 +1612,37 @@ func (r *Repository) buildSearchQuery(ctx context.Context, params *search.Search
 		filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
 		filter = append(filter, map[string]interface{}{
 			"term": map[string]interface{}{
-				"type": params.DocumentType,
+				"type": params.DocumentType, // Используем поле "type" как в индексе OpenSearch
 			},
 		})
 		query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 	}
+
+	// Исключаем storefront products из marketplace search (они должны искаться только через storefront search)
+	// Это гарантирует что обычные объявления и витринные товары не смешиваются
+	filter := query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"].([]interface{})
+	filter = append(filter, map[string]interface{}{
+		"bool": map[string]interface{}{
+			"should": []interface{}{
+				map[string]interface{}{
+					"bool": map[string]interface{}{
+						"must_not": map[string]interface{}{
+							"exists": map[string]interface{}{
+								"field": "is_storefront",
+							},
+						},
+					},
+				},
+				map[string]interface{}{
+					"term": map[string]interface{}{
+						"is_storefront": false,
+					},
+				},
+			},
+			"minimum_should_match": 1,
+		},
+	})
+	query["query"].(map[string]interface{})["bool"].(map[string]interface{})["filter"] = filter
 
 	if params.Query != "" {
 		logger.Info().Msgf("Текстовый поиск по запросу: '%s'", params.Query)
@@ -3087,13 +3128,29 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		listing.StorefrontID = &id
 	}
 
-	// Обрабатываем координаты
+	// Обрабатываем флаг is_storefront для различия типа товара
+	if isStorefront, ok := doc["is_storefront"].(bool); ok {
+		listing.IsStorefrontProduct = isStorefront
+	}
+
+	// Обрабатываем координаты (проверяем оба варианта: coordinates и location)
 	if coordinates, ok := doc["coordinates"].(map[string]interface{}); ok {
 		if lat, ok := coordinates["lat"].(float64); ok {
 			listing.Latitude = &lat
 		}
 
 		if lon, ok := coordinates["lon"].(float64); ok {
+			listing.Longitude = &lon
+		}
+	}
+
+	// Также проверяем поле location (используется в storefront products с geo_point типом)
+	if location, ok := doc["location"].(map[string]interface{}); ok {
+		if lat, ok := location["lat"].(float64); ok {
+			listing.Latitude = &lat
+		}
+
+		if lon, ok := location["lon"].(float64); ok {
 			listing.Longitude = &lon
 		}
 	}
@@ -3265,6 +3322,29 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 				if description, ok := langTranslations["description"]; ok && description != "" {
 					listing.Description = description
 				}
+
+				// Применяем переводы адреса
+				if address, ok := langTranslations["address"]; ok && address != "" {
+					listing.Location = address
+				}
+				if city, ok := langTranslations["city"]; ok && city != "" {
+					listing.City = city
+				}
+				if country, ok := langTranslations["country"]; ok && country != "" {
+					listing.Country = country
+				}
+			}
+		}
+	}
+
+	// Также заполняем AddressMultilingual для всех языков из translations
+	if len(listing.Translations) > 0 {
+		if listing.AddressMultilingual == nil {
+			listing.AddressMultilingual = make(map[string]string)
+		}
+		for lang, langTranslations := range listing.Translations {
+			if address, ok := langTranslations["address"]; ok && address != "" {
+				listing.AddressMultilingual[lang] = address
 			}
 		}
 	}

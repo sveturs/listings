@@ -20,9 +20,10 @@ type MarketplaceMessage struct {
 	Receiver          *User               `json:"receiver,omitempty"`
 	Listing           *MarketplaceListing `json:"listing,omitempty"`
 	StorefrontProduct *StorefrontProduct  `json:"storefront_product,omitempty"` // Новое поле для товара витрины
-	// Добавляем поля для мультиязычности
-	OriginalLanguage string                       `json:"original_language"`
-	Translations     map[string]map[string]string `json:"translations,omitempty"`
+	// Мультиязычность
+	OriginalLanguage        string                   `json:"original_language"`
+	Translations            map[string]string        `json:"translations,omitempty"` // {"en": "Hello", "ru": "Привет"}
+	ChatTranslationMetadata *ChatTranslationMetadata `json:"translation_metadata,omitempty"`
 
 	// Поля для поддержки вложений
 	HasAttachments   bool             `json:"has_attachments"`
@@ -80,4 +81,21 @@ type ChatActivityStats struct {
 	DaysSinceLastMsg  int       `json:"days_since_last_msg"`
 	FirstMessageDate  time.Time `json:"first_message_date"`
 	LastMessageDate   time.Time `json:"last_message_date"`
+}
+
+// ChatTranslationMetadata содержит метаинформацию о переводе сообщения
+type ChatTranslationMetadata struct {
+	TranslatedFrom string    `json:"translated_from"` // "ru"
+	TranslatedTo   string    `json:"translated_to"`   // "en"
+	TranslatedAt   time.Time `json:"translated_at"`   // Timestamp
+	CacheHit       bool      `json:"cache_hit"`       // From Redis cache?
+	Provider       string    `json:"provider"`        // "claude-haiku"
+}
+
+// ChatUserSettings содержит настройки чата пользователя
+type ChatUserSettings struct {
+	AutoTranslate     bool   `json:"auto_translate_chat"`
+	PreferredLanguage string `json:"preferred_language"` // "ru", "en", "sr"
+	ShowLanguageBadge bool   `json:"show_original_language_badge"`
+	ModerateTone      bool   `json:"chat_tone_moderation"` // Модерация тона сообщений
 }

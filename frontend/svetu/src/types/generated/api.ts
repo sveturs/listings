@@ -18436,6 +18436,78 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/marketplace/chat/messages/{id}/translation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Translate a specific message
+     * @description Translates a chat message to the specified language
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Target language code (ru, en, sr) */
+          lang: string;
+        };
+        header?: never;
+        path: {
+          /** @description Message ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['internal_proj_marketplace_handler.TranslationResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/marketplace/chats/{chat_id}/archive': {
     parameters: {
       query?: never;
@@ -35384,6 +35456,122 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/users/chat-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get chat settings
+     * @description Returns chat settings for the authenticated user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Chat settings */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+            };
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description users.chat.error.fetch */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update chat settings
+     * @description Updates chat settings for the authenticated user
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Chat settings */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+        };
+      };
+      responses: {
+        /** @description Settings updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['backend_internal_domain_models.ChatUserSettings'];
+            };
+          };
+        };
+        /** @description users.chat.error.invalid_data or users.chat.error.invalid_language */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description auth.required */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description users.chat.error.update */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/users/me': {
     parameters: {
       query?: never;
@@ -38920,6 +39108,26 @@ export interface components {
       /** @description URL превью для видео */
       thumbnail_url?: string;
     };
+    'backend_internal_domain_models.ChatTranslationMetadata': {
+      /** @description From Redis cache? */
+      cache_hit?: boolean;
+      /** @description "claude-haiku" */
+      provider?: string;
+      /** @description Timestamp */
+      translated_at?: string;
+      /** @description "ru" */
+      translated_from?: string;
+      /** @description "en" */
+      translated_to?: string;
+    };
+    'backend_internal_domain_models.ChatUserSettings': {
+      auto_translate_chat?: boolean;
+      /** @description Модерация тона сообщений */
+      chat_tone_moderation?: boolean;
+      /** @description "ru", "en", "sr" */
+      preferred_language?: string;
+      show_original_language_badge?: boolean;
+    };
     'backend_internal_domain_models.CheckLimitRequest': {
       count?: number;
       /** @enum {string} */
@@ -39025,6 +39233,12 @@ export interface components {
       show_on_map?: boolean;
       sku?: string;
       stock_quantity?: number;
+      /** @description Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}} */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       variant_settings?: components['schemas']['backend_internal_domain_models.VariantSettings'];
       variants?: components['schemas']['backend_internal_domain_models.CreateVariantInline'][];
     };
@@ -39487,7 +39701,7 @@ export interface components {
       is_read?: boolean;
       listing?: components['schemas']['backend_internal_domain_models.MarketplaceListing'];
       listing_id?: number;
-      /** @description Добавляем поля для мультиязычности */
+      /** @description Мультиязычность */
       original_language?: string;
       receiver?: components['schemas']['backend_internal_domain_models.User'];
       receiver_id?: number;
@@ -39498,10 +39712,10 @@ export interface components {
       storefront_product?: components['schemas']['backend_internal_domain_models.StorefrontProduct'];
       /** @description Новое поле для товаров витрин */
       storefront_product_id?: number;
+      translation_metadata?: components['schemas']['backend_internal_domain_models.ChatTranslationMetadata'];
+      /** @description {"en": "Hello", "ru": "Привет"} */
       translations?: {
-        [key: string]: {
-          [key: string]: string;
-        };
+        [key: string]: string;
       };
       updated_at?: string;
     };
@@ -40148,6 +40362,10 @@ export interface components {
       transaction_fee?: number;
     };
     'backend_internal_domain_models.StorefrontProduct': {
+      /** @description AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"} */
+      address_translations?: {
+        [key: string]: string;
+      };
       attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       barcode?: string;
       category?: components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
@@ -40176,6 +40394,12 @@ export interface components {
       /** @description in_stock, low_stock, out_of_stock */
       stock_status?: string;
       storefront_id?: number;
+      /** @description Translations - map[language]map[field]text, e.g. {"ru": {"title": "...", "description": "..."}} */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       updated_at?: string;
       variants?: components['schemas']['backend_internal_domain_models.StorefrontProductVariant'][];
       view_count?: number;
@@ -40655,6 +40879,10 @@ export interface components {
       allow_contact_requests?: boolean;
       allow_messages_from_contacts_only?: boolean;
       created_at?: string;
+      /** @description JSONB поле для расширяемых настроек (chat settings и др.) */
+      settings?: {
+        [key: string]: unknown;
+      };
       updated_at?: string;
       user_id?: number;
     };
@@ -42723,6 +42951,12 @@ export interface components {
       storefront_id?: number;
       /** @description Slug витрины для правильного URL */
       storefront_slug?: string;
+      /** @description Переводы (локаль -> поле -> значение) */
+      translations?: {
+        [key: string]: {
+          [key: string]: string;
+        };
+      };
       /** @description Информация о продавце */
       user?: components['schemas']['internal_proj_global_handler.UnifiedUserInfo'];
       /** @description Для расчета популярности */
@@ -43229,6 +43463,14 @@ export interface components {
       remaining?: number;
       /** @example 3450 */
       used_today?: number;
+    };
+    'internal_proj_marketplace_handler.TranslationResponse': {
+      message_id?: number;
+      metadata?: components['schemas']['backend_internal_domain_models.ChatTranslationMetadata'];
+      original_text?: string;
+      source_language?: string;
+      target_language?: string;
+      translated_text?: string;
     };
     'internal_proj_marketplace_handler.TranslationResult': {
       /** @example 123 */

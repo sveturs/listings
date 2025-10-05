@@ -256,3 +256,72 @@ func (h *UserHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
 		Message: "users.privacy.success.updated",
 	})
 }
+
+// GetChatSettings возвращает настройки чата пользователя
+// @Summary Get chat settings
+// @Description Returns chat settings for the authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatUserSettings} "Chat settings"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.fetch"
+// @Security BearerAuth
+// @Router /api/v1/users/chat-settings [get]
+func (h *UserHandler) GetChatSettings(c *fiber.Ctx) error {
+	userID, _ := authMiddleware.GetUserID(c)
+
+	settings, err := h.userService.GetChatSettings(c.Context(), userID)
+	if err != nil {
+		logger.Error().Err(err).Int("user_id", userID).Msg("Error fetching chat settings")
+		// Возвращаем дефолтные настройки если их нет
+		settings = &models.ChatUserSettings{
+			AutoTranslate:     true,
+			PreferredLanguage: "en",
+			ShowLanguageBadge: true,
+			ModerateTone:      true,
+		}
+	}
+
+	return utils.SuccessResponse(c, settings)
+}
+
+// UpdateChatSettings обновляет настройки чата пользователя
+// @Summary Update chat settings
+// @Description Updates chat settings for the authenticated user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param settings body backend_internal_domain_models.ChatUserSettings true "Chat settings"
+// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatUserSettings} "Settings updated"
+// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.invalid_data or users.chat.error.invalid_language"
+// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.update"
+// @Security BearerAuth
+// @Router /api/v1/users/chat-settings [put]
+func (h *UserHandler) UpdateChatSettings(c *fiber.Ctx) error {
+	userID, _ := authMiddleware.GetUserID(c)
+
+	var settings models.ChatUserSettings
+	if err := c.BodyParser(&settings); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.chat.error.invalid_data")
+	}
+
+	// Валидация языка
+	validLanguages := map[string]bool{
+		"ru": true,
+		"en": true,
+		"sr": true,
+	}
+	if !validLanguages[settings.PreferredLanguage] {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "users.chat.error.invalid_language")
+	}
+
+	err := h.userService.UpdateChatSettings(c.Context(), userID, &settings)
+	if err != nil {
+		logger.Error().Err(err).Int("user_id", userID).Msg("Error updating chat settings")
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.chat.error.update")
+	}
+
+	return utils.SuccessResponse(c, settings)
+}

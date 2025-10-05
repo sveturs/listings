@@ -282,7 +282,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 				'' as sender_picture,
 				'' as receiver_name,
 				'' as receiver_picture,
-				m.has_attachments, m.attachments_count
+				m.has_attachments, m.attachments_count, m.translations, m.original_language
 			FROM marketplace_messages m
 			JOIN marketplace_chats c ON m.chat_id = c.id
 			WHERE m.chat_id = $1
@@ -340,7 +340,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 				'' as sender_picture,
 				'' as receiver_name,
 				'' as receiver_picture,
-				m.has_attachments, m.attachments_count
+				m.has_attachments, m.attachments_count, m.translations, m.original_language
 			FROM marketplace_messages m
 			JOIN chat c ON m.chat_id = c.id
 			ORDER BY m.created_at DESC
@@ -392,6 +392,8 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		var listingID sql.NullInt64
 		var storefrontProductID sql.NullInt64
 		var attachmentsJSON json.RawMessage
+		var translationsJSON json.RawMessage
+		var originalLanguage sql.NullString
 		var senderName, senderPicture, receiverName, receiverPicture sql.NullString
 		msg.Sender = &models.User{}
 		msg.Receiver = &models.User{}
@@ -401,7 +403,7 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 			&msg.Content, &msg.IsRead, &msg.CreatedAt,
 			&senderName, &senderPicture,
 			&receiverName, &receiverPicture,
-			&msg.HasAttachments, &msg.AttachmentsCount,
+			&msg.HasAttachments, &msg.AttachmentsCount, &translationsJSON, &originalLanguage,
 			&attachmentsJSON,
 		)
 		if err != nil {
@@ -427,6 +429,21 @@ func (s *Storage) GetMessages(ctx context.Context, listingID int, userID int, of
 		msg.Sender.PictureURL = senderPicture.String
 		msg.Receiver.Name = receiverName.String
 		msg.Receiver.PictureURL = receiverPicture.String
+
+		// Устанавливаем original_language
+		if originalLanguage.Valid {
+			msg.OriginalLanguage = originalLanguage.String
+		}
+
+		// Парсим переводы из JSON
+		if len(translationsJSON) > 0 {
+			var translations map[string]string
+			if err := json.Unmarshal(translationsJSON, &translations); err != nil {
+				log.Printf("Error unmarshalling translations for message %d: %v", msg.ID, err)
+				translations = make(map[string]string)
+			}
+			msg.Translations = translations
+		}
 
 		// Парсим вложения из JSON
 		if msg.HasAttachments && msg.AttachmentsCount > 0 {
@@ -819,6 +836,28 @@ func (s *Storage) ArchiveChat(ctx context.Context, chatID int, userID int) error
 
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("chat not found or permission denied")
+	}
+
+	return nil
+}
+
+// UpdateMessageTranslations обновляет переводы сообщения в БД (добавляет новые ключи к существующим)
+func (s *Storage) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
+	// Конвертируем map в JSON
+	translationsJSON, err := json.Marshal(translations)
+	if err != nil {
+		return fmt.Errorf("failed to marshal translations: %w", err)
+	}
+
+	// Мерджим переводы с существующими через jsonb ||  оператор (concat)
+	// Это добавит новые ключи и обновит существующие, не удаляя остальные
+	_, err = s.pool.Exec(ctx, `
+		UPDATE marketplace_messages
+		SET translations = COALESCE(translations, '{}'::jsonb) || $1::jsonb
+		WHERE id = $2
+	`, translationsJSON, messageID)
+	if err != nil {
+		return fmt.Errorf("failed to update message translations: %w", err)
 	}
 
 	return nil

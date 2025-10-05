@@ -1,7 +1,6 @@
 # CLAUDE.md
 
 ## 🎯 КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА
-промежуточные статусы озвучивай голосом - выполняй команду say "привет дима" и проблемы и успехи - я не смотрю в монитор, но хочу слышать прогресс
 
 1. **НЕ ОСТАВЛЯЙ ТЕХНИЧЕСКИЙ ДОЛГ!**
 2. **База данных: ТОЛЬКО через миграции** - см. [Database Guidelines](docs/CLAUDE_DATABASE_GUIDELINES.md)
@@ -204,15 +203,8 @@ curl -X GET "http://localhost:9200/marketplace_listings/_count" | jq '.'
 ```
 
 ### JWT токен для тестирования
-```bash
-# Получить токен
-ssh svetu@svetu.rs "cd /opt/svetu-authpreprod && sed 's|/data/auth_svetu/keys/private.pem|./keys/private.pem|g' scripts/create_admin_jwt.go > /tmp/create_jwt_fixed.go && go run /tmp/create_jwt_fixed.go" > /tmp/jwt_token.txt
-
-# Проверить (используй bash -c в ZSH!)
-bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/users/me | jq ".data.email"'
-
-# Примеры использования
-bash -c 'TOKEN=$(cat /tmp/jwt_token.txt); curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/marketplace/favorites | jq "."'
+```
+cat /tmp/token
 ```
 
 ### Очистка кэша

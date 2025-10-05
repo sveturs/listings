@@ -22,6 +22,7 @@ type ChatServiceInterface interface {
 
 	// WebSocket
 	BroadcastMessage(msg *models.MarketplaceMessage)
+	BroadcastMessageWithTranslations(ctx context.Context, msg *models.MarketplaceMessage)
 	SubscribeToMessages(userID int) chan *models.MarketplaceMessage
 	UnsubscribeFromMessages(userID int)
 

@@ -57,6 +57,7 @@ type Handler struct {
 	UnifiedAttributes      *UnifiedAttributesHandler
 	AICategoryHandler      *AICategoryHandler
 	service                globalService.ServicesInterface
+	jwtParserMW            fiber.Handler
 }
 
 func (h *Handler) GetPrefix() string {
@@ -64,7 +65,7 @@ func (h *Handler) GetPrefix() string {
 }
 
 // NewHandler creates a new marketplace handler
-func NewHandler(ctx context.Context, services globalService.ServicesInterface) *Handler {
+func NewHandler(ctx context.Context, services globalService.ServicesInterface, jwtParserMW fiber.Handler) *Handler {
 	// Сначала создаем базовые обработчики
 	categoriesHandler := NewCategoriesHandler(services)
 	// Получаем storage из services и создаем хранилище для кастомных компонентов
@@ -184,7 +185,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 			Favorites:              NewFavoritesHandler(services),
 			SavedSearches:          NewSavedSearchesHandler(services),
 			Indexing:               NewIndexingHandler(services),
-			Chat:                   NewChatHandler(services, services.Config()),
+			Chat:                   NewChatHandler(services, services.Config(), jwtParserMW),
 			AdminCategories:        adminCategoriesHandler,
 			AdminAttributes:        NewAdminAttributesHandler(services),
 			AdminVariantAttributes: NewAdminVariantAttributesHandler(services),
@@ -199,6 +200,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 			UnifiedAttributes:      unifiedAttributesHandler,
 			AICategoryHandler:      aiCategoryHandler,
 			service:                services,
+			jwtParserMW:            jwtParserMW,
 		}
 	}
 
@@ -219,7 +221,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		Favorites:              NewFavoritesHandler(services),
 		SavedSearches:          NewSavedSearchesHandler(services),
 		Indexing:               NewIndexingHandler(services),
-		Chat:                   NewChatHandler(services, services.Config()),
+		Chat:                   NewChatHandler(services, services.Config(), jwtParserMW),
 		AdminCategories:        adminCategoriesHandler,
 		AdminAttributes:        NewAdminAttributesHandler(services),
 		AdminVariantAttributes: NewAdminVariantAttributesHandler(services),
@@ -232,6 +234,7 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface) *
 		UnifiedAttributes:      nil, // В fallback случае не создаем
 		AICategoryHandler:      nil, // В fallback случае нет AI handler
 		service:                services,
+		jwtParserMW:            jwtParserMW,
 	}
 }
 
@@ -560,9 +563,10 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/reindex-ratings", h.Indexing.ReindexRatings)
 
 	// Chat routes - используем узкий префикс для группы
-	chat := app.Group("/api/v1/marketplace/chat", mw.JWTParser(), authMiddleware.RequireAuth())
+	chat := app.Group("/api/v1/marketplace/chat", h.jwtParserMW, authMiddleware.RequireAuth())
 	chat.Get("/", h.Chat.GetChats)
 	chat.Get("/messages", h.Chat.GetMessages)
+	chat.Get("/messages/:id/translation", h.Chat.TranslateMessage) // NEW: Translation endpoint
 
 	// Применяем rate limiting для отправки сообщений и загрузки файлов
 	chat.Post("/messages", mw.RateLimitMessages(), h.Chat.SendMessage)

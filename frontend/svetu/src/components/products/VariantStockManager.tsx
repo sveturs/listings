@@ -115,7 +115,7 @@ export default function VariantStockManager({
                   <th>SKU</th>
                   <th>{t('products.price')} (RSD)</th>
                   <th>{t('products.stock')}</th>
-                  <th>{t('products.status')}</th>
+                  <th>{t('statusLabel')}</th>
                 </tr>
               </thead>
               <tbody>

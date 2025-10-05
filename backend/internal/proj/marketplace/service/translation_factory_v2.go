@@ -474,6 +474,104 @@ func (f *TranslationServiceFactoryV2) ModerateText(ctx context.Context, text str
 	return text, nil
 }
 
+// TranslateWithToneModeration переводит текст с опцией смягчения грубого языка
+func (f *TranslationServiceFactoryV2) TranslateWithToneModeration(ctx context.Context, text string, sourceLanguage string, targetLanguage string, moderateTone bool) (string, error) {
+	f.mutex.RLock()
+	chain := make([]TranslationProvider, len(f.fallbackChain))
+	copy(chain, f.fallbackChain)
+	f.mutex.RUnlock()
+
+	// ВАЖНО: Если moderateTone=true, приоритизируем Claude AI (единственный провайдер с реальной модерацией)
+	if moderateTone {
+		// Переставляем Claude AI в начало цепочки, если он доступен
+		var reorderedChain []TranslationProvider
+		var hasClaudeAI bool
+
+		// Сначала добавляем Claude AI
+		for _, provider := range chain {
+			if provider == ClaudeAI {
+				reorderedChain = append(reorderedChain, provider)
+				hasClaudeAI = true
+				break
+			}
+		}
+
+		// Затем добавляем остальных
+		for _, provider := range chain {
+			if provider != ClaudeAI {
+				reorderedChain = append(reorderedChain, provider)
+			}
+		}
+
+		chain = reorderedChain
+
+		if hasClaudeAI {
+			logger.Debug().
+				Bool("moderateTone", moderateTone).
+				Interface("providerOrder", chain).
+				Msg("Tone moderation enabled - prioritizing Claude AI")
+		}
+	}
+
+	var lastError error
+	attemptedProviders := make([]string, 0, len(chain))
+
+	// Пробуем каждый провайдер в цепочке
+	for _, provider := range chain {
+		service, err := f.GetTranslationService(provider)
+		if err != nil {
+			logger.Debug().
+				Str("provider", string(provider)).
+				Err(err).
+				Msg("Провайдер недоступен, пропускаем")
+			continue
+		}
+
+		result, err := service.TranslateWithToneModeration(ctx, text, sourceLanguage, targetLanguage, moderateTone)
+		if err == nil {
+			if len(attemptedProviders) > 0 {
+				logger.Info().
+					Str("successProvider", string(provider)).
+					Interface("failedProviders", attemptedProviders).
+					Bool("moderateTone", moderateTone).
+					Msg("Перевод с модерацией тона выполнен после fallback")
+			} else if moderateTone && provider == ClaudeAI {
+				logger.Debug().
+					Str("provider", string(provider)).
+					Bool("moderateTone", moderateTone).
+					Msg("Tone moderation applied via Claude AI")
+			}
+			return result, nil
+		}
+
+		// Сохраняем ошибку и пробуем следующий провайдер
+		lastError = err
+		attemptedProviders = append(attemptedProviders, string(provider))
+
+		logger.Warn().
+			Err(err).
+			Str("provider", string(provider)).
+			Bool("moderateTone", moderateTone).
+			Int("attemptNumber", len(attemptedProviders)).
+			Msg("Перевод с модерацией не удался, пробуем следующий провайдер")
+	}
+
+	// Если все провайдеры не сработали, возвращаем mock перевод
+	if lastError != nil {
+		logger.Error().
+			Err(lastError).
+			Interface("attemptedProviders", attemptedProviders).
+			Bool("moderateTone", moderateTone).
+			Msg("Все провайдеры перевода не сработали, возвращаем mock")
+
+		// Возвращаем mock перевод
+		mockTranslation := fmt.Sprintf("[%s] %s", strings.ToUpper(targetLanguage), text)
+		return mockTranslation, nil
+	}
+
+	return "", fmt.Errorf("не удалось выполнить перевод с модерацией: нет доступных провайдеров")
+}
+
 // UpdateTranslation обновляет перевод с информацией о провайдере
 func (f *TranslationServiceFactoryV2) UpdateTranslation(ctx context.Context, translation *models.Translation, provider TranslationProvider, userID int) error {
 	// Создаем отдельное поле для хранения информации о провайдере
