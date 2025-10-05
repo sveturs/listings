@@ -605,6 +605,11 @@ func (m *MockStorage) GetUserStorefrontFavorites(ctx context.Context, userID int
 	return []models.MarketplaceListing{}, nil
 }
 
+// UpdateMessageTranslations - обновление переводов сообщения
+func (m *MockStorage) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
+	return nil
+}
+
 // GetCarListingsCount - недостающий метод для подсчета автомобильных объявлений
 func (m *MockStorage) GetCarListingsCount(ctx context.Context) (int, error) {
 	args := m.Called(ctx)

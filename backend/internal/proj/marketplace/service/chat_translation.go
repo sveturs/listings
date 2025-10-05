@@ -10,8 +10,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/internal/storage"
 	userService "backend/internal/proj/users/service"
+	"backend/internal/storage"
 )
 
 const (
@@ -274,7 +274,6 @@ func (s *ChatTranslationService) DetectAndSetLanguage(
 func (s *ChatTranslationService) getCacheKey(messageID int, targetLang string) string {
 	return fmt.Sprintf("chat:translation:%d:%s", messageID, targetLang)
 }
-
 
 // GetUserTranslationSettings получает настройки перевода пользователя из БД
 func (s *ChatTranslationService) GetUserTranslationSettings(
