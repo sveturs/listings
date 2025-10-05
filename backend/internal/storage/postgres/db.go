@@ -285,12 +285,13 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 		var categoryID sql.NullInt32
 		var categoryName, categorySlug, categoryIcon sql.NullString
 		var categoryParentID sql.NullInt32
+		var attributesJSON []byte
 
 		err := rows.Scan(
 			&product.ID, &product.StorefrontID, &product.Name, &product.Description,
 			&product.Price, &product.Currency, &categoryID, &product.SKU, &product.Barcode,
 			&product.StockQuantity, &product.StockStatus, &product.IsActive,
-			&product.Attributes, &product.ViewCount, &product.SoldCount,
+			&attributesJSON, &product.ViewCount, &product.SoldCount,
 			&product.CreatedAt, &product.UpdatedAt,
 			&product.HasIndividualLocation, &product.IndividualAddress,
 			&product.IndividualLatitude, &product.IndividualLongitude,
@@ -301,6 +302,13 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 		if err != nil {
 			log.Printf("Ошибка сканирования товара: %v", err)
 			continue
+		}
+
+		// Десериализуем attributes из JSON
+		if attributesJSON != nil {
+			if unmarshalErr := json.Unmarshal(attributesJSON, &product.Attributes); unmarshalErr != nil {
+				log.Printf("Ошибка десериализации атрибутов товара %d: %v", product.ID, unmarshalErr)
+			}
 		}
 
 		// Заполняем категорию если есть
