@@ -65,6 +65,47 @@ export interface UploadImagesResponse {
   }>;
 }
 
+/**
+ * Извлекает город из полного адреса
+ * Формат адреса: "Улица номер, Город почтовый_код, Регион, Страна"
+ * Примеры:
+ * - "Васе Стајића 18, Нови Сад 21101, Јужнобачки управни округ, Србија" → "Нови Сад"
+ * - "Белград" → "Белград"
+ */
+function extractCityFromAddress(address: string): string {
+  if (!address) return '';
+
+  const parts = address.split(',').map((p) => p.trim());
+
+  // Если адрес состоит из одной части - возвращаем как есть (скорее всего это уже город)
+  if (parts.length === 1) return parts[0];
+
+  // Если больше одной части - берем вторую (index 1), это обычно "Город почтовый_код"
+  if (parts.length > 1) {
+    const cityPart = parts[1];
+    // Убираем почтовый код (обычно 5 цифр в конце)
+    return cityPart.replace(/\s+\d{5}.*$/, '').trim();
+  }
+
+  return '';
+}
+
+/**
+ * Извлекает страну из полного адреса
+ * Берет последнюю часть адреса
+ */
+function extractCountryFromAddress(address: string): string {
+  if (!address) return 'Србија';
+
+  const parts = address.split(',').map((p) => p.trim());
+
+  // Если только одна часть - это не полный адрес, возвращаем дефолт
+  if (parts.length === 1) return 'Србија';
+
+  // Берем последнюю часть
+  return parts[parts.length - 1] || 'Србија';
+}
+
 export class ListingsService {
   static async createListing(
     data: CreateListingState,
@@ -72,6 +113,9 @@ export class ListingsService {
   ): Promise<CreateListingResponse> {
     // Отладочное логирование состояния формы
     console.log('CreateListing Data:', JSON.stringify(data, null, 2));
+
+    const srAddress =
+      data.location?.addressMultilingual?.sr || data.location?.address || '';
 
     // Преобразуем данные из формы в формат API
     const request: CreateListingRequest = {
@@ -81,16 +125,12 @@ export class ListingsService {
       price: data.price,
       condition: data.condition,
       // Используем сербскую версию как основную (мы в Сербии)
-      location:
-        data.location?.addressMultilingual?.sr || data.location?.address || '',
+      location: srAddress,
       latitude: data.location?.latitude,
       longitude: data.location?.longitude,
-      // Извлекаем город из сербского адреса или используем то что есть
-      city:
-        data.location?.addressMultilingual?.sr?.split(',')[0]?.trim() ||
-        data.location?.city ||
-        '',
-      country: 'Србија',
+      // Правильно извлекаем город из полного адреса
+      city: extractCityFromAddress(srAddress) || data.location?.city || '',
+      country: extractCountryFromAddress(srAddress),
       show_on_map:
         data.location?.latitude && data.location?.longitude ? true : false,
       location_privacy: locationPrivacy,
@@ -117,9 +157,11 @@ export class ListingsService {
         addressTranslations.en = {
           location: data.location.addressMultilingual.en,
           city:
-            data.location.addressMultilingual.en.split(',')[0]?.trim() ||
+            extractCityFromAddress(data.location.addressMultilingual.en) ||
             'Belgrade',
-          country: 'Serbia',
+          country:
+            extractCountryFromAddress(data.location.addressMultilingual.en) ||
+            'Serbia',
         };
       }
 
@@ -127,9 +169,11 @@ export class ListingsService {
         addressTranslations.ru = {
           location: data.location.addressMultilingual.ru,
           city:
-            data.location.addressMultilingual.ru.split(',')[0]?.trim() ||
+            extractCityFromAddress(data.location.addressMultilingual.ru) ||
             'Белград',
-          country: 'Сербия',
+          country:
+            extractCountryFromAddress(data.location.addressMultilingual.ru) ||
+            'Сербия',
         };
       }
 
@@ -137,9 +181,11 @@ export class ListingsService {
         addressTranslations.sr = {
           location: data.location.addressMultilingual.sr,
           city:
-            data.location.addressMultilingual.sr.split(',')[0]?.trim() ||
+            extractCityFromAddress(data.location.addressMultilingual.sr) ||
             'Београд',
-          country: 'Србија',
+          country:
+            extractCountryFromAddress(data.location.addressMultilingual.sr) ||
+            'Србија',
         };
       }
     }
