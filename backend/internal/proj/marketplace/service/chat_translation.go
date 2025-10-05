@@ -11,6 +11,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	userService "backend/internal/proj/users/service"
 )
 
 const (
@@ -21,16 +22,19 @@ const (
 type ChatTranslationService struct {
 	translationSvc TranslationServiceInterface
 	redisClient    *redis.Client
+	userSvc        userService.UserServiceInterface
 }
 
 // NewChatTranslationService создает новый сервис переводов чатов
 func NewChatTranslationService(
 	translationSvc TranslationServiceInterface,
 	redisClient *redis.Client,
+	userSvc userService.UserServiceInterface,
 ) *ChatTranslationService {
 	return &ChatTranslationService{
 		translationSvc: translationSvc,
 		redisClient:    redisClient,
+		userSvc:        userSvc,
 	}
 }
 
@@ -269,20 +273,29 @@ func (s *ChatTranslationService) SaveTranslationToDB(
 	return nil
 }
 
-// GetUserTranslationSettings получает настройки перевода пользователя
+// GetUserTranslationSettings получает настройки перевода пользователя из БД
 func (s *ChatTranslationService) GetUserTranslationSettings(
 	ctx context.Context,
 	userID int,
 ) (*models.ChatUserSettings, error) {
-	// TODO: Загрузить из user_privacy_settings.settings JSONB
-	// Временно возвращаем defaults
+	// ✅ ИЗМЕНЕНО: Теперь загружаем из БД через UserService
+	settings, err := s.userSvc.GetChatSettings(ctx, userID)
+	if err != nil {
+		logger.Warn().Err(err).Int("userId", userID).Msg("Failed to get chat settings from DB, using defaults")
+		// Возвращаем defaults при ошибке
+		return &models.ChatUserSettings{
+			AutoTranslate:     true,
+			PreferredLanguage: "en",
+			ShowLanguageBadge: true,
+			ModerateTone:      true,
+		}, nil
+	}
+
 	logger.Debug().
 		Int("userId", userID).
-		Msg("Getting user translation settings (returning defaults)")
+		Str("preferredLang", settings.PreferredLanguage).
+		Bool("autoTranslate", settings.AutoTranslate).
+		Msg("Loaded user translation settings from DB")
 
-	return &models.ChatUserSettings{
-		AutoTranslate:     false, // По умолчанию выключено
-		PreferredLanguage: "en",
-		ShowLanguageBadge: true,
-	}, nil
+	return settings, nil
 }

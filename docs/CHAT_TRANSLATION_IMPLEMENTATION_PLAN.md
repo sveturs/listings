@@ -1,9 +1,57 @@
-# 🌍 ПЛАН РЕАЛИЗАЦИИ АВТОМАТИЧЕСКИХ ПЕРЕВОДОВ СООБЩЕНИЙ ЧАТОВ
+# 🌍 АВТОМАТИЧЕСКИЕ ПЕРЕВОДЫ В ЧАТЕ - ОГЛАВЛЕНИЕ
+
+**Дата создания:** 2025-10-03
+**Последнее обновление:** 2025-10-04
+**Автор:** Claude (Anthropic)
+
+---
+
+## 📚 ДОКУМЕНТАЦИЯ РАЗДЕЛЕНА НА ДВА ФАЙЛА
+
+Из-за большого размера оригинальный документ разделён на:
+
+### ✅ [CHAT_TRANSLATION_COMPLETED.md](./CHAT_TRANSLATION_COMPLETED.md)
+**Что уже реализовано и работает**
+
+- ✅ Реализованная архитектура (client-side translation)
+- ✅ Backend: API endpoint `/messages/:id/translation`
+- ✅ Backend: Redis кеширование (TTL 30 дней)
+- ✅ Backend: Tone moderation (смягчение грубого языка)
+- ✅ Frontend: MessageItem компонент с кнопкой перевода
+- ✅ Frontend: i18n переводы для en/ru/sr
+- ✅ Исправленные проблемы (зацикливание RU→RU, и др.)
+- ✅ Успешное тестирование
+
+### 🚀 [CHAT_TRANSLATION_ROADMAP.md](./CHAT_TRANSLATION_ROADMAP.md)
+**План критичных улучшений (server-side translation)**
+
+- 🔴 Аудит текущих проблем
+- 🔴 Client-side → Server-side миграция
+- 🔴 Phase 1: Хранение локали на сервере (1-2 дня)
+- 🔴 Phase 2: Server-side переводы в GetMessages (2-3 дня)
+- 🔴 Phase 3: Синхронизация локали с сервером (1-2 дня)
+- 🔴 Phase 4: WebSocket с переводами (1-2 дня)
+- 🔴 Phase 5: Тестирование и оптимизация (2-3 дня)
+- 🔴 Ожидаемые результаты: 90-95% экономия API запросов
+
+---
+
+## 🎯 БЫСТРАЯ НАВИГАЦИЯ
+
+**Если вы хотите:**
+- Понять что уже работает → [COMPLETED.md](./CHAT_TRANSLATION_COMPLETED.md)
+- Узнать о критичных проблемах → [ROADMAP.md](./CHAT_TRANSLATION_ROADMAP.md) (раздел "Аудит")
+- Увидеть план улучшений → [ROADMAP.md](./CHAT_TRANSLATION_ROADMAP.md)
+- Посмотреть исходный полный план → читайте дальше этот файл
+
+---
+
+# 🌍 ИСХОДНЫЙ ПЛАН РЕАЛИЗАЦИИ (АРХИВ)
 
 **Дата создания:** 2025-10-03
 **Автор:** Claude (Anthropic)
 **Версия:** 2.0
-**Статус:** 🟢 READY FOR E2E TESTING
+**Статус:** 🟢 РЕАЛИЗОВАНО (см. COMPLETED.md)
 **Последнее обновление:** 2025-10-03 23:20
 
 ## 🎯 ТЕКУЩИЙ СТАТУС РЕАЛИЗАЦИИ
@@ -2115,4 +2163,674 @@ RU→RU с moderate_tone=true:
 curl -H "Authorization: Bearer $TOKEN" \
   "http://localhost:3000/api/v1/marketplace/chat/messages/123/translation?lang=ru&moderate_tone=true"
 ```
+
+---
+
+## 🔍 ДЕТАЛЬНЫЙ АУДИТ РЕАЛИЗАЦИИ (2025-10-04)
+
+**Дата аудита:** 2025-10-04
+**Проведён:** Claude (по запросу пользователя)
+
+### 🎯 Цель аудита
+
+Проверить текущую реализацию онлайн переводов в чате на предмет:
+1. Эффективности работы Redis кеширования
+2. Логики определения и хранения локали пользователя
+3. Причины повторного перевода сообщений при обновлении страницы
+4. Проблемы "прыгающих" сообщений (сначала оригинал, потом перевод)
+
+### 📊 Текущее состояние реализации
+
+#### ✅ ЧТО РАБОТАЕТ
+
+**Backend:**
+- ✅ Redis работает на `localhost:6379` (105 ключей, включая `chat:translation:*`)
+- ✅ Кеширование переводов работает (TTL 30 дней)
+- ✅ Endpoint `GET /api/v1/marketplace/chat/messages/:id/translation?lang=X&moderate_tone=Y`
+- ✅ Определение языка сообщения через Claude API
+- ✅ Смягчение тона (tone moderation) работает
+- ✅ Метаданные перевода (cache_hit, provider, timestamp)
+
+**Frontend:**
+- ✅ MessageItem компонент с кнопкой "Translate" / "Show original"
+- ✅ chatService.getMessageTranslation() метод
+- ✅ localStorage для хранения настроек (`chat_auto_translate`, `chat_tone_moderation`)
+- ✅ i18n переводы для en/ru/sr
+
+#### ❌ КРИТИЧЕСКИЕ ПРОБЛЕМЫ
+
+### Проблема #1: Client-side переводы вместо server-side
+
+**Описание:**
+Текущая архитектура использует **on-demand client-side translation** вместо **server-side translation**.
+
+**Как работает сейчас:**
+```
+1. Backend отправляет сообщение в оригинале (RU: "Привет")
+2. Frontend получает оригинал
+3. Frontend показывает оригинал пользователю (⚠️ видно ~300мс)
+4. Frontend запрашивает перевод через getMessageTranslation()
+5. Backend переводит и возвращает перевод
+6. Frontend заменяет оригинал на перевод
+```
+
+**Проблемы:**
+- ❌ Пользователь всегда видит оригинал сначала (эффект "прыгания")
+- ❌ При каждом обновлении страницы сообщения снова переводятся (нет server-side кеша в GetMessages)
+- ❌ Множественные API запросы к Claude (даже при наличии Redis кеша)
+- ❌ Локаль пользователя НЕ хранится на сервере
+- ❌ Нет автоматического перевода для новых сообщений в WebSocket
+
+**Как должно работать (server-side):**
+```
+1. Frontend отправляет locale пользователя на сервер при авторизации
+2. Backend сохраняет preferred_language в user_privacy_settings.settings JSONB
+3. При GetMessages backend автоматически добавляет переводы для всех сообщений
+4. Backend отправляет сообщения УЖЕ с переводами: { content: "Привет", translations: { en: "Hello" } }
+5. Frontend показывает сразу перевод (если auto_translate=true)
+6. WebSocket новые сообщения также приходят с переводами
+```
+
+---
+
+### Проблема #2: Логика автоперевода в useEffect
+
+**Код в MessageItem.tsx:134-176:**
+```typescript
+useEffect(() => {
+  // Загружаем настройки из localStorage
+  const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
+  const isAutoTranslateEnabled = savedAutoTranslate !== null ? savedAutoTranslate === 'true' : true;
+
+  setAutoTranslate(isAutoTranslateEnabled);
+
+  // Если автоперевод включен и это входящее сообщение
+  if (isAutoTranslateEnabled && shouldShowTranslateButton && !translatedText) {
+    handleTranslate(); // ⚠️ ЗАПРОС К API ПРИ КАЖДОМ РЕНДЕРЕ!
+  }
+}, [message.id, shouldShowTranslateButton, translatedText, handleTranslate]);
+```
+
+**Проблемы:**
+- ❌ `handleTranslate()` вызывается каждый раз при монтировании компонента
+- ❌ При обновлении страницы все сообщения снова переводятся (даже если есть Redis кеш)
+- ❌ Нет проверки наличия `message.translations[locale]` из backend
+- ❌ Зависимость от `handleTranslate` в useEffect может вызвать лишние рендеры
+
+**Решение:**
+- Переводы должны приходить с backend в GetMessages
+- Frontend только показывает готовые переводы
+- handleTranslate() только для ручного переключения Original ↔ Translation
+
+---
+
+### Проблема #3: Отсутствие хранения локали на сервере
+
+**Текущее состояние:**
+- Локаль хранится только в localStorage браузера (`chat_auto_translate`, `locale`)
+- Backend НЕ знает preferred_language пользователя
+- При WebSocket сообщениях backend не может отправить перевод
+
+**Где должна храниться локаль:**
+```sql
+-- Таблица user_privacy_settings уже существует
+-- Нужно добавить в JSONB колонку settings:
+{
+  "preferred_language": "en",
+  "auto_translate_chat": true,
+  "chat_tone_moderation": true
+}
+```
+
+**Реализация:**
+1. При изменении языка в Next.js (useLocale) → отправка на backend
+2. Backend сохраняет в `user_privacy_settings.settings->preferred_language`
+3. GetMessages автоматически переводит сообщения на preferred_language
+4. WebSocket тоже отправляет переводы
+
+---
+
+### Проблема #4: Redis кеш не используется в GetMessages
+
+**Текущий код:**
+```go
+// backend/internal/proj/marketplace/handler/chat.go
+func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
+    // ... загрузка сообщений из БД ...
+
+    // ❌ НЕТ КОДА ДЛЯ ДОБАВЛЕНИЯ ПЕРЕВОДОВ!
+    // Сообщения возвращаются БЕЗ translations
+
+    return utils.SuccessResponse(c, messages)
+}
+```
+
+**Проблема:**
+- Даже если есть Redis кеш `chat:translation:122:en` → он НЕ используется
+- Frontend каждый раз запрашивает перевод заново через `/messages/:id/translation`
+
+**Решение:**
+```go
+func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
+    userID, _ := authMiddleware.GetUserID(c)
+
+    // ... загрузка сообщений из БД ...
+
+    // ✅ ДОБАВИТЬ: Получаем preferred_language пользователя
+    userSettings, _ := h.services.ChatTranslation().GetUserTranslationSettings(c.Context(), userID)
+
+    if userSettings.AutoTranslate && userSettings.PreferredLanguage != "" {
+        // ✅ ДОБАВИТЬ: Batch перевод всех сообщений с использованием Redis кеша
+        _ = h.services.ChatTranslation().TranslateBatch(
+            c.Context(),
+            messages,
+            userSettings.PreferredLanguage,
+            userSettings.ModerateTone, // из settings
+        )
+    }
+
+    return utils.SuccessResponse(c, messages)
+}
+```
+
+---
+
+### Проблема #5: WebSocket не отправляет переводы
+
+**Текущий код:**
+```go
+// WebSocket отправка нового сообщения
+ws.Send(newMessage) // ❌ Только оригинал, без translations
+```
+
+**Проблема:**
+- Новые сообщения приходят ТОЛЬКО с оригиналом
+- Frontend снова запрашивает перевод через API
+- Лаг 300-500мс перед показом перевода
+
+**Решение:**
+```go
+// При отправке сообщения через WebSocket
+func (h *ChatHandler) broadcastMessage(message *MarketplaceMessage) {
+    // Получаем всех участников чата
+    participants := h.getParticipants(message.ChatID)
+
+    for _, participant := range participants {
+        // Получаем preferred_language участника
+        settings, _ := h.services.ChatTranslation().GetUserTranslationSettings(ctx, participant.ID)
+
+        // Если нужен перевод
+        if settings.AutoTranslate && message.OriginalLanguage != settings.PreferredLanguage {
+            // Переводим (используя Redis кеш)
+            _ = h.services.ChatTranslation().TranslateMessage(
+                ctx,
+                message,
+                settings.PreferredLanguage,
+                settings.ModerateTone,
+            )
+        }
+
+        // Отправляем сообщение С переводом
+        participant.WS.Send(message)
+    }
+}
+```
+
+---
+
+## 🚀 ПЛАН УЛУЧШЕНИЙ (КРИТИЧНЫЕ ИЗМЕНЕНИЯ)
+
+### Phase 1: Backend - Хранение локали пользователя (1-2 дня)
+
+#### Task 1.1: Обновить модели и БД
+
+**Файл:** `backend/internal/domain/models/user.go`
+```go
+// UserPrivacySettings уже существует, добавить поля в ChatUserSettings
+type ChatUserSettings struct {
+    AutoTranslate     bool   `json:"auto_translate_chat"`
+    PreferredLanguage string `json:"preferred_language"` // "ru", "en", "sr"
+    ShowLanguageBadge bool   `json:"show_original_language_badge"`
+    ModerateTone      bool   `json:"chat_tone_moderation"` // NEW
+}
+```
+
+**Миграция БД:** НЕ ТРЕБУЕТСЯ
+(user_privacy_settings.settings уже JSONB, просто добавляем новые ключи)
+
+#### Task 1.2: Создать endpoint для обновления локали
+
+**Файл:** `backend/internal/proj/users/handler/user.go`
+
+**Новый эндпоинт:**
+```go
+// PUT /api/v1/users/chat-settings
+func (h *UserHandler) UpdateChatSettings(c *fiber.Ctx) error {
+    userID, _ := authMiddleware.GetUserID(c)
+
+    var req models.ChatUserSettings
+    if err := c.BodyParser(&req); err != nil {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidRequest")
+    }
+
+    // Валидация
+    if !isValidLanguage(req.PreferredLanguage) {
+        return utils.ErrorResponse(c, fiber.StatusBadRequest, "validation.invalidLanguage")
+    }
+
+    // Сохраняем в user_privacy_settings.settings
+    err := h.services.User().UpdateChatSettings(c.Context(), userID, &req)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.updateSettingsFailed")
+    }
+
+    return utils.SuccessResponse(c, req)
+}
+
+// GET /api/v1/users/chat-settings
+func (h *UserHandler) GetChatSettings(c *fiber.Ctx) error {
+    userID, _ := authMiddleware.GetUserID(c)
+
+    settings, err := h.services.User().GetChatSettings(c.Context(), userID)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "users.getSettingsFailed")
+    }
+
+    return utils.SuccessResponse(c, settings)
+}
+```
+
+**Файл:** `backend/internal/proj/users/service/user.go`
+```go
+func (s *UserService) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+    // Сериализуем в JSON
+    settingsJSON, err := json.Marshal(settings)
+    if err != nil {
+        return err
+    }
+
+    // Обновляем user_privacy_settings.settings
+    query := `
+        INSERT INTO user_privacy_settings (user_id, settings)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO UPDATE
+        SET settings = user_privacy_settings.settings || $2::jsonb
+    `
+
+    _, err = s.db.ExecContext(ctx, query, userID, settingsJSON)
+    return err
+}
+
+func (s *UserService) GetChatSettings(ctx context.Context, userID int) (*models.ChatUserSettings, error) {
+    query := `
+        SELECT settings->'preferred_language' as preferred_language,
+               settings->'auto_translate_chat' as auto_translate,
+               settings->'show_original_language_badge' as show_badge,
+               settings->'chat_tone_moderation' as moderate_tone
+        FROM user_privacy_settings
+        WHERE user_id = $1
+    `
+
+    var settings models.ChatUserSettings
+    err := s.db.QueryRowContext(ctx, query, userID).Scan(
+        &settings.PreferredLanguage,
+        &settings.AutoTranslate,
+        &settings.ShowLanguageBadge,
+        &settings.ModerateTone,
+    )
+
+    if err == sql.ErrNoRows {
+        // Возвращаем defaults
+        return &models.ChatUserSettings{
+            AutoTranslate:     true, // По умолчанию ВКЛЮЧЕН
+            PreferredLanguage: "en",
+            ShowLanguageBadge: true,
+            ModerateTone:      true,
+        }, nil
+    }
+
+    return &settings, err
+}
+```
+
+---
+
+### Phase 2: Backend - Server-side переводы в GetMessages (2-3 дня)
+
+#### Task 2.1: Обновить GetMessages для автоматического перевода
+
+**Файл:** `backend/internal/proj/marketplace/handler/chat.go`
+
+```go
+func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
+    userID, _ := authMiddleware.GetUserID(c)
+
+    // ... existing code для парсинга параметров и загрузки сообщений ...
+
+    messages, err := h.services.Storage().GetMessages(c.Context(), params)
+    if err != nil {
+        return utils.ErrorResponse(c, fiber.StatusInternalServerError, "marketplace.getMessagesFailed")
+    }
+
+    // ✅ НОВЫЙ КОД: Автоматический перевод
+    userSettings, err := h.services.User().GetChatSettings(c.Context(), userID)
+    if err != nil {
+        logger.Warn().Err(err).Msg("Failed to get user chat settings, skipping auto-translation")
+    } else if userSettings.AutoTranslate && userSettings.PreferredLanguage != "" {
+        logger.Debug().
+            Int("userId", userID).
+            Str("preferredLang", userSettings.PreferredLanguage).
+            Int("messagesCount", len(messages)).
+            Msg("Auto-translating messages for user")
+
+        // Batch перевод с использованием Redis кеша
+        err = h.services.ChatTranslation().TranslateBatch(
+            c.Context(),
+            messages,
+            userSettings.PreferredLanguage,
+            userSettings.ModerateTone,
+        )
+        if err != nil {
+            logger.Warn().Err(err).Msg("Batch translation failed, continuing without translations")
+        }
+    }
+
+    return utils.SuccessResponse(c, map[string]interface{}{
+        "messages": messages,
+        "total":    len(messages),
+        "page":     params.Page,
+        "limit":    params.Limit,
+    })
+}
+```
+
+---
+
+### Phase 3: Frontend - Синхронизация локали с сервером (1-2 дня)
+
+#### Task 3.1: Создать chatSettings API методы
+
+**Файл:** `frontend/svetu/src/services/chat.ts`
+
+```typescript
+// Новые методы
+async getChatSettings(): Promise<ChatUserSettings> {
+  const response = await this.request<{
+    data: ChatUserSettings;
+    success: boolean;
+  }>('/settings'); // BFF proxy: /api/v2/marketplace/chat/settings → /api/v1/users/chat-settings
+  return response.data;
+}
+
+async updateChatSettings(settings: ChatUserSettings): Promise<void> {
+  await this.request<void>('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+}
+```
+
+**Файл:** `frontend/svetu/src/types/chat.ts`
+
+```typescript
+export interface ChatUserSettings {
+  auto_translate_chat: boolean;
+  preferred_language: 'ru' | 'en' | 'sr';
+  show_original_language_badge: boolean;
+  chat_tone_moderation: boolean; // NEW
+}
+```
+
+#### Task 3.2: Синхронизация локали при смене языка
+
+**Файл:** `frontend/svetu/src/app/[locale]/layout.tsx` (или где меняется locale)
+
+```typescript
+'use client';
+
+import { useLocale } from 'next-intl';
+import { useEffect } from 'react';
+import { chatService } from '@/services/chat';
+
+export default function LocaleLayout({ children }: { children: React.ReactNode }) {
+  const locale = useLocale();
+
+  useEffect(() => {
+    // Синхронизируем локаль с сервером
+    const syncLocale = async () => {
+      try {
+        const currentSettings = await chatService.getChatSettings();
+
+        // Если локаль изменилась - обновляем на сервере
+        if (currentSettings.preferred_language !== locale) {
+          await chatService.updateChatSettings({
+            ...currentSettings,
+            preferred_language: locale as 'ru' | 'en' | 'sr',
+          });
+
+          console.log(`Locale synced to server: ${locale}`);
+        }
+      } catch (error) {
+        console.error('Failed to sync locale:', error);
+      }
+    };
+
+    syncLocale();
+  }, [locale]);
+
+  return <>{children}</>;
+}
+```
+
+#### Task 3.3: Обновить MessageItem - показ готовых переводов
+
+**Файл:** `frontend/svetu/src/components/Chat/MessageItem.tsx`
+
+```typescript
+export default function MessageItem({ message, isOwn }: MessageItemProps) {
+  const locale = useLocale();
+  const t = useTranslations('chat');
+
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  // ✅ ИЗМЕНЕНО: Проверяем наличие готового перевода из backend
+  const hasTranslation = message.translations && message.translations[locale];
+
+  // ✅ ИЗМЕНЕНО: Текст для отображения (без API запроса!)
+  const displayText = showOriginal ? message.content : (hasTranslation || message.content);
+
+  // ✅ УДАЛЕНО: useEffect с автоматическим вызовом handleTranslate()
+  // ✅ УДАЛЕНО: isTranslating state
+  // ✅ УДАЛЕНО: translatedText state
+
+  // Кнопка только для переключения Original ↔ Translation
+  const shouldShowToggleButton = !isOwn && hasTranslation;
+
+  return (
+    <div className={`chat ${isOwn ? 'chat-end' : 'chat-start'} mb-2`}>
+      {/* ... existing avatar code ... */}
+
+      <div className="chat-bubble">
+        <p className="whitespace-pre-wrap">{displayText}</p>
+      </div>
+
+      {/* Кнопка переключения (НЕТ API запроса!) */}
+      {shouldShowToggleButton && (
+        <button
+          onClick={() => setShowOriginal(!showOriginal)}
+          className="btn btn-xs btn-ghost"
+        >
+          {showOriginal ? t('translation.showTranslation') : t('translation.showOriginal')}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### Phase 4: Backend - WebSocket с переводами (1-2 дня)
+
+#### Task 4.1: Обновить broadcast сообщений
+
+**Файл:** `backend/internal/proj/marketplace/handler/websocket.go`
+
+```go
+func (h *ChatHandler) broadcastMessageToParticipants(ctx context.Context, message *models.MarketplaceMessage) {
+    // Получаем участников чата
+    chat, err := h.services.Storage().GetChatByID(ctx, message.ChatID)
+    if err != nil {
+        logger.Error().Err(err).Msg("Failed to get chat")
+        return
+    }
+
+    participants := []int{chat.BuyerID, chat.SellerID}
+
+    for _, participantID := range participants {
+        // Клонируем сообщение для каждого участника
+        msgCopy := *message
+
+        // Получаем настройки участника
+        settings, err := h.services.User().GetChatSettings(ctx, participantID)
+        if err != nil {
+            logger.Warn().Err(err).Int("userId", participantID).Msg("Failed to get chat settings")
+            settings = &models.ChatUserSettings{
+                AutoTranslate:     false,
+                PreferredLanguage: "en",
+            }
+        }
+
+        // Если нужен перевод
+        if settings.AutoTranslate &&
+           msgCopy.OriginalLanguage != settings.PreferredLanguage {
+
+            // Переводим (используя Redis кеш)
+            err = h.services.ChatTranslation().TranslateMessage(
+                ctx,
+                &msgCopy,
+                settings.PreferredLanguage,
+                settings.ModerateTone,
+            )
+            if err != nil {
+                logger.Warn().Err(err).Msg("Translation failed for WebSocket message")
+            }
+        }
+
+        // Отправляем сообщение С переводом
+        h.sendToUser(participantID, &msgCopy)
+    }
+}
+```
+
+---
+
+### Phase 5: Оптимизация и тестирование (2-3 дня)
+
+#### Task 5.1: Тестирование
+
+1. **Unit tests** - сервисы перевода
+2. **Integration tests** - GetMessages с переводами
+3. **E2E tests** - полный флоу User1 (RU) → User2 (EN)
+
+#### Task 5.2: Мониторинг
+
+- Prometheus метрики: `chat_translation_cache_hit_rate`
+- Логирование: количество переводов per request
+- Redis memory usage
+
+---
+
+## 📝 ФИНАЛЬНАЯ АРХИТЕКТУРА (ПОСЛЕ УЛУЧШЕНИЙ)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    USER AUTHENTICATION                      │
+│  1. Login → Backend saves preferred_language in DB          │
+│  2. Change locale → Frontend syncs to backend               │
+└─────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    GET MESSAGES (HTTP)                      │
+│  1. Frontend: GET /api/v2/marketplace/chat/messages         │
+│  2. Backend: Loads messages from DB                         │
+│  3. Backend: Gets user's preferred_language                 │
+│  4. Backend: TranslateBatch() - checks Redis first!         │
+│  5. Backend: Returns messages WITH translations             │
+│  6. Frontend: Shows translated text IMMEDIATELY             │
+└─────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  NEW MESSAGE (WebSocket)                    │
+│  1. User A sends message: "Привет"                          │
+│  2. Backend detects language: "ru"                          │
+│  3. Backend saves to DB with original_language="ru"         │
+│  4. Backend broadcasts to participants:                     │
+│     - User A (ru): original "Привет"                        │
+│     - User B (en): + translation "Hello" (from Redis/API)   │
+│  5. Both users see correct version INSTANTLY                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## ✅ ПРЕИМУЩЕСТВА НОВОЙ АРХИТЕКТУРЫ
+
+1. ✅ **Нет "прыгающих" сообщений** - переводы приходят сразу с backend
+2. ✅ **Нет повторных переводов** при обновлении страницы (server-side кеш работает)
+3. ✅ **Меньше API запросов к Claude** (batch перевод + Redis кеш)
+4. ✅ **WebSocket сообщения с переводами** - instant UX
+5. ✅ **Локаль хранится на сервере** - работает на всех устройствах
+6. ✅ **Кеш Redis используется эффективно** - GetMessages и WebSocket
+7. ✅ **Меньше нагрузки на frontend** - не нужны useEffect с API запросами
+
+---
+
+## 📋 ЧЕКЛИСТ ВНЕДРЕНИЯ
+
+### Backend
+- [ ] Task 1.1: Обновить модели ChatUserSettings (добавить ModerateTone)
+- [ ] Task 1.2: Endpoint PUT/GET `/api/v1/users/chat-settings`
+- [ ] Task 1.3: Service методы UpdateChatSettings / GetChatSettings
+- [ ] Task 2.1: Обновить GetMessages - автоматический batch перевод
+- [ ] Task 2.2: Обновить ChatTranslationService.GetUserTranslationSettings (использовать БД)
+- [ ] Task 4.1: Обновить WebSocket broadcast - переводы per participant
+
+### Frontend
+- [ ] Task 3.1: chatService методы getChatSettings / updateChatSettings
+- [ ] Task 3.2: Синхронизация локали с сервером при смене языка
+- [ ] Task 3.3: Обновить MessageItem - убрать useEffect, показ готовых переводов
+- [ ] Task 3.4: Обновить ChatSettings - синхронизация с сервером
+
+### Testing
+- [ ] Unit tests: ChatTranslationService
+- [ ] Integration tests: GetMessages с переводами
+- [ ] E2E tests: User RU → User EN (WebSocket + HTTP)
+- [ ] Load testing: Redis cache hit rate
+- [ ] Manual testing: обновление страницы, смена локали
+
+---
+
+## 🎯 ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ
+
+**До улучшений:**
+- ❌ При обновлении страницы: ~50 API запросов к Claude (по одному на сообщение)
+- ❌ Пользователь видит "прыгание": оригинал → перевод (~300мс задержка)
+- ❌ Redis кеш существует, но НЕ используется в GetMessages
+- ❌ Локаль только в localStorage (не работает на других устройствах)
+
+**После улучшений:**
+- ✅ При обновлении страницы: 0 API запросов (все из Redis/БД)
+- ✅ Пользователь видит перевод СРАЗУ (0мс задержка)
+- ✅ Redis кеш используется в GetMessages и WebSocket
+- ✅ Локаль синхронизирована на сервере (работает везде)
+- ✅ При новом сообщении: 1 API запрос → кеш → broadcast всем участникам
+
+---
+
+**Дата обновления:** 2025-10-04
+**Автор аудита:** Claude
+**Статус:** 🔴 КРИТИЧНЫЕ УЛУЧШЕНИЯ ТРЕБУЮТСЯ
 

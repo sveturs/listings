@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -283,22 +284,104 @@ func (s *ClaudeTranslationService) TranslateEntityFields(ctx context.Context, so
 	return result, nil
 }
 
-// DetectLanguage определяет язык текста
+// DetectLanguage определяет язык текста используя Claude API
 func (s *ClaudeTranslationService) DetectLanguage(ctx context.Context, text string) (string, float64, error) {
 	if text == "" {
 		return "", 0, fmt.Errorf("empty text")
 	}
 
-	// Простая эвристика для определения языка
-	// Можно улучшить, используя Claude для определения языка
-	if containsCyrillic(text) {
-		if containsSerbian(text) {
-			return "sr", 0.9, nil
-		}
-		return "ru", 0.9, nil
+	// Используем Claude для точного определения языка
+	prompt := fmt.Sprintf(`Determine the language of the following text.
+Respond with ONLY the ISO 639-1 language code (sr for Serbian, ru for Russian, en for English).
+Do not include any explanations, just the two-letter code.
+
+Text:
+%s`, text)
+
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 10, // Нужно всего 2 символа
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
 	}
 
-	return "en", 0.9, nil
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to marshal detect language request")
+		// Fallback to heuristic
+		return s.detectLanguageHeuristic(text)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonData))
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to create detect language request")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", s.apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to execute detect language request")
+		return s.detectLanguageHeuristic(text)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to read detect language response")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		logger.Warn().Err(err).Msg("Failed to unmarshal detect language response")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	if len(claudeResp.Content) == 0 {
+		logger.Warn().Msg("Empty detect language response from Claude")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	// Получаем код языка и очищаем от пробелов
+	detectedLang := strings.TrimSpace(strings.ToLower(claudeResp.Content[0].Text))
+
+	// Валидация: проверяем что это один из поддерживаемых языков
+	supportedLangs := map[string]bool{
+		"sr": true,
+		"ru": true,
+		"en": true,
+	}
+
+	if !supportedLangs[detectedLang] {
+		logger.Warn().Str("detected", detectedLang).Msg("Unsupported language detected, using heuristic")
+		return s.detectLanguageHeuristic(text)
+	}
+
+	logger.Debug().
+		Str("text", text[:min(50, len(text))]).
+		Str("detected", detectedLang).
+		Msg("Language detected successfully via Claude API")
+
+	return detectedLang, 0.95, nil
+}
+
+// detectLanguageHeuristic - fallback эвристика для определения языка
+func (s *ClaudeTranslationService) detectLanguageHeuristic(text string) (string, float64, error) {
+	if containsCyrillic(text) {
+		if containsSerbian(text) {
+			return "sr", 0.8, nil
+		}
+		return "ru", 0.8, nil
+	}
+	return "en", 0.8, nil
 }
 
 // ModerateText выполняет модерацию текста
@@ -527,4 +610,88 @@ Text to translate:
 	}
 
 	return "", fmt.Errorf("unexpected Claude API response format")
+}
+
+// detectLanguageWithClaude - глобальная helper функция для определения языка через Claude API
+// Используется всеми translation провайдерами для точного определения языка
+func detectLanguageWithClaude(ctx context.Context, text string) (string, float64, error) {
+	// Получаем API ключ из окружения
+	apiKey := os.Getenv("CLAUDE_API_KEY")
+	if apiKey == "" {
+		return "", 0, fmt.Errorf("CLAUDE_API_KEY not set")
+	}
+
+	// Создаем временный HTTP клиент
+	httpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	// Промпт для определения языка
+	prompt := fmt.Sprintf(`Determine the language of the following text.
+Respond with ONLY the ISO 639-1 language code (sr for Serbian, ru for Russian, en for English).
+Do not include any explanations, just the two-letter code.
+
+Text:
+%s`, text)
+
+	requestBody := claudeRequest{
+		Model:     "claude-3-haiku-20240307",
+		MaxTokens: 10,
+		Messages: []claudeMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var claudeResp claudeResponse
+	if err := json.Unmarshal(body, &claudeResp); err != nil {
+		return "", 0, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if len(claudeResp.Content) == 0 {
+		return "", 0, fmt.Errorf("empty response from Claude")
+	}
+
+	// Получаем код языка и очищаем
+	detectedLang := strings.TrimSpace(strings.ToLower(claudeResp.Content[0].Text))
+
+	// Валидация
+	supportedLangs := map[string]bool{
+		"sr": true,
+		"ru": true,
+		"en": true,
+	}
+
+	if !supportedLangs[detectedLang] {
+		return "", 0, fmt.Errorf("unsupported language detected: %s", detectedLang)
+	}
+
+	return detectedLang, 0.95, nil
 }

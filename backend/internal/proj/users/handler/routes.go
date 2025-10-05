@@ -44,6 +44,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	users.Get("/:id/profile", h.User.GetProfileByID)
 	users.Get("/privacy-settings", h.User.GetPrivacySettings)
 	users.Put("/privacy-settings", h.User.UpdatePrivacySettings)
+	users.Get("/chat-settings", h.User.GetChatSettings)
+	users.Put("/chat-settings", h.User.UpdateChatSettings)
 
 	// Roles endpoints for specific users
 	users.Get("/:userId/roles", h.Auth.GetUserRoles)

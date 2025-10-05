@@ -3,8 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -277,39 +280,64 @@ func (s *Storage) GetUserPrivacySettings(ctx context.Context, userID int) (*mode
 	// User existence проверяется через JWT auth middleware
 	// Если запрос дошел сюда, пользователь уже аутентифицирован в auth-service
 
-	// Пытаемся получить существующие настройки
+	// Пытаемся получить существующие настройки (включая JSONB settings)
 	selectQuery := `
-		SELECT user_id, allow_contact_requests, allow_messages_from_contacts_only, created_at, updated_at
+		SELECT user_id, allow_contact_requests, allow_messages_from_contacts_only, COALESCE(settings, '{}'::jsonb), created_at, updated_at
 		FROM user_privacy_settings
 		WHERE user_id = $1
 	`
 
 	settings := &models.UserPrivacySettings{}
+	var settingsJSON []byte
 	err := s.pool.QueryRow(ctx, selectQuery, userID).Scan(
 		&settings.UserID,
 		&settings.AllowContactRequests,
 		&settings.AllowMessagesFromContactsOnly,
+		&settingsJSON,
 		&settings.CreatedAt,
 		&settings.UpdatedAt,
 	)
 
-	if errors.Is(err, sql.ErrNoRows) {
+	if err == nil {
+		// Парсим JSONB settings
+		if len(settingsJSON) > 0 {
+			if err := json.Unmarshal(settingsJSON, &settings.Settings); err != nil {
+				logger.Warn().Err(err).Msg("Failed to parse settings JSONB, using empty map")
+				settings.Settings = make(map[string]interface{})
+			}
+		} else {
+			settings.Settings = make(map[string]interface{})
+		}
+	}
+
+	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows) {
 		// Если настроек нет, создаем их с значениями по умолчанию
 		insertQuery := `
-			INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 
+			INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only)
 			VALUES ($1, true, false)
-			RETURNING user_id, allow_contact_requests, allow_messages_from_contacts_only, created_at, updated_at
+			RETURNING user_id, allow_contact_requests, allow_messages_from_contacts_only, COALESCE(settings, '{}'::jsonb), created_at, updated_at
 		`
 
 		err = s.pool.QueryRow(ctx, insertQuery, userID).Scan(
 			&settings.UserID,
 			&settings.AllowContactRequests,
 			&settings.AllowMessagesFromContactsOnly,
+			&settingsJSON,
 			&settings.CreatedAt,
 			&settings.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating privacy settings: %w", err)
+		}
+
+		// Парсим JSONB settings для новой записи
+		if len(settingsJSON) > 0 {
+			if err := json.Unmarshal(settingsJSON, &settings.Settings); err != nil {
+				logger.Warn().Err(err).Msg("Failed to parse settings JSONB for new record")
+				settings.Settings = make(map[string]interface{})
+			}
+		} else {
+			settings.Settings = make(map[string]interface{})
 		}
 	} else if err != nil {
 		return nil, fmt.Errorf("error getting privacy settings: %w", err)
@@ -327,10 +355,10 @@ func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, set
 
 	// Упрощенный запрос
 	query := `
-		INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only) 
-		VALUES ($1, COALESCE($2, true), COALESCE($3, false)) 
-		ON CONFLICT (user_id) 
-		DO UPDATE SET 
+		INSERT INTO user_privacy_settings (user_id, allow_contact_requests, allow_messages_from_contacts_only)
+		VALUES ($1, COALESCE($2, true), COALESCE($3, false))
+		ON CONFLICT (user_id)
+		DO UPDATE SET
 			allow_contact_requests = COALESCE($2, user_privacy_settings.allow_contact_requests),
 			allow_messages_from_contacts_only = COALESCE($3, user_privacy_settings.allow_messages_from_contacts_only),
 			updated_at = CURRENT_TIMESTAMP
@@ -339,6 +367,52 @@ func (s *Storage) UpdateUserPrivacySettings(ctx context.Context, userID int, set
 	_, err := s.pool.Exec(ctx, query, userID, settings.AllowContactRequests, settings.AllowMessagesFromContactsOnly)
 	if err != nil {
 		return fmt.Errorf("error updating privacy settings: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateChatSettings обновляет настройки чата в JSONB поле settings
+func (s *Storage) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	// Сначала убеждаемся что запись существует (создаст если нет)
+	_, err := s.GetUserPrivacySettings(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to get/create privacy settings: %w", err)
+	}
+
+	// Обновляем JSONB поле settings используя jsonb_set
+	query := `
+		UPDATE user_privacy_settings
+		SET settings = jsonb_set(
+			jsonb_set(
+				jsonb_set(
+					jsonb_set(
+						COALESCE(settings, '{}'::jsonb),
+						'{auto_translate_chat}',
+						to_jsonb($2::boolean)
+					),
+					'{preferred_language}',
+					to_jsonb($3::text)
+				),
+				'{show_original_language_badge}',
+				to_jsonb($4::boolean)
+			),
+			'{chat_tone_moderation}',
+			to_jsonb($5::boolean)
+		),
+		updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = $1
+	`
+
+	_, err = s.pool.Exec(ctx, query,
+		userID,
+		settings.AutoTranslate,
+		settings.PreferredLanguage,
+		settings.ShowLanguageBadge,
+		settings.ModerateTone,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update chat settings: %w", err)
 	}
 
 	return nil

@@ -240,6 +240,35 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	// TODO: добавить метод в сервис для получения общего количества сообщений по chat_id
 	// Пока что используем -1, что заставит фронтенд определять hasMore по количеству возвращенных сообщений
 
+	// ✅ НОВЫЙ КОД: Автоматический server-side перевод сообщений
+	userSettings, err := h.services.User().GetChatSettings(c.Context(), userID)
+	if err != nil {
+		logger.Warn().Err(err).Int("userId", userID).Msg("Failed to get user chat settings")
+	} else if userSettings != nil && userSettings.AutoTranslate && userSettings.PreferredLanguage != "" {
+		logger.Debug().
+			Int("userId", userID).
+			Str("preferredLang", userSettings.PreferredLanguage).
+			Int("messagesCount", len(messages)).
+			Msg("Auto-translating messages batch")
+
+		// Конвертируем []models.MarketplaceMessage в []*models.MarketplaceMessage
+		messagePtrs := make([]*models.MarketplaceMessage, len(messages))
+		for i := range messages {
+			messagePtrs[i] = &messages[i]
+		}
+
+		// Batch перевод с использованием Redis кеша
+		err = h.services.ChatTranslation().TranslateBatch(
+			c.Context(),
+			messagePtrs,
+			userSettings.PreferredLanguage,
+			userSettings.ModerateTone,
+		)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Batch translation failed")
+		}
+	}
+
 	// Возвращаем структурированный ответ
 	response := ChatMessagesResponse{
 		Messages: messages,
@@ -470,9 +499,9 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 			updatedMessage.HasAttachments = true
 			updatedMessage.AttachmentsCount = len(attachments)
 
-			logger.Info().Int("attachmentsCount", len(updatedMessage.Attachments)).Msg("UploadAttachments: broadcasting message")
-			// Отправляем обновленное сообщение через WebSocket
-			h.services.Chat().BroadcastMessage(updatedMessage)
+			logger.Info().Int("attachmentsCount", len(updatedMessage.Attachments)).Msg("UploadAttachments: broadcasting message with translations")
+			// Отправляем обновленное сообщение через WebSocket с персонализированными переводами
+			h.services.Chat().BroadcastMessageWithTranslations(c.Context(), updatedMessage)
 		} else {
 			logger.Error().Err(err).Msg("UploadAttachments: error getting message by ID")
 		}

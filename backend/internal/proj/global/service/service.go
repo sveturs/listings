@@ -135,11 +135,21 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 	// Установка сервиса вложений в marketplace сервис
 	marketplaceSvc.SetChatAttachmentService(chatAttachmentSvc)
 
-	// Инициализация сервиса переводов чата
-	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient)
+	// Создаем userService для chatTranslation (с доступом к storage для chat settings)
+	usersSvc := userService.NewService(authSvc, userSvc, storage)
+
+	// Инициализация сервиса переводов чата (теперь с доступом к userService)
+	chatTranslationSvc := marketplaceService.NewChatTranslationService(translationSvc, redisClient, usersSvc.User)
 
 	// Установка сервиса переводов в marketplace сервис
 	marketplaceSvc.SetChatTranslationService(chatTranslationSvc)
+
+	// Установка зависимостей в ChatService для поддержки персонализированных переводов в WebSocket
+	if chatSvc, ok := marketplaceSvc.Chat.(*marketplaceService.ChatService); ok {
+		chatSvc.SetChatTranslationService(chatTranslationSvc)
+		chatSvc.SetUserService(usersSvc.User)
+		log.Println("ChatService dependencies set (translation & user service)")
+	}
 
 	// Создаем UnifiedCarService
 	carServiceConfig := &marketplaceService.CarServiceConfig{
@@ -151,7 +161,7 @@ func NewService(ctx context.Context, storage storage.Storage, cfg *config.Config
 
 	// Создаем экземпляр Service
 	s := &Service{
-		users:            userService.NewService(authSvc, userSvc),
+		users:            usersSvc,
 		marketplace:      marketplaceSvc,
 		review:           reviewService.NewService(storage),
 		chat:             marketplaceSvc, // Reuse the same service for chat

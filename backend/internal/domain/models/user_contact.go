@@ -22,11 +22,12 @@ type UserContact struct {
 
 // UserPrivacySettings настройки приватности пользователя
 type UserPrivacySettings struct {
-	UserID                        int       `json:"user_id" db:"user_id"`
-	AllowContactRequests          bool      `json:"allow_contact_requests" db:"allow_contact_requests"`
-	AllowMessagesFromContactsOnly bool      `json:"allow_messages_from_contacts_only" db:"allow_messages_from_contacts_only"`
-	CreatedAt                     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt                     time.Time `json:"updated_at" db:"updated_at"`
+	UserID                        int                    `json:"user_id" db:"user_id"`
+	AllowContactRequests          bool                   `json:"allow_contact_requests" db:"allow_contact_requests"`
+	AllowMessagesFromContactsOnly bool                   `json:"allow_messages_from_contacts_only" db:"allow_messages_from_contacts_only"`
+	Settings                      map[string]interface{} `json:"settings,omitempty" db:"settings"` // JSONB поле для расширяемых настроек (chat settings и др.)
+	CreatedAt                     time.Time              `json:"created_at" db:"created_at"`
+	UpdatedAt                     time.Time              `json:"updated_at" db:"updated_at"`
 }
 
 // Константы для статусов контактов

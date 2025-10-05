@@ -218,6 +218,7 @@ type Storage interface {
 	// Privacy Settings methods
 	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error
+	UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error
 
 	// Car Makes and Models methods
 	GetCarMakes(ctx context.Context, country string, isDomestic bool, isMotorcycle bool, activeOnly bool) ([]models.CarMake, error)

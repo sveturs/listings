@@ -9,8 +9,7 @@ import { ChatAttachments } from '@/components/Chat/ChatAttachments';
 import { useChat } from '@/hooks/useChat';
 import DOMPurify from 'isomorphic-dompurify';
 import Image from 'next/image';
-import { useState, useEffect, useCallback } from 'react';
-import { chatService } from '@/services/chat';
+import { useState } from 'react';
 
 // Динамически импортируем AnimatedEmoji, чтобы избежать проблем с SSR
 const AnimatedEmoji = dynamic(() => import('./AnimatedEmoji'), {
@@ -83,97 +82,23 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
   const isEmojiOnly = isOnlyEmoji(message.content);
   const { deleteAttachment } = useChat();
 
-  // Translation state
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [translatedText, setTranslatedText] = useState<string>('');
-  const [translationError, setTranslationError] = useState<string | null>(null);
-  const [_autoTranslate, setAutoTranslate] = useState(true); // По умолчанию ВКЛЮЧЕН
+  // ✅ УПРОЩЕНО: Просто показываем готовый перевод из backend (БЕЗ API запросов!)
+  const [showOriginal, setShowOriginal] = useState(false);
 
-  // Определяем, нужна ли кнопка перевода
-  const shouldShowTranslateButton =
-    !isOwn && // Только для чужих сообщений
-    !isEmojiOnly && // Не для emoji
-    message.content && // Есть текст
-    message.content.trim().length > 0; // Не пустой текст
+  // Проверяем готовый перевод из backend
+  const hasTranslation = message.translations && message.translations[locale];
 
-  // Функция перевода (объявлена ДО useEffect, чтобы избежать ошибки инициализации)
-  const handleTranslate = useCallback(async () => {
-    if (showTranslation) {
-      // Переключаемся обратно на оригинал
-      setShowTranslation(false);
-      return;
-    }
+  // Отображаемый текст:
+  // - Если это своё сообщение (isOwn), всегда показываем оригинал
+  // - Если чужое сообщение, показываем перевод (если есть) или оригинал
+  const displayText = isOwn
+    ? message.content
+    : showOriginal
+      ? message.content
+      : hasTranslation || message.content;
 
-    // Если уже есть перевод, просто показываем его
-    if (translatedText) {
-      setShowTranslation(true);
-      return;
-    }
-
-    // Запрашиваем перевод
-    setIsTranslating(true);
-    setTranslationError(null);
-
-    try {
-      const response = await chatService.getMessageTranslation({
-        messageId: message.id,
-        language: locale,
-      });
-
-      setTranslatedText(response.translated_text);
-      setShowTranslation(true);
-    } catch (error) {
-      console.error('Translation error:', error);
-      setTranslationError(t('translation.translationError'));
-    } finally {
-      setIsTranslating(false);
-    }
-  }, [showTranslation, translatedText, message.id, locale, t]);
-
-  // Загрузка настроек и автоматический перевод
-  useEffect(() => {
-    // Загружаем настройки из localStorage
-    const savedAutoTranslate = localStorage.getItem('chat_auto_translate');
-
-    // Если настройка не сохранена, включаем автоперевод по умолчанию
-    const isAutoTranslateEnabled =
-      savedAutoTranslate !== null ? savedAutoTranslate === 'true' : true; // По умолчанию ВКЛЮЧЕН
-
-    setAutoTranslate(isAutoTranslateEnabled);
-
-    // Если автоперевод включен и это входящее сообщение
-    if (
-      isAutoTranslateEnabled &&
-      shouldShowTranslateButton &&
-      !translatedText
-    ) {
-      handleTranslate();
-    }
-
-    // Слушаем изменения настроек
-    const handleSettingsChange = (event: CustomEvent) => {
-      const { autoTranslate: newAutoTranslate } = event.detail;
-      setAutoTranslate(newAutoTranslate);
-
-      // Если включили автоперевод и еще нет перевода - переводим
-      if (newAutoTranslate && shouldShowTranslateButton && !translatedText) {
-        handleTranslate();
-      }
-    };
-
-    window.addEventListener(
-      'chat-settings-changed',
-      handleSettingsChange as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        'chat-settings-changed',
-        handleSettingsChange as EventListener
-      );
-    };
-  }, [message.id, shouldShowTranslateButton, translatedText, handleTranslate]);
+  // Кнопка переключения только если есть перевод
+  const shouldShowToggleButton = !isOwn && !isEmojiOnly && hasTranslation;
 
   const formatTime = (date: string) => {
     return format(new Date(date), 'HH:mm', {
@@ -238,13 +163,10 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
               <p
                 className="whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(
-                    showTranslation ? translatedText : message.content,
-                    {
-                      ALLOWED_TAGS: [],
-                      KEEP_CONTENT: true,
-                    }
-                  ),
+                  __html: DOMPurify.sanitize(displayText, {
+                    ALLOWED_TAGS: [],
+                    KEEP_CONTENT: true,
+                  }),
                 }}
               />
             </div>
@@ -294,15 +216,10 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                       <p className="whitespace-pre-wrap">
                         <span
                           dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(
-                              showTranslation
-                                ? translatedText
-                                : message.content,
-                              {
-                                ALLOWED_TAGS: [],
-                                KEEP_CONTENT: true,
-                              }
-                            ),
+                            __html: DOMPurify.sanitize(displayText, {
+                              ALLOWED_TAGS: [],
+                              KEEP_CONTENT: true,
+                            }),
                           }}
                         />
                       </p>
@@ -311,30 +228,17 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                 </div>
               )}
 
-            {/* Кнопка перевода - ВЫНЕСЕНА ЗА ПРЕДЕЛЫ СООБЩЕНИЯ */}
-            {shouldShowTranslateButton && (
+            {/* ✅ УПРОЩЕНО: Кнопка только для переключения (БЕЗ API!) */}
+            {shouldShowToggleButton && (
               <div className="mt-1 flex items-center gap-2">
                 <button
-                  onClick={handleTranslate}
-                  disabled={isTranslating}
+                  onClick={() => setShowOriginal(!showOriginal)}
                   className="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content/80 opacity-60 hover:opacity-100 transition-opacity"
                 >
-                  {isTranslating ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs"></span>
-                      {t('translation.translating')}
-                    </>
-                  ) : showTranslation ? (
-                    t('translation.showOriginal')
-                  ) : (
-                    t('translation.translate')
-                  )}
+                  {showOriginal
+                    ? t('translation.showTranslation')
+                    : t('translation.showOriginal')}
                 </button>
-                {translationError && (
-                  <span className="text-xs text-error/70">
-                    {translationError}
-                  </span>
-                )}
               </div>
             )}
           </>

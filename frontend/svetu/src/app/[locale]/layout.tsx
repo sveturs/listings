@@ -9,6 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ReduxProvider } from '@/components/ReduxProvider';
 import WebSocketManager from '@/components/WebSocketManager';
 import AuthStateManager from '@/components/AuthStateManager';
+import LocaleSync from '@/components/LocaleSync';
 import { VisibleCitiesProvider } from '@/components/GIS/contexts/VisibleCitiesContext';
 import { SmartMobileBottomNav } from '@/components/navigation/SmartMobileBottomNav';
 import { CartSyncProvider } from '@/components/CartSyncProvider';
@@ -122,6 +123,7 @@ export default async function RootLayout({
                     <ErrorBoundaryClass name="RootLayout">
                       <AuthStateManager />
                       <WebSocketManager />
+                      <LocaleSync />
                       <HeaderWrapper />
                       <Toaster position="top-right" />
                       <main className="min-h-screen pt-16 pb-16 md:pb-0">

@@ -494,6 +494,54 @@ class ChatService {
 
     return ws;
   }
+
+  // ✅ НОВЫЕ МЕТОДЫ: Получить настройки чата пользователя
+  async getChatSettings(): Promise<{
+    auto_translate_chat: boolean;
+    preferred_language: 'ru' | 'en' | 'sr';
+    show_original_language_badge: boolean;
+    chat_tone_moderation: boolean;
+  }> {
+    // Используем прямой fetch к /api/v2/users/chat-settings (через BFF proxy)
+    const response = await fetch('/api/v2/users/chat-settings', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get chat settings');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  // Обновить настройки чата пользователя
+  async updateChatSettings(settings: {
+    auto_translate_chat: boolean;
+    preferred_language: 'ru' | 'en' | 'sr';
+    show_original_language_badge: boolean;
+    chat_tone_moderation: boolean;
+  }): Promise<void> {
+    const csrfToken = await this.getCsrfToken();
+
+    const response = await fetch('/api/v2/users/chat-settings', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update chat settings');
+    }
+  }
 }
 
 export const chatService = new ChatService();

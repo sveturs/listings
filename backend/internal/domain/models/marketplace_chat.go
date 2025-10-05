@@ -97,4 +97,5 @@ type ChatUserSettings struct {
 	AutoTranslate     bool   `json:"auto_translate_chat"`
 	PreferredLanguage string `json:"preferred_language"` // "ru", "en", "sr"
 	ShowLanguageBadge bool   `json:"show_original_language_badge"`
+	ModerateTone      bool   `json:"chat_tone_moderation"` // Модерация тона сообщений
 }

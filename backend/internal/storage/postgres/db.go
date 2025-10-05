@@ -1144,6 +1144,10 @@ func (db *Database) UpdatePrivacySettings(ctx context.Context, userID int, setti
 	return db.marketplaceDB.UpdateUserPrivacySettings(ctx, userID, settings)
 }
 
+func (db *Database) UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error {
+	return db.marketplaceDB.UpdateChatSettings(ctx, userID, settings)
+}
+
 func (db *Database) CanAddContact(ctx context.Context, userID, targetUserID int) (bool, error) {
 	return db.marketplaceDB.CanAddContact(ctx, userID, targetUserID)
 }

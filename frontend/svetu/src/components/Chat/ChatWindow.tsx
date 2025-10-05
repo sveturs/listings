@@ -309,9 +309,11 @@ export default function ChatWindow({
 
     const { scrollTop, scrollHeight, clientHeight } =
       messagesContainerRef.current;
-    setIsAtBottom(scrollHeight - scrollTop - clientHeight < 100);
+    const isNowAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setIsAtBottom(isNowAtBottom);
 
     // Загрузка предыдущих сообщений при скролле вверх
+    const currentPage = Math.ceil(chatMessages.length / 20);
     if (
       scrollTop < 100 &&
       hasMore &&
@@ -325,7 +327,6 @@ export default function ChatWindow({
       const oldScrollHeight = scrollHeight;
 
       try {
-        const currentPage = Math.ceil(chatMessages.length / 20);
         await loadMessages({
           chat_id: chat.id,
           page: currentPage + 1,

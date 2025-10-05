@@ -33,4 +33,8 @@ type UserServiceInterface interface {
 	// Методы для настроек приватности
 	GetPrivacySettings(ctx context.Context, userID int) (*models.UserPrivacySettings, error)
 	UpdatePrivacySettings(ctx context.Context, userID int, settings *models.UpdatePrivacySettingsRequest) error
+
+	// Методы для настроек чата
+	GetChatSettings(ctx context.Context, userID int) (*models.ChatUserSettings, error)
+	UpdateChatSettings(ctx context.Context, userID int, settings *models.ChatUserSettings) error
 }
