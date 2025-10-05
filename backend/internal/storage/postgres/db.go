@@ -247,6 +247,124 @@ func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
 	return db.osStorefrontRepo.ReindexAll(ctx)
 }
 
+// ReindexAllProducts переиндексирует все товары витрин
+func (db *Database) ReindexAllProducts(ctx context.Context) error {
+	if db.productSearchRepo == nil {
+		return fmt.Errorf("OpenSearch для товаров витрин не настроен")
+	}
+
+	// Получаем все активные товары витрин из БД
+	query := `
+		SELECT
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
+			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
+			c.id, c.name, c.slug, c.icon, c.parent_id,
+			s.name as storefront_name
+		FROM storefront_products p
+		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN storefronts s ON p.storefront_id = s.id
+		WHERE p.is_active = true
+		ORDER BY p.id
+	`
+
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return fmt.Errorf("ошибка получения товаров: %w", err)
+	}
+	defer rows.Close()
+
+	var products []*models.StorefrontProduct
+	for rows.Next() {
+		product := &models.StorefrontProduct{}
+		var category models.MarketplaceCategory
+		var storefrontName sql.NullString
+		var categoryID sql.NullInt32
+		var categoryName, categorySlug, categoryIcon sql.NullString
+		var categoryParentID sql.NullInt32
+
+		err := rows.Scan(
+			&product.ID, &product.StorefrontID, &product.Name, &product.Description,
+			&product.Price, &product.Currency, &categoryID, &product.SKU, &product.Barcode,
+			&product.StockQuantity, &product.StockStatus, &product.IsActive,
+			&product.Attributes, &product.ViewCount, &product.SoldCount,
+			&product.CreatedAt, &product.UpdatedAt,
+			&product.HasIndividualLocation, &product.IndividualAddress,
+			&product.IndividualLatitude, &product.IndividualLongitude,
+			&product.LocationPrivacy, &product.ShowOnMap, &product.HasVariants,
+			&category.ID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
+			&storefrontName,
+		)
+		if err != nil {
+			log.Printf("Ошибка сканирования товара: %v", err)
+			continue
+		}
+
+		// Заполняем категорию если есть
+		if categoryID.Valid {
+			category.ID = int(categoryID.Int32)
+			product.CategoryID = category.ID
+			if categoryName.Valid {
+				category.Name = categoryName.String
+			}
+			if categorySlug.Valid {
+				category.Slug = categorySlug.String
+			}
+			if categoryIcon.Valid {
+				category.Icon = &categoryIcon.String
+			}
+			if categoryParentID.Valid {
+				parentID := int(categoryParentID.Int32)
+				category.ParentID = &parentID
+			}
+			product.Category = &category
+		}
+
+		// Загружаем варианты если есть
+		if product.HasVariants {
+			variants, err := db.getProductVariants(ctx, product.ID)
+			if err == nil {
+				product.Variants = variants
+			}
+		}
+
+		// Загружаем изображения
+		images, err := db.getProductImages(ctx, []int{product.ID})
+		if err == nil {
+			product.Images = images
+		}
+
+		products = append(products, product)
+	}
+
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("ошибка итерации товаров: %w", err)
+	}
+
+	log.Printf("Получено %d товаров для индексации", len(products))
+
+	// Индексируем все товары пакетами
+	const batchSize = 100
+	for i := 0; i < len(products); i += batchSize {
+		end := i + batchSize
+		if end > len(products) {
+			end = len(products)
+		}
+		batch := products[i:end]
+
+		if err := db.productSearchRepo.BulkIndexProducts(ctx, batch); err != nil {
+			return fmt.Errorf("ошибка индексации пакета товаров: %w", err)
+		}
+		log.Printf("Проиндексировано %d/%d товаров", end, len(products))
+	}
+
+	log.Printf("Успешно проиндексировано %d товаров витрин", len(products))
+	return nil
+}
+
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	var image models.MarketplaceImage
 	var storageBucket, publicURL sql.NullString
