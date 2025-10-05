@@ -6,7 +6,7 @@ import { version } from './package.json';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // output: 'standalone' - отключено для dev сервера (нужно только для Docker)
   // Moved from experimental to top-level in Next.js 15
   serverExternalPackages: [],
   env: {
