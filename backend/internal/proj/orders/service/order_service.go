@@ -183,7 +183,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 				// FIXED: транзакции реализованы в CreateOrderWithTx
 				return nil, fmt.Errorf("variant %d is not active", *item.VariantID)
 			}
-			price = decimal.NewFromFloat(variant.Price)
+			price = decimal.NewFromFloat(*variant.Price)
 			stockQuantity = variant.StockQuantity
 		} else {
 			price = decimal.NewFromFloat(product.Price)
@@ -226,7 +226,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *models.CreateOrderR
 		}
 
 		if variant != nil {
-			orderItem.VariantName = &variant.Name
+			orderItem.VariantName = nil
 		}
 
 		orderItems = append(orderItems, orderItem)
@@ -561,7 +561,7 @@ func (s *OrderService) AddToCart(ctx context.Context, cartItem *models.ShoppingC
 		if !variant.IsActive {
 			return nil, fmt.Errorf("variant is not active")
 		}
-		cartItem.PricePerUnit = decimal.NewFromFloat(variant.Price)
+		cartItem.PricePerUnit = decimal.NewFromFloat(*variant.Price)
 	} else {
 		cartItem.PricePerUnit = decimal.NewFromFloat(product.Price)
 	}

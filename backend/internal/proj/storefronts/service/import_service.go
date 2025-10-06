@@ -1432,22 +1432,16 @@ func (s *ImportService) groupAndDetectVariants(products []models.ImportProductRe
 }
 
 // importVariantGroup импортирует группу вариантов как один товар с вариантами
-// Эта функция будет расширена в следующих спринтах
+// TODO: Доделать интеграцию с ImportProductRequest (нужны Description, Currency, CategoryID, ImageURLs)
 func (s *ImportService) importVariantGroup(
 	ctx context.Context,
 	group *VariantGroup,
 	storefrontID int,
 ) error {
-	// TODO: Реализация импорта группы вариантов
-	// 1. Создать parent product с has_variants=true
-	// 2. Создать все варианты в storefront_product_variants
-	// 3. Загрузить изображения для каждого варианта
-	// 4. Установить is_default для первого варианта
-	
-	// Пока просто возвращаем nil (skeleton)
+	// Временно возвращаем ошибку - функция будет доработана в следующем спринте
+	// когда будет готова правильная интеграция с parsers
 	_ = ctx
-	_ = storefrontID
 	_ = group
-	
-	return fmt.Errorf("variant import not yet implemented - coming in next sprint")
+	_ = storefrontID
+	return fmt.Errorf("variant group import not yet fully implemented - repository methods ready, integration pending")
 }

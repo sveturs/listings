@@ -193,15 +193,64 @@ func (s *StorefrontProductImage) SetMainImage(isMain bool) {
 // StorefrontProductVariant represents a variant of a product (e.g., size, color)
 type StorefrontProductVariant struct {
 	ID                  int       `json:"id" db:"id"`
-	StorefrontProductID int       `json:"storefront_product_id" db:"storefront_product_id"`
-	Name                string    `json:"name" db:"name"` // e.g., "Red - Large"
+	ProductID           int       `json:"product_id" db:"product_id"`
 	SKU                 *string   `json:"sku,omitempty" db:"sku"`
-	Price               float64   `json:"price" db:"price"`
+	Barcode             *string   `json:"barcode,omitempty" db:"barcode"`
+	Price               *float64  `json:"price,omitempty" db:"price"`
+	CompareAtPrice      *float64  `json:"compare_at_price,omitempty" db:"compare_at_price"`
+	CostPrice           *float64  `json:"cost_price,omitempty" db:"cost_price"`
 	StockQuantity       int       `json:"stock_quantity" db:"stock_quantity"`
-	Attributes          JSONB     `json:"attributes,omitempty" db:"attributes"` // e.g., {"color": "red", "size": "L"}
+	StockStatus         string    `json:"stock_status" db:"stock_status"`
+	LowStockThreshold   *int      `json:"low_stock_threshold,omitempty" db:"low_stock_threshold"`
+	VariantAttributes   JSONB     `json:"variant_attributes" db:"variant_attributes"` // e.g., {"color": "red", "size": "L"}
+	Weight              *float64  `json:"weight,omitempty" db:"weight"`
+	Dimensions          JSONB     `json:"dimensions,omitempty" db:"dimensions"`
 	IsActive            bool      `json:"is_active" db:"is_active"`
+	IsDefault           bool      `json:"is_default" db:"is_default"`
+	ViewCount           int       `json:"view_count" db:"view_count"`
+	SoldCount           int       `json:"sold_count" db:"sold_count"`
 	CreatedAt           time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// CreateProductVariantRequest represents a request to create a product variant
+type CreateProductVariantRequest struct {
+	ProductID         int     `json:"product_id"`
+	SKU               *string `json:"sku,omitempty"`
+	Barcode           *string `json:"barcode,omitempty"`
+	Price             *float64 `json:"price,omitempty"`
+	CompareAtPrice    *float64 `json:"compare_at_price,omitempty"`
+	CostPrice         *float64 `json:"cost_price,omitempty"`
+	StockQuantity     int     `json:"stock_quantity"`
+	StockStatus       string  `json:"stock_status"`
+	LowStockThreshold *int    `json:"low_stock_threshold,omitempty"`
+	VariantAttributes JSONB   `json:"variant_attributes"`
+	Weight            *float64 `json:"weight,omitempty"`
+	Dimensions        JSONB   `json:"dimensions,omitempty"`
+	IsActive          bool    `json:"is_active"`
+	IsDefault         bool    `json:"is_default"`
+}
+
+// StorefrontProductVariantImage represents an image for a product variant
+type StorefrontProductVariantImage struct {
+	ID           int       `json:"id" db:"id"`
+	VariantID    int       `json:"variant_id" db:"variant_id"`
+	ImageURL     string    `json:"image_url" db:"image_url"`
+	ThumbnailURL *string   `json:"thumbnail_url,omitempty" db:"thumbnail_url"`
+	AltText      *string   `json:"alt_text,omitempty" db:"alt_text"`
+	DisplayOrder int       `json:"display_order" db:"display_order"`
+	IsMain       bool      `json:"is_main" db:"is_main"`
+	CreatedAt    time.Time `json:"created_at" db:"created_at"`
+}
+
+// CreateProductVariantImageRequest represents a request to create a variant image
+type CreateProductVariantImageRequest struct {
+	VariantID    int     `json:"variant_id"`
+	ImageURL     string  `json:"image_url"`
+	ThumbnailURL *string `json:"thumbnail_url,omitempty"`
+	AltText      *string `json:"alt_text,omitempty"`
+	DisplayOrder int     `json:"display_order"`
+	IsMain       bool    `json:"is_main"`
 }
 
 // StorefrontInventoryMovement tracks inventory changes

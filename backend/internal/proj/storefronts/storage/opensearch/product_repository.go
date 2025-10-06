@@ -215,10 +215,10 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 
 			varDoc := map[string]interface{}{
 				"id":                 variant.ID,
-				"name":               variant.Name,
+				"name":               "",
 				"sku":                variant.SKU,
 				"price":              variant.Price,
-				"attributes":         variant.Attributes,
+				"attributes":         variant.VariantAttributes,
 				"stock_quantity":     variant.StockQuantity,
 				"available_quantity": availableQuantity,
 				"is_active":          variant.IsActive,
@@ -249,11 +249,11 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 			}
 
 			// Отслеживаем диапазон цен
-			if variant.Price < minPrice {
-				minPrice = variant.Price
+			if variant.Price != nil && *variant.Price < minPrice {
+				minPrice = *variant.Price
 			}
-			if variant.Price > maxPrice {
-				maxPrice = variant.Price
+			if variant.Price != nil && *variant.Price > maxPrice {
+				maxPrice = *variant.Price
 			}
 
 			// Считаем общие остатки по вариантам

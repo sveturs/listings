@@ -84,9 +84,9 @@ func (s *OrderService) CreateOrderWithTx(ctx context.Context, db *sqlx.DB, req *
 				if !variant.IsActive {
 					return fmt.Errorf("variant %d is not active", *item.VariantID)
 				}
-				price = decimal.NewFromFloat(variant.Price)
+				price = decimal.NewFromFloat(*variant.Price)
 				stockQuantity = variant.StockQuantity
-				variantName = &variant.Name
+				variantName = nil
 			} else {
 				price = decimal.NewFromFloat(product.Price)
 				stockQuantity = product.StockQuantity

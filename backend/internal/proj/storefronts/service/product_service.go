@@ -49,6 +49,13 @@ type Storage interface {
 	HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
+
+	// Variant operations
+	CreateProductVariant(ctx context.Context, variant *models.CreateProductVariantRequest) (*models.StorefrontProductVariant, error)
+	BatchCreateProductVariants(ctx context.Context, variants []*models.CreateProductVariantRequest) ([]*models.StorefrontProductVariant, error)
+	CreateProductVariantImage(ctx context.Context, image *models.CreateProductVariantImageRequest) (*models.StorefrontProductVariantImage, error)
+	BatchCreateProductVariantImages(ctx context.Context, images []*models.CreateProductVariantImageRequest) ([]*models.StorefrontProductVariantImage, error)
+	GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error)
 	IncrementProductViews(ctx context.Context, productID int) error
 
 	// Bulk operations
@@ -85,6 +92,11 @@ func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepos
 		searchRepo:     searchRepo,
 		variantService: variantService,
 	}
+}
+
+// GetStorage returns the storage instance
+func (s *ProductService) GetStorage() Storage {
+	return s.storage
 }
 
 // ValidateStorefrontOwnership checks if user owns the storefront
@@ -298,12 +310,11 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		for i, v := range createdVariants {
 			product.Variants[i] = models.StorefrontProductVariant{
 				ID:                  v.ID,
-				StorefrontProductID: v.ProductID,
-				Name:                s.generateVariantName(v.VariantAttributes),
+				ProductID: v.ProductID,
 				SKU:                 v.SKU,
-				Price:               s.getVariantPrice(v.Price, product.Price),
+				Price: v.Price,
 				StockQuantity:       v.StockQuantity,
-				Attributes:          v.VariantAttributes,
+				VariantAttributes:          v.VariantAttributes,
 				IsActive:            v.IsActive,
 				CreatedAt:           v.CreatedAt,
 				UpdatedAt:           v.UpdatedAt,

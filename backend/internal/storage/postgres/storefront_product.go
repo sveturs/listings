@@ -591,7 +591,7 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 	var attributesJSON []byte
 
 	err := s.pool.QueryRow(ctx, query, variantID).Scan(
-		&variant.ID, &variant.StorefrontProductID, &variant.SKU,
+		&variant.ID, &variant.ProductID, &variant.SKU,
 		&variant.Price, &variant.StockQuantity, &attributesJSON,
 		&variant.IsActive, &variant.CreatedAt, &variant.UpdatedAt,
 	)
@@ -605,11 +605,10 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 
 	// Parse variant attributes to create name
 	if attributesJSON != nil {
-		if unmarshalErr := json.Unmarshal(attributesJSON, &variant.Attributes); unmarshalErr != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &variant.VariantAttributes); unmarshalErr != nil {
 			logger.Error().Err(unmarshalErr).Msg("Failed to unmarshal variant attributes")
 		}
 		// Create variant name from attributes (e.g., "Red - Large")
-		variant.Name = s.createVariantNameFromAttributes(variant.Attributes)
 	}
 
 	return variant, nil
@@ -1320,7 +1319,7 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 		var attributesJSON []byte
 
 		err := rows.Scan(
-			&v.ID, &v.StorefrontProductID, &v.Name, &v.SKU, &v.Price,
+			&v.ID, &v.ProductID, &sql.NullString{}, &v.SKU, &v.Price,
 			&v.StockQuantity, &attributesJSON, &v.IsActive, &v.CreatedAt, &v.UpdatedAt,
 		)
 		if err != nil {
@@ -1328,7 +1327,7 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 		}
 
 		if attributesJSON != nil {
-			if err := json.Unmarshal(attributesJSON, &v.Attributes); err != nil {
+			if err := json.Unmarshal(attributesJSON, &v.VariantAttributes); err != nil {
 				return nil, err
 			}
 		}

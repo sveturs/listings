@@ -1083,3 +1083,24 @@ func (s *storageAdapter) CreateStorefrontProductTx(ctx context.Context, tx store
 	// Call the database method with the transaction
 	return s.db.CreateStorefrontProductTx(ctx, sqlxWrapper.tx, storefrontID, req)
 }
+
+// Variant operations
+func (s *storageAdapter) CreateProductVariant(ctx context.Context, variant *models.CreateProductVariantRequest) (*models.StorefrontProductVariant, error) {
+	return s.db.CreateProductVariant(ctx, variant)
+}
+
+func (s *storageAdapter) BatchCreateProductVariants(ctx context.Context, variants []*models.CreateProductVariantRequest) ([]*models.StorefrontProductVariant, error) {
+	return s.db.BatchCreateProductVariants(ctx, variants)
+}
+
+func (s *storageAdapter) CreateProductVariantImage(ctx context.Context, image *models.CreateProductVariantImageRequest) (*models.StorefrontProductVariantImage, error) {
+	return s.db.CreateProductVariantImage(ctx, image)
+}
+
+func (s *storageAdapter) BatchCreateProductVariantImages(ctx context.Context, images []*models.CreateProductVariantImageRequest) ([]*models.StorefrontProductVariantImage, error) {
+	return s.db.BatchCreateProductVariantImages(ctx, images)
+}
+
+func (s *storageAdapter) GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error) {
+	return s.db.GetProductVariants(ctx, productID)
+}
