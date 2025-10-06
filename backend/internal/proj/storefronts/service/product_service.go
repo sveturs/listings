@@ -40,6 +40,7 @@ type Storage interface {
 	GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error)
 	GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error)
 	GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error)
+	GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error)
 	CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
 	UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
@@ -161,6 +162,23 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 				logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
 			}
 		}(context.WithoutCancel(ctx))
+	}
+
+	// Обрабатываем адрес с учетом приватности
+	s.processProductLocationPrivacy(product)
+
+	return product, nil
+}
+
+// GetProductBySKU retrieves a single product by SKU and storefront ID
+func (s *ProductService) GetProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	product, err := s.storage.GetStorefrontProductBySKU(ctx, storefrontID, sku)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product by SKU: %w", err)
+	}
+
+	if product == nil {
+		return nil, fmt.Errorf("product not found")
 	}
 
 	// Обрабатываем адрес с учетом приватности

@@ -4,8 +4,14 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -13,7 +19,10 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/parsers"
+	"backend/internal/services"
 	"backend/internal/storage/postgres"
+
+	_ "golang.org/x/image/webp"
 )
 
 const (
@@ -30,14 +39,28 @@ const (
 type ImportService struct {
 	productService *ProductService
 	jobsRepo       postgres.ImportJobsRepositoryInterface
+	queueManager   *ImportQueueManager
+	imageService   *services.ImageService
 }
 
 // NewImportService creates a new import service
-func NewImportService(productService *ProductService, jobsRepo postgres.ImportJobsRepositoryInterface) *ImportService {
+func NewImportService(productService *ProductService, jobsRepo postgres.ImportJobsRepositoryInterface, imageService *services.ImageService) *ImportService {
 	return &ImportService{
 		productService: productService,
 		jobsRepo:       jobsRepo,
+		queueManager:   nil, // Will be set via SetQueueManager
+		imageService:   imageService,
 	}
+}
+
+// SetQueueManager sets the queue manager for async processing
+func (s *ImportService) SetQueueManager(queueManager *ImportQueueManager) {
+	s.queueManager = queueManager
+}
+
+// GetQueueManager returns the queue manager
+func (s *ImportService) GetQueueManager() *ImportQueueManager {
+	return s.queueManager
 }
 
 // ImportFromURL downloads and imports products from a URL
@@ -389,9 +412,11 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 	var err error
 
 	if importProduct.SKU != "" {
-		// existingProduct, err = s.productService.GetProductBySKU(ctx, storefrontID, importProduct.SKU)
-		// For now, treat all as new products
-		_ = err
+		existingProduct, err = s.productService.GetProductBySKU(ctx, storefrontID, importProduct.SKU)
+		// Если товар не найден - это нормально, просто создадим новый
+		if err != nil && !errors.Is(err, postgres.ErrStorefrontProductNotFound) {
+			return fmt.Errorf("failed to check existing product: %w", err)
+		}
 	}
 
 	switch updateMode {
@@ -441,17 +466,13 @@ func (s *ImportService) createProduct(ctx context.Context, importProduct models.
 	}
 	fmt.Printf("Successfully created product: %s (ID: %d)\n", product.Name, product.ID)
 
-	// Add images if provided
+	// Import images if provided
 	if len(importProduct.ImageURLs) > 0 {
-		for i, imageURL := range importProduct.ImageURLs {
-			imageReq := models.StorefrontProductImage{
-				StorefrontProductID: product.ID,
-				ImageURL:            imageURL,
-				DisplayOrder:        i + 1,
-				IsDefault:           i == 0,
-			}
-			// Add image (would need to implement this in product service)
-			_ = imageReq
+		err := s.importProductImages(ctx, product.ID, importProduct.ImageURLs)
+		if err != nil {
+			// Логируем ошибку, но не прерываем импорт товара
+			// Товар уже создан, и частичная загрузка изображений допустима
+			fmt.Printf("Failed to import all images for product %d: %v\n", product.ID, err)
 		}
 	}
 
@@ -650,6 +671,279 @@ func (s *ImportService) RetryJob(ctx context.Context, jobID int) (*models.Import
 	}
 
 	return newJob, nil
+}
+
+// ImportFromURLAsync asynchronously downloads and imports products from a URL
+func (s *ImportService) ImportFromURLAsync(ctx context.Context, userID int, req models.ImportRequest) (*models.ImportJob, error) {
+	if req.FileURL == nil {
+		return nil, fmt.Errorf("file URL is required")
+	}
+
+	// Check if queue manager is available
+	if s.queueManager == nil || !s.queueManager.IsRunning() {
+		// Fallback to synchronous import if queue manager is not available
+		return s.ImportFromURL(ctx, userID, req)
+	}
+
+	// Create import job in database with pending status
+	job := &models.ImportJob{
+		StorefrontID: req.StorefrontID,
+		UserID:       userID,
+		FileType:     req.FileType,
+		FileURL:      req.FileURL,
+		Status:       "pending",
+	}
+
+	// Save job to database
+	if err := s.jobsRepo.Create(ctx, job); err != nil {
+		return nil, fmt.Errorf("failed to create import job: %w", err)
+	}
+
+	// Download file in background
+	go func() {
+		data, _, err := s.downloadFile(context.Background(), *req.FileURL)
+		if err != nil {
+			// Update job status to failed
+			job.Status = statusFailed
+			errorMsg := fmt.Sprintf("Failed to download file: %v", err)
+			job.ErrorMessage = &errorMsg
+			_ = s.jobsRepo.Update(context.Background(), job)
+			return
+		}
+
+		// Create task for worker pool
+		task := &ImportJobTask{
+			JobID:        job.ID,
+			UserID:       userID,
+			StorefrontID: req.StorefrontID,
+			FileData:     data,
+			FileType:     req.FileType,
+			UpdateMode:   req.UpdateMode,
+			FileURL:      req.FileURL,
+		}
+
+		// Enqueue job
+		if err := s.queueManager.EnqueueJob(task); err != nil {
+			// Update job status to failed if enqueue fails
+			job.Status = statusFailed
+			errorMsg := fmt.Sprintf("Failed to enqueue job: %v", err)
+			job.ErrorMessage = &errorMsg
+			_ = s.jobsRepo.Update(context.Background(), job)
+		}
+	}()
+
+	// Return job immediately
+	return job, nil
+}
+
+// ImportFromFileAsync asynchronously imports products from uploaded file data
+func (s *ImportService) ImportFromFileAsync(ctx context.Context, userID int, fileData []byte, req models.ImportRequest) (*models.ImportJob, error) {
+	// Check if queue manager is available
+	if s.queueManager == nil || !s.queueManager.IsRunning() {
+		// Fallback to synchronous import if queue manager is not available
+		return s.ImportFromFile(ctx, userID, fileData, req)
+	}
+
+	// Create import job in database with pending status
+	job := &models.ImportJob{
+		StorefrontID: req.StorefrontID,
+		UserID:       userID,
+		FileType:     req.FileType,
+		Status:       "pending",
+	}
+
+	if req.FileName != nil {
+		job.FileName = *req.FileName
+	}
+
+	// Save job to database
+	if err := s.jobsRepo.Create(ctx, job); err != nil {
+		return nil, fmt.Errorf("failed to create import job: %w", err)
+	}
+
+	// Create task for worker pool
+	task := &ImportJobTask{
+		JobID:        job.ID,
+		UserID:       userID,
+		StorefrontID: req.StorefrontID,
+		FileData:     fileData,
+		FileType:     req.FileType,
+		UpdateMode:   req.UpdateMode,
+		FileName:     req.FileName,
+	}
+
+	// Enqueue job
+	if err := s.queueManager.EnqueueJob(task); err != nil {
+		// Update job status to failed if enqueue fails
+		job.Status = statusFailed
+		errorMsg := fmt.Sprintf("Failed to enqueue job: %v", err)
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
+		return job, fmt.Errorf("failed to enqueue job: %w", err)
+	}
+
+	// Return job immediately
+	return job, nil
+}
+
+// downloadImage downloads an image from a URL
+func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, string, error) {
+	// Валидация URL
+	if url == "" {
+		return nil, "", fmt.Errorf("empty image URL")
+	}
+
+	// Создание HTTP запроса
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// HTTP клиент с таймаутом
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Выполнение запроса
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to download image: %w", err)
+	}
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Failed to close response body: %v\n", err)
+		}
+	}()
+
+	// Проверка статуса ответа
+	if resp.StatusCode != http.StatusOK {
+		return nil, "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	// Проверка Content-Type
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		return nil, "", fmt.Errorf("invalid content type: %s (expected image/*)", contentType)
+	}
+
+	// Проверка размера файла (максимум 10MB)
+	const maxImageSize = 10 * 1024 * 1024
+	if resp.ContentLength > maxImageSize {
+		return nil, "", fmt.Errorf("image size exceeds maximum limit of 10MB")
+	}
+
+	// Чтение данных изображения
+	imageData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to read image data: %w", err)
+	}
+
+	// Дополнительная проверка размера после загрузки
+	if len(imageData) > maxImageSize {
+		return nil, "", fmt.Errorf("image size exceeds maximum limit of 10MB")
+	}
+
+	// Валидация что это действительно изображение (попытка декодировать)
+	_, _, err = image.DecodeConfig(bytes.NewReader(imageData))
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid image format: %w", err)
+	}
+
+	// Определение расширения файла
+	ext := filepath.Ext(url)
+	if ext == "" || len(ext) > 5 {
+		// Если расширение не найдено в URL, определяем по Content-Type
+		switch contentType {
+		case "image/jpeg", "image/jpg":
+			ext = ".jpg"
+		case "image/png":
+			ext = ".png"
+		case "image/gif":
+			ext = ".gif"
+		case "image/webp":
+			ext = ".webp"
+		default:
+			ext = ".jpg" // Fallback
+		}
+	}
+
+	return imageData, ext, nil
+}
+
+// bytesFileAdapter wraps bytes.Reader to implement multipart.File interface
+type bytesFileAdapter struct {
+	*bytes.Reader
+}
+
+// Close implements multipart.File
+func (b *bytesFileAdapter) Close() error {
+	return nil // bytes.Reader doesn't need closing
+}
+
+// importProductImages imports images for a product from URLs
+func (s *ImportService) importProductImages(ctx context.Context, productID int, imageURLs []string) error {
+	if s.imageService == nil {
+		return fmt.Errorf("image service not initialized")
+	}
+
+	if len(imageURLs) == 0 {
+		return nil // Нет изображений для загрузки
+	}
+
+	// Загружаем каждое изображение
+	for i, imageURL := range imageURLs {
+		// Скачиваем изображение
+		imageData, ext, err := s.downloadImage(ctx, imageURL)
+		if err != nil {
+			// Логируем ошибку, но продолжаем загрузку остальных изображений
+			fmt.Printf("Failed to download image from %s: %v\n", imageURL, err)
+			continue
+		}
+
+		// Создаем multipart.File адаптер
+		fileReader := &bytesFileAdapter{Reader: bytes.NewReader(imageData)}
+
+		// Создаем multipart.FileHeader
+		filename := fmt.Sprintf("import_image_%d%s", i+1, ext)
+		fileHeader := &multipart.FileHeader{
+			Filename: filename,
+			Size:     int64(len(imageData)),
+			Header:   make(map[string][]string),
+		}
+		// Определяем Content-Type на основе расширения
+		contentType := "image/jpeg"
+		switch ext {
+		case ".png":
+			contentType = "image/png"
+		case ".gif":
+			contentType = "image/gif"
+		case ".webp":
+			contentType = "image/webp"
+		}
+		fileHeader.Header["Content-Type"] = []string{contentType}
+
+		// Создаем запрос для загрузки изображения
+		uploadRequest := &services.UploadImageRequest{
+			EntityType:   services.ImageTypeStorefrontProduct,
+			EntityID:     productID,
+			File:         fileReader,
+			FileHeader:   fileHeader,
+			IsMain:       i == 0, // Первое изображение делаем главным
+			DisplayOrder: i + 1,
+		}
+
+		// Загружаем изображение через ImageService
+		_, err = s.imageService.UploadImage(ctx, uploadRequest)
+		if err != nil {
+			// Логируем ошибку, но продолжаем загрузку остальных изображений
+			fmt.Printf("Failed to upload image %s for product %d: %v\n", imageURL, productID, err)
+			continue
+		}
+
+		fmt.Printf("Successfully imported image %d/%d for product %d from %s\n", i+1, len(imageURLs), productID, imageURL)
+	}
+
+	return nil
 }
 
 // Helper function to convert string to string pointer

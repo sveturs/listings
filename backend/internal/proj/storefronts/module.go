@@ -37,6 +37,7 @@ type Module struct {
 	variantHandler       *storefrontHandler.VariantHandler
 	publicVariantHandler *storefrontHandler.PublicVariantHandler
 	aiProductHandler     *handler.AIProductHandler
+	importQueueManager   *storefrontService.ImportQueueManager
 }
 
 // NewModule создает новый модуль витрин
@@ -58,12 +59,6 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Создаем ProductService с VariantService
 	productSvc := storefrontService.NewProductService(productStorage, searchRepo, variantService)
 
-	// Создаем repository для import jobs
-	importJobsRepo := postgres.NewImportJobsRepository(db.GetPool())
-
-	// Создаем сервис импорта
-	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo)
-
 	// Создаем единый ImageService с конфигурацией buckets
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
 	cfg := services.Config()
@@ -74,6 +69,29 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		BucketReviewPhoto: cfg.FileStorage.MinioReviewPhotosBucket,
 	}
 	imageService := services.NewImageService(services.FileStorage(), imageRepo, imageCfg)
+
+	// Создаем repository для import jobs
+	importJobsRepo := postgres.NewImportJobsRepository(db.GetPool())
+
+	// Создаем сервис импорта с imageService
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService)
+
+	// Создаем Import Queue Manager для асинхронной обработки импорта
+	// Параметры: workerCount (количество воркеров), queueSize (размер очереди)
+	importQueueManager := storefrontService.NewImportQueueManager(4, 100, importSvc)
+
+	// Устанавливаем queue manager в ImportService
+	importSvc.SetQueueManager(importQueueManager)
+
+	// Запускаем queue manager
+	if err := importQueueManager.Start(); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to start import queue manager")
+		// Продолжаем работу без queue manager (fallback на синхронный импорт)
+	} else {
+		logger.Info().Msg("Import queue manager started successfully")
+	}
 
 	// Получаем storefront repository
 	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
@@ -109,7 +127,27 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		variantHandler:       variantHandler,
 		publicVariantHandler: publicVariantHandler,
 		aiProductHandler:     aiProductHandlerInstance,
+		importQueueManager:   importQueueManager,
 	}
+}
+
+// Shutdown gracefully shuts down the module
+func (m *Module) Shutdown() error {
+	logger.Info().Msg("Shutting down storefronts module...")
+
+	// Stop import queue manager
+	if m.importQueueManager != nil && m.importQueueManager.IsRunning() {
+		if err := m.importQueueManager.Stop(); err != nil {
+			logger.Error().
+				Err(err).
+				Msg("Failed to stop import queue manager")
+			return err
+		}
+		logger.Info().Msg("Import queue manager stopped successfully")
+	}
+
+	logger.Info().Msg("Storefronts module shutdown complete")
+	return nil
 }
 
 // GetPrefix возвращает префикс для маршрутов
@@ -900,6 +938,11 @@ func (s *storageAdapter) GetStorefrontProduct(ctx context.Context, storefrontID,
 // GetStorefrontProductByID delegates to database
 func (s *storageAdapter) GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error) {
 	return s.db.GetStorefrontProductByID(ctx, productID)
+}
+
+// GetStorefrontProductBySKU delegates to database
+func (s *storageAdapter) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProductBySKU(ctx, storefrontID, sku)
 }
 
 // CreateStorefrontProduct delegates to database

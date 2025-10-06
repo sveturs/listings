@@ -98,8 +98,8 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 		})
 	}
 
-	// Start import job
-	job, err := h.importService.ImportFromURL(c.Context(), userID, req)
+	// Start import job asynchronously
+	job, err := h.importService.ImportFromURLAsync(c.Context(), userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
 			Error:   "Failed to start import",
@@ -213,8 +213,8 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 		})
 	}
 
-	// Start import job
-	job, err := h.importService.ImportFromFile(c.Context(), userID, fileData, req)
+	// Start import job asynchronously
+	job, err := h.importService.ImportFromFileAsync(c.Context(), userID, fileData, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
 			Error:   "Failed to start import",

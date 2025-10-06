@@ -1,0 +1,4 @@
+name,price,currency,sku,image_urls,stock_quantity,description
+"MacBook Pro 16",2499,USD,MACBOOK-002,"https://images.unsplash.com/photo-1517336714731-489689fd1ca8,https://images.unsplash.com/photo-1611186871348-b1ce696e52c9",10,"Powerful laptop for professionals"
+"iPhone 14 Pro",999,USD,IPHONE-002,"https://images.unsplash.com/photo-1678685888221-cda269d91b4d",25,"Latest iPhone with pro camera"
+"AirPods Pro",249,USD,AIRPODS-002,"https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7",50,"Premium wireless earbuds"

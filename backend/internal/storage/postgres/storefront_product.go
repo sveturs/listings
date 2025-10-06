@@ -313,6 +313,104 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		}
 	}
 
+	return p, nil
+}
+
+// GetStorefrontProductBySKU retrieves a single product by SKU and storefront_id
+func (s *Database) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	query := `
+		SELECT
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
+			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
+			c.id, c.name, c.slug, c.icon, c.parent_id
+		FROM storefront_products p
+		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		WHERE p.storefront_id = $1 AND p.sku = $2`
+
+	p := &models.StorefrontProduct{}
+	c := &models.MarketplaceCategory{}
+	var attributesJSON []byte
+	var categoryID sql.NullInt64
+	var categoryName, categorySlug, categoryIcon sql.NullString
+	var categoryParentID sql.NullInt64
+
+	err := s.pool.QueryRow(ctx, query, storefrontID, sku).Scan(
+		&p.ID, &p.StorefrontID, &p.Name, &p.Description, &p.Price, &p.Currency,
+		&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
+		&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
+		&p.CreatedAt, &p.UpdatedAt,
+		&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
+		&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap, &p.HasVariants,
+		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
+	)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrStorefrontProductNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront product by SKU: %w", err)
+	}
+
+	if attributesJSON != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &p.Attributes); unmarshalErr != nil {
+			return nil, fmt.Errorf("failed to unmarshal attributes: %w", unmarshalErr)
+		}
+	}
+
+	// Only set category if it exists
+	if categoryID.Valid {
+		c.ID = int(categoryID.Int64)
+		c.Name = categoryName.String
+		c.Slug = categorySlug.String
+		if categoryIcon.Valid {
+			c.Icon = &categoryIcon.String
+		}
+		if categoryParentID.Valid {
+			parentID := int(categoryParentID.Int64)
+			c.ParentID = &parentID
+		}
+		p.Category = c
+	}
+
+	// Load images
+	images, err := s.getProductImages(ctx, []int{p.ID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product images: %w", err)
+	}
+	// Initialize empty slice if no images found
+	if images == nil {
+		p.Images = []models.StorefrontProductImage{}
+	} else {
+		p.Images = images
+	}
+
+	// Load variants
+	variants, err := s.getProductVariants(ctx, p.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product variants: %w", err)
+	}
+	p.Variants = variants
+
+	// Load translations
+	translations, err := s.GetTranslationsForEntity(ctx, "storefront_product", p.ID)
+	if err != nil {
+		// Don't fail if translations load fails, just log it
+		logger.Error().Err(err).Int("product_id", p.ID).Msg("Failed to load product translations")
+	} else if len(translations) > 0 {
+		// Convert []Translation to map[language]map[field]text
+		p.Translations = make(map[string]map[string]string)
+		for _, t := range translations {
+			if p.Translations[t.Language] == nil {
+				p.Translations[t.Language] = make(map[string]string)
+			}
+			p.Translations[t.Language][t.FieldName] = t.TranslatedText
+		}
+	}
+
 	// Load address translations from geocoding_cache
 	if err := s.loadAddressTranslationsForProduct(ctx, p); err != nil {
 		logger.Warn().Err(err).Int("product_id", p.ID).Msg("Failed to load address translations for product")

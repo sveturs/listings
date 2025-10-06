@@ -73,7 +73,6 @@ func (r *importJobsRepository) Create(ctx context.Context, job *models.ImportJob
 		job.StartedAt,
 		job.CompletedAt,
 	).Scan(&job.ID, &job.CreatedAt, &job.UpdatedAt)
-
 	if err != nil {
 		return fmt.Errorf("failed to create import job: %w", err)
 	}
@@ -113,7 +112,6 @@ func (r *importJobsRepository) GetByID(ctx context.Context, id int) (*models.Imp
 		&job.CreatedAt,
 		&job.UpdatedAt,
 	)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("import job not found")
@@ -352,7 +350,6 @@ func (r *importJobsRepository) AddError(ctx context.Context, importError *models
 		importError.ErrorMessage,
 		importError.RawData,
 	).Scan(&importError.ID, &importError.CreatedAt)
-
 	if err != nil {
 		return fmt.Errorf("failed to add import error: %w", err)
 	}
