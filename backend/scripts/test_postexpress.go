@@ -25,7 +25,7 @@ func main() {
 
 	fmt.Println("=================================================================")
 	fmt.Println("Post Express API Integration Test")
-	fmt.Println("=================================================================\n")
+	fmt.Println("=================================================================")
 
 	// Создание сервиса
 	service, err := postexpress.NewService(nil)
@@ -182,7 +182,8 @@ func testCreateShipment(ctx context.Context, service *postexpress.Service) (*pos
 	}
 
 	// Сохраняем tracking number в файл для последующего использования
-	if err := os.WriteFile("/tmp/postexpress_tracking.txt", []byte(resp.TrackingNumber), 0644); err != nil {
+	trackingFilePath := os.TempDir() + "/postexpress_tracking.txt"
+	if err := os.WriteFile(trackingFilePath, []byte(resp.TrackingNumber), 0o600); err != nil {
 		log.Warn().Err(err).Msg("Failed to save tracking number")
 	}
 

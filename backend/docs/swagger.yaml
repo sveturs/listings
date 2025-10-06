@@ -10050,6 +10050,101 @@ definitions:
       status:
         type: string
     type: object
+  internal_proj_postexpress_handler.TestShipmentRequest:
+    properties:
+      cod_amount:
+        description: наложенный платеж (RSD)
+        example: 0
+        type: integer
+      content:
+        example: Test paket za SVETU
+        type: string
+      delivery_method:
+        description: K = Kurir, S = Šalter
+        example: K
+        type: string
+      insured_value:
+        description: объявленная ценность (RSD)
+        example: 0
+        type: integer
+      payment_method:
+        description: POF = gotovina
+        example: POF
+        type: string
+      recipient_address:
+        example: Takovska 2
+        type: string
+      recipient_city:
+        example: Beograd
+        type: string
+      recipient_email:
+        example: petar@example.com
+        type: string
+      recipient_name:
+        description: Получатель
+        example: Petar Petrović
+        type: string
+      recipient_phone:
+        example: "0641234567"
+        type: string
+      recipient_zip:
+        example: "11000"
+        type: string
+      sender_address:
+        example: Bulevar kralja Aleksandra 73
+        type: string
+      sender_city:
+        example: Beograd
+        type: string
+      sender_email:
+        example: b2b@svetu.rs
+        type: string
+      sender_name:
+        description: Отправитель
+        example: Sve Tu d.o.o.
+        type: string
+      sender_phone:
+        example: "0641234567"
+        type: string
+      sender_zip:
+        example: "11000"
+        type: string
+      services:
+        description: Дополнительные услуги
+        example: PNA
+        type: string
+      weight:
+        description: Параметры отправления
+        example: 500
+        type: integer
+    type: object
+  internal_proj_postexpress_handler.TestShipmentResponse:
+    properties:
+      cost:
+        description: RSD
+        type: integer
+      created_at:
+        type: string
+      errors:
+        items:
+          type: string
+        type: array
+      external_id:
+        type: string
+      manifest_id:
+        type: integer
+      processing_time_ms:
+        description: milliseconds
+        type: integer
+      request_data: {}
+      response_data: {}
+      shipment_id:
+        type: integer
+      success:
+        type: boolean
+      tracking_number:
+        type: string
+    type: object
   internal_proj_recommendations.RecommendationRequest:
     properties:
       category:
@@ -26291,6 +26386,81 @@ paths:
       summary: Get warehouse statistics
       tags:
       - PostExpress
+  /api/v1/postexpress/test/config:
+    get:
+      description: Get current Post Express configuration (without password) for testing
+        page
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Configuration
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Get Post Express test config
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/history:
+    get:
+      description: Get history of test shipments (mock data for demo)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test shipments history
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/internal_proj_postexpress_handler.TestShipmentResponse'
+                  type: array
+              type: object
+      summary: Get test shipments history
+      tags:
+      - post-express-test
+  /api/v1/postexpress/test/shipment:
+    post:
+      consumes:
+      - application/json
+      description: Create a test shipment using Post Express WSP API for visual testing
+      parameters:
+      - description: Test shipment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_proj_postexpress_handler.TestShipmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test shipment result
+          schema:
+            allOf:
+            - $ref: '#/definitions/backend_pkg_utils.SuccessResponseSwag'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_proj_postexpress_handler.TestShipmentResponse'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/backend_pkg_utils.ErrorResponseSwag'
+      summary: Create test shipment
+      tags:
+      - post-express-test
   /api/v1/postexpress/track/{tracking}:
     get:
       consumes:

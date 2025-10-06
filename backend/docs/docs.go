@@ -24329,6 +24329,132 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/postexpress/test/config": {
+            "get": {
+                "description": "Get current Post Express configuration (without password) for testing page",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Get Post Express test config",
+                "responses": {
+                    "200": {
+                        "description": "Configuration",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/history": {
+            "get": {
+                "description": "Get history of test shipments (mock data for demo)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Get test shipments history",
+                "responses": {
+                    "200": {
+                        "description": "Test shipments history",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/internal_proj_postexpress_handler.TestShipmentResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/postexpress/test/shipment": {
+            "post": {
+                "description": "Create a test shipment using Post Express WSP API for visual testing",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post-express-test"
+                ],
+                "summary": "Create test shipment",
+                "parameters": [
+                    {
+                        "description": "Test shipment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_proj_postexpress_handler.TestShipmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test shipment result",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/backend_pkg_utils.SuccessResponseSwag"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/internal_proj_postexpress_handler.TestShipmentResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/backend_pkg_utils.ErrorResponseSwag"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/postexpress/track/sync": {
             "post": {
                 "description": "Синхронизировать статусы всех активных отправлений с Post Express",
@@ -52148,6 +52274,134 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_proj_postexpress_handler.TestShipmentRequest": {
+            "type": "object",
+            "properties": {
+                "cod_amount": {
+                    "description": "наложенный платеж (RSD)",
+                    "type": "integer",
+                    "example": 0
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Test paket za SVETU"
+                },
+                "delivery_method": {
+                    "description": "K = Kurir, S = Šalter",
+                    "type": "string",
+                    "example": "K"
+                },
+                "insured_value": {
+                    "description": "объявленная ценность (RSD)",
+                    "type": "integer",
+                    "example": 0
+                },
+                "payment_method": {
+                    "description": "POF = gotovina",
+                    "type": "string",
+                    "example": "POF"
+                },
+                "recipient_address": {
+                    "type": "string",
+                    "example": "Takovska 2"
+                },
+                "recipient_city": {
+                    "type": "string",
+                    "example": "Beograd"
+                },
+                "recipient_email": {
+                    "type": "string",
+                    "example": "petar@example.com"
+                },
+                "recipient_name": {
+                    "description": "Получатель",
+                    "type": "string",
+                    "example": "Petar Petrović"
+                },
+                "recipient_phone": {
+                    "type": "string",
+                    "example": "0641234567"
+                },
+                "recipient_zip": {
+                    "type": "string",
+                    "example": "11000"
+                },
+                "sender_address": {
+                    "type": "string",
+                    "example": "Bulevar kralja Aleksandra 73"
+                },
+                "sender_city": {
+                    "type": "string",
+                    "example": "Beograd"
+                },
+                "sender_email": {
+                    "type": "string",
+                    "example": "b2b@svetu.rs"
+                },
+                "sender_name": {
+                    "description": "Отправитель",
+                    "type": "string",
+                    "example": "Sve Tu d.o.o."
+                },
+                "sender_phone": {
+                    "type": "string",
+                    "example": "0641234567"
+                },
+                "sender_zip": {
+                    "type": "string",
+                    "example": "11000"
+                },
+                "services": {
+                    "description": "Дополнительные услуги",
+                    "type": "string",
+                    "example": "PNA"
+                },
+                "weight": {
+                    "description": "Параметры отправления",
+                    "type": "integer",
+                    "example": 500
+                }
+            }
+        },
+        "internal_proj_postexpress_handler.TestShipmentResponse": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "description": "RSD",
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "manifest_id": {
+                    "type": "integer"
+                },
+                "processing_time_ms": {
+                    "description": "milliseconds",
+                    "type": "integer"
+                },
+                "request_data": {},
+                "response_data": {},
+                "shipment_id": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "tracking_number": {
                     "type": "string"
                 }
             }

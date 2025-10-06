@@ -31,13 +31,13 @@ type TestShipmentRequest struct {
 	// Параметры отправления
 	Weight       int    `json:"weight" example:"500"` // граммы
 	Content      string `json:"content" example:"Test paket za SVETU"`
-	CODAmount    int64  `json:"cod_amount" example:"0"`      // наложенный платеж (RSD)
-	InsuredValue int64  `json:"insured_value" example:"0"`   // объявленная ценность (RSD)
+	CODAmount    int64  `json:"cod_amount" example:"0"`    // наложенный платеж (RSD)
+	InsuredValue int64  `json:"insured_value" example:"0"` // объявленная ценность (RSD)
 
 	// Дополнительные услуги
-	Services         string `json:"services" example:"PNA"` // PNA, SMS, OTK, VD
-	DeliveryMethod   string `json:"delivery_method" example:"K"` // K = Kurir, S = Šalter
-	PaymentMethod    string `json:"payment_method" example:"POF"` // POF = gotovina
+	Services       string `json:"services" example:"PNA"`       // PNA, SMS, OTK, VD
+	DeliveryMethod string `json:"delivery_method" example:"K"`  // K = Kurir, S = Šalter
+	PaymentMethod  string `json:"payment_method" example:"POF"` // POF = gotovina
 }
 
 // TestShipmentResponse - ответ с результатом создания
@@ -184,8 +184,8 @@ func (h *Handler) createTestShipmentResponse(req *TestShipmentRequest, startTime
 	response := &TestShipmentResponse{
 		Success:        true,
 		TrackingNumber: trackingNumber,
-		ManifestID:     int(time.Now().Unix() % 100000) + 120000, // Реалистичные ID как в тестах
-		ShipmentID:     int(time.Now().Unix() % 100000) + 27000,
+		ManifestID:     int(time.Now().Unix()%100000) + 120000, // Реалистичные ID как в тестах
+		ShipmentID:     int(time.Now().Unix()%100000) + 27000,
 		ExternalID:     externalID,
 		Cost:           cost,
 		CreatedAt:      time.Now().Format(time.RFC3339),
@@ -218,8 +218,8 @@ func (h *Handler) createTestShipmentResponse(req *TestShipmentRequest, startTime
 			},
 		},
 		ResponseData: fiber.Map{
-			"status":   "created",
-			"provider": "post_express",
+			"status":    "created",
+			"provider":  "post_express",
 			"test_mode": true,
 			"api_response": fiber.Map{
 				"Rezultat": 0,
@@ -236,13 +236,16 @@ func (h *Handler) createTestShipmentResponse(req *TestShipmentRequest, startTime
 func generateTrackingNumber() string {
 	// Формат: PJ700042693RS
 	randomNum := make([]byte, 4)
-	rand.Read(randomNum)
+	if _, err := rand.Read(randomNum); err != nil {
+		// Fallback to timestamp-based number if random fails
+		randomNum = []byte{0, 0, 0, byte(time.Now().Unix() % 256)}
+	}
 
 	num := int(randomNum[0])<<24 | int(randomNum[1])<<16 | int(randomNum[2])<<8 | int(randomNum[3])
 	if num < 0 {
 		num = -num
 	}
-	num = num % 100000
+	num %= 100000
 
 	return fmt.Sprintf("PJ700%05dRS", num)
 }

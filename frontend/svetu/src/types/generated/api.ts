@@ -24543,6 +24543,154 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/postexpress/test/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Post Express test config
+     * @description Get current Post Express configuration (without password) for testing page
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Configuration */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: {
+                [key: string]: unknown;
+              };
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get test shipments history
+     * @description Get history of test shipments (mock data for demo)
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Test shipments history */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_postexpress_handler.TestShipmentResponse'][];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/postexpress/test/shipment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create test shipment
+     * @description Create a test shipment using Post Express WSP API for visual testing
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Test shipment request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['internal_proj_postexpress_handler.TestShipmentRequest'];
+        };
+      };
+      responses: {
+        /** @description Test shipment result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['internal_proj_postexpress_handler.TestShipmentResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['backend_pkg_utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/postexpress/track/{tracking}': {
     parameters: {
       query?: never;
@@ -43655,6 +43803,85 @@ export interface components {
     'internal_proj_payments_handler.WebhookResponse': {
       message?: string;
       status?: string;
+    };
+    'internal_proj_postexpress_handler.TestShipmentRequest': {
+      /**
+       * @description наложенный платеж (RSD)
+       * @example 0
+       */
+      cod_amount?: number;
+      /** @example Test paket za SVETU */
+      content?: string;
+      /**
+       * @description K = Kurir, S = Šalter
+       * @example K
+       */
+      delivery_method?: string;
+      /**
+       * @description объявленная ценность (RSD)
+       * @example 0
+       */
+      insured_value?: number;
+      /**
+       * @description POF = gotovina
+       * @example POF
+       */
+      payment_method?: string;
+      /** @example Takovska 2 */
+      recipient_address?: string;
+      /** @example Beograd */
+      recipient_city?: string;
+      /** @example petar@example.com */
+      recipient_email?: string;
+      /**
+       * @description Получатель
+       * @example Petar Petrović
+       */
+      recipient_name?: string;
+      /** @example 0641234567 */
+      recipient_phone?: string;
+      /** @example 11000 */
+      recipient_zip?: string;
+      /** @example Bulevar kralja Aleksandra 73 */
+      sender_address?: string;
+      /** @example Beograd */
+      sender_city?: string;
+      /** @example b2b@svetu.rs */
+      sender_email?: string;
+      /**
+       * @description Отправитель
+       * @example Sve Tu d.o.o.
+       */
+      sender_name?: string;
+      /** @example 0641234567 */
+      sender_phone?: string;
+      /** @example 11000 */
+      sender_zip?: string;
+      /**
+       * @description Дополнительные услуги
+       * @example PNA
+       */
+      services?: string;
+      /**
+       * @description Параметры отправления
+       * @example 500
+       */
+      weight?: number;
+    };
+    'internal_proj_postexpress_handler.TestShipmentResponse': {
+      /** @description RSD */
+      cost?: number;
+      created_at?: string;
+      errors?: string[];
+      external_id?: string;
+      manifest_id?: number;
+      /** @description milliseconds */
+      processing_time_ms?: number;
+      request_data?: unknown;
+      response_data?: unknown;
+      shipment_id?: number;
+      success?: boolean;
+      tracking_number?: string;
     };
     'internal_proj_recommendations.RecommendationRequest': {
       category: string;

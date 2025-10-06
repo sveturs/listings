@@ -200,10 +200,10 @@ func main() {
 							},
 						},
 						MestoPreuzimanja: mestoPreuzimanja,
-						Masa:             1000,  // 1 kg
-						Vrednost:         5000,  // ОБЯЗАТЕЛЬНО для COD!
+						Masa:             1000, // 1 kg
+						Vrednost:         5000, // ОБЯЗАТЕЛЬНО для COD!
 						VrednostDTS:      0,
-						Otkupnina:        5000,  // 5000 RSD COD - НАЛОЖЕННЫЙ ПЛАТЕЖ!
+						Otkupnina:        5000, // 5000 RSD COD - НАЛОЖЕННЫЙ ПЛАТЕЖ!
 						Sadrzaj:          "Testni paket sa otkupninom",
 						PosebneUsluge:    "PNA;OTK;VD", // Prijem na adresi + Otkupnina + Vrednosna
 					},

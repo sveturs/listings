@@ -56,7 +56,7 @@ func (a *PostExpressAdapter) GetCapabilities() *interfaces.ProviderCapabilities 
 // CalculateRate рассчитывает стоимость доставки
 func (a *PostExpressAdapter) CalculateRate(ctx context.Context, req *interfaces.RateRequest) (*interfaces.RateResponse, error) {
 	if a.service == nil {
-		return nil, fmt.Errorf("Post Express service not initialized")
+		return nil, fmt.Errorf("post Express service not initialized")
 	}
 
 	// Маппинг из универсального запроса в Post Express формат
@@ -71,7 +71,7 @@ func (a *PostExpressAdapter) CalculateRate(ctx context.Context, req *interfaces.
 
 	peResp, err := a.service.CalculateRate(ctx, peReq)
 	if err != nil {
-		return nil, fmt.Errorf("Post Express rate calculation failed: %w", err)
+		return nil, fmt.Errorf("post Express rate calculation failed: %w", err)
 	}
 
 	// Маппинг из Post Express ответа в универсальный формат
@@ -103,7 +103,7 @@ func (a *PostExpressAdapter) CalculateRate(ctx context.Context, req *interfaces.
 // CreateShipment создает отправление
 func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces.ShipmentRequest) (*interfaces.ShipmentResponse, error) {
 	if a.service == nil {
-		return nil, fmt.Errorf("Post Express service not initialized")
+		return nil, fmt.Errorf("post Express service not initialized")
 	}
 
 	// Маппинг в Post Express формат
@@ -147,7 +147,7 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 	// Создание отправления
 	peResp, err := a.service.CreateShipment(ctx, peReq)
 	if err != nil {
-		return nil, fmt.Errorf("Post Express shipment creation failed: %w", err)
+		return nil, fmt.Errorf("post Express shipment creation failed: %w", err)
 	}
 
 	// Маппинг ответа
@@ -177,12 +177,12 @@ func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces
 // TrackShipment отслеживает отправление
 func (a *PostExpressAdapter) TrackShipment(ctx context.Context, trackingNumber string) (*interfaces.TrackingResponse, error) {
 	if a.service == nil {
-		return nil, fmt.Errorf("Post Express service not initialized")
+		return nil, fmt.Errorf("post Express service not initialized")
 	}
 
 	peResp, err := a.service.TrackShipment(ctx, trackingNumber)
 	if err != nil {
-		return nil, fmt.Errorf("Post Express tracking failed: %w", err)
+		return nil, fmt.Errorf("post Express tracking failed: %w", err)
 	}
 
 	// Маппинг событий
@@ -224,7 +224,7 @@ func (a *PostExpressAdapter) TrackShipment(ctx context.Context, trackingNumber s
 // CancelShipment отменяет отправление
 func (a *PostExpressAdapter) CancelShipment(ctx context.Context, externalID string) error {
 	if a.service == nil {
-		return fmt.Errorf("Post Express service not initialized")
+		return fmt.Errorf("post Express service not initialized")
 	}
 
 	return a.service.CancelShipment(ctx, externalID, "Отменено пользователем")
@@ -348,9 +348,4 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
-}
-
-// timePtr возвращает указатель на время
-func timePtr(t time.Time) *time.Time {
-	return &t
 }

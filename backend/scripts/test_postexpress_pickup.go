@@ -185,13 +185,13 @@ func main() {
 								PostanskiBroj: "11000",
 							},
 						},
-						MestoPreuzimanja: nil,   // НЕ нужно для самовывоза
-						Masa:             2000,  // 2 kg - больший вес
+						MestoPreuzimanja: nil,  // НЕ нужно для самовывоза
+						Masa:             2000, // 2 kg - больший вес
 						Vrednost:         0,
 						VrednostDTS:      0,
 						Otkupnina:        0,
 						Sadrzaj:          "Testni paket za preuzimanje na šalteru",
-						PosebneUsluge:    "",    // Без дополнительных услуг для самовывоза
+						PosebneUsluge:    "", // Без дополнительных услуг для самовывоза
 					},
 				},
 			},

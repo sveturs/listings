@@ -9,14 +9,14 @@ import (
 
 // Config содержит конфигурацию для Post Express API
 type Config struct {
-	APIURL         string
-	Username       string
-	Password       string
-	Brand          string
-	Warehouse      string
-	Timeout        time.Duration
-	RetryAttempts  int
-	IsProduction   bool
+	APIURL        string
+	Username      string
+	Password      string
+	Brand         string
+	Warehouse     string
+	Timeout       time.Duration
+	RetryAttempts int
+	IsProduction  bool
 }
 
 // LoadConfig загружает конфигурацию из переменных окружения
@@ -60,10 +60,7 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
-	isProduction := false
-	if apiURL == "https://wsp.posta.rs/api" {
-		isProduction = true
-	}
+	isProduction := apiURL == "https://wsp.posta.rs/api"
 
 	return &Config{
 		APIURL:        apiURL,

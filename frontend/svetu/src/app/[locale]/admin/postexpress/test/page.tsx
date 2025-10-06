@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiClient } from '@/services/api-client';
 
@@ -91,11 +91,7 @@ export default function PostExpressTestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
       const response = await apiClient.get('/postexpress/test/config');
       if (response.data.success && response.data.data) {
@@ -103,8 +99,8 @@ export default function PostExpressTestPage() {
         setConfig(cfg);
 
         // Заполняем форму дефолтными значениями
-        setFormData({
-          ...formData,
+        setFormData((prev) => ({
+          ...prev,
           sender_name: cfg.default_sender.name,
           sender_phone: cfg.default_sender.phone,
           sender_email: cfg.default_sender.email,
@@ -117,12 +113,16 @@ export default function PostExpressTestPage() {
           recipient_city: cfg.default_recipient.city,
           recipient_address: cfg.default_recipient.address,
           recipient_zip: cfg.default_recipient.zip,
-        });
+        }));
       }
     } catch (err: any) {
       console.error('Failed to load config:', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +131,10 @@ export default function PostExpressTestPage() {
     setResult(null);
 
     try {
-      const response = await apiClient.post('/postexpress/test/shipment', formData);
+      const response = await apiClient.post(
+        '/postexpress/test/shipment',
+        formData
+      );
 
       if (response.data.success && response.data.data) {
         setResult(response.data.data);
@@ -145,7 +148,11 @@ export default function PostExpressTestPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value, type } = e.target;
     setFormData({
       ...formData,
@@ -158,9 +165,7 @@ export default function PostExpressTestPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">📦 {t('title')}</h1>
-          <p className="mt-2 text-gray-600">
-            {t('description')}
-          </p>
+          <p className="mt-2 text-gray-600">{t('description')}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -171,7 +176,9 @@ export default function PostExpressTestPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Получатель */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-blue-700">{t('recipient')}</h3>
+                <h3 className="text-lg font-semibold mb-4 text-blue-700">
+                  {t('recipient')}
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -269,7 +276,9 @@ export default function PostExpressTestPage() {
 
               {/* Отправитель */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-green-700">{t('sender')}</h3>
+                <h3 className="text-lg font-semibold mb-4 text-green-700">
+                  {t('sender')}
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -367,7 +376,9 @@ export default function PostExpressTestPage() {
 
               {/* Параметры посылки */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-purple-700">{t('packageParams')}</h3>
+                <h3 className="text-lg font-semibold mb-4 text-purple-700">
+                  {t('packageParams')}
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -498,16 +509,30 @@ export default function PostExpressTestPage() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     {t('creating')}
                   </>
                 ) : (
-                  <>
-                    📦 {t('createButton')}
-                  </>
+                  <>📦 {t('createButton')}</>
                 )}
               </button>
             </form>
@@ -519,8 +544,18 @@ export default function PostExpressTestPage() {
 
             {!result && !error && (
               <div className="text-center py-12 text-gray-400">
-                <svg className="mx-auto h-24 w-24 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                <svg
+                  className="mx-auto h-24 w-24 mb-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                  />
                 </svg>
                 <p className="text-lg">{t('fillFormPrompt')}</p>
               </div>
@@ -529,8 +564,18 @@ export default function PostExpressTestPage() {
             {error && (
               <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
                 <div className="flex items-start">
-                  <svg className="h-6 w-6 text-red-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-6 w-6 text-red-500 mr-3 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <div>
                     <h3 className="text-red-800 font-semibold">{t('error')}</h3>
@@ -545,12 +590,26 @@ export default function PostExpressTestPage() {
                 {/* Success banner */}
                 <div className="bg-green-50 border-l-4 border-green-500 p-4">
                   <div className="flex items-start">
-                    <svg className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="h-6 w-6 text-green-500 mr-3 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <div>
-                      <h3 className="text-green-800 font-semibold">{t('successTitle')}</h3>
-                      <p className="text-green-700 text-sm mt-1">{t('processingTime')}: {result.processing_time_ms}ms</p>
+                      <h3 className="text-green-800 font-semibold">
+                        {t('successTitle')}
+                      </h3>
+                      <p className="text-green-700 text-sm mt-1">
+                        {t('processingTime')}: {result.processing_time_ms}ms
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -558,37 +617,59 @@ export default function PostExpressTestPage() {
                 {/* Tracking info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="text-sm text-blue-600 font-medium mb-1">{t('trackingNumber')}</p>
-                    <p className="text-2xl font-bold text-blue-900">{result.tracking_number}</p>
+                    <p className="text-sm text-blue-600 font-medium mb-1">
+                      {t('trackingNumber')}
+                    </p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {result.tracking_number}
+                    </p>
                   </div>
 
                   <div className="bg-purple-50 p-4 rounded-lg">
-                    <p className="text-sm text-purple-600 font-medium mb-1">{t('cost')}</p>
-                    <p className="text-2xl font-bold text-purple-900">{result.cost} RSD</p>
+                    <p className="text-sm text-purple-600 font-medium mb-1">
+                      {t('cost')}
+                    </p>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {result.cost} RSD
+                    </p>
                   </div>
                 </div>
 
                 {/* IDs */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-gray-50 p-3 rounded">
-                    <p className="text-xs text-gray-600 mb-1">{t('manifestId')}</p>
-                    <p className="font-mono text-sm font-semibold">{result.manifest_id}</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {t('manifestId')}
+                    </p>
+                    <p className="font-mono text-sm font-semibold">
+                      {result.manifest_id}
+                    </p>
                   </div>
 
                   <div className="bg-gray-50 p-3 rounded">
-                    <p className="text-xs text-gray-600 mb-1">{t('shipmentId')}</p>
-                    <p className="font-mono text-sm font-semibold">{result.shipment_id}</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {t('shipmentId')}
+                    </p>
+                    <p className="font-mono text-sm font-semibold">
+                      {result.shipment_id}
+                    </p>
                   </div>
 
                   <div className="bg-gray-50 p-3 rounded">
-                    <p className="text-xs text-gray-600 mb-1">{t('externalId')}</p>
-                    <p className="font-mono text-xs font-semibold">{result.external_id}</p>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {t('externalId')}
+                    </p>
+                    <p className="font-mono text-xs font-semibold">
+                      {result.external_id}
+                    </p>
                   </div>
                 </div>
 
                 {/* Request data */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('requestData')}</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                    {t('requestData')}
+                  </h3>
                   <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-auto max-h-64">
                     {JSON.stringify(result.request_data, null, 2)}
                   </pre>
@@ -596,7 +677,9 @@ export default function PostExpressTestPage() {
 
                 {/* Response data */}
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('responseData')}</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                    {t('responseData')}
+                  </h3>
                   <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-auto max-h-64">
                     {JSON.stringify(result.response_data, null, 2)}
                   </pre>

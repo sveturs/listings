@@ -203,7 +203,7 @@ func main() {
 						Masa:             750,   // 750 грамм
 						Vrednost:         10000, // 10000 RSD - ОБЪЯВЛЕННАЯ ЦЕННОСТЬ!
 						VrednostDTS:      0,
-						Otkupnina:        0,                // Без COD
+						Otkupnina:        0, // Без COD
 						Sadrzaj:          "Vredan testni paket - elektronika",
 						PosebneUsluge:    "PNA;VD", // Prijem na adresi + Vrednosna pošiljka
 					},

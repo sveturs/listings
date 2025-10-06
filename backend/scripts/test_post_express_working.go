@@ -209,7 +209,7 @@ func testManifestFixed(client *http.Client, endpoint, username, password string)
 							},
 						},
 						Primalac: Korisnik{
-							Vrsta:          "F", // Fizičko lice
+							Vrsta:          "F",              // Fizičko lice
 							Naziv:          "Petar Petrović", // ОБЯЗАТЕЛЬНО для API!
 							Prezime:        "Petrović",
 							Ime:            "Petar",
@@ -223,13 +223,13 @@ func testManifestFixed(client *http.Client, endpoint, username, password string)
 								PostanskiBroj: "11000",
 							},
 						},
-						MestoPreuzimanja: mestoPreuzimanja,       // ОБЯЗАТЕЛЬНО для курьера!
-						Masa:             500,                    // 500 грамм
-						Vrednost:         0,                      // БЕЗ объявленной ценности (убираем VD)
-						VrednostDTS:      0,                      // БЕЗ DTS
-						Otkupnina:        0,                      // БЕЗ наложенного платежа
+						MestoPreuzimanja: mestoPreuzimanja,      // ОБЯЗАТЕЛЬНО для курьера!
+						Masa:             500,                   // 500 грамм
+						Vrednost:         0,                     // БЕЗ объявленной ценности (убираем VD)
+						VrednostDTS:      0,                     // БЕЗ DTS
+						Otkupnina:        0,                     // БЕЗ наложенного платежа
 						Sadrzaj:          "Test paket za SVETU", // Содержимое
-						PosebneUsluge:    "PNA",                  // Прием на адресе (ОБЯЗАТЕЛЬНО для курьера!)
+						PosebneUsluge:    "PNA",                 // Прием на адресе (ОБЯЗАТЕЛЬНО для курьера!)
 					},
 				},
 			},

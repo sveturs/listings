@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,7 +36,12 @@ func (c *Client) doRequest(ctx context.Context, method, endpoint string, body in
 	for attempt := 0; attempt <= c.config.RetryAttempts; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s, 8s
-			backoff := time.Duration(1<<uint(attempt-1)) * time.Second
+			// Cap the backoff to prevent overflow
+			shift := attempt - 1
+			if shift > 30 {
+				shift = 30 // Cap to prevent overflow
+			}
+			backoff := time.Duration(1<<shift) * time.Second
 			log.Warn().
 				Int("attempt", attempt).
 				Dur("backoff", backoff).
@@ -113,7 +119,11 @@ func (c *Client) doSingleRequest(ctx context.Context, method, endpoint string, b
 			Msg("Post Express API request failed")
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Warn().Err(closeErr).Msg("Failed to close response body")
+		}
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -230,7 +240,8 @@ func (e *APIError) IsServerError() bool {
 
 // isClientError проверяет, является ли ошибка клиентской
 func isClientError(err error) bool {
-	if apiErr, ok := err.(*APIError); ok {
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
 		return apiErr.IsClientError()
 	}
 	return false
