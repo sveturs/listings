@@ -100,6 +100,11 @@ test-coverage:
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "✅ Coverage report generated: coverage.html"
 
+test-postexpress:
+	@echo "Running Post Express integration test..."
+	cd scripts && go run test_postexpress.go
+	@echo "✅ Post Express test completed!"
+
 pre-commit: format-check lint test-short
 	@echo "✅ Pre-commit checks passed!"
 

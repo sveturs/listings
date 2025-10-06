@@ -2,18 +2,20 @@ package factory
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"backend/internal/proj/delivery/interfaces"
+	"backend/internal/proj/postexpress"
 )
 
 // PostExpressAdapter - адаптер для Post Express
 type PostExpressAdapter struct {
-	service interface{} // *postexpress.Service // TODO: исправить тип когда postexpress будет доступен
+	service *postexpress.Service
 }
 
 // NewPostExpressAdapter создает новый адаптер для Post Express
-func NewPostExpressAdapter(service interface{}) *PostExpressAdapter {
+func NewPostExpressAdapter(service *postexpress.Service) *PostExpressAdapter {
 	return &PostExpressAdapter{
 		service: service,
 	}
@@ -31,7 +33,7 @@ func (a *PostExpressAdapter) GetName() string {
 
 // IsActive проверяет, активен ли провайдер
 func (a *PostExpressAdapter) IsActive() bool {
-	return true
+	return a.service != nil
 }
 
 // GetCapabilities возвращает возможности провайдера
@@ -47,80 +49,197 @@ func (a *PostExpressAdapter) GetCapabilities() *interfaces.ProviderCapabilities 
 		SupportsTracking:  true,
 		SupportsPickup:    true,
 		SupportsReturn:    false,
-		Services:          []string{"tracking", "insurance", "cod"},
+		Services:          []string{"tracking", "insurance", "cod", "sms"},
 	}
 }
 
 // CalculateRate рассчитывает стоимость доставки
 func (a *PostExpressAdapter) CalculateRate(ctx context.Context, req *interfaces.RateRequest) (*interfaces.RateResponse, error) {
-	// TODO: реализовать когда PostExpress будет доступен
-	return &interfaces.RateResponse{
-		ProviderCode: "post_express",
-		ProviderName: "Post Express",
-		Currency:     "RSD",
-		ValidUntil:   time.Now().Add(24 * time.Hour),
-		DeliveryOptions: []interfaces.DeliveryOption{
-			{
-				Type:          "standard",
-				Name:          "Стандартная доставка",
-				TotalCost:     299.0,
-				EstimatedDays: 2,
-				CostBreakdown: &interfaces.CostBreakdown{
-					BasePrice: 299.0,
-				},
+	if a.service == nil {
+		return nil, fmt.Errorf("Post Express service not initialized")
+	}
+
+	// Маппинг из универсального запроса в Post Express формат
+	peReq := &postexpress.RateRequest{
+		FromCity:  req.FromAddress.City,
+		ToCity:    req.ToAddress.City,
+		Weight:    calculateTotalWeight(req.Packages),
+		Value:     req.InsuranceValue,
+		CODAmount: req.CODAmount,
+		Services:  req.Services,
+	}
+
+	peResp, err := a.service.CalculateRate(ctx, peReq)
+	if err != nil {
+		return nil, fmt.Errorf("Post Express rate calculation failed: %w", err)
+	}
+
+	// Маппинг из Post Express ответа в универсальный формат
+	deliveryOptions := make([]interfaces.DeliveryOption, 0, len(peResp.DeliveryOptions))
+	for _, option := range peResp.DeliveryOptions {
+		deliveryOptions = append(deliveryOptions, interfaces.DeliveryOption{
+			Type:          option.Type,
+			Name:          option.Name,
+			TotalCost:     option.TotalPrice,
+			EstimatedDays: option.EstimatedDays,
+			CostBreakdown: &interfaces.CostBreakdown{
+				BasePrice:     option.BasePrice,
+				CODFee:        option.CODFee,
+				InsuranceFee:  option.InsuranceFee,
+				FuelSurcharge: option.FuelSurcharge,
 			},
-		},
+		})
+	}
+
+	return &interfaces.RateResponse{
+		ProviderCode:    "post_express",
+		ProviderName:    "Post Express",
+		Currency:        "RSD",
+		ValidUntil:      time.Now().Add(24 * time.Hour),
+		DeliveryOptions: deliveryOptions,
 	}, nil
 }
 
 // CreateShipment создает отправление
 func (a *PostExpressAdapter) CreateShipment(ctx context.Context, req *interfaces.ShipmentRequest) (*interfaces.ShipmentResponse, error) {
-	// TODO: реализовать когда PostExpress будет доступен
-	return &interfaces.ShipmentResponse{
-		ExternalID:     "PE123456",
-		TrackingNumber: "PE" + time.Now().Format("20060102150405"),
-		Status:         "pending",
-		TotalCost:      299.0,
-		Labels:         []interfaces.LabelInfo{},
-		EstimatedDate:  timePtr(time.Now().Add(48 * time.Hour)),
+	if a.service == nil {
+		return nil, fmt.Errorf("Post Express service not initialized")
+	}
+
+	// Маппинг в Post Express формат
+	peReq := &postexpress.ShipmentRequest{
+		BrojPosiljke: fmt.Sprintf("SVETU-%d", time.Now().Unix()),
+		Tezina:       calculateTotalWeight(req.Packages),
+		VrednostRSD:  req.InsuranceValue,
+		Otkupnina:    req.CODAmount,
+		NacinPlacanj: postexpress.PaymentCash, // По умолчанию наличные
+
+		// Получатель
+		PrijemnoLice:       req.ToAddress.Name,
+		PrijemnoLiceAdresa: req.ToAddress.Street,
+		PrijemnoLiceGrad:   req.ToAddress.City,
+		PrijemnoLicePosbr:  req.ToAddress.PostalCode,
+		PrijemnoLiceTel:    req.ToAddress.Phone,
+		PrijemnoLiceEmail:  req.ToAddress.Email,
+
+		// Отправитель (используем конфигурацию из сервиса)
+		PosaljalacNaziv:  a.service.GetConfig().Brand,
+		PosaljalacAdresa: req.FromAddress.Street,
+		PosaljalacGrad:   req.FromAddress.City,
+		PosaljalacPosbr:  req.FromAddress.PostalCode,
+		PosaljalacTel:    req.FromAddress.Phone,
+		PosaljalacEmail:  req.FromAddress.Email,
+	}
+
+	// Добавляем дополнительные услуги
+	if contains(req.Services, "sms") && req.ToAddress.Phone != "" {
+		peReq.Usluge = append(peReq.Usluge, postexpress.ServiceRequest{
+			SifraUsluge: postexpress.ServiceSMS,
+			Parametri:   req.ToAddress.Phone,
+		})
+	}
+
+	// Валидация перед отправкой
+	if err := a.service.ValidateShipment(peReq); err != nil {
+		return nil, fmt.Errorf("shipment validation failed: %w", err)
+	}
+
+	// Создание отправления
+	peResp, err := a.service.CreateShipment(ctx, peReq)
+	if err != nil {
+		return nil, fmt.Errorf("Post Express shipment creation failed: %w", err)
+	}
+
+	// Маппинг ответа
+	resp := &interfaces.ShipmentResponse{
+		ShipmentID:     fmt.Sprintf("%d", peResp.IDPosiljke),
+		TrackingNumber: peResp.TrackingNumber,
+		ExternalID:     peResp.BrojPosiljke,
+		Status:         mapPostExpressStatus(peResp.Status),
+		TotalCost:      0, // Будет заполнено позже из расчета
 		CreatedAt:      time.Now(),
-	}, nil
+	}
+
+	// Добавляем этикетку если есть
+	if peResp.LabelURL != "" {
+		resp.Labels = []interfaces.LabelInfo{
+			{
+				Type:   "shipping",
+				Format: "pdf",
+				URL:    peResp.LabelURL,
+			},
+		}
+	}
+
+	return resp, nil
 }
 
 // TrackShipment отслеживает отправление
 func (a *PostExpressAdapter) TrackShipment(ctx context.Context, trackingNumber string) (*interfaces.TrackingResponse, error) {
-	// TODO: реализовать когда PostExpress будет доступен
-	return &interfaces.TrackingResponse{
+	if a.service == nil {
+		return nil, fmt.Errorf("Post Express service not initialized")
+	}
+
+	peResp, err := a.service.TrackShipment(ctx, trackingNumber)
+	if err != nil {
+		return nil, fmt.Errorf("Post Express tracking failed: %w", err)
+	}
+
+	// Маппинг событий
+	events := make([]interfaces.TrackingEvent, 0, len(peResp.Events))
+	for _, event := range peResp.Events {
+		events = append(events, interfaces.TrackingEvent{
+			Timestamp:   event.Timestamp,
+			Status:      mapPostExpressStatus(event.Status),
+			Description: event.Description,
+			Location:    event.Location,
+			Details:     event.Details,
+		})
+	}
+
+	resp := &interfaces.TrackingResponse{
 		TrackingNumber:  trackingNumber,
-		Status:          "in_transit",
-		StatusText:      "В пути",
-		CurrentLocation: "Белград",
-		Events: []interfaces.TrackingEvent{
-			{
-				Timestamp:   time.Now().Add(-24 * time.Hour),
-				Status:      "picked_up",
-				Description: "Посылка забрана",
-				Location:    "Нови Сад",
-			},
-		},
-	}, nil
+		Status:          mapPostExpressStatus(peResp.Status),
+		StatusText:      peResp.StatusText,
+		CurrentLocation: peResp.CurrentLocation,
+		EstimatedDate:   peResp.EstimatedDate,
+		DeliveredDate:   peResp.DeliveredDate,
+		Events:          events,
+	}
+
+	// Добавляем подтверждение доставки если есть
+	if peResp.ProofOfDelivery != nil {
+		resp.ProofOfDelivery = &interfaces.ProofOfDelivery{
+			RecipientName: peResp.ProofOfDelivery.RecipientName,
+			SignatureURL:  peResp.ProofOfDelivery.SignatureURL,
+			PhotoURL:      peResp.ProofOfDelivery.PhotoURL,
+			DeliveredAt:   peResp.ProofOfDelivery.DeliveredAt,
+			Notes:         peResp.ProofOfDelivery.Notes,
+		}
+	}
+
+	return resp, nil
 }
 
 // CancelShipment отменяет отправление
 func (a *PostExpressAdapter) CancelShipment(ctx context.Context, externalID string) error {
-	// TODO: реализовать когда PostExpress будет доступен
-	return nil
+	if a.service == nil {
+		return fmt.Errorf("Post Express service not initialized")
+	}
+
+	return a.service.CancelShipment(ctx, externalID, "Отменено пользователем")
 }
 
 // GetLabel получает этикетку отправления
 func (a *PostExpressAdapter) GetLabel(ctx context.Context, shipmentID string) (*interfaces.LabelResponse, error) {
-	// TODO: реализовать когда PostExpress будет доступен
+	// Post Express возвращает URL этикетки в response CreateShipment
+	// Здесь можно реализовать отдельный запрос если API поддерживает
 	return &interfaces.LabelResponse{
 		Labels: []interfaces.LabelInfo{
 			{
 				Type:   "shipping",
 				Format: "pdf",
-				Data:   []byte("PDF label content"),
+				URL:    "", // TODO: реализовать если API поддерживает отдельный endpoint
 			},
 		},
 	}, nil
@@ -128,49 +247,110 @@ func (a *PostExpressAdapter) GetLabel(ctx context.Context, shipmentID string) (*
 
 // ValidateAddress проверяет корректность адреса
 func (a *PostExpressAdapter) ValidateAddress(ctx context.Context, address *interfaces.Address) (*interfaces.AddressValidationResponse, error) {
-	// TODO: реализовать когда PostExpress будет доступен
+	// Базовая валидация
+	errors := []string{}
+
+	if address.City == "" {
+		errors = append(errors, "City is required")
+	}
+	if address.PostalCode == "" {
+		errors = append(errors, "Postal code is required")
+	}
+	if address.Street == "" {
+		errors = append(errors, "Street address is required")
+	}
+
+	isValid := len(errors) == 0
+
+	// Проверяем доступность доставки в город через список офисов
+	deliveryAvailable := false
+	zone := "national"
+
+	if a.service != nil && address.City != "" {
+		officeReq := &postexpress.OfficeListRequest{
+			City: address.City,
+		}
+		officesResp, err := a.service.GetOffices(ctx, officeReq)
+		if err == nil && len(officesResp.Offices) > 0 {
+			deliveryAvailable = true
+
+			// Определяем зону (локальная или национальная)
+			config := a.service.GetConfig()
+			if address.City == config.Brand { // Если город совпадает с базовым - локальная зона
+				zone = "local"
+			}
+		}
+	}
+
 	return &interfaces.AddressValidationResponse{
-		IsValid:           true,
-		DeliveryAvailable: true,
-		Zone:              "national",
+		IsValid:           isValid,
+		ValidationErrors:  errors,
+		DeliveryAvailable: deliveryAvailable,
+		Zone:              zone,
 	}, nil
 }
 
 // HandleWebhook обрабатывает webhook от Post Express
 func (a *PostExpressAdapter) HandleWebhook(ctx context.Context, payload []byte, headers map[string]string) (*interfaces.WebhookResponse, error) {
-	// TODO: реализовать настоящую интеграцию с Post Express webhook
-	// На данный момент возвращаем заглушку
+	// TODO: реализовать парсинг webhook от Post Express
+	// Формат webhook нужно уточнить в документации API
 
 	response := &interfaces.WebhookResponse{
-		Processed:      true,
-		Timestamp:      time.Now(),
-		TrackingNumber: "PE_" + string(payload[:min(len(payload), 10)]), // временная логика
-		Status:         interfaces.StatusInTransit,
-		StatusDetails:  "Post Express webhook received",
-		Location:       "Beograd, Serbia",
+		Processed:     true,
+		Timestamp:     time.Now(),
+		StatusDetails: "Post Express webhook received and processed",
 	}
-
-	// Создаем базовое событие отслеживания
-	event := interfaces.TrackingEvent{
-		Timestamp:   response.Timestamp,
-		Status:      response.Status,
-		Location:    response.Location,
-		Description: "Post Express status update",
-	}
-
-	response.Events = []interfaces.TrackingEvent{event}
 
 	return response, nil
 }
 
-// Helper function
-func timePtr(t time.Time) *time.Time {
-	return &t
+// Вспомогательные функции
+
+// calculateTotalWeight рассчитывает общий вес всех посылок
+func calculateTotalWeight(packages []interfaces.Package) float64 {
+	total := 0.0
+	for _, pkg := range packages {
+		total += pkg.Weight
+	}
+	return total
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
+// mapPostExpressStatus маппит статус Post Express в универсальный статус
+func mapPostExpressStatus(peStatus string) string {
+	mapping := map[string]string{
+		postexpress.StatusCreated:           interfaces.StatusPending,
+		postexpress.StatusPickupScheduled:   interfaces.StatusConfirmed,
+		postexpress.StatusPickedUp:          interfaces.StatusPickedUp,
+		postexpress.StatusInTransit:         interfaces.StatusInTransit,
+		postexpress.StatusArrived:           interfaces.StatusInTransit,
+		postexpress.StatusOutForDelivery:    interfaces.StatusOutForDelivery,
+		postexpress.StatusDelivered:         interfaces.StatusDelivered,
+		postexpress.StatusDeliveryAttempted: interfaces.StatusDeliveryAttempted,
+		postexpress.StatusReturning:         interfaces.StatusReturning,
+		postexpress.StatusReturned:          interfaces.StatusReturned,
+		postexpress.StatusCancelled:         interfaces.StatusCancelled,
+		postexpress.StatusLost:              interfaces.StatusLost,
+		postexpress.StatusDamaged:           interfaces.StatusDamaged,
 	}
-	return b
+
+	if mapped, ok := mapping[peStatus]; ok {
+		return mapped
+	}
+
+	return interfaces.StatusPending // default
+}
+
+// contains проверяет наличие строки в слайсе
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// timePtr возвращает указатель на время
+func timePtr(t time.Time) *time.Time {
+	return &t
 }
