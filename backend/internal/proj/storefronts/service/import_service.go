@@ -1432,16 +1432,130 @@ func (s *ImportService) groupAndDetectVariants(products []models.ImportProductRe
 }
 
 // importVariantGroup импортирует группу вариантов как один товар с вариантами
-// TODO: Доделать интеграцию с ImportProductRequest (нужны Description, Currency, CategoryID, ImageURLs)
 func (s *ImportService) importVariantGroup(
 	ctx context.Context,
 	group *VariantGroup,
 	storefrontID int,
 ) error {
-	// Временно возвращаем ошибку - функция будет доработана в следующем спринте
-	// когда будет готова правильная интеграция с parsers
-	_ = ctx
-	_ = group
-	_ = storefrontID
-	return fmt.Errorf("variant group import not yet fully implemented - repository methods ready, integration pending")
+	if len(group.Variants) == 0 {
+		return fmt.Errorf("variant group has no variants")
+	}
+
+	// 1. Создаем parent product из первого варианта группы
+	firstVariant := group.Variants[0]
+
+	// Извлекаем данные из OriginalAttributes
+	description := ""
+	if desc, ok := firstVariant.OriginalAttributes["description"].(string); ok {
+		description = desc
+	}
+
+	categoryID := 0
+	if catID, ok := firstVariant.OriginalAttributes["category_id"].(int); ok {
+		categoryID = catID
+	}
+
+	// Используем базовое название группы для parent product
+	createReq := models.CreateProductRequest{
+		Name:          group.BaseName,
+		Description:   description,
+		Price:         firstVariant.Price, // цена по умолчанию из первого варианта
+		Currency:      "RSD",              // TODO: извлекать из OriginalAttributes
+		CategoryID:    categoryID,
+		SKU:           &group.BaseName, // используем base name как SKU родителя
+		StockQuantity: 0,               // суммарное количество будет в вариантах
+		IsActive:      true,
+		Attributes:    make(map[string]interface{}),
+	}
+
+	// Создаем parent product
+	product, err := s.productService.CreateProductForImport(ctx, storefrontID, &createReq)
+	if err != nil {
+		return fmt.Errorf("failed to create parent product for variant group %s: %w", group.BaseName, err)
+	}
+
+	fmt.Printf("Created parent product for variant group: %s (ID: %d, %d variants)\n",
+		group.BaseName, product.ID, len(group.Variants))
+
+	// 2. Создаем варианты товара
+	variantRequests := make([]*models.CreateProductVariantRequest, 0, len(group.Variants))
+
+	for i, variant := range group.Variants {
+		// Конвертируем VariantAttributes в JSONB
+		variantAttrsJSON := models.JSONB{}
+		for key, val := range variant.VariantAttributes {
+			variantAttrsJSON[key] = val
+		}
+
+		// Извлекаем barcode если есть
+		var barcode *string
+		if bc, ok := variant.OriginalAttributes["barcode"].(string); ok && bc != "" {
+			barcode = &bc
+		}
+
+		// Статус склада
+		stockStatus := "in_stock"
+		if variant.StockQuantity == 0 {
+			stockStatus = "out_of_stock"
+		}
+
+		variantReq := &models.CreateProductVariantRequest{
+			ProductID:         product.ID,
+			SKU:               &variant.SKU,
+			Barcode:           barcode,
+			Price:             &variant.Price,
+			CompareAtPrice:    nil, // TODO: если есть sale price
+			CostPrice:         nil,
+			StockQuantity:     variant.StockQuantity,
+			StockStatus:       stockStatus,
+			LowStockThreshold: nil,
+			VariantAttributes: variantAttrsJSON,
+			Weight:            nil,
+			Dimensions:        models.JSONB{},
+			IsActive:          true,
+			IsDefault:         i == 0, // первый вариант делаем default
+		}
+
+		variantRequests = append(variantRequests, variantReq)
+	}
+
+	// Batch создание вариантов
+	createdVariants, err := s.productService.storage.BatchCreateProductVariants(ctx, variantRequests)
+	if err != nil {
+		return fmt.Errorf("failed to create variants for product %d: %w", product.ID, err)
+	}
+
+	fmt.Printf("Created %d variants for product %s (ID: %d)\n",
+		len(createdVariants), product.Name, product.ID)
+
+	// 3. Добавляем изображения к вариантам (если есть)
+	imageRequests := make([]*models.CreateProductVariantImageRequest, 0)
+
+	for i, variant := range group.Variants {
+		if variant.ImageURL != "" && i < len(createdVariants) {
+			createdVariantID := createdVariants[i].ID
+
+			imageReq := &models.CreateProductVariantImageRequest{
+				VariantID:    createdVariantID,
+				ImageURL:     variant.ImageURL,
+				ThumbnailURL: nil,
+				AltText:      nil,
+				DisplayOrder: 0,    // первое изображение
+				IsMain:       true, // первое изображение делаем главным
+			}
+			imageRequests = append(imageRequests, imageReq)
+		}
+	}
+
+	if len(imageRequests) > 0 {
+		_, err = s.productService.storage.BatchCreateProductVariantImages(ctx, imageRequests)
+		if err != nil {
+			// Логируем ошибку, но не прерываем импорт
+			fmt.Printf("Warning: failed to import some variant images for product %d: %v\n", product.ID, err)
+		} else {
+			fmt.Printf("Imported %d variant images for product %s\n", len(imageRequests), product.Name)
+		}
+	}
+
+	return nil
 }
