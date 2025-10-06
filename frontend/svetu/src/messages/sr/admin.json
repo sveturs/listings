@@ -1424,7 +1424,8 @@
       "pricingRules": "Pravila cena",
       "problems": "Problematične pošiljke",
       "problemShipments": "Problematične pošiljke",
-      "analytics": "Analitika"
+      "analytics": "Analitika",
+      "testing": "Testiranje"
     },
     "dashboard": {
       "title": "Kontrolna tabla",
@@ -1711,6 +1712,54 @@
         "cancel": "Otkaži"
       },
       "noProblems": "Nema problematičnih pošiljki"
+    },
+    "testing": {
+      "title": "Testiranje provajdera dostave",
+      "description": "Vizuelno testiranje integracije sa kurirskim službama",
+      "configured": "Podešeno",
+      "comingSoon": "Uskoro",
+      "postexpressDescription": "Potpuno vizuelno testiranje Post Express WSP API sa kontrolom svih parametara",
+      "otherProviders": "Ostali provajderi",
+      "otherProvidersDescription": "Testiranje drugih kurirskih službi biće dostupno nakon njihove integracije",
+      "openTest": "Otvori testiranje",
+      "infoMessage": "💡 Vizuelno testiranje omogućava proveru integracije sa kurirskom službom bez kreiranja stvarnih pošiljki"
+    },
+    "postexpressTest": {
+      "title": "Post Express - Vizuelno testiranje",
+      "description": "Potpuno vizuelno testiranje Post Express WSP API integracije",
+      "shipmentParams": "Parametri pošiljke",
+      "recipient": "Primalac",
+      "sender": "Pošiljalac",
+      "packageParams": "Parametri paketa",
+      "fullName": "Ime i prezime",
+      "phone": "Telefon",
+      "email": "Email",
+      "city": "Grad",
+      "zip": "Poštanski broj",
+      "address": "Adresa",
+      "companyName": "Naziv",
+      "content": "Sadržaj",
+      "weight": "Težina (g)",
+      "codAmount": "Otkup (RSD)",
+      "insuredValue": "Vrednost (RSD)",
+      "services": "Usluge",
+      "deliveryMethod": "Način dostave",
+      "paymentMethod": "Način plaćanja",
+      "creating": "Kreiranje...",
+      "createButton": "Kreiraj test pošiljku",
+      "results": "Rezultati",
+      "fillFormPrompt": "Popunite formu i kreirajte test pošiljku",
+      "error": "Greška",
+      "successTitle": "Pošiljka uspešno kreirana!",
+      "processingTime": "Vreme obrade",
+      "trackingNumber": "Broj pošiljke",
+      "cost": "Cena",
+      "manifestId": "Manifest ID",
+      "shipmentId": "Shipment ID",
+      "externalId": "External ID",
+      "requestData": "Poslati podaci",
+      "responseData": "API odgovor",
+      "required": "*"
     }
   }
 }

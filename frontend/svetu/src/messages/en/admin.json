@@ -1404,7 +1404,8 @@
       "pricingRules": "Pricing Rules",
       "problems": "Problem Shipments",
       "problemShipments": "Problem Shipments",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "testing": "Testing"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -1691,6 +1692,54 @@
         "cancel": "Cancel"
       },
       "noProblems": "No problem shipments found"
+    },
+    "testing": {
+      "title": "Delivery Provider Testing",
+      "description": "Visual testing of courier service integrations",
+      "configured": "Configured",
+      "comingSoon": "Coming Soon",
+      "postexpressDescription": "Complete visual testing of Post Express WSP API with full parameter control",
+      "otherProviders": "Other Providers",
+      "otherProvidersDescription": "Testing for other courier services will be available after their integration",
+      "openTest": "Open Testing",
+      "infoMessage": "💡 Visual testing allows you to verify courier service integration without creating real shipments"
+    },
+    "postexpressTest": {
+      "title": "Post Express - Visual Testing",
+      "description": "Complete visual testing of Post Express WSP API integration",
+      "shipmentParams": "Shipment Parameters",
+      "recipient": "Recipient",
+      "sender": "Sender",
+      "packageParams": "Package Parameters",
+      "fullName": "Full Name",
+      "phone": "Phone",
+      "email": "Email",
+      "city": "City",
+      "zip": "ZIP Code",
+      "address": "Address",
+      "companyName": "Company Name",
+      "content": "Content",
+      "weight": "Weight (g)",
+      "codAmount": "Cash on Delivery (RSD)",
+      "insuredValue": "Insured Value (RSD)",
+      "services": "Services",
+      "deliveryMethod": "Delivery Method",
+      "paymentMethod": "Payment Method",
+      "creating": "Creating...",
+      "createButton": "Create Test Shipment",
+      "results": "Results",
+      "fillFormPrompt": "Fill out the form and create a test shipment",
+      "error": "Error",
+      "successTitle": "Shipment created successfully!",
+      "processingTime": "Processing time",
+      "trackingNumber": "Tracking Number",
+      "cost": "Cost",
+      "manifestId": "Manifest ID",
+      "shipmentId": "Shipment ID",
+      "externalId": "External ID",
+      "requestData": "Request Data",
+      "responseData": "API Response",
+      "required": "*"
     }
   }
 }
