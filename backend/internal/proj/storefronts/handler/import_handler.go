@@ -10,6 +10,7 @@ import (
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 )
 
 // ImportHandler handles product import endpoints
@@ -89,8 +90,16 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 		req.CategoryMappingMode = "auto"
 	}
 
+	// Get user ID from JWT token
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse{
+			Error: "User ID not found in context",
+		})
+	}
+
 	// Start import job
-	job, err := h.importService.ImportFromURL(c.Context(), req)
+	job, err := h.importService.ImportFromURL(c.Context(), userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
 			Error:   "Failed to start import",
@@ -196,8 +205,16 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 	fileName := file.Filename
 	req.FileName = &fileName
 
+	// Get user ID from JWT token
+	userID, ok := authMiddleware.GetUserID(c)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse{
+			Error: "User ID not found in context",
+		})
+	}
+
 	// Start import job
-	job, err := h.importService.ImportFromFile(c.Context(), fileData, req)
+	job, err := h.importService.ImportFromFile(c.Context(), userID, fileData, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
 			Error:   "Failed to start import",

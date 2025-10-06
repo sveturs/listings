@@ -13,6 +13,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/parsers"
+	"backend/internal/storage/postgres"
 )
 
 const (
@@ -28,44 +29,54 @@ const (
 // ImportService handles product import operations
 type ImportService struct {
 	productService *ProductService
-	// Add repository for import jobs when needed
+	jobsRepo       postgres.ImportJobsRepositoryInterface
 }
 
 // NewImportService creates a new import service
-func NewImportService(productService *ProductService) *ImportService {
+func NewImportService(productService *ProductService, jobsRepo postgres.ImportJobsRepositoryInterface) *ImportService {
 	return &ImportService{
 		productService: productService,
+		jobsRepo:       jobsRepo,
 	}
 }
 
 // ImportFromURL downloads and imports products from a URL
-func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequest) (*models.ImportJob, error) {
+func (s *ImportService) ImportFromURL(ctx context.Context, userID int, req models.ImportRequest) (*models.ImportJob, error) {
 	if req.FileURL == nil {
 		return nil, fmt.Errorf("file URL is required")
 	}
 
-	// Create import job
+	// Create import job in database
 	job := &models.ImportJob{
 		StorefrontID: req.StorefrontID,
+		UserID:       userID,
 		FileType:     req.FileType,
 		FileURL:      req.FileURL,
 		Status:       "pending",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+	}
+
+	// Save job to database
+	if err := s.jobsRepo.Create(ctx, job); err != nil {
+		return nil, fmt.Errorf("failed to create import job: %w", err)
 	}
 
 	// Download file
 	data, _, err := s.downloadFile(ctx, *req.FileURL)
 	if err != nil {
 		job.Status = statusFailed
-		job.ErrorMessage = &[]string{fmt.Sprintf("Failed to download file: %v", err)}[0]
+		errorMsg := fmt.Sprintf("Failed to download file: %v", err)
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
 		return job, err
 	}
 
-	// Update job status
+	// Update job status to processing
 	job.Status = "processing"
 	startTime := time.Now()
 	job.StartedAt = &startTime
+	if err := s.jobsRepo.Update(ctx, job); err != nil {
+		return job, fmt.Errorf("failed to update job status: %w", err)
+	}
 
 	// Process file based on type
 	var products []models.ImportProductRequest
@@ -79,12 +90,18 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 	case fileTypeZIP:
 		products, validationErrors, err = s.processZIPData(data, req.StorefrontID)
 	default:
-		return nil, fmt.Errorf("unsupported file type: %s", req.FileType)
+		job.Status = statusFailed
+		errorMsg := fmt.Sprintf("unsupported file type: %s", req.FileType)
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
+		return job, fmt.Errorf(errorMsg)
 	}
 
 	if err != nil {
 		job.Status = statusFailed
-		job.ErrorMessage = &[]string{err.Error()}[0]
+		errorMsg := err.Error()
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
 		return job, err
 	}
 
@@ -92,8 +109,20 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 	job.TotalRecords = len(products) + len(validationErrors)
 	job.FailedRecords = len(validationErrors)
 
+	// Save validation errors to import_errors table
+	for i, valErr := range validationErrors {
+		importError := &models.ImportError{
+			JobID:        job.ID,
+			LineNumber:   i + 1,
+			FieldName:    valErr.Field,
+			ErrorMessage: valErr.Message,
+			RawData:      fmt.Sprintf("%v", valErr.Value),
+		}
+		_ = s.jobsRepo.AddError(ctx, importError)
+	}
+
 	// Import products
-	successCount, importErrors := s.importProducts(ctx, products, req.StorefrontID, req.UpdateMode)
+	successCount, importErrors := s.importProducts(ctx, job.ID, products, req.StorefrontID, req.UpdateMode)
 
 	job.ProcessedRecords = len(products)
 	job.SuccessfulRecords = successCount
@@ -105,31 +134,44 @@ func (s *ImportService) ImportFromURL(ctx context.Context, req models.ImportRequ
 	job.Status = "completed"
 
 	if len(importErrors) > 0 {
-		// Store errors in job (simplified - in real implementation, store in separate table)
 		errorMsg := fmt.Sprintf("Import completed with %d errors", len(importErrors))
 		job.ErrorMessage = &errorMsg
+	}
+
+	// Update job in database
+	if err := s.jobsRepo.Update(ctx, job); err != nil {
+		return job, fmt.Errorf("failed to update job: %w", err)
 	}
 
 	return job, nil
 }
 
 // ImportFromFile imports products from uploaded file data
-func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req models.ImportRequest) (*models.ImportJob, error) {
-	// Create import job
+func (s *ImportService) ImportFromFile(ctx context.Context, userID int, fileData []byte, req models.ImportRequest) (*models.ImportJob, error) {
+	// Create import job in database
 	job := &models.ImportJob{
 		StorefrontID: req.StorefrontID,
+		UserID:       userID,
 		FileType:     req.FileType,
-		Status:       "processing",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		Status:       "pending",
 	}
 
 	if req.FileName != nil {
 		job.FileName = *req.FileName
 	}
 
+	// Save job to database
+	if err := s.jobsRepo.Create(ctx, job); err != nil {
+		return nil, fmt.Errorf("failed to create import job: %w", err)
+	}
+
+	// Update job status to processing
+	job.Status = "processing"
 	startTime := time.Now()
 	job.StartedAt = &startTime
+	if err := s.jobsRepo.Update(ctx, job); err != nil {
+		return job, fmt.Errorf("failed to update job status: %w", err)
+	}
 
 	// Process file based on type
 	var products []models.ImportProductRequest
@@ -144,12 +186,18 @@ func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req
 	case fileTypeZIP:
 		products, validationErrors, err = s.processZIPData(fileData, req.StorefrontID)
 	default:
-		return nil, fmt.Errorf("unsupported file type: %s", req.FileType)
+		job.Status = statusFailed
+		errorMsg := fmt.Sprintf("unsupported file type: %s", req.FileType)
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
+		return job, fmt.Errorf(errorMsg)
 	}
 
 	if err != nil {
 		job.Status = statusFailed
-		job.ErrorMessage = &[]string{err.Error()}[0]
+		errorMsg := err.Error()
+		job.ErrorMessage = &errorMsg
+		_ = s.jobsRepo.Update(ctx, job)
 		return job, err
 	}
 
@@ -157,8 +205,20 @@ func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req
 	job.TotalRecords = len(products) + len(validationErrors)
 	job.FailedRecords = len(validationErrors)
 
+	// Save validation errors to import_errors table
+	for i, valErr := range validationErrors {
+		importError := &models.ImportError{
+			JobID:        job.ID,
+			LineNumber:   i + 1,
+			FieldName:    valErr.Field,
+			ErrorMessage: valErr.Message,
+			RawData:      fmt.Sprintf("%v", valErr.Value),
+		}
+		_ = s.jobsRepo.AddError(ctx, importError)
+	}
+
 	// Import products
-	successCount, importErrors := s.importProducts(ctx, products, req.StorefrontID, req.UpdateMode)
+	successCount, importErrors := s.importProducts(ctx, job.ID, products, req.StorefrontID, req.UpdateMode)
 
 	job.ProcessedRecords = len(products)
 	job.SuccessfulRecords = successCount
@@ -172,6 +232,11 @@ func (s *ImportService) ImportFromFile(ctx context.Context, fileData []byte, req
 	if len(importErrors) > 0 {
 		errorMsg := fmt.Sprintf("Import completed with %d errors", len(importErrors))
 		job.ErrorMessage = &errorMsg
+	}
+
+	// Update job in database
+	if err := s.jobsRepo.Update(ctx, job); err != nil {
+		return job, fmt.Errorf("failed to update job: %w", err)
 	}
 
 	return job, nil
@@ -291,14 +356,24 @@ func (s *ImportService) processZIPData(data []byte, storefrontID int) ([]models.
 }
 
 // importProducts imports validated products
-func (s *ImportService) importProducts(ctx context.Context, products []models.ImportProductRequest, storefrontID int, updateMode string) (int, []error) {
+func (s *ImportService) importProducts(ctx context.Context, jobID int, products []models.ImportProductRequest, storefrontID int, updateMode string) (int, []error) {
 	var successCount int
 	var errors []error
 
-	for _, product := range products {
+	for i, product := range products {
 		err := s.importSingleProduct(ctx, product, storefrontID, updateMode)
 		if err != nil {
 			errors = append(errors, err)
+
+			// Save error to import_errors table
+			importError := &models.ImportError{
+				JobID:        jobID,
+				LineNumber:   i + 1,
+				FieldName:    product.SKU,
+				ErrorMessage: err.Error(),
+				RawData:      product.Name,
+			}
+			_ = s.jobsRepo.AddError(ctx, importError)
 		} else {
 			successCount++
 		}
@@ -447,59 +522,39 @@ func (s *ImportService) ValidateImportFile(ctx context.Context, fileData []byte,
 
 // GetJobs returns list of import jobs for a storefront
 func (s *ImportService) GetJobs(ctx context.Context, storefrontID int, status string, limit, offset int) (*models.ImportJobsResponse, error) {
-	// TODO: Implement database queries for import jobs
-	// For now, return mock data
-	jobs := []models.ImportJob{
-		{
-			ID:                1,
-			StorefrontID:      storefrontID,
-			FileName:          "test.xml",
-			FileType:          "xml",
-			Status:            "completed",
-			TotalRecords:      2,
-			ProcessedRecords:  2,
-			SuccessfulRecords: 0,
-			FailedRecords:     2,
-			ErrorMessage:      stringPtr("Import completed with errors"),
-			CreatedAt:         time.Now().Add(-time.Hour),
-			UpdatedAt:         time.Now().Add(-time.Minute * 30),
-		},
+	filter := &postgres.ImportJobFilter{
+		Limit:     limit,
+		Offset:    offset,
+		SortBy:    "created_at",
+		SortOrder: "DESC",
 	}
 
-	// Filter by status if provided
 	if status != "" {
-		var filteredJobs []models.ImportJob
-		for _, job := range jobs {
-			if job.Status == status {
-				filteredJobs = append(filteredJobs, job)
-			}
-		}
-		jobs = filteredJobs
+		filter.Status = &status
+	}
+
+	jobs, total, err := s.jobsRepo.GetByStorefront(ctx, storefrontID, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get import jobs: %w", err)
+	}
+
+	// Convert []*models.ImportJob to []models.ImportJob
+	jobsList := make([]models.ImportJob, len(jobs))
+	for i, job := range jobs {
+		jobsList[i] = *job
 	}
 
 	return &models.ImportJobsResponse{
-		Jobs:  jobs,
-		Total: len(jobs),
+		Jobs:  jobsList,
+		Total: total,
 	}, nil
 }
 
 // GetJobDetails returns detailed information about an import job
 func (s *ImportService) GetJobDetails(ctx context.Context, jobID int) (*models.ImportJob, error) {
-	// TODO: Implement database query for job details
-	// For now, return mock data
-	job := &models.ImportJob{
-		ID:                jobID,
-		StorefrontID:      4, // Mock storefront ID
-		FileName:          "test.xml",
-		FileType:          "xml",
-		Status:            "completed",
-		TotalRecords:      2,
-		ProcessedRecords:  2,
-		SuccessfulRecords: 0,
-		FailedRecords:     2,
-		ErrorMessage:      stringPtr("Import completed with errors"),
-		CreatedAt:         time.Now().Add(-time.Hour),
-		UpdatedAt:         time.Now().Add(-time.Minute * 30),
+	job, err := s.jobsRepo.GetByID(ctx, jobID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get job details: %w", err)
 	}
 
 	return job, nil
@@ -507,45 +562,94 @@ func (s *ImportService) GetJobDetails(ctx context.Context, jobID int) (*models.I
 
 // GetJobStatus returns status of an import job
 func (s *ImportService) GetJobStatus(ctx context.Context, jobID int) (*models.ImportJobStatus, error) {
-	// TODO: Implement database query for job status
-	// For now, return mock data
+	job, err := s.jobsRepo.GetByID(ctx, jobID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get job status: %w", err)
+	}
+
+	// Get errors for this job
+	errors, err := s.jobsRepo.GetErrors(ctx, jobID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get job errors: %w", err)
+	}
+
+	// Calculate progress
+	var progress float64
+	if job.TotalRecords > 0 {
+		progress = float64(job.ProcessedRecords) / float64(job.TotalRecords) * 100
+	}
+
 	status := &models.ImportJobStatus{
-		Status:            "completed",
-		TotalRecords:      2,
-		ProcessedRecords:  2,
-		SuccessfulRecords: 0,
-		FailedRecords:     2,
-		Progress:          100.0,
+		ID:                job.ID,
+		Status:            job.Status,
+		Progress:          progress,
+		TotalRecords:      job.TotalRecords,
+		ProcessedRecords:  job.ProcessedRecords,
+		SuccessfulRecords: job.SuccessfulRecords,
+		FailedRecords:     job.FailedRecords,
+		Errors:            convertToImportErrors(errors),
+		StartedAt:         job.StartedAt,
+		CompletedAt:       job.CompletedAt,
 	}
 
 	return status, nil
 }
 
+// convertToImportErrors converts []*models.ImportError to []models.ImportError
+func convertToImportErrors(errors []*models.ImportError) []models.ImportError {
+	result := make([]models.ImportError, len(errors))
+	for i, err := range errors {
+		result[i] = *err
+	}
+	return result
+}
+
 // CancelJob cancels a running import job
 func (s *ImportService) CancelJob(ctx context.Context, jobID int) error {
-	// TODO: Implement job cancellation logic
-	return nil
+	// Check if job exists and is in cancellable state
+	job, err := s.jobsRepo.GetByID(ctx, jobID)
+	if err != nil {
+		return fmt.Errorf("failed to get job: %w", err)
+	}
+
+	// Only pending or processing jobs can be cancelled
+	if job.Status != "pending" && job.Status != "processing" {
+		return fmt.Errorf("job cannot be cancelled in %s state", job.Status)
+	}
+
+	// Update job status to cancelled
+	return s.jobsRepo.UpdateStatus(ctx, jobID, "cancelled")
 }
 
 // RetryJob retries a failed import job
 func (s *ImportService) RetryJob(ctx context.Context, jobID int) (*models.ImportJob, error) {
-	// TODO: Implement job retry logic
-	// For now, return a new mock job
-	job := &models.ImportJob{
-		ID:                jobID + 100, // New job ID
-		StorefrontID:      4,           // Mock storefront ID
-		FileName:          "test.xml",
-		FileType:          "xml",
-		Status:            "pending",
-		TotalRecords:      0,
-		ProcessedRecords:  0,
-		SuccessfulRecords: 0,
-		FailedRecords:     0,
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
+	// Get the original job
+	originalJob, err := s.jobsRepo.GetByID(ctx, jobID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get original job: %w", err)
 	}
 
-	return job, nil
+	// Only failed jobs can be retried
+	if originalJob.Status != "failed" && originalJob.Status != "cancelled" {
+		return nil, fmt.Errorf("only failed or cancelled jobs can be retried")
+	}
+
+	// Create a new job based on the original
+	newJob := &models.ImportJob{
+		StorefrontID: originalJob.StorefrontID,
+		UserID:       originalJob.UserID,
+		FileName:     originalJob.FileName,
+		FileType:     originalJob.FileType,
+		FileURL:      originalJob.FileURL,
+		Status:       "pending",
+	}
+
+	// Save new job to database
+	if err := s.jobsRepo.Create(ctx, newJob); err != nil {
+		return nil, fmt.Errorf("failed to create retry job: %w", err)
+	}
+
+	return newJob, nil
 }
 
 // Helper function to convert string to string pointer

@@ -58,8 +58,11 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Создаем ProductService с VariantService
 	productSvc := storefrontService.NewProductService(productStorage, searchRepo, variantService)
 
+	// Создаем repository для import jobs
+	importJobsRepo := postgres.NewImportJobsRepository(db.GetPool())
+
 	// Создаем сервис импорта
-	importSvc := storefrontService.NewImportService(productSvc)
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo)
 
 	// Создаем единый ImageService с конфигурацией buckets
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
@@ -213,14 +216,14 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Put("/storefronts/slug/:slug/products/bulk/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateStatusBySlug)
 
 		// Маршруты импорта товаров
-		api.Post("/storefronts/:id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
-		api.Post("/storefronts/:id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
-		api.Post("/storefronts/:id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
-		api.Get("/storefronts/:id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
-		api.Get("/storefronts/:id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
-		api.Get("/storefronts/:id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
-		api.Post("/storefronts/:id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
-		api.Post("/storefronts/:id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
+		api.Post("/storefronts/:storefront_id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
+		api.Post("/storefronts/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
+		api.Post("/storefronts/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
+		api.Get("/storefronts/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
+		api.Get("/storefronts/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
+		api.Get("/storefronts/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
+		api.Post("/storefronts/:storefront_id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
+		api.Post("/storefronts/:storefront_id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
 
 		// Маршруты импорта через slug
 		api.Post("/storefronts/slug/:slug/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromURLBySlug)
