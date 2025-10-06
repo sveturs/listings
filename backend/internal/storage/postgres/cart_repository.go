@@ -545,11 +545,10 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 				variantSKUPtr = &variantSKU.String
 			}
 
-
 			item.Variant = &models.StorefrontProductVariant{
-				ID:                  int(*item.VariantID),
+				ID:        int(*item.VariantID),
 				ProductID: int(item.ProductID),
-				SKU:                 variantSKUPtr,
+				SKU:       variantSKUPtr,
 			}
 
 			if variantPrice.Valid {

@@ -76,21 +76,32 @@ class DigitalVisionAnalyzer:
 
     # Паттерны для определения вариантов
     COLOR_PATTERNS = [
-        r'\b(crn[ai]|bel[ai]|crven[ai]?|zelen[ai]?|plav[ai]|pink|black|white|red|blue|green|yellow|grey|silver|gold)\b',
-        r'\b(dark|light|bright|deep)\s+(blue|red|green|yellow|black|white)',
+        # Основные цвета (английский, сербский)
+        r'\b(crn[ai]|bel[ai]|crven[ai]?|zelen[ai]?|plav[ai]|pink|black|white|red|blue|green|yellow|grey|gray|silver|gold)\b',
+        # Модификаторы цвета + цвет (dark blue, light yellow)
+        r'\b(dark|light|bright|deep)\s+(blue|red|green|yellow|black|white|grey|gray)\b',
+        # Одиночные модификаторы цвета
+        r'\b(light|dark|bright|deep)\b',
     ]
 
     SIZE_PATTERNS = [
+        r'\b\d+\/\d+\/\d+\/\d+\s*mm\b',  # 42/44/45/49mm - четыре размера
+        r'\b\d+\/\d+\/\d+\s*mm\b',  # 38/40/41mm - три размера
+        r'\b\d+\/\d+\s*mm\b',  # 42/44mm - два размера
+        r'\/\d+mm\b',  # /49mm - оставшиеся части после слэша
+        r'\b\d+mm\b',  # 40mm - одиночные размеры
         r'\b[SML]\/[ML]\b',  # S/M, M/L
-        r'\b(small|medium|large|xs|xl|xxl)\b',
-        r'\b\d+mm\b',
-        r'\b\d+\/\d+\/\d+\s*mm\b',  # 38/40/41mm
+        r'\b(small|medium|large|xs|s|m|l|xl|xxl)\b',
     ]
 
     MODEL_PATTERNS = [
-        r'\b\d{2,4}[A-Z]+\b',  # 2021G
-        r'\biPhone\s+\d+\s*(Pro|Plus|Max)?\b',
-        r'\bSamsung\s+[A-Z]\d+\b',
+        # Модели телефонов - порядок важен!
+        r'\bSamsung\s+Galaxy\s+[A-Z]\d+\+?\b',  # Samsung Galaxy S21 - полная форма сначала
+        r'\bGalaxy\s+[A-Z]\d+\+?\b',  # Galaxy S21
+        r'\biPhone\s+\d+\s*(Pro|Plus|Max|Mini)?\b',  # iPhone 12, iPhone 13 Pro
+        r'\b(Samsung|Apple|Xiaomi|Huawei)\b',  # Производители отдельно
+        # Общие паттерны моделей
+        r'\b\d{2,4}[A-Z]+\b',  # 2021G, KB-UM-104
     ]
 
     def __init__(self, xml_file: str):

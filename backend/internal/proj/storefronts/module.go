@@ -76,8 +76,22 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Создаем repository для category mappings
 	categoryMappingsRepo := postgres.NewCategoryMappingsRepository(db.GetPool())
 
+	// Создаем AttributeMapper для маппинга атрибутов (нужен storage adapter)
+	zerologLogger := *logger.Get() // Получаем zerolog.Logger
+	attributeMapper := storefrontService.NewAttributeMapper(productStorage, zerologLogger)
+
+	// Загружаем атрибуты в кэш AttributeMapper
+	if err := attributeMapper.LoadAttributesCache(ctx); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to load attributes cache for AttributeMapper")
+		// Продолжаем без кэша - маппинг будет работать в режиме fallback
+	} else {
+		logger.Info().Msg("AttributeMapper cache loaded successfully")
+	}
+
 	// Создаем сервис импорта (categoryMappingService будет установлен позже)
-	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil)
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil, attributeMapper)
 
 	// Создаем Import Queue Manager для асинхронной обработки импорта
 	// Параметры: workerCount (количество воркеров), queueSize (размер очереди)
@@ -134,7 +148,7 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		services:             services,
 		storefrontHandler:    handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:       handler.NewProductHandler(productSvc),
-		importHandler:        handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer),
+		importHandler:        handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer, attributeMapper),
 		imageHandler:         handler.NewImageHandler(imageService, productSvc),
 		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
 		variantHandler:       variantHandler,
@@ -1103,4 +1117,9 @@ func (s *storageAdapter) BatchCreateProductVariantImages(ctx context.Context, im
 
 func (s *storageAdapter) GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error) {
 	return s.db.GetProductVariants(ctx, productID)
+}
+
+// GetAllUnifiedAttributes получает все активные unified attributes
+func (s *storageAdapter) GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
+	return s.db.GetAllUnifiedAttributes(ctx)
 }

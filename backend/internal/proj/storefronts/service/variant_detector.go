@@ -15,24 +15,24 @@ type VariantAttribute struct {
 
 // ProductVariant представляет один вариант товара
 type ProductVariant struct {
-	Name               string                      `json:"name"`
-	SKU                string                      `json:"sku"`
-	VariantAttributes  map[string]string           `json:"variant_attributes"`
-	Price              float64                     `json:"price,omitempty"`
-	StockQuantity      int                         `json:"stock_quantity,omitempty"`
-	ImageURL           string                      `json:"image_url,omitempty"`
-	OriginalAttributes map[string]interface{}      `json:"original_attributes,omitempty"`
+	Name               string                 `json:"name"`
+	SKU                string                 `json:"sku"`
+	VariantAttributes  map[string]string      `json:"variant_attributes"`
+	Price              float64                `json:"price,omitempty"`
+	StockQuantity      int                    `json:"stock_quantity,omitempty"`
+	ImageURL           string                 `json:"image_url,omitempty"`
+	OriginalAttributes map[string]interface{} `json:"original_attributes,omitempty"`
 }
 
 // VariantGroup представляет группу вариантов товара
 type VariantGroup struct {
-	BaseName           string                 `json:"base_name"`
-	BaseProduct        *ProductVariant        `json:"base_product"`
-	Variants           []*ProductVariant      `json:"variants"`
-	VariantCount       int                    `json:"variant_count"`
-	VariantAttributes  []string               `json:"variant_attributes"`  // Названия атрибутов (color, size)
-	Confidence         float64                `json:"confidence"`
-	IsGrouped          bool                   `json:"is_grouped"`
+	BaseName          string            `json:"base_name"`
+	BaseProduct       *ProductVariant   `json:"base_product"`
+	Variants          []*ProductVariant `json:"variants"`
+	VariantCount      int               `json:"variant_count"`
+	VariantAttributes []string          `json:"variant_attributes"` // Названия атрибутов (color, size)
+	Confidence        float64           `json:"confidence"`
+	IsGrouped         bool              `json:"is_grouped"`
 }
 
 // VariantDetector обнаруживает и группирует варианты товаров
@@ -69,8 +69,12 @@ func compileColorPatterns() []*regexp.Regexp {
 	patterns := []string{
 		// Русские цвета (все падежи и формы) - используем (?:^|\s) и (?:\s|$) вместо \b
 		`(?:^|\s)(черн(?:ый|ая|ое|ые|ого|ому|ым|ом)|бел(?:ый|ая|ое|ые|ого|ому|ым|ом)|красн(?:ый|ая|ое|ые|ого|ому|ым|ом)|син(?:ий|яя|ее|ие|его|ему|им|ем)|зелен(?:ый|ая|ое|ые|ого|ому|ым|ом)|желт(?:ый|ая|ое|ые|ого|ому|ым|ом)|оранжев(?:ый|ая|ое|ые|ого|ому|ым|ом)|фиолетов(?:ый|ая|ое|ые|ого|ому|ым|ом)|розов(?:ый|ая|ое|ые|ого|ому|ым|ом)|коричнев(?:ый|ая|ое|ые|ого|ому|ым|ом)|сер(?:ый|ая|ое|ые|ого|ому|ым|ом)|голуб(?:ой|ая|ое|ые|ого|ому|ым|ом)|бежев(?:ый|ая|ое|ые|ого|ому|ым|ом)|бордов(?:ый|ая|ое|ые|ого|ому|ым|ом))(?:\s|$)`,
-		// Английские цвета
-		`\b(black|white|red|blue|green|yellow|orange|purple|pink|brown|gray|grey|beige|burgundy|navy|cream|ivory)\b`,
+		// Английские цвета + модификаторы
+		`\b(black|white|red|blue|green|yellow|orange|purple|pink|brown|gray|grey|beige|burgundy|navy|cream|ivory|gold|silver)\b`,
+		// Модификаторы цвета + цвет (dark blue, light yellow)
+		`\b(dark|light|bright|deep)\s+(blue|red|green|yellow|black|white|grey|gray)\b`,
+		// Одиночные модификаторы цвета
+		`\b(light|dark|bright|deep)\b`,
 		// Сербские цвета
 		`(?:^|\s)(crn(?:a|i|e|o)|bel(?:a|i|e|o)|crven(?:a|i|e|o)|plav(?:a|i|e|o)|zelen(?:a|i|e|o)|žut(?:a|i|e|o)|narandžast(?:a|i|e|o)|ljubičast(?:a|i|e|o)|roze|braon|siv(?:a|i|e|o)|svetloplav(?:a|i|e|o)|bež|bordo)(?:\s|$)`,
 		// Варианты написания
@@ -89,6 +93,13 @@ func compileColorPatterns() []*regexp.Regexp {
 // compileSizePatterns компилирует регулярные выражения для определения размеров
 func compileSizePatterns() []*regexp.Regexp {
 	patterns := []string{
+		// Apple Watch размеры (порядок важен - сначала самые длинные!)
+		`\b\d+/\d+/\d+/\d+\s*mm\b`,  // 42/44/45/49mm
+		`\b\d+/\d+/\d+\s*mm\b`,      // 38/40/41mm
+		`\b\d+/\d+\s*mm\b`,          // 42/44mm
+		`/\d+mm\b`,                  // /49mm - оставшиеся части
+		`\b\d+mm\b`,                 // 40mm
+		`\b[SML]/[ML]\b`,            // S/M, M/L
 		// Стандартные размеры одежды
 		`\b(XXS|XS|S|M|L|XL|XXL|XXXL)\b`,
 		// Числовые размеры
@@ -111,6 +122,12 @@ func compileSizePatterns() []*regexp.Regexp {
 // compileModelPatterns компилирует регулярные выражения для определения моделей/версий
 func compileModelPatterns() []*regexp.Regexp {
 	patterns := []string{
+		// Модели телефонов (порядок важен - сначала полные формы!)
+		`\bSamsung\s+Galaxy\s+[A-Z]\d+\+?\b`,  // Samsung Galaxy S21
+		`\bGalaxy\s+[A-Z]\d+\+?\b`,            // Galaxy S21, Galaxy A52
+		`\biPhone\s+\d+\s*(Pro|Plus|Max|Mini)?\b`, // iPhone 12, iPhone 13 Pro
+		// Производители отдельно
+		`\b(Samsung|Apple|Xiaomi|Huawei)\b`,
 		// Версии и модели
 		`\b(v\d+|ver\d+|версия\s?\d+|модель\s?\d+)\b`,
 		`\b(model|модель)\s+[A-Z0-9\-]+\b`,
@@ -118,6 +135,8 @@ func compileModelPatterns() []*regexp.Regexp {
 		`\b(20\d{2})\b`,
 		// Поколения
 		`\b(\d+(st|nd|rd|th)\s+generation|поколение)\b`,
+		// Общие паттерны моделей
+		`\b\d{2,4}[A-Z]+\b`,  // 2021G, KB-UM-104
 	}
 
 	compiled := make([]*regexp.Regexp, 0, len(patterns))

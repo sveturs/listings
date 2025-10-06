@@ -203,6 +203,26 @@ func (w *ImportWorker) processJob(task *ImportJobTask) {
 		return
 	}
 
+	// Инкрементальная индексация товаров с needs_reindex=true
+	if successCount > 0 {
+		w.logger.Info().
+			Int("job_id", task.JobID).
+			Int("storefront_id", task.StorefrontID).
+			Msg("Starting incremental indexing of imported products...")
+
+		if err := w.service.IndexPendingProducts(w.ctx, task.StorefrontID, 100); err != nil {
+			w.logger.Error().
+				Err(err).
+				Int("job_id", task.JobID).
+				Msg("Failed to index imported products (non-fatal)")
+			// Не прерываем выполнение - товары импортированы, индексация может быть выполнена позже
+		} else {
+			w.logger.Info().
+				Int("job_id", task.JobID).
+				Msg("Successfully indexed imported products")
+		}
+	}
+
 	duration := time.Since(startTime)
 	w.logger.Info().
 		Int("worker_id", w.id).

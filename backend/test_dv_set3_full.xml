@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artikli>
+    <!-- Набор 3: Полный набор - все товары из теста -->
+
+    <!-- Группа 1: Fidget Spinner - 5 вариантов -->
+    <artikal>
+        <id>1001</id>
+        <sifra>FS-001-BLACK</sifra>
+        <naziv>Fidget Spinner crni</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>IGRAČKE</kategorija2>
+        <kategorija3>FIDGET SPINNERS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>150.00</vpCena>
+        <mpCena>350.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Kvalitetan fidget spinner u crnoj boji</opis>
+        <barKod>1234567890001</barKod>
+        <slike>
+            <slika>http://example.com/images/fs-black-1.jpg</slika>
+            <slika>http://example.com/images/fs-black-2.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>1002</id>
+        <sifra>FS-001-RED</sifra>
+        <naziv>Fidget Spinner crveni</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>IGRAČKE</kategorija2>
+        <kategorija3>FIDGET SPINNERS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>150.00</vpCena>
+        <mpCena>350.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Kvalitetan fidget spinner u crvenoj boji</opis>
+        <barKod>1234567890002</barKod>
+        <slike>
+            <slika>http://example.com/images/fs-red-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>1003</id>
+        <sifra>FS-001-BLUE</sifra>
+        <naziv>Fidget Spinner plavi</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>IGRAČKE</kategorija2>
+        <kategorija3>FIDGET SPINNERS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>150.00</vpCena>
+        <mpCena>350.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Kvalitetan fidget spinner u plavoj boji</opis>
+        <barKod>1234567890003</barKod>
+        <slike>
+            <slika>http://example.com/images/fs-blue-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>1004</id>
+        <sifra>FS-001-GREEN</sifra>
+        <naziv>Fidget Spinner zeleni</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>IGRAČKE</kategorija2>
+        <kategorija3>FIDGET SPINNERS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>150.00</vpCena>
+        <mpCena>350.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Kvalitetan fidget spinner u zelenoj boji</opis>
+        <barKod>1234567890004</barKod>
+        <slike>
+            <slika>http://example.com/images/fs-green-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>1005</id>
+        <sifra>FS-001-WHITE</sifra>
+        <naziv>Fidget Spinner beli</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>IGRAČKE</kategorija2>
+        <kategorija3>FIDGET SPINNERS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>150.00</vpCena>
+        <mpCena>350.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Kvalitetan fidget spinner u beloj boji</opis>
+        <barKod>1234567890005</barKod>
+        <slike>
+            <slika>http://example.com/images/fs-white-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <!-- Группа 2: Apple Watch наруквицы - 3 варианта (размер + цвет) -->
+    <artikal>
+        <id>2001</id>
+        <sifra>AW-STRAP-BLACK-SM</sifra>
+        <naziv>Narukvica za Apple Watch Silicone Strap black S/M 38/40/41mm</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>MASKE</kategorija2>
+        <kategorija3>APPLE</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2024.</godinaUvoza>
+        <zemljaPorekla>Vietnam</zemljaPorekla>
+        <vpCena>450.00</vpCena>
+        <mpCena>890.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis>Silikonska narukvica za Apple Watch</opis>
+        <barKod>2234567890001</barKod>
+        <slike>
+            <slika>http://example.com/images/aw-black-sm-1.jpg</slika>
+            <slika>http://example.com/images/aw-black-sm-2.jpg</slika>
+            <slika>http://example.com/images/aw-black-sm-3.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>2002</id>
+        <sifra>AW-STRAP-BLACK-ML</sifra>
+        <naziv>Narukvica za Apple Watch Silicone Strap black M/L 42/44/45/49mm</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>MASKE</kategorija2>
+        <kategorija3>APPLE</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2024.</godinaUvoza>
+        <zemljaPorekla>Vietnam</zemljaPorekla>
+        <vpCena>450.00</vpCena>
+        <mpCena>890.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis>Silikonska narukvica za Apple Watch</opis>
+        <barKod>2234567890002</barKod>
+        <slike>
+            <slika>http://example.com/images/aw-black-ml-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>2003</id>
+        <sifra>AW-STRAP-YELLOW-SM</sifra>
+        <naziv>Narukvica za Apple Watch Silicone Strap light yellow S/M 38/40/41mm</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>MASKE</kategorija2>
+        <kategorija3>APPLE</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2024.</godinaUvoza>
+        <zemljaPorekla>Vietnam</zemljaPorekla>
+        <vpCena>450.00</vpCena>
+        <mpCena>890.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>1</naAkciji>
+        <opis>Silikonska narukvica za Apple Watch</opis>
+        <barKod>2234567890003</barKod>
+        <slike>
+            <slika>http://example.com/images/aw-yellow-sm-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <!-- Простой товар без вариантов -->
+    <artikal>
+        <id>3001</id>
+        <sifra>PWR-BANK-001</sifra>
+        <naziv>Power Bank 20000mAh USB-C Fast Charging</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>BATERIJE</kategorija2>
+        <kategorija3>POWER BANKS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>1200.00</vpCena>
+        <mpCena>2490.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Brzo punjenje, LED indikatori, 2x USB-A + 1x USB-C</opis>
+        <barKod>3234567890001</barKod>
+        <slike>
+            <slika>http://example.com/images/pwrbank-1.jpg</slika>
+            <slika>http://example.com/images/pwrbank-2.jpg</slika>
+        </slike>
+    </artikal>
+
+    <!-- Группа 3: ECO grade батареї - 2 варианта -->
+    <artikal>
+        <id>4001</id>
+        <sifra>BATT-ECO-001</sifra>
+        <naziv>Baterija Samsung Galaxy S21 ECO GRADE</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>BATERIJE</kategorija2>
+        <kategorija3>BATERIJE ECO GRADE</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2024.</godinaUvoza>
+        <zemljaPorekla>Taiwan</zemljaPorekla>
+        <vpCena>600.00</vpCena>
+        <mpCena>890.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Refurbished baterija sa 80%+ kapacitetom</opis>
+        <barKod>4234567890001</barKod>
+        <slike>
+            <slika>http://example.com/images/batt-eco-1.jpg</slika>
+        </slike>
+    </artikal>
+
+    <artikal>
+        <id>4002</id>
+        <sifra>BATT-ECO-002</sifra>
+        <naziv>Baterija iPhone 12 ECO GRADE</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>BATERIJE</kategorija2>
+        <kategorija3>BATERIJE ECO GRADE</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2024.</godinaUvoza>
+        <zemljaPorekla>Taiwan</zemljaPorekla>
+        <vpCena>750.00</vpCena>
+        <mpCena>1190.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Refurbished baterija sa 80%+ kapacitetom</opis>
+        <barKod>4234567890002</barKod>
+    </artikal>
+</artikli>

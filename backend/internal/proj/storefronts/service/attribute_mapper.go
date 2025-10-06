@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -72,11 +73,61 @@ func NewAttributeMapper(storage Storage, logger zerolog.Logger) *AttributeMapper
 func (m *AttributeMapper) LoadAttributesCache(ctx context.Context) error {
 	m.logger.Info().Msg("Loading attributes into cache")
 
-	// TODO: реализовать GetAllUnifiedAttributes() в Storage
-	// Пока заглушка - будет реализовано в следующем шаге
-	m.logger.Warn().Msg("GetAllUnifiedAttributes not implemented yet - using empty cache")
+	// Получаем все активные атрибуты из БД
+	attributes, err := m.storage.GetAllUnifiedAttributes(ctx)
+	if err != nil {
+		m.logger.Error().Err(err).Msg("Failed to load attributes from database")
+		return fmt.Errorf("failed to load attributes: %w", err)
+	}
+
+	// Очищаем кэш и заполняем новыми данными
+	m.attributesCache = make(map[string]*AttributeTemplate)
+	m.mappingCache = make(map[string]int)
+
+	for _, attr := range attributes {
+		// Конвертируем models.UnifiedAttribute -> AttributeTemplate
+		template := &AttributeTemplate{
+			ID:              attr.ID,
+			Code:            attr.Code,
+			Name:            attr.Name,
+			DisplayName:     attr.DisplayName,
+			AttributeType:   attr.AttributeType,
+			Purpose:         string(attr.Purpose),
+			Options:         parseJSONMap(attr.Options),
+			ValidationRules: parseJSONMap(attr.ValidationRules),
+			UISettings:      parseJSONMap(attr.UISettings),
+			IsSearchable:    attr.IsSearchable,
+			IsFilterable:    attr.IsFilterable,
+			IsRequired:      attr.IsRequired,
+			AffectsStock:    attr.AffectsStock,
+			AffectsPrice:    attr.AffectsPrice,
+		}
+
+		// Сохраняем в кэш по normalized code
+		normalizedCode := m.normalizeAttributeName(attr.Code)
+		m.attributesCache[normalizedCode] = template
+
+		// Также сохраняем по normalized name для быстрого поиска
+		normalizedName := m.normalizeAttributeName(attr.Name)
+		m.mappingCache[normalizedName] = attr.ID
+	}
+
+	m.logger.Info().
+		Int("count", len(attributes)).
+		Msg("Attributes loaded into cache successfully")
 
 	return nil
+}
+
+// parseJSONMap парсит json.RawMessage в map[string]interface{}
+func parseJSONMap(data []byte) map[string]interface{} {
+	if len(data) == 0 {
+		return nil
+	}
+	var result map[string]interface{}
+	// Игнорируем ошибки парсинга - вернем nil
+	_ = json.Unmarshal(data, &result)
+	return result
 }
 
 // MapExternalAttribute мапит внешний атрибут на внутренний

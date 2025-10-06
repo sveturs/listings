@@ -75,6 +75,9 @@ type Storage interface {
 
 	// Transactional methods
 	CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
+
+	// Unified Attributes для AttributeMapper
+	GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error)
 }
 
 // Transaction interface for database transactions
@@ -309,15 +312,15 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		product.Variants = make([]models.StorefrontProductVariant, len(createdVariants))
 		for i, v := range createdVariants {
 			product.Variants[i] = models.StorefrontProductVariant{
-				ID:                  v.ID,
-				ProductID: v.ProductID,
-				SKU:                 v.SKU,
-				Price: v.Price,
-				StockQuantity:       v.StockQuantity,
-				VariantAttributes:          v.VariantAttributes,
-				IsActive:            v.IsActive,
-				CreatedAt:           v.CreatedAt,
-				UpdatedAt:           v.UpdatedAt,
+				ID:                v.ID,
+				ProductID:         v.ProductID,
+				SKU:               v.SKU,
+				Price:             v.Price,
+				StockQuantity:     v.StockQuantity,
+				VariantAttributes: v.VariantAttributes,
+				IsActive:          v.IsActive,
+				CreatedAt:         v.CreatedAt,
+				UpdatedAt:         v.UpdatedAt,
 			}
 		}
 	}

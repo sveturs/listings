@@ -12,6 +12,7 @@ const ALLOWED_DOMAINS = [
   'lh3.googleusercontent.com',
   'images.unsplash.com',
   'unsplash.com',
+  'digitalvision.rs', // TODO: Временно! Нужно загружать картинки в наш S3 при импорте
 ];
 
 // Список разрешенных протоколов

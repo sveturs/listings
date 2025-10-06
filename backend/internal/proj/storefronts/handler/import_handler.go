@@ -15,9 +15,10 @@ import (
 
 // ImportHandler handles product import endpoints
 type ImportHandler struct {
-	importService       *service.ImportService
-	aiCategoryMapper    *service.AICategoryMapper
-	aiCategoryAnalyzer  *service.AICategoryAnalyzer
+	importService      *service.ImportService
+	aiCategoryMapper   *service.AICategoryMapper
+	aiCategoryAnalyzer *service.AICategoryAnalyzer
+	attributeMapper    *service.AttributeMapper
 }
 
 // NewImportHandler creates a new import handler
@@ -25,11 +26,13 @@ func NewImportHandler(
 	importService *service.ImportService,
 	aiCategoryMapper *service.AICategoryMapper,
 	aiCategoryAnalyzer *service.AICategoryAnalyzer,
+	attributeMapper *service.AttributeMapper,
 ) *ImportHandler {
 	return &ImportHandler{
 		importService:      importService,
 		aiCategoryMapper:   aiCategoryMapper,
 		aiCategoryAnalyzer: aiCategoryAnalyzer,
+		attributeMapper:    attributeMapper,
 	}
 }
 

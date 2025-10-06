@@ -53,6 +53,9 @@ type UnifiedAttributeStorage interface {
 	UpdateVariantMapping(ctx context.Context, id int, update *models.VariantAttributeMappingUpdateRequest) error
 	DeleteVariantMapping(ctx context.Context, id int) error
 	DeleteCategoryVariantMappings(ctx context.Context, categoryID int) error
+
+	// Для AttributeMapper
+	GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error)
 }
 
 type unifiedAttributeStorage struct {
@@ -1047,4 +1050,49 @@ func (s *unifiedAttributeStorage) DeleteCategoryVariantMappings(ctx context.Cont
 	}
 
 	return nil
+}
+
+// GetAllUnifiedAttributes получает все активные атрибуты для загрузки в кэш AttributeMapper
+func (s *unifiedAttributeStorage) GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
+	query := `
+		SELECT
+			id, code, name, display_name, attribute_type, purpose,
+			options, validation_rules, ui_settings,
+			is_searchable, is_filterable, is_required,
+			is_variant_compatible, affects_stock, affects_price,
+			sort_order, is_active, created_at, updated_at,
+			legacy_category_attribute_id, legacy_product_variant_attribute_id
+		FROM unified_attributes
+		WHERE is_active = true
+		ORDER BY code`
+
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query all unified attributes: %w", err)
+	}
+	defer rows.Close()
+
+	var attributes []*models.UnifiedAttribute
+	for rows.Next() {
+		attr := &models.UnifiedAttribute{}
+		err := rows.Scan(
+			&attr.ID, &attr.Code, &attr.Name, &attr.DisplayName,
+			&attr.AttributeType, &attr.Purpose,
+			&attr.Options, &attr.ValidationRules, &attr.UISettings,
+			&attr.IsSearchable, &attr.IsFilterable, &attr.IsRequired,
+			&attr.IsVariantCompatible, &attr.AffectsStock, &attr.AffectsPrice,
+			&attr.SortOrder, &attr.IsActive, &attr.CreatedAt, &attr.UpdatedAt,
+			&attr.LegacyCategoryAttributeID, &attr.LegacyProductVariantAttributeID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan attribute: %w", err)
+		}
+		attributes = append(attributes, attr)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return attributes, nil
 }

@@ -85,8 +85,12 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	}
 
 	if isActive := c.Query("is_active"); isActive != "" {
-		active := isActive == boolValueTrue
-		filter.IsActive = &active
+		// Если передан параметр "all" - не фильтруем по is_active (показываем все)
+		if isActive != "all" {
+			active := isActive == boolValueTrue
+			filter.IsActive = &active
+		}
+		// Если "all" - filter.IsActive остается nil (показываем все товары)
 	} else {
 		// Для публичного API (не-админов) показываем только активные товары
 		isAdmin := authMiddleware.IsAdmin(c)

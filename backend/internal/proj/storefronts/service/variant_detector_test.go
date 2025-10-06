@@ -115,11 +115,11 @@ func TestVariantDetector_GroupProducts(t *testing.T) {
 	vd.SetMinGroupSize(2)
 
 	tests := []struct {
-		name                string
-		products            []*ProductVariant
-		expectedGroupCount  int
-		expectedVariantCnt  int // для первой группы
-		expectedIsGrouped   bool
+		name               string
+		products           []*ProductVariant
+		expectedGroupCount int
+		expectedVariantCnt int // для первой группы
+		expectedIsGrouped  bool
 	}{
 		{
 			name: "Valid variant group with colors",
@@ -194,15 +194,15 @@ func TestVariantDetector_ValidateVariantGroup(t *testing.T) {
 	vd := NewVariantDetector()
 
 	tests := []struct {
-		name          string
-		group         *VariantGroup
+		name           string
+		group          *VariantGroup
 		expectWarnings bool
 	}{
 		{
 			name: "Valid group - no warnings",
 			group: &VariantGroup{
-				BaseName:     "T-Shirt",
-				VariantCount: 2,
+				BaseName:          "T-Shirt",
+				VariantCount:      2,
 				VariantAttributes: []string{"color"},
 				Variants: []*ProductVariant{
 					{
@@ -226,8 +226,8 @@ func TestVariantDetector_ValidateVariantGroup(t *testing.T) {
 		{
 			name: "Missing attribute - should warn",
 			group: &VariantGroup{
-				BaseName:     "T-Shirt",
-				VariantCount: 2,
+				BaseName:          "T-Shirt",
+				VariantCount:      2,
 				VariantAttributes: []string{"color"},
 				Variants: []*ProductVariant{
 					{
@@ -249,8 +249,8 @@ func TestVariantDetector_ValidateVariantGroup(t *testing.T) {
 		{
 			name: "Duplicate attributes - should warn",
 			group: &VariantGroup{
-				BaseName:     "T-Shirt",
-				VariantCount: 2,
+				BaseName:          "T-Shirt",
+				VariantCount:      2,
 				VariantAttributes: []string{"color"},
 				Variants: []*ProductVariant{
 					{

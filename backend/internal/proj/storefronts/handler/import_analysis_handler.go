@@ -9,17 +9,17 @@ import (
 
 // AnalyzeCategoriesRequest represents the request for category analysis
 type AnalyzeCategoriesRequest struct {
-	FileType      string                          `json:"file_type"` // xml, csv
-	Products      []models.ImportProductRequest   `json:"products"`  // Sample products with categories
-	CategoryPaths []string                        `json:"category_paths,omitempty"` // Unique category paths from file
+	FileType      string                        `json:"file_type"`                // xml, csv
+	Products      []models.ImportProductRequest `json:"products"`                 // Sample products with categories
+	CategoryPaths []string                      `json:"category_paths,omitempty"` // Unique category paths from file
 }
 
 // AnalyzeCategoriesResponse represents the response with AI category mapping suggestions
 type AnalyzeCategoriesResponse struct {
-	TotalCategories     int                                          `json:"total_categories"`
-	MappingSuggestions  map[string]*service.CategoryMappingSuggestion `json:"mapping_suggestions"` // external_cat -> suggestion
-	MappingQuality      *service.MappingQuality                      `json:"mapping_quality"`
-	ProcessingTimeMs    int64                                        `json:"processing_time_ms"`
+	TotalCategories    int                                           `json:"total_categories"`
+	MappingSuggestions map[string]*service.CategoryMappingSuggestion `json:"mapping_suggestions"` // external_cat -> suggestion
+	MappingQuality     *service.MappingQuality                       `json:"mapping_quality"`
+	ProcessingTimeMs   int64                                         `json:"processing_time_ms"`
 }
 
 // AnalyzeCategories analyzes categories in import file and provides AI mapping suggestions
@@ -147,14 +147,12 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		})
 	}
 
-	// TODO: Implement attribute detection logic
-	// For now, return mock data showing what attributes we support
-
 	detectedAttrs := make([]DetectedAttribute, 0)
 
 	// Analyze products to detect common attributes from Attributes map
 	attributeFrequency := make(map[string]int)
 	attributeExamples := make(map[string][]string)
+	attributeFirstValue := make(map[string]interface{}) // Для маппинга
 
 	for _, product := range req.Products {
 		// Analyze custom attributes from product.Attributes
@@ -167,6 +165,11 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 
 				attributeFrequency[attrName]++
 
+				// Сохраняем первое значение для маппинга
+				if _, exists := attributeFirstValue[attrName]; !exists {
+					attributeFirstValue[attrName] = attrValue
+				}
+
 				// Add example value (up to 3 examples)
 				if len(attributeExamples[attrName]) < 3 {
 					if strVal, ok := attrValue.(string); ok {
@@ -177,14 +180,36 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		}
 	}
 
-	// Convert to DetectedAttribute format
+	// Используем AttributeMapper для маппинга атрибутов
 	for attrName, frequency := range attributeFrequency {
+		// Мапим через AttributeMapper
+		mappedAttr, err := h.attributeMapper.MapExternalAttribute(
+			c.Context(),
+			attrName,
+			attributeFirstValue[attrName],
+			nil, // categoryID optional
+		)
+
+		suggestedMap := "custom_attribute"
+		isStandard := false
+
+		if err == nil && mappedAttr != nil {
+			// Если нашли маппинг в unified_attributes
+			if !mappedAttr.IsNewAttribute {
+				suggestedMap = mappedAttr.Code
+				isStandard = true
+			} else {
+				// Если это новый атрибут - используем предложенный код
+				suggestedMap = mappedAttr.SuggestedCode
+			}
+		}
+
 		detectedAttrs = append(detectedAttrs, DetectedAttribute{
 			Name:         attrName,
 			Examples:     attributeExamples[attrName],
 			Frequency:    frequency,
-			IsStandard:   false,
-			SuggestedMap: "custom_attribute",
+			IsStandard:   isStandard,
+			SuggestedMap: suggestedMap,
 		})
 	}
 
@@ -205,22 +230,22 @@ type DetectVariantsRequest struct {
 
 // VariantGroup represents a group of product variants
 type VariantGroup struct {
-	BaseName         string   `json:"base_name"`
-	VariantCount     int      `json:"variant_count"`
-	VariantAttr      string   `json:"variant_attr"`       // e.g., "color", "size", "model"
-	VariantValues    []string `json:"variant_values"`     // e.g., ["Black", "White", "Red"]
-	ProductSKUs      []string `json:"product_skus"`
-	ConfidenceScore  float64  `json:"confidence_score"`   // 0.0-1.0
-	ShouldGroupAuto  bool     `json:"should_group_auto"`  // true if confidence > 0.85
+	BaseName        string   `json:"base_name"`
+	VariantCount    int      `json:"variant_count"`
+	VariantAttr     string   `json:"variant_attr"`   // e.g., "color", "size", "model"
+	VariantValues   []string `json:"variant_values"` // e.g., ["Black", "White", "Red"]
+	ProductSKUs     []string `json:"product_skus"`
+	ConfidenceScore float64  `json:"confidence_score"`  // 0.0-1.0
+	ShouldGroupAuto bool     `json:"should_group_auto"` // true if confidence > 0.85
 }
 
 // DetectVariantsResponse represents the response with detected variant groups
 type DetectVariantsResponse struct {
-	VariantGroups       []VariantGroup `json:"variant_groups"`
-	TotalProducts       int            `json:"total_products"`
-	GroupedProducts     int            `json:"grouped_products"`
-	StandaloneProducts  int            `json:"standalone_products"`
-	ProcessingTimeMs    int64          `json:"processing_time_ms"`
+	VariantGroups      []VariantGroup `json:"variant_groups"`
+	TotalProducts      int            `json:"total_products"`
+	GroupedProducts    int            `json:"grouped_products"`
+	StandaloneProducts int            `json:"standalone_products"`
+	ProcessingTimeMs   int64          `json:"processing_time_ms"`
 }
 
 // DetectVariants detects potential product variants in import file
@@ -264,8 +289,8 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 
 // AnalyzeClientCategoriesRequest represents request for analyzing unique client categories
 type AnalyzeClientCategoriesRequest struct {
-	FileType   string                               `json:"file_type"`
-	Categories []service.ClientCategoryInfo         `json:"categories"` // Categories with product counts
+	FileType   string                       `json:"file_type"`
+	Categories []service.ClientCategoryInfo `json:"categories"` // Categories with product counts
 }
 
 // AnalyzeClientCategoriesResponse represents response with category insights

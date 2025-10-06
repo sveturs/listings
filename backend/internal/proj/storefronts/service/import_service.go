@@ -14,11 +14,14 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/proj/storefronts/parsers"
 	"backend/internal/services"
 	"backend/internal/storage/postgres"
@@ -1190,7 +1193,7 @@ func (s *ImportService) ImportFromFileAsync(ctx context.Context, userID int, fil
 	return job, nil
 }
 
-// downloadImage downloads an image from a URL
+// downloadImage downloads an image from a URL with retry logic for TLS issues
 func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, string, error) {
 	// Валидация URL
 	if url == "" {
@@ -1203,7 +1206,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 		return nil, "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// HTTP клиент с таймаутом и поддержкой устаревших TLS серверов
+	// Попытка 1: Стандартный HTTP клиент с поддержкой устаревших TLS серверов
 	// ВАЖНО: InsecureSkipVerify используется только для загрузки внешних изображений
 	// из доверенных источников (прайсов поставщиков). Для production рекомендуется
 	// настроить прокси или обновить TLS конфигурацию поставщиков.
@@ -1222,11 +1225,34 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 	// Выполнение запроса
 	resp, err := client.Do(req)
 	if err != nil {
+		// Попытка 2: Fallback на системный curl для обхода Go TLS ограничений
+		// Это необходимо для серверов с устаревшими DH ключами (например, digitalvision.rs)
+		if strings.Contains(err.Error(), "tls") || strings.Contains(err.Error(), "handshake") {
+			logger.Warn().
+				Str("url", url).
+				Err(err).
+				Msg("TLS handshake failed, trying fallback with system curl")
+
+			// Используем системный curl с --insecure для обхода TLS проблем
+			imageData, ext, curlErr := s.downloadImageWithCurl(ctx, url)
+			if curlErr != nil {
+				logger.Error().
+					Str("url", url).
+					Err(curlErr).
+					Msg("Curl fallback also failed")
+				return nil, "", fmt.Errorf("failed to download image (both Go and curl failed): %w", err)
+			}
+
+			logger.Info().
+				Str("url", url).
+				Msg("Successfully downloaded image using curl fallback")
+			return imageData, ext, nil
+		}
 		return nil, "", fmt.Errorf("failed to download image: %w", err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("Failed to close response body: %v\n", err)
+			logger.Error().Err(err).Msg("Failed to close response body")
 		}
 	}()
 
@@ -1281,6 +1307,80 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 			ext = ".jpg" // Fallback
 		}
 	}
+
+	return imageData, ext, nil
+}
+
+// downloadImageWithCurl downloads image using system curl as fallback for TLS issues
+// This is necessary for servers with weak DH keys that Go's TLS client cannot handle
+func (s *ImportService) downloadImageWithCurl(ctx context.Context, url string) ([]byte, string, error) {
+	// Создаем временный файл для сохранения изображения
+	tmpFile, err := os.CreateTemp("", "import_image_*")
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name()
+	tmpFile.Close()
+	defer os.Remove(tmpPath) // Удаляем временный файл после использования
+
+	// Выполняем curl с пониженным security level для обхода weak DH key проблемы
+	// ВАЖНО: Это workaround для серверов с устаревшей TLS конфигурацией
+	// DEFAULT:@SECLEVEL=0 - понижает OpenSSL security level до 0 (разрешает weak DH keys)
+	// --insecure: игнорирует проблемы SSL сертификатов
+	// --max-time 30: таймаут 30 секунд
+	// --location: следует редиректам
+	// --fail: возвращает ошибку при HTTP ошибках (4xx, 5xx)
+	cmd := exec.CommandContext(ctx, "curl",
+		"--ciphers", "DEFAULT:@SECLEVEL=0",
+		"--insecure",
+		"--silent",
+		"--show-error",
+		"--max-time", "30",
+		"--location",
+		"--fail",
+		"--output", tmpPath,
+		url,
+	)
+	// Устанавливаем пустой OPENSSL_CONF для избежания конфликтов с системной конфигурацией
+	cmd.Env = append(os.Environ(), "OPENSSL_CONF=/dev/null")
+
+	// Выполняем команду
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, "", fmt.Errorf("curl command failed: %w (output: %s)", err, string(output))
+	}
+
+	// Читаем загруженный файл
+	imageData, err := os.ReadFile(tmpPath)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to read downloaded file: %w", err)
+	}
+
+	// Проверка размера файла (максимум 10MB)
+	const maxImageSize = 10 * 1024 * 1024
+	if len(imageData) > maxImageSize {
+		return nil, "", fmt.Errorf("image size exceeds maximum limit of 10MB")
+	}
+
+	// Валидация что это действительно изображение
+	config, format, err := image.DecodeConfig(bytes.NewReader(imageData))
+	if err != nil {
+		return nil, "", fmt.Errorf("invalid image format: %w", err)
+	}
+
+	// Определение расширения на основе формата
+	ext := "." + format
+	if ext == ".jpeg" {
+		ext = ".jpg"
+	}
+
+	logger.Info().
+		Str("url", url).
+		Str("format", format).
+		Int("width", config.Width).
+		Int("height", config.Height).
+		Int("size_bytes", len(imageData)).
+		Msg("Successfully downloaded image using curl")
 
 	return imageData, ext, nil
 }

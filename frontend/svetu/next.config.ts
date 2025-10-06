@@ -99,6 +99,12 @@ const nextConfig: NextConfig = {
         hostname: 'ui-avatars.com',
         pathname: '/**',
       },
+      // DigitalVision - внешний storefront
+      {
+        protocol: 'https',
+        hostname: 'digitalvision.rs',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {
