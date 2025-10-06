@@ -465,15 +465,15 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 		if existing, found := existingProducts[sku]; found {
 			// Product exists
 			switch updateMode {
-			case "create_only":
+			case updateModeCreateOnly:
 				errors = append(errors, fmt.Errorf("product with SKU %s already exists", sku))
 				lineNumber := offset + 1 // Will be corrected below
 				_ = s.jobsRepo.AddError(ctx, &models.ImportError{
 					JobID:        jobID,
 					LineNumber:   lineNumber,
-					FieldName:    sku,
-					ErrorMessage: fmt.Sprintf("product with SKU %s already exists", sku),
-					RawData:      importProduct.Name,
+					FieldName:    "sku", // Field that caused the error
+					ErrorMessage: fmt.Sprintf("Product with SKU '%s' already exists (mode: create_only). Use 'update_only' or 'upsert' mode to update existing products.", sku),
+					RawData:      fmt.Sprintf("name=%s, sku=%s", importProduct.Name, sku),
 				})
 			case updateModeUpdateOnly, updateModeUpsert:
 				updateProducts = append(updateProducts, struct {
@@ -489,9 +489,9 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 				_ = s.jobsRepo.AddError(ctx, &models.ImportError{
 					JobID:        jobID,
 					LineNumber:   lineNumber,
-					FieldName:    sku,
-					ErrorMessage: fmt.Sprintf("product with SKU %s not found", sku),
-					RawData:      importProduct.Name,
+					FieldName:    "sku", // Field that caused the error
+					ErrorMessage: fmt.Sprintf("Product with SKU '%s' not found (mode: update_only). Use 'create_only' or 'upsert' mode to create new products.", sku),
+					RawData:      fmt.Sprintf("name=%s, sku=%s", importProduct.Name, sku),
 				})
 			} else {
 				// Resolve category
@@ -588,9 +588,9 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 			_ = s.jobsRepo.AddError(ctx, &models.ImportError{
 				JobID:        jobID,
 				LineNumber:   offset + 1,
-				FieldName:    item.request.SKU,
-				ErrorMessage: err.Error(),
-				RawData:      item.request.Name,
+				FieldName:    "product", // General product update error
+				ErrorMessage: fmt.Sprintf("Failed to update product with SKU '%s': %v", item.request.SKU, err),
+				RawData:      fmt.Sprintf("name=%s, sku=%s", item.request.Name, item.request.SKU),
 			})
 		} else {
 			successCount++
