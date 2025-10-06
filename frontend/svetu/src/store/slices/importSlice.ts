@@ -17,6 +17,11 @@ const initialState: ImportState = {
   validationErrors: [],
   formats: null,
 
+  // Preview states
+  previewData: null,
+  isPreviewLoading: false,
+  previewError: null,
+
   // UI states
   isLoading: false,
   error: null,
@@ -129,6 +134,38 @@ export const validateImportFile = createAsyncThunk(
       params.storefrontId,
       params.file,
       params.fileType
+    );
+  }
+);
+
+export const previewImportFile = createAsyncThunk(
+  'import/previewFile',
+  async (params: {
+    storefrontId?: number;
+    storefrontSlug?: string;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+    previewLimit?: number;
+  }) => {
+    // Use slug-based API if slug is provided
+    if (params.storefrontSlug) {
+      return await ImportApi.previewFileBySlug(
+        params.storefrontSlug,
+        params.file,
+        params.fileType,
+        params.previewLimit
+      );
+    }
+
+    if (!params.storefrontId) {
+      throw new Error('Either storefrontId or storefrontSlug is required');
+    }
+
+    return await ImportApi.previewFile(
+      params.storefrontId,
+      params.file,
+      params.fileType,
+      params.previewLimit
     );
   }
 );
@@ -265,6 +302,14 @@ const importSlice = createSlice({
       state.uploadProgress = null;
       state.validationErrors = [];
       state.error = null;
+      state.previewData = null;
+      state.previewError = null;
+    },
+
+    // Preview reducers
+    clearPreview: (state) => {
+      state.previewData = null;
+      state.previewError = null;
     },
   },
   extraReducers: (builder) => {
@@ -398,6 +443,22 @@ const importSlice = createSlice({
           state.jobs.unshift(action.payload);
         }
         state.currentJob = action.payload;
+      })
+
+      // Preview file
+      .addCase(previewImportFile.pending, (state) => {
+        state.isPreviewLoading = true;
+        state.previewError = null;
+        state.previewData = null;
+      })
+      .addCase(previewImportFile.fulfilled, (state, action) => {
+        state.isPreviewLoading = false;
+        state.previewData = action.payload;
+      })
+      .addCase(previewImportFile.rejected, (state, action) => {
+        state.isPreviewLoading = false;
+        state.previewError =
+          action.error.message || 'Failed to preview import file';
       });
   },
 });
@@ -418,6 +479,7 @@ export const {
   setCurrentJob,
   updateJobStatus,
   resetForm,
+  clearPreview,
 } = importSlice.actions;
 
 export default importSlice.reducer;

@@ -6,6 +6,7 @@ import type {
   ImportSummary,
   ImportFormats,
   UploadProgress,
+  ImportPreviewResponse,
 } from '@/types/import';
 
 export class ImportApi {
@@ -314,22 +315,24 @@ export class ImportApi {
 
   /**
    * Uploads file and gets preview of data without importing
+   * @param storefrontId - ID of the storefront
+   * @param file - File to preview
+   * @param fileType - Type of the file (csv, xml, zip)
+   * @param previewLimit - Number of rows to preview (default: 10, max: 100)
    */
   static async previewFile(
+    storefrontId: number,
     file: File,
-    fileType: 'xml' | 'csv' | 'zip'
-  ): Promise<{
-    sample_data: any[];
-    total_records: number;
-    detected_fields: string[];
-    validation_errors: any[];
-  }> {
+    fileType: 'xml' | 'csv' | 'zip',
+    previewLimit: number = 10
+  ): Promise<ImportPreviewResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('file_type', fileType);
+    formData.append('preview_limit', previewLimit.toString());
 
     const response = await apiClient.post(
-      '/api/v1/storefronts/import/preview',
+      `/api/v1/storefronts/${storefrontId}/import/preview`,
       formData,
       {
         headers: {
@@ -339,6 +342,42 @@ export class ImportApi {
     );
 
     return response.data;
+  }
+
+  /**
+   * Uploads file and gets preview of data without importing (using slug)
+   * @param storefrontSlug - Slug of the storefront
+   * @param file - File to preview
+   * @param fileType - Type of the file (csv, xml, zip)
+   * @param previewLimit - Number of rows to preview (default: 10, max: 100)
+   */
+  static async previewFileBySlug(
+    storefrontSlug: string,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip',
+    previewLimit: number = 10
+  ): Promise<ImportPreviewResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+    formData.append('preview_limit', previewLimit.toString());
+
+    // Use fetch directly with BFF proxy
+    const response = await fetch(
+      `/api/v2/storefronts/slug/${storefrontSlug}/import/preview`,
+      {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Include cookies for auth
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `HTTP Error: ${response.status}`);
+    }
+
+    return response.json();
   }
 
   /**

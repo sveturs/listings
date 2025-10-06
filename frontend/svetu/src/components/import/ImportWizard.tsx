@@ -13,11 +13,13 @@ import {
   setCategoryMappingMode,
   importFromFile,
   importFromUrl,
-  validateImportFile,
+  previewImportFile,
   downloadCsvTemplate,
   resetForm,
   clearError,
+  clearPreview,
 } from '@/store/slices/importSlice';
+import ImportPreviewTable from './ImportPreviewTable';
 import {
   validateFileType,
   validateFileSize,
@@ -53,12 +55,14 @@ export default function ImportWizard({
     uploadProgress,
     error,
     formats,
-    validationErrors,
+    previewData,
+    isPreviewLoading,
+    previewError,
   } = useAppSelector((state) => state.import);
 
   const [activeTab, setActiveTab] = useState<'file' | 'url'>('file');
   const [dragActive, setDragActive] = useState(false);
-  const [validationStep, setValidationStep] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (isImportModalOpen && !formats) {
@@ -125,21 +129,23 @@ export default function ImportWizard({
     dispatch(clearError());
   };
 
-  const handleValidateFile = async () => {
+  const handlePreviewFile = async () => {
     if (selectedFiles.length === 0 || !selectedFileType) return;
 
     try {
       await dispatch(
-        validateImportFile({
-          storefrontId,
+        previewImportFile({
+          storefrontId: storefrontSlug ? undefined : storefrontId,
+          storefrontSlug,
           file: selectedFiles[0],
           fileType: selectedFileType,
+          previewLimit: 10,
         })
       ).unwrap();
 
-      setValidationStep(true);
+      setShowPreview(true);
     } catch (error) {
-      console.error('Validation failed:', error);
+      console.error('Preview failed:', error);
     }
   };
 
@@ -193,9 +199,15 @@ export default function ImportWizard({
 
   const handleClose = () => {
     dispatch(resetForm());
-    setValidationStep(false);
+    dispatch(clearPreview());
+    setShowPreview(false);
     dispatch(setImportModalOpen(false));
     onClose?.();
+  };
+
+  const handleBackFromPreview = () => {
+    setShowPreview(false);
+    dispatch(clearPreview());
   };
 
   const handleDownloadTemplate = () => {
@@ -232,7 +244,7 @@ export default function ImportWizard({
 
         {/* Content */}
         <div className="p-6">
-          {!validationStep ? (
+          {!showPreview ? (
             <>
               {/* Tabs */}
               <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
@@ -533,13 +545,37 @@ export default function ImportWizard({
                     selectedFiles.length > 0 &&
                     selectedFileType && (
                       <button
-                        onClick={handleValidateFile}
-                        disabled={isLoading}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                        onClick={handlePreviewFile}
+                        disabled={isPreviewLoading}
+                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isLoading
-                          ? t('actions.validating')
-                          : t('actions.validate')}
+                        {isPreviewLoading ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 inline-block"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Loading Preview...
+                          </>
+                        ) : (
+                          'Preview Import'
+                        )}
                       </button>
                     )}
 
@@ -567,55 +603,32 @@ export default function ImportWizard({
               </div>
             </>
           ) : (
-            /* Validation Results */
+            /* Preview Results */
             <div className="space-y-6">
-              <div className="text-center">
-                <svg
-                  className="w-12 h-12 text-green-500 mx-auto mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900">
-                  {t('validation.success.title')}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {t('validation.success.description')}
-                </p>
-              </div>
-
-              {validationErrors.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                  <h4 className="text-sm font-medium text-yellow-800 mb-2">
-                    {t('validation.warnings')}
-                  </h4>
-                  <ul className="text-sm text-yellow-700 space-y-1">
-                    {validationErrors.slice(0, 5).map((error, index) => (
-                      <li key={index}>
-                        {error.field}: {error.message}
-                      </li>
-                    ))}
-                    {validationErrors.length > 5 && (
-                      <li>
-                        {t('validation.moreErrors', {
-                          count: validationErrors.length - 5,
-                        })}
-                      </li>
-                    )}
-                  </ul>
+              {previewError ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-5 h-5 text-red-500 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <p className="text-sm text-red-800">{previewError}</p>
+                  </div>
                 </div>
-              )}
+              ) : previewData ? (
+                <ImportPreviewTable previewData={previewData} />
+              ) : null}
 
-              <div className="flex justify-between">
+              <div className="flex justify-between pt-4 border-t">
                 <button
-                  onClick={() => setValidationStep(false)}
+                  onClick={handleBackFromPreview}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   {t('actions.back')}
@@ -623,11 +636,35 @@ export default function ImportWizard({
                 <button
                   onClick={handleImportFromFile}
                   disabled={isLoading || isUploading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading || isUploading
-                    ? t('actions.importing')
-                    : t('actions.proceedImport')}
+                  {isLoading || isUploading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 inline-block"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Importing...
+                    </>
+                  ) : (
+                    'Proceed with Import'
+                  )}
                 </button>
               </div>
             </div>

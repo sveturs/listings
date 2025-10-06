@@ -93,6 +93,23 @@ export interface ImportValidationError {
   value?: any;
 }
 
+// Preview types
+export interface ImportPreviewRow {
+  line_number: number;
+  data: Record<string, any>;
+  errors?: ImportValidationError[];
+  is_valid: boolean;
+}
+
+export interface ImportPreviewResponse {
+  file_type: string;
+  total_rows: number;
+  preview_rows: ImportPreviewRow[];
+  headers?: string[]; // For CSV files
+  validation_ok: boolean;
+  error_summary?: string;
+}
+
 // UI State types
 export interface ImportState {
   jobs: ImportJob[];
@@ -101,6 +118,11 @@ export interface ImportState {
   uploadProgress: UploadProgress | null;
   validationErrors: ImportValidationError[];
   formats: ImportFormats | null;
+
+  // Preview states
+  previewData: ImportPreviewResponse | null;
+  isPreviewLoading: boolean;
+  previewError: string | null;
 
   // UI states
   isLoading: boolean;
