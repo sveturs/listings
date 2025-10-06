@@ -668,5 +668,135 @@
   "apply": "Primeni",
   "categoriesLoadError": "Neuspelo učitavanje kategorija",
   "noCategoriesFound": "Kategorije nisu pronađene",
-  "willGenerateVariants": "Biće kreirano {count} varijanti"
+  "willGenerateVariants": "Biće kreirano {count} varijanti",
+  "import": {
+    "categoryMapping": {
+      "title": "Mapiranje kategorija",
+      "aiSuggestion": "AI predlog",
+      "selectCategory": "Izaberite kategoriju",
+      "selectPlaceholder": "Izaberite kategoriju sa liste",
+      "newCategory": {
+        "request": "Zatraži novu kategoriju",
+        "reasoning": "Obrazloženje",
+        "reasoningPlaceholder": "Objasnite zašto je potrebna nova kategorija...",
+        "submit": "Pošalji zahtev",
+        "cancel": "Otkaži"
+      },
+      "actions": {
+        "approve": "Odobri"
+      },
+      "confidence": {
+        "high": "Visoka",
+        "medium": "Srednja",
+        "low": "Niska"
+      },
+      "status": {
+        "approved": "Odobreno"
+      },
+      "summary": {
+        "highConfidence": "Visoka sigurnost",
+        "mediumConfidence": "Srednja sigurnost",
+        "lowConfidence": "Niska sigurnost",
+        "unmapped": "Bez mapiranja"
+      },
+      "sections": {
+        "highConfidence": "Visoka sigurnost (Auto-odobreno)",
+        "mediumConfidence": "Srednja sigurnost (Preporučuje se provera)",
+        "lowConfidence": "Niska sigurnost (Potreban ručni izbor)",
+        "unmapped": "Bez AI predloga"
+      },
+      "help": {
+        "title": "Kako funkcioniše AI mapiranje",
+        "highConfidence": "Zeleno - AI je siguran, može se automatski odobriti",
+        "mediumConfidence": "Žuto - preporučuje se provera AI predloga",
+        "lowConfidence": "Crveno - potreban ručni izbor kategorije",
+        "newCategory": "Ako potrebna kategorija ne postoji - zatražite kreiranje"
+      },
+      "errors": {
+        "reasoningRequired": "Obrazloženje je obavezno"
+      }
+    },
+    "attributeMapping": {
+      "title": "Mapiranje atributa",
+      "filters": {
+        "search": "Pretraga",
+        "searchPlaceholder": "Pretraži atribute...",
+        "type": "Tip",
+        "allTypes": "Svi tipovi",
+        "variantDefiningOnly": "Samo definišuće varijante"
+      },
+      "actions": {
+        "selectAll": "Izaberi sve",
+        "deselectAll": "Poništi izbor"
+      },
+      "stats": {
+        "total": "Ukupno",
+        "selected": "Izabrano",
+        "variantDefining": "Definišuće varijante"
+      },
+      "types": {
+        "string": "Tekst",
+        "number": "Broj",
+        "boolean": "Da/Ne",
+        "enum": "Lista"
+      },
+      "badges": {
+        "variantDefining": "Definišuće varijante"
+      },
+      "suggestedMapping": "Predloženo mapiranje",
+      "frequency": "Učestalost",
+      "products": "proizvoda",
+      "sampleValues": "Primeri",
+      "noAttributesFound": "Atributi nisu pronađeni",
+      "help": {
+        "title": "Izbor atributa",
+        "selectAttributes": "Izaberite atribute koje želite da uvezete",
+        "variantDefining": "Atributi označeni kao 'Definišuće varijante' koriste se za grupisanje proizvoda",
+        "frequency": "Učestalost pokazuje koliko proizvoda ima ovaj atribut",
+        "sampleValues": "Primeri pomažu razumevanju formata vrednosti"
+      }
+    },
+    "variantDetection": {
+      "title": "Detekcija varijanti",
+      "filters": {
+        "search": "Pretraga",
+        "searchPlaceholder": "Pretraži grupe varijanti...",
+        "confidence": "Sigurnost",
+        "allConfidence": "Svi nivoi"
+      },
+      "actions": {
+        "approveAll": "Odobri sve",
+        "rejectAll": "Odbij sve",
+        "showVariants": "Prikaži varijante",
+        "hideVariants": "Sakrij varijante"
+      },
+      "stats": {
+        "groups": "Grupa",
+        "variants": "Varijanti",
+        "approved": "Odobreno"
+      },
+      "confidence": {
+        "high": "Visoka",
+        "medium": "Srednja",
+        "low": "Niska"
+      },
+      "status": {
+        "approved": "Odobreno"
+      },
+      "variants": "varijanti",
+      "attributes": "Atributi",
+      "noGroupsFound": "Grupe nisu pronađene",
+      "help": {
+        "title": "Grupisanje varijanti",
+        "variantGroups": "Proizvodi se automatski grupišu po osnovnom nazivu",
+        "confidence": "Nivo sigurnosti pokazuje kvalitet grupisanja",
+        "approve": "Odobrite grupe za uvoz kao varijante jednog proizvoda",
+        "expandDetails": "Proširite grupu da vidite sve varijante"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Klasičan",
+    "enhanced": "Napredni"
+  }
 }

@@ -20,6 +20,7 @@ import {
   clearPreview,
 } from '@/store/slices/importSlice';
 import ImportPreviewTable from './ImportPreviewTable';
+import ImportAnalysisWizard from './ImportAnalysisWizard';
 import {
   validateFileType,
   validateFileSize,
@@ -63,6 +64,8 @@ export default function ImportWizard({
   const [activeTab, setActiveTab] = useState<'file' | 'url'>('file');
   const [dragActive, setDragActive] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  type ImportMode = 'classic' | 'enhanced';
+  const [importMode, setImportMode] = useState<ImportMode>('classic');
 
   useEffect(() => {
     if (isImportModalOpen && !formats) {
@@ -201,6 +204,7 @@ export default function ImportWizard({
     dispatch(resetForm());
     dispatch(clearPreview());
     setShowPreview(false);
+    setImportMode('classic'); // Reset to classic mode on close
     dispatch(setImportModalOpen(false));
     onClose?.();
   };
@@ -216,12 +220,50 @@ export default function ImportWizard({
 
   if (!isImportModalOpen) return null;
 
+  // If enhanced mode is selected, render ImportAnalysisWizard instead
+  if (importMode === 'enhanced') {
+    return (
+      <ImportAnalysisWizard
+        storefrontId={storefrontId}
+        storefrontSlug={storefrontSlug}
+        onClose={handleClose}
+        onSuccess={onSuccess}
+        onSwitchToClassic={() => setImportMode('classic')}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-semibold text-gray-900">{t('title')}</h2>
+          <div className="flex items-center space-x-4">
+            <h2 className="text-2xl font-semibold text-gray-900">{t('title')}</h2>
+            {/* Import Mode Toggle */}
+            <div className="flex items-center space-x-2 text-sm">
+              <button
+                onClick={() => setImportMode('classic' as ImportMode)}
+                className={
+                  importMode === 'classic'
+                    ? 'px-3 py-1 rounded-md font-medium transition-colors bg-blue-100 text-blue-700'
+                    : 'px-3 py-1 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100'
+                }
+              >
+                {t('importMode.classic')}
+              </button>
+              <button
+                onClick={() => setImportMode('enhanced' as ImportMode)}
+                className={
+                  (importMode as string) === 'enhanced'
+                    ? 'px-3 py-1 rounded-md font-medium transition-colors bg-purple-100 text-purple-700'
+                    : 'px-3 py-1 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100'
+                }
+              >
+                {t('importMode.enhanced')} ✨
+              </button>
+            </div>
+          </div>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"

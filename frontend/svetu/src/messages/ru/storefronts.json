@@ -678,5 +678,135 @@
   "delete": "Удалить",
   "confirmDelete": "Подтвердить удаление",
   "edit": "Редактировать",
-  "processing": "Обработка..."
+  "processing": "Обработка...",
+  "import": {
+    "categoryMapping": {
+      "title": "Маппинг категорий",
+      "aiSuggestion": "Предложение AI",
+      "selectCategory": "Выберите категорию",
+      "selectPlaceholder": "Выберите категорию из списка",
+      "newCategory": {
+        "request": "Запросить новую категорию",
+        "reasoning": "Обоснование запроса",
+        "reasoningPlaceholder": "Объясните, почему нужна новая категория...",
+        "submit": "Отправить запрос",
+        "cancel": "Отмена"
+      },
+      "actions": {
+        "approve": "Одобрить"
+      },
+      "confidence": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "status": {
+        "approved": "Одобрено"
+      },
+      "summary": {
+        "highConfidence": "Высокая уверенность",
+        "mediumConfidence": "Средняя уверенность",
+        "lowConfidence": "Низкая уверенность",
+        "unmapped": "Без маппинга"
+      },
+      "sections": {
+        "highConfidence": "Высокая уверенность (Авто-одобрено)",
+        "mediumConfidence": "Средняя уверенность (Рекомендуется проверка)",
+        "lowConfidence": "Низкая уверенность (Требуется ручной выбор)",
+        "unmapped": "Без предложений AI"
+      },
+      "help": {
+        "title": "Как работает AI маппинг",
+        "highConfidence": "Зелёные - AI уверен в маппинге, можно одобрить автоматически",
+        "mediumConfidence": "Жёлтые - рекомендуется проверить предложение AI",
+        "lowConfidence": "Красные - требуется выбрать категорию вручную",
+        "newCategory": "Если нужной категории нет - запросите создание новой"
+      },
+      "errors": {
+        "reasoningRequired": "Необходимо указать обоснование запроса"
+      }
+    },
+    "attributeMapping": {
+      "title": "Маппинг атрибутов",
+      "filters": {
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск атрибутов...",
+        "type": "Тип",
+        "allTypes": "Все типы",
+        "variantDefiningOnly": "Только определяющие варианты"
+      },
+      "actions": {
+        "selectAll": "Выбрать все",
+        "deselectAll": "Снять выбор"
+      },
+      "stats": {
+        "total": "Всего",
+        "selected": "Выбрано",
+        "variantDefining": "Для вариантов"
+      },
+      "types": {
+        "string": "Текст",
+        "number": "Число",
+        "boolean": "Да/Нет",
+        "enum": "Список"
+      },
+      "badges": {
+        "variantDefining": "Для вариантов"
+      },
+      "suggestedMapping": "Предложенный маппинг",
+      "frequency": "Частота",
+      "products": "товаров",
+      "sampleValues": "Примеры",
+      "noAttributesFound": "Атрибуты не найдены",
+      "help": {
+        "title": "Выбор атрибутов",
+        "selectAttributes": "Выберите атрибуты, которые хотите импортировать",
+        "variantDefining": "Атрибуты с меткой 'Для вариантов' используются для группировки товаров",
+        "frequency": "Частота показывает, в скольких товарах есть этот атрибут",
+        "sampleValues": "Примеры помогают понять формат значений"
+      }
+    },
+    "variantDetection": {
+      "title": "Обнаружение вариантов",
+      "filters": {
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск групп вариантов...",
+        "confidence": "Уверенность",
+        "allConfidence": "Все уровни"
+      },
+      "actions": {
+        "approveAll": "Одобрить все",
+        "rejectAll": "Отклонить все",
+        "showVariants": "Показать варианты",
+        "hideVariants": "Скрыть варианты"
+      },
+      "stats": {
+        "groups": "Групп",
+        "variants": "Вариантов",
+        "approved": "Одобрено"
+      },
+      "confidence": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "status": {
+        "approved": "Одобрено"
+      },
+      "variants": "вариантов",
+      "attributes": "Атрибуты",
+      "noGroupsFound": "Группы не найдены",
+      "help": {
+        "title": "Группировка вариантов",
+        "variantGroups": "Товары автоматически группируются по базовому названию",
+        "confidence": "Уровень уверенности показывает качество группировки",
+        "approve": "Одобрите группы для импорта как варианты одного товара",
+        "expandDetails": "Раскройте группу, чтобы увидеть все варианты"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Классический",
+    "enhanced": "Расширенный"
+  }
 }

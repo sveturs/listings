@@ -116,6 +116,10 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Устанавливаем CategoryMappingService в ImportService
 	importSvc.SetCategoryMappingService(categoryMappingSvc)
 
+	// Создаем AI Category Mapper и Analyzer для умного импорта
+	aiCategoryMapper := storefrontService.NewAICategoryMapper(aiDetector, categoryMappingSvc)
+	aiCategoryAnalyzer := storefrontService.NewAICategoryAnalyzer(aiCategoryMapper, categoryMappingSvc)
+
 	// Создаем AI Handler для общих AI операций (анализ изображений, переводы и т.д.)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
 
@@ -130,7 +134,7 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		services:             services,
 		storefrontHandler:    handler.NewStorefrontHandler(storefrontSvc),
 		productHandler:       handler.NewProductHandler(productSvc),
-		importHandler:        handler.NewImportHandler(importSvc),
+		importHandler:        handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer),
 		imageHandler:         handler.NewImageHandler(imageService, productSvc),
 		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
 		variantHandler:       variantHandler,
@@ -267,6 +271,13 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Post("/storefronts/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
 		api.Post("/storefronts/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
 		api.Post("/storefronts/:storefront_id/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.PreviewImportFile)
+
+		// Новые маршруты для AI анализа импорта
+		api.Post("/storefronts/:storefront_id/import/analyze-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeCategories)
+		api.Post("/storefronts/:storefront_id/import/analyze-attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeAttributes)
+		api.Post("/storefronts/:storefront_id/import/detect-variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.DetectVariants)
+		api.Post("/storefronts/:storefront_id/import/analyze-client-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeClientCategories)
+
 		api.Get("/storefronts/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
 		api.Get("/storefronts/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
 		api.Get("/storefronts/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)

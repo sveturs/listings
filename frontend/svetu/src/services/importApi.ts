@@ -436,6 +436,170 @@ export class ImportApi {
     }
     return response.blob();
   }
+
+  // ============================================
+  // Enhanced Import Analysis API (Phase 1)
+  // ============================================
+
+  /**
+   * Analyzes categories in import file and provides AI mapping suggestions
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeCategories(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-categories`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Analyzes attributes in import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeAttributes(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-attributes`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Detects potential product variant groups in import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async detectVariants(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/detect-variants`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Analyzes unique categories from client's import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeClientCategories(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-client-categories`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Gets list of category proposals for admin review
+   */
+  static async getCategoryProposals(params?: {
+    status?: 'pending' | 'approved' | 'rejected';
+    storefront_id?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ proposals: any[]; total: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.storefront_id)
+      queryParams.append('storefront_id', params.storefront_id.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/admin/category-proposals${queryString ? `?${queryString}` : ''}`;
+
+    const response = await apiClient.get(url);
+    return response.data;
+  }
+
+  /**
+   * Approves a category proposal (admin only)
+   * @param proposalId - ID of the proposal to approve
+   */
+  static async approveCategoryProposal(proposalId: number): Promise<void> {
+    await apiClient.post(
+      `/api/v1/admin/category-proposals/${proposalId}/approve`
+    );
+  }
+
+  /**
+   * Rejects a category proposal (admin only)
+   * @param proposalId - ID of the proposal to reject
+   * @param reason - Optional reason for rejection
+   */
+  static async rejectCategoryProposal(
+    proposalId: number,
+    reason?: string
+  ): Promise<void> {
+    await apiClient.post(
+      `/api/v1/admin/category-proposals/${proposalId}/reject`,
+      { reason }
+    );
+  }
 }
 
 // Helper functions for file handling

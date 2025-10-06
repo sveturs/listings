@@ -51,6 +51,7 @@ type ImportService struct {
 	queueManager           *ImportQueueManager
 	imageService           *services.ImageService
 	categoryMappingService *CategoryMappingService
+	variantDetector        *VariantDetector
 }
 
 // NewImportService creates a new import service
@@ -66,6 +67,7 @@ func NewImportService(
 		queueManager:           nil, // Will be set via SetQueueManager
 		imageService:           imageService,
 		categoryMappingService: categoryMappingService,
+		variantDetector:        NewVariantDetector(),
 	}
 }
 
@@ -1383,4 +1385,69 @@ func (s *ImportService) resolveCategoryID(ctx context.Context, importProduct *mo
 	importProduct.CategoryID = categoryID
 
 	return nil
+}
+
+// convertImportProductsToVariants конвертирует ImportProductRequest в ProductVariant
+func (s *ImportService) convertImportProductsToVariants(products []models.ImportProductRequest) []*ProductVariant {
+	variants := make([]*ProductVariant, 0, len(products))
+	
+	for _, p := range products {
+		variant := &ProductVariant{
+			Name:          p.Name,
+			SKU:           p.SKU,
+			Price:         p.Price,
+			StockQuantity: p.StockQuantity,
+		}
+		
+		// Добавляем изображение если есть
+		if len(p.ImageURLs) > 0 {
+			variant.ImageURL = p.ImageURLs[0]
+		}
+		
+		// Сохраняем оригинальные атрибуты
+		variant.OriginalAttributes = make(map[string]interface{})
+		if p.Description != "" {
+			variant.OriginalAttributes["description"] = p.Description
+		}
+		if p.Barcode != "" {
+			variant.OriginalAttributes["barcode"] = p.Barcode
+		}
+		variant.OriginalAttributes["category_id"] = p.CategoryID
+		
+		variants = append(variants, variant)
+	}
+	
+	return variants
+}
+
+// groupAndDetectVariants группирует товары в варианты используя VariantDetector
+func (s *ImportService) groupAndDetectVariants(products []models.ImportProductRequest) []*VariantGroup {
+	// Конвертируем в ProductVariant
+	variants := s.convertImportProductsToVariants(products)
+	
+	// Группируем через detector
+	groups := s.variantDetector.GroupProducts(variants)
+	
+	return groups
+}
+
+// importVariantGroup импортирует группу вариантов как один товар с вариантами
+// Эта функция будет расширена в следующих спринтах
+func (s *ImportService) importVariantGroup(
+	ctx context.Context,
+	group *VariantGroup,
+	storefrontID int,
+) error {
+	// TODO: Реализация импорта группы вариантов
+	// 1. Создать parent product с has_variants=true
+	// 2. Создать все варианты в storefront_product_variants
+	// 3. Загрузить изображения для каждого варианта
+	// 4. Установить is_default для первого варианта
+	
+	// Пока просто возвращаем nil (skeleton)
+	_ = ctx
+	_ = storefrontID
+	_ = group
+	
+	return fmt.Errorf("variant import not yet implemented - coming in next sprint")
 }

@@ -671,5 +671,135 @@
   "apply": "Apply",
   "categoriesLoadError": "Failed to load categories",
   "noCategoriesFound": "No categories found",
-  "willGenerateVariants": "Will generate {count} variants"
+  "willGenerateVariants": "Will generate {count} variants",
+  "import": {
+    "categoryMapping": {
+      "title": "Category Mapping",
+      "aiSuggestion": "AI Suggestion",
+      "selectCategory": "Select Category",
+      "selectPlaceholder": "Choose a category from the list",
+      "newCategory": {
+        "request": "Request New Category",
+        "reasoning": "Reasoning",
+        "reasoningPlaceholder": "Explain why a new category is needed...",
+        "submit": "Submit Request",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "approve": "Approve"
+      },
+      "confidence": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "status": {
+        "approved": "Approved"
+      },
+      "summary": {
+        "highConfidence": "High Confidence",
+        "mediumConfidence": "Medium Confidence",
+        "lowConfidence": "Low Confidence",
+        "unmapped": "Unmapped"
+      },
+      "sections": {
+        "highConfidence": "High Confidence (Auto-approved)",
+        "mediumConfidence": "Medium Confidence (Review Recommended)",
+        "lowConfidence": "Low Confidence (Manual Required)",
+        "unmapped": "No AI Suggestions"
+      },
+      "help": {
+        "title": "How AI Mapping Works",
+        "highConfidence": "Green - AI is confident, can be auto-approved",
+        "mediumConfidence": "Yellow - recommended to review AI suggestion",
+        "lowConfidence": "Red - manual category selection required",
+        "newCategory": "If needed category doesn't exist - request creation"
+      },
+      "errors": {
+        "reasoningRequired": "Reasoning is required"
+      }
+    },
+    "attributeMapping": {
+      "title": "Attribute Mapping",
+      "filters": {
+        "search": "Search",
+        "searchPlaceholder": "Search attributes...",
+        "type": "Type",
+        "allTypes": "All Types",
+        "variantDefiningOnly": "Variant-defining Only"
+      },
+      "actions": {
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All"
+      },
+      "stats": {
+        "total": "Total",
+        "selected": "Selected",
+        "variantDefining": "Variant-defining"
+      },
+      "types": {
+        "string": "Text",
+        "number": "Number",
+        "boolean": "Yes/No",
+        "enum": "List"
+      },
+      "badges": {
+        "variantDefining": "Variant-defining"
+      },
+      "suggestedMapping": "Suggested Mapping",
+      "frequency": "Frequency",
+      "products": "products",
+      "sampleValues": "Examples",
+      "noAttributesFound": "No attributes found",
+      "help": {
+        "title": "Attribute Selection",
+        "selectAttributes": "Select attributes you want to import",
+        "variantDefining": "Attributes marked 'Variant-defining' are used for product grouping",
+        "frequency": "Frequency shows how many products have this attribute",
+        "sampleValues": "Examples help understand value format"
+      }
+    },
+    "variantDetection": {
+      "title": "Variant Detection",
+      "filters": {
+        "search": "Search",
+        "searchPlaceholder": "Search variant groups...",
+        "confidence": "Confidence",
+        "allConfidence": "All Levels"
+      },
+      "actions": {
+        "approveAll": "Approve All",
+        "rejectAll": "Reject All",
+        "showVariants": "Show Variants",
+        "hideVariants": "Hide Variants"
+      },
+      "stats": {
+        "groups": "Groups",
+        "variants": "Variants",
+        "approved": "Approved"
+      },
+      "confidence": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "status": {
+        "approved": "Approved"
+      },
+      "variants": "variants",
+      "attributes": "Attributes",
+      "noGroupsFound": "No groups found",
+      "help": {
+        "title": "Variant Grouping",
+        "variantGroups": "Products are automatically grouped by base name",
+        "confidence": "Confidence level shows grouping quality",
+        "approve": "Approve groups to import as variants of one product",
+        "expandDetails": "Expand group to see all variants"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Classic",
+    "enhanced": "Enhanced"
+  }
 }
