@@ -81,6 +81,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, middleware *middleware.Middlewa
 	postExpress.Get("/statistics/shipments", h.GetShipmentStatistics)
 	postExpress.Get("/statistics/warehouse/:id", h.GetWarehouseStatistics)
 
+	// Тестовые эндпоинты для визуального тестирования
+	test := postExpress.Group("/test")
+	test.Post("/shipment", h.CreateTestShipment)
+	test.Get("/config", h.GetTestConfig)
+	test.Get("/history", h.GetTestHistory)
+
 	return nil
 }
 
