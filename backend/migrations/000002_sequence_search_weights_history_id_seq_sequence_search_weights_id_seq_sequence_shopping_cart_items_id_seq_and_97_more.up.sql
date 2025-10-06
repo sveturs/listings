@@ -428,6 +428,25 @@ BEGIN
     OR (is_revoked = TRUE AND revoked_at < CURRENT_TIMESTAMP - INTERVAL '30 days');
 END;
 $$;
+CREATE FUNCTION public.extract_country_from_location(full_address text) RETURNS text
+    LANGUAGE plpgsql IMMUTABLE
+    AS $$
+DECLARE
+    parts TEXT[];
+BEGIN
+    IF full_address IS NULL OR full_address = '' THEN
+        RETURN 'Србија';
+    END IF;
+    -- Разбиваем адрес по запятой
+    parts := string_to_array(full_address, ',');
+    -- Если только одна часть - возвращаем дефолт
+    IF array_length(parts, 1) = 1 THEN
+        RETURN 'Србија';
+    END IF;
+    -- Берем последнюю часть
+    RETURN trim(parts[array_length(parts, 1)]);
+END;
+$$;
 CREATE FUNCTION public.rebuild_all_ratings() RETURNS void
     LANGUAGE plpgsql
     AS $$
@@ -840,14 +859,6 @@ BEGIN
 END;
 $$;
 CREATE FUNCTION public.update_user_privacy_settings_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$;
-CREATE FUNCTION public.update_user_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
