@@ -172,13 +172,76 @@ func (w *ImportWorker) processJob(task *ImportJobTask) {
 		_ = w.service.jobsRepo.AddError(w.ctx, importError)
 	}
 
-	// Import products
+	// Import products with variant detection
 	w.logger.Info().
 		Int("job_id", task.JobID).
 		Int("total_products", len(products)).
-		Msg("Starting product import")
+		Msg("Starting product import with variant detection")
 
-	successCount, importErrors := w.service.importProducts(w.ctx, job.ID, products, task.StorefrontID, task.UpdateMode)
+	// Шаг 1: Группировка товаров в варианты
+	variantGroups := w.service.groupAndDetectVariants(products)
+
+	w.logger.Info().
+		Int("job_id", task.JobID).
+		Int("total_groups", len(variantGroups)).
+		Msg("Variant detection completed")
+
+	// Шаг 2: Импорт variant groups
+	successCount := 0
+	var importErrors []error
+
+	// Создаем map для быстрой проверки какие товары вошли в группы
+	productsInGroups := make(map[string]bool)
+
+	for _, group := range variantGroups {
+		// Проверяем что группа валидна (минимум 2 варианта, confidence > 0.5)
+		if len(group.Variants) < 2 || group.Confidence < 0.5 {
+			// Не группируем - импортируем как отдельные товары
+			continue
+		}
+
+		w.logger.Info().
+			Int("job_id", task.JobID).
+			Str("base_name", group.BaseName).
+			Int("variants_count", len(group.Variants)).
+			Float64("confidence", group.Confidence).
+			Msg("Importing variant group")
+
+		// Импортируем группу вариантов
+		if err := w.service.importVariantGroup(w.ctx, group, task.StorefrontID); err != nil {
+			w.logger.Error().
+				Err(err).
+				Int("job_id", task.JobID).
+				Str("base_name", group.BaseName).
+				Msg("Failed to import variant group")
+			importErrors = append(importErrors, err)
+		} else {
+			// Помечаем все товары группы как успешно импортированные
+			for _, variant := range group.Variants {
+				productsInGroups[variant.SKU] = true
+				successCount++
+			}
+		}
+	}
+
+	// Шаг 3: Импорт оставшихся товаров (не вошедших в группы)
+	remainingProducts := make([]models.ImportProductRequest, 0)
+	for _, product := range products {
+		if !productsInGroups[product.SKU] {
+			remainingProducts = append(remainingProducts, product)
+		}
+	}
+
+	if len(remainingProducts) > 0 {
+		w.logger.Info().
+			Int("job_id", task.JobID).
+			Int("remaining_products", len(remainingProducts)).
+			Msg("Importing remaining products (not grouped)")
+
+		remainingSuccess, remainingErrors := w.service.importProducts(w.ctx, job.ID, remainingProducts, task.StorefrontID, task.UpdateMode)
+		successCount += remainingSuccess
+		importErrors = append(importErrors, remainingErrors...)
+	}
 
 	job.ProcessedRecords = len(products)
 	job.SuccessfulRecords = successCount
