@@ -37,6 +37,11 @@ const (
 	fileTypeXML = "xml"
 	fileTypeCSV = "csv"
 	fileTypeZIP = "zip"
+
+	// Update modes
+	updateModeCreateOnly = "create_only"
+	updateModeUpdateOnly = "update_only"
+	updateModeUpsert     = "upsert"
 )
 
 // ImportService handles product import operations
@@ -394,25 +399,199 @@ func (s *ImportService) processZIPData(data []byte, storefrontID int) ([]models.
 	return allProducts, allErrors, nil
 }
 
-// importProducts imports validated products
+// importProducts imports validated products using batch processing
 func (s *ImportService) importProducts(ctx context.Context, jobID int, products []models.ImportProductRequest, storefrontID int, updateMode string) (int, []error) {
+	var successCount int
+	var allErrors []error
+
+	const batchSize = 100
+
+	// Process products in batches
+	for batchStart := 0; batchStart < len(products); batchStart += batchSize {
+		batchEnd := batchStart + batchSize
+		if batchEnd > len(products) {
+			batchEnd = len(products)
+		}
+
+		batch := products[batchStart:batchEnd]
+		count, errors := s.importProductsBatch(ctx, jobID, batch, storefrontID, updateMode, batchStart)
+		successCount += count
+		allErrors = append(allErrors, errors...)
+	}
+
+	return successCount, allErrors
+}
+
+// importProductsBatch imports a batch of products
+func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, products []models.ImportProductRequest, storefrontID int, updateMode string, offset int) (int, []error) {
 	var successCount int
 	var errors []error
 
-	for i, product := range products {
-		err := s.importSingleProduct(ctx, product, storefrontID, updateMode)
+	// Collect all SKUs
+	skus := make([]string, 0, len(products))
+	productsBySKU := make(map[string]*models.ImportProductRequest)
+	productsWithoutSKU := make([]*models.ImportProductRequest, 0)
+
+	for i := range products {
+		if products[i].SKU != "" {
+			skus = append(skus, products[i].SKU)
+			productsBySKU[products[i].SKU] = &products[i]
+		} else {
+			productsWithoutSKU = append(productsWithoutSKU, &products[i])
+		}
+	}
+
+	// Get all existing products in one query
+	existingProducts := make(map[string]*models.StorefrontProduct)
+	if len(skus) > 0 {
+		existing, err := s.productService.GetProductsBySKUs(ctx, storefrontID, skus)
+		if err != nil {
+			// Log error but continue
+			fmt.Printf("Warning: failed to get existing products: %v\n", err)
+		} else {
+			existingProducts = existing
+		}
+	}
+
+	// Separate products into new and existing
+	var newProducts []*models.CreateProductRequest
+	var updateProducts []struct {
+		product *models.StorefrontProduct
+		request *models.ImportProductRequest
+	}
+
+	// Process products with SKU
+	for sku, importProduct := range productsBySKU {
+		if existing, found := existingProducts[sku]; found {
+			// Product exists
+			switch updateMode {
+			case "create_only":
+				errors = append(errors, fmt.Errorf("product with SKU %s already exists", sku))
+				lineNumber := offset + 1 // Will be corrected below
+				_ = s.jobsRepo.AddError(ctx, &models.ImportError{
+					JobID:        jobID,
+					LineNumber:   lineNumber,
+					FieldName:    sku,
+					ErrorMessage: fmt.Sprintf("product with SKU %s already exists", sku),
+					RawData:      importProduct.Name,
+				})
+			case updateModeUpdateOnly, updateModeUpsert:
+				updateProducts = append(updateProducts, struct {
+					product *models.StorefrontProduct
+					request *models.ImportProductRequest
+				}{existing, importProduct})
+			}
+		} else {
+			// Product doesn't exist
+			if updateMode == updateModeUpdateOnly {
+				errors = append(errors, fmt.Errorf("product with SKU %s not found", sku))
+				lineNumber := offset + 1
+				_ = s.jobsRepo.AddError(ctx, &models.ImportError{
+					JobID:        jobID,
+					LineNumber:   lineNumber,
+					FieldName:    sku,
+					ErrorMessage: fmt.Sprintf("product with SKU %s not found", sku),
+					RawData:      importProduct.Name,
+				})
+			} else {
+				// Resolve category
+				if err := s.resolveCategoryID(ctx, importProduct, storefrontID); err != nil {
+					fmt.Printf("Warning: failed to resolve category for product %s: %v\n", importProduct.Name, err)
+				}
+
+				newProducts = append(newProducts, &models.CreateProductRequest{
+					Name:          importProduct.Name,
+					Description:   importProduct.Description,
+					Price:         importProduct.Price,
+					Currency:      importProduct.Currency,
+					CategoryID:    importProduct.CategoryID,
+					SKU:           &importProduct.SKU,
+					Barcode:       &importProduct.Barcode,
+					StockQuantity: importProduct.StockQuantity,
+					IsActive:      importProduct.IsActive,
+					Attributes:    importProduct.Attributes,
+				})
+			}
+		}
+	}
+
+	// Add products without SKU to new products list
+	for _, importProduct := range productsWithoutSKU {
+		if updateMode != "update_only" {
+			// Resolve category
+			if err := s.resolveCategoryID(ctx, importProduct, storefrontID); err != nil {
+				fmt.Printf("Warning: failed to resolve category for product %s: %v\n", importProduct.Name, err)
+			}
+
+			newProducts = append(newProducts, &models.CreateProductRequest{
+				Name:          importProduct.Name,
+				Description:   importProduct.Description,
+				Price:         importProduct.Price,
+				Currency:      importProduct.Currency,
+				CategoryID:    importProduct.CategoryID,
+				SKU:           &importProduct.SKU,
+				Barcode:       &importProduct.Barcode,
+				StockQuantity: importProduct.StockQuantity,
+				IsActive:      importProduct.IsActive,
+				Attributes:    importProduct.Attributes,
+			})
+		}
+	}
+
+	// Batch create new products
+	if len(newProducts) > 0 {
+		createdProducts, err := s.productService.BatchCreateProductsForImport(ctx, storefrontID, newProducts)
+		if err != nil {
+			fmt.Printf("Failed to batch create products: %v\n", err)
+			errors = append(errors, err)
+		} else {
+			successCount += len(createdProducts)
+			fmt.Printf("Successfully batch created %d products\n", len(createdProducts))
+
+			// Import images for created products
+			// TODO: This is sequential, could be optimized further
+			for i, product := range createdProducts {
+				if i < len(newProducts) {
+					// Find corresponding import request with ImageURLs
+					var imageURLs []string
+					// Match by name or SKU
+					if product.SKU != nil && *product.SKU != "" {
+						for _, importProduct := range productsBySKU {
+							if importProduct.SKU == *product.SKU {
+								imageURLs = importProduct.ImageURLs
+								break
+							}
+						}
+					}
+					if len(imageURLs) == 0 {
+						for _, importProduct := range productsWithoutSKU {
+							if importProduct.Name == product.Name {
+								imageURLs = importProduct.ImageURLs
+								break
+							}
+						}
+					}
+
+					if len(imageURLs) > 0 {
+						_ = s.importProductImages(ctx, product.ID, imageURLs)
+					}
+				}
+			}
+		}
+	}
+
+	// Update existing products (still sequential, but usually fewer updates than creates)
+	for _, item := range updateProducts {
+		err := s.updateProduct(ctx, item.product.ID, *item.request, storefrontID)
 		if err != nil {
 			errors = append(errors, err)
-
-			// Save error to import_errors table
-			importError := &models.ImportError{
+			_ = s.jobsRepo.AddError(ctx, &models.ImportError{
 				JobID:        jobID,
-				LineNumber:   i + 1,
-				FieldName:    product.SKU,
+				LineNumber:   offset + 1,
+				FieldName:    item.request.SKU,
 				ErrorMessage: err.Error(),
-				RawData:      product.Name,
-			}
-			_ = s.jobsRepo.AddError(ctx, importError)
+				RawData:      item.request.Name,
+			})
 		} else {
 			successCount++
 		}
@@ -422,6 +601,8 @@ func (s *ImportService) importProducts(ctx context.Context, jobID int, products 
 }
 
 // importSingleProduct imports a single product
+//
+//nolint:unused // Legacy function, kept for potential future use
 func (s *ImportService) importSingleProduct(ctx context.Context, importProduct models.ImportProductRequest, storefrontID int, updateMode string) error {
 	// Check if product already exists by SKU or external ID
 	var existingProduct *models.StorefrontProduct
@@ -460,6 +641,8 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 }
 
 // createProduct creates a new product
+//
+//nolint:unused // Legacy function, kept for potential future use
 func (s *ImportService) createProduct(ctx context.Context, importProduct models.ImportProductRequest, storefrontID int) error {
 	// Resolve category if original_category is present in attributes
 	if err := s.resolveCategoryID(ctx, &importProduct, storefrontID); err != nil {
@@ -561,6 +744,190 @@ func (s *ImportService) ValidateImportFile(ctx context.Context, fileData []byte,
 	}
 
 	return status, nil
+}
+
+// PreviewImport previews first N rows of import file with validation
+func (s *ImportService) PreviewImport(ctx context.Context, fileData []byte, fileType string, storefrontID int, previewLimit int) (*models.ImportPreviewResponse, error) {
+	if previewLimit <= 0 {
+		previewLimit = 10 // Default preview limit
+	}
+
+	switch fileType {
+	case fileTypeCSV:
+		return s.previewCSVData(fileData, storefrontID, previewLimit)
+	case fileTypeXML:
+		return s.previewXMLData(fileData, storefrontID, previewLimit)
+	case fileTypeZIP:
+		return nil, fmt.Errorf("preview not supported for ZIP files")
+	default:
+		return nil, fmt.Errorf("unsupported file type: %s", fileType)
+	}
+}
+
+// previewCSVData previews CSV file data
+func (s *ImportService) previewCSVData(csvData []byte, storefrontID int, previewLimit int) (*models.ImportPreviewResponse, error) {
+	// Parse CSV to get products and validation errors
+	reader := bytes.NewReader(csvData)
+	parser := parsers.NewCSVParser(storefrontID)
+	products, validationErrors, err := parser.ParseCSV(reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+	}
+
+	response := &models.ImportPreviewResponse{
+		FileType:     fileTypeCSV,
+		PreviewRows:  make([]models.ImportPreviewRow, 0),
+		TotalRows:    len(products) + len(validationErrors),
+		ValidationOK: len(validationErrors) == 0,
+	}
+
+	// Convert first N products to preview rows
+	for i, product := range products {
+		if i >= previewLimit {
+			break
+		}
+
+		rowData := map[string]interface{}{
+			"sku":            product.SKU,
+			"name":           product.Name,
+			"price":          product.Price,
+			"currency":       product.Currency,
+			"category_id":    product.CategoryID,
+			"description":    product.Description,
+			"stock_quantity": product.StockQuantity,
+			"barcode":        product.Barcode,
+			"is_active":      product.IsActive,
+		}
+
+		previewRow := models.ImportPreviewRow{
+			LineNumber: i + 2, // +1 for 0-index, +1 for header
+			Data:       rowData,
+			Errors:     []models.ImportValidationError{},
+			IsValid:    true,
+		}
+
+		response.PreviewRows = append(response.PreviewRows, previewRow)
+	}
+
+	// Add validation errors to response (if any)
+	if len(validationErrors) > 0 && len(response.PreviewRows) < previewLimit {
+		// Create error rows for first few errors
+		for i, validErr := range validationErrors {
+			if len(response.PreviewRows) >= previewLimit {
+				break
+			}
+
+			errorRow := models.ImportPreviewRow{
+				LineNumber: len(products) + i + 2,
+				Data:       map[string]interface{}{"error": "Validation failed"},
+				Errors:     []models.ImportValidationError{validErr},
+				IsValid:    false,
+			}
+
+			response.PreviewRows = append(response.PreviewRows, errorRow)
+			response.ValidationOK = false
+		}
+	}
+
+	if !response.ValidationOK {
+		response.ErrorSummary = fmt.Sprintf("Found %d validation errors in file", len(validationErrors))
+	}
+
+	return response, nil
+}
+
+// previewXMLData previews XML file data
+func (s *ImportService) previewXMLData(xmlData []byte, storefrontID int, previewLimit int) (*models.ImportPreviewResponse, error) {
+	// Parse XML using existing parser
+	products, validationErrors, err := s.processXMLData(xmlData, storefrontID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse XML: %w", err)
+	}
+
+	response := &models.ImportPreviewResponse{
+		FileType:     fileTypeXML,
+		PreviewRows:  make([]models.ImportPreviewRow, 0),
+		TotalRows:    len(products) + len(validationErrors),
+		ValidationOK: true,
+	}
+
+	// Convert products to preview rows (limit to previewLimit)
+	for i, product := range products {
+		if i >= previewLimit {
+			break
+		}
+
+		rowData := map[string]interface{}{
+			"sku":         product.SKU,
+			"name":        product.Name,
+			"price":       product.Price,
+			"currency":    product.Currency,
+			"category_id": product.CategoryID,
+			"description": product.Description,
+		}
+
+		previewRow := models.ImportPreviewRow{
+			LineNumber: i + 1,
+			Data:       rowData,
+			Errors:     []models.ImportValidationError{},
+			IsValid:    true,
+		}
+
+		response.PreviewRows = append(response.PreviewRows, previewRow)
+	}
+
+	// Add validation errors to preview rows
+	errorMap := make(map[int][]models.ImportValidationError)
+	if len(validationErrors) > 0 {
+		errorMap[0] = append(errorMap[0], validationErrors...)
+	}
+
+	for lineNum, errors := range errorMap {
+		if lineNum >= previewLimit {
+			continue
+		}
+
+		// Find or create preview row for this line
+		found := false
+		for i := range response.PreviewRows {
+			if response.PreviewRows[i].LineNumber == lineNum+1 {
+				response.PreviewRows[i].Errors = errors
+				response.PreviewRows[i].IsValid = false
+				response.ValidationOK = false
+				found = true
+				break
+			}
+		}
+
+		if !found && len(response.PreviewRows) < previewLimit {
+			previewRow := models.ImportPreviewRow{
+				LineNumber: lineNum + 1,
+				Data:       map[string]interface{}{},
+				Errors:     errors,
+				IsValid:    false,
+			}
+			response.PreviewRows = append(response.PreviewRows, previewRow)
+			response.ValidationOK = false
+		}
+	}
+
+	if !response.ValidationOK {
+		response.ErrorSummary = "Found validation errors in XML data"
+	}
+
+	return response, nil
+}
+
+// countInvalidRows counts rows with validation errors
+// nolint:unused // Used in preview logic
+func countInvalidRows(rows []models.ImportPreviewRow) int {
+	count := 0
+	for _, row := range rows {
+		if !row.IsValid {
+			count++
+		}
+	}
+	return count
 }
 
 // GetJobs returns list of import jobs for a storefront

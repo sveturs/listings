@@ -186,3 +186,21 @@ type ImportJobsResponse struct {
 	Jobs  []ImportJob `json:"jobs"`
 	Total int         `json:"total"`
 }
+
+// ImportPreviewRow represents a single row in import preview with validation
+type ImportPreviewRow struct {
+	LineNumber int                     `json:"line_number"`
+	Data       map[string]interface{}  `json:"data"`
+	Errors     []ImportValidationError `json:"errors,omitempty"`
+	IsValid    bool                    `json:"is_valid"`
+}
+
+// ImportPreviewResponse represents preview of import file before actual import
+type ImportPreviewResponse struct {
+	FileType     string             `json:"file_type"`
+	TotalRows    int                `json:"total_rows"`
+	PreviewRows  []ImportPreviewRow `json:"preview_rows"`
+	Headers      []string           `json:"headers,omitempty"` // For CSV files
+	ValidationOK bool               `json:"validation_ok"`     // True if all preview rows are valid
+	ErrorSummary string             `json:"error_summary,omitempty"`
+}

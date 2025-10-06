@@ -41,7 +41,9 @@ type Storage interface {
 	GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error)
 	GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error)
 	GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error)
+	GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error)
 	CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
+	BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error)
 	UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
@@ -1067,4 +1069,36 @@ func (s *ProductService) updateProductStockInSearch(ctx context.Context, storefr
 
 	// Fallback: полное переиндексирование продукта
 	return s.searchRepo.IndexProduct(ctx, product)
+}
+
+// BatchCreateProductsForImport creates multiple products in a single batch (for import use only)
+func (s *ProductService) BatchCreateProductsForImport(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
+	if len(requests) == 0 {
+		return []*models.StorefrontProduct{}, nil
+	}
+
+	// Validate all requests
+	for i, req := range requests {
+		if err := s.validateCreateRequest(req); err != nil {
+			return nil, fmt.Errorf("invalid request at index %d: %w", i, err)
+		}
+	}
+
+	// Batch create products
+	products, err := s.storage.BatchCreateStorefrontProducts(ctx, storefrontID, requests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch create products: %w", err)
+	}
+
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("created_count", len(products)).
+		Msg("Successfully batch created products for import")
+
+	return products, nil
+}
+
+// GetProductsBySKUs retrieves products by multiple SKUs in a single query
+func (s *ProductService) GetProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
+	return s.storage.GetStorefrontProductsBySKUs(ctx, storefrontID, skus)
 }

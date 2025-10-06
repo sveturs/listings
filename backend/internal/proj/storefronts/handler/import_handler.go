@@ -310,6 +310,102 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 	return c.JSON(status)
 }
 
+// PreviewImportFile previews first N rows of import file with validation
+// @Summary Preview import file
+// @Description Preview first N rows of import file with validation before actual import
+// @Tags storefronts,import
+// @Accept multipart/form-data
+// @Produce json
+// @Param storefront_id path int true "Storefront ID"
+// @Param file formData file true "Import file"
+// @Param file_type formData string true "File type" Enums(xml,csv,zip)
+// @Param preview_limit formData int false "Number of rows to preview" default(10)
+// @Success 200 {object} backend_internal_domain_models.ImportPreviewResponse "Preview result"
+// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
+// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
+// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /api/v1/storefronts/{storefront_id}/import/preview [post]
+func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
+	// Try to get storefront ID from locals first (for slug-based routes)
+	var storefrontID int
+	var err error
+
+	if id, ok := c.Locals("storefrontID").(int); ok {
+		storefrontID = id
+	} else {
+		// Fall back to path parameter
+		storefrontID, err = strconv.Atoi(c.Params("storefront_id"))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+				Error:   "Invalid storefront ID",
+				Message: err.Error(),
+			})
+		}
+	}
+
+	// Get uploaded file
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "File upload failed",
+			Message: err.Error(),
+		})
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to open uploaded file",
+			Message: err.Error(),
+		})
+	}
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
+
+	// Read file data
+	fileData, err := io.ReadAll(src)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to read uploaded file",
+			Message: err.Error(),
+		})
+	}
+
+	// Get file type from form
+	fileType := c.FormValue("file_type")
+	if fileType == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "file_type is required",
+		})
+	}
+
+	// Get preview limit (default: 10)
+	previewLimit := 10
+	if limitStr := c.FormValue("preview_limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err == nil && limit > 0 && limit <= 100 {
+			previewLimit = limit
+		}
+	}
+
+	// Preview file
+	preview, err := h.importService.PreviewImport(c.Context(), fileData, fileType, storefrontID, previewLimit)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "File preview failed",
+			Message: err.Error(),
+		})
+	}
+
+	return c.JSON(preview)
+}
+
 // GetCSVTemplate returns CSV template for product import
 // @Summary Get CSV import template
 // @Description Get CSV template with headers and example data for product import

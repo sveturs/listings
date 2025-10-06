@@ -266,6 +266,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Post("/storefronts/:storefront_id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
 		api.Post("/storefronts/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
 		api.Post("/storefronts/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
+		api.Post("/storefronts/:storefront_id/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.PreviewImportFile)
 		api.Get("/storefronts/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
 		api.Get("/storefronts/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
 		api.Get("/storefronts/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
@@ -276,6 +277,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Post("/storefronts/slug/:slug/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromURLBySlug)
 		api.Post("/storefronts/slug/:slug/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromFileBySlug)
 		api.Post("/storefronts/slug/:slug/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.validateImportBySlug)
+		api.Post("/storefronts/slug/:slug/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.previewImportBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobsBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobDetailsBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobStatusBySlug)
@@ -669,6 +671,20 @@ func (m *Module) validateImportBySlug(c *fiber.Ctx) error {
 	return m.importHandler.ValidateImportFile(c)
 }
 
+func (m *Module) previewImportBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.PreviewImportFile(c)
+}
+
 // Функции-обертки для работы с jobs через slug
 func (m *Module) getJobsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
@@ -954,9 +970,19 @@ func (s *storageAdapter) GetStorefrontProductBySKU(ctx context.Context, storefro
 	return s.db.GetStorefrontProductBySKU(ctx, storefrontID, sku)
 }
 
+// GetStorefrontProductsBySKUs delegates to database
+func (s *storageAdapter) GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProductsBySKUs(ctx, storefrontID, skus)
+}
+
 // CreateStorefrontProduct delegates to database
 func (s *storageAdapter) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	return s.db.CreateStorefrontProduct(ctx, storefrontID, req)
+}
+
+// BatchCreateStorefrontProducts delegates to database
+func (s *storageAdapter) BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
+	return s.db.BatchCreateStorefrontProducts(ctx, storefrontID, requests)
 }
 
 // UpdateStorefrontProduct delegates to database
