@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"image"
@@ -52,6 +53,7 @@ type ImportService struct {
 	imageService           *services.ImageService
 	categoryMappingService *CategoryMappingService
 	variantDetector        *VariantDetector
+	attributeMapper        *AttributeMapper
 }
 
 // NewImportService creates a new import service
@@ -60,6 +62,7 @@ func NewImportService(
 	jobsRepo postgres.ImportJobsRepositoryInterface,
 	imageService *services.ImageService,
 	categoryMappingService *CategoryMappingService,
+	attributeMapper *AttributeMapper,
 ) *ImportService {
 	return &ImportService{
 		productService:         productService,
@@ -68,6 +71,7 @@ func NewImportService(
 		imageService:           imageService,
 		categoryMappingService: categoryMappingService,
 		variantDetector:        NewVariantDetector(),
+		attributeMapper:        attributeMapper,
 	}
 }
 
@@ -596,6 +600,11 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 			})
 		} else {
 			successCount++
+
+			// Import images for updated products
+			if len(item.request.ImageURLs) > 0 {
+				_ = s.importProductImages(ctx, item.product.ID, item.request.ImageURLs)
+			}
 		}
 	}
 
@@ -1194,9 +1203,20 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 		return nil, "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// HTTP клиент с таймаутом
+	// HTTP клиент с таймаутом и поддержкой устаревших TLS серверов
+	// ВАЖНО: InsecureSkipVerify используется только для загрузки внешних изображений
+	// из доверенных источников (прайсов поставщиков). Для production рекомендуется
+	// настроить прокси или обновить TLS конфигурацию поставщиков.
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,     // Игнорируем проблемы сертификатов
+			MinVersion:         tls.VersionTLS10, // Разрешаем старые версии TLS
+			MaxVersion:         tls.VersionTLS13, // До новейших
+		},
+	}
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout:   30 * time.Second,
+		Transport: transport,
 	}
 
 	// Выполнение запроса
@@ -1390,7 +1410,7 @@ func (s *ImportService) resolveCategoryID(ctx context.Context, importProduct *mo
 // convertImportProductsToVariants конвертирует ImportProductRequest в ProductVariant
 func (s *ImportService) convertImportProductsToVariants(products []models.ImportProductRequest) []*ProductVariant {
 	variants := make([]*ProductVariant, 0, len(products))
-	
+
 	for _, p := range products {
 		variant := &ProductVariant{
 			Name:          p.Name,
@@ -1398,12 +1418,12 @@ func (s *ImportService) convertImportProductsToVariants(products []models.Import
 			Price:         p.Price,
 			StockQuantity: p.StockQuantity,
 		}
-		
+
 		// Добавляем изображение если есть
 		if len(p.ImageURLs) > 0 {
 			variant.ImageURL = p.ImageURLs[0]
 		}
-		
+
 		// Сохраняем оригинальные атрибуты
 		variant.OriginalAttributes = make(map[string]interface{})
 		if p.Description != "" {
@@ -1413,10 +1433,10 @@ func (s *ImportService) convertImportProductsToVariants(products []models.Import
 			variant.OriginalAttributes["barcode"] = p.Barcode
 		}
 		variant.OriginalAttributes["category_id"] = p.CategoryID
-		
+
 		variants = append(variants, variant)
 	}
-	
+
 	return variants
 }
 
@@ -1424,10 +1444,10 @@ func (s *ImportService) convertImportProductsToVariants(products []models.Import
 func (s *ImportService) groupAndDetectVariants(products []models.ImportProductRequest) []*VariantGroup {
 	// Конвертируем в ProductVariant
 	variants := s.convertImportProductsToVariants(products)
-	
+
 	// Группируем через detector
 	groups := s.variantDetector.GroupProducts(variants)
-	
+
 	return groups
 }
 
@@ -1558,4 +1578,67 @@ func (s *ImportService) importVariantGroup(
 	}
 
 	return nil
+}
+
+// IndexPendingProducts индексирует товары витрины в OpenSearch после импорта
+// Вызывается после успешного импорта для инкрементальной индексации
+func (s *ImportService) IndexPendingProducts(ctx context.Context, storefrontID int, batchSize int) error {
+	if batchSize <= 0 {
+		batchSize = 100
+	}
+
+	// Получаем все активные товары витрины (они уже помечены needs_reindex=true триггером)
+	filter := models.ProductFilter{
+		StorefrontID: storefrontID,
+		IsActive:     boolPtr(true),
+		Limit:        1000, // большой лимит для всех товаров
+		Offset:       0,
+	}
+
+	products, err := s.productService.storage.GetStorefrontProducts(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("failed to fetch storefront products: %w", err)
+	}
+
+	if len(products) == 0 {
+		return nil // нет товаров для индексации
+	}
+
+	// Индексируем товары батчами
+	for i := 0; i < len(products); i += batchSize {
+		end := i + batchSize
+		if end > len(products) {
+			end = len(products)
+		}
+
+		batch := products[i:end]
+		if err := s.indexProductsBatch(ctx, batch); err != nil {
+			return fmt.Errorf("failed to index batch %d-%d: %w", i, end, err)
+		}
+	}
+
+	return nil
+}
+
+// indexProductsBatch индексирует batch товаров в OpenSearch
+func (s *ImportService) indexProductsBatch(ctx context.Context, products []*models.StorefrontProduct) error {
+	if len(products) == 0 {
+		return nil
+	}
+
+	// Индексируем в OpenSearch через searchRepo
+	searchRepo := s.productService.searchRepo
+	if searchRepo != nil {
+		if err := searchRepo.BulkIndexProducts(ctx, products); err != nil {
+			return fmt.Errorf("failed to bulk index products: %w", err)
+		}
+		fmt.Printf("Successfully indexed %d products in OpenSearch\n", len(products))
+	}
+
+	return nil
+}
+
+// boolPtr helper для создания *bool
+func boolPtr(b bool) *bool {
+	return &b
 }

@@ -126,7 +126,7 @@ func (p *XMLParser) convertDigitalVisionProduct(dv models.DigitalVisionProduct, 
 
 	// Category mapping will be handled by the service layer
 	// For now, set a default category ID (will be mapped later)
-	product.CategoryID = 1 // Default category
+	product.CategoryID = 1001 // Default category: Electronics
 
 	return product, errors
 }
