@@ -106,16 +106,16 @@ func (w *ImportWorker) processJob(task *ImportJobTask) {
 		return
 	}
 
-	// Check if job was cancelled
-	if job.Status == "cancelled" {
+	// Check if job was canceled
+	if job.Status == statusCanceled {
 		w.logger.Info().
 			Int("job_id", task.JobID).
-			Msg("Job was cancelled, skipping")
+			Msg("Job was canceled, skipping")
 		return
 	}
 
 	// Update job status to processing
-	job.Status = "processing"
+	job.Status = statusProcessing
 	job.StartedAt = &startTime
 	if err := w.service.jobsRepo.Update(w.ctx, job); err != nil {
 		w.logger.Error().

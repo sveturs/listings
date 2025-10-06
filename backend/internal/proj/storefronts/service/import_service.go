@@ -27,7 +27,11 @@ import (
 
 const (
 	// Status values
-	statusFailed = "failed"
+	statusPending    = "pending"
+	statusProcessing = "processing"
+	statusCompleted  = "completed"
+	statusFailed     = "failed"
+	statusCanceled   = "canceled"
 
 	// File types
 	fileTypeXML = "xml"
@@ -37,19 +41,26 @@ const (
 
 // ImportService handles product import operations
 type ImportService struct {
-	productService *ProductService
-	jobsRepo       postgres.ImportJobsRepositoryInterface
-	queueManager   *ImportQueueManager
-	imageService   *services.ImageService
+	productService         *ProductService
+	jobsRepo               postgres.ImportJobsRepositoryInterface
+	queueManager           *ImportQueueManager
+	imageService           *services.ImageService
+	categoryMappingService *CategoryMappingService
 }
 
 // NewImportService creates a new import service
-func NewImportService(productService *ProductService, jobsRepo postgres.ImportJobsRepositoryInterface, imageService *services.ImageService) *ImportService {
+func NewImportService(
+	productService *ProductService,
+	jobsRepo postgres.ImportJobsRepositoryInterface,
+	imageService *services.ImageService,
+	categoryMappingService *CategoryMappingService,
+) *ImportService {
 	return &ImportService{
-		productService: productService,
-		jobsRepo:       jobsRepo,
-		queueManager:   nil, // Will be set via SetQueueManager
-		imageService:   imageService,
+		productService:         productService,
+		jobsRepo:               jobsRepo,
+		queueManager:           nil, // Will be set via SetQueueManager
+		imageService:           imageService,
+		categoryMappingService: categoryMappingService,
 	}
 }
 
@@ -61,6 +72,11 @@ func (s *ImportService) SetQueueManager(queueManager *ImportQueueManager) {
 // GetQueueManager returns the queue manager
 func (s *ImportService) GetQueueManager() *ImportQueueManager {
 	return s.queueManager
+}
+
+// SetCategoryMappingService sets the category mapping service
+func (s *ImportService) SetCategoryMappingService(categoryMappingSvc *CategoryMappingService) {
+	s.categoryMappingService = categoryMappingSvc
 }
 
 // ImportFromURL downloads and imports products from a URL
@@ -94,7 +110,7 @@ func (s *ImportService) ImportFromURL(ctx context.Context, userID int, req model
 	}
 
 	// Update job status to processing
-	job.Status = "processing"
+	job.Status = statusProcessing
 	startTime := time.Now()
 	job.StartedAt = &startTime
 	if err := s.jobsRepo.Update(ctx, job); err != nil {
@@ -117,7 +133,7 @@ func (s *ImportService) ImportFromURL(ctx context.Context, userID int, req model
 		errorMsg := fmt.Sprintf("unsupported file type: %s", req.FileType)
 		job.ErrorMessage = &errorMsg
 		_ = s.jobsRepo.Update(ctx, job)
-		return job, fmt.Errorf(errorMsg)
+		return job, errors.New(errorMsg)
 	}
 
 	if err != nil {
@@ -154,7 +170,7 @@ func (s *ImportService) ImportFromURL(ctx context.Context, userID int, req model
 	// Complete job
 	completedTime := time.Now()
 	job.CompletedAt = &completedTime
-	job.Status = "completed"
+	job.Status = statusCompleted
 
 	if len(importErrors) > 0 {
 		errorMsg := fmt.Sprintf("Import completed with %d errors", len(importErrors))
@@ -189,7 +205,7 @@ func (s *ImportService) ImportFromFile(ctx context.Context, userID int, fileData
 	}
 
 	// Update job status to processing
-	job.Status = "processing"
+	job.Status = statusProcessing
 	startTime := time.Now()
 	job.StartedAt = &startTime
 	if err := s.jobsRepo.Update(ctx, job); err != nil {
@@ -213,7 +229,7 @@ func (s *ImportService) ImportFromFile(ctx context.Context, userID int, fileData
 		errorMsg := fmt.Sprintf("unsupported file type: %s", req.FileType)
 		job.ErrorMessage = &errorMsg
 		_ = s.jobsRepo.Update(ctx, job)
-		return job, fmt.Errorf(errorMsg)
+		return job, errors.New(errorMsg)
 	}
 
 	if err != nil {
@@ -250,7 +266,7 @@ func (s *ImportService) ImportFromFile(ctx context.Context, userID int, fileData
 	// Complete job
 	completedTime := time.Now()
 	job.CompletedAt = &completedTime
-	job.Status = "completed"
+	job.Status = statusCompleted
 
 	if len(importErrors) > 0 {
 		errorMsg := fmt.Sprintf("Import completed with %d errors", len(importErrors))
@@ -445,6 +461,12 @@ func (s *ImportService) importSingleProduct(ctx context.Context, importProduct m
 
 // createProduct creates a new product
 func (s *ImportService) createProduct(ctx context.Context, importProduct models.ImportProductRequest, storefrontID int) error {
+	// Resolve category if original_category is present in attributes
+	if err := s.resolveCategoryID(ctx, &importProduct, storefrontID); err != nil {
+		// Log warning but continue with default category
+		fmt.Printf("Warning: failed to resolve category for product %s: %v\n", importProduct.Name, err)
+	}
+
 	createReq := models.CreateProductRequest{
 		Name:          importProduct.Name,
 		Description:   importProduct.Description,
@@ -633,13 +655,13 @@ func (s *ImportService) CancelJob(ctx context.Context, jobID int) error {
 		return fmt.Errorf("failed to get job: %w", err)
 	}
 
-	// Only pending or processing jobs can be cancelled
-	if job.Status != "pending" && job.Status != "processing" {
-		return fmt.Errorf("job cannot be cancelled in %s state", job.Status)
+	// Only pending or processing jobs can be canceled
+	if job.Status != statusPending && job.Status != statusProcessing {
+		return fmt.Errorf("job cannot be canceled in %s state", job.Status)
 	}
 
-	// Update job status to cancelled
-	return s.jobsRepo.UpdateStatus(ctx, jobID, "cancelled")
+	// Update job status to canceled
+	return s.jobsRepo.UpdateStatus(ctx, jobID, statusCanceled)
 }
 
 // RetryJob retries a failed import job
@@ -651,8 +673,8 @@ func (s *ImportService) RetryJob(ctx context.Context, jobID int) (*models.Import
 	}
 
 	// Only failed jobs can be retried
-	if originalJob.Status != "failed" && originalJob.Status != "cancelled" {
-		return nil, fmt.Errorf("only failed or cancelled jobs can be retried")
+	if originalJob.Status != statusFailed && originalJob.Status != statusCanceled {
+		return nil, fmt.Errorf("only failed or canceled jobs can be retried")
 	}
 
 	// Create a new job based on the original
@@ -700,14 +722,18 @@ func (s *ImportService) ImportFromURLAsync(ctx context.Context, userID int, req 
 	}
 
 	// Download file in background
-	go func() {
-		data, _, err := s.downloadFile(context.Background(), *req.FileURL)
+	go func(parentCtx context.Context) {
+		// Create a new context with timeout for background processing (detached from parent)
+		bgCtx, cancel := context.WithTimeout(parentCtx, 30*time.Minute)
+		defer cancel()
+
+		data, _, err := s.downloadFile(bgCtx, *req.FileURL)
 		if err != nil {
 			// Update job status to failed
 			job.Status = statusFailed
 			errorMsg := fmt.Sprintf("Failed to download file: %v", err)
 			job.ErrorMessage = &errorMsg
-			_ = s.jobsRepo.Update(context.Background(), job)
+			_ = s.jobsRepo.Update(bgCtx, job)
 			return
 		}
 
@@ -728,9 +754,9 @@ func (s *ImportService) ImportFromURLAsync(ctx context.Context, userID int, req 
 			job.Status = statusFailed
 			errorMsg := fmt.Sprintf("Failed to enqueue job: %v", err)
 			job.ErrorMessage = &errorMsg
-			_ = s.jobsRepo.Update(context.Background(), job)
+			_ = s.jobsRepo.Update(bgCtx, job)
 		}
-	}()
+	}(ctx)
 
 	// Return job immediately
 	return job, nil
@@ -946,7 +972,48 @@ func (s *ImportService) importProductImages(ctx context.Context, productID int, 
 	return nil
 }
 
-// Helper function to convert string to string pointer
-func stringPtr(s string) *string {
-	return &s
+// resolveCategoryID resolves category ID from original_category attribute using CategoryMappingService
+func (s *ImportService) resolveCategoryID(ctx context.Context, importProduct *models.ImportProductRequest, storefrontID int) error {
+	// Skip if category mapping service is not available
+	if s.categoryMappingService == nil {
+		return nil
+	}
+
+	// Check if original_category is present in attributes
+	if importProduct.Attributes == nil {
+		return nil
+	}
+
+	originalCategory, exists := importProduct.Attributes["original_category"]
+	if !exists {
+		return nil
+	}
+
+	// Convert to string
+	categoryPath, ok := originalCategory.(string)
+	if !ok || categoryPath == "" {
+		return nil
+	}
+
+	// Use CategoryMappingService to resolve category
+	categoryID, err := s.categoryMappingService.GetOrCreateMapping(
+		ctx,
+		storefrontID,
+		categoryPath,
+		importProduct.Name,
+		importProduct.Description,
+	)
+	if err != nil {
+		// Log warning but use fallback category (1001 - Elektronika)
+		// This ensures import doesn't fail due to category resolution issues
+		fmt.Printf("Warning: failed to resolve category '%s' for product %s: %v. Using fallback category 1001.\n",
+			categoryPath, importProduct.Name, err)
+		importProduct.CategoryID = 1001
+		return nil
+	}
+
+	// Update category ID
+	importProduct.CategoryID = categoryID
+
+	return nil
 }

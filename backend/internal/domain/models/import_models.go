@@ -64,7 +64,7 @@ type DigitalVisionCatalog struct {
 	Products []DigitalVisionProduct `xml:"artikal"`
 }
 
-// CategoryMapping represents mapping between import categories and local categories
+// CategoryMapping represents mapping between import categories and local categories (LEGACY - for Digital Vision XML)
 type CategoryMapping struct {
 	ID              int       `json:"id" db:"id"`
 	StorefrontID    int       `json:"storefront_id" db:"storefront_id"`
@@ -75,6 +75,26 @@ type CategoryMapping struct {
 	IsActive        bool      `json:"is_active" db:"is_active"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// StorefrontCategoryMapping represents flexible category mapping for any import source
+// Maps external category paths (e.g., "Electronics/Phones/Apple") to internal marketplace categories
+type StorefrontCategoryMapping struct {
+	ID                 int       `json:"id" db:"id"`
+	StorefrontID       int       `json:"storefront_id" db:"storefront_id"`
+	SourceCategoryPath string    `json:"source_category_path" db:"source_category_path"`   // External category path from import
+	TargetCategoryID   int       `json:"target_category_id" db:"target_category_id"`       // ID in marketplace_categories
+	IsManual           bool      `json:"is_manual" db:"is_manual"`                         // true if created manually, false if via AI
+	ConfidenceScore    *float64  `json:"confidence_score,omitempty" db:"confidence_score"` // AI confidence (0.0-1.0), NULL for manual
+	CreatedAt          time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// StorefrontCategoryMappingWithDetails includes category name for API responses
+type StorefrontCategoryMappingWithDetails struct {
+	StorefrontCategoryMapping
+	TargetCategoryName string `json:"target_category_name" db:"target_category_name"`
+	TargetCategoryPath string `json:"target_category_path" db:"target_category_path"` // Full path like "Electronics > Phones > Smartphones"
 }
 
 // ImportRequest represents a request to start an import

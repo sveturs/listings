@@ -73,8 +73,11 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Создаем repository для import jobs
 	importJobsRepo := postgres.NewImportJobsRepository(db.GetPool())
 
-	// Создаем сервис импорта с imageService
-	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService)
+	// Создаем repository для category mappings
+	categoryMappingsRepo := postgres.NewCategoryMappingsRepository(db.GetPool())
+
+	// Создаем сервис импорта (categoryMappingService будет установлен позже)
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil)
 
 	// Создаем Import Queue Manager для асинхронной обработки импорта
 	// Параметры: workerCount (количество воркеров), queueSize (размер очереди)
@@ -106,6 +109,12 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	_ = log              // Избегаем warning о неиспользуемой переменной
 
 	aiDetector := marketplaceServices.NewAICategoryDetector(ctx, db.GetSQLXDB(), zap.L())
+
+	// Создаем CategoryMappingService с AI detector (после создания aiDetector)
+	categoryMappingSvc := storefrontService.NewCategoryMappingService(categoryMappingsRepo, aiDetector, zap.L())
+
+	// Устанавливаем CategoryMappingService в ImportService
+	importSvc.SetCategoryMappingService(categoryMappingSvc)
 
 	// Создаем AI Handler для общих AI операций (анализ изображений, переводы и т.д.)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
