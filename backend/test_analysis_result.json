@@ -1,0 +1,229 @@
+{
+  "total_products": 9,
+  "categories": {
+    "total": 9,
+    "level1": 1,
+    "level2": 3,
+    "level3": 4,
+    "unique_level1": [
+      "OPREMA ZA MOBILNI"
+    ],
+    "unique_level2": [
+      "OPREMA ZA MOBILNI > BATERIJE",
+      "OPREMA ZA MOBILNI > IGRAČKE",
+      "OPREMA ZA MOBILNI > MASKE"
+    ],
+    "unique_level3": [
+      "OPREMA ZA MOBILNI > BATERIJE > BATERIJE ECO GRADE",
+      "OPREMA ZA MOBILNI > BATERIJE > POWER BANKS",
+      "OPREMA ZA MOBILNI > IGRAČKE > FIDGET SPINNERS",
+      "OPREMA ZA MOBILNI > MASKE > APPLE"
+    ],
+    "top_categories": [
+      {
+        "category": "OPREMA ZA MOBILNI",
+        "product_count": 9
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > IGRAČKE",
+        "product_count": 3
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > IGRAČKE > FIDGET SPINNERS",
+        "product_count": 3
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > MASKE",
+        "product_count": 3
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > MASKE > APPLE",
+        "product_count": 3
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > BATERIJE",
+        "product_count": 3
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > BATERIJE > BATERIJE ECO GRADE",
+        "product_count": 2
+      },
+      {
+        "category": "OPREMA ZA MOBILNI > BATERIJE > POWER BANKS",
+        "product_count": 1
+      }
+    ]
+  },
+  "attributes": {
+    "detected": [
+      "uvoznik",
+      "godinaUvoza",
+      "zemljaPorekla",
+      "dostupan",
+      "naAkciji",
+      "barKod"
+    ],
+    "unique_values": {
+      "uvoznik": [
+        "Digital Vision doo"
+      ],
+      "godinaUvoza": [
+        "2024.",
+        "2025."
+      ],
+      "zemljaPorekla": [
+        "Kina",
+        "Taiwan",
+        "Vietnam"
+      ],
+      "dostupan": [
+        "1"
+      ],
+      "naAkciji": [
+        "0",
+        "1"
+      ],
+      "barKod": [
+        "1234567890001",
+        "1234567890002",
+        "1234567890003",
+        "2234567890001",
+        "2234567890002",
+        "2234567890003",
+        "3234567890001",
+        "4234567890001",
+        "4234567890002"
+      ]
+    },
+    "value_distribution": {
+      "uvoznik": [
+        [
+          "Digital Vision doo",
+          9
+        ]
+      ],
+      "godinaUvoza": [
+        [
+          "2024.",
+          5
+        ],
+        [
+          "2025.",
+          4
+        ]
+      ],
+      "zemljaPorekla": [
+        [
+          "Kina",
+          4
+        ],
+        [
+          "Vietnam",
+          3
+        ],
+        [
+          "Taiwan",
+          2
+        ]
+      ],
+      "dostupan": [
+        [
+          "1",
+          9
+        ]
+      ],
+      "naAkciji": [
+        [
+          "0",
+          6
+        ],
+        [
+          "1",
+          3
+        ]
+      ],
+      "barKod": [
+        [
+          "1234567890001",
+          1
+        ],
+        [
+          "1234567890002",
+          1
+        ],
+        [
+          "1234567890003",
+          1
+        ],
+        [
+          "2234567890001",
+          1
+        ],
+        [
+          "2234567890002",
+          1
+        ],
+        [
+          "2234567890003",
+          1
+        ],
+        [
+          "3234567890001",
+          1
+        ],
+        [
+          "4234567890001",
+          1
+        ],
+        [
+          "4234567890002",
+          1
+        ]
+      ]
+    }
+  },
+  "variants": {
+    "potential_groups": 1,
+    "products_affected": 3,
+    "top_variant_groups": [
+      {
+        "base_name": "Fidget Spinner",
+        "variant_count": 3,
+        "attributes": [
+          "color"
+        ],
+        "confidence": 1.0,
+        "examples": [
+          {
+            "name": "Fidget Spinner crni",
+            "sku": "FS-001-BLACK",
+            "attributes": {
+              "color": "crni"
+            }
+          },
+          {
+            "name": "Fidget Spinner crveni",
+            "sku": "FS-001-RED",
+            "attributes": {
+              "color": "crveni"
+            }
+          },
+          {
+            "name": "Fidget Spinner plavi",
+            "sku": "FS-001-BLUE",
+            "attributes": {
+              "color": "plavi"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "images": {
+    "total_products_with_images": 8,
+    "total_images": 12,
+    "avg_images_per_product": 1.5,
+    "max_images_per_product": 3,
+    "percentage": 88.9
+  }
+}
