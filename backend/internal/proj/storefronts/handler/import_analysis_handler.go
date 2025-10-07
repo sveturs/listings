@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+
 	"backend/internal/domain/models"
+	"backend/internal/proj/storefronts/parsers"
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -26,10 +31,11 @@ type AnalyzeCategoriesResponse struct {
 // @Summary Analyze categories in import file
 // @Description Analyze categories and get AI mapping suggestions before import
 // @Tags storefronts,import
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Param request body AnalyzeCategoriesRequest true "Analysis request"
+// @Param file formData file true "Import file"
+// @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} AnalyzeCategoriesResponse "Category analysis result"
 // @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
 // @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
@@ -38,29 +44,101 @@ type AnalyzeCategoriesResponse struct {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/analyze-categories [post]
 func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
-	var err error
-
-	var req AnalyzeCategoriesRequest
-	if err := c.BodyParser(&req); err != nil {
+	// Get storefront ID from path
+	storefrontID, err := c.ParamsInt("storefront_id")
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid request body",
+			Error:   "Invalid storefront_id",
 			Message: err.Error(),
 		})
+	}
+
+	// Get file from form
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "File upload failed",
+			Message: err.Error(),
+		})
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to open uploaded file",
+			Message: err.Error(),
+		})
+	}
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
+
+	// Read file data
+	fileData, err := io.ReadAll(src)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to read uploaded file",
+			Message: err.Error(),
+		})
+	}
+
+	// Get file type from form
+	fileType := c.FormValue("file_type")
+	if fileType == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "file_type is required",
+		})
+	}
+
+	// Parse file to extract products
+	var products []models.ImportProductRequest
+	var parseErrors []models.ImportValidationError
+
+	switch fileType {
+	case "xml":
+		xmlParser := parsers.NewXMLParser(storefrontID)
+		// Try Digital Vision format first
+		products, parseErrors, err = xmlParser.ParseDigitalVisionXML(fileData)
+		if err != nil {
+			// Try generic XML format
+			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+					Error:   "Failed to parse XML file",
+					Message: err.Error(),
+				})
+			}
+		}
+	case "csv":
+		csvParser := parsers.NewCSVParser(storefrontID)
+		reader := bytes.NewReader(fileData)
+		products, parseErrors, err = csvParser.ParseCSV(reader)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+				Error:   "Failed to parse CSV file",
+				Message: err.Error(),
+			})
+		}
+	default:
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "Unsupported file type. Supported types: xml, csv",
+		})
+	}
+
+	// Log parse errors (but continue with analysis)
+	if len(parseErrors) > 0 {
+		fmt.Printf("Parse warnings: %d\n", len(parseErrors))
 	}
 
 	// Extract unique categories and sample products
 	uniqueCategories := make(map[string]bool)
 	categoryToProduct := make(map[string]models.ImportProductRequest)
 
-	// Use category paths provided directly (for now, we just map these)
-	if len(req.CategoryPaths) > 0 {
-		for _, catPath := range req.CategoryPaths {
-			uniqueCategories[catPath] = true
-		}
-	}
-
-	// If products provided with category info in Attributes, extract them
-	for _, product := range req.Products {
+	// Extract categories from products
+	for _, product := range products {
 		// Try to extract category from Attributes map
 		if product.Attributes != nil {
 			if catPath, ok := product.Attributes["category_path"].(string); ok && catPath != "" {
@@ -127,10 +205,11 @@ type AnalyzeAttributesResponse struct {
 // @Summary Analyze attributes in import file
 // @Description Detect and analyze product attributes before import
 // @Tags storefronts,import
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Param request body AnalyzeAttributesRequest true "Analysis request"
+// @Param file formData file true "Import file"
+// @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} AnalyzeAttributesResponse "Attribute analysis result"
 // @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
 // @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
@@ -139,12 +218,91 @@ type AnalyzeAttributesResponse struct {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/analyze-attributes [post]
 func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
-	var req AnalyzeAttributesRequest
-	if err := c.BodyParser(&req); err != nil {
+	// Get storefront ID from path
+	storefrontID, err := c.ParamsInt("storefront_id")
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid request body",
+			Error:   "Invalid storefront_id",
 			Message: err.Error(),
 		})
+	}
+
+	// Get file from form
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "File upload failed",
+			Message: err.Error(),
+		})
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to open uploaded file",
+			Message: err.Error(),
+		})
+	}
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
+
+	// Read file data
+	fileData, err := io.ReadAll(src)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to read uploaded file",
+			Message: err.Error(),
+		})
+	}
+
+	// Get file type from form
+	fileType := c.FormValue("file_type")
+	if fileType == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "file_type is required",
+		})
+	}
+
+	// Parse file to extract products
+	var products []models.ImportProductRequest
+	var parseErrors []models.ImportValidationError
+
+	switch fileType {
+	case "xml":
+		xmlParser := parsers.NewXMLParser(storefrontID)
+		products, parseErrors, err = xmlParser.ParseDigitalVisionXML(fileData)
+		if err != nil {
+			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+					Error:   "Failed to parse XML file",
+					Message: err.Error(),
+				})
+			}
+		}
+	case "csv":
+		csvParser := parsers.NewCSVParser(storefrontID)
+		reader := bytes.NewReader(fileData)
+		products, parseErrors, err = csvParser.ParseCSV(reader)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+				Error:   "Failed to parse CSV file",
+				Message: err.Error(),
+			})
+		}
+	default:
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "Unsupported file type. Supported types: xml, csv",
+		})
+	}
+
+	// Log parse errors
+	if len(parseErrors) > 0 {
+		fmt.Printf("Parse warnings: %d\n", len(parseErrors))
 	}
 
 	detectedAttrs := make([]DetectedAttribute, 0)
@@ -154,7 +312,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	attributeExamples := make(map[string][]string)
 	attributeFirstValue := make(map[string]interface{}) // Для маппинга
 
-	for _, product := range req.Products {
+	for _, product := range products {
 		// Analyze custom attributes from product.Attributes
 		if product.Attributes != nil {
 			for attrName, attrValue := range product.Attributes {
@@ -215,7 +373,7 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 
 	response := AnalyzeAttributesResponse{
 		DetectedAttributes: detectedAttrs,
-		TotalProducts:      len(req.Products),
+		TotalProducts:      len(products),
 		ProcessingTimeMs:   0,
 	}
 
@@ -252,10 +410,11 @@ type DetectVariantsResponse struct {
 // @Summary Detect product variants
 // @Description Detect and group product variants before import
 // @Tags storefronts,import
-// @Accept json
+// @Accept multipart/form-data
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Param request body DetectVariantsRequest true "Detection request"
+// @Param file formData file true "Import file"
+// @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} DetectVariantsResponse "Variant detection result"
 // @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
 // @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
@@ -264,12 +423,91 @@ type DetectVariantsResponse struct {
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/detect-variants [post]
 func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
-	var req DetectVariantsRequest
-	if err := c.BodyParser(&req); err != nil {
+	// Get storefront ID from path
+	storefrontID, err := c.ParamsInt("storefront_id")
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
-			Error:   "Invalid request body",
+			Error:   "Invalid storefront_id",
 			Message: err.Error(),
 		})
+	}
+
+	// Get file from form
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "File upload failed",
+			Message: err.Error(),
+		})
+	}
+
+	// Open file
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to open uploaded file",
+			Message: err.Error(),
+		})
+	}
+	defer func() {
+		if err := src.Close(); err != nil {
+			fmt.Printf("Failed to close file: %v", err)
+		}
+	}()
+
+	// Read file data
+	fileData, err := io.ReadAll(src)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error:   "Failed to read uploaded file",
+			Message: err.Error(),
+		})
+	}
+
+	// Get file type from form
+	fileType := c.FormValue("file_type")
+	if fileType == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "file_type is required",
+		})
+	}
+
+	// Parse file to extract products
+	var products []models.ImportProductRequest
+	var parseErrors []models.ImportValidationError
+
+	switch fileType {
+	case "xml":
+		xmlParser := parsers.NewXMLParser(storefrontID)
+		products, parseErrors, err = xmlParser.ParseDigitalVisionXML(fileData)
+		if err != nil {
+			products, parseErrors, err = xmlParser.ParseGenericXML(fileData)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+					Error:   "Failed to parse XML file",
+					Message: err.Error(),
+				})
+			}
+		}
+	case "csv":
+		csvParser := parsers.NewCSVParser(storefrontID)
+		reader := bytes.NewReader(fileData)
+		products, parseErrors, err = csvParser.ParseCSV(reader)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+				Error:   "Failed to parse CSV file",
+				Message: err.Error(),
+			})
+		}
+	default:
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
+			Error: "Unsupported file type. Supported types: xml, csv",
+		})
+	}
+
+	// Log parse errors
+	if len(parseErrors) > 0 {
+		fmt.Printf("Parse warnings: %d\n", len(parseErrors))
 	}
 
 	// TODO: Implement variant detection logic
@@ -278,9 +516,9 @@ func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
 	// For now, return empty result
 	response := DetectVariantsResponse{
 		VariantGroups:      []VariantGroup{},
-		TotalProducts:      len(req.Products),
+		TotalProducts:      len(products),
 		GroupedProducts:    0,
-		StandaloneProducts: len(req.Products),
+		StandaloneProducts: len(products),
 		ProcessingTimeMs:   0,
 	}
 
