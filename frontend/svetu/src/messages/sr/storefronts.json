@@ -654,7 +654,9 @@
     "stock": "Zalihe",
     "analytics": "Analitika"
   },
-  "progress": "Napredak",
+  "progress": {
+    "uploading": "Otpremanje..."
+  },
   "updateSuccess": "Postavke prodavnice su uspešno ažurirane",
   "updateError": "Greška pri ažuriranju postavki prodavnice",
   "advancedModeNotAvailable": "Napredno upravljanje varijantama biće dostupno nakon kreiranja proizvoda. Za sada koristite Jednostavan režim za kreiranje osnovnih varijanti.",
@@ -914,6 +916,7 @@
     "selectFile": "Izaberi fajl",
     "downloadTemplate": "Preuzmi šablon",
     "import": "Uvezi",
+    "importing": "Uvozim...",
     "close": "Zatvori",
     "removeFile": "Ukloni fajl"
   },

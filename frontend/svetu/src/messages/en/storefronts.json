@@ -657,7 +657,9 @@
     "stock": "Stock",
     "analytics": "Analytics"
   },
-  "progress": "Progress",
+  "progress": {
+    "uploading": "Uploading..."
+  },
   "updateSuccess": "Storefront settings successfully updated",
   "updateError": "Error updating storefront settings",
   "advancedModeNotAvailable": "Advanced variant management will be available after product creation. For now, use Simple Mode to create basic variants.",
@@ -917,6 +919,7 @@
     "selectFile": "Select File",
     "downloadTemplate": "Download Template",
     "import": "Import",
+    "importing": "Importing...",
     "close": "Close",
     "removeFile": "Remove File"
   },
