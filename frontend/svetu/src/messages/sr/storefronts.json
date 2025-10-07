@@ -798,5 +798,52 @@
   "importMode": {
     "classic": "Klasičan",
     "enhanced": "Napredni"
+  },
+  "jobs": {
+    "title": "Istorija uvoza",
+    "filters": {
+      "all": "Svi",
+      "pending": "Na čekanju",
+      "processing": "U obradi",
+      "completed": "Završeno",
+      "failed": "Greška"
+    },
+    "empty": {
+      "title": "Nema uvoza",
+      "description": "Počnite uvoz proizvoda iz fajla"
+    }
+  },
+  "actions": {
+    "refresh": "Osveži",
+    "viewDetails": "Detalji",
+    "viewErrors": "Prikaži greške",
+    "cancel": "Otkaži",
+    "retry": "Pokušaj ponovo",
+    "confirmCancel": "Da li ste sigurni da želite da otkažete uvoz?"
+  },
+  "status": {
+    "pending": "Na čekanju",
+    "processing": "U obradi",
+    "completed": "Završeno",
+    "failed": "Greška",
+    "cancelled": "Otkazano"
+  },
+  "manager": {
+    "title": "Upravljanje uvozom",
+    "description": "Uvezite proizvode iz XML, CSV ili ZIP fajlova",
+    "startImport": "Pokreni uvoz"
+  },
+  "stats": {
+    "pending": "Na čekanju",
+    "processing": "U obradi",
+    "completed": "Završeno",
+    "failed": "Sa greškama"
+  },
+  "formats": {
+    "title": "Podržani formati",
+    "extensions": "Ekstenzije",
+    "encoding": "Kodiranje",
+    "maxFileSize": "Maksimalna veličina fajla",
+    "maxProducts": "Maksimum proizvoda po uvozu"
   }
 }

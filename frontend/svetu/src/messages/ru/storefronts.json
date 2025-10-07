@@ -808,5 +808,52 @@
   "importMode": {
     "classic": "Классический",
     "enhanced": "Расширенный"
+  },
+  "jobs": {
+    "title": "История импорта",
+    "filters": {
+      "all": "Все",
+      "pending": "Ожидает",
+      "processing": "Обрабатывается",
+      "completed": "Завершено",
+      "failed": "Ошибка"
+    },
+    "empty": {
+      "title": "Нет импортов",
+      "description": "Начните импорт товаров из файла"
+    }
+  },
+  "actions": {
+    "refresh": "Обновить",
+    "viewDetails": "Подробнее",
+    "viewErrors": "Показать ошибки",
+    "cancel": "Отменить",
+    "retry": "Повторить",
+    "confirmCancel": "Вы уверены, что хотите отменить импорт?"
+  },
+  "status": {
+    "pending": "Ожидает",
+    "processing": "Обрабатывается",
+    "completed": "Завершено",
+    "failed": "Ошибка",
+    "cancelled": "Отменено"
+  },
+  "manager": {
+    "title": "Управление импортом",
+    "description": "Импортируйте товары из XML, CSV или ZIP файлов",
+    "startImport": "Начать импорт"
+  },
+  "stats": {
+    "pending": "Ожидают",
+    "processing": "Обрабатываются",
+    "completed": "Завершено",
+    "failed": "С ошибками"
+  },
+  "formats": {
+    "title": "Поддерживаемые форматы",
+    "extensions": "Расширения",
+    "encoding": "Кодировка",
+    "maxFileSize": "Максимальный размер файла",
+    "maxProducts": "Максимум товаров за импорт"
   }
 }

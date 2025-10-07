@@ -801,5 +801,52 @@
   "importMode": {
     "classic": "Classic",
     "enhanced": "Enhanced"
+  },
+  "jobs": {
+    "title": "Import History",
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "empty": {
+      "title": "No imports yet",
+      "description": "Start importing products from a file"
+    }
+  },
+  "actions": {
+    "refresh": "Refresh",
+    "viewDetails": "View Details",
+    "viewErrors": "View Errors",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "confirmCancel": "Are you sure you want to cancel this import?"
+  },
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "manager": {
+    "title": "Import Manager",
+    "description": "Import products from XML, CSV or ZIP files",
+    "startImport": "Start Import"
+  },
+  "stats": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "formats": {
+    "title": "Supported Formats",
+    "extensions": "Extensions",
+    "encoding": "Encoding",
+    "maxFileSize": "Maximum file size",
+    "maxProducts": "Maximum products per import"
   }
 }
