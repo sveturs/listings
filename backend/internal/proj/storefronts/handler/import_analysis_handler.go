@@ -141,11 +141,39 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	for _, product := range products {
 		// Try to extract category from Attributes map
 		if product.Attributes != nil {
+			var categoryPath string
+
+			// Try category_path first (generic format)
 			if catPath, ok := product.Attributes["category_path"].(string); ok && catPath != "" {
-				uniqueCategories[catPath] = true
+				categoryPath = catPath
+			} else {
+				// Try Digital Vision format (kategorija1, kategorija2, kategorija3)
+				cat1, _ := product.Attributes["kategorija1"].(string)
+				cat2, _ := product.Attributes["kategorija2"].(string)
+				cat3, _ := product.Attributes["kategorija3"].(string)
+
+				// Build category path from available levels
+				categories := []string{}
+				if cat1 != "" {
+					categories = append(categories, cat1)
+				}
+				if cat2 != "" {
+					categories = append(categories, cat2)
+				}
+				if cat3 != "" {
+					categories = append(categories, cat3)
+				}
+
+				if len(categories) > 0 {
+					categoryPath = categories[len(categories)-1] // Use deepest category
+				}
+			}
+
+			if categoryPath != "" {
+				uniqueCategories[categoryPath] = true
 				// Keep first product as sample for this category
-				if _, exists := categoryToProduct[catPath]; !exists {
-					categoryToProduct[catPath] = product
+				if _, exists := categoryToProduct[categoryPath]; !exists {
+					categoryToProduct[categoryPath] = product
 				}
 			}
 		}
