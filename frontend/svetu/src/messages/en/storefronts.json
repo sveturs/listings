@@ -723,6 +723,13 @@
         "next": "Next",
         "previous": "Previous",
         "startImport": "Start Import"
+      },
+      "categories": {
+        "total": "categories found",
+        "highConfidence": "High Confidence",
+        "mediumConfidence": "Medium Confidence",
+        "lowConfidence": "Low Confidence",
+        "unmapped": "Unmapped"
       }
     },
     "categoryMapping": {

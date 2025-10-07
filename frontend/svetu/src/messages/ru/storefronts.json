@@ -730,6 +730,13 @@
         "next": "Далее",
         "previous": "Назад",
         "startImport": "Начать импорт"
+      },
+      "categories": {
+        "total": "категорий найдено",
+        "highConfidence": "Высокая уверенность",
+        "mediumConfidence": "Средняя уверенность",
+        "lowConfidence": "Низкая уверенность",
+        "unmapped": "Без маппинга"
       }
     },
     "categoryMapping": {

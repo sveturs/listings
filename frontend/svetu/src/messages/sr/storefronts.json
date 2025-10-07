@@ -720,6 +720,13 @@
         "next": "Sledeće",
         "previous": "Prethodno",
         "startImport": "Započni uvoz"
+      },
+      "categories": {
+        "total": "pronađenih kategorija",
+        "highConfidence": "Visoka pouzdanost",
+        "mediumConfidence": "Srednja pouzdanost",
+        "lowConfidence": "Niska pouzdanost",
+        "unmapped": "Nemapirano"
       }
     },
     "categoryMapping": {
