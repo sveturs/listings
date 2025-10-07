@@ -57,6 +57,8 @@ type Storage interface {
 	CreateListing(ctx context.Context, listing *models.MarketplaceListing) (int, error)
 	GetListings(ctx context.Context, filters map[string]string, limit int, offset int) ([]models.MarketplaceListing, int64, error)
 	GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error)
+	GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error)
+	ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int) error
 
 	// Marketplace listing variants methods
 	CreateListingVariants(ctx context.Context, listingID int, variants []models.MarketplaceListingVariant) error

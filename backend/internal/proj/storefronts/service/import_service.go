@@ -22,6 +22,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
+	marketplaceOpenSearch "backend/internal/proj/marketplace/storage/opensearch"
 	"backend/internal/proj/storefronts/parsers"
 	"backend/internal/services"
 	"backend/internal/storage/postgres"
@@ -50,13 +51,21 @@ const (
 
 // ImportService handles product import operations
 type ImportService struct {
-	productService         *ProductService
-	jobsRepo               postgres.ImportJobsRepositoryInterface
-	queueManager           *ImportQueueManager
-	imageService           *services.ImageService
-	categoryMappingService *CategoryMappingService
-	variantDetector        *VariantDetector
-	attributeMapper        *AttributeMapper
+	productService          *ProductService
+	jobsRepo                postgres.ImportJobsRepositoryInterface
+	queueManager            *ImportQueueManager
+	imageService            *services.ImageService
+	categoryMappingService  *CategoryMappingService
+	variantDetector         *VariantDetector
+	attributeMapper         *AttributeMapper
+	dbStorage               ImportStorage                                     // Database storage interface для доступа к БД
+	marketplaceSearchRepo   marketplaceOpenSearch.MarketplaceSearchRepository // OpenSearch repository для marketplace listings
+}
+
+// ImportStorage interface for import service (минимальный интерфейс для избежания конфликтов)
+type ImportStorage interface {
+	GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error)
+	ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int) error
 }
 
 // NewImportService creates a new import service
@@ -66,6 +75,8 @@ func NewImportService(
 	imageService *services.ImageService,
 	categoryMappingService *CategoryMappingService,
 	attributeMapper *AttributeMapper,
+	dbStorage ImportStorage,
+	marketplaceSearchRepo marketplaceOpenSearch.MarketplaceSearchRepository,
 ) *ImportService {
 	return &ImportService{
 		productService:         productService,
@@ -75,6 +86,8 @@ func NewImportService(
 		categoryMappingService: categoryMappingService,
 		variantDetector:        NewVariantDetector(),
 		attributeMapper:        attributeMapper,
+		dbStorage:              dbStorage,
+		marketplaceSearchRepo:  marketplaceSearchRepo,
 	}
 }
 
@@ -1733,6 +1746,83 @@ func (s *ImportService) indexProductsBatch(ctx context.Context, products []*mode
 			return fmt.Errorf("failed to bulk index products: %w", err)
 		}
 		fmt.Printf("Successfully indexed %d products in OpenSearch\n", len(products))
+	}
+
+	return nil
+}
+
+// IndexMarketplaceListings индексирует marketplace listings с needs_reindex=true в OpenSearch
+// Вызывается после успешного импорта для инкрементальной индексации marketplace_listings
+func (s *ImportService) IndexMarketplaceListings(ctx context.Context, batchSize int) error {
+	if batchSize <= 0 {
+		batchSize = 100
+	}
+
+	// Получаем listings с needs_reindex=true из БД
+	listings, err := s.dbStorage.GetMarketplaceListingsForReindex(ctx, 1000)
+	if err != nil {
+		return fmt.Errorf("failed to fetch marketplace listings for reindex: %w", err)
+	}
+
+	if len(listings) == 0 {
+		logger.Debug().Msg("No marketplace listings need reindexing")
+		return nil
+	}
+
+	logger.Info().
+		Int("count", len(listings)).
+		Msg("Indexing marketplace listings in OpenSearch")
+
+	// Индексируем listings батчами
+	for i := 0; i < len(listings); i += batchSize {
+		end := i + batchSize
+		if end > len(listings) {
+			end = len(listings)
+		}
+
+		batch := listings[i:end]
+		if err := s.indexMarketplaceListingsBatch(ctx, batch); err != nil {
+			return fmt.Errorf("failed to index marketplace listings batch %d-%d: %w", i, end, err)
+		}
+	}
+
+	// Сбрасываем флаг needs_reindex после успешной индексации
+	listingIDs := make([]int, len(listings))
+	for i, listing := range listings {
+		listingIDs[i] = listing.ID
+	}
+
+	if err := s.dbStorage.ResetMarketplaceListingsReindexFlag(ctx, listingIDs); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to reset needs_reindex flag for marketplace listings")
+		// Не возвращаем ошибку, так как индексация прошла успешно
+	} else {
+		logger.Info().
+			Int("count", len(listingIDs)).
+			Msg("Reset needs_reindex flag for marketplace listings")
+	}
+
+	return nil
+}
+
+// indexMarketplaceListingsBatch индексирует batch marketplace listings в OpenSearch
+func (s *ImportService) indexMarketplaceListingsBatch(ctx context.Context, listings []*models.MarketplaceListing) error {
+	if len(listings) == 0 {
+		return nil
+	}
+
+	// Индексируем в OpenSearch через marketplace search repo
+	if s.marketplaceSearchRepo != nil {
+		if err := s.marketplaceSearchRepo.BulkIndexListings(ctx, listings); err != nil {
+			return fmt.Errorf("failed to bulk index marketplace listings: %w", err)
+		}
+
+		logger.Info().
+			Int("count", len(listings)).
+			Msg("Successfully indexed marketplace listings in OpenSearch")
+	} else {
+		logger.Warn().Msg("Marketplace search repository is nil, skipping indexing")
 	}
 
 	return nil

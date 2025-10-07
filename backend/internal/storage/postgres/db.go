@@ -618,6 +618,121 @@ func (db *Database) GetListingByID(ctx context.Context, id int) (*models.Marketp
 	return db.marketplaceDB.GetListingByID(ctx, id)
 }
 
+// GetMarketplaceListingsForReindex возвращает listings с needs_reindex=true для индексации в OpenSearch
+func (db *Database) GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error) {
+	if limit <= 0 {
+		limit = 1000 // default limit
+	}
+
+	query := `
+		SELECT
+			id, user_id, category_id, title, description, price,
+			condition, status, location, latitude, longitude,
+			address_city, address_country, views_count, show_on_map,
+			original_language, created_at, updated_at,
+			storefront_id, external_id, metadata,
+			address_multilingual
+		FROM marketplace_listings
+		WHERE needs_reindex = true
+		  AND status = 'active'
+		ORDER BY id
+		LIMIT $1
+	`
+
+	rows, err := db.pool.Query(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query marketplace listings for reindex: %w", err)
+	}
+	defer rows.Close()
+
+	listings := make([]*models.MarketplaceListing, 0)
+	for rows.Next() {
+		listing := &models.MarketplaceListing{}
+		var addressMultilingual []byte
+		var metadataJSON []byte
+		var city sql.NullString
+		var country sql.NullString
+
+		err := rows.Scan(
+			&listing.ID,
+			&listing.UserID,
+			&listing.CategoryID,
+			&listing.Title,
+			&listing.Description,
+			&listing.Price,
+			&listing.Condition,
+			&listing.Status,
+			&listing.Location,
+			&listing.Latitude,
+			&listing.Longitude,
+			&city,
+			&country,
+			&listing.ViewsCount,
+			&listing.ShowOnMap,
+			&listing.OriginalLanguage,
+			&listing.CreatedAt,
+			&listing.UpdatedAt,
+			&listing.StorefrontID,
+			&listing.ExternalID,
+			&metadataJSON,
+			&addressMultilingual,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan marketplace listing: %w", err)
+		}
+
+		// Handle nullable fields
+		if city.Valid {
+			listing.City = city.String
+		}
+		if country.Valid {
+			listing.Country = country.String
+		}
+
+		// Parse metadata JSON
+		if len(metadataJSON) > 0 {
+			if err := json.Unmarshal(metadataJSON, &listing.Metadata); err != nil {
+				log.Printf("Warning: failed to unmarshal metadata for listing %d: %v", listing.ID, err)
+			}
+		}
+
+		// Parse address_multilingual JSON
+		if len(addressMultilingual) > 0 {
+			if err := json.Unmarshal(addressMultilingual, &listing.AddressMultilingual); err != nil {
+				log.Printf("Warning: failed to unmarshal address_multilingual for listing %d: %v", listing.ID, err)
+			}
+		}
+
+		listings = append(listings, listing)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating marketplace listings: %w", err)
+	}
+
+	return listings, nil
+}
+
+// ResetMarketplaceListingsReindexFlag сбрасывает флаг needs_reindex для listings после успешной индексации
+func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int) error {
+	if len(listingIDs) == 0 {
+		return nil
+	}
+
+	query := `
+		UPDATE marketplace_listings
+		SET needs_reindex = false
+		WHERE id = ANY($1)
+	`
+
+	_, err := db.pool.Exec(ctx, query, listingIDs)
+	if err != nil {
+		return fmt.Errorf("failed to reset needs_reindex flag: %w", err)
+	}
+
+	return nil
+}
+
 func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
 	return db.marketplaceDB.GetListingBySlug(ctx, slug)
 }

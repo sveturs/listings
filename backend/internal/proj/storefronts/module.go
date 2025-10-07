@@ -90,8 +90,11 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		logger.Info().Msg("AttributeMapper cache loaded successfully")
 	}
 
+	// Получаем MarketplaceSearchRepository для индексации marketplace listings
+	marketplaceSearchRepo := db.GetOpenSearchRepository()
+
 	// Создаем сервис импорта (categoryMappingService будет установлен позже)
-	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil, attributeMapper)
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil, attributeMapper, db, marketplaceSearchRepo)
 
 	// Создаем Import Queue Manager для асинхронной обработки импорта
 	// Параметры: workerCount (количество воркеров), queueSize (размер очереди)
