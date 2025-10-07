@@ -570,9 +570,22 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 			successCount += len(createdProducts)
 			fmt.Printf("Successfully batch created %d products\n", len(createdProducts))
 
+			logger.Info().
+				Int("created_products_count", len(createdProducts)).
+				Int("new_products_count", len(newProducts)).
+				Msg("Starting image import for batch created products")
+
 			// Import images for created products
 			// TODO: This is sequential, could be optimized further
 			for i, product := range createdProducts {
+				logger.Debug().
+					Int("loop_index", i).
+					Int("product_id", product.ID).
+					Str("product_name", product.Name).
+					Int("new_products_len", len(newProducts)).
+					Bool("condition_check", i < len(newProducts)).
+					Msg("Iterating batch created products")
+
 				if i < len(newProducts) {
 					// Find corresponding import request with ImageURLs
 					var imageURLs []string
