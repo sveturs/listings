@@ -1724,6 +1724,11 @@
     "approved": "Одобрены",
     "rejected": "Отклонены",
     "allStatuses": "Все статусы",
+    "status": {
+      "pending": "Ожидает",
+      "approved": "Одобрено",
+      "rejected": "Отклонено"
+    },
     "pendingCount": "{count} ожидают",
     "noPending": "Нет ожидающих предложений",
     "noProposals": "Предложений не найдено",
@@ -1733,7 +1738,6 @@
     "products": "{count} товаров",
     "reasoning": "Обоснование AI",
     "externalSource": "Исходная категория",
-    "status": "Статус",
     "createdAt": "Создано",
     "reviewedAt": "Проверено",
     "reviewedBy": "Проверил",

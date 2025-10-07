@@ -1771,6 +1771,11 @@
     "approved": "Odobreni",
     "rejected": "Odbijeni",
     "allStatuses": "Svi statusi",
+    "status": {
+      "pending": "Na čekanju",
+      "approved": "Odobreno",
+      "rejected": "Odbijeno"
+    },
     "pendingCount": "{count} čeka",
     "noPending": "Nema predloga na čekanju",
     "noProposals": "Predlozi nisu pronađeni",
@@ -1780,7 +1785,6 @@
     "products": "{count} proizvoda",
     "reasoning": "AI obrazloženje",
     "externalSource": "Izvorna kategorija",
-    "status": "Status",
     "createdAt": "Kreirano",
     "reviewedAt": "Pregledano",
     "reviewedBy": "Pregledao",

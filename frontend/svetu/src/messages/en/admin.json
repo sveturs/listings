@@ -1402,6 +1402,11 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "allStatuses": "All Statuses",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
     "pendingCount": "{count} pending",
     "noPending": "No pending proposals",
     "noProposals": "No proposals found",
@@ -1411,7 +1416,6 @@
     "products": "{count} products",
     "reasoning": "AI Reasoning",
     "externalSource": "Original Category",
-    "status": "Status",
     "createdAt": "Created",
     "reviewedAt": "Reviewed",
     "reviewedBy": "Reviewed By",

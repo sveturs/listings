@@ -92,11 +92,11 @@ export class CategoryProposalsApi {
    */
   static async approveProposal(
     id: number,
-    createCategory: boolean = true
+    request: CategoryProposalApproveRequest
   ): Promise<CategoryProposalApproveResponse> {
     const response = await apiClient.post(
       `/admin/category-proposals/${id}/approve`,
-      { create_category: createCategory } as CategoryProposalApproveRequest
+      request
     );
     return response.data;
   }

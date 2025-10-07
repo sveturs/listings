@@ -16,6 +16,7 @@ import {
   closeRejectModal,
 } from '@/store/slices/categoryProposalsSlice';
 import CategoryProposalCard from './CategoryProposalCard';
+import type { CategoryProposalApproveRequest } from '@/types/categoryProposals';
 
 export default function CategoryProposalsList() {
   const t = useTranslations('admin.categoryProposals');
@@ -68,7 +69,7 @@ export default function CategoryProposalsList() {
       await dispatch(
         approveCategoryProposal({
           id: selectedProposalId,
-          request: { create_category: createCategory },
+          request: { create_category: createCategory } as CategoryProposalApproveRequest,
         })
       ).unwrap();
 
