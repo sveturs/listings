@@ -447,7 +447,11 @@ export default function ImportAnalysisWizard({
                 </div>
 
                 <CategoryMappingStep
-                  mappings={categoryAnalysis.mappings}
+                  mappings={
+                    categoryAnalysis.mapping_suggestions
+                      ? Object.values(categoryAnalysis.mapping_suggestions)
+                      : []
+                  }
                   onMappingChange={handleCategoryMappingChange}
                   onApproveMapping={handleApproveMapping}
                   onRequestNewCategory={handleRequestNewCategory}

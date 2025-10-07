@@ -724,6 +724,7 @@
         "startAnalysis": "Start Analysis",
         "next": "Next",
         "previous": "Previous",
+        "back": "Back",
         "startImport": "Start Import"
       },
       "categories": {
@@ -921,7 +922,8 @@
     "import": "Import",
     "importing": "Importing...",
     "close": "Close",
-    "removeFile": "Remove File"
+    "removeFile": "Remove File",
+    "back": "Back"
   },
   "fileType": {
     "label": "File Type",

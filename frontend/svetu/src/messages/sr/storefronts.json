@@ -721,6 +721,7 @@
         "startAnalysis": "Započni analizu",
         "next": "Sledeće",
         "previous": "Prethodno",
+        "back": "Nazad",
         "startImport": "Započni uvoz"
       },
       "categories": {
@@ -918,7 +919,8 @@
     "import": "Uvezi",
     "importing": "Uvozim...",
     "close": "Zatvori",
-    "removeFile": "Ukloni fajl"
+    "removeFile": "Ukloni fajl",
+    "back": "Nazad"
   },
   "fileType": {
     "label": "Tip fajla",

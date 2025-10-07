@@ -731,6 +731,7 @@
         "startAnalysis": "Начать анализ",
         "next": "Далее",
         "previous": "Назад",
+        "back": "Назад",
         "startImport": "Начать импорт"
       },
       "categories": {
@@ -928,7 +929,8 @@
     "import": "Импортировать",
     "importing": "Импортируется...",
     "close": "Закрыть",
-    "removeFile": "Удалить файл"
+    "removeFile": "Удалить файл",
+    "back": "Назад"
   },
   "fileType": {
     "label": "Тип файла",
