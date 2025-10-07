@@ -674,7 +674,50 @@
   "noCategoriesFound": "No categories found",
   "willGenerateVariants": "Will generate {count} variants",
   "import": {
-    "wizard": "Import Wizard",
+    "wizard": {
+      "title": "Import Wizard",
+      "steps": {
+        "upload": {
+          "name": "Upload",
+          "title": "Upload File",
+          "description": "Select a file to import products",
+          "dragDrop": "Drag and drop file here or click to select",
+          "supportedFormats": "Supported formats: XML, CSV, ZIP (max 50MB)"
+        },
+        "analyzing": {
+          "name": "Analyzing",
+          "title": "Analyzing File",
+          "description": "We are analyzing your file..."
+        },
+        "categories": {
+          "name": "Categories",
+          "title": "Category Mapping",
+          "description": "Map product categories"
+        },
+        "attributes": {
+          "name": "Attributes",
+          "title": "Attribute Mapping",
+          "description": "Map product attributes"
+        },
+        "variants": {
+          "name": "Variants",
+          "title": "Variant Detection",
+          "description": "Review detected product variants"
+        },
+        "summary": {
+          "name": "Summary",
+          "title": "Import Summary",
+          "description": "Review and confirm import"
+        }
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "startAnalysis": "Start Analysis",
+        "next": "Next",
+        "previous": "Previous",
+        "startImport": "Start Import"
+      }
+    },
     "categoryMapping": {
       "title": "Category Mapping",
       "aiSuggestion": "AI Suggestion",

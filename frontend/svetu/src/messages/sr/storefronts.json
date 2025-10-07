@@ -671,7 +671,50 @@
   "noCategoriesFound": "Kategorije nisu pronađene",
   "willGenerateVariants": "Biće kreirano {count} varijanti",
   "import": {
-    "wizard": "Čarobnjak za uvoz",
+    "wizard": {
+      "title": "Čarobnjak za uvoz",
+      "steps": {
+        "upload": {
+          "name": "Otpremanje",
+          "title": "Otpremanje fajla",
+          "description": "Izaberite fajl za uvoz proizvoda",
+          "dragDrop": "Prevuci fajl ovde ili klikni za izbor",
+          "supportedFormats": "Podržani formati: XML, CSV, ZIP (maks. 50MB)"
+        },
+        "analyzing": {
+          "name": "Analiza",
+          "title": "Analiza fajla",
+          "description": "Analiziramo vaš fajl..."
+        },
+        "categories": {
+          "name": "Kategorije",
+          "title": "Mapiranje kategorija",
+          "description": "Mapirajte kategorije proizvoda"
+        },
+        "attributes": {
+          "name": "Atributi",
+          "title": "Mapiranje atributa",
+          "description": "Mapirajte atribute proizvoda"
+        },
+        "variants": {
+          "name": "Varijante",
+          "title": "Detekcija varijanti",
+          "description": "Pregledajte otkrivene varijante proizvoda"
+        },
+        "summary": {
+          "name": "Rezime",
+          "title": "Rezime uvoza",
+          "description": "Pregledajte i potvrdite uvoz"
+        }
+      },
+      "buttons": {
+        "cancel": "Otkaži",
+        "startAnalysis": "Započni analizu",
+        "next": "Sledeće",
+        "previous": "Prethodno",
+        "startImport": "Započni uvoz"
+      }
+    },
     "categoryMapping": {
       "title": "Mapiranje kategorija",
       "aiSuggestion": "AI predlog",
