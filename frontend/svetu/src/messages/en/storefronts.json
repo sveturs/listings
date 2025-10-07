@@ -738,6 +738,20 @@
         "totalGroups": "Groups Found",
         "totalVariants": "Total Variants",
         "ungrouped": "Ungrouped Products"
+      },
+      "summary": {
+        "file": "File",
+        "fileName": "File Name",
+        "fileSize": "File Size",
+        "categories": "Categories",
+        "totalCategories": "Total Categories",
+        "approvedMappings": "Approved Mappings",
+        "customMappings": "Custom Mappings",
+        "attributes": "Attributes",
+        "selectedAttributes": "Selected Attributes",
+        "variants": "Variants",
+        "approvedGroups": "Approved Groups",
+        "totalVariants": "Total Variants"
       }
     },
     "categoryMapping": {

@@ -735,6 +735,20 @@
         "totalGroups": "Pronađeno grupa",
         "totalVariants": "Ukupno varijanti",
         "ungrouped": "Negrupisanih proizvoda"
+      },
+      "summary": {
+        "file": "Fajl",
+        "fileName": "Ime fajla",
+        "fileSize": "Veličina fajla",
+        "categories": "Kategorije",
+        "totalCategories": "Ukupno kategorija",
+        "approvedMappings": "Odobrenih mapiranja",
+        "customMappings": "Korisničkih mapiranja",
+        "attributes": "Atributi",
+        "selectedAttributes": "Izabranih atributa",
+        "variants": "Varijante",
+        "approvedGroups": "Odobrenih grupa",
+        "totalVariants": "Ukupno varijanti"
       }
     },
     "categoryMapping": {

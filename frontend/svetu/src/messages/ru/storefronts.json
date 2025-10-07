@@ -745,6 +745,20 @@
         "totalGroups": "Найдено групп",
         "totalVariants": "Всего вариантов",
         "ungrouped": "Несгруппированных товаров"
+      },
+      "summary": {
+        "file": "Файл",
+        "fileName": "Имя файла",
+        "fileSize": "Размер файла",
+        "categories": "Категории",
+        "totalCategories": "Всего категорий",
+        "approvedMappings": "Подтвержденных маппингов",
+        "customMappings": "Пользовательских маппингов",
+        "attributes": "Атрибуты",
+        "selectedAttributes": "Выбранных атрибутов",
+        "variants": "Варианты",
+        "approvedGroups": "Подтвержденных групп",
+        "totalVariants": "Всего вариантов"
       }
     },
     "categoryMapping": {
