@@ -919,7 +919,8 @@
       "created": "Создан",
       "started": "Начат",
       "completed": "Завершен",
-      "duration": "Длительность"
+      "duration": "Длительность",
+      "notSet": "Не указано"
     }
   },
   "actions": {

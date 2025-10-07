@@ -204,8 +204,8 @@ export const fetchJobStatus = createAsyncThunk(
 
 export const fetchJobDetails = createAsyncThunk(
   'import/fetchJobDetails',
-  async (jobId: number) => {
-    return await ImportApi.getJobDetails(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.getJobDetails(params.storefrontId, params.jobId);
   }
 );
 
@@ -358,16 +358,16 @@ export const rejectCategoryProposal = createAsyncThunk(
 
 export const cancelImportJob = createAsyncThunk(
   'import/cancelJob',
-  async (jobId: number) => {
-    await ImportApi.cancelJob(jobId);
-    return jobId;
+  async (params: { storefrontId: number; jobId: number }) => {
+    await ImportApi.cancelJob(params.storefrontId, params.jobId);
+    return params.jobId;
   }
 );
 
 export const retryImportJob = createAsyncThunk(
   'import/retryJob',
-  async (jobId: number) => {
-    return await ImportApi.retryJob(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.retryJob(params.storefrontId, params.jobId);
   }
 );
 

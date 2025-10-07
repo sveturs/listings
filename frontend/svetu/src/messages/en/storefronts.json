@@ -912,7 +912,8 @@
       "created": "Created",
       "started": "Started",
       "completed": "Completed",
-      "duration": "Duration"
+      "duration": "Duration",
+      "notSet": "Not Set"
     }
   },
   "actions": {

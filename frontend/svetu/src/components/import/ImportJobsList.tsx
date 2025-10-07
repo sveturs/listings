@@ -70,13 +70,13 @@ export default function ImportJobsList({
   const handleCancelJob = async (jobId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm(t('actions.confirmCancel'))) {
-      await dispatch(cancelImportJob(jobId));
+      await dispatch(cancelImportJob({ storefrontId, jobId }));
     }
   };
 
   const handleRetryJob = async (jobId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    await dispatch(retryImportJob(jobId));
+    await dispatch(retryImportJob({ storefrontId, jobId }));
   };
 
   const filteredJobs =

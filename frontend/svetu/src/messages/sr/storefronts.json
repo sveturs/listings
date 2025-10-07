@@ -909,7 +909,8 @@
       "created": "Kreiran",
       "started": "Započet",
       "completed": "Završen",
-      "duration": "Trajanje"
+      "duration": "Trajanje",
+      "notSet": "Nije postavljeno"
     }
   },
   "actions": {
