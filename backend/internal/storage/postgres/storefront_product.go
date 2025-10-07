@@ -1835,7 +1835,7 @@ func (s *Database) BatchCreateStorefrontProducts(ctx context.Context, storefront
 			has_individual_location, individual_address, individual_latitude,
 			individual_longitude, location_privacy, show_on_map, has_variants
 		) VALUES %s
-		RETURNING id, name, price, currency, category_id, stock_status, created_at, updated_at`,
+		RETURNING id, name, sku, price, currency, category_id, stock_status, created_at, updated_at`,
 		strings.Join(valueClauses, ", "))
 
 	// Execute batch insert
@@ -1859,6 +1859,7 @@ func (s *Database) BatchCreateStorefrontProducts(ctx context.Context, storefront
 		err := rows.Scan(
 			&product.ID,
 			&product.Name,
+			&product.SKU,
 			&product.Price,
 			&product.Currency,
 			&product.CategoryID,

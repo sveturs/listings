@@ -578,24 +578,13 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 			// Import images for created products
 			// TODO: This is sequential, could be optimized further
 			for i, product := range createdProducts {
-				logger.Debug().
-					Int("loop_index", i).
-					Int("product_id", product.ID).
-					Str("product_name", product.Name).
-					Int("new_products_len", len(newProducts)).
-					Bool("condition_check", i < len(newProducts)).
-					Msg("Iterating batch created products")
-
 				if i < len(newProducts) {
 					// Find corresponding import request with ImageURLs
 					var imageURLs []string
 					// Match by name or SKU
 					if product.SKU != nil && *product.SKU != "" {
-						for _, importProduct := range productsBySKU {
-							if importProduct.SKU == *product.SKU {
-								imageURLs = importProduct.ImageURLs
-								break
-							}
+						if importProduct, ok := productsBySKU[*product.SKU]; ok {
+							imageURLs = importProduct.ImageURLs
 						}
 					}
 					if len(imageURLs) == 0 {
@@ -622,10 +611,13 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 								Msg("Failed to import images for newly created product")
 						}
 					} else {
-						logger.Debug().
+						logEvent := logger.Info().
 							Int("product_id", product.ID).
-							Str("product_name", product.Name).
-							Msg("No images found for newly created product")
+							Str("product_name", product.Name)
+						if product.SKU != nil {
+							logEvent = logEvent.Str("product_sku", *product.SKU)
+						}
+						logEvent.Msg("No images found for newly created product")
 					}
 				}
 			}
