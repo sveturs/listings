@@ -730,6 +730,11 @@
         "mediumConfidence": "Srednja pouzdanost",
         "lowConfidence": "Niska pouzdanost",
         "unmapped": "Nemapirano"
+      },
+      "variants": {
+        "totalGroups": "Pronađeno grupa",
+        "totalVariants": "Ukupno varijanti",
+        "ungrouped": "Negrupisanih proizvoda"
       }
     },
     "categoryMapping": {

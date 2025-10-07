@@ -740,6 +740,11 @@
         "mediumConfidence": "Средняя уверенность",
         "lowConfidence": "Низкая уверенность",
         "unmapped": "Без маппинга"
+      },
+      "variants": {
+        "totalGroups": "Найдено групп",
+        "totalVariants": "Всего вариантов",
+        "ungrouped": "Несгруппированных товаров"
       }
     },
     "categoryMapping": {

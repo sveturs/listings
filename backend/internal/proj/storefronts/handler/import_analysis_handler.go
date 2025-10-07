@@ -344,8 +344,11 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		// Analyze custom attributes from product.Attributes
 		if product.Attributes != nil {
 			for attrName, attrValue := range product.Attributes {
-				// Skip standard fields
-				if attrName == "category_path" {
+				// Skip standard fields and category fields
+				if attrName == "category_path" ||
+				   attrName == "kategorija1" ||
+				   attrName == "kategorija2" ||
+				   attrName == "kategorija3" {
 					continue
 				}
 

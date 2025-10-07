@@ -733,6 +733,11 @@
         "mediumConfidence": "Medium Confidence",
         "lowConfidence": "Low Confidence",
         "unmapped": "Unmapped"
+      },
+      "variants": {
+        "totalGroups": "Groups Found",
+        "totalVariants": "Total Variants",
+        "ungrouped": "Ungrouped Products"
       }
     },
     "categoryMapping": {
