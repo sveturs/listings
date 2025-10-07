@@ -492,13 +492,15 @@ export default function ImportAnalysisWizard({
 
             {attributeAnalysis && (
               <AttributeMappingStep
-                attributes={attributeAnalysis.attributes}
+                attributes={attributeAnalysis.detected_attributes || []}
                 selectedAttributes={selectedAttributes}
                 onToggleAttribute={handleAttributeToggle}
                 onSelectAll={() => {
                   dispatch(
                     setSelectedAttributes(
-                      attributeAnalysis.attributes.map((a) => a.name)
+                      (attributeAnalysis.detected_attributes || []).map(
+                        (a) => a.name
+                      )
                     )
                   );
                 }}
@@ -570,13 +572,15 @@ export default function ImportAnalysisWizard({
                 </div>
 
                 <VariantDetectionStep
-                  variantGroups={variantDetection.variant_groups}
+                  variantGroups={variantDetection.variant_groups || []}
                   approvedGroups={approvedVariantGroups}
                   onToggleGroup={handleVariantGroupToggle}
                   onApproveAll={() => {
                     dispatch(
                       setApprovedVariantGroups(
-                        variantDetection.variant_groups.map((g) => g.base_name)
+                        (variantDetection.variant_groups || []).map(
+                          (g) => g.base_name
+                        )
                       )
                     );
                   }}
