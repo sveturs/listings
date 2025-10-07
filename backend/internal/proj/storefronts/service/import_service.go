@@ -595,7 +595,24 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 					}
 
 					if len(imageURLs) > 0 {
-						_ = s.importProductImages(ctx, product.ID, imageURLs)
+						logger.Info().
+							Int("product_id", product.ID).
+							Str("product_name", product.Name).
+							Int("images_count", len(imageURLs)).
+							Msg("Importing images for newly created product (batch)")
+						err := s.importProductImages(ctx, product.ID, imageURLs)
+						if err != nil {
+							logger.Error().
+								Int("product_id", product.ID).
+								Str("product_name", product.Name).
+								Err(err).
+								Msg("Failed to import images for newly created product")
+						}
+					} else {
+						logger.Debug().
+							Int("product_id", product.ID).
+							Str("product_name", product.Name).
+							Msg("No images found for newly created product")
 					}
 				}
 			}
@@ -619,7 +636,19 @@ func (s *ImportService) importProductsBatch(ctx context.Context, jobID int, prod
 
 			// Import images for updated products
 			if len(item.request.ImageURLs) > 0 {
-				_ = s.importProductImages(ctx, item.product.ID, item.request.ImageURLs)
+				logger.Info().
+					Int("product_id", item.product.ID).
+					Str("product_name", item.product.Name).
+					Int("images_count", len(item.request.ImageURLs)).
+					Msg("Importing images for updated product")
+				err := s.importProductImages(ctx, item.product.ID, item.request.ImageURLs)
+				if err != nil {
+					logger.Error().
+						Int("product_id", item.product.ID).
+						Str("product_name", item.product.Name).
+						Err(err).
+						Msg("Failed to import images for updated product")
+				}
 			}
 		}
 	}
@@ -1415,18 +1444,49 @@ func (s *ImportService) importProductImages(ctx context.Context, productID int, 
 	}
 
 	if len(imageURLs) == 0 {
+		logger.Debug().
+			Int("product_id", productID).
+			Msg("No images to import (imageURLs is empty)")
 		return nil // Нет изображений для загрузки
 	}
 
+	logger.Info().
+		Int("product_id", productID).
+		Int("images_count", len(imageURLs)).
+		Strs("image_urls", imageURLs).
+		Msg("Starting image import for product")
+
+	successCount := 0
+	errorCount := 0
+
 	// Загружаем каждое изображение
 	for i, imageURL := range imageURLs {
+		logger.Debug().
+			Int("product_id", productID).
+			Int("image_index", i+1).
+			Int("total_images", len(imageURLs)).
+			Str("image_url", imageURL).
+			Msg("Downloading image")
+
 		// Скачиваем изображение
 		imageData, ext, err := s.downloadImage(ctx, imageURL)
 		if err != nil {
 			// Логируем ошибку, но продолжаем загрузку остальных изображений
-			fmt.Printf("Failed to download image from %s: %v\n", imageURL, err)
+			logger.Error().
+				Int("product_id", productID).
+				Str("image_url", imageURL).
+				Err(err).
+				Msg("Failed to download image")
+			errorCount++
 			continue
 		}
+
+		logger.Debug().
+			Int("product_id", productID).
+			Str("image_url", imageURL).
+			Str("extension", ext).
+			Int("size_bytes", len(imageData)).
+			Msg("Image downloaded successfully, uploading to S3")
 
 		// Создаем multipart.File адаптер
 		fileReader := &bytesFileAdapter{Reader: bytes.NewReader(imageData)}
@@ -1464,12 +1524,30 @@ func (s *ImportService) importProductImages(ctx context.Context, productID int, 
 		_, err = s.imageService.UploadImage(ctx, uploadRequest)
 		if err != nil {
 			// Логируем ошибку, но продолжаем загрузку остальных изображений
-			fmt.Printf("Failed to upload image %s for product %d: %v\n", imageURL, productID, err)
+			logger.Error().
+				Int("product_id", productID).
+				Str("image_url", imageURL).
+				Err(err).
+				Msg("Failed to upload image to S3")
+			errorCount++
 			continue
 		}
 
-		fmt.Printf("Successfully imported image %d/%d for product %d from %s\n", i+1, len(imageURLs), productID, imageURL)
+		logger.Info().
+			Int("product_id", productID).
+			Int("image_index", i+1).
+			Int("total_images", len(imageURLs)).
+			Str("image_url", imageURL).
+			Msg("Successfully imported image")
+		successCount++
 	}
+
+	logger.Info().
+		Int("product_id", productID).
+		Int("success_count", successCount).
+		Int("error_count", errorCount).
+		Int("total_count", len(imageURLs)).
+		Msg("Finished image import for product")
 
 	return nil
 }
