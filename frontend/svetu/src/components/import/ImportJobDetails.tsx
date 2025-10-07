@@ -213,7 +213,7 @@ export default function ImportJobDetails() {
                 }`}
               >
                 {getStatusIcon(currentJob.status)}
-                <span className="ml-2">{t(`status.${currentJob.status}`)}</span>
+                <span className="ml-2">{t(`jobs.status.${currentJob.status}`)}</span>
               </span>
 
               {currentJob.status === 'processing' && (

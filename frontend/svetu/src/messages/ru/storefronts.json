@@ -934,7 +934,15 @@
       "started": "Начат",
       "completed": "Завершен",
       "duration": "Длительность",
-      "notSet": "Не указано"
+      "notSet": "Не указано",
+      "complete": "завершено"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "processing": "Обрабатывается",
+      "completed": "Завершено",
+      "failed": "Ошибка",
+      "cancelled": "Отменено"
     }
   },
   "actions": {
@@ -969,13 +977,6 @@
       "manual": "Вручную",
       "skip": "Пропустить"
     }
-  },
-  "status": {
-    "pending": "Ожидает",
-    "processing": "Обрабатывается",
-    "completed": "Завершено",
-    "failed": "Ошибка",
-    "cancelled": "Отменено"
   },
   "manager": {
     "title": "Управление импортом",

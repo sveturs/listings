@@ -36,7 +36,7 @@ const (
 	statusProcessing = "processing"
 	statusCompleted  = "completed"
 	statusFailed     = "failed"
-	statusCanceled   = "canceled"
+	statusCanceled   = "cancelled"
 
 	// File types
 	fileTypeXML = "xml"

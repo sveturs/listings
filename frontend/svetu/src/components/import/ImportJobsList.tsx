@@ -267,7 +267,7 @@ export default function ImportJobsList({
                       >
                         {getStatusIcon(job.status)}
                         <span className="ml-1">
-                          {t(`status.${job.status}`)}
+                          {t(`jobs.status.${job.status}`)}
                         </span>
                       </span>
 

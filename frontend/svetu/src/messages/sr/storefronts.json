@@ -924,7 +924,15 @@
       "started": "Započet",
       "completed": "Završen",
       "duration": "Trajanje",
-      "notSet": "Nije postavljeno"
+      "notSet": "Nije postavljeno",
+      "complete": "završeno"
+    },
+    "status": {
+      "pending": "Na čekanju",
+      "processing": "U obradi",
+      "completed": "Završeno",
+      "failed": "Greška",
+      "cancelled": "Otkazano"
     }
   },
   "actions": {
@@ -959,13 +967,6 @@
       "manual": "Ručno",
       "skip": "Preskoči"
     }
-  },
-  "status": {
-    "pending": "Na čekanju",
-    "processing": "U obradi",
-    "completed": "Završeno",
-    "failed": "Greška",
-    "cancelled": "Otkazano"
   },
   "manager": {
     "title": "Upravljanje uvozom",

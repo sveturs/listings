@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"backend/internal/domain/models"
+	"backend/internal/logger"
 	"backend/internal/proj/storefronts/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -650,6 +651,10 @@ func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
 func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 	jobID, err := strconv.Atoi(c.Params("jobId"))
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Str("jobId", c.Params("jobId")).
+			Msg("Invalid job ID for cancel")
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
 			Error:   "Invalid job ID",
 			Message: err.Error(),
@@ -658,6 +663,10 @@ func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 
 	err = h.importService.CancelJob(c.Context(), jobID)
 	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("jobId", jobID).
+			Msg("Failed to cancel import job")
 		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse{
 			Error:   "Failed to cancel job",
 			Message: err.Error(),

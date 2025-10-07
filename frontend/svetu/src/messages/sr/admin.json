@@ -428,6 +428,7 @@
     "dashboard": "Kontrolna tabla",
     "catalog": "Katalog",
     "categories": "Kategorije",
+    "categoryProposals": "Predlozi kategorija",
     "attributes": "Atributi",
     "variantAttributes": "Atributi varijanti",
     "attributeGroups": "Grupe atributa",
@@ -1760,6 +1761,72 @@
       "requestData": "Poslati podaci",
       "responseData": "API odgovor",
       "required": "*"
+    }
+  },
+  "categoryProposals": {
+    "title": "Predlozi kategorija",
+    "description": "Pregled i upravljanje predlozima kategorija od AI tokom importa",
+    "list": "Lista predloga",
+    "pending": "Čekaju",
+    "approved": "Odobreni",
+    "rejected": "Odbijeni",
+    "allStatuses": "Svi statusi",
+    "pendingCount": "{count} čeka",
+    "noPending": "Nema predloga na čekanju",
+    "noProposals": "Predlozi nisu pronađeni",
+    "name": "Naziv kategorije",
+    "parentCategory": "Roditeljska kategorija",
+    "expectedProducts": "Očekivani proizvodi",
+    "products": "{count} proizvoda",
+    "reasoning": "AI obrazloženje",
+    "externalSource": "Izvorna kategorija",
+    "status": "Status",
+    "createdAt": "Kreirano",
+    "reviewedAt": "Pregledano",
+    "reviewedBy": "Pregledao",
+    "actions": "Akcije",
+    "approve": "Odobri",
+    "reject": "Odbij",
+    "view": "Pregled",
+    "delete": "Obriši",
+    "approving": "Odobravanje...",
+    "rejecting": "Odbijanje...",
+    "createCategory": "Kreiraj kategoriju",
+    "justMarkApproved": "Samo označi kao odobreno",
+    "rejectReason": "Razlog odbijanja",
+    "rejectReasonPlaceholder": "Objasnite zašto je ovaj predlog odbijen...",
+    "similarCategories": "Slične kategorije",
+    "tags": "Tagovi",
+    "noTags": "Nema tagova",
+    "translations": "Prevodi",
+    "approveModal": {
+      "title": "Odobri predlog kategorije",
+      "message": "Želite li da kreirate novu kategoriju ili samo označite kao odobreno?",
+      "createCategory": "Kreiraj novu kategoriju u marketplace",
+      "justApprove": "Samo označi kao odobreno (potrebno ručno kreiranje)",
+      "confirm": "Odobri",
+      "cancel": "Otkaži"
+    },
+    "rejectModal": {
+      "title": "Odbij predlog kategorije",
+      "message": "Da li ste sigurni da želite da odbijete ovaj predlog?",
+      "reasonLabel": "Razlog odbijanja (opciono)",
+      "confirm": "Odbij",
+      "cancel": "Otkaži"
+    },
+    "deleteConfirm": "Da li ste sigurni da želite da obrišete ovaj predlog?",
+    "error": {
+      "load": "Nije moguće učitati predloge",
+      "approve": "Nije moguće odobriti predlog",
+      "reject": "Nije moguće odbiti predlog",
+      "delete": "Nije moguće obrisati predlog",
+      "notFound": "Predlog nije pronađen"
+    },
+    "success": {
+      "approved": "Predlog odobren",
+      "approvedWithCategory": "Predlog odobren i kategorija kreirana",
+      "rejected": "Predlog odbijen",
+      "deleted": "Predlog obrisan"
     }
   }
 }

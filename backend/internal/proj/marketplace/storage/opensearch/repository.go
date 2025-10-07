@@ -1284,7 +1284,7 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 		logger.Info().Msgf("Fetching storefront %d data for listing %d", *listing.StorefrontID, listing.ID)
 		var storefront models.Storefront
 		err := storage.QueryRow(context.Background(), `
-			SELECT id, name, slug, city, address, country, latitude, longitude, is_verified
+			SELECT id, name, slug, city, address, country, latitude, longitude
 			FROM user_storefronts
 			WHERE id = $1
 		`, *listing.StorefrontID).Scan(
@@ -1296,8 +1296,9 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 			&storefront.Country,
 			&storefront.Latitude,
 			&storefront.Longitude,
-			&storefront.IsVerified,
 		)
+		// user_storefronts - legacy таблица без is_verified, устанавливаем false по умолчанию
+		storefront.IsVerified = false
 
 		if err == nil {
 			// Добавляем полную информацию о витрине в документ

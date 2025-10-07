@@ -28,16 +28,17 @@ import (
 
 // Module представляет модуль витрин с продуктами
 type Module struct {
-	services             service.ServicesInterface
-	storefrontHandler    *handler.StorefrontHandler
-	productHandler       *handler.ProductHandler
-	importHandler        *handler.ImportHandler
-	imageHandler         *handler.ImageHandler
-	dashboardHandler     *handler.DashboardHandler
-	variantHandler       *storefrontHandler.VariantHandler
-	publicVariantHandler *storefrontHandler.PublicVariantHandler
-	aiProductHandler     *handler.AIProductHandler
-	importQueueManager   *storefrontService.ImportQueueManager
+	services                service.ServicesInterface
+	storefrontHandler       *handler.StorefrontHandler
+	productHandler          *handler.ProductHandler
+	importHandler           *handler.ImportHandler
+	imageHandler            *handler.ImageHandler
+	dashboardHandler        *handler.DashboardHandler
+	variantHandler          *storefrontHandler.VariantHandler
+	publicVariantHandler    *storefrontHandler.PublicVariantHandler
+	aiProductHandler        *handler.AIProductHandler
+	categoryProposalHandler *handler.CategoryProposalHandler
+	importQueueManager      *storefrontService.ImportQueueManager
 }
 
 // NewModule создает новый модуль витрин
@@ -147,17 +148,28 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		zap.L(),
 	)
 
+	// Создаем repository и service для CategoryProposals
+	categoryProposalsRepo := postgres.NewCategoryProposalsRepository(db.GetPool())
+	// Database реализует CategoryRepository interface
+	categoryProposalSvc := storefrontService.NewCategoryProposalService(
+		categoryProposalsRepo,
+		db, // Database implements CategoryRepository interface
+		aiCategoryMapper,
+	)
+	categoryProposalHandlerInstance := handler.NewCategoryProposalHandler(categoryProposalSvc)
+
 	return &Module{
-		services:             services,
-		storefrontHandler:    handler.NewStorefrontHandler(storefrontSvc),
-		productHandler:       handler.NewProductHandler(productSvc),
-		importHandler:        handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer, attributeMapper),
-		imageHandler:         handler.NewImageHandler(imageService, productSvc),
-		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
-		variantHandler:       variantHandler,
-		publicVariantHandler: publicVariantHandler,
-		aiProductHandler:     aiProductHandlerInstance,
-		importQueueManager:   importQueueManager,
+		services:                services,
+		storefrontHandler:       handler.NewStorefrontHandler(storefrontSvc),
+		productHandler:          handler.NewProductHandler(productSvc),
+		importHandler:           handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer, attributeMapper),
+		imageHandler:            handler.NewImageHandler(imageService, productSvc),
+		dashboardHandler:        handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
+		variantHandler:          variantHandler,
+		publicVariantHandler:    publicVariantHandler,
+		aiProductHandler:        aiProductHandlerInstance,
+		categoryProposalHandler: categoryProposalHandlerInstance,
+		importQueueManager:      importQueueManager,
 	}
 }
 
@@ -351,6 +363,19 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Post("/storefronts/storefront/products/attributes/setup", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.SetupProductAttributes)
 		api.Get("/storefronts/storefront/products/:product_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetProductAttributes)
 		api.Get("/storefronts/storefront/categories/:category_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetAvailableAttributesForCategory)
+	}
+
+	// Admin routes для Category Proposals (требуют роль admin)
+	adminCategoryProposals := api.Group("/admin/category-proposals", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
+	{
+		adminCategoryProposals.Get("/", m.categoryProposalHandler.ListProposals)
+		adminCategoryProposals.Get("/pending/count", m.categoryProposalHandler.GetPendingCount)
+		adminCategoryProposals.Post("/", m.categoryProposalHandler.CreateProposal)
+		adminCategoryProposals.Get("/:id", m.categoryProposalHandler.GetProposal)
+		adminCategoryProposals.Put("/:id", m.categoryProposalHandler.UpdateProposal)
+		adminCategoryProposals.Delete("/:id", m.categoryProposalHandler.DeleteProposal)
+		adminCategoryProposals.Post("/:id/approve", m.categoryProposalHandler.ApproveProposal)
+		adminCategoryProposals.Post("/:id/reject", m.categoryProposalHandler.RejectProposal)
 	}
 
 	// Публичные маршруты для вариантов (БЕЗ АВТОРИЗАЦИИ)

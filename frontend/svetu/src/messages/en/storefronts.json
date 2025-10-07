@@ -927,7 +927,15 @@
       "started": "Started",
       "completed": "Completed",
       "duration": "Duration",
-      "notSet": "Not Set"
+      "notSet": "Not Set",
+      "complete": "complete"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
     }
   },
   "actions": {
@@ -962,13 +970,6 @@
       "manual": "Manual",
       "skip": "Skip"
     }
-  },
-  "status": {
-    "pending": "Pending",
-    "processing": "Processing",
-    "completed": "Completed",
-    "failed": "Failed",
-    "cancelled": "Cancelled"
   },
   "manager": {
     "title": "Import Manager",
