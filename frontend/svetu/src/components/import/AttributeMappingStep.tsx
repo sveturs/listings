@@ -230,12 +230,12 @@ export default function AttributeMappingStep({
                     </div>
 
                     {/* Suggested Mapping */}
-                    {attr.suggested_mapping && (
+                    {attr.suggested_map && (
                       <div className="mb-2 text-sm text-gray-600">
                         <span className="font-medium">
                           {t('suggestedMapping')}:
                         </span>{' '}
-                        {attr.suggested_mapping}
+                        {attr.suggested_map}
                       </div>
                     )}
 
@@ -249,8 +249,8 @@ export default function AttributeMappingStep({
                       <span>
                         {t('sampleValues')}:{' '}
                         <span className="italic">
-                          {attr.sample_values.slice(0, 3).join(', ')}
-                          {attr.sample_values.length > 3 && '...'}
+                          {attr.examples?.slice(0, 3).join(', ') || 'N/A'}
+                          {attr.examples && attr.examples.length > 3 && '...'}
                         </span>
                       </span>
                     </div>
