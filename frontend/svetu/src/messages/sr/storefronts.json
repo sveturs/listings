@@ -907,7 +907,26 @@
     "selectFile": "Izaberi fajl",
     "downloadTemplate": "Preuzmi šablon",
     "import": "Uvezi",
-    "close": "Zatvori"
+    "close": "Zatvori",
+    "removeFile": "Ukloni fajl"
+  },
+  "fileType": {
+    "label": "Tip fajla",
+    "select": "Izaberite tip fajla"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Režim ažuriranja",
+      "upsert": "Kreiraj ili ažuriraj",
+      "createOnly": "Samo kreiranje",
+      "updateOnly": "Samo ažuriranje"
+    },
+    "categoryMapping": {
+      "label": "Mapiranje kategorija",
+      "auto": "Automatski",
+      "manual": "Ručno",
+      "skip": "Preskoči"
+    }
   },
   "status": {
     "pending": "Na čekanju",

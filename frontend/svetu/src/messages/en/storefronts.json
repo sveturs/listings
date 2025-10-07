@@ -910,7 +910,26 @@
     "selectFile": "Select File",
     "downloadTemplate": "Download Template",
     "import": "Import",
-    "close": "Close"
+    "close": "Close",
+    "removeFile": "Remove File"
+  },
+  "fileType": {
+    "label": "File Type",
+    "select": "Select file type"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Update Mode",
+      "upsert": "Create or Update",
+      "createOnly": "Create Only",
+      "updateOnly": "Update Only"
+    },
+    "categoryMapping": {
+      "label": "Category Mapping",
+      "auto": "Automatic",
+      "manual": "Manual",
+      "skip": "Skip"
+    }
   },
   "status": {
     "pending": "Pending",

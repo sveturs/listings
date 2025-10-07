@@ -917,7 +917,26 @@
     "selectFile": "Выбрать файл",
     "downloadTemplate": "Скачать шаблон",
     "import": "Импортировать",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "removeFile": "Удалить файл"
+  },
+  "fileType": {
+    "label": "Тип файла",
+    "select": "Выберите тип файла"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Режим обновления",
+      "upsert": "Создать или обновить",
+      "createOnly": "Только создание",
+      "updateOnly": "Только обновление"
+    },
+    "categoryMapping": {
+      "label": "Маппинг категорий",
+      "auto": "Автоматически",
+      "manual": "Вручную",
+      "skip": "Пропустить"
+    }
   },
   "status": {
     "pending": "Ожидает",
