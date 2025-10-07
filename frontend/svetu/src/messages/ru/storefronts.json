@@ -695,7 +695,13 @@
         "analyzing": {
           "name": "Анализ",
           "title": "Анализ файла",
-          "description": "Мы анализируем ваш файл..."
+          "description": "Мы анализируем ваш файл...",
+          "progress": "Прогресс",
+          "stages": {
+            "categories": "Анализ категорий",
+            "attributes": "Анализ атрибутов",
+            "variants": "Определение вариантов"
+          }
         },
         "categories": {
           "name": "Категории",

@@ -685,7 +685,13 @@
         "analyzing": {
           "name": "Analiza",
           "title": "Analiza fajla",
-          "description": "Analiziramo vaš fajl..."
+          "description": "Analiziramo vaš fajl...",
+          "progress": "Napredak",
+          "stages": {
+            "categories": "Analiza kategorija",
+            "attributes": "Analiza atributa",
+            "variants": "Detekcija varijanti"
+          }
         },
         "categories": {
           "name": "Kategorije",

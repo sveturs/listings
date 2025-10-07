@@ -688,7 +688,13 @@
         "analyzing": {
           "name": "Analyzing",
           "title": "Analyzing File",
-          "description": "We are analyzing your file..."
+          "description": "We are analyzing your file...",
+          "progress": "Progress",
+          "stages": {
+            "categories": "Categories analysis",
+            "attributes": "Attributes analysis",
+            "variants": "Variants detection"
+          }
         },
         "categories": {
           "name": "Categories",
