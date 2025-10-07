@@ -117,7 +117,9 @@ export default function AdminLayoutClient({
                 <li>
                   <Link
                     href="/admin/category-proposals"
-                    className={isActive('/admin/category-proposals') ? 'active' : ''}
+                    className={
+                      isActive('/admin/category-proposals') ? 'active' : ''
+                    }
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

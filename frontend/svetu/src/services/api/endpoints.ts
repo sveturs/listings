@@ -3,13 +3,13 @@ import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированной схемы
 type UserProfile =
-  components['schemas']['backend_internal_domain_models.UserProfile'];
+  components['schemas']['models.UserProfile'];
 type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+  components['schemas']['models.MarketplaceListing'];
 type ChatMessage =
-  components['schemas']['backend_internal_domain_models.MarketplaceMessage'];
+  components['schemas']['models.MarketplaceMessage'];
 type ListingsResponse =
-  components['schemas']['internal_proj_marketplace_handler.ListingsResponse'];
+  components['schemas']['handler.ListingsResponse'];
 
 /**
  * Базовый класс для API endpoints

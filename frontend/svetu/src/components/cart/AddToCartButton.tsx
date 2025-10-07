@@ -10,7 +10,7 @@ import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
 type StorefrontProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+  components['schemas']['models.StorefrontProductVariant'];
 
 interface ProductForCart {
   id: number;
@@ -75,7 +75,7 @@ export default function AddToCartButton({
             productId: product.id,
             variantId: variant?.id,
             name: product.name,
-            variantName: variant?.name,
+            variantName: variant?.sku,
             price: variant?.price || product.price,
             currency: product.currency || 'RSD',
             quantity,

@@ -5,7 +5,7 @@ import { productApi } from '@/services/productApi';
 import { toast } from 'react-hot-toast';
 
 type BulkOperationError =
-  components['schemas']['backend_internal_domain_models.BulkOperationError'];
+  components['schemas']['models.BulkOperationError'];
 
 interface ProductState {
   products: StorefrontProduct[];

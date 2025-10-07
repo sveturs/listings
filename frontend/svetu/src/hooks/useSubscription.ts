@@ -8,9 +8,9 @@ import { subscriptionService } from '@/services/subscriptions';
 import type { components } from '@/types/generated/api';
 
 type SubscriptionPlan =
-  components['schemas']['backend_internal_domain_models.SubscriptionPlanDetails'];
+  components['schemas']['models.SubscriptionPlanDetails'];
 type UserSubscriptionInfo =
-  components['schemas']['backend_internal_domain_models.UserSubscriptionInfo'];
+  components['schemas']['models.UserSubscriptionInfo'];
 
 export interface UseSubscriptionResult {
   // Data

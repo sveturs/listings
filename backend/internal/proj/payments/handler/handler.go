@@ -53,8 +53,8 @@ func (h *Handler) InitAllSecure(allsecureService *paymentService.AllSecureServic
 // @Produce json
 // @Param Stripe-Signature header string true "Stripe signature for webhook verification"
 // @Param payload body StripeWebhookRequest true "Stripe webhook payload"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=WebhookResponse} "Webhook processed successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "payments.webhook.invalid_signature or payments.webhook.processing_error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=WebhookResponse} "Webhook processed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "payments.webhook.invalid_signature or payments.webhook.processing_error"
 // @Router /api/v1/payments/stripe/webhook [post]
 func (h *Handler) HandleWebhook(c *fiber.Ctx) error {
 	payload := c.Body()

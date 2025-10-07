@@ -62,9 +62,9 @@ type TestShipmentResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body TestShipmentRequest true "Test shipment request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TestShipmentResponse} "Test shipment result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TestShipmentResponse} "Test shipment result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Server error"
 // @Router /api/v1/postexpress/test/shipment [post]
 func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 	startTime := time.Now()
@@ -117,7 +117,7 @@ func (h *Handler) CreateTestShipment(c *fiber.Ctx) error {
 // @Description Get current Post Express configuration (without password) for testing page
 // @Tags post-express-test
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Configuration"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Configuration"
 // @Router /api/v1/postexpress/test/config [get]
 func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 	config := fiber.Map{
@@ -163,7 +163,7 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 // @Description Get history of test shipments (mock data for demo)
 // @Tags post-express-test
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]TestShipmentResponse} "Test shipments history"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]TestShipmentResponse} "Test shipments history"
 // @Router /api/v1/postexpress/test/history [get]
 func (h *Handler) GetTestHistory(c *fiber.Ctx) error {
 	// Возвращаем пустую историю пока не будет реального хранилища

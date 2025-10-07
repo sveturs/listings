@@ -254,4 +254,3 @@ func (s *CategoryProposalService) GetPendingCount(ctx context.Context, storefron
 	}
 	return count, nil
 }
-

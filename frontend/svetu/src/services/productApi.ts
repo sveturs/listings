@@ -3,21 +3,21 @@ import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
 type BulkCreateProductsRequest =
-  components['schemas']['backend_internal_domain_models.BulkCreateProductsRequest'];
+  components['schemas']['models.BulkCreateProductsRequest'];
 type BulkCreateProductsResponse =
-  components['schemas']['backend_internal_domain_models.BulkCreateProductsResponse'];
+  components['schemas']['models.BulkCreateProductsResponse'];
 type BulkUpdateProductsRequest =
-  components['schemas']['backend_internal_domain_models.BulkUpdateProductsRequest'];
+  components['schemas']['models.BulkUpdateProductsRequest'];
 type BulkUpdateProductsResponse =
-  components['schemas']['backend_internal_domain_models.BulkUpdateProductsResponse'];
+  components['schemas']['models.BulkUpdateProductsResponse'];
 type BulkDeleteProductsRequest =
-  components['schemas']['backend_internal_domain_models.BulkDeleteProductsRequest'];
+  components['schemas']['models.BulkDeleteProductsRequest'];
 type BulkDeleteProductsResponse =
-  components['schemas']['backend_internal_domain_models.BulkDeleteProductsResponse'];
+  components['schemas']['models.BulkDeleteProductsResponse'];
 type BulkUpdateStatusRequest =
-  components['schemas']['backend_internal_domain_models.BulkUpdateStatusRequest'];
+  components['schemas']['models.BulkUpdateStatusRequest'];
 type BulkUpdateStatusResponse =
-  components['schemas']['backend_internal_domain_models.BulkUpdateStatusResponse'];
+  components['schemas']['models.BulkUpdateStatusResponse'];
 
 export const productApi = {
   /**

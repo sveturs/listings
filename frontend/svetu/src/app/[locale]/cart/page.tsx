@@ -629,9 +629,9 @@ export default function CartPage() {
                                           {item.product?.name ||
                                             'Unknown Product'}
                                         </h3>
-                                        {item.variant?.name && (
+                                        {item.variant?.sku && (
                                           <p className="text-sm text-base-content/60">
-                                            {item.variant.name}
+                                            SKU: {item.variant.sku}
                                           </p>
                                         )}
                                         <p className="text-sm text-base-content/60">

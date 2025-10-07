@@ -16,11 +16,11 @@ import {
 } from '@/utils/addressUtils';
 
 type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+  components['schemas']['models.StorefrontProduct'];
 type Storefront =
-  components['schemas']['backend_internal_domain_models.Storefront'];
+  components['schemas']['models.Storefront'];
 type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'] & {
+  components['schemas']['models.StorefrontProductVariant'] & {
     images?: Array<{
       id: number;
       image_url: string;

@@ -21,7 +21,7 @@ import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 
 type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+  components['schemas']['models.StorefrontProduct'];
 
 interface PageProps {
   params: Promise<{

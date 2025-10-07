@@ -3,7 +3,7 @@ import CarDetailClient from './CarDetailClient';
 import type { components } from '@/types/generated/api';
 
 type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+  components['schemas']['models.MarketplaceListing'];
 
 interface CarDetailPageProps {
   params: Promise<{

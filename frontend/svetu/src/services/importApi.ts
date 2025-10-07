@@ -203,8 +203,13 @@ export class ImportApi {
   /**
    * Gets import job status
    */
-  static async getJobStatus(storefrontId: number, jobId: number): Promise<ImportJobStatus> {
-    const response = await apiClient.get(`/storefronts/${storefrontId}/import/jobs/${jobId}/status`);
+  static async getJobStatus(
+    storefrontId: number,
+    jobId: number
+  ): Promise<ImportJobStatus> {
+    const response = await apiClient.get(
+      `/storefronts/${storefrontId}/import/jobs/${jobId}/status`
+    );
     return response.data;
   }
 
@@ -238,7 +243,9 @@ export class ImportApi {
     storefrontId: number,
     jobId: number
   ): Promise<ImportJob & { errors?: any[] }> {
-    const response = await apiClient.get(`/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}`);
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}`
+    );
     return response.data;
   }
 
@@ -268,14 +275,21 @@ export class ImportApi {
    * Cancels an ongoing import job
    */
   static async cancelJob(storefrontId: number, jobId: number): Promise<void> {
-    await apiClient.post(`/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/cancel`);
+    await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/cancel`
+    );
   }
 
   /**
    * Retries a failed import job
    */
-  static async retryJob(storefrontId: number, jobId: number): Promise<ImportJob> {
-    const response = await apiClient.post(`/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/retry`);
+  static async retryJob(
+    storefrontId: number,
+    jobId: number
+  ): Promise<ImportJob> {
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/retry`
+    );
     return response.data;
   }
 

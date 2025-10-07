@@ -23,30 +23,30 @@ type AnalyzeCategoriesRequest struct {
 
 // CategoryMappingDTO represents a single category mapping for frontend
 type CategoryMappingDTO struct {
-	ExternalCategory              string  `json:"external_category"`
-	SuggestedInternalCategoryID   *int    `json:"suggested_internal_category_id"`
-	SuggestedInternalCategoryName string  `json:"suggested_internal_category_name,omitempty"`
-	Confidence                    string  `json:"confidence"` // "high", "medium", "low"
-	Reasoning                     string  `json:"reasoning,omitempty"`
-	IsApproved                    bool    `json:"is_approved"`
-	RequiresNewCategory           bool    `json:"requires_new_category"`
+	ExternalCategory              string `json:"external_category"`
+	SuggestedInternalCategoryID   *int   `json:"suggested_internal_category_id"`
+	SuggestedInternalCategoryName string `json:"suggested_internal_category_name,omitempty"`
+	Confidence                    string `json:"confidence"` // "high", "medium", "low"
+	Reasoning                     string `json:"reasoning,omitempty"`
+	IsApproved                    bool   `json:"is_approved"`
+	RequiresNewCategory           bool   `json:"requires_new_category"`
 }
 
 // QualitySummaryDTO represents mapping quality statistics
 type QualitySummaryDTO struct {
-	HighConfidence       int `json:"high_confidence"`
-	MediumConfidence     int `json:"medium_confidence"`
-	LowConfidence        int `json:"low_confidence"`
-	RequiresNewCategory  int `json:"requires_new_category"`
+	HighConfidence      int `json:"high_confidence"`
+	MediumConfidence    int `json:"medium_confidence"`
+	LowConfidence       int `json:"low_confidence"`
+	RequiresNewCategory int `json:"requires_new_category"`
 }
 
 // AnalyzeCategoriesResponse represents the response with AI category mapping suggestions
 type AnalyzeCategoriesResponse struct {
-	TotalCategories     int                 `json:"total_categories"`
-	Mappings            []CategoryMappingDTO `json:"mappings"`
-	QualitySummary      QualitySummaryDTO   `json:"quality_summary"`
-	UnmappedCategories  []string            `json:"unmapped_categories"`
-	ProcessingTimeMs    int64               `json:"processing_time_ms"`
+	TotalCategories    int                  `json:"total_categories"`
+	Mappings           []CategoryMappingDTO `json:"mappings"`
+	QualitySummary     QualitySummaryDTO    `json:"quality_summary"`
+	UnmappedCategories []string             `json:"unmapped_categories"`
+	ProcessingTimeMs   int64                `json:"processing_time_ms"`
 }
 
 // AnalyzeCategories analyzes categories in import file and provides AI mapping suggestions
@@ -59,10 +59,10 @@ type AnalyzeCategoriesResponse struct {
 // @Param file formData file true "Import file"
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} AnalyzeCategoriesResponse "Category analysis result"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/analyze-categories [post]
 func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
@@ -290,12 +290,12 @@ type AnalyzeAttributesRequest struct {
 // DetectedAttribute represents a detected attribute from import file
 type DetectedAttribute struct {
 	Name              string   `json:"name"`
-	ValueType         string   `json:"value_type"`           // Type of value: string, number, boolean, enum
-	SampleValues      []string `json:"sample_values"`        // Example values
-	Frequency         int      `json:"frequency"`            // How many products have this attribute
-	IsStandard        bool     `json:"is_standard"`          // Is this a standard marketplace attribute
-	SuggestedMapping  string   `json:"suggested_mapping"`    // Suggested mapping to standard attribute
-	IsVariantDefining bool     `json:"is_variant_defining"`  // Could be used for variants (color, size, etc.)
+	ValueType         string   `json:"value_type"`          // Type of value: string, number, boolean, enum
+	SampleValues      []string `json:"sample_values"`       // Example values
+	Frequency         int      `json:"frequency"`           // How many products have this attribute
+	IsStandard        bool     `json:"is_standard"`         // Is this a standard marketplace attribute
+	SuggestedMapping  string   `json:"suggested_mapping"`   // Suggested mapping to standard attribute
+	IsVariantDefining bool     `json:"is_variant_defining"` // Could be used for variants (color, size, etc.)
 }
 
 // detectValueType determines the type of attribute based on sample values
@@ -368,11 +368,11 @@ func isVariantDefiningAttribute(name string) bool {
 
 // AnalyzeAttributesResponse represents the response with detected attributes
 type AnalyzeAttributesResponse struct {
-	Attributes                 []DetectedAttribute `json:"attributes"`
-	TotalAttributes            int                 `json:"total_attributes"`
-	VariantDefiningAttributes  []string            `json:"variant_defining_attributes"`
-	TotalProducts              int                 `json:"total_products"`
-	ProcessingTimeMs           int64               `json:"processing_time_ms"`
+	Attributes                []DetectedAttribute `json:"attributes"`
+	TotalAttributes           int                 `json:"total_attributes"`
+	VariantDefiningAttributes []string            `json:"variant_defining_attributes"`
+	TotalProducts             int                 `json:"total_products"`
+	ProcessingTimeMs          int64               `json:"processing_time_ms"`
 }
 
 // AnalyzeAttributes analyzes attributes in import file
@@ -385,10 +385,10 @@ type AnalyzeAttributesResponse struct {
 // @Param file formData file true "Import file"
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} AnalyzeAttributesResponse "Attribute analysis result"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/analyze-attributes [post]
 func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
@@ -497,9 +497,9 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 
 				// Skip standard fields and category fields
 				if attrName == "category_path" ||
-				   attrName == "kategorija1" ||
-				   attrName == "kategorija2" ||
-				   attrName == "kategorija3" {
+					attrName == "kategorija1" ||
+					attrName == "kategorija2" ||
+					attrName == "kategorija3" {
 					fmt.Printf("[DEBUG]     SKIPPED (category field)\n")
 					continue
 				}
@@ -625,10 +625,10 @@ type DetectVariantsResponse struct {
 // @Param file formData file true "Import file"
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Success 200 {object} DetectVariantsResponse "Variant detection result"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/detect-variants [post]
 func (h *ImportHandler) DetectVariants(c *fiber.Ctx) error {
@@ -754,10 +754,10 @@ type AnalyzeClientCategoriesResponse struct {
 // @Param storefront_id path int true "Storefront ID"
 // @Param request body AnalyzeClientCategoriesRequest true "Analysis request"
 // @Success 200 {object} AnalyzeClientCategoriesResponse "Category analysis"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/analyze-client-categories [post]
 func (h *ImportHandler) AnalyzeClientCategories(c *fiber.Ctx) error {

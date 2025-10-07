@@ -78,6 +78,21 @@ func (m *MockStorage) IsSlugUnique(ctx context.Context, slug string, excludeID i
 	return args.Bool(0), args.Error(1)
 }
 
+// Недостающий метод GetMarketplaceListingsForReindex
+func (m *MockStorage) GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error) {
+	args := m.Called(ctx, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MarketplaceListing), args.Error(1)
+}
+
+// Недостающий метод ResetMarketplaceListingsReindexFlag
+func (m *MockStorage) ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int) error {
+	args := m.Called(ctx, listingIDs)
+	return args.Error(0)
+}
+
 // Все остальные методы интерфейса Storage (заглушки)
 func (m *MockStorage) GetOrCreateGoogleUser(ctx context.Context, user *models.User) (*models.User, error) {
 	return nil, ErrNotImplemented

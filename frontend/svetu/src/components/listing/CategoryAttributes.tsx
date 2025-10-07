@@ -7,9 +7,9 @@ import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 type CategoryAttribute =
-  components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+  components['schemas']['models.CategoryAttribute'];
 type MarketplaceCategory =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.MarketplaceCategory'];
 
 interface AttributeValue {
   attribute_id: number;

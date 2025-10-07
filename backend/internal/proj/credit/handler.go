@@ -67,8 +67,8 @@ type PaymentScheduleItem struct {
 // @Accept json
 // @Produce json
 // @Param request body CreditCalculationRequest true "Credit calculation request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=CreditCalculationResponse} "Credit calculation result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=CreditCalculationResponse} "Credit calculation result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Router /api/v1/credit/calculate [post]
 func (h *Handler) CalculateCredit(c *fiber.Ctx) error {
 	var req CreditCalculationRequest

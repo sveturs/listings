@@ -12,10 +12,8 @@ interface TranslationStatusProps {
   compact?: boolean;
 }
 
-type TranslationStatus =
-  components['schemas']['internal_proj_marketplace_handler.TranslationStatusItem'];
-type FieldStatus =
-  components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus'];
+type TranslationStatus = components['schemas']['handler.TranslationStatusItem'];
+type FieldStatus = components['schemas']['handler.TranslationFieldStatus'];
 
 const LANGUAGES = ['en', 'ru', 'sr'] as const;
 const LANGUAGE_LABELS: Record<string, string> = {

@@ -8,7 +8,7 @@ import MarketplaceOrderCard from './MarketplaceOrderCard';
 import type { components } from '@/types/generated/api';
 
 type StorefrontOrder =
-  components['schemas']['backend_internal_domain_models.StorefrontOrder'];
+  components['schemas']['models.StorefrontOrder'];
 
 interface OrderHistoryProps {
   status?: string;

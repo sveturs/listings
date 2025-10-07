@@ -12,23 +12,23 @@ import type { PaymentMethodType } from '@/types/storefront';
 
 // Типы из сгенерированного API
 type Storefront =
-  components['schemas']['backend_internal_domain_models.Storefront'];
+  components['schemas']['models.Storefront'];
 type StorefrontCreateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
+  components['schemas']['models.StorefrontCreateDTO'];
 type StorefrontUpdateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+  components['schemas']['models.StorefrontUpdateDTO'];
 type StorefrontAnalytics =
-  components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
+  components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
-  components['schemas']['backend_internal_domain_models.StorefrontRatingSummary'];
+  components['schemas']['models.StorefrontRatingSummary'];
 type StorefrontDeliveryOption =
-  components['schemas']['backend_internal_domain_models.StorefrontDeliveryOption'];
+  components['schemas']['models.StorefrontDeliveryOption'];
 type StorefrontPaymentMethod =
-  components['schemas']['backend_internal_domain_models.StorefrontPaymentMethod'];
+  components['schemas']['models.StorefrontPaymentMethod'];
 type StorefrontHours =
-  components['schemas']['backend_internal_domain_models.StorefrontHours'];
+  components['schemas']['models.StorefrontHours'];
 type StorefrontsListResponse =
-  components['schemas']['internal_proj_storefronts_handler.StorefrontsListResponse'];
+  components['schemas']['handler.StorefrontsListResponse'];
 
 // Интерфейсы для фильтров и настроек
 export interface StorefrontFilters {

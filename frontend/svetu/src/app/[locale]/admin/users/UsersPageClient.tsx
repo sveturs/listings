@@ -6,8 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
-type UserProfile =
-  components['schemas']['backend_internal_domain_models.UserProfile'];
+type UserProfile = components['schemas']['models.UserProfile'];
 
 export default function UsersPageClient() {
   const t = useTranslations('admin');

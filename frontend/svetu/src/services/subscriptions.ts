@@ -3,15 +3,15 @@ import type { components } from '@/types/generated/api';
 
 // Type aliases for better readability
 type SubscriptionPlan =
-  components['schemas']['backend_internal_domain_models.SubscriptionPlanDetails'];
+  components['schemas']['models.SubscriptionPlanDetails'];
 type UserSubscription =
-  components['schemas']['backend_internal_domain_models.UserSubscription'];
+  components['schemas']['models.UserSubscription'];
 type UserSubscriptionInfo =
-  components['schemas']['backend_internal_domain_models.UserSubscriptionInfo'];
+  components['schemas']['models.UserSubscriptionInfo'];
 type CheckLimitRequest =
-  components['schemas']['backend_internal_domain_models.CheckLimitRequest'];
+  components['schemas']['models.CheckLimitRequest'];
 type CheckLimitResponse =
-  components['schemas']['backend_internal_domain_models.CheckLimitResponse'];
+  components['schemas']['models.CheckLimitResponse'];
 
 export interface CreateSubscriptionRequest {
   plan_code: string;

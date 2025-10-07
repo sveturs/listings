@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 type StorefrontOrder =
-  components['schemas']['backend_internal_domain_models.StorefrontOrder'];
+  components['schemas']['models.StorefrontOrder'];
 
 interface OrderDetailsProps {
   order: StorefrontOrder;

@@ -44,12 +44,12 @@ func NewImportHandler(
 // @Accept json
 // @Produce json
 // @Param storefront_id path int true "Storefront ID"
-// @Param request body backend_internal_domain_models.ImportRequest true "Import request"
-// @Success 200 {object} backend_internal_domain_models.ImportJob "Import job created"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Param request body models.ImportRequest true "Import request"
+// @Success 200 {object} models.ImportJob "Import job created"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/url [post]
 func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
@@ -133,11 +133,11 @@ func (h *ImportHandler) ImportFromURL(c *fiber.Ctx) error {
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Param update_mode formData string false "Update mode" Enums(create_only,update_only,upsert) default(upsert)
 // @Param category_mapping_mode formData string false "Category mapping mode" Enums(auto,manual,skip) default(auto)
-// @Success 200 {object} backend_internal_domain_models.ImportJob "Import job created"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJob "Import job created"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/file [post]
 func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
@@ -246,11 +246,11 @@ func (h *ImportHandler) ImportFromFile(c *fiber.Ctx) error {
 // @Param storefront_id path int true "Storefront ID"
 // @Param file formData file true "Import file"
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
-// @Success 200 {object} backend_internal_domain_models.ImportJobStatus "Validation result"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJobStatus "Validation result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/validate [post]
 func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
@@ -332,11 +332,11 @@ func (h *ImportHandler) ValidateImportFile(c *fiber.Ctx) error {
 // @Param file formData file true "Import file"
 // @Param file_type formData string true "File type" Enums(xml,csv,zip)
 // @Param preview_limit formData int false "Number of rows to preview" default(10)
-// @Success 200 {object} backend_internal_domain_models.ImportPreviewResponse "Preview result"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportPreviewResponse "Preview result"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/preview [post]
 func (h *ImportHandler) PreviewImportFile(c *fiber.Ctx) error {
@@ -511,11 +511,11 @@ func (h *ImportHandler) GetImportFormats(c *fiber.Ctx) error {
 // @Param status query string false "Filter by status"
 // @Param limit query int false "Limit number of results"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} backend_internal_domain_models.ImportJobsResponse "List of import jobs"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJobsResponse "List of import jobs"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/{storefront_id}/import/jobs [get]
 func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
@@ -570,12 +570,12 @@ func (h *ImportHandler) GetJobs(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param jobId path int true "Job ID"
-// @Success 200 {object} backend_internal_domain_models.ImportJob "Import job details"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Job not found"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJob "Import job details"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/import/jobs/{jobId} [get]
 func (h *ImportHandler) GetJobDetails(c *fiber.Ctx) error {
@@ -605,12 +605,12 @@ func (h *ImportHandler) GetJobDetails(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param jobId path int true "Job ID"
-// @Success 200 {object} backend_internal_domain_models.ImportJobStatus "Import job status"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Job not found"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJobStatus "Import job status"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/import/jobs/{jobId}/status [get]
 func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
@@ -640,12 +640,12 @@ func (h *ImportHandler) GetJobStatus(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param jobId path int true "Job ID"
-// @Success 200 {object} backend_internal_domain_models.SuccessResponse "Job canceled successfully"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Job not found"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.SuccessResponse "Job canceled successfully"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/import/jobs/{jobId}/cancel [post]
 func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
@@ -686,12 +686,12 @@ func (h *ImportHandler) CancelJob(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param jobId path int true "Job ID"
-// @Success 200 {object} backend_internal_domain_models.ImportJob "New import job created"
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse "Bad request"
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse "Unauthorized"
-// @Failure 403 {object} backend_internal_domain_models.ErrorResponse "Forbidden"
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse "Job not found"
-// @Failure 500 {object} backend_internal_domain_models.ErrorResponse "Internal server error"
+// @Success 200 {object} models.ImportJob "New import job created"
+// @Failure 400 {object} models.ErrorResponse "Bad request"
+// @Failure 401 {object} models.ErrorResponse "Unauthorized"
+// @Failure 403 {object} models.ErrorResponse "Forbidden"
+// @Failure 404 {object} models.ErrorResponse "Job not found"
+// @Failure 500 {object} models.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/import/jobs/{jobId}/retry [post]
 func (h *ImportHandler) RetryJob(c *fiber.Ctx) error {

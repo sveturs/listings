@@ -2,11 +2,11 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
 type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+  components['schemas']['models.StorefrontProduct'];
 type UpdateProductRequest =
-  components['schemas']['backend_internal_domain_models.UpdateProductRequest'];
+  components['schemas']['models.UpdateProductRequest'];
 type CreateProductRequest =
-  components['schemas']['backend_internal_domain_models.CreateProductRequest'];
+  components['schemas']['models.CreateProductRequest'];
 
 // Расширенный тип для создания товара с вариантами
 interface CreateProductWithVariantsRequest extends CreateProductRequest {

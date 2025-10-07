@@ -6,12 +6,7 @@ import type {
   ImportJobStatus,
   UploadProgress,
   ImportRequest,
-  CategoryAnalysisResponse,
-  AttributeAnalysisResponse,
-  VariantDetectionResponse,
-  ClientCategoriesResponse,
   CategoryMapping,
-  CategoryProposal,
 } from '@/types/import';
 
 // Initial state
@@ -500,7 +495,10 @@ const importSlice = createSlice({
     },
     setCustomMapping: (
       state,
-      action: PayloadAction<{ externalCategory: string; internalCategoryId: number }>
+      action: PayloadAction<{
+        externalCategory: string;
+        internalCategoryId: number;
+      }>
     ) => {
       state.customMappings[action.payload.externalCategory] =
         action.payload.internalCategoryId;
@@ -708,7 +706,8 @@ const importSlice = createSlice({
       })
       .addCase(analyzeImportFile.rejected, (state, action) => {
         state.isAnalyzing = false;
-        state.analysisError = action.error.message || 'Failed to analyze import file';
+        state.analysisError =
+          action.error.message || 'Failed to analyze import file';
         state.analysisProgress = 0;
       })
 
@@ -723,7 +722,8 @@ const importSlice = createSlice({
       })
       .addCase(analyzeCategories.rejected, (state, action) => {
         state.isAnalyzing = false;
-        state.analysisError = action.error.message || 'Failed to analyze categories';
+        state.analysisError =
+          action.error.message || 'Failed to analyze categories';
       })
 
       // Analyze attributes
@@ -737,7 +737,8 @@ const importSlice = createSlice({
       })
       .addCase(analyzeAttributes.rejected, (state, action) => {
         state.isAnalyzing = false;
-        state.analysisError = action.error.message || 'Failed to analyze attributes';
+        state.analysisError =
+          action.error.message || 'Failed to analyze attributes';
       })
 
       // Detect variants
@@ -751,7 +752,8 @@ const importSlice = createSlice({
       })
       .addCase(detectVariants.rejected, (state, action) => {
         state.isAnalyzing = false;
-        state.analysisError = action.error.message || 'Failed to detect variants';
+        state.analysisError =
+          action.error.message || 'Failed to detect variants';
       })
 
       // Analyze client categories
@@ -780,7 +782,8 @@ const importSlice = createSlice({
       })
       .addCase(fetchCategoryProposals.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Failed to fetch category proposals';
+        state.error =
+          action.error.message || 'Failed to fetch category proposals';
       })
 
       // Approve category proposal

@@ -111,7 +111,7 @@ export interface AttributeGroupItem {
 
 // Use generated PaginatedResponse type
 type PaginatedResponse<T> =
-  components['schemas']['backend_internal_domain_models.PaginatedResponse'] & {
+  components['schemas']['models.PaginatedResponse'] & {
     data: T[];
   };
 
@@ -611,7 +611,7 @@ export const adminApi = {
     entityType: 'category' | 'attribute',
     entityIds?: number[]
   ): Promise<
-    components['schemas']['internal_proj_marketplace_handler.TranslationStatusItem'][]
+    components['schemas']['handler.TranslationStatusItem'][]
   > {
     const params = new URLSearchParams();
     params.append('entity_type', entityType);
@@ -695,7 +695,7 @@ export const adminApi = {
   ): Promise<
     Record<
       string,
-      components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus']
+      components['schemas']['handler.TranslationFieldStatus']
     >
   > {
     const response = await apiClient.put(

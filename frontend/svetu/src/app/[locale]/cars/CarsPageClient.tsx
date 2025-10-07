@@ -28,9 +28,8 @@ import UniversalListingCard, {
 import CarFiltersDrawer from '@/components/cars/CarFiltersDrawer';
 import CarQuickViewModal from '@/components/cars/CarQuickViewModal';
 
-type CarMake = components['schemas']['backend_internal_domain_models.CarMake'];
-type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+type CarMake = components['schemas']['models.CarMake'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarsPageClientProps {
   locale: string;

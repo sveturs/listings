@@ -3,7 +3,7 @@ import { api } from '@/lib/api';
 import { components } from '@/types/generated/api';
 
 type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+  components['schemas']['models.MarketplaceListing'];
 
 interface FavoritesState {
   items: MarketplaceListing[];

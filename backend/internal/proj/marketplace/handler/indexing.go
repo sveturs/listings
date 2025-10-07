@@ -36,10 +36,10 @@ func NewIndexingHandler(services globalService.ServicesInterface) *IndexingHandl
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Reindexing started"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
 // @Security BearerAuth
 // @Router /api/v1/admin/reindex-listings [post]
 func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
@@ -86,10 +86,10 @@ func (h *IndexingHandler) ReindexAll(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing with translations started"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing with translations started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
 // @Security BearerAuth
 // @Router /api/v1/admin/reindex-listings-with-translations [post]
 func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
@@ -179,10 +179,10 @@ func (h *IndexingHandler) ReindexAllWithTranslations(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing started"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
 // @Security BearerAuth
 // @Router /api/v1/admin/reindex-all-listings [post]
 func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
@@ -228,10 +228,10 @@ func (h *IndexingHandler) ReindexAllListings(c *fiber.Ctx) error {
 // @Tags marketplace-admin-indexing
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ReindexStartedResponse} "Rating reindexing started"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.authRequired"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminRequired"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.adminCheckError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ReindexStartedResponse} "Rating reindexing started"
+// @Failure 401 {object} utils.ErrorResponseSwag "marketplace.authRequired"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.adminRequired"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.adminCheckError"
 // @Security BearerAuth
 // @Router /api/v1/admin/reindex-ratings [post]
 func (h *IndexingHandler) ReindexRatings(c *fiber.Ctx) error {

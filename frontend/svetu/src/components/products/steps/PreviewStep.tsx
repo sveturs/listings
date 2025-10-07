@@ -15,7 +15,7 @@ import {
 } from '@/utils/addressUtils';
 
 type CategoryAttribute =
-  components['schemas']['backend_internal_domain_models.CategoryAttribute'];
+  components['schemas']['models.CategoryAttribute'];
 
 interface PreviewStepProps {
   onBack: () => void;

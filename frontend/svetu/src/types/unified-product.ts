@@ -60,7 +60,7 @@ export interface UnifiedProductAttribute {
 
 // Тип для вариантов товара
 export type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+  components['schemas']['models.StorefrontProductVariant'];
 
 // Основной унифицированный тип продукта
 export interface UnifiedProduct {

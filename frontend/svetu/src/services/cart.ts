@@ -2,11 +2,11 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
 type ShoppingCart =
-  components['schemas']['backend_internal_domain_models.ShoppingCart'];
+  components['schemas']['models.ShoppingCart'];
 type AddToCartRequest =
-  components['schemas']['backend_internal_domain_models.AddToCartRequest'];
+  components['schemas']['models.AddToCartRequest'];
 type UpdateCartItemRequest =
-  components['schemas']['backend_internal_domain_models.UpdateCartItemRequest'];
+  components['schemas']['models.UpdateCartItemRequest'];
 
 export const cartService = {
   // Получить все корзины пользователя

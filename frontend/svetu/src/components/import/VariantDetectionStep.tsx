@@ -53,10 +53,7 @@ export default function VariantDetectionStep({
   // Stats
   const stats = {
     totalGroups: variantGroups.length,
-    totalVariants: variantGroups.reduce(
-      (sum, g) => sum + g.variant_count,
-      0
-    ),
+    totalVariants: variantGroups.reduce((sum, g) => sum + g.variant_count, 0),
     approved: approvedGroups.length,
     byConfidence: {
       high: variantGroups.filter((g) => g.confidence === 'high').length,
@@ -227,8 +224,7 @@ export default function VariantDetectionStep({
                       {/* Variant Stats */}
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <span>
-                          <strong>{group.variant_count}</strong>{' '}
-                          {t('variants')}
+                          <strong>{group.variant_count}</strong> {t('variants')}
                         </span>
                         <span>•</span>
                         <span>

@@ -84,7 +84,6 @@ func (r *categoryProposalsRepository) Create(ctx context.Context, proposal *mode
 		proposal.Tags,
 		proposal.Status,
 	).Scan(&proposal.ID, &proposal.CreatedAt, &proposal.UpdatedAt)
-
 	if err != nil {
 		return fmt.Errorf("failed to create category proposal: %w", err)
 	}
@@ -126,7 +125,6 @@ func (r *categoryProposalsRepository) GetByID(ctx context.Context, id int) (*mod
 		&proposal.CreatedAt,
 		&proposal.UpdatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("category proposal not found: %w", err)
@@ -256,7 +254,6 @@ func (r *categoryProposalsRepository) Update(ctx context.Context, proposal *mode
 		proposal.Tags,
 		proposal.ID,
 	).Scan(&proposal.UpdatedAt)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("category proposal not found: %w", err)

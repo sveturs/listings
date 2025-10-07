@@ -47,7 +47,7 @@ import { CarSelectorCompact } from '@/components/cars';
 import configManager from '@/config';
 
 type MarketplaceCategory =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.MarketplaceCategory'];
 
 interface AttributeValue {
   attribute_id: number;

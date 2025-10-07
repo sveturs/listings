@@ -43,9 +43,9 @@ func NewBalanceHandler(balanceService balance.BalanceServiceInterface, paymentSe
 // @Tags balance
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.UserBalance} "User balance information"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "balance.getError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserBalance} "User balance information"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getError"
 // @Security BearerAuth
 // @Router /api/v1/balance [get]
 func (h *BalanceHandler) GetBalance(c *fiber.Ctx) error {
@@ -86,10 +86,10 @@ type DepositRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body DepositRequest true "Deposit details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.PaymentSession} "Payment session created"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "balance.invalidRequest"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "balance.createDepositError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.PaymentSession} "Payment session created"
+// @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.createDepositError"
 // @Security BearerAuth
 // @Router /api/v1/balance/deposit [post]
 func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
@@ -132,9 +132,9 @@ func (h *BalanceHandler) CreateDeposit(c *fiber.Ctx) error {
 // @Produce json
 // @Param limit query int false "Limit" default(20)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.BalanceTransaction} "List of transactions"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "balance.getTransactionsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.BalanceTransaction} "List of transactions"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getTransactionsError"
 // @Security BearerAuth
 // @Router /api/v1/balance/transactions [get]
 func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
@@ -169,8 +169,8 @@ func (h *BalanceHandler) GetTransactions(c *fiber.Ctx) error {
 // @Tags balance
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.PaymentMethod} "List of payment methods"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "balance.getPaymentMethodsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.PaymentMethod} "List of payment methods"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.getPaymentMethodsError"
 // @Router /api/v1/balance/payment-methods [get]
 func (h *BalanceHandler) GetPaymentMethods(c *fiber.Ctx) error {
 	methods, err := h.balanceService.GetPaymentMethods(c.Context())
@@ -194,10 +194,10 @@ type CompleteMockPaymentRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body CompleteMockPaymentRequest true "Payment session ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=object} "Payment completed successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "balance.invalidRequest"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "balance.completeMockPaymentError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=object} "Payment completed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "balance.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "balance.completeMockPaymentError"
 // @Security BearerAuth
 // @Router /api/v1/balance/mock/complete [post]
 func (h *BalanceHandler) CompleteMockPayment(c *fiber.Ctx) error {

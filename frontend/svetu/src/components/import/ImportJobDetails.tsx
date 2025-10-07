@@ -21,7 +21,12 @@ export default function ImportJobDetails() {
 
   useEffect(() => {
     if (isJobDetailsModalOpen && currentJob) {
-      dispatch(fetchJobDetails({ storefrontId: currentJob.storefront_id, jobId: currentJob.id }));
+      dispatch(
+        fetchJobDetails({
+          storefrontId: currentJob.storefront_id,
+          jobId: currentJob.id,
+        })
+      );
     }
   }, [isJobDetailsModalOpen, currentJob, dispatch]);
 
@@ -35,14 +40,24 @@ export default function ImportJobDetails() {
 
   const handleCancelJob = async () => {
     if (currentJob && confirm(t('actions.confirmCancel'))) {
-      await dispatch(cancelImportJob({ storefrontId: currentJob.storefront_id, jobId: currentJob.id }));
+      await dispatch(
+        cancelImportJob({
+          storefrontId: currentJob.storefront_id,
+          jobId: currentJob.id,
+        })
+      );
       handleClose();
     }
   };
 
   const handleRetryJob = async () => {
     if (currentJob) {
-      await dispatch(retryImportJob({ storefrontId: currentJob.storefront_id, jobId: currentJob.id }));
+      await dispatch(
+        retryImportJob({
+          storefrontId: currentJob.storefront_id,
+          jobId: currentJob.id,
+        })
+      );
       handleClose();
     }
   };
@@ -213,7 +228,9 @@ export default function ImportJobDetails() {
                 }`}
               >
                 {getStatusIcon(currentJob.status)}
-                <span className="ml-2">{t(`jobs.status.${currentJob.status}`)}</span>
+                <span className="ml-2">
+                  {t(`jobs.status.${currentJob.status}`)}
+                </span>
               </span>
 
               {currentJob.status === 'processing' && (

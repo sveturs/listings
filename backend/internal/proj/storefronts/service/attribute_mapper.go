@@ -43,13 +43,13 @@ type AttributeTemplate struct {
 
 // MappedAttribute результат маппинга
 type MappedAttribute struct {
-	AttributeID   int         `json:"attribute_id"`
-	Code          string      `json:"code"`
-	Name          string      `json:"name"`
-	Value         interface{} `json:"value"`
-	Confidence    float64     `json:"confidence"`     // 0.0-1.0
-	IsNewAttribute bool       `json:"is_new_attribute"` // true если атрибут не найден и нужно создать
-	SuggestedCode string      `json:"suggested_code"`   // предлагаемый code для нового атрибута
+	AttributeID    int         `json:"attribute_id"`
+	Code           string      `json:"code"`
+	Name           string      `json:"name"`
+	Value          interface{} `json:"value"`
+	Confidence     float64     `json:"confidence"`       // 0.0-1.0
+	IsNewAttribute bool        `json:"is_new_attribute"` // true если атрибут не найден и нужно создать
+	SuggestedCode  string      `json:"suggested_code"`   // предлагаемый code для нового атрибута
 }
 
 // AttributeMappingRequest запрос на маппинг атрибута

@@ -24,9 +24,9 @@ const SmartAttributeFilters = lazy(
 );
 
 type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+  components['schemas']['models.UnifiedAttribute'];
 type Category =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.MarketplaceCategory'];
 
 interface SearchPageWithAttributesProps {
   initialData: {

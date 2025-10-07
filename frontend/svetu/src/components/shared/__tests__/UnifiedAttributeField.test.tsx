@@ -11,9 +11,9 @@ jest.mock('next-intl', () => ({
 }));
 
 type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+  components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 describe('UnifiedAttributeField', () => {
   const mockOnChange = jest.fn();

@@ -16,9 +16,7 @@ interface CategoryMappingStepProps {
   isLoading?: boolean;
 }
 
-const getConfidenceBadgeColor = (
-  confidence: MappingConfidence
-): string => {
+const getConfidenceBadgeColor = (confidence: MappingConfidence): string => {
   switch (confidence) {
     case 'high':
       return 'bg-green-100 text-green-800 border-green-200';
@@ -239,7 +237,9 @@ export default function CategoryMappingStep({
                                 : ''
                             }`}
                           >
-                            {cat.parent ? `${cat.parent} > ${cat.name}` : cat.name}
+                            {cat.parent
+                              ? `${cat.parent} > ${cat.name}`
+                              : cat.name}
                           </button>
                         </li>
                       ))}
@@ -342,9 +342,7 @@ export default function CategoryMappingStep({
             <div className="text-2xl font-bold text-gray-600">
               {groupedMappings.unmapped.length}
             </div>
-            <div className="text-sm text-gray-600">
-              {t('summary.unmapped')}
-            </div>
+            <div className="text-sm text-gray-600">{t('summary.unmapped')}</div>
           </div>
         </div>
       </div>

@@ -18,9 +18,9 @@ import (
 // @Tags admin-management
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.AdminUser} "List of administrators"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.fetch_failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.AdminUser} "List of administrators"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.fetch_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins [get]
 func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
@@ -47,11 +47,11 @@ func (h *UserHandler) GetAllAdmins(c *fiber.Ctx) error {
 // @Tags admin-management
 // @Accept json
 // @Produce json
-// @Param admin body backend_internal_domain_models.AdminUser true "Administrator data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.AdminUser} "Created administrator"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.invalid_format or admin.admins.error.email_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.add_failed"
+// @Param admin body models.AdminUser true "Administrator data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.AdminUser} "Created administrator"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.invalid_format or admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.add_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins [post]
 func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
@@ -93,10 +93,10 @@ func (h *UserHandler) AddAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "Administrator email"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminMessageResponse} "Administrator removed"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.email_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.remove_failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminMessageResponse} "Administrator removed"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.remove_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins/{email} [delete]
 func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
@@ -133,10 +133,10 @@ func (h *UserHandler) RemoveAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.email_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.check_failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "admin.admins.error.unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
 // @Security BearerAuth
 // @Router /api/v1/admin/admins/check/{email} [get]
 func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
@@ -174,9 +174,9 @@ func (h *UserHandler) IsAdmin(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.email_required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "admin.admins.error.check_failed"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminAdminsResponse} "Admin status"
+// @Failure 400 {object} utils.ErrorResponseSwag "admin.admins.error.email_required"
+// @Failure 500 {object} utils.ErrorResponseSwag "admin.admins.error.check_failed"
 // @Router /api/v1/admin-check/{email} [get]
 func (h *UserHandler) IsAdminPublic(c *fiber.Ctx) error {
 	ctx := context.Background()

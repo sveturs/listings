@@ -54,10 +54,10 @@ type CategoryProposal struct {
 	NameTranslations       NameTranslations       `json:"name_translations" db:"name_translations"`
 	ParentCategoryID       *int                   `json:"parent_category_id,omitempty" db:"parent_category_id"`
 	Description            *string                `json:"description,omitempty" db:"description"`
-	Reasoning              *string                `json:"reasoning,omitempty" db:"reasoning"`              // AI reasoning
-	ExpectedProducts       int                    `json:"expected_products" db:"expected_products"`        // Number of products that would use this
+	Reasoning              *string                `json:"reasoning,omitempty" db:"reasoning"`                               // AI reasoning
+	ExpectedProducts       int                    `json:"expected_products" db:"expected_products"`                         // Number of products that would use this
 	ExternalCategorySource *string                `json:"external_category_source,omitempty" db:"external_category_source"` // Original external category
-	SimilarCategories      []int                  `json:"similar_categories,omitempty" db:"similar_categories"` // Related category IDs
+	SimilarCategories      []int                  `json:"similar_categories,omitempty" db:"similar_categories"`             // Related category IDs
 	Tags                   []string               `json:"tags,omitempty" db:"tags"`
 	Status                 CategoryProposalStatus `json:"status" db:"status"`
 	ReviewedByUserID       *int                   `json:"reviewed_by_user_id,omitempty" db:"reviewed_by_user_id"`

@@ -17,9 +17,9 @@ import { useSwipeNavigation } from '@/hooks/useTouchGestures';
 import type { components } from '@/types/generated/api';
 
 type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+  components['schemas']['models.UnifiedAttribute'];
 type _AttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 interface MobileAttributeSelectorProps {
   attributes: UnifiedAttribute[];

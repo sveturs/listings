@@ -21,7 +21,7 @@ import (
 // @Param category query string false "Category filter"
 // @Param item_id query int false "Current item ID (for similar recommendations)"
 // @Param limit query int false "Number of results" default(10)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Recommendations"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Recommendations"
 // @Router /api/v1/marketplace/recommendations [get]
 func (h *MarketplaceHandler) GetPublicRecommendations(c *fiber.Ctx) error {
 	recType := c.Query("type", "trending")

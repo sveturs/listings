@@ -28,8 +28,8 @@ import (
 // @Param max_price query number false "Maximum price filter"
 // @Param attributes query string false "JSON object with attribute filters"
 // @Success 200 {object} MapBoundsResponse "Listings within bounds"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidBounds"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.mapError"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/bounds [get]
 func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 	// Получаем параметры bounds
@@ -131,8 +131,8 @@ func (h *MarketplaceHandler) GetListingsInBounds(c *fiber.Ctx) error {
 // @Param max_price query number false "Maximum price filter"
 // @Param attributes query string false "JSON object with attribute filters"
 // @Success 200 {object} MapClustersResponse "Map clusters or markers data"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidBounds"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.mapError"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidBounds"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.mapError"
 // @Router /api/v1/marketplace/map/clusters [get]
 func (h *MarketplaceHandler) GetMapClusters(c *fiber.Ctx) error {
 	// Получаем параметры bounds

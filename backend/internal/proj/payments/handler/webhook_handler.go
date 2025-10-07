@@ -36,9 +36,9 @@ func NewWebhookHandler(service *service.AllSecureService, webhookSecret string, 
 // @Produce json
 // @Param X-Signature header string true "Webhook signature"
 // @Param payload body object true "Webhook payload"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Webhook processed successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid signature or payload"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Webhook processed successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid signature or payload"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /webhooks/allsecure [post]
 func (h *WebhookHandler) HandleAllSecureWebhook(c *fiber.Ctx) error {
 	// Получаем подпись из заголовка

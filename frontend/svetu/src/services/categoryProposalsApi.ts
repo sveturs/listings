@@ -83,7 +83,10 @@ export class CategoryProposalsApi {
     id: number,
     request: UpdateCategoryProposalRequest
   ): Promise<CategoryProposal> {
-    const response = await apiClient.put(`/admin/category-proposals/${id}`, request);
+    const response = await apiClient.put(
+      `/admin/category-proposals/${id}`,
+      request
+    );
     return response.data;
   }
 

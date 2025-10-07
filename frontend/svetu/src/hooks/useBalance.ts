@@ -4,9 +4,9 @@ import { toast } from 'react-hot-toast';
 import type { components } from '@/types/generated/api';
 
 type UserBalance =
-  components['schemas']['backend_internal_domain_models.UserBalance'];
+  components['schemas']['models.UserBalance'];
 type Transaction =
-  components['schemas']['backend_internal_domain_models.BalanceTransaction'];
+  components['schemas']['models.BalanceTransaction'];
 
 interface UseBalanceReturn {
   balance: UserBalance | null;

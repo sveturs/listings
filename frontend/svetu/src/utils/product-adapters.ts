@@ -8,7 +8,7 @@ import type {
 import configManager from '@/config';
 
 type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+  components['schemas']['models.StorefrontProduct'];
 
 /**
  * Конвертирует изображения маркетплейса в унифицированный формат

@@ -18,78 +18,103 @@ type mockStorageForAttributeMapper struct{}
 func (m *mockStorageForAttributeMapper) GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) CreateProductVariant(ctx context.Context, variant *models.CreateProductVariantRequest) (*models.StorefrontProductVariant, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BatchCreateProductVariants(ctx context.Context, variants []*models.CreateProductVariantRequest) ([]*models.StorefrontProductVariant, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) CreateProductVariantImage(ctx context.Context, image *models.CreateProductVariantImageRequest) (*models.StorefrontProductVariantImage, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BatchCreateProductVariantImages(ctx context.Context, images []*models.CreateProductVariantImageRequest) ([]*models.StorefrontProductVariantImage, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) IncrementProductViews(ctx context.Context, productID int) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) BulkCreateProducts(ctx context.Context, storefrontID int, products []models.CreateProductRequest) ([]int, []error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BulkUpdateProducts(ctx context.Context, storefrontID int, updates []models.BulkUpdateItem) ([]int, []error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BulkDeleteProducts(ctx context.Context, storefrontID int, productIDs []int) ([]int, []error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) BulkUpdateStatus(ctx context.Context, storefrontID int, productIDs []int, isActive bool) ([]int, []error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) SaveTranslation(ctx context.Context, translation *models.Translation) error {
 	return nil
 }
+
 func (m *mockStorageForAttributeMapper) BeginTx(ctx context.Context) (Transaction, error) {
 	return nil, nil
 }
+
 func (m *mockStorageForAttributeMapper) CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	return nil, nil
 }

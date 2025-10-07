@@ -31,10 +31,10 @@ func NewCategoryProposalHandler(proposalService *service.CategoryProposalService
 // @Tags admin,categories,proposals
 // @Accept json
 // @Produce json
-// @Param request body backend_internal_domain_models.CreateCategoryProposalRequest true "Proposal data"
-// @Success 201 {object} backend_internal_domain_models.CategoryProposal
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Param request body models.CreateCategoryProposalRequest true "Proposal data"
+// @Success 201 {object} models.CategoryProposal
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals [post]
 func (h *CategoryProposalHandler) CreateProposal(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
@@ -62,9 +62,9 @@ func (h *CategoryProposalHandler) CreateProposal(c *fiber.Ctx) error {
 // @Tags admin,categories,proposals
 // @Produce json
 // @Param id path int true "Proposal ID"
-// @Success 200 {object} backend_internal_domain_models.CategoryProposal
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Success 200 {object} models.CategoryProposal
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/{id} [get]
 func (h *CategoryProposalHandler) GetProposal(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -90,9 +90,9 @@ func (h *CategoryProposalHandler) GetProposal(c *fiber.Ctx) error {
 // @Param storefront_id query int false "Filter by storefront ID"
 // @Param page query int false "Page number (default: 1)"
 // @Param page_size query int false "Page size (default: 20, max: 100)"
-// @Success 200 {object} backend_internal_domain_models.CategoryProposalListResponse
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Success 200 {object} models.CategoryProposalListResponse
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals [get]
 func (h *CategoryProposalHandler) ListProposals(c *fiber.Ctx) error {
 	// Parse filters
@@ -150,11 +150,11 @@ func (h *CategoryProposalHandler) ListProposals(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Proposal ID"
-// @Param request body backend_internal_domain_models.UpdateCategoryProposalRequest true "Update data"
-// @Success 200 {object} backend_internal_domain_models.CategoryProposal
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Param request body models.UpdateCategoryProposalRequest true "Update data"
+// @Success 200 {object} models.CategoryProposal
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/{id} [put]
 func (h *CategoryProposalHandler) UpdateProposal(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -183,11 +183,11 @@ func (h *CategoryProposalHandler) UpdateProposal(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Proposal ID"
-// @Param request body backend_internal_domain_models.CategoryProposalApproveRequest true "Approve options"
-// @Success 200 {object} object{proposal=backend_internal_domain_models.CategoryProposal,category=backend_internal_domain_models.Category}
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Param request body models.CategoryProposalApproveRequest true "Approve options"
+// @Success 200 {object} utils.SuccessResponseSwag
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/{id}/approve [post]
 func (h *CategoryProposalHandler) ApproveProposal(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
@@ -224,11 +224,11 @@ func (h *CategoryProposalHandler) ApproveProposal(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Proposal ID"
-// @Param request body backend_internal_domain_models.CategoryProposalRejectRequest true "Reject reason"
-// @Success 200 {object} backend_internal_domain_models.CategoryProposal
-// @Failure 400 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Param request body models.CategoryProposalRejectRequest true "Reject reason"
+// @Success 200 {object} models.CategoryProposal
+// @Failure 400 {object} models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/{id}/reject [post]
 func (h *CategoryProposalHandler) RejectProposal(c *fiber.Ctx) error {
 	userID, ok := authMiddleware.GetUserID(c)
@@ -262,8 +262,8 @@ func (h *CategoryProposalHandler) RejectProposal(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Proposal ID"
 // @Success 204 "No content"
-// @Failure 404 {object} backend_internal_domain_models.ErrorResponse
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Failure 404 {object} models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/{id} [delete]
 func (h *CategoryProposalHandler) DeleteProposal(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
@@ -287,7 +287,7 @@ func (h *CategoryProposalHandler) DeleteProposal(c *fiber.Ctx) error {
 // @Produce json
 // @Param storefront_id query int false "Filter by storefront ID"
 // @Success 200 {object} object{count=int}
-// @Failure 401 {object} backend_internal_domain_models.ErrorResponse
+// @Failure 401 {object} models.ErrorResponse
 // @Router /api/v1/admin/category-proposals/pending/count [get]
 func (h *CategoryProposalHandler) GetPendingCount(c *fiber.Ctx) error {
 	var storefrontID *int

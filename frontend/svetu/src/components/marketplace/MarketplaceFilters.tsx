@@ -11,7 +11,7 @@ interface MarketplaceFiltersProps {
 }
 
 type Category =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.MarketplaceCategory'];
 
 export function MarketplaceFilters({
   onFilterChange,

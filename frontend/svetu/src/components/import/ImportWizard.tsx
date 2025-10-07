@@ -239,7 +239,9 @@ export default function ImportWizard({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-semibold text-gray-900">{t('title')}</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {t('title')}
+            </h2>
             {/* Import Mode Toggle */}
             <div className="flex items-center space-x-2 text-sm">
               <button

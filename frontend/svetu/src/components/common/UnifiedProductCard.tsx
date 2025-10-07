@@ -99,7 +99,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   // Проверяем, является ли это автомобильная категория
   if (isAutomotiveCategory(product.category?.id)) {
     // Конвертируем UnifiedProduct обратно в формат MarketplaceListing для CarListingCard
-    const listing: components['schemas']['backend_internal_domain_models.MarketplaceListing'] =
+    const listing: components['schemas']['models.MarketplaceListing'] =
       {
         id: product.id,
         user_id: product.seller?.id || 0,
@@ -276,7 +276,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
         productId: product.id,
         variantId: variant?.id,
         name: product.name,
-        variantName: variant?.name,
+        variantName: variant?.sku,
         price: variant?.price || minPrice,
         quantity,
         storefrontId: product.storefront.id,

@@ -11,7 +11,7 @@ import { DesktopFilters } from './DesktopFilters';
 import { renderCategoryIcon } from '@/utils/iconMapper';
 
 type MarketplaceCategory =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.MarketplaceCategory'];
 
 interface CategoryTreeNode extends MarketplaceCategory {
   children: CategoryTreeNode[];

@@ -2,11 +2,11 @@ import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
 type StorefrontOrder =
-  components['schemas']['backend_internal_domain_models.StorefrontOrder'];
+  components['schemas']['models.StorefrontOrder'];
 type CreateOrderRequest =
-  components['schemas']['backend_internal_domain_models.CreateOrderRequest'];
+  components['schemas']['models.CreateOrderRequest'];
 type CancelOrderRequest =
-  components['schemas']['backend_internal_domain_models.CancelOrderRequest'];
+  components['schemas']['models.CancelOrderRequest'];
 
 export const ordersService = {
   // Создать заказ

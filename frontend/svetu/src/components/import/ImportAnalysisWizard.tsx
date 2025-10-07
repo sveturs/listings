@@ -19,7 +19,6 @@ import {
 import CategoryMappingStep from './CategoryMappingStep';
 import AttributeMappingStep from './AttributeMappingStep';
 import VariantDetectionStep from './VariantDetectionStep';
-import type { CategoryMapping } from '@/types/import';
 import { CategoryService, type Category } from '@/services/category';
 
 interface ImportAnalysisWizardProps {
@@ -39,20 +38,18 @@ const WIZARD_STEPS = [
   'summary', // Step 5: Summary and confirm
 ] as const;
 
-type WizardStep = (typeof WIZARD_STEPS)[number];
-
 export default function ImportAnalysisWizard({
   storefrontId,
-  storefrontSlug,
+  storefrontSlug: _storefrontSlug,
   onClose,
-  onSuccess,
+  onSuccess: _onSuccess,
   onSwitchToClassic,
 }: ImportAnalysisWizardProps) {
   const t = useTranslations('storefronts.import.wizard');
   const dispatch = useAppDispatch();
 
   const {
-    analysisFile,
+    analysisFile: _analysisFile,
     analysisFileType,
     categoryAnalysis,
     attributeAnalysis,
@@ -60,7 +57,7 @@ export default function ImportAnalysisWizard({
     isAnalyzing,
     analysisError,
     analysisProgress,
-    currentAnalysisStep,
+    currentAnalysisStep: _currentAnalysisStep,
     approvedMappings,
     customMappings,
     selectedAttributes,
@@ -492,25 +489,32 @@ export default function ImportAnalysisWizard({
             )}
 
             {/* Category Mapping Component */}
-            {!categoriesLoading && !categoriesError && categoryAnalysis?.mappings && categoryAnalysis.mappings.length > 0 && (
-              <CategoryMappingStep
-                mappings={categoryAnalysis.mappings}
-                onMappingChange={handleCategoryMappingChange}
-                onApproveMapping={handleApproveMapping}
-                onRequestNewCategory={handleRequestNewCategory}
-                availableCategories={availableCategories}
-                isLoading={isAnalyzing}
-              />
-            )}
+            {!categoriesLoading &&
+              !categoriesError &&
+              categoryAnalysis?.mappings &&
+              categoryAnalysis.mappings.length > 0 && (
+                <CategoryMappingStep
+                  mappings={categoryAnalysis.mappings}
+                  onMappingChange={handleCategoryMappingChange}
+                  onApproveMapping={handleApproveMapping}
+                  onRequestNewCategory={handleRequestNewCategory}
+                  availableCategories={availableCategories}
+                  isLoading={isAnalyzing}
+                />
+              )}
 
             {/* No mappings found */}
-            {!categoriesLoading && !categoriesError && categoryAnalysis && (!categoryAnalysis.mappings || categoryAnalysis.mappings.length === 0) && (
-              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                <p className="text-yellow-800">
-                  {t('categories.noMappingsFound')}
-                </p>
-              </div>
-            )}
+            {!categoriesLoading &&
+              !categoriesError &&
+              categoryAnalysis &&
+              (!categoryAnalysis.mappings ||
+                categoryAnalysis.mappings.length === 0) && (
+                <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                  <p className="text-yellow-800">
+                    {t('categories.noMappingsFound')}
+                  </p>
+                </div>
+              )}
 
             <div className="flex justify-between gap-4 mt-8">
               <button
@@ -541,35 +545,37 @@ export default function ImportAnalysisWizard({
               </p>
             </div>
 
-            {attributeAnalysis && attributeAnalysis.attributes && attributeAnalysis.attributes.length > 0 && (
-              <AttributeMappingStep
-                attributes={attributeAnalysis.attributes}
-                selectedAttributes={selectedAttributes}
-                onToggleAttribute={handleAttributeToggle}
-                onSelectAll={() => {
-                  dispatch(
-                    setSelectedAttributes(
-                      (attributeAnalysis?.attributes || []).map(
-                        (a) => a.name
+            {attributeAnalysis &&
+              attributeAnalysis.attributes &&
+              attributeAnalysis.attributes.length > 0 && (
+                <AttributeMappingStep
+                  attributes={attributeAnalysis.attributes}
+                  selectedAttributes={selectedAttributes}
+                  onToggleAttribute={handleAttributeToggle}
+                  onSelectAll={() => {
+                    dispatch(
+                      setSelectedAttributes(
+                        (attributeAnalysis?.attributes || []).map((a) => a.name)
                       )
-                    )
-                  );
-                }}
-                onDeselectAll={() => {
-                  dispatch(setSelectedAttributes([]));
-                }}
-                isLoading={isAnalyzing}
-              />
-            )}
+                    );
+                  }}
+                  onDeselectAll={() => {
+                    dispatch(setSelectedAttributes([]));
+                  }}
+                  isLoading={isAnalyzing}
+                />
+              )}
 
             {/* No attributes found */}
-            {attributeAnalysis && (!attributeAnalysis.attributes || attributeAnalysis.attributes.length === 0) && (
-              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                <p className="text-yellow-800">
-                  No attributes detected in the import file.
-                </p>
-              </div>
-            )}
+            {attributeAnalysis &&
+              (!attributeAnalysis.attributes ||
+                attributeAnalysis.attributes.length === 0) && (
+                <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                  <p className="text-yellow-800">
+                    No attributes detected in the import file.
+                  </p>
+                </div>
+              )}
 
             <div className="flex justify-between gap-4 mt-8">
               <button
@@ -833,7 +839,7 @@ export default function ImportAnalysisWizard({
           ))}
         </div>
         <div className="flex items-center justify-between mt-2">
-          {WIZARD_STEPS.map((step, index) => (
+          {WIZARD_STEPS.map((step, _index) => (
             <div
               key={step}
               className="text-xs text-gray-600"

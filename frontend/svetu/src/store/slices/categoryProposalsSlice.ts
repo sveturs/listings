@@ -3,11 +3,9 @@ import { CategoryProposalsApi } from '@/services/categoryProposalsApi';
 import type {
   CategoryProposal,
   CategoryProposalStatus,
-  CategoryProposalListResponse,
   CategoryProposalFilter,
   CategoryProposalApproveRequest,
   CategoryProposalRejectRequest,
-  CategoryProposalApproveResponse,
 } from '@/types/categoryProposals';
 
 interface CategoryProposalsState {
@@ -84,14 +82,20 @@ export const fetchCategoryProposal = createAsyncThunk(
 export const approveCategoryProposal = createAsyncThunk(
   'categoryProposals/approve',
   async (params: { id: number; request: CategoryProposalApproveRequest }) => {
-    return await CategoryProposalsApi.approveProposal(params.id, params.request);
+    return await CategoryProposalsApi.approveProposal(
+      params.id,
+      params.request
+    );
   }
 );
 
 export const rejectCategoryProposal = createAsyncThunk(
   'categoryProposals/reject',
   async (params: { id: number; request: CategoryProposalRejectRequest }) => {
-    return await CategoryProposalsApi.rejectProposal(params.id, params.request.reason);
+    return await CategoryProposalsApi.rejectProposal(
+      params.id,
+      params.request.reason
+    );
   }
 );
 
@@ -107,7 +111,10 @@ const categoryProposalsSlice = createSlice({
   name: 'categoryProposals',
   initialState,
   reducers: {
-    setStatusFilter: (state, action: PayloadAction<CategoryProposalStatus | 'all'>) => {
+    setStatusFilter: (
+      state,
+      action: PayloadAction<CategoryProposalStatus | 'all'>
+    ) => {
       state.statusFilter = action.payload;
       state.page = 1; // Reset page when filter changes
     },
@@ -191,7 +198,9 @@ const categoryProposalsSlice = createSlice({
       state.selectedProposalId = null;
 
       // Update proposal in list
-      const index = state.proposals.findIndex(p => p.id === action.payload.proposal.id);
+      const index = state.proposals.findIndex(
+        (p) => p.id === action.payload.proposal.id
+      );
       if (index !== -1) {
         state.proposals[index] = action.payload.proposal;
       }
@@ -202,7 +211,10 @@ const categoryProposalsSlice = createSlice({
       }
 
       // Decrement pending count if status changed to approved
-      if (action.payload.proposal.status === 'approved' && state.pendingCount > 0) {
+      if (
+        action.payload.proposal.status === 'approved' &&
+        state.pendingCount > 0
+      ) {
         state.pendingCount--;
       }
     });
@@ -222,7 +234,9 @@ const categoryProposalsSlice = createSlice({
       state.selectedProposalId = null;
 
       // Update proposal in list
-      const index = state.proposals.findIndex(p => p.id === action.payload.id);
+      const index = state.proposals.findIndex(
+        (p) => p.id === action.payload.id
+      );
       if (index !== -1) {
         state.proposals[index] = action.payload;
       }
@@ -251,7 +265,7 @@ const categoryProposalsSlice = createSlice({
       state.isDeleting = false;
 
       // Remove from list
-      state.proposals = state.proposals.filter(p => p.id !== action.payload);
+      state.proposals = state.proposals.filter((p) => p.id !== action.payload);
       state.total--;
 
       // Clear current if it was deleted
@@ -260,7 +274,9 @@ const categoryProposalsSlice = createSlice({
       }
 
       // Decrement pending count if it was a pending proposal
-      const deletedProposal = state.proposals.find(p => p.id === action.payload);
+      const deletedProposal = state.proposals.find(
+        (p) => p.id === action.payload
+      );
       if (deletedProposal?.status === 'pending' && state.pendingCount > 0) {
         state.pendingCount--;
       }

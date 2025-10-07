@@ -51,10 +51,10 @@ func (h *VINHandler) RegisterRoutes(app *fiber.App) {
 // @Tags vin
 // @Accept json
 // @Produce json
-// @Param request body backend_internal_proj_vin_models.VINDecodeRequest true "VIN для декодирования"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Успешное декодирование"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Param request body models.VINDecodeRequest true "VIN для декодирования"
+// @Success 200 {object} utils.SuccessResponseSwag "Успешное декодирование"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/vin/decode [post]
 func (h *VINHandler) DecodeVIN(c *fiber.Ctx) error {
 	var req models.VINDecodeRequest
@@ -95,8 +95,8 @@ func (h *VINHandler) DecodeVIN(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param vin path string true "VIN номер для проверки"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "VIN валиден"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "VIN невалиден"
+// @Success 200 {object} utils.SuccessResponseSwag "VIN валиден"
+// @Failure 400 {object} utils.ErrorResponseSwag "VIN невалиден"
 // @Router /api/v1/vin/validate/{vin} [get]
 func (h *VINHandler) ValidateVIN(c *fiber.Ctx) error {
 	vin := strings.ToUpper(strings.TrimSpace(c.Params("vin")))
@@ -134,9 +134,9 @@ func (h *VINHandler) ValidateVIN(c *fiber.Ctx) error {
 // @Param vin query string false "Фильтр по конкретному VIN"
 // @Param limit query int false "Лимит записей" default(20)
 // @Param offset query int false "Смещение" default(0)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "История проверок"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "История проверок"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/vin/history [get]
 func (h *VINHandler) GetHistory(c *fiber.Ctx) error {
 	// Получаем user ID из контекста
@@ -174,10 +174,10 @@ func (h *VINHandler) GetHistory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body map[string]string true "VIN номер"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Данные для автозаполнения"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Данные для автозаполнения"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/vin/auto-fill [post]
 func (h *VINHandler) AutoFillFromVIN(c *fiber.Ctx) error {
 	// Получаем user ID из контекста
@@ -222,9 +222,9 @@ func (h *VINHandler) AutoFillFromVIN(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Статистика"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Статистика"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/vin/stats [get]
 func (h *VINHandler) GetStats(c *fiber.Ctx) error {
 	// Получаем user ID из контекста
@@ -255,9 +255,9 @@ func (h *VINHandler) GetStats(c *fiber.Ctx) error {
 // @Produce json
 // @Param vin path string true "VIN номер"
 // @Success 200 {object} map[string]interface{} "Отчет о VIN"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный VIN"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Не авторизован"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный VIN"
+// @Failure 401 {object} utils.ErrorResponseSwag "Не авторизован"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Router /api/v1/vin/report/{vin} [get]
 func (h *VINHandler) ExportReport(c *fiber.Ctx) error {
 	// Получаем user ID из контекста

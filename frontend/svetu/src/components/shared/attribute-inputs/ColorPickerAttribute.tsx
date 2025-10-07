@@ -10,7 +10,7 @@ import {
 import type { components } from '@/types/generated/api';
 
 type UnifiedAttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 interface ColorPickerAttributeProps {
   attributeId: number;

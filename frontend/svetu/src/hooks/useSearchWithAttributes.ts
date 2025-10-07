@@ -4,9 +4,9 @@ import { debounce } from 'lodash';
 import type { components } from '@/types/generated/api';
 
 type _UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+  components['schemas']['models.UnifiedAttribute'];
 type _AttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 interface SearchFilters {
   query?: string;

@@ -46,8 +46,7 @@ export default function AttributeMappingStep({
     const matchesSearch =
       searchQuery === '' ||
       attr.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType =
-      filterType === 'all' || attr.value_type === filterType;
+    const matchesType = filterType === 'all' || attr.value_type === filterType;
     const matchesVariantFilter =
       !showVariantDefiningOnly || attr.is_variant_defining;
 
@@ -250,7 +249,9 @@ export default function AttributeMappingStep({
                         {t('sampleValues')}:{' '}
                         <span className="italic">
                           {attr.sample_values?.slice(0, 3).join(', ') || 'N/A'}
-                          {attr.sample_values && attr.sample_values.length > 3 && '...'}
+                          {attr.sample_values &&
+                            attr.sample_values.length > 3 &&
+                            '...'}
                         </span>
                       </span>
                     </div>

@@ -7,7 +7,7 @@ import VariantSelector from '@/components/Storefront/ProductVariants/VariantSele
 import type { components } from '@/types/generated/api';
 
 type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+  components['schemas']['models.StorefrontProductVariant'];
 
 interface VariantSelectionModalProps {
   isOpen: boolean;

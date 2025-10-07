@@ -94,12 +94,12 @@ func compileColorPatterns() []*regexp.Regexp {
 func compileSizePatterns() []*regexp.Regexp {
 	patterns := []string{
 		// Apple Watch размеры (порядок важен - сначала самые длинные!)
-		`\b\d+/\d+/\d+/\d+\s*mm\b`,  // 42/44/45/49mm
-		`\b\d+/\d+/\d+\s*mm\b`,      // 38/40/41mm
-		`\b\d+/\d+\s*mm\b`,          // 42/44mm
-		`/\d+mm\b`,                  // /49mm - оставшиеся части
-		`\b\d+mm\b`,                 // 40mm
-		`\b[SML]/[ML]\b`,            // S/M, M/L
+		`\b\d+/\d+/\d+/\d+\s*mm\b`, // 42/44/45/49mm
+		`\b\d+/\d+/\d+\s*mm\b`,     // 38/40/41mm
+		`\b\d+/\d+\s*mm\b`,         // 42/44mm
+		`/\d+mm\b`,                 // /49mm - оставшиеся части
+		`\b\d+mm\b`,                // 40mm
+		`\b[SML]/[ML]\b`,           // S/M, M/L
 		// Стандартные размеры одежды
 		`\b(XXS|XS|S|M|L|XL|XXL|XXXL)\b`,
 		// Числовые размеры
@@ -123,8 +123,8 @@ func compileSizePatterns() []*regexp.Regexp {
 func compileModelPatterns() []*regexp.Regexp {
 	patterns := []string{
 		// Модели телефонов (порядок важен - сначала полные формы!)
-		`\bSamsung\s+Galaxy\s+[A-Z]\d+\+?\b`,  // Samsung Galaxy S21
-		`\bGalaxy\s+[A-Z]\d+\+?\b`,            // Galaxy S21, Galaxy A52
+		`\bSamsung\s+Galaxy\s+[A-Z]\d+\+?\b`,      // Samsung Galaxy S21
+		`\bGalaxy\s+[A-Z]\d+\+?\b`,                // Galaxy S21, Galaxy A52
 		`\biPhone\s+\d+\s*(Pro|Plus|Max|Mini)?\b`, // iPhone 12, iPhone 13 Pro
 		// Производители отдельно
 		`\b(Samsung|Apple|Xiaomi|Huawei)\b`,
@@ -136,7 +136,7 @@ func compileModelPatterns() []*regexp.Regexp {
 		// Поколения
 		`\b(\d+(st|nd|rd|th)\s+generation|поколение)\b`,
 		// Общие паттерны моделей
-		`\b\d{2,4}[A-Z]+\b`,  // 2021G, KB-UM-104
+		`\b\d{2,4}[A-Z]+\b`, // 2021G, KB-UM-104
 	}
 
 	compiled := make([]*regexp.Regexp, 0, len(patterns))

@@ -9,7 +9,7 @@ import { VINDecoder } from '@/components/marketplace/VINDecoder';
 import type { components } from '@/types/generated/api';
 
 type VINDecodeResult =
-  components['schemas']['backend_internal_domain_models.VINDecodeResult'];
+  components['schemas']['models.VINDecodeResult'];
 
 interface VINDecoderClientProps {
   locale: string;

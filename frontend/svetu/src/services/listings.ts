@@ -46,8 +46,8 @@ export interface CreateListingRequest {
 
 // Используем сгенерированный тип из backend с обёрткой SuccessResponse
 export type CreateListingResponse =
-  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-    data?: components['schemas']['internal_proj_marketplace_handler.IDMessageResponse'];
+  components['schemas']['utils.SuccessResponseSwag'] & {
+    data?: components['schemas']['handler.IDMessageResponse'];
   };
 
 export interface UploadImagesRequest {

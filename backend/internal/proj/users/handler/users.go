@@ -76,9 +76,9 @@ type AdminCheckResponseWrapper struct {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.UserProfile} "User profile"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.profile.error.fetch"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.UserProfile} "User profile"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.fetch"
 // @Security BearerAuth
 // @Router /api/v1/users/me [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
@@ -109,11 +109,11 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param profile body backend_internal_domain_models.UserProfileUpdate true "Profile update data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Profile updated successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.profile.error.invalid_data or users.profile.error.validation"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.profile.error.update"
+// @Param profile body models.UserProfileUpdate true "Profile update data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Profile updated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_data or users.profile.error.validation"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.profile.error.update"
 // @Security BearerAuth
 // @Router /api/v1/users/me [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
@@ -146,10 +146,10 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "User ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=PublicUserResponse} "Public user profile"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.profile.error.invalid_id"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "users.profile.error.not_found"
+// @Success 200 {object} utils.SuccessResponseSwag{data=PublicUserResponse} "Public user profile"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.profile.error.invalid_id"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "users.profile.error.not_found"
 // @Security BearerAuth
 // @Router /api/v1/users/{id}/profile [get]
 func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
@@ -181,10 +181,10 @@ func (h *UserHandler) GetProfileByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param email path string true "User email"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=AdminCheckResponse} "Admin status"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.admin_check.error.email_required"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "users.admin_check.error.user_not_found"
+// @Success 200 {object} utils.SuccessResponseSwag{data=AdminCheckResponse} "Admin status"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.admin_check.error.email_required"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "users.admin_check.error.user_not_found"
 // @Security BearerAuth
 // @Router /api/v1/users/admin-check/{email} [get]
 func (h *UserHandler) IsAdminSimple(c *fiber.Ctx) error {
@@ -231,11 +231,11 @@ func (h *UserHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param settings body backend_internal_domain_models.UpdatePrivacySettingsRequest true "Privacy settings"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse} "Settings updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.privacy.error.invalid_data"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.privacy.error.update"
+// @Param settings body models.UpdatePrivacySettingsRequest true "Privacy settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse} "Settings updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.privacy.error.invalid_data"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.privacy.error.update"
 // @Security BearerAuth
 // @Router /api/v1/users/privacy-settings [put]
 func (h *UserHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
@@ -263,9 +263,9 @@ func (h *UserHandler) UpdatePrivacySettings(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatUserSettings} "Chat settings"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.fetch"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatUserSettings} "Chat settings"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.chat.error.fetch"
 // @Security BearerAuth
 // @Router /api/v1/users/chat-settings [get]
 func (h *UserHandler) GetChatSettings(c *fiber.Ctx) error {
@@ -292,11 +292,11 @@ func (h *UserHandler) GetChatSettings(c *fiber.Ctx) error {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param settings body backend_internal_domain_models.ChatUserSettings true "Chat settings"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatUserSettings} "Settings updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.invalid_data or users.chat.error.invalid_language"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "users.chat.error.update"
+// @Param settings body models.ChatUserSettings true "Chat settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatUserSettings} "Settings updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "users.chat.error.invalid_data or users.chat.error.invalid_language"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "users.chat.error.update"
 // @Security BearerAuth
 // @Router /api/v1/users/chat-settings [put]
 func (h *UserHandler) UpdateChatSettings(c *fiber.Ctx) error {

@@ -28,7 +28,7 @@ func NewPublicVariantHandler(variantRepo *repository.VariantRepository) *PublicV
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariant
+// @Success 200 {array} types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -64,7 +64,7 @@ func (h *PublicVariantHandler) GetProductVariantsPublic(c *fiber.Ctx) error {
 // @Tags public-variants
 // @Accept json
 // @Produce json
-// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttribute
+// @Success 200 {array} types.ProductVariantAttribute
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes [get]
 func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
@@ -85,7 +85,7 @@ func (h *PublicVariantHandler) GetVariantAttributesPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param attribute_id path int true "Attribute ID"
-// @Success 200 {array} backend_internal_proj_storefront_types.ProductVariantAttributeValue
+// @Success 200 {array} types.ProductVariantAttributeValue
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/public/variants/attributes/{attribute_id}/values [get]
@@ -115,7 +115,7 @@ func (h *PublicVariantHandler) GetVariantAttributeValuesPublic(c *fiber.Ctx) err
 // @Produce json
 // @Param slug path string true "Storefront slug"
 // @Param product_id path int true "Product ID"
-// @Success 200 {object} backend_internal_domain_models.StorefrontProduct
+// @Success 200 {object} models.StorefrontProduct
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -164,7 +164,7 @@ func (h *PublicVariantHandler) GetProductPublic(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param variant_id path int true "Variant ID"
-// @Success 200 {object} backend_internal_proj_storefront_types.ProductVariant
+// @Success 200 {object} types.ProductVariant
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string

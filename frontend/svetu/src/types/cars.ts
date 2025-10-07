@@ -1,11 +1,11 @@
 import type { components } from '@/types/generated/api';
 
 export type CarMake =
-  components['schemas']['backend_internal_domain_models.CarMake'];
+  components['schemas']['models.CarMake'];
 export type CarModel =
-  components['schemas']['backend_internal_domain_models.CarModel'];
+  components['schemas']['models.CarModel'];
 export type CarGeneration =
-  components['schemas']['backend_internal_domain_models.CarGeneration'];
+  components['schemas']['models.CarGeneration'];
 
 export interface CarMakeWithModels extends CarMake {
   models?: CarModel[];

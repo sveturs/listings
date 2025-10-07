@@ -51,15 +51,15 @@ const (
 
 // ImportService handles product import operations
 type ImportService struct {
-	productService          *ProductService
-	jobsRepo                postgres.ImportJobsRepositoryInterface
-	queueManager            *ImportQueueManager
-	imageService            *services.ImageService
-	categoryMappingService  *CategoryMappingService
-	variantDetector         *VariantDetector
-	attributeMapper         *AttributeMapper
-	dbStorage               ImportStorage                                     // Database storage interface для доступа к БД
-	marketplaceSearchRepo   marketplaceOpenSearch.MarketplaceSearchRepository // OpenSearch repository для marketplace listings
+	productService         *ProductService
+	jobsRepo               postgres.ImportJobsRepositoryInterface
+	queueManager           *ImportQueueManager
+	imageService           *services.ImageService
+	categoryMappingService *CategoryMappingService
+	variantDetector        *VariantDetector
+	attributeMapper        *AttributeMapper
+	dbStorage              ImportStorage                                     // Database storage interface для доступа к БД
+	marketplaceSearchRepo  marketplaceOpenSearch.MarketplaceSearchRepository // OpenSearch repository для marketplace listings
 }
 
 // ImportStorage interface for import service (минимальный интерфейс для избежания конфликтов)
@@ -1259,7 +1259,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 	// настроить прокси или обновить TLS конфигурацию поставщиков.
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,     // Игнорируем проблемы сертификатов
+			InsecureSkipVerify: true,             // Игнорируем проблемы сертификатов
 			MinVersion:         tls.VersionTLS10, // Разрешаем старые версии TLS
 			MaxVersion:         tls.VersionTLS13, // До новейших
 		},

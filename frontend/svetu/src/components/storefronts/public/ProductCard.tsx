@@ -11,7 +11,7 @@ import {
   getFullLocalizedAddress,
 } from '@/utils/addressUtils';
 
-type StorefrontProduct = components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
 
 interface ProductCardProps {
   product: StorefrontProduct;

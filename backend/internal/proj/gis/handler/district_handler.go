@@ -35,9 +35,9 @@ func NewDistrictHandler(service *service.DistrictService) *DistrictHandler {
 // @Param city_id query string false "City ID"
 // @Param city_ids query []string false "City IDs (comma-separated)"
 // @Param name query string false "District name (partial match)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.District} "List of districts"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.District} "List of districts"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/districts [get]
 func (h *DistrictHandler) GetDistricts(c *fiber.Ctx) error {
 	params := types.DistrictSearchParams{
@@ -85,10 +85,10 @@ func (h *DistrictHandler) GetDistricts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "District ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.District} "District details"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "District not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.District} "District details"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "District not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/districts/{id} [get]
 func (h *DistrictHandler) GetDistrictByID(c *fiber.Ctx) error {
 	districtID, err := uuid.Parse(c.Params("id"))
@@ -111,10 +111,10 @@ func (h *DistrictHandler) GetDistrictByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "District ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.DistrictBoundaryResponse} "District boundary"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "District not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.DistrictBoundaryResponse} "District boundary"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "District not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/districts/{id}/boundary [get]
 func (h *DistrictHandler) GetDistrictBoundary(c *fiber.Ctx) error {
 	districtID, err := uuid.Parse(c.Params("id"))
@@ -139,9 +139,9 @@ func (h *DistrictHandler) GetDistrictBoundary(c *fiber.Ctx) error {
 // @Param country_code query string false "Country code (e.g., RS)"
 // @Param district_id query string false "District ID"
 // @Param name query string false "Municipality name (partial match)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.Municipality} "List of municipalities"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.Municipality} "List of municipalities"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/municipalities [get]
 func (h *DistrictHandler) GetMunicipalities(c *fiber.Ctx) error {
 	params := types.MunicipalitySearchParams{
@@ -173,10 +173,10 @@ func (h *DistrictHandler) GetMunicipalities(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "Municipality ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.Municipality} "Municipality details"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Municipality not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.Municipality} "Municipality details"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Municipality not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/municipalities/{id} [get]
 func (h *DistrictHandler) GetMunicipalityByID(c *fiber.Ctx) error {
 	municipalityID, err := uuid.Parse(c.Params("id"))
@@ -204,10 +204,10 @@ func (h *DistrictHandler) GetMunicipalityByID(c *fiber.Ctx) error {
 // @Param max_price query number false "Maximum price"
 // @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "District not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "District not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/search/by-district/{district_id} [get]
 func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 	districtID, err := uuid.Parse(c.Params("district_id"))
@@ -275,10 +275,10 @@ func (h *DistrictHandler) SearchByDistrict(c *fiber.Ctx) error {
 // @Param max_price query number false "Maximum price"
 // @Param limit query int false "Limit results (default: 1000, max: 5000)"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Municipality not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.GeoListing} "Search results"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Municipality not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/search/by-municipality/{municipality_id} [get]
 func (h *DistrictHandler) SearchByMunicipality(c *fiber.Ctx) error {
 	municipalityID, err := uuid.Parse(c.Params("municipality_id"))
@@ -344,9 +344,9 @@ func (h *DistrictHandler) SearchByMunicipality(c *fiber.Ctx) error {
 // @Param bounds_south query number false "Viewport south boundary"
 // @Param bounds_east query number false "Viewport east boundary"
 // @Param bounds_west query number false "Viewport west boundary"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]types.City} "List of cities"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]types.City} "List of cities"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/cities [get]
 func (h *DistrictHandler) GetCities(c *fiber.Ctx) error {
 	params := types.CitySearchParams{
@@ -399,9 +399,9 @@ func (h *DistrictHandler) GetCities(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body types.VisibleCitiesRequest true "Viewport bounds and center"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=types.VisibleCitiesResponse} "Visible cities with distances"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=types.VisibleCitiesResponse} "Visible cities with distances"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/gis/cities/visible [post]
 func (h *DistrictHandler) GetVisibleCities(c *fiber.Ctx) error {
 	var req types.VisibleCitiesRequest
