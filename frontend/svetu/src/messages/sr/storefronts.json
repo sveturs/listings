@@ -679,7 +679,8 @@
           "title": "Otpremanje fajla",
           "description": "Izaberite fajl za uvoz proizvoda",
           "dragDrop": "Prevuci fajl ovde ili klikni za izbor",
-          "supportedFormats": "Podržani formati: XML, CSV, ZIP (maks. 50MB)"
+          "supportedFormats": "Podržani formati: XML, CSV, ZIP (maks. 50MB)",
+          "remove": "Ukloni"
         },
         "analyzing": {
           "name": "Analiza",

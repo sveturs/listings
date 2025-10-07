@@ -682,7 +682,8 @@
           "title": "Upload File",
           "description": "Select a file to import products",
           "dragDrop": "Drag and drop file here or click to select",
-          "supportedFormats": "Supported formats: XML, CSV, ZIP (max 50MB)"
+          "supportedFormats": "Supported formats: XML, CSV, ZIP (max 50MB)",
+          "remove": "Remove"
         },
         "analyzing": {
           "name": "Analyzing",
