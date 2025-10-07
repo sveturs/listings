@@ -91,7 +91,7 @@ export const approveCategoryProposal = createAsyncThunk(
 export const rejectCategoryProposal = createAsyncThunk(
   'categoryProposals/reject',
   async (params: { id: number; request: CategoryProposalRejectRequest }) => {
-    return await CategoryProposalsApi.rejectProposal(params.id, params.request);
+    return await CategoryProposalsApi.rejectProposal(params.id, params.request.reason);
   }
 );
 
@@ -163,7 +163,7 @@ const categoryProposalsSlice = createSlice({
 
     // Fetch pending count
     builder.addCase(fetchPendingCount.fulfilled, (state, action) => {
-      state.pendingCount = action.payload.count;
+      state.pendingCount = action.payload;
     });
 
     // Fetch single proposal

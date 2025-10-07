@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import type { CategoryMapping, MappingConfidence } from '@/types/import';
 
@@ -44,6 +44,25 @@ export default function CategoryMappingStep({
     null
   );
   const [newCategoryReasoning, setNewCategoryReasoning] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdown) {
+        const dropdownEl = dropdownRefs.current.get(openDropdown);
+        if (dropdownEl && !dropdownEl.contains(event.target as Node)) {
+          setOpenDropdown(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
 
   // Group mappings by confidence
   const groupedMappings = {
@@ -120,29 +139,114 @@ export default function CategoryMappingStep({
               </div>
             )}
 
-            {/* Manual Category Selection */}
+            {/* Manual Category Selection - Custom Dropdown */}
             <div className="mt-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('selectCategory')}
               </label>
-              <select
-                value={mapping.suggested_internal_category_id || ''}
-                onChange={(e) =>
-                  onMappingChange(
-                    mapping.external_category,
-                    e.target.value ? parseInt(e.target.value) : null
-                  )
-                }
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                disabled={isLoading}
+              <div
+                className="relative"
+                ref={(el) => {
+                  if (el) {
+                    dropdownRefs.current.set(mapping.external_category, el);
+                  }
+                }}
               >
-                <option value="">{t('selectPlaceholder')}</option>
-                {availableCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.parent ? `${cat.parent} > ${cat.name}` : cat.name}
-                  </option>
-                ))}
-              </select>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOpenDropdown(
+                      openDropdown === mapping.external_category
+                        ? null
+                        : mapping.external_category
+                    )
+                  }
+                  disabled={isLoading}
+                  className="btn btn-outline w-full justify-between"
+                >
+                  <span className="text-left truncate">
+                    {mapping.suggested_internal_category_id
+                      ? availableCategories.find(
+                          (c) => c.id === mapping.suggested_internal_category_id
+                        )?.parent
+                        ? `${
+                            availableCategories.find(
+                              (c) =>
+                                c.id === mapping.suggested_internal_category_id
+                            )?.parent
+                          } > ${
+                            availableCategories.find(
+                              (c) =>
+                                c.id === mapping.suggested_internal_category_id
+                            )?.name
+                          }`
+                        : availableCategories.find(
+                            (c) =>
+                              c.id === mapping.suggested_internal_category_id
+                          )?.name || t('selectPlaceholder')
+                      : t('selectPlaceholder')}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 ml-2 transition-transform ${
+                      openDropdown === mapping.external_category
+                        ? 'rotate-180'
+                        : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {openDropdown === mapping.external_category && (
+                  <div className="absolute z-10 w-full mt-1">
+                    <ul className="menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-60 overflow-auto border border-base-300">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onMappingChange(mapping.external_category, null);
+                            setOpenDropdown(null);
+                          }}
+                          className="hover:bg-base-200"
+                        >
+                          <span className="text-gray-500">
+                            {t('selectPlaceholder')}
+                          </span>
+                        </button>
+                      </li>
+                      {availableCategories.map((cat) => (
+                        <li key={cat.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onMappingChange(
+                                mapping.external_category,
+                                cat.id
+                              );
+                              setOpenDropdown(null);
+                            }}
+                            className={`hover:bg-base-200 ${
+                              mapping.suggested_internal_category_id === cat.id
+                                ? 'bg-blue-50 font-semibold'
+                                : ''
+                            }`}
+                          >
+                            {cat.parent ? `${cat.parent} > ${cat.name}` : cat.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* New Category Request Form */}

@@ -729,7 +729,8 @@
         "highConfidence": "Visoka pouzdanost",
         "mediumConfidence": "Srednja pouzdanost",
         "lowConfidence": "Niska pouzdanost",
-        "unmapped": "Nemapirano"
+        "unmapped": "Nemapirano",
+        "noMappingsFound": "Mapiranje kategorija nije pronađeno. Analiza nije otkrila kategorije u vašoj datoteci za uvoz."
       },
       "variants": {
         "totalGroups": "Pronađeno grupa",

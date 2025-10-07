@@ -732,7 +732,8 @@
         "highConfidence": "High Confidence",
         "mediumConfidence": "Medium Confidence",
         "lowConfidence": "Low Confidence",
-        "unmapped": "Unmapped"
+        "unmapped": "Unmapped",
+        "noMappingsFound": "No category mappings found. The analysis did not detect any categories in your import file."
       },
       "variants": {
         "totalGroups": "Groups Found",

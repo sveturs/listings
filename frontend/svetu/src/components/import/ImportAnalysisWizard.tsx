@@ -20,6 +20,7 @@ import CategoryMappingStep from './CategoryMappingStep';
 import AttributeMappingStep from './AttributeMappingStep';
 import VariantDetectionStep from './VariantDetectionStep';
 import type { CategoryMapping } from '@/types/import';
+import { CategoryService, type Category } from '@/services/category';
 
 interface ImportAnalysisWizardProps {
   storefrontId: number;
@@ -70,17 +71,57 @@ export default function ImportAnalysisWizard({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Mock available categories - should be fetched from API
-  const [availableCategories] = useState<
+  // Real categories fetched from API
+  const [availableCategories, setAvailableCategories] = useState<
     Array<{ id: number; name: string; parent?: string }>
-  >([
-    { id: 1, name: 'Electronics', parent: undefined },
-    { id: 2, name: 'Smartphones', parent: 'Electronics' },
-    { id: 3, name: 'Laptops', parent: 'Electronics' },
-    { id: 4, name: 'Clothing', parent: undefined },
-    { id: 5, name: 'Men', parent: 'Clothing' },
-    { id: 6, name: 'Women', parent: 'Clothing' },
-  ]);
+  >([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        setCategoriesError(null);
+
+        const categories = await CategoryService.getCategories();
+
+        // Create a map for quick parent lookup
+        const categoryMap = new Map<number, Category>();
+        categories.forEach((cat) => {
+          categoryMap.set(cat.id, cat);
+        });
+
+        // Transform to the format expected by CategoryMappingStep
+        const transformed = categories.map((cat) => {
+          let parentName: string | undefined = undefined;
+
+          if (cat.parent_id) {
+            const parent = categoryMap.get(cat.parent_id);
+            if (parent) {
+              parentName = parent.name;
+            }
+          }
+
+          return {
+            id: cat.id,
+            name: cat.name,
+            parent: parentName,
+          };
+        });
+
+        setAvailableCategories(transformed);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        setCategoriesError('Failed to load categories');
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -408,47 +449,67 @@ export default function ImportAnalysisWizard({
               )}
             </div>
 
-            {/* TODO: Fix mapping_quality type - temporarily disabled */}
-            {false && (
-              <>
-                {/* Quality summary */}
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="text-2xl font-bold text-green-700">
-                      0
-                    </div>
-                    <div className="text-sm text-green-600">
-                      {t('categories.highConfidence')}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-700">
-                      0
-                    </div>
-                    <div className="text-sm text-yellow-600">
-                      {t('categories.mediumConfidence')}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="text-2xl font-bold text-red-700">
-                      0
-                    </div>
-                    <div className="text-sm text-red-600">
-                      {t('categories.lowConfidence')}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-700">
-                      0
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {t('categories.unmapped')}
-                    </div>
-                  </div>
+            {/* Categories Loading State */}
+            {categoriesLoading && (
+              <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p className="text-blue-800">Loading categories...</p>
                 </div>
+              </div>
+            )}
 
-                {/* CategoryMappingStep temporarily disabled due to type issues */}
-              </>
+            {/* Categories Error State */}
+            {categoriesError && !categoriesLoading && (
+              <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-center">
+                <p className="text-red-800">{categoriesError}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-2 text-red-600 hover:text-red-800 underline"
+                >
+                  Reload page
+                </button>
+              </div>
+            )}
+
+            {/* Category Mapping Component */}
+            {!categoriesLoading && !categoriesError && categoryAnalysis?.mappings && categoryAnalysis.mappings.length > 0 && (
+              <CategoryMappingStep
+                mappings={categoryAnalysis.mappings}
+                onMappingChange={handleCategoryMappingChange}
+                onApproveMapping={handleApproveMapping}
+                onRequestNewCategory={handleRequestNewCategory}
+                availableCategories={availableCategories}
+                isLoading={isAnalyzing}
+              />
+            )}
+
+            {/* No mappings found */}
+            {!categoriesLoading && !categoriesError && categoryAnalysis && (!categoryAnalysis.mappings || categoryAnalysis.mappings.length === 0) && (
+              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                <p className="text-yellow-800">
+                  {t('categories.noMappingsFound')}
+                </p>
+              </div>
             )}
 
             <div className="flex justify-between gap-4 mt-8">
@@ -480,15 +541,15 @@ export default function ImportAnalysisWizard({
               </p>
             </div>
 
-            {false && attributeAnalysis && (
+            {attributeAnalysis && attributeAnalysis.attributes && attributeAnalysis.attributes.length > 0 && (
               <AttributeMappingStep
-                attributes={[]}
+                attributes={attributeAnalysis.attributes}
                 selectedAttributes={selectedAttributes}
                 onToggleAttribute={handleAttributeToggle}
                 onSelectAll={() => {
                   dispatch(
                     setSelectedAttributes(
-                      (attributeAnalysis.detected_attributes || []).map(
+                      (attributeAnalysis?.attributes || []).map(
                         (a) => a.name
                       )
                     )
@@ -499,6 +560,15 @@ export default function ImportAnalysisWizard({
                 }}
                 isLoading={isAnalyzing}
               />
+            )}
+
+            {/* No attributes found */}
+            {attributeAnalysis && (!attributeAnalysis.attributes || attributeAnalysis.attributes.length === 0) && (
+              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                <p className="text-yellow-800">
+                  No attributes detected in the import file.
+                </p>
+              </div>
             )}
 
             <div className="flex justify-between gap-4 mt-8">

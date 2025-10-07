@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 
 	"backend/internal/domain/models"
 	"backend/internal/proj/storefronts/parsers"
@@ -19,12 +21,32 @@ type AnalyzeCategoriesRequest struct {
 	CategoryPaths []string                      `json:"category_paths,omitempty"` // Unique category paths from file
 }
 
+// CategoryMappingDTO represents a single category mapping for frontend
+type CategoryMappingDTO struct {
+	ExternalCategory              string  `json:"external_category"`
+	SuggestedInternalCategoryID   *int    `json:"suggested_internal_category_id"`
+	SuggestedInternalCategoryName string  `json:"suggested_internal_category_name,omitempty"`
+	Confidence                    string  `json:"confidence"` // "high", "medium", "low"
+	Reasoning                     string  `json:"reasoning,omitempty"`
+	IsApproved                    bool    `json:"is_approved"`
+	RequiresNewCategory           bool    `json:"requires_new_category"`
+}
+
+// QualitySummaryDTO represents mapping quality statistics
+type QualitySummaryDTO struct {
+	HighConfidence       int `json:"high_confidence"`
+	MediumConfidence     int `json:"medium_confidence"`
+	LowConfidence        int `json:"low_confidence"`
+	RequiresNewCategory  int `json:"requires_new_category"`
+}
+
 // AnalyzeCategoriesResponse represents the response with AI category mapping suggestions
 type AnalyzeCategoriesResponse struct {
-	TotalCategories    int                                           `json:"total_categories"`
-	MappingSuggestions map[string]*service.CategoryMappingSuggestion `json:"mapping_suggestions"` // external_cat -> suggestion
-	MappingQuality     *service.MappingQuality                       `json:"mapping_quality"`
-	ProcessingTimeMs   int64                                         `json:"processing_time_ms"`
+	TotalCategories     int                 `json:"total_categories"`
+	Mappings            []CategoryMappingDTO `json:"mappings"`
+	QualitySummary      QualitySummaryDTO   `json:"quality_summary"`
+	UnmappedCategories  []string            `json:"unmapped_categories"`
+	ProcessingTimeMs    int64               `json:"processing_time_ms"`
 }
 
 // AnalyzeCategories analyzes categories in import file and provides AI mapping suggestions
@@ -197,10 +219,62 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	// Analyze mapping quality
 	quality := h.aiCategoryMapper.AnalyzeMappingQuality(suggestions)
 
+	// Convert map to array of DTOs
+	mappings := make([]CategoryMappingDTO, 0, len(suggestions))
+	unmappedCategories := make([]string, 0)
+
+	for externalCat, suggestion := range suggestions {
+		// Determine confidence level
+		confidence := "low"
+		if suggestion.ConfidenceScore >= 0.8 {
+			confidence = "high"
+		} else if suggestion.ConfidenceScore >= 0.5 {
+			confidence = "medium"
+		}
+
+		// Build reasoning string from steps
+		reasoning := ""
+		if len(suggestion.ReasoningSteps) > 0 {
+			reasoning = suggestion.ReasoningSteps[0] // Use first reasoning step
+		}
+
+		// Check if category was mapped
+		var categoryID *int
+		categoryName := ""
+		requiresNew := false
+
+		if suggestion.SuggestedCategoryID > 0 {
+			categoryID = &suggestion.SuggestedCategoryID
+			categoryName = suggestion.SuggestedCategoryPath
+		} else {
+			requiresNew = true
+			unmappedCategories = append(unmappedCategories, externalCat)
+		}
+
+		mappings = append(mappings, CategoryMappingDTO{
+			ExternalCategory:              externalCat,
+			SuggestedInternalCategoryID:   categoryID,
+			SuggestedInternalCategoryName: categoryName,
+			Confidence:                    confidence,
+			Reasoning:                     reasoning,
+			IsApproved:                    confidence == "high", // Auto-approve high confidence
+			RequiresNewCategory:           requiresNew,
+		})
+	}
+
+	// Build quality summary
+	qualitySummary := QualitySummaryDTO{
+		HighConfidence:      len(quality.HighConfidence),
+		MediumConfidence:    len(quality.MediumConfidence),
+		LowConfidence:       len(quality.LowConfidence),
+		RequiresNewCategory: len(unmappedCategories),
+	}
+
 	response := AnalyzeCategoriesResponse{
 		TotalCategories:    len(categories),
-		MappingSuggestions: suggestions,
-		MappingQuality:     quality,
+		Mappings:           mappings,
+		QualitySummary:     qualitySummary,
+		UnmappedCategories: unmappedCategories,
 		ProcessingTimeMs:   0, // TODO: track time
 	}
 
@@ -215,18 +289,90 @@ type AnalyzeAttributesRequest struct {
 
 // DetectedAttribute represents a detected attribute from import file
 type DetectedAttribute struct {
-	Name         string   `json:"name"`
-	Examples     []string `json:"examples"`      // Example values
-	Frequency    int      `json:"frequency"`     // How many products have this attribute
-	IsStandard   bool     `json:"is_standard"`   // Is this a standard marketplace attribute
-	SuggestedMap string   `json:"suggested_map"` // Suggested mapping to standard attribute
+	Name              string   `json:"name"`
+	ValueType         string   `json:"value_type"`           // Type of value: string, number, boolean, enum
+	SampleValues      []string `json:"sample_values"`        // Example values
+	Frequency         int      `json:"frequency"`            // How many products have this attribute
+	IsStandard        bool     `json:"is_standard"`          // Is this a standard marketplace attribute
+	SuggestedMapping  string   `json:"suggested_mapping"`    // Suggested mapping to standard attribute
+	IsVariantDefining bool     `json:"is_variant_defining"`  // Could be used for variants (color, size, etc.)
+}
+
+// detectValueType determines the type of attribute based on sample values
+func detectValueType(values []string) string {
+	if len(values) == 0 {
+		return "string"
+	}
+
+	// Check if all values are numbers
+	allNumbers := true
+	for _, v := range values {
+		if _, err := strconv.ParseFloat(v, 64); err != nil {
+			allNumbers = false
+			break
+		}
+	}
+	if allNumbers {
+		return "number"
+	}
+
+	// Check if all values are booleans
+	allBooleans := true
+	for _, v := range values {
+		lower := strings.ToLower(strings.TrimSpace(v))
+		if lower != "true" && lower != "false" && lower != "да" && lower != "нет" && lower != "yes" && lower != "no" {
+			allBooleans = false
+			break
+		}
+	}
+	if allBooleans {
+		return "boolean"
+	}
+
+	// Check if limited unique values (enum)
+	uniqueValues := make(map[string]bool)
+	for _, v := range values {
+		uniqueValues[v] = true
+	}
+	if len(uniqueValues) <= 10 && len(values) > len(uniqueValues)*2 {
+		// If there are <=10 unique values and they repeat (frequency > 2x unique count)
+		return "enum"
+	}
+
+	return "string"
+}
+
+// isVariantDefiningAttribute checks if attribute name suggests it could define variants
+func isVariantDefiningAttribute(name string) bool {
+	nameLower := strings.ToLower(name)
+
+	variantKeywords := []string{
+		"color", "colour", "boja", "цвет",
+		"size", "velicina", "veličina", "размер",
+		"material", "materijal", "материал",
+		"style", "stil", "стиль",
+		"model", "модель",
+		"capacity", "kapacitet", "capacité", "емкость",
+		"version", "verzija", "версия",
+		"type", "tip", "тип",
+	}
+
+	for _, keyword := range variantKeywords {
+		if strings.Contains(nameLower, keyword) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // AnalyzeAttributesResponse represents the response with detected attributes
 type AnalyzeAttributesResponse struct {
-	DetectedAttributes []DetectedAttribute `json:"detected_attributes"`
-	TotalProducts      int                 `json:"total_products"`
-	ProcessingTimeMs   int64               `json:"processing_time_ms"`
+	Attributes                 []DetectedAttribute `json:"attributes"`
+	TotalAttributes            int                 `json:"total_attributes"`
+	VariantDefiningAttributes  []string            `json:"variant_defining_attributes"`
+	TotalProducts              int                 `json:"total_products"`
+	ProcessingTimeMs           int64               `json:"processing_time_ms"`
 }
 
 // AnalyzeAttributes analyzes attributes in import file
@@ -340,15 +486,21 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	attributeExamples := make(map[string][]string)
 	attributeFirstValue := make(map[string]interface{}) // Для маппинга
 
+	fmt.Printf("[DEBUG] AnalyzeAttributes: Total products parsed: %d\n", len(products))
+
 	for _, product := range products {
 		// Analyze custom attributes from product.Attributes
 		if product.Attributes != nil {
+			fmt.Printf("[DEBUG] Product %s has %d attributes\n", product.SKU, len(product.Attributes))
 			for attrName, attrValue := range product.Attributes {
+				fmt.Printf("[DEBUG]   - %s: %v (type: %T)\n", attrName, attrValue, attrValue)
+
 				// Skip standard fields and category fields
 				if attrName == "category_path" ||
 				   attrName == "kategorija1" ||
 				   attrName == "kategorija2" ||
 				   attrName == "kategorija3" {
+					fmt.Printf("[DEBUG]     SKIPPED (category field)\n")
 					continue
 				}
 
@@ -369,8 +521,12 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		}
 	}
 
+	fmt.Printf("[DEBUG] Detected %d unique attributes after filtering\n", len(attributeFrequency))
+
 	// Используем AttributeMapper для маппинга атрибутов
+	fmt.Printf("[DEBUG] Starting attribute mapping for %d attributes\n", len(attributeFrequency))
 	for attrName, frequency := range attributeFrequency {
+		fmt.Printf("[DEBUG] Mapping attribute: %s (frequency: %d)\n", attrName, frequency)
 		// Мапим через AttributeMapper
 		mappedAttr, err := h.attributeMapper.MapExternalAttribute(
 			c.Context(),
@@ -393,19 +549,41 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 			}
 		}
 
+		sampleValues := attributeExamples[attrName]
+		valueType := detectValueType(sampleValues)
+		isVariantDefining := isVariantDefiningAttribute(attrName)
+
 		detectedAttrs = append(detectedAttrs, DetectedAttribute{
-			Name:         attrName,
-			Examples:     attributeExamples[attrName],
-			Frequency:    frequency,
-			IsStandard:   isStandard,
-			SuggestedMap: suggestedMap,
+			Name:              attrName,
+			ValueType:         valueType,
+			SampleValues:      sampleValues,
+			Frequency:         frequency,
+			IsStandard:        isStandard,
+			SuggestedMapping:  suggestedMap,
+			IsVariantDefining: isVariantDefining,
 		})
 	}
 
+	// Collect variant defining attribute names
+	variantDefiningAttrs := make([]string, 0)
+	for _, attr := range detectedAttrs {
+		if attr.IsVariantDefining {
+			variantDefiningAttrs = append(variantDefiningAttrs, attr.Name)
+		}
+	}
+
 	response := AnalyzeAttributesResponse{
-		DetectedAttributes: detectedAttrs,
-		TotalProducts:      len(products),
-		ProcessingTimeMs:   0,
+		Attributes:                detectedAttrs,
+		TotalAttributes:           len(detectedAttrs),
+		VariantDefiningAttributes: variantDefiningAttrs,
+		TotalProducts:             len(products),
+		ProcessingTimeMs:          0,
+	}
+
+	fmt.Printf("[DEBUG] Final response: %d detected attributes, %d total products\n", len(detectedAttrs), len(products))
+	for i, attr := range detectedAttrs {
+		fmt.Printf("[DEBUG]   Attribute %d: %s (type: %s, samples: %v, frequency: %d, standard: %v, variant: %v)\n",
+			i+1, attr.Name, attr.ValueType, attr.SampleValues, attr.Frequency, attr.IsStandard, attr.IsVariantDefining)
 	}
 
 	return c.JSON(response)
