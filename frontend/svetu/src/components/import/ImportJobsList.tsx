@@ -49,13 +49,13 @@ export default function ImportJobsList({
     const interval = setInterval(() => {
       jobs.forEach((job) => {
         if (job.status === 'pending' || job.status === 'processing') {
-          dispatch(fetchJobStatus(job.id));
+          dispatch(fetchJobStatus({ storefrontId, jobId: job.id }));
         }
       });
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [jobs, autoRefresh, refreshInterval, dispatch]);
+  }, [jobs, autoRefresh, refreshInterval, dispatch, storefrontId]);
 
   const handleJobClick = (job: ImportJob) => {
     dispatch(setCurrentJob(job));

@@ -197,8 +197,8 @@ export const previewImportFile = createAsyncThunk(
 
 export const fetchJobStatus = createAsyncThunk(
   'import/fetchJobStatus',
-  async (jobId: number) => {
-    return await ImportApi.getJobStatus(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.getJobStatus(params.storefrontId, params.jobId);
   }
 );
 

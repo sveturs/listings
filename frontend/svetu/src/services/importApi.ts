@@ -203,8 +203,8 @@ export class ImportApi {
   /**
    * Gets import job status
    */
-  static async getJobStatus(jobId: number): Promise<ImportJobStatus> {
-    const response = await apiClient.get(`/api/v1/import/jobs/${jobId}/status`);
+  static async getJobStatus(storefrontId: number, jobId: number): Promise<ImportJobStatus> {
+    const response = await apiClient.get(`/storefronts/${storefrontId}/import/jobs/${jobId}/status`);
     return response.data;
   }
 
