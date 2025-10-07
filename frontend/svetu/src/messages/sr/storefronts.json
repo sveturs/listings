@@ -671,6 +671,7 @@
   "noCategoriesFound": "Kategorije nisu pronađene",
   "willGenerateVariants": "Biće kreirano {count} varijanti",
   "import": {
+    "wizard": "Čarobnjak za uvoz",
     "categoryMapping": {
       "title": "Mapiranje kategorija",
       "aiSuggestion": "AI predlog",
@@ -800,6 +801,18 @@
     "classic": "Klasičan",
     "enhanced": "Napredni"
   },
+  "tabs": {
+    "uploadFile": "Otpremi fajl",
+    "importFromUrl": "Uvezi sa URL-a"
+  },
+  "dragDrop": {
+    "title": "Prevuci i otpusti fajl ovde",
+    "subtitle": "ili klikni da izabereš"
+  },
+  "template": {
+    "title": "Preuzmi šablon",
+    "description": "Koristi naš šablon za pravilnu pripremu podataka"
+  },
   "jobs": {
     "title": "Istorija uvoza",
     "filters": {
@@ -812,6 +825,22 @@
     "empty": {
       "title": "Nema uvoza",
       "description": "Počnite uvoz proizvoda iz fajla"
+    },
+    "details": {
+      "title": "Detalji uvoza",
+      "fileInfo": "Informacije o fajlu",
+      "fileName": "Ime fajla",
+      "fileType": "Tip fajla",
+      "statistics": "Statistika",
+      "total": "Ukupno",
+      "processed": "Obrađeno",
+      "successful": "Uspešno",
+      "failed": "Greške",
+      "timing": "Vreme",
+      "created": "Kreiran",
+      "started": "Započet",
+      "completed": "Završen",
+      "duration": "Trajanje"
     }
   },
   "actions": {
@@ -820,7 +849,11 @@
     "viewErrors": "Prikaži greške",
     "cancel": "Otkaži",
     "retry": "Pokušaj ponovo",
-    "confirmCancel": "Da li ste sigurni da želite da otkažete uvoz?"
+    "confirmCancel": "Da li ste sigurni da želite da otkažete uvoz?",
+    "selectFile": "Izaberi fajl",
+    "downloadTemplate": "Preuzmi šablon",
+    "import": "Uvezi",
+    "close": "Zatvori"
   },
   "status": {
     "pending": "Na čekanju",

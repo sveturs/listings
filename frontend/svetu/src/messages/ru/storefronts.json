@@ -681,6 +681,7 @@
   "edit": "Редактировать",
   "processing": "Обработка...",
   "import": {
+    "wizard": "Мастер импорта",
     "categoryMapping": {
       "title": "Маппинг категорий",
       "aiSuggestion": "Предложение AI",
@@ -810,6 +811,18 @@
     "classic": "Классический",
     "enhanced": "Расширенный"
   },
+  "tabs": {
+    "uploadFile": "Загрузить файл",
+    "importFromUrl": "Импорт по URL"
+  },
+  "dragDrop": {
+    "title": "Перетащите файл сюда",
+    "subtitle": "или нажмите, чтобы выбрать"
+  },
+  "template": {
+    "title": "Скачать шаблон",
+    "description": "Используйте наш шаблон для правильной подготовки данных"
+  },
   "jobs": {
     "title": "История импорта",
     "filters": {
@@ -822,6 +835,22 @@
     "empty": {
       "title": "Нет импортов",
       "description": "Начните импорт товаров из файла"
+    },
+    "details": {
+      "title": "Детали импорта",
+      "fileInfo": "Информация о файле",
+      "fileName": "Имя файла",
+      "fileType": "Тип файла",
+      "statistics": "Статистика",
+      "total": "Всего",
+      "processed": "Обработано",
+      "successful": "Успешно",
+      "failed": "Ошибок",
+      "timing": "Время",
+      "created": "Создан",
+      "started": "Начат",
+      "completed": "Завершен",
+      "duration": "Длительность"
     }
   },
   "actions": {
@@ -830,7 +859,11 @@
     "viewErrors": "Показать ошибки",
     "cancel": "Отменить",
     "retry": "Повторить",
-    "confirmCancel": "Вы уверены, что хотите отменить импорт?"
+    "confirmCancel": "Вы уверены, что хотите отменить импорт?",
+    "selectFile": "Выбрать файл",
+    "downloadTemplate": "Скачать шаблон",
+    "import": "Импортировать",
+    "close": "Закрыть"
   },
   "status": {
     "pending": "Ожидает",

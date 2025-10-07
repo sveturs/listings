@@ -674,6 +674,7 @@
   "noCategoriesFound": "No categories found",
   "willGenerateVariants": "Will generate {count} variants",
   "import": {
+    "wizard": "Import Wizard",
     "categoryMapping": {
       "title": "Category Mapping",
       "aiSuggestion": "AI Suggestion",
@@ -803,6 +804,18 @@
     "classic": "Classic",
     "enhanced": "Enhanced"
   },
+  "tabs": {
+    "uploadFile": "Upload File",
+    "importFromUrl": "Import from URL"
+  },
+  "dragDrop": {
+    "title": "Drag and drop file here",
+    "subtitle": "or click to select file"
+  },
+  "template": {
+    "title": "Download Template",
+    "description": "Use our template to prepare your data correctly"
+  },
   "jobs": {
     "title": "Import History",
     "filters": {
@@ -815,6 +828,22 @@
     "empty": {
       "title": "No imports yet",
       "description": "Start importing products from a file"
+    },
+    "details": {
+      "title": "Import Details",
+      "fileInfo": "File Information",
+      "fileName": "File Name",
+      "fileType": "File Type",
+      "statistics": "Statistics",
+      "total": "Total",
+      "processed": "Processed",
+      "successful": "Successful",
+      "failed": "Failed",
+      "timing": "Timing",
+      "created": "Created",
+      "started": "Started",
+      "completed": "Completed",
+      "duration": "Duration"
     }
   },
   "actions": {
@@ -823,7 +852,11 @@
     "viewErrors": "View Errors",
     "cancel": "Cancel",
     "retry": "Retry",
-    "confirmCancel": "Are you sure you want to cancel this import?"
+    "confirmCancel": "Are you sure you want to cancel this import?",
+    "selectFile": "Select File",
+    "downloadTemplate": "Download Template",
+    "import": "Import",
+    "close": "Close"
   },
   "status": {
     "pending": "Pending",
