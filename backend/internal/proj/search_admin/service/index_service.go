@@ -575,35 +575,38 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 	logger.Info().Msgf("Should index listings: %v, products: %v", shouldIndexListings, shouldIndexProducts)
 
-	// Временно отключено удаление документов - документы будут перезаписываться по ID
-	// TODO: Исправить bulk индексацию и снова включить очистку индексов
-	// if shouldIndexListings {
-	// 	// Удаляем все документы из индекса marketplace_listings
-	// 	deleteQuery := map[string]interface{}{
-	// 		"query": map[string]interface{}{
-	// 			"match_all": map[string]interface{}{},
-	// 		},
-	// 	}
-	// 	deleteJSON, _ := json.Marshal(deleteQuery)
-	// 	_, err := s.osClient.Execute(ctx, "POST", "/" + marketplaceListingIndex + "/_delete_by_query", deleteJSON)
-	// 	if err != nil {
-	// 		fmt.Printf("Warning: Failed to clean marketplace_listings index: %v\n", err)
-	// 	}
-	// }
+	// Очистка индексов перед переиндексацией для удаления старых документов
+	if shouldIndexListings {
+		// Удаляем все документы из индекса marketplace_listings
+		deleteQuery := map[string]interface{}{
+			"query": map[string]interface{}{
+				"match_all": map[string]interface{}{},
+			},
+		}
+		deleteJSON, _ := json.Marshal(deleteQuery)
+		_, err := s.osClient.Execute(ctx, "POST", "/"+marketplaceListingIndex+"/_delete_by_query", deleteJSON)
+		if err != nil {
+			logger.Warn().Msgf("Warning: Failed to clean marketplace_listings index: %v", err)
+		} else {
+			logger.Info().Msg("Successfully cleaned marketplace_listings index")
+		}
+	}
 
-	// if shouldIndexProducts {
-	// 	// Удаляем все документы из индекса storefront_products
-	// 	deleteQuery := map[string]interface{}{
-	// 		"query": map[string]interface{}{
-	// 			"match_all": map[string]interface{}{},
-	// 		},
-	// 	}
-	// 	deleteJSON, _ := json.Marshal(deleteQuery)
-	// 	_, err := s.osClient.Execute(ctx, "POST", "/" + storefrontProductsIndex + "/_delete_by_query", deleteJSON)
-	// 	if err != nil {
-	// 		fmt.Printf("Warning: Failed to clean storefront_products index: %v\n", err)
-	// 	}
-	// }
+	if shouldIndexProducts {
+		// Удаляем все документы из индекса storefront_products
+		deleteQuery := map[string]interface{}{
+			"query": map[string]interface{}{
+				"match_all": map[string]interface{}{},
+			},
+		}
+		deleteJSON, _ := json.Marshal(deleteQuery)
+		_, err := s.osClient.Execute(ctx, "POST", "/"+storefrontProductsIndex+"/_delete_by_query", deleteJSON)
+		if err != nil {
+			logger.Warn().Msgf("Warning: Failed to clean storefront_products index: %v", err)
+		} else {
+			logger.Info().Msg("Successfully cleaned storefront_products index")
+		}
+	}
 
 	// Переиндексация объявлений маркетплейса
 	if shouldIndexListings {
