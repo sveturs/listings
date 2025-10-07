@@ -866,6 +866,10 @@
     "title": "Download Template",
     "description": "Use our template to prepare your data correctly"
   },
+  "url": {
+    "label": "Import from URL",
+    "help": "Enter the URL of a CSV or XML file to import"
+  },
   "jobs": {
     "title": "Import History",
     "filters": {

@@ -863,6 +863,10 @@
     "title": "Preuzmi šablon",
     "description": "Koristi naš šablon za pravilnu pripremu podataka"
   },
+  "url": {
+    "label": "Uvoz preko URL-a",
+    "help": "Unesite URL CSV ili XML fajla za uvoz"
+  },
   "jobs": {
     "title": "Istorija uvoza",
     "filters": {
