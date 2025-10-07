@@ -458,12 +458,8 @@ export class ImportApi {
 
     const response = await apiClient.post(
       `/api/v1/storefronts/${storefrontId}/import/analyze-categories`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
+      // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
     );
 
     return response.data;
@@ -486,12 +482,8 @@ export class ImportApi {
 
     const response = await apiClient.post(
       `/api/v1/storefronts/${storefrontId}/import/analyze-attributes`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
+      // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
     );
 
     return response.data;
@@ -514,12 +506,7 @@ export class ImportApi {
 
     const response = await apiClient.post(
       `/api/v1/storefronts/${storefrontId}/import/detect-variants`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
 
     return response.data;
