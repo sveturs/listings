@@ -197,15 +197,12 @@ export const fetchStorefronts = createAsyncThunk<
         });
       }
 
-      const response = await fetch(
-        `/api/v1/b2c?${queryParams.toString()}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch(`/api/v1/b2c?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response
@@ -781,8 +778,7 @@ export const selectCurrentStorefront = (state: RootState) =>
   state.b2cStores.currentStorefront;
 export const selectMyStorefronts = (state: RootState) =>
   state.b2cStores.myStorefronts;
-export const selectIsLoading = (state: RootState) =>
-  state.b2cStores.isLoading;
+export const selectIsLoading = (state: RootState) => state.b2cStores.isLoading;
 export const selectIsCreating = (state: RootState) =>
   state.b2cStores.isCreating;
 export const selectIsUpdating = (state: RootState) =>
@@ -796,8 +792,7 @@ export const selectPagination = (state: RootState) =>
 export const selectTotalCount = (state: RootState) =>
   state.b2cStores.totalCount;
 export const selectHasMore = (state: RootState) => state.b2cStores.hasMore;
-export const selectAnalytics = (state: RootState) =>
-  state.b2cStores.analytics;
+export const selectAnalytics = (state: RootState) => state.b2cStores.analytics;
 export const selectIsLoadingAnalytics = (state: RootState) =>
   state.b2cStores.isLoadingAnalytics;
 

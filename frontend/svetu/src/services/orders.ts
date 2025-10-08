@@ -62,10 +62,7 @@ export const ordersService = {
   },
 
   // Отменить заказ
-  async cancelOrder(
-    orderId: number,
-    reason?: string
-  ): Promise<B2COrder> {
+  async cancelOrder(orderId: number, reason?: string): Promise<B2COrder> {
     const cancelData: CancelOrderRequest = { reason };
     const response = await apiClient.put(
       `/api/v1/orders/${orderId}/cancel`,

@@ -30,9 +30,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [allListings, setAllListings] = useState<C2CItem[]>([]);
-  const [displayedListings, setDisplayedListings] = useState<C2CItem[]>(
-    []
-  );
+  const [displayedListings, setDisplayedListings] = useState<C2CItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(20);
@@ -199,10 +197,7 @@ export default function SimilarListings({ listingId }: SimilarListingsProps) {
               key={`similar-grid-${listing.id}-${index}`}
               className="group hover:shadow-lg transition-all duration-200"
             >
-              <Link
-                href={`/${locale}/c2c/${listing.id}`}
-                className="block"
-              >
+              <Link href={`/${locale}/c2c/${listing.id}`} className="block">
                 <div className="relative aspect-square rounded-lg overflow-hidden bg-base-200 mb-2">
                   <SafeImage
                     src={(() => {

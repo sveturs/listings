@@ -18,9 +18,7 @@ export const cartService = {
 
   // Получить корзину витрины
   async getCart(storefrontId: number): Promise<ShoppingCart> {
-    const response = await apiClient.get(
-      `/api/v1/b2c/${storefrontId}/cart`
-    );
+    const response = await apiClient.get(`/api/v1/b2c/${storefrontId}/cart`);
     return response.data.data;
   },
 

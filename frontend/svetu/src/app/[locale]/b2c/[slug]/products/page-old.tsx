@@ -44,8 +44,9 @@ export default function ProductsPage({ params }: PageProps) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] =
-    useState<B2CProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<B2CProduct | null>(
+    null
+  );
   const [viewMode, setViewMode] = useViewPreference('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);

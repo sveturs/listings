@@ -16,11 +16,11 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/logger"
 	"backend/internal/middleware"
-	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/c2c/cache"
 	"backend/internal/proj/c2c/repository"
 	marketplaceServices "backend/internal/proj/c2c/services"
 	"backend/internal/proj/c2c/storage/opensearch"
+	globalService "backend/internal/proj/global/service"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
 )

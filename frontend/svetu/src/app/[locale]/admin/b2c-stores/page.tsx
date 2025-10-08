@@ -10,12 +10,9 @@ interface PageProps {
 
 async function getStorefrontsStats() {
   try {
-    const response = await fetch(
-      `${configManager.getApiUrl()}/api/v1/b2c`,
-      {
-        cache: 'no-store',
-      }
-    );
+    const response = await fetch(`${configManager.getApiUrl()}/api/v1/b2c`, {
+      cache: 'no-store',
+    });
     const data = await response.json();
 
     if (data.storefronts) {
@@ -54,9 +51,7 @@ export default async function StorefrontsPage({ params }: PageProps) {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">{t('b2c.title')}</h1>
-          <p className="text-base-content/60 mt-1">
-            {t('b2c.description')}
-          </p>
+          <p className="text-base-content/60 mt-1">{t('b2c.description')}</p>
         </div>
 
         <div className="flex gap-2">

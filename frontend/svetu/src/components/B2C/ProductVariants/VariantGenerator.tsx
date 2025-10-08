@@ -37,9 +37,7 @@ export default function VariantGenerator({
   onCancel,
 }: VariantGeneratorProps) {
   const t = useTranslations('storefronts');
-  const [attributes, setAttributes] = useState<B2CProductAttribute[]>(
-    []
-  );
+  const [attributes, setAttributes] = useState<B2CProductAttribute[]>([]);
   const [selectedValues, setSelectedValues] = useState<
     Record<string, string[]>
   >({});

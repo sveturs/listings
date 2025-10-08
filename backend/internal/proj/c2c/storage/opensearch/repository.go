@@ -1444,7 +1444,8 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 		}
 	}
 
-	if len(listing.Images) > 0 {
+	switch {
+	case len(listing.Images) > 0:
 		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 		for _, img := range listing.Images {
 			imageDoc := map[string]interface{}{
@@ -1464,9 +1465,9 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 			imagesDoc = append(imagesDoc, imageDoc)
 		}
 		doc["images"] = imagesDoc
-	} else if isStorefrontProduct {
-		// Для товаров витрин загружаем изображения из storefront_product_images
-		storefrontImages, err := storage.GetStorefrontProductImages(context.Background(), listing.ID)
+	case isStorefrontProduct:
+		// Для B2C товаров загружаем изображения из storefront_product_images
+		storefrontImages, err := storage.GetB2CProductImages(context.Background(), listing.ID)
 		if err == nil && len(storefrontImages) > 0 {
 			imagesDoc := make([]map[string]interface{}, 0, len(storefrontImages))
 			var mainImageURL, mainThumbnailURL string
@@ -1500,7 +1501,7 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 				doc["thumbnail_url"] = storefrontImages[0].ThumbnailURL
 			}
 		}
-	} else {
+	default:
 		images, err := storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
 		if err == nil && len(images) > 0 {
 			imagesDoc := make([]map[string]interface{}, 0, len(images))

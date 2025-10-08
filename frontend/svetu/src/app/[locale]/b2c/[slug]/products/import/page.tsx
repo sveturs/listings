@@ -115,9 +115,7 @@ export default function ProductImportPage() {
                   />
                 </svg>
                 <button
-                  onClick={() =>
-                    router.push(`/${locale}/b2c/${slug}/products`)
-                  }
+                  onClick={() => router.push(`/${locale}/b2c/${slug}/products`)}
                   className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
                   Products
@@ -158,9 +156,7 @@ export default function ProductImportPage() {
             {/* Quick Actions */}
             <div className="flex items-center space-x-3">
               <button
-                onClick={() =>
-                  router.push(`/${locale}/b2c/${slug}/products`)
-                }
+                onClick={() => router.push(`/${locale}/b2c/${slug}/products`)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
                 <svg

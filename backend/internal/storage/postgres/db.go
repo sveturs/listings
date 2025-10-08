@@ -29,8 +29,8 @@ import (
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 
-	"backend/internal/proj/c2c/storage/opensearch"
 	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
+	"backend/internal/proj/c2c/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
 )
 
@@ -786,8 +786,8 @@ func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]m
 	return db.marketplaceDB.GetListingImages(ctx, listingID)
 }
 
-func (db *Database) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
-	return db.marketplaceDB.GetStorefrontProductImages(ctx, productID)
+func (db *Database) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+	return db.marketplaceDB.GetB2CProductImages(ctx, productID)
 }
 
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {

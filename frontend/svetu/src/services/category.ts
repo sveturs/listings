@@ -59,9 +59,7 @@ export class CategoryService {
     locale: string = 'en'
   ): Promise<Category[]> {
     try {
-      const response = await apiClient.get(
-        `/c2c/categories?locale=${locale}`
-      );
+      const response = await apiClient.get(`/c2c/categories?locale=${locale}`);
       return response.data?.data || [];
     } catch {
       // Fallback to regular categories if with-counts endpoint doesn't exist

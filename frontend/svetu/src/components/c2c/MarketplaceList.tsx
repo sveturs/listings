@@ -51,9 +51,7 @@ function convertFiltersToSearchParams(filters: FilterValues) {
 }
 
 // Адаптер для преобразования UnifiedSearchItem в C2CItem
-function convertToC2CItem(
-  unifiedItem: UnifiedSearchItem
-): C2CItem {
+function convertToC2CItem(unifiedItem: UnifiedSearchItem): C2CItem {
   return {
     id: unifiedItem.product_id,
     title: unifiedItem.name,

@@ -831,7 +831,7 @@ func (s *Storage) ArchiveChat(ctx context.Context, chatID int, userID int) error
 }
 
 // UpdateMessageTranslations обновляет переводы сообщения в БД (добавляет новые ключи к существующим)
-// DEPRECATED: Колонка translations не существует в таблице c2c_messages.
+// Deprecated: Колонка translations не существует в таблице c2c_messages.
 // Если нужна функциональность переводов, необходимо создать миграцию для добавления колонки.
 func (s *Storage) UpdateMessageTranslations(ctx context.Context, messageID int, translations map[string]string) error {
 	// Временно отключено - колонка translations не существует в таблице

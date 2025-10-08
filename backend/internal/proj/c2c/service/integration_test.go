@@ -289,7 +289,7 @@ func (m *MockStorage) GetListingImages(ctx context.Context, listingID string) ([
 	return nil, ErrNotImplemented
 }
 
-func (m *MockStorage) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+func (m *MockStorage) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
 	return nil, ErrNotImplemented
 }
 

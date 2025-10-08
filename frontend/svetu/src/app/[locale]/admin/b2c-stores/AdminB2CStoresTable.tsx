@@ -156,9 +156,7 @@ export default function AdminStorefrontsTable() {
   const handleDelete = async (id: number, type: 'soft' | 'hard' = 'soft') => {
     try {
       const url =
-        type === 'hard'
-          ? `/b2c/${id}?hard_delete=true`
-          : `/b2c/${id}`;
+        type === 'hard' ? `/b2c/${id}?hard_delete=true` : `/b2c/${id}`;
 
       const response = await apiClient.delete(url);
 
@@ -279,9 +277,7 @@ export default function AdminStorefrontsTable() {
             >
               <option value="">{t('b2c.filters.allStatus')}</option>
               <option value="active">{t('b2c.filters.active')}</option>
-              <option value="inactive">
-                {t('b2c.filters.inactive')}
-              </option>
+              <option value="inactive">{t('b2c.filters.inactive')}</option>
             </select>
 
             <select
@@ -289,15 +285,9 @@ export default function AdminStorefrontsTable() {
               value={verifiedFilter}
               onChange={(e) => setVerifiedFilter(e.target.value)}
             >
-              <option value="">
-                {t('b2c.filters.allVerification')}
-              </option>
-              <option value="verified">
-                {t('b2c.filters.verified')}
-              </option>
-              <option value="unverified">
-                {t('b2c.filters.unverified')}
-              </option>
+              <option value="">{t('b2c.filters.allVerification')}</option>
+              <option value="verified">{t('b2c.filters.verified')}</option>
+              <option value="unverified">{t('b2c.filters.unverified')}</option>
             </select>
 
             <select
@@ -308,18 +298,12 @@ export default function AdminStorefrontsTable() {
               <option value="date_desc">{t('b2c.sort.newest')}</option>
               <option value="date_asc">{t('b2c.sort.oldest')}</option>
               <option value="name_asc">{t('b2c.sort.nameAsc')}</option>
-              <option value="name_desc">
-                {t('b2c.sort.nameDesc')}
-              </option>
+              <option value="name_desc">{t('b2c.sort.nameDesc')}</option>
               <option value="products_desc">
                 {t('b2c.sort.mostProducts')}
               </option>
-              <option value="sales_desc">
-                {t('b2c.sort.mostSales')}
-              </option>
-              <option value="rating_desc">
-                {t('b2c.sort.bestRating')}
-              </option>
+              <option value="sales_desc">{t('b2c.sort.mostSales')}</option>
+              <option value="rating_desc">{t('b2c.sort.bestRating')}</option>
             </select>
           </div>
 
@@ -354,8 +338,7 @@ export default function AdminStorefrontsTable() {
                     onClick={() => handleBulkAction('soft-delete')}
                     className="text-warning"
                   >
-                    {t('b2c.softDelete')} (
-                    {t('b2c.deleteSelected')})
+                    {t('b2c.softDelete')} ({t('b2c.deleteSelected')})
                   </button>
                 </li>
                 <li>
@@ -363,8 +346,7 @@ export default function AdminStorefrontsTable() {
                     onClick={() => handleBulkAction('hard-delete')}
                     className="text-error"
                   >
-                    {t('b2c.hardDelete')} (
-                    {t('b2c.deleteSelected')})
+                    {t('b2c.hardDelete')} ({t('b2c.deleteSelected')})
                   </button>
                 </li>
               </ul>
@@ -405,9 +387,7 @@ export default function AdminStorefrontsTable() {
               {storefronts.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="text-center py-8">
-                    <p className="text-base-content/60">
-                      {t('b2c.noData')}
-                    </p>
+                    <p className="text-base-content/60">{t('b2c.noData')}</p>
                   </td>
                 </tr>
               ) : (
@@ -525,9 +505,7 @@ export default function AdminStorefrontsTable() {
                           <li>
                             <button
                               onClick={() =>
-                                router.push(
-                                  `/admin/b2c/${storefront.id}/edit`
-                                )
+                                router.push(`/admin/b2c/${storefront.id}/edit`)
                               }
                             >
                               {t('b2c.edit')}
@@ -616,9 +594,7 @@ export default function AdminStorefrontsTable() {
       {deleteModalOpen && (
         <dialog className="modal modal-open">
           <div className="modal-box">
-            <h3 className="font-bold text-lg">
-              {t('b2c.confirmDeleteTitle')}
-            </h3>
+            <h3 className="font-bold text-lg">{t('b2c.confirmDeleteTitle')}</h3>
             <p className="py-4">{t('b2c.confirmDeleteMessage')}</p>
 
             {/* Выбор типа удаления для администратора */}

@@ -41,9 +41,7 @@ interface C2COrderCardProps {
   order: C2COrder;
 }
 
-export default function C2COrderCard({
-  order,
-}: C2COrderCardProps) {
+export default function C2COrderCard({ order }: C2COrderCardProps) {
   const t = useTranslations('orders');
   const locale = useLocale();
 

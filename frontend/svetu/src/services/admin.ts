@@ -563,15 +563,12 @@ export const adminApi = {
 
     for (const targetLang of targetLanguages) {
       try {
-        const response = await apiClient.post(
-          '/c2c/translations/translate',
-          {
-            text,
-            source_lang: 'ru', // Предполагаем, что исходный текст на русском
-            target_lang: targetLang,
-            provider: 'google',
-          }
-        );
+        const response = await apiClient.post('/c2c/translations/translate', {
+          text,
+          source_lang: 'ru', // Предполагаем, что исходный текст на русском
+          target_lang: targetLang,
+          provider: 'google',
+        });
 
         const data = response.data as any;
         if (data && data.data && data.data.translated_text) {

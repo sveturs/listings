@@ -522,10 +522,9 @@ export default function AdminB2CProductsTable() {
         return;
       }
 
-      const response = await apiClient.put(
-        `/b2c/slug/${slug}/products/${id}`,
-        { is_active: !isActive }
-      );
+      const response = await apiClient.put(`/b2c/slug/${slug}/products/${id}`, {
+        is_active: !isActive,
+      });
 
       if (response.data) {
         await fetchProducts();

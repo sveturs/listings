@@ -3117,8 +3117,8 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 	log.Printf("DEBUG GetListingByID: listing.ID=%d, StorefrontID=%v", listing.ID, listing.StorefrontID)
 	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
 		log.Printf("DEBUG GetListingByID: Loading storefront images for listing %d, storefront_id=%d", listing.ID, *listing.StorefrontID)
-		// Для storefront товаров загружаем изображения из storefront_product_images
-		storefrontImages, err := s.GetStorefrontProductImages(ctx, listing.ID)
+		// Для B2C товаров загружаем изображения из storefront_product_images
+		storefrontImages, err := s.GetB2CProductImages(ctx, listing.ID)
 		if err != nil {
 			log.Printf("Error loading storefront images for listing %d: %v", listing.ID, err)
 			// Не прерываем выполнение, просто оставляем пустой массив изображений
@@ -3400,9 +3400,9 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	// User info будет загружена в handler через auth-service
 	listing.User.ID = listing.UserID
 
-	// Загружаем изображения для storefront продукта
+	// Загружаем изображения для B2C продукта
 	log.Printf("DEBUG getStorefrontProductAsListing: Loading images for storefront product %d", listing.ID)
-	storefrontImages, err := s.GetStorefrontProductImages(ctx, listing.ID)
+	storefrontImages, err := s.GetB2CProductImages(ctx, listing.ID)
 	if err != nil {
 		log.Printf("Error loading storefront images for product %d: %v", listing.ID, err)
 		listing.Images = []models.MarketplaceImage{}
@@ -3611,8 +3611,8 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 	return categories, nil
 }
 
-// GetStorefrontProductImages загружает изображения для storefront товара и конвертирует их в MarketplaceImage
-func (s *Storage) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+// GetB2CProductImages загружает изображения для B2C товара и конвертирует их в MarketplaceImage
+func (s *Storage) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
 	query := `
         SELECT
             id, storefront_product_id, image_url, thumbnail_url, 

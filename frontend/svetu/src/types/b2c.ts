@@ -6,8 +6,7 @@ export type B2CStoreCreateDTO =
   components['schemas']['models.B2CStoreCreateDTO'];
 export type B2CStoreUpdateDTO =
   components['schemas']['models.B2CStoreUpdateDTO'];
-export type B2CProduct =
-  components['schemas']['models.B2CProduct'];
+export type B2CProduct = components['schemas']['models.B2CProduct'];
 
 // Расширенный тип Storefront с дополнительными полями
 export interface B2CStore extends StorefrontBase {
@@ -40,8 +39,7 @@ export type StorefrontAnalytics =
   components['schemas']['models.StorefrontAnalytics'];
 export type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
-export type B2CStoreMapData =
-  components['schemas']['models.B2CStoreMapData'];
+export type B2CStoreMapData = components['schemas']['models.B2CStoreMapData'];
 export type StorefrontSearchResult = any; // Type removed from swagger schema
 export type StorefrontSearchItem = any; // Type removed from swagger schema
 export type StorefrontsListResponse =
@@ -70,8 +68,7 @@ export type DeliveryProvider = components['schemas']['models.DeliveryProvider'];
 /**
  * Состояние формы создания витрины
  */
-export interface B2CStoreFormData
-  extends Omit<B2CStoreCreateDTO, 'location'> {
+export interface B2CStoreFormData extends Omit<B2CStoreCreateDTO, 'location'> {
   // Координаты отдельно для удобства
   latitude?: number;
   longitude?: number;

@@ -35,9 +35,7 @@ export default function OrderDetailsPage({ params }: Props) {
 
     const fetchOrder = async () => {
       try {
-        const response = await apiClient.get(
-          `/api/v1/c2c/orders/${id}`
-        );
+        const response = await apiClient.get(`/api/v1/c2c/orders/${id}`);
         console.log('Order details:', response);
 
         if (response.data?.success && response.data?.data) {

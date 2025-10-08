@@ -222,10 +222,7 @@ export default function EditStorefrontPage() {
             </h2>
             <p className="text-base-content/70">{error}</p>
             <div className="card-actions justify-center mt-6">
-              <Link
-                href={`/${locale}/profile/b2c`}
-                className="btn btn-primary"
-              >
+              <Link href={`/${locale}/profile/b2c`} className="btn btn-primary">
                 <ArrowLeftIcon className="w-5 h-5" />
                 {tCommon('back')}
               </Link>
@@ -249,10 +246,7 @@ export default function EditStorefrontPage() {
               Витрина не загружена: {currentStorefront ? 'есть' : 'нет'}
             </p>
             <div className="card-actions justify-center mt-6">
-              <Link
-                href={`/${locale}/profile/b2c`}
-                className="btn btn-primary"
-              >
+              <Link href={`/${locale}/profile/b2c`} className="btn btn-primary">
                 <ArrowLeftIcon className="w-5 h-5" />
                 {tCommon('back')}
               </Link>

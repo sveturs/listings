@@ -87,10 +87,7 @@ export interface OrderListResponse {
 export const marketplaceOrdersService = {
   // Создать заказ
   async createOrder(data: CreateOrderRequest): Promise<CreateOrderResponse> {
-    const response = await apiClient.post(
-      '/api/v1/c2c/orders/create',
-      data
-    );
+    const response = await apiClient.post('/api/v1/c2c/orders/create', data);
     return response.data?.data || response.data;
   },
 
@@ -120,9 +117,7 @@ export const marketplaceOrdersService = {
 
   // Получить детали заказа
   async getOrderDetails(orderId: number): Promise<C2COrder> {
-    const response = await apiClient.get(
-      `/api/v1/c2c/orders/${orderId}`
-    );
+    const response = await apiClient.get(`/api/v1/c2c/orders/${orderId}`);
     return response.data?.data || response.data;
   },
 
@@ -140,9 +135,7 @@ export const marketplaceOrdersService = {
 
   // Подтвердить доставку
   async confirmDelivery(orderId: number): Promise<void> {
-    await apiClient.post(
-      `/api/v1/c2c/orders/${orderId}/confirm-delivery`
-    );
+    await apiClient.post(`/api/v1/c2c/orders/${orderId}/confirm-delivery`);
   },
 
   // Открыть спор

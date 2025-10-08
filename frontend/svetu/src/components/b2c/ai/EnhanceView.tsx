@@ -252,9 +252,7 @@ export default function EnhanceView({
     const id = Array.isArray(categoryId) ? categoryId[0] : categoryId;
     // Загружаем информацию о категории для получения имени
     try {
-      const response = await fetch(
-        `/api/v1/c2c/categories?page=1&limit=1000`
-      );
+      const response = await fetch(`/api/v1/c2c/categories?page=1&limit=1000`);
       if (response.ok) {
         const data = await response.json();
         const category = data.data?.find((cat: any) => cat.id === id);

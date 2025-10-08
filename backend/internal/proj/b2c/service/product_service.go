@@ -11,9 +11,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	variantTypes "backend/internal/proj/storefront/types"
 	"backend/internal/proj/b2c/common"
 	"backend/internal/proj/b2c/storage/opensearch"
+	variantTypes "backend/internal/proj/storefront/types"
 	"backend/pkg/utils"
 )
 

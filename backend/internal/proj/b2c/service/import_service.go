@@ -22,8 +22,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	marketplaceOpenSearch "backend/internal/proj/c2c/storage/opensearch"
 	"backend/internal/proj/b2c/parsers"
+	marketplaceOpenSearch "backend/internal/proj/c2c/storage/opensearch"
 	"backend/internal/services"
 	"backend/internal/storage/postgres"
 

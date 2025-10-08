@@ -23,9 +23,7 @@ import GridColumnsToggle from '@/components/common/GridColumnsToggle';
 import { useGridColumns } from '@/hooks/useGridColumns';
 
 // Адаптер для преобразования UnifiedSearchItem в C2CItem
-function convertToC2CItem(
-  unifiedItem: UnifiedSearchItem
-): C2CItem {
+function convertToC2CItem(unifiedItem: UnifiedSearchItem): C2CItem {
   return {
     id: unifiedItem.product_id,
     title: unifiedItem.name,

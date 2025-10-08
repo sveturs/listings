@@ -8,9 +8,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	globalService "backend/internal/proj/global/service"
-	marketplaceService "backend/internal/proj/c2c/service"
 	storefrontService "backend/internal/proj/b2c/service"
+	marketplaceService "backend/internal/proj/c2c/service"
+	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/service"
 )

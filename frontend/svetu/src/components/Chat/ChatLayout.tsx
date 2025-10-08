@@ -25,9 +25,8 @@ export default function ChatLayout({
 
   // Определяем, есть ли параметры для нового чата
   const isNewChatParams =
-    Boolean(
-      (initialListingId || initialB2CProductId) && initialSellerId
-    ) || Boolean(initialContactId);
+    Boolean((initialListingId || initialB2CProductId) && initialSellerId) ||
+    Boolean(initialContactId);
 
   // На мобильных: если есть параметры для нового чата, сразу показываем окно чата
   // Иначе показываем список чатов
@@ -95,8 +94,7 @@ export default function ChatLayout({
             showBackButton={isMobile}
             onShowChat={handleShowChat}
           />
-        ) : (initialListingId || initialB2CProductId) &&
-          initialSellerId ? (
+        ) : (initialListingId || initialB2CProductId) && initialSellerId ? (
           <ChatWindow
             initialListingId={initialListingId}
             initialB2CProductId={initialB2CProductId}

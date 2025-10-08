@@ -17,19 +17,18 @@ import {
 
 type B2CProduct = components['schemas']['models.B2CProduct'];
 type B2CStore = components['schemas']['models.Storefront'];
-type ProductVariant =
-  components['schemas']['models.B2CProductVariant'] & {
-    images?: Array<{
-      id: number;
-      image_url: string;
-      thumbnail_url?: string;
-      alt_text?: string;
-      is_main: boolean;
-    }>;
-    stock_status?: string;
-    available_quantity?: number;
-    is_default?: boolean;
-  };
+type ProductVariant = components['schemas']['models.B2CProductVariant'] & {
+  images?: Array<{
+    id: number;
+    image_url: string;
+    thumbnail_url?: string;
+    alt_text?: string;
+    is_main: boolean;
+  }>;
+  stock_status?: string;
+  available_quantity?: number;
+  is_default?: boolean;
+};
 
 type Props = {
   params: Promise<{ slug: string; id: string }>;
@@ -161,10 +160,7 @@ export default function B2CProductPage({ params }: Props) {
           <p className="text-base-content/60 mb-6">
             {t('notFoundDescription')}
           </p>
-          <Link
-            href={`/${locale}/b2c/${slug}`}
-            className="btn btn-primary"
-          >
+          <Link href={`/${locale}/b2c/${slug}`} className="btn btn-primary">
             {tCommon('back')}
           </Link>
         </div>
@@ -186,9 +182,7 @@ export default function B2CProductPage({ params }: Props) {
               <Link href={`/${locale}`}>{tCommon('home')}</Link>
             </li>
             <li>
-              <Link href={`/${locale}/b2c/${slug}`}>
-                {storefront.name}
-              </Link>
+              <Link href={`/${locale}/b2c/${slug}`}>{storefront.name}</Link>
             </li>
             <li>
               <Link href={`/${locale}/b2c/${slug}/products`}>

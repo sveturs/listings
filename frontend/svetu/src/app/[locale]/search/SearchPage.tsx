@@ -1548,9 +1548,7 @@ export default function SearchPage() {
                         }
                       >
                         <UnifiedProductCard
-                          product={adaptC2CItem(
-                            convertToC2CItem(item)
-                          )}
+                          product={adaptC2CItem(convertToC2CItem(item))}
                           locale={locale}
                           viewMode={viewMode}
                           index={index}

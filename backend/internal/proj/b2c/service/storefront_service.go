@@ -11,9 +11,9 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/internal/proj/notifications/service"
 	"backend/internal/proj/b2c/common"
 	"backend/internal/proj/b2c/storage/opensearch"
+	"backend/internal/proj/notifications/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 	"backend/internal/storage/postgres"

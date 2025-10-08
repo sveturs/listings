@@ -190,10 +190,7 @@ export default function ProductDetailPage() {
       <div className="bg-base-100 border-b">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
-            <Link
-              href="/c2c"
-              className="hover:text-primary"
-            >
+            <Link href="/c2c" className="hover:text-primary">
               <FaArrowLeft className="inline mr-2" />
               Главная
             </Link>

@@ -166,9 +166,7 @@ export default function HomePageClient({
           'No storefront_id in deal, fetching product details from API...'
         );
         try {
-          const response = await apiClient.get(
-            `/b2c/products/${productId}`
-          );
+          const response = await apiClient.get(`/b2c/products/${productId}`);
           if (response.data && response.data.storefront_id) {
             storefrontId = response.data.storefront_id;
             logger.debug('Got storefront_id from API:', storefrontId);

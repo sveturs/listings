@@ -45,9 +45,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   });
   const [loading, setLoading] = useState(true);
   const [popularMakes, setPopularMakes] = useState<CarMake[]>([]);
-  const [latestListings, setLatestListings] = useState<C2CListing[]>(
-    []
-  );
+  const [latestListings, setLatestListings] = useState<C2CListing[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState({
     totalListings: 0,
@@ -63,8 +61,9 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
   const [searchResults, setSearchResults] = useState<C2CListing[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [quickViewListing, setQuickViewListing] =
-    useState<C2CListing | null>(null);
+  const [quickViewListing, setQuickViewListing] = useState<C2CListing | null>(
+    null
+  );
   const [_favoriteIds, _setFavoriteIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -203,10 +202,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
         }
       });
 
-      const response = await apiClient.post(
-        '/c2c/search',
-        searchParams
-      );
+      const response = await apiClient.post('/c2c/search', searchParams);
 
       // API возвращает массив напрямую в data, не в data.items
       if (response.data?.data) {

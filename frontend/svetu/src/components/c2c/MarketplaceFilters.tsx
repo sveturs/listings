@@ -12,9 +12,7 @@ interface C2CFiltersProps {
 
 type Category = components['schemas']['models.MarketplaceCategory'];
 
-export function C2CFilters({
-  onFilterChange,
-}: C2CFiltersProps) {
+export function C2CFilters({ onFilterChange }: C2CFiltersProps) {
   const locale = useLocale();
   const t = useTranslations('dashboard');
   const [categories, setCategories] = useState<Category[]>([]);

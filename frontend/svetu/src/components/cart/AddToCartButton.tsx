@@ -9,8 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
-type B2CProductVariant =
-  components['schemas']['models.B2CProductVariant'];
+type B2CProductVariant = components['schemas']['models.B2CProductVariant'];
 
 interface ProductForCart {
   id: number;

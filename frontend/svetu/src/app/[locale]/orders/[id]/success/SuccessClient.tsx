@@ -34,9 +34,7 @@ export default function SuccessClient({ params }: Props) {
     const fetchOrder = async () => {
       try {
         // Получаем детали заказа из marketplace API
-        const response = await apiClient.get(
-          `/api/v1/c2c/orders/${id}`
-        );
+        const response = await apiClient.get(`/api/v1/c2c/orders/${id}`);
         console.log('Order details response:', response);
 
         if (response.data?.success && response.data?.data) {

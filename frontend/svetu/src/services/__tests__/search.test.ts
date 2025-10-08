@@ -52,10 +52,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.searchListings(params);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/c2c/search',
-        params
-      );
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/c2c/search', params);
       expect(result).toEqual(mockSearchResponse.data);
     });
 
@@ -78,10 +75,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.searchListings(params);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/c2c/search',
-        params
-      );
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/c2c/search', params);
       expect(result).toEqual(mockSearchResponse.data);
     });
 
@@ -331,9 +325,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.getTrendingSearches();
 
-      expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/c2c/search/trending'
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/c2c/search/trending');
       expect(result).toEqual(mockTrendingResponse.data);
     });
 

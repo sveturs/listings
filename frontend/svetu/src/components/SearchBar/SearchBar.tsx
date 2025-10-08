@@ -336,9 +336,7 @@ export default function SearchBar({
             ? suggestion.metadata.storefront_slug
             : undefined;
         if (storefrontSlug) {
-          router.push(
-            `/${locale}/b2c/${storefrontSlug}/products/${productId}`
-          );
+          router.push(`/${locale}/b2c/${storefrontSlug}/products/${productId}`);
         } else {
           // Если нет slug, переходим на страницу поиска с фильтром
           router.push(

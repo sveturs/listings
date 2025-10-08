@@ -16,9 +16,9 @@ import (
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
 	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/c2c/cache"
 	"backend/internal/proj/c2c/service"
+	globalService "backend/internal/proj/global/service"
 	searchlogsTypes "backend/internal/proj/searchlogs/types"
 	"backend/pkg/utils"
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"backend/internal/middleware"
+	storefrontsOpensearch "backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/proj/orders/adapters"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
-	storefrontsOpensearch "backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/storage"
 	opensearchClient "backend/internal/storage/opensearch"
 	"backend/internal/storage/postgres"

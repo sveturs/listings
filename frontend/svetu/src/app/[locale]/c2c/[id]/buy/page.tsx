@@ -35,9 +35,7 @@ export default function BuyPage({ params }: Props) {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const response = await apiClient.get(
-          `/api/v1/c2c/listings/${id}`
-        );
+        const response = await apiClient.get(`/api/v1/c2c/listings/${id}`);
         if (response.data?.data) {
           setListing(response.data.data);
         } else {
@@ -93,14 +91,11 @@ export default function BuyPage({ params }: Props) {
       }
 
       // Создаем заказ
-      const response = await apiClient.post(
-        '/api/v1/c2c/orders/create',
-        {
-          listing_id: listing.id,
-          message: message || undefined,
-          payment_method: paymentMethod === 'balance' ? 'card' : paymentMethod,
-        }
-      );
+      const response = await apiClient.post('/api/v1/c2c/orders/create', {
+        listing_id: listing.id,
+        message: message || undefined,
+        payment_method: paymentMethod === 'balance' ? 'card' : paymentMethod,
+      });
 
       if (response.data?.success && response.data?.data?.payment_url) {
         // Перенаправляем на страницу оплаты с учетом локали
@@ -151,9 +146,7 @@ export default function BuyPage({ params }: Props) {
             <Link href={`/${locale}`}>{tHome('title')}</Link>
           </li>
           <li>
-            <Link href={`/${locale}/c2c/${listing.id}`}>
-              {listing.title}
-            </Link>
+            <Link href={`/${locale}/c2c/${listing.id}`}>{listing.title}</Link>
           </li>
           <li>{t('buy')}</li>
         </ul>

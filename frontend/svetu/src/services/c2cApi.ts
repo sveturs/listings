@@ -40,9 +40,7 @@ class MarketplaceApiService extends BaseApiService {
   /**
    * Get marketplace listings with filters
    */
-  async getListings(
-    filters?: C2CFilters
-  ): Promise<C2CListingsResponse> {
+  async getListings(filters?: C2CFilters): Promise<C2CListingsResponse> {
     const url = this.createUrl('/api/v1/c2c/listings', filters);
     return this.request<C2CListingsResponse>(url);
   }

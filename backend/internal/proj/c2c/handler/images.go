@@ -14,8 +14,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/c2c/service"
+	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"

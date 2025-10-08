@@ -5,10 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  marketplaceOrdersService,
-  type C2COrder,
-} from '@/services/c2cOrders';
+import { marketplaceOrdersService, type C2COrder } from '@/services/c2cOrders';
 import { balanceService } from '@/services/balance';
 import SafeImage from '@/components/SafeImage';
 import { toast } from 'react-hot-toast';

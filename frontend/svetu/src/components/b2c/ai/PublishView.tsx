@@ -137,9 +137,7 @@ export default function PublishView({
 
       // Reset context and redirect
       reset();
-      router.push(
-        `/${locale}/b2c/${storefrontSlug}/products/${productId}`
-      );
+      router.push(`/${locale}/b2c/${storefrontSlug}/products/${productId}`);
     } catch (error: any) {
       console.error('Publish error:', error);
       setError(error.message || 'Failed to publish product');

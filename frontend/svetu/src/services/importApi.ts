@@ -87,10 +87,7 @@ export class ImportApi {
       });
 
       // Используем BFF proxy - автоматически добавит cookies для авторизации
-      xhr.open(
-        'POST',
-        `/api/v2/b2c/slug/${storefrontSlug}/import/file`
-      );
+      xhr.open('POST', `/api/v2/b2c/slug/${storefrontSlug}/import/file`);
       xhr.withCredentials = true; // Include cookies
 
       xhr.send(formData);
@@ -440,12 +437,9 @@ export class ImportApi {
    */
   static async downloadSample(format: 'csv' | 'xml'): Promise<Blob> {
     // Используем BFF proxy - автоматически добавит cookies для авторизации
-    const response = await fetch(
-      `/api/v2/b2c/import/sample/${format}`,
-      {
-        credentials: 'include',
-      }
-    );
+    const response = await fetch(`/api/v2/b2c/import/sample/${format}`, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

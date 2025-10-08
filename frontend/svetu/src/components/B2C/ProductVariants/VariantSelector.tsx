@@ -6,17 +6,16 @@ import SafeImage from '../../SafeImage';
 import type { components } from '@/types/generated/api';
 
 // Use generated types from API
-type ProductVariant =
-  components['schemas']['models.B2CProductVariant'] & {
-    // Add additional fields that might be needed
-    images?: ProductVariantImage[];
-    stock_status?: string;
-    reserved_quantity?: number;
-    available_quantity?: number;
-    is_default?: boolean;
-    variant_attributes?: Record<string, any>;
-    attributes?: Record<string, any>;
-  };
+type ProductVariant = components['schemas']['models.B2CProductVariant'] & {
+  // Add additional fields that might be needed
+  images?: ProductVariantImage[];
+  stock_status?: string;
+  reserved_quantity?: number;
+  available_quantity?: number;
+  is_default?: boolean;
+  variant_attributes?: Record<string, any>;
+  attributes?: Record<string, any>;
+};
 
 interface ProductVariantImage {
   id: number;

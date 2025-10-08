@@ -277,9 +277,7 @@ export default function ViewDemoPage() {
             >
               <div className="card-body">
                 <h3 className="card-title text-lg">💳 Страница покупки</h3>
-                <p className="text-sm text-base-content/70">
-                  /c2c/[id]/buy
-                </p>
+                <p className="text-sm text-base-content/70">/c2c/[id]/buy</p>
                 <div className="badge badge-warning">Оформление</div>
               </div>
             </Link>
@@ -527,10 +525,7 @@ export default function ViewDemoPage() {
                   <td>Маркетплейс</td>
                   <td>Главная страница с товарами</td>
                   <td>
-                    <Link
-                      href={`/${locale}/c2c`}
-                      className="link link-primary"
-                    >
+                    <Link href={`/${locale}/c2c`} className="link link-primary">
                       /c2c
                     </Link>
                   </td>
@@ -539,10 +534,7 @@ export default function ViewDemoPage() {
                   <td>Витрины</td>
                   <td>Список всех витрин</td>
                   <td>
-                    <Link
-                      href={`/${locale}/b2c`}
-                      className="link link-primary"
-                    >
+                    <Link href={`/${locale}/b2c`} className="link link-primary">
                       /b2c
                     </Link>
                   </td>

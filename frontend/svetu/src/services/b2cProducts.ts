@@ -84,9 +84,7 @@ export const storefrontProductsService = {
 
   // Получить товар напрямую по ID (без slug витрины)
   async getProductById(productId: number): Promise<B2CProduct> {
-    const response = await apiClient.get(
-      `/api/v1/b2c/products/${productId}`
-    );
+    const response = await apiClient.get(`/api/v1/b2c/products/${productId}`);
 
     if (response.error) {
       throw new Error(response.error.message || 'Failed to fetch product');

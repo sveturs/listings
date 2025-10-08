@@ -13,10 +13,9 @@ import { storefrontApi } from '@/services/b2cStoreApi';
 import type { B2CStoreCreateDTO } from '@/types/b2c';
 import dynamic from 'next/dynamic';
 
-const UpgradePrompt = dynamic(
-  () => import('@/components/b2c/UpgradePrompt'),
-  { ssr: false }
-);
+const UpgradePrompt = dynamic(() => import('@/components/b2c/UpgradePrompt'), {
+  ssr: false,
+});
 
 interface B2CStoreFormData {
   // Basic Info

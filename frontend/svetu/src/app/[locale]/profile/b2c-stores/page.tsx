@@ -87,14 +87,12 @@ export default function MyStorefrontsPage() {
     );
   };
 
-  const filteredStorefronts = userStorefronts.filter(
-    (storefront: B2CStore) => {
-      if (selectedTab === 'all') return true;
-      if (selectedTab === 'active') return storefront.is_active === true;
-      if (selectedTab === 'inactive') return storefront.is_active === false;
-      return true;
-    }
-  );
+  const filteredStorefronts = userStorefronts.filter((storefront: B2CStore) => {
+    if (selectedTab === 'all') return true;
+    if (selectedTab === 'active') return storefront.is_active === true;
+    if (selectedTab === 'inactive') return storefront.is_active === false;
+    return true;
+  });
 
   // Calculate summary stats
   const stats = {

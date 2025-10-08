@@ -12,8 +12,8 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/internal/proj/c2c/service"
 	"backend/internal/proj/b2c/storage/opensearch"
+	"backend/internal/proj/c2c/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 	"backend/internal/types"
@@ -1383,4 +1383,9 @@ func (m *mockTranslationService) TranslateWithToneModeration(ctx context.Context
 		return translated, nil
 	}
 	return text, nil
+}
+
+// GetB2CProductImages - метод для получения изображений B2C продуктов в тестах
+func (ts *testStorage) GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+	return []models.MarketplaceImage{}, nil
 }

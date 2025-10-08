@@ -226,9 +226,7 @@ class FavoritesService {
   // Проверить статус на сервере
   async checkFavoriteStatus(listingId: number): Promise<boolean> {
     try {
-      const response = await apiClient.get(
-        `/c2c/favorites/${listingId}/check`
-      );
+      const response = await apiClient.get(`/c2c/favorites/${listingId}/check`);
       if (response.data?.success) {
         const isInFavorites = response.data.data?.isInFavorites || false;
         if (isInFavorites) {

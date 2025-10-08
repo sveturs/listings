@@ -33,9 +33,12 @@ import (
 	adminLogistics "backend/internal/proj/admin/logistics"
 	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/analytics"
+	b2cModule "backend/internal/proj/b2c"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
 	"backend/internal/proj/bexexpress"
+	marketplaceHandler "backend/internal/proj/c2c/handler"
+	marketplaceService "backend/internal/proj/c2c/service"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -46,8 +49,6 @@ import (
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
-	marketplaceHandler "backend/internal/proj/c2c/handler"
-	marketplaceService "backend/internal/proj/c2c/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
@@ -58,7 +59,6 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
-	b2cModule "backend/internal/proj/b2c"
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/tracking"
 	"backend/internal/proj/translation_admin"
@@ -144,7 +144,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.C2CIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}

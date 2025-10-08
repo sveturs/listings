@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"backend/internal/logger"
-	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/c2c/service"
+	globalService "backend/internal/proj/global/service"
 	"backend/pkg/utils"
 )
 

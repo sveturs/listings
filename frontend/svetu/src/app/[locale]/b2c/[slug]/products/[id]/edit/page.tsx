@@ -73,10 +73,7 @@ function EditProductPageContent({
             {tStorefronts('products.errors.loadFailed')}
           </h3>
           <p className="text-error/80 mb-4">{error}</p>
-          <Link
-            href={`/b2c/${slug}/products`}
-            className="btn btn-primary"
-          >
+          <Link href={`/b2c/${slug}/products`} className="btn btn-primary">
             {tStorefronts('products.backToProducts')}
           </Link>
         </div>
@@ -91,10 +88,7 @@ function EditProductPageContent({
           <h3 className="text-lg font-semibold text-error mb-2">
             {tStorefronts('products.errors.productNotFound')}
           </h3>
-          <Link
-            href={`/b2c/${slug}/products`}
-            className="btn btn-primary"
-          >
+          <Link href={`/b2c/${slug}/products`} className="btn btn-primary">
             {tStorefronts('products.backToProducts')}
           </Link>
         </div>

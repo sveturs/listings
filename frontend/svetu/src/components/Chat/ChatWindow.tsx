@@ -87,8 +87,7 @@ export default function ChatWindow({
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showProductQuickView, setShowProductQuickView] = useState(false);
-  const [storefrontProduct, setB2CProduct] =
-    useState<B2CProduct | null>(null);
+  const [storefrontProduct, setB2CProduct] = useState<B2CProduct | null>(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
   const dispatch = useAppDispatch();
@@ -193,15 +192,12 @@ export default function ChatWindow({
   useEffect(() => {
     if (chat?.storefront_product_id && !storefrontProduct) {
       const apiUrl = configManager.getApiUrl();
-      fetch(
-        `${apiUrl}/api/v1/b2c/products/${chat.storefront_product_id}`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      fetch(`${apiUrl}/api/v1/b2c/products/${chat.storefront_product_id}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
         .then((res) => res.json())
         .then((result) => {
           const data = result.data || result;
@@ -256,12 +252,7 @@ export default function ChatWindow({
     }
 
     // Для товаров витрин - используем заглушку пока endpoint не реализован
-    if (
-      isNewChat &&
-      initialB2CProductId &&
-      !listingInfo &&
-      !isContactChat
-    ) {
+    if (isNewChat && initialB2CProductId && !listingInfo && !isContactChat) {
       console.log(
         'Storefront product loading - using placeholder data (endpoint not implemented):',
         initialB2CProductId
