@@ -24,6 +24,7 @@ import {
 import { PageTransition } from '@/components/ui/PageTransition';
 // Marketplace listings linked to storefronts can be added to cart
 import AddToCartButton from '@/components/cart/AddToCartButton';
+import SafeHTML from '@/components/SafeHTML';
 // import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
 // import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
@@ -807,9 +808,10 @@ export default function ListingPage({ params }: Props) {
                   <h2 className="card-title text-2xl mb-4">
                     {locale === 'ru' ? 'Описание' : 'Description'}
                   </h2>
-                  <p className="text-base-content/80 whitespace-pre-wrap">
-                    {displayDescription}
-                  </p>
+                  <SafeHTML
+                    html={displayDescription}
+                    className="text-base-content/80 whitespace-pre-wrap"
+                  />
                   {isLongDescription && (
                     <button
                       onClick={() =>

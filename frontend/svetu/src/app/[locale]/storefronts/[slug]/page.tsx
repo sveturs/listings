@@ -10,6 +10,7 @@ import type { Storefront } from '@/types/storefront';
 import { ReviewsSection } from '@/components/reviews';
 import { ImageGallery } from '@/components/reviews/ImageGallery';
 import { usePageViewTracking } from '@/hooks/useAnalytics';
+import SafeHTML from '@/components/SafeHTML';
 import StorefrontHeader from '@/components/storefronts/public/StorefrontHeader';
 import StorefrontInfo from '@/components/storefronts/public/StorefrontInfo';
 import StorefrontActions from '@/components/storefronts/public/StorefrontActions';
@@ -120,9 +121,10 @@ export default function StorefrontPage({ params }: Props) {
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title text-2xl mb-4">{t('about')}</h2>
-                <p className="text-base-content/80 whitespace-pre-wrap">
-                  {storefront.description}
-                </p>
+                <SafeHTML
+                  html={storefront.description || ''}
+                  className="text-base-content/80 whitespace-pre-wrap"
+                />
 
                 {/* Business Details */}
                 {(storefront.registration_number ||

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import SafeImage from '@/components/SafeImage';
+import SafeHTML from '@/components/SafeHTML';
 import AddToCartButton from '@/components/cart/AddToCartButton';
 import type { components } from '@/types/generated/api';
 import { MapPin } from 'lucide-react';
@@ -60,11 +61,12 @@ export default function ProductCard({
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h3 className="card-title text-lg">{product.name}</h3>
-              
+
               {product.description && (
-                <p className="text-sm text-base-content/70 line-clamp-2 mt-1">
-                  {product.description}
-                </p>
+                <SafeHTML
+                  html={product.description}
+                  className="text-sm text-base-content/70 line-clamp-2 mt-1"
+                />
               )}
 
               {/* Location */}
@@ -154,11 +156,12 @@ export default function ProductCard({
 
       <div className="card-body">
         <h3 className="card-title text-lg line-clamp-2">{product.name}</h3>
-        
+
         {product.description && (
-          <p className="text-sm text-base-content/70 line-clamp-2">
-            {product.description}
-          </p>
+          <SafeHTML
+            html={product.description}
+            className="text-sm text-base-content/70 line-clamp-2"
+          />
         )}
 
         {/* Location */}
