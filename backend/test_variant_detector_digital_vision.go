@@ -21,7 +21,7 @@ func main() {
 		{Name: "Monitor Samsung 24\" S24C310", SKU: "MONITORS24C310", Price: 15000},
 	}
 
-	fmt.Println("=== Testing Variant Detector on Digital Vision Data ===\n")
+	fmt.Println("=== Testing Variant Detector on Digital Vision Data ===")
 
 	// Test base name extraction
 	fmt.Println("1. Base Name Extraction:")

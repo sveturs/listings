@@ -11,22 +11,17 @@ import type { components } from '@/types/generated/api';
 import type { PaymentMethodType } from '@/types/storefront';
 
 // Типы из сгенерированного API
-type Storefront =
-  components['schemas']['models.Storefront'];
-type StorefrontCreateDTO =
-  components['schemas']['models.StorefrontCreateDTO'];
-type StorefrontUpdateDTO =
-  components['schemas']['models.StorefrontUpdateDTO'];
-type StorefrontAnalytics =
-  components['schemas']['models.StorefrontAnalytics'];
+type Storefront = components['schemas']['models.Storefront'];
+type StorefrontCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type StorefrontUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
+type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
 type StorefrontDeliveryOption =
   components['schemas']['models.StorefrontDeliveryOption'];
 type StorefrontPaymentMethod =
   components['schemas']['models.StorefrontPaymentMethod'];
-type StorefrontHours =
-  components['schemas']['models.StorefrontHours'];
+type StorefrontHours = components['schemas']['models.StorefrontHours'];
 type StorefrontsListResponse =
   components['schemas']['handler.StorefrontsListResponse'];
 

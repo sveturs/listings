@@ -15,10 +15,8 @@ import {
   type LocationPrivacyLevel,
 } from '@/utils/addressUtils';
 
-type StorefrontProduct =
-  components['schemas']['models.StorefrontProduct'];
-type Storefront =
-  components['schemas']['models.Storefront'];
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
+type Storefront = components['schemas']['models.Storefront'];
 type ProductVariant =
   components['schemas']['models.StorefrontProductVariant'] & {
     images?: Array<{

@@ -1,8 +1,7 @@
 import type { components } from '@/types/generated/api';
 
 // Базовые типы из API
-export type StorefrontBase =
-  components['schemas']['models.Storefront'];
+export type StorefrontBase = components['schemas']['models.Storefront'];
 export type StorefrontCreateDTO =
   components['schemas']['models.StorefrontCreateDTO'];
 export type StorefrontUpdateDTO =
@@ -49,27 +48,22 @@ export type StorefrontsListResponse =
   components['schemas']['handler.StorefrontsListResponse'];
 
 // Связанные типы
-export type StorefrontStaff =
-  components['schemas']['models.StorefrontStaff'];
-export type StorefrontHours =
-  components['schemas']['models.StorefrontHours'];
+export type StorefrontStaff = components['schemas']['models.StorefrontStaff'];
+export type StorefrontHours = components['schemas']['models.StorefrontHours'];
 export type StorefrontPaymentMethod =
   components['schemas']['models.StorefrontPaymentMethod'];
 export type StorefrontDeliveryOption =
   components['schemas']['models.StorefrontDeliveryOption'];
-export type Location =
-  components['schemas']['models.Location'];
+export type Location = components['schemas']['models.Location'];
 export type JSONB = any; // Type removed from swagger schema
 
 // Enum типы
 export type SubscriptionPlan =
   components['schemas']['models.SubscriptionPlanType'];
-export type StaffRole =
-  components['schemas']['models.StaffRole'];
+export type StaffRole = components['schemas']['models.StaffRole'];
 export type PaymentMethodType =
   components['schemas']['models.PaymentMethodType'];
-export type DeliveryProvider =
-  components['schemas']['models.DeliveryProvider'];
+export type DeliveryProvider = components['schemas']['models.DeliveryProvider'];
 
 // Дополнительные интерфейсы для UI
 

@@ -24,8 +24,7 @@ import {
 import CarBadges from './CarBadges';
 import CarQuickInfo from './CarQuickInfo';
 
-type MarketplaceListing =
-  components['schemas']['models.MarketplaceListing'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarQuickViewModalProps {
   isOpen: boolean;

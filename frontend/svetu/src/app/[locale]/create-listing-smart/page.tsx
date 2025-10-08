@@ -46,8 +46,7 @@ import CategoryAttributes from '@/components/listing/CategoryAttributes';
 import { CarSelectorCompact } from '@/components/cars';
 import configManager from '@/config';
 
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface AttributeValue {
   attribute_id: number;

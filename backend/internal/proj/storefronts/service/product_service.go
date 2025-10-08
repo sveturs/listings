@@ -1024,33 +1024,6 @@ func (s *ProductService) validateSKU(sku string) error {
 	return nil
 }
 
-// generateVariantName creates a display name from variant attributes
-func (s *ProductService) generateVariantName(attributes map[string]interface{}) string {
-	// Sort attribute keys for consistent ordering
-	keys := make([]string, 0, len(attributes))
-	for k := range attributes {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	// Build name from attribute values
-	var parts []string
-	for _, k := range keys {
-		v := attributes[k]
-		parts = append(parts, fmt.Sprintf("%v", v))
-	}
-
-	return strings.Join(parts, " - ")
-}
-
-// getVariantPrice returns variant price or base product price
-func (s *ProductService) getVariantPrice(variantPrice *float64, basePrice float64) float64 {
-	if variantPrice != nil && *variantPrice > 0 {
-		return *variantPrice
-	}
-	return basePrice
-}
-
 // indexProductWithVariants indexes product with variants in OpenSearch
 func (s *ProductService) indexProductWithVariants(ctx context.Context, product *models.StorefrontProduct) {
 	if err := s.searchRepo.IndexProduct(ctx, product); err != nil {

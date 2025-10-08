@@ -2,16 +2,12 @@ import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
 // Type aliases for better readability
-type SubscriptionPlan =
-  components['schemas']['models.SubscriptionPlanDetails'];
-type UserSubscription =
-  components['schemas']['models.UserSubscription'];
+type SubscriptionPlan = components['schemas']['models.SubscriptionPlanDetails'];
+type UserSubscription = components['schemas']['models.UserSubscription'];
 type UserSubscriptionInfo =
   components['schemas']['models.UserSubscriptionInfo'];
-type CheckLimitRequest =
-  components['schemas']['models.CheckLimitRequest'];
-type CheckLimitResponse =
-  components['schemas']['models.CheckLimitResponse'];
+type CheckLimitRequest = components['schemas']['models.CheckLimitRequest'];
+type CheckLimitResponse = components['schemas']['models.CheckLimitResponse'];
 
 export interface CreateSubscriptionRequest {
   plan_code: string;

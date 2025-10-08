@@ -35,8 +35,7 @@ import {
   selectFavorites,
 } from '@/store/selectors/compareSelectors';
 
-type MarketplaceListing =
-  components['schemas']['models.MarketplaceListing'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarDetailClientProps {
   car: MarketplaceListing;

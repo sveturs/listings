@@ -6,8 +6,7 @@ import { MarketplaceService } from '@/services/marketplace';
 import type { components } from '@/types/generated/api';
 import { renderCategoryIcon } from '@/utils/iconMapper';
 
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface CategorySidebarProps {
   onCategorySelect: (categoryId: number | null) => void;

@@ -1,10 +1,8 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
-type ShoppingCart =
-  components['schemas']['models.ShoppingCart'];
-type AddToCartRequest =
-  components['schemas']['models.AddToCartRequest'];
+type ShoppingCart = components['schemas']['models.ShoppingCart'];
+type AddToCartRequest = components['schemas']['models.AddToCartRequest'];
 type UpdateCartItemRequest =
   components['schemas']['models.UpdateCartItemRequest'];
 

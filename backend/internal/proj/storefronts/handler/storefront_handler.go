@@ -341,7 +341,7 @@ func (h *StorefrontHandler) ListStorefronts(c *fiber.Ctx) error {
 	}
 
 	// Проверяем параметр include_inactive для админ панели
-	includeInactive := c.Query("include_inactive") == "true"
+	includeInactive := c.Query("include_inactive") == boolValueTrue
 
 	// Если запрашивается include_inactive, то обрабатываем как админ запрос
 	// чтобы репозиторий не применял фильтрацию по is_active

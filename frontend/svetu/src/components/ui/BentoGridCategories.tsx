@@ -10,8 +10,7 @@ import { FilterModal } from './FilterModal';
 import { DesktopFilters } from './DesktopFilters';
 import { renderCategoryIcon } from '@/utils/iconMapper';
 
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface CategoryTreeNode extends MarketplaceCategory {
   children: CategoryTreeNode[];

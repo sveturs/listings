@@ -10,8 +10,7 @@ jest.mock('next-intl', () => ({
   useLocale: () => 'en',
 }));
 
-type UnifiedAttribute =
-  components['schemas']['models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
   components['schemas']['models.UnifiedAttributeValue'];
 

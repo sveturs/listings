@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -126,7 +127,7 @@ func (r *categoryProposalsRepository) GetByID(ctx context.Context, id int) (*mod
 		&proposal.UpdatedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("category proposal not found: %w", err)
 		}
 		return nil, fmt.Errorf("failed to get category proposal: %w", err)
@@ -255,7 +256,7 @@ func (r *categoryProposalsRepository) Update(ctx context.Context, proposal *mode
 		proposal.ID,
 	).Scan(&proposal.UpdatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("category proposal not found: %w", err)
 		}
 		return fmt.Errorf("failed to update category proposal: %w", err)

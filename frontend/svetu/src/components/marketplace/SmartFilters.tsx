@@ -10,8 +10,7 @@ const CarFilters = lazy(() =>
   import('./CarFilters').then((module) => ({ default: module.CarFilters }))
 );
 
-type CategoryAttribute =
-  components['schemas']['models.CategoryAttribute'];
+type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
 
 interface FilterValue {
   [attributeId: string]: any;

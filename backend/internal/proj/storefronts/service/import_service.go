@@ -36,7 +36,7 @@ const (
 	statusProcessing = "processing"
 	statusCompleted  = "completed"
 	statusFailed     = "failed"
-	statusCanceled   = "cancelled"
+	statusCanceled   = "canceled"
 
 	// File types
 	fileTypeXML = "xml"
@@ -47,6 +47,9 @@ const (
 	updateModeCreateOnly = "create_only"
 	updateModeUpdateOnly = "update_only"
 	updateModeUpsert     = "upsert"
+
+	// Image extensions
+	imageExtJPG = ".jpg"
 )
 
 // ImportService handles product import operations
@@ -1259,7 +1262,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 	// настроить прокси или обновить TLS конфигурацию поставщиков.
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,             // Игнорируем проблемы сертификатов
+			InsecureSkipVerify: true,             //nolint:gosec // Намеренно для загрузки внешних изображений из прайсов поставщиков
 			MinVersion:         tls.VersionTLS10, // Разрешаем старые версии TLS
 			MaxVersion:         tls.VersionTLS13, // До новейших
 		},
@@ -1343,7 +1346,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 		// Если расширение не найдено в URL, определяем по Content-Type
 		switch contentType {
 		case "image/jpeg", "image/jpg":
-			ext = ".jpg"
+			ext = imageExtJPG
 		case "image/png":
 			ext = ".png"
 		case "image/gif":
@@ -1351,7 +1354,7 @@ func (s *ImportService) downloadImage(ctx context.Context, url string) ([]byte, 
 		case "image/webp":
 			ext = ".webp"
 		default:
-			ext = ".jpg" // Fallback
+			ext = imageExtJPG // Fallback
 		}
 	}
 
@@ -1367,8 +1370,12 @@ func (s *ImportService) downloadImageWithCurl(ctx context.Context, url string) (
 		return nil, "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	tmpPath := tmpFile.Name()
-	tmpFile.Close()
-	defer os.Remove(tmpPath) // Удаляем временный файл после использования
+	if err := tmpFile.Close(); err != nil {
+		return nil, "", fmt.Errorf("failed to close temp file: %w", err)
+	}
+	defer func() {
+		_ = os.Remove(tmpPath) // Удаляем временный файл после использования
+	}()
 
 	// Выполняем curl с пониженным security level для обхода weak DH key проблемы
 	// ВАЖНО: Это workaround для серверов с устаревшей TLS конфигурацией
@@ -1377,7 +1384,7 @@ func (s *ImportService) downloadImageWithCurl(ctx context.Context, url string) (
 	// --max-time 30: таймаут 30 секунд
 	// --location: следует редиректам
 	// --fail: возвращает ошибку при HTTP ошибках (4xx, 5xx)
-	cmd := exec.CommandContext(ctx, "curl",
+	cmd := exec.CommandContext(ctx, "curl", //nolint:gosec // Curl используется для обхода проблем TLS с устаревшими серверами поставщиков
 		"--ciphers", "DEFAULT:@SECLEVEL=0",
 		"--insecure",
 		"--silent",
@@ -1398,7 +1405,7 @@ func (s *ImportService) downloadImageWithCurl(ctx context.Context, url string) (
 	}
 
 	// Читаем загруженный файл
-	imageData, err := os.ReadFile(tmpPath)
+	imageData, err := os.ReadFile(tmpPath) //nolint:gosec // tmpPath создан нами через os.CreateTemp, безопасно
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to read downloaded file: %w", err)
 	}
@@ -1418,7 +1425,7 @@ func (s *ImportService) downloadImageWithCurl(ctx context.Context, url string) (
 	// Определение расширения на основе формата
 	ext := "." + format
 	if ext == ".jpeg" {
-		ext = ".jpg"
+		ext = imageExtJPG
 	}
 
 	logger.Info().

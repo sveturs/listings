@@ -21,8 +21,7 @@ import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import { useAuth } from '@/contexts/AuthContext';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface QuickViewProps {
   isOpen: boolean;

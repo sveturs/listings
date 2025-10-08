@@ -14,6 +14,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	fileTypeXML = "xml"
+	fileTypeCSV = "csv"
+)
+
 // AnalyzeCategoriesRequest represents the request for category analysis
 type AnalyzeCategoriesRequest struct {
 	FileType      string                        `json:"file_type"`                // xml, csv
@@ -120,7 +125,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 	var parseErrors []models.ImportValidationError
 
 	switch fileType {
-	case "xml":
+	case fileTypeXML:
 		xmlParser := parsers.NewXMLParser(storefrontID)
 		// Try Digital Vision format first
 		products, parseErrors, err = xmlParser.ParseDigitalVisionXML(fileData)
@@ -134,7 +139,7 @@ func (h *ImportHandler) AnalyzeCategories(c *fiber.Ctx) error {
 				})
 			}
 		}
-	case "csv":
+	case fileTypeCSV:
 		csvParser := parsers.NewCSVParser(storefrontID)
 		reader := bytes.NewReader(fileData)
 		products, parseErrors, err = csvParser.ParseCSV(reader)
@@ -347,7 +352,7 @@ func isVariantDefiningAttribute(name string) bool {
 	nameLower := strings.ToLower(name)
 
 	variantKeywords := []string{
-		"color", "colour", "boja", "цвет",
+		"color", "colour", "boja", "цвет", //nolint:misspell // "colour" - британский вариант написания
 		"size", "velicina", "veličina", "размер",
 		"material", "materijal", "материал",
 		"style", "stil", "стиль",

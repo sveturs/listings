@@ -6,9 +6,9 @@ import type { components } from '@/types/generated/api';
 import configManager from '@/config';
 
 // Use generated types from API
-type ProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
-type VariantMatrixResponse = components['schemas']['types.VariantMatrixResponse'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
+type VariantMatrixResponse =
+  components['schemas']['types.VariantMatrixResponse'];
 type BulkUpdateStockRequest =
   components['schemas']['types.BulkUpdateStockRequest'];
 type VariantAnalyticsResponse =

@@ -1,12 +1,9 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
-type StorefrontOrder =
-  components['schemas']['models.StorefrontOrder'];
-type CreateOrderRequest =
-  components['schemas']['models.CreateOrderRequest'];
-type CancelOrderRequest =
-  components['schemas']['models.CancelOrderRequest'];
+type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
+type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
+type CancelOrderRequest = components['schemas']['models.CancelOrderRequest'];
 
 export const ordersService = {
   // Создать заказ

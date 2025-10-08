@@ -6,8 +6,7 @@ import Image from 'next/image';
 import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface VariantSelectionModalProps {
   isOpen: boolean;

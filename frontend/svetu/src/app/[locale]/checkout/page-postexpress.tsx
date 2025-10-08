@@ -31,8 +31,7 @@ import PostExpressDeliveryStep, {
   type PostExpressDeliveryData,
 } from '@/components/checkout/PostExpressDeliveryStep';
 
-type CreateOrderRequest =
-  components['schemas']['models.CreateOrderRequest'];
+type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
 
 // Validation schemas for each step
 const customerInfoSchema = z.object({

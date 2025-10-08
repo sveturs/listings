@@ -1,7 +1,6 @@
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
   components['schemas']['models.UnifiedAttributeValue'];
 

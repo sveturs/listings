@@ -5,8 +5,7 @@ import { ChevronRight, ChevronDown, Search, Package, X } from 'lucide-react';
 import { renderCategoryIcon } from '@/utils/iconMapper';
 import type { components } from '@/types/generated/api';
 
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface CategorySelectorProps {
   categories: MarketplaceCategory[];

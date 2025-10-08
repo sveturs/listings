@@ -7,8 +7,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import MarketplaceOrderCard from './MarketplaceOrderCard';
 import type { components } from '@/types/generated/api';
 
-type StorefrontOrder =
-  components['schemas']['models.StorefrontOrder'];
+type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
 
 interface OrderHistoryProps {
   status?: string;

@@ -6,8 +6,7 @@ import IntuitiveAttributeField from './IntuitiveAttributeField';
 import { unifiedAttributeService } from '@/services/unifiedAttributeService';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
   components['schemas']['models.UnifiedAttributeValue'];
 

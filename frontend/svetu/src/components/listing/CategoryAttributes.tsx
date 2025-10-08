@@ -6,10 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
-type CategoryAttribute =
-  components['schemas']['models.CategoryAttribute'];
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface AttributeValue {
   attribute_id: number;

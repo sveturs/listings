@@ -12,9 +12,8 @@ import (
 
 // AICategoryMapper manages AI-powered category mapping for imports
 type AICategoryMapper struct {
-	aiDetector            *services.AICategoryDetector
-	categoryService       *CategoryMappingService
-	marketplaceCategories []models.MarketplaceCategory
+	aiDetector      *services.AICategoryDetector
+	categoryService *CategoryMappingService
 }
 
 // NewAICategoryMapper creates a new AI category mapper

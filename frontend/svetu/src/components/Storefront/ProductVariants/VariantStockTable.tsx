@@ -5,8 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 // Use generated types from API
-type ProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 type BulkUpdateStockRequest =
   components['schemas']['types.BulkUpdateStockRequest'];
 
@@ -104,12 +103,14 @@ export default function VariantStockTable({
         const attrs: Record<string, Set<string>> = {};
         data.forEach((variant) => {
           if (variant.variant_attributes) {
-            Object.entries(variant.variant_attributes).forEach(([key, value]) => {
-              if (!attrs[key]) {
-                attrs[key] = new Set();
+            Object.entries(variant.variant_attributes).forEach(
+              ([key, value]) => {
+                if (!attrs[key]) {
+                  attrs[key] = new Set();
+                }
+                attrs[key].add(String(value));
               }
-              attrs[key].add(String(value));
-            });
+            );
           }
         });
         setAvailableAttributes(attrs);
@@ -165,7 +166,8 @@ export default function VariantStockTable({
       filtered = filtered.filter(
         (variant) =>
           variant.variant_attributes &&
-          variant.variant_attributes[filters.attribute] === filters.attributeValue
+          variant.variant_attributes[filters.attribute] ===
+            filters.attributeValue
       );
     }
 

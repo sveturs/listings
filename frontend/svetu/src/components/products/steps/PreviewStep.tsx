@@ -14,8 +14,7 @@ import {
   type LocationPrivacyLevel,
 } from '@/utils/addressUtils';
 
-type CategoryAttribute =
-  components['schemas']['models.CategoryAttribute'];
+type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
 
 interface PreviewStepProps {
   onBack: () => void;

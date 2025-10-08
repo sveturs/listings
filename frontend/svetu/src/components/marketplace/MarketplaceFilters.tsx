@@ -10,8 +10,7 @@ interface MarketplaceFiltersProps {
   onFilterChange: (filters: { category?: string }) => void;
 }
 
-type Category =
-  components['schemas']['models.MarketplaceCategory'];
+type Category = components['schemas']['models.MarketplaceCategory'];
 
 export function MarketplaceFilters({
   onFilterChange,

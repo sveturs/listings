@@ -10,8 +10,7 @@ import MultiSelectAttribute from '@/components/attributes/MultiSelectAttribute';
 import RangeAttribute from '@/components/attributes/RangeAttribute';
 import type { components } from '@/types/generated/api';
 
-type CategoryAttribute =
-  components['schemas']['models.CategoryAttribute'];
+type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
 
 interface AttributeGroup {
   id: string;

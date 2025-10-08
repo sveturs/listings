@@ -28,8 +28,7 @@ import { clearCart as clearLocalCart } from '@/store/slices/localCartSlice';
 import { clearCart as clearApiCart } from '@/store/slices/cartSlice';
 import { apiClient } from '@/services/api-client';
 
-type CreateOrderRequest =
-  components['schemas']['models.CreateOrderRequest'];
+type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
 
 // Validation schemas for each step
 const customerInfoSchema = z.object({

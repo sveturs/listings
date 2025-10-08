@@ -5,8 +5,7 @@ import type { components } from '@/types/generated/api';
 
 type CreateProductRequest =
   components['schemas']['models.CreateProductRequest'];
-type MarketplaceCategory =
-  components['schemas']['models.MarketplaceCategory'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface ProductVariantCreate {
   sku?: string;

@@ -614,39 +614,6 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 	return variant, nil
 }
 
-// createVariantNameFromAttributes creates a readable name from variant attributes
-func (s *Database) createVariantNameFromAttributes(attributes map[string]interface{}) string {
-	if len(attributes) == 0 {
-		return ""
-	}
-
-	var parts []string
-	// Common attribute order for display
-	order := []string{"color", "size", "material", "style"}
-
-	for _, key := range order {
-		if val, ok := attributes[key]; ok {
-			parts = append(parts, fmt.Sprintf("%v", val))
-		}
-	}
-
-	// Add any remaining attributes not in the order list
-	for key, val := range attributes {
-		found := false
-		for _, orderedKey := range order {
-			if key == orderedKey {
-				found = true
-				break
-			}
-		}
-		if !found {
-			parts = append(parts, fmt.Sprintf("%v", val))
-		}
-	}
-
-	return strings.Join(parts, " - ")
-}
-
 // UpdateProductStock updates the stock quantity for a product or variant
 func (s *Database) UpdateProductStock(ctx context.Context, productID int64, variantID *int64, quantity int) error {
 	if variantID != nil && *variantID > 0 {

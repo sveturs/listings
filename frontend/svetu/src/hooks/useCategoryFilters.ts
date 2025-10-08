@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { components } from '@/types/generated/api';
 
-type CategoryAttribute =
-  components['schemas']['models.CategoryAttribute'];
+type CategoryAttribute = components['schemas']['models.CategoryAttribute'];
 
 interface UseCategoryFiltersOptions {
   lang?: string;

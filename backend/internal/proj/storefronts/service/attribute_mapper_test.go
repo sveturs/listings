@@ -1,4 +1,4 @@
-// backend/internal/proj/storefronts/service/attribute_mapper_test.go
+//nolint:nilnil // Mock функции для тестов могут возвращать nil, nil
 package service
 
 import (
@@ -16,15 +16,15 @@ type mockStorageForAttributeMapper struct{}
 
 // Все методы интерфейса Storage (заглушки)
 func (m *mockStorageForAttributeMapper) GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error) {
-	return nil, nil
+	return nil, nil //nolint:nilnil // Это mock для тестов
 }
 
 func (m *mockStorageForAttributeMapper) GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error) {
-	return nil, nil
+	return nil, nil //nolint:nilnil // Это mock для тестов
 }
 
 func (m *mockStorageForAttributeMapper) GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error) {
-	return nil, nil
+	return nil, nil //nolint:nilnil // Это mock для тестов
 }
 
 func (m *mockStorageForAttributeMapper) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
@@ -116,6 +116,10 @@ func (m *mockStorageForAttributeMapper) BeginTx(ctx context.Context) (Transactio
 }
 
 func (m *mockStorageForAttributeMapper) CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
+	return nil, nil
+}
+
+func (m *mockStorageForAttributeMapper) GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
 	return nil, nil
 }
 

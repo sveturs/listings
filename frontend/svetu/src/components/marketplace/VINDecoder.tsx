@@ -6,8 +6,7 @@ import { Search, Info, Car, Loader2 } from 'lucide-react';
 import { CarsService } from '@/services/CarsService';
 import type { components } from '@/types/generated/api';
 
-type VINDecodeResult =
-  components['schemas']['models.VINDecodeResult'];
+type VINDecodeResult = components['schemas']['models.VINDecodeResult'];
 
 interface VINDecoderProps {
   onVINDecoded?: (result: VINDecodeResult) => void;

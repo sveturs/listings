@@ -7,8 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/services/subscriptions';
 import type { components } from '@/types/generated/api';
 
-type SubscriptionPlan =
-  components['schemas']['models.SubscriptionPlanDetails'];
+type SubscriptionPlan = components['schemas']['models.SubscriptionPlanDetails'];
 type UserSubscriptionInfo =
   components['schemas']['models.UserSubscriptionInfo'];
 

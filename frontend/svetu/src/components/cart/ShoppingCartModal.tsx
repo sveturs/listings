@@ -18,8 +18,7 @@ import { normalizeImageUrl } from '@/utils/imageUtils';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
-type ShoppingCartItem =
-  components['schemas']['models.ShoppingCartItem'];
+type ShoppingCartItem = components['schemas']['models.ShoppingCartItem'];
 
 interface ShoppingCartModalProps {
   storefrontId: number;

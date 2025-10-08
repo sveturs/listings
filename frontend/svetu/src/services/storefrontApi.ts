@@ -4,23 +4,17 @@ import { AuthService } from './auth';
 import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
-type Storefront =
-  components['schemas']['models.Storefront'];
-type StorefrontCreateDTO =
-  components['schemas']['models.StorefrontCreateDTO'];
-type StorefrontUpdateDTO =
-  components['schemas']['models.StorefrontUpdateDTO'];
-type StorefrontAnalytics =
-  components['schemas']['models.StorefrontAnalytics'];
+type Storefront = components['schemas']['models.Storefront'];
+type StorefrontCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type StorefrontUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
+type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
-type StorefrontMapData =
-  components['schemas']['models.StorefrontMapData'];
+type StorefrontMapData = components['schemas']['models.StorefrontMapData'];
 type StorefrontSearchResult = any; // Type removed from swagger schema
 type StorefrontsListResponse =
   components['schemas']['handler.StorefrontsListResponse'];
-type StorefrontHours =
-  components['schemas']['models.StorefrontHours'];
+type StorefrontHours = components['schemas']['models.StorefrontHours'];
 type StorefrontPaymentMethod =
   components['schemas']['models.StorefrontPaymentMethod'];
 type StorefrontDeliveryOption =

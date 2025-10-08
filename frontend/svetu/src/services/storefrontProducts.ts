@@ -1,8 +1,7 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
-type StorefrontProduct =
-  components['schemas']['models.StorefrontProduct'];
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
 type UpdateProductRequest =
   components['schemas']['models.UpdateProductRequest'];
 type CreateProductRequest =
