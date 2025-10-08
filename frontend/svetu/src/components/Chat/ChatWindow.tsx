@@ -907,7 +907,7 @@ export default function ChatWindow({
           <MessageInput
             chat={chat}
             initialListingId={initialListingId}
-            initialStorefrontProductID={initialStorefrontProductId}
+            initialStorefrontProductId={initialStorefrontProductId}
             initialSellerId={initialSellerId || initialContactId}
             onShowChat={onShowChat}
           />
