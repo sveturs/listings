@@ -83,8 +83,8 @@ type UnifiedSearchItem struct {
 	Price              float64                      `json:"price"`
 	Currency           string                       `json:"currency"`
 	Images             []UnifiedProductImage        `json:"images"`
-	ImageURL           *string                      `json:"image_url,omitempty"`      // Главное изображение (для удобства)
-	ThumbnailURL       *string                      `json:"thumbnail_url,omitempty"`  // Миниатюра главного изображения
+	ImageURL           *string                      `json:"image_url,omitempty"`     // Главное изображение (для удобства)
+	ThumbnailURL       *string                      `json:"thumbnail_url,omitempty"` // Миниатюра главного изображения
 	Category           UnifiedCategoryInfo          `json:"category"`
 	Location           *UnifiedLocationInfo         `json:"location,omitempty"`
 	User               *UnifiedUserInfo             `json:"user,omitempty"`            // Информация о продавце

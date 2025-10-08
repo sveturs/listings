@@ -789,7 +789,8 @@ export default function ChatWindow({
           onScroll={handleScroll}
           className="absolute inset-x-0 top-0 overflow-y-auto p-3 sm:p-4 lg:px-8"
           style={{
-            bottom: 'calc(4rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+            bottom:
+              'calc(4rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
           }}
         >
           <style jsx>{`
@@ -862,7 +863,8 @@ export default function ChatWindow({
             onClick={scrollToBottom}
             className="absolute right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
             style={{
-              bottom: 'calc(4.06rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+              bottom:
+                'calc(4.06rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
             }}
           >
             <style jsx>{`
@@ -894,7 +896,8 @@ export default function ChatWindow({
         <div
           className="absolute left-0 right-0 z-20"
           style={{
-            bottom: 'calc(3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+            bottom:
+              'calc(3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
           }}
         >
           <style jsx>{`

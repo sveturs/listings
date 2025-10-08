@@ -24,7 +24,7 @@ export default function SafeHTML({
   html,
   className = '',
   allowedTags,
-  allowedAttributes
+  allowedAttributes,
 }: SafeHTMLProps) {
   const sanitizedHTML = useMemo(() => {
     if (!html) return '';
@@ -32,19 +32,37 @@ export default function SafeHTML({
     // Базовая конфигурация DOMPurify
     const config: any = {
       ALLOWED_TAGS: allowedTags || [
-        'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'a',
-        'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'span', 'div', 'img'
+        'p',
+        'br',
+        'strong',
+        'b',
+        'em',
+        'i',
+        'u',
+        'a',
+        'ul',
+        'ol',
+        'li',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'span',
+        'div',
+        'img',
       ],
       ALLOWED_ATTR: allowedAttributes || {
         a: ['href', 'title', 'target', 'rel'],
-        img: ['src', 'alt', 'title', 'width', 'height']
+        img: ['src', 'alt', 'title', 'width', 'height'],
       },
       // Автоматически добавляет rel="noopener noreferrer" к внешним ссылкам
       ADD_ATTR: ['target'],
       ALLOW_DATA_ATTR: false,
       // Разрешаем только безопасные URI схемы
-      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOWED_URI_REGEXP:
+        /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     };
 
     return DOMPurify.sanitize(html, config);

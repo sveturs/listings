@@ -13343,6 +13343,11 @@ paths:
           name: storefront_id
           schema:
             type: integer
+        - description: Exclude storefront products (for admin P2P listings)
+          in: query
+          name: exclude_storefronts
+          schema:
+            type: boolean
         - description: Number of items per page
           in: query
           name: limit
@@ -28838,6 +28843,9 @@ components:
         id:
           description: Уникальный ID (ml_123 или sp_456)
           type: string
+        image_url:
+          description: Главное изображение (для удобства)
+          type: string
         images:
           items:
             $ref: "#/components/schemas/handler.UnifiedProductImage"
@@ -28873,6 +28881,9 @@ components:
           type: integer
         storefront_slug:
           description: Slug витрины для правильного URL
+          type: string
+        thumbnail_url:
+          description: Миниатюра главного изображения
           type: string
         translations:
           additionalProperties:

@@ -19684,6 +19684,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Exclude storefront products (for admin P2P listings)",
+                        "name": "exclude_storefronts",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "default": 20,
                         "description": "Number of items per page",
@@ -41924,6 +41930,10 @@ const docTemplate = `{
                     "description": "Уникальный ID (ml_123 или sp_456)",
                     "type": "string"
                 },
+                "image_url": {
+                    "description": "Главное изображение (для удобства)",
+                    "type": "string"
+                },
                 "images": {
                     "type": "array",
                     "items": {
@@ -41975,6 +41985,10 @@ const docTemplate = `{
                 },
                 "storefront_slug": {
                     "description": "Slug витрины для правильного URL",
+                    "type": "string"
+                },
+                "thumbnail_url": {
+                    "description": "Миниатюра главного изображения",
                     "type": "string"
                 },
                 "translations": {

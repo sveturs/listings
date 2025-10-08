@@ -288,6 +288,11 @@ func (m *MockStorage) AddListingImage(ctx context.Context, image *models.Marketp
 func (m *MockStorage) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
 	return nil, ErrNotImplemented
 }
+
+func (m *MockStorage) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+	return nil, ErrNotImplemented
+}
+
 func (m *MockStorage) FileStorage() filestorage.FileStorageInterface { return nil }
 func (m *MockStorage) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
 	return nil, ErrNotImplemented

@@ -519,7 +519,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 					// Поиск по вариантам
 					{
 						"nested": map[string]interface{}{
-							"path": "variants",
+							"path":            "variants",
 							"ignore_unmapped": true, // Игнорировать, если поле отсутствует (marketplace_listings не имеет variants)
 							"query": map[string]interface{}{
 								"multi_match": map[string]interface{}{

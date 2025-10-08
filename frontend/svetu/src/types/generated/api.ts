@@ -19807,6 +19807,8 @@ export interface paths {
           user_id?: number;
           /** @description Storefront ID filter */
           storefront_id?: number;
+          /** @description Exclude storefront products (for admin P2P listings) */
+          exclude_storefronts?: boolean;
           /** @description Number of items per page */
           limit?: number;
           /** @description Number of items to skip */
@@ -40892,6 +40894,8 @@ export interface components {
       };
       /** @description Уникальный ID (ml_123 или sp_456) */
       id?: string;
+      /** @description Главное изображение (для удобства) */
+      image_url?: string;
       images?: components['schemas']['handler.UnifiedProductImage'][];
       location?: components['schemas']['handler.UnifiedLocationInfo'];
       name?: string;
@@ -40912,6 +40916,8 @@ export interface components {
       storefront_id?: number;
       /** @description Slug витрины для правильного URL */
       storefront_slug?: string;
+      /** @description Миниатюра главного изображения */
+      thumbnail_url?: string;
       /** @description Переводы (локаль -> поле -> значение) */
       translations?: {
         [key: string]: {
