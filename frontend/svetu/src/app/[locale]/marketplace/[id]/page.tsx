@@ -28,8 +28,7 @@ import AddToCartButton from '@/components/cart/AddToCartButton';
 // import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface User {
   id: number;

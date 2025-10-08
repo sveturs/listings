@@ -51,11 +51,11 @@ export default function DragDropMappingEditor({
 
       // Разделяем на связанные и доступные
       const linkedIds = new Set(mappings.map((m: any) => m.id));
-      const linked = variantCompatibleAttributes.filter((attr) =>
+      const linked = variantCompatibleAttributes.filter((attr: Attribute) =>
         linkedIds.has(attr.id)
       );
       const available = variantCompatibleAttributes.filter(
-        (attr) => !linkedIds.has(attr.id)
+        (attr: Attribute) => !linkedIds.has(attr.id)
       );
 
       setLinkedAttributes(linked);

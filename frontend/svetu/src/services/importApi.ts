@@ -6,6 +6,7 @@ import type {
   ImportSummary,
   ImportFormats,
   UploadProgress,
+  ImportPreviewResponse,
 } from '@/types/import';
 
 export class ImportApi {
@@ -202,8 +203,13 @@ export class ImportApi {
   /**
    * Gets import job status
    */
-  static async getJobStatus(jobId: number): Promise<ImportJobStatus> {
-    const response = await apiClient.get(`/api/v1/import/jobs/${jobId}/status`);
+  static async getJobStatus(
+    storefrontId: number,
+    jobId: number
+  ): Promise<ImportJobStatus> {
+    const response = await apiClient.get(
+      `/storefronts/${storefrontId}/import/jobs/${jobId}/status`
+    );
     return response.data;
   }
 
@@ -234,9 +240,12 @@ export class ImportApi {
    * Gets detailed job information including errors
    */
   static async getJobDetails(
+    storefrontId: number,
     jobId: number
   ): Promise<ImportJob & { errors?: any[] }> {
-    const response = await apiClient.get(`/api/v1/import/jobs/${jobId}`);
+    const response = await apiClient.get(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}`
+    );
     return response.data;
   }
 
@@ -265,15 +274,22 @@ export class ImportApi {
   /**
    * Cancels an ongoing import job
    */
-  static async cancelJob(jobId: number): Promise<void> {
-    await apiClient.post(`/api/v1/import/jobs/${jobId}/cancel`);
+  static async cancelJob(storefrontId: number, jobId: number): Promise<void> {
+    await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/cancel`
+    );
   }
 
   /**
    * Retries a failed import job
    */
-  static async retryJob(jobId: number): Promise<ImportJob> {
-    const response = await apiClient.post(`/api/v1/import/jobs/${jobId}/retry`);
+  static async retryJob(
+    storefrontId: number,
+    jobId: number
+  ): Promise<ImportJob> {
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/jobs/${jobId}/retry`
+    );
     return response.data;
   }
 
@@ -314,22 +330,24 @@ export class ImportApi {
 
   /**
    * Uploads file and gets preview of data without importing
+   * @param storefrontId - ID of the storefront
+   * @param file - File to preview
+   * @param fileType - Type of the file (csv, xml, zip)
+   * @param previewLimit - Number of rows to preview (default: 10, max: 100)
    */
   static async previewFile(
+    storefrontId: number,
     file: File,
-    fileType: 'xml' | 'csv' | 'zip'
-  ): Promise<{
-    sample_data: any[];
-    total_records: number;
-    detected_fields: string[];
-    validation_errors: any[];
-  }> {
+    fileType: 'xml' | 'csv' | 'zip',
+    previewLimit: number = 10
+  ): Promise<ImportPreviewResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('file_type', fileType);
+    formData.append('preview_limit', previewLimit.toString());
 
     const response = await apiClient.post(
-      '/api/v1/storefronts/import/preview',
+      `/api/v1/storefronts/${storefrontId}/import/preview`,
       formData,
       {
         headers: {
@@ -339,6 +357,42 @@ export class ImportApi {
     );
 
     return response.data;
+  }
+
+  /**
+   * Uploads file and gets preview of data without importing (using slug)
+   * @param storefrontSlug - Slug of the storefront
+   * @param file - File to preview
+   * @param fileType - Type of the file (csv, xml, zip)
+   * @param previewLimit - Number of rows to preview (default: 10, max: 100)
+   */
+  static async previewFileBySlug(
+    storefrontSlug: string,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip',
+    previewLimit: number = 10
+  ): Promise<ImportPreviewResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+    formData.append('preview_limit', previewLimit.toString());
+
+    // Use fetch directly with BFF proxy
+    const response = await fetch(
+      `/api/v2/storefronts/slug/${storefrontSlug}/import/preview`,
+      {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Include cookies for auth
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || `HTTP Error: ${response.status}`);
+    }
+
+    return response.json();
   }
 
   /**
@@ -396,6 +450,157 @@ export class ImportApi {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response.blob();
+  }
+
+  // ============================================
+  // Enhanced Import Analysis API (Phase 1)
+  // ============================================
+
+  /**
+   * Analyzes categories in import file and provides AI mapping suggestions
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeCategories(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-categories`,
+      formData
+      // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Analyzes attributes in import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeAttributes(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-attributes`,
+      formData
+      // НЕ устанавливаем Content-Type вручную - браузер сам добавит правильный multipart/form-data с boundary
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Detects potential product variant groups in import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async detectVariants(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/detect-variants`,
+      formData
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Analyzes unique categories from client's import file
+   * @param storefrontId - ID of the storefront
+   * @param file - File to analyze
+   * @param fileType - Type of the file (csv, xml, zip)
+   */
+  static async analyzeClientCategories(
+    storefrontId: number,
+    file: File,
+    fileType: 'xml' | 'csv' | 'zip'
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const response = await apiClient.post(
+      `/api/v1/storefronts/${storefrontId}/import/analyze-client-categories`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Gets list of category proposals for admin review
+   */
+  static async getCategoryProposals(params?: {
+    status?: 'pending' | 'approved' | 'rejected';
+    storefront_id?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ proposals: any[]; total: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.storefront_id)
+      queryParams.append('storefront_id', params.storefront_id.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/admin/category-proposals${queryString ? `?${queryString}` : ''}`;
+
+    const response = await apiClient.get(url);
+    return response.data;
+  }
+
+  /**
+   * Approves a category proposal (admin only)
+   * @param proposalId - ID of the proposal to approve
+   */
+  static async approveCategoryProposal(proposalId: number): Promise<void> {
+    await apiClient.post(
+      `/api/v1/admin/category-proposals/${proposalId}/approve`
+    );
+  }
+
+  /**
+   * Rejects a category proposal (admin only)
+   * @param proposalId - ID of the proposal to reject
+   * @param reason - Optional reason for rejection
+   */
+  static async rejectCategoryProposal(
+    proposalId: number,
+    reason?: string
+  ): Promise<void> {
+    await apiClient.post(
+      `/api/v1/admin/category-proposals/${proposalId}/reject`,
+      { reason }
+    );
   }
 }
 

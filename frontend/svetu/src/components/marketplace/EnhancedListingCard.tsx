@@ -37,8 +37,7 @@ import type { AppDispatch } from '@/store';
 import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface EnhancedListingCardProps {
   item: MarketplaceItem;
@@ -230,7 +229,7 @@ export const EnhancedListingCard: React.FC<EnhancedListingCardProps> = ({
         productId: item.id,
         variantId: variant?.id,
         name: item.title,
-        variantName: variant?.name,
+        variantName: variant?.sku,
         price: variant?.price || item.price || 0,
         quantity,
         storefrontId: item.storefront_id,

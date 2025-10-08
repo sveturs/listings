@@ -40,9 +40,9 @@ type EventRequest struct {
 // @Accept json
 // @Produce json
 // @Param event body EventRequest true "Event data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Event recorded"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Event recorded"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/event [post]
 func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 	var req EventRequest
@@ -96,9 +96,9 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 // @Param date_from query string false "Start date (YYYY-MM-DD)"
 // @Param date_to query string false "End date (YYYY-MM-DD)"
 // @Param period query string false "Period (day, week, month)" default(week)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_proj_analytics_service.SearchMetrics} "Search metrics"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=service.SearchMetrics} "Search metrics"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/search [get]
 func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 	// Проверяем права админа - используем тот же подход как в search_admin
@@ -144,9 +144,9 @@ func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 // @Param date_from query string false "Start date (YYYY-MM-DD)"
 // @Param date_to query string false "End date (YYYY-MM-DD)"
 // @Param limit query int false "Limit" default(20)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_proj_analytics_service.ItemPerformance} "Items performance"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]service.ItemPerformance} "Items performance"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/items [get]
 func (h *AnalyticsHandler) GetItemsPerformance(c *fiber.Ctx) error {
 	// Проверяем права админа - используем тот же подход как в search_admin

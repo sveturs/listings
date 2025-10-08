@@ -129,15 +129,19 @@ func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, docu
 	var bulkBody strings.Builder
 
 	for _, doc := range documents {
-		// Получаем ID документа
-		docID, ok := doc["id"].(string)
-		if !ok {
+		// Получаем ID документа - приоритет _doc_id для кастомных ID
+		var docID string
+		if customID, ok := doc["_doc_id"].(string); ok {
+			docID = customID
+			// Удаляем _doc_id из документа, чтобы он не попал в индекс
+			delete(doc, "_doc_id")
+		} else if id, ok := doc["id"].(string); ok {
+			docID = id
+		} else if numID, ok := doc["id"].(int); ok {
 			// Преобразуем число в строку, если ID - число
-			if numID, ok := doc["id"].(int); ok {
-				docID = fmt.Sprintf("%d", numID)
-			} else {
-				return fmt.Errorf("ID документа не найден или имеет неверный тип")
-			}
+			docID = fmt.Sprintf("%d", numID)
+		} else {
+			return fmt.Errorf("ID документа не найден или имеет неверный тип")
 		}
 
 		// Создаем метаданные действия
@@ -157,7 +161,7 @@ func (c *OpenSearchClient) BulkIndex(ctx context.Context, indexName string, docu
 		bulkBody.WriteString(string(actionJSON))
 		bulkBody.WriteString("\n")
 
-		// Сохраняем документ как есть, включая ID
+		// Сохраняем документ как есть
 		docCopy := doc
 
 		docJSON, err := json.Marshal(docCopy)

@@ -7,10 +7,8 @@ import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 import { toast } from '@/utils/toast';
 
-type StorefrontOrder =
-  components['schemas']['backend_internal_domain_models.StorefrontOrder'];
-type StorefrontOrderItem =
-  components['schemas']['backend_internal_domain_models.StorefrontOrderItem'];
+type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
+type StorefrontOrderItem = components['schemas']['models.StorefrontOrderItem'];
 
 interface OrderCardProps {
   order: StorefrontOrder;

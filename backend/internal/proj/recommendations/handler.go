@@ -71,8 +71,8 @@ type RecommendationRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body RecommendationRequest true "Recommendation request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "Recommendations"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "Recommendations"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
 // @Router /api/v1/recommendations [post]
 func (h *Handler) GetRecommendations(c *fiber.Ctx) error {
 	var req RecommendationRequest
@@ -155,8 +155,8 @@ type ViewHistoryRequest struct {
 // @Produce json
 // @Security Bearer
 // @Param request body ViewHistoryRequest true "View history request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Success"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} utils.SuccessResponseSwag "Success"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [post]
 func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 	// Пытаемся получить userID из контекста через библиотечный helper
@@ -204,8 +204,8 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceListing} "View history"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceListing} "View history"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Router /api/v1/recommendations/view-history [get]
 func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
 	// TODO: Fix view history query - currently returns empty due to SQL mapping issues
@@ -223,7 +223,7 @@ func (h *Handler) GetViewHistory(c *fiber.Ctx) error {
 // @Tags recommendations
 // @Produce json
 // @Param listing_id path int true "Listing ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=internal_proj_recommendations.ViewStatistics} "View statistics"
+// @Success 200 {object} utils.SuccessResponseSwag{data=recommendations.ViewStatistics} "View statistics"
 // @Router /api/v1/recommendations/view-statistics/{listing_id} [get]
 func (h *Handler) GetViewStatistics(c *fiber.Ctx) error {
 	listingID, err := strconv.ParseInt(c.Params("listing_id"), 10, 64)

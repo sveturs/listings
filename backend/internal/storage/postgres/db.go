@@ -144,8 +144,8 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
-		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "marketplace_listings")
+		// Используем отдельный индекс для товаров витрин
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
 		// Подготавливаем индекс товаров витрин
 		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
@@ -245,6 +245,132 @@ func (db *Database) ReindexAllStorefronts(ctx context.Context) error {
 		return fmt.Errorf("OpenSearch для витрин не настроен")
 	}
 	return db.osStorefrontRepo.ReindexAll(ctx)
+}
+
+// ReindexAllProducts переиндексирует все товары витрин
+func (db *Database) ReindexAllProducts(ctx context.Context) error {
+	if db.productSearchRepo == nil {
+		return fmt.Errorf("OpenSearch для товаров витрин не настроен")
+	}
+
+	// Получаем все активные товары витрин из БД
+	query := `
+		SELECT
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
+			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
+			c.id, c.name, c.slug, c.icon, c.parent_id,
+			s.name as storefront_name
+		FROM storefront_products p
+		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN storefronts s ON p.storefront_id = s.id
+		WHERE p.is_active = true
+		ORDER BY p.id
+	`
+
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return fmt.Errorf("ошибка получения товаров: %w", err)
+	}
+	defer rows.Close()
+
+	var products []*models.StorefrontProduct
+	for rows.Next() {
+		product := &models.StorefrontProduct{}
+		var category models.MarketplaceCategory
+		var storefrontName sql.NullString
+		var categoryID sql.NullInt32
+		var categoryName, categorySlug, categoryIcon sql.NullString
+		var categoryParentID sql.NullInt32
+		var attributesJSON []byte
+
+		err := rows.Scan(
+			&product.ID, &product.StorefrontID, &product.Name, &product.Description,
+			&product.Price, &product.Currency, &categoryID, &product.SKU, &product.Barcode,
+			&product.StockQuantity, &product.StockStatus, &product.IsActive,
+			&attributesJSON, &product.ViewCount, &product.SoldCount,
+			&product.CreatedAt, &product.UpdatedAt,
+			&product.HasIndividualLocation, &product.IndividualAddress,
+			&product.IndividualLatitude, &product.IndividualLongitude,
+			&product.LocationPrivacy, &product.ShowOnMap, &product.HasVariants,
+			&category.ID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
+			&storefrontName,
+		)
+		if err != nil {
+			log.Printf("Ошибка сканирования товара: %v", err)
+			continue
+		}
+
+		// Десериализуем attributes из JSON
+		if attributesJSON != nil {
+			if unmarshalErr := json.Unmarshal(attributesJSON, &product.Attributes); unmarshalErr != nil {
+				log.Printf("Ошибка десериализации атрибутов товара %d: %v", product.ID, unmarshalErr)
+			}
+		}
+
+		// Заполняем категорию если есть
+		if categoryID.Valid {
+			category.ID = int(categoryID.Int32)
+			product.CategoryID = category.ID
+			if categoryName.Valid {
+				category.Name = categoryName.String
+			}
+			if categorySlug.Valid {
+				category.Slug = categorySlug.String
+			}
+			if categoryIcon.Valid {
+				category.Icon = &categoryIcon.String
+			}
+			if categoryParentID.Valid {
+				parentID := int(categoryParentID.Int32)
+				category.ParentID = &parentID
+			}
+			product.Category = &category
+		}
+
+		// Загружаем варианты если есть
+		if product.HasVariants {
+			variants, err := db.getProductVariants(ctx, product.ID)
+			if err == nil {
+				product.Variants = variants
+			}
+		}
+
+		// Загружаем изображения
+		images, err := db.getProductImages(ctx, []int{product.ID})
+		if err == nil {
+			product.Images = images
+		}
+
+		products = append(products, product)
+	}
+
+	if err = rows.Err(); err != nil {
+		return fmt.Errorf("ошибка итерации товаров: %w", err)
+	}
+
+	log.Printf("Получено %d товаров для индексации", len(products))
+
+	// Индексируем все товары пакетами
+	const batchSize = 100
+	for i := 0; i < len(products); i += batchSize {
+		end := i + batchSize
+		if end > len(products) {
+			end = len(products)
+		}
+		batch := products[i:end]
+
+		if err := db.productSearchRepo.BulkIndexProducts(ctx, batch); err != nil {
+			return fmt.Errorf("ошибка индексации пакета товаров: %w", err)
+		}
+		log.Printf("Проиндексировано %d/%d товаров", end, len(products))
+	}
+
+	log.Printf("Успешно проиндексировано %d товаров витрин", len(products))
+	return nil
 }
 
 func (db *Database) GetListingImageByID(ctx context.Context, imageID int) (*models.MarketplaceImage, error) {
@@ -490,6 +616,121 @@ func (db *Database) GetListings(ctx context.Context, filters map[string]string, 
 
 func (db *Database) GetListingByID(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	return db.marketplaceDB.GetListingByID(ctx, id)
+}
+
+// GetMarketplaceListingsForReindex возвращает listings с needs_reindex=true для индексации в OpenSearch
+func (db *Database) GetMarketplaceListingsForReindex(ctx context.Context, limit int) ([]*models.MarketplaceListing, error) {
+	if limit <= 0 {
+		limit = 1000 // default limit
+	}
+
+	query := `
+		SELECT
+			id, user_id, category_id, title, description, price,
+			condition, status, location, latitude, longitude,
+			address_city, address_country, views_count, show_on_map,
+			original_language, created_at, updated_at,
+			storefront_id, external_id, metadata,
+			address_multilingual
+		FROM marketplace_listings
+		WHERE needs_reindex = true
+		  AND status = 'active'
+		ORDER BY id
+		LIMIT $1
+	`
+
+	rows, err := db.pool.Query(ctx, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query marketplace listings for reindex: %w", err)
+	}
+	defer rows.Close()
+
+	listings := make([]*models.MarketplaceListing, 0)
+	for rows.Next() {
+		listing := &models.MarketplaceListing{}
+		var addressMultilingual []byte
+		var metadataJSON []byte
+		var city sql.NullString
+		var country sql.NullString
+
+		err := rows.Scan(
+			&listing.ID,
+			&listing.UserID,
+			&listing.CategoryID,
+			&listing.Title,
+			&listing.Description,
+			&listing.Price,
+			&listing.Condition,
+			&listing.Status,
+			&listing.Location,
+			&listing.Latitude,
+			&listing.Longitude,
+			&city,
+			&country,
+			&listing.ViewsCount,
+			&listing.ShowOnMap,
+			&listing.OriginalLanguage,
+			&listing.CreatedAt,
+			&listing.UpdatedAt,
+			&listing.StorefrontID,
+			&listing.ExternalID,
+			&metadataJSON,
+			&addressMultilingual,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan marketplace listing: %w", err)
+		}
+
+		// Handle nullable fields
+		if city.Valid {
+			listing.City = city.String
+		}
+		if country.Valid {
+			listing.Country = country.String
+		}
+
+		// Parse metadata JSON
+		if len(metadataJSON) > 0 {
+			if err := json.Unmarshal(metadataJSON, &listing.Metadata); err != nil {
+				log.Printf("Warning: failed to unmarshal metadata for listing %d: %v", listing.ID, err)
+			}
+		}
+
+		// Parse address_multilingual JSON
+		if len(addressMultilingual) > 0 {
+			if err := json.Unmarshal(addressMultilingual, &listing.AddressMultilingual); err != nil {
+				log.Printf("Warning: failed to unmarshal address_multilingual for listing %d: %v", listing.ID, err)
+			}
+		}
+
+		listings = append(listings, listing)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating marketplace listings: %w", err)
+	}
+
+	return listings, nil
+}
+
+// ResetMarketplaceListingsReindexFlag сбрасывает флаг needs_reindex для listings после успешной индексации
+func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, listingIDs []int) error {
+	if len(listingIDs) == 0 {
+		return nil
+	}
+
+	query := `
+		UPDATE marketplace_listings
+		SET needs_reindex = false
+		WHERE id = ANY($1)
+	`
+
+	_, err := db.pool.Exec(ctx, query, listingIDs)
+	if err != nil {
+		return fmt.Errorf("failed to reset needs_reindex flag: %w", err)
+	}
+
+	return nil
 }
 
 func (db *Database) GetListingBySlug(ctx context.Context, slug string) (*models.MarketplaceListing, error) {
@@ -1901,4 +2142,49 @@ func (db *Database) SetMarketplaceUserService(userService *authservice.UserServi
 	if db.marketplaceDB != nil {
 		db.marketplaceDB.SetUserService(userService)
 	}
+}
+
+// GetAllUnifiedAttributes получает все активные unified attributes
+func (db *Database) GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
+	query := `
+		SELECT
+			id, code, name, display_name, attribute_type, purpose,
+			options, validation_rules, ui_settings,
+			is_searchable, is_filterable, is_required,
+			is_variant_compatible, affects_stock, affects_price,
+			sort_order, is_active, created_at, updated_at,
+			legacy_category_attribute_id, legacy_product_variant_attribute_id
+		FROM unified_attributes
+		WHERE is_active = true
+		ORDER BY code`
+
+	rows, err := db.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query all unified attributes: %w", err)
+	}
+	defer rows.Close()
+
+	var attributes []*models.UnifiedAttribute
+	for rows.Next() {
+		attr := &models.UnifiedAttribute{}
+		err := rows.Scan(
+			&attr.ID, &attr.Code, &attr.Name, &attr.DisplayName,
+			&attr.AttributeType, &attr.Purpose,
+			&attr.Options, &attr.ValidationRules, &attr.UISettings,
+			&attr.IsSearchable, &attr.IsFilterable, &attr.IsRequired,
+			&attr.IsVariantCompatible, &attr.AffectsStock, &attr.AffectsPrice,
+			&attr.SortOrder, &attr.IsActive, &attr.CreatedAt, &attr.UpdatedAt,
+			&attr.LegacyCategoryAttributeID, &attr.LegacyProductVariantAttributeID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan attribute: %w", err)
+		}
+		attributes = append(attributes, attr)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return attributes, nil
 }

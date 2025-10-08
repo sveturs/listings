@@ -65,9 +65,9 @@ type TranslateContentRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body AnalyzeProductImageRequest true "Image data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=handler.AnalyzeProductResponse} "AI analysis result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=handler.AnalyzeProductResponse} "AI analysis result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/ai/analyze-product-image [post]
 func (h *AIProductHandler) AnalyzeProductImage(c *fiber.Ctx) error {
@@ -100,9 +100,9 @@ func (h *AIProductHandler) AnalyzeProductImage(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body DetectCategoryRequest true "Product details"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=marketplaceServices.AIDetectionResult} "Category detection result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=marketplaceServices.AIDetectionResult} "Category detection result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/ai/detect-category [post]
 func (h *AIProductHandler) DetectCategory(c *fiber.Ctx) error {
@@ -148,9 +148,9 @@ func (h *AIProductHandler) DetectCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body ABTestTitlesRequest true "Title variants"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "A/B test result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "A/B test result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/ai/ab-test-titles [post]
 func (h *AIProductHandler) ABTestTitles(c *fiber.Ctx) error {
@@ -175,9 +175,9 @@ func (h *AIProductHandler) ABTestTitles(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body TranslateContentRequest true "Content to translate"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Translation result"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Translation result"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/ai/translate-content [post]
 func (h *AIProductHandler) TranslateContent(c *fiber.Ctx) error {
@@ -205,8 +205,8 @@ func (h *AIProductHandler) TranslateContent(c *fiber.Ctx) error {
 // @Tags AI Storefronts
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Metrics data"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Metrics data"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
 // @Router /api/v1/storefronts/ai/metrics [get]
 func (h *AIProductHandler) GetMetrics(c *fiber.Ctx) error {

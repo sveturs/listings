@@ -6,10 +6,9 @@ import { ColorPickerAttribute } from './attribute-inputs/ColorPickerAttribute';
 import { SizePickerAttribute } from './attribute-inputs/SizePickerAttribute';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 interface IntuitivePart {
   component: 'color' | 'size' | 'default';

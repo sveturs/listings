@@ -45,9 +45,9 @@ func NewProblemsHandler(problemService *service.ProblemService, logger *logger.L
 // @Param assigned_to query int false "Фильтр по назначенному пользователю"
 // @Param page query int false "Номер страницы" default(1)
 // @Param limit query int false "Количество элементов на странице" default(20)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "List of problems"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "List of problems"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems [get]
 func (h *ProblemsHandler) GetProblems(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -104,10 +104,10 @@ func (h *ProblemsHandler) GetProblems(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param body body logistics.ProblemShipment true "Данные проблемы"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Created problem"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid data"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Created problem"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid data"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems [post]
 func (h *ProblemsHandler) CreateProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -154,11 +154,11 @@ func (h *ProblemsHandler) CreateProblem(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
 // @Param body body map[string]interface{} true "Обновляемые поля"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Updated problem"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid data"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Updated problem"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id} [put]
 func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -200,11 +200,11 @@ func (h *ProblemsHandler) UpdateProblem(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
 // @Param body body map[string]string true "Резолюция проблемы"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Problem resolved"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid data"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Problem resolved"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/resolve [post]
 func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -270,11 +270,11 @@ func (h *ProblemsHandler) ResolveProblem(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
 // @Param body body map[string]int true "ID пользователя для назначения"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Problem assigned"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid data"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag "Problem assigned"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/assign [post]
 func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -339,11 +339,11 @@ func (h *ProblemsHandler) AssignProblem(c *fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
 // @Param body body map[string]string true "Текст комментария"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=logistics.ProblemComment} "Added comment"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request - invalid data"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} utils.SuccessResponseSwag{data=logistics.ProblemComment} "Added comment"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request - invalid data"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/comments [post]
 func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -392,10 +392,10 @@ func (h *ProblemsHandler) AddProblemComment(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]logistics.ProblemComment} "List of comments"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]logistics.ProblemComment} "List of comments"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/comments [get]
 func (h *ProblemsHandler) GetProblemComments(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -427,10 +427,10 @@ func (h *ProblemsHandler) GetProblemComments(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]logistics.ProblemStatusHistory} "History of changes"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]logistics.ProblemStatusHistory} "History of changes"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/history [get]
 func (h *ProblemsHandler) GetProblemHistory(c *fiber.Ctx) error {
 	// Проверка прав доступа
@@ -462,10 +462,10 @@ func (h *ProblemsHandler) GetProblemHistory(c *fiber.Ctx) error {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param id path int true "ID проблемы"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Problem details with comments and history"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Problem not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=logistics.ProblemShipment} "Problem details with comments and history"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 404 {object} utils.ErrorResponseSwag "Problem not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/admin/logistics/problems/{id}/details [get]
 func (h *ProblemsHandler) GetProblemDetails(c *fiber.Ctx) error {
 	// Проверка прав доступа

@@ -12,6 +12,7 @@ import compareReducer from './slices/compareSlice';
 import universalCompareReducer from './slices/universalCompareSlice';
 import favoritesReducer from './slices/favoritesSlice';
 import savedSearchesReducer from './slices/savedSearchesSlice';
+import categoryProposalsReducer from './slices/categoryProposalsSlice';
 import { websocketMiddleware } from './middleware/websocketMiddleware';
 
 export const store = configureStore({
@@ -29,6 +30,7 @@ export const store = configureStore({
     universalCompare: universalCompareReducer,
     favorites: favoritesReducer,
     savedSearches: savedSearchesReducer,
+    categoryProposals: categoryProposalsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -40,14 +42,24 @@ export const store = configureStore({
           'chat/handleUserOnline',
           'chat/handleUserOffline',
           'import/setSelectedFiles',
+          'import/setAnalysisFile',
+          'import/setAnalysisFileType',
           'import/importFromFile/pending',
           'import/importFromFile/fulfilled',
+          'import/analyzeImportFile/pending',
+          'import/analyzeCategories/pending',
+          'import/analyzeAttributes/pending',
+          'import/detectVariants/pending',
+          'import/analyzeClientCategories/pending',
+          'import/fetchJobStatus/pending',
+          'import/fetchJobStatus/fulfilled',
         ],
         ignoredPaths: [
           'chat.ws',
           'chat.onlineUsers',
           'chat.typingUsers',
           'import.selectedFiles',
+          'import.analysisFile',
           'products.selectedIds',
           'favorites.itemIds',
         ],

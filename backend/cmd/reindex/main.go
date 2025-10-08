@@ -72,6 +72,11 @@ func main() {
 		log.Fatalf("Error reindexing storefronts: %v", err)
 	}
 
+	log.Println("Запуск реиндексации товаров витрин...")
+	if err := db.ReindexAllProducts(ctx); err != nil {
+		log.Fatalf("Error reindexing products: %v", err)
+	}
+
 	duration := time.Since(startTime)
 	log.Printf("Переиндексация завершена успешно за %v", duration)
 }

@@ -213,7 +213,8 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 	categoryStr := getField("category")
 	if categoryStr != "" {
 		// For now, set default category ID (will be mapped by service layer)
-		product.CategoryID = 1
+		// IMPORTANT: Category ID 1001 is "Elektronika" - used as fallback
+		product.CategoryID = 1001
 
 		// Store original category in attributes for mapping
 		if product.Attributes == nil {
@@ -221,7 +222,7 @@ func (p *CSVParser) parseCSVRecord(record []string, headerMap map[string]int, li
 		}
 		product.Attributes["original_category"] = categoryStr
 	} else {
-		product.CategoryID = 1 // Default category
+		product.CategoryID = 1001 // Default category (Elektronika)
 	}
 
 	// Parse additional attributes

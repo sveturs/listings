@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<artikli>
+    <!-- Набор 1: Простой товар без вариантов -->
+    <artikal>
+        <id>3001</id>
+        <sifra>PWR-BANK-001</sifra>
+        <naziv>Power Bank 20000mAh USB-C Fast Charging</naziv>
+        <kategorija1>OPREMA ZA MOBILNI</kategorija1>
+        <kategorija2>BATERIJE</kategorija2>
+        <kategorija3>POWER BANKS</kategorija3>
+        <uvoznik>Digital Vision doo</uvoznik>
+        <godinaUvoza>2025.</godinaUvoza>
+        <zemljaPorekla>Kina</zemljaPorekla>
+        <vpCena>1200.00</vpCena>
+        <mpCena>2490.00</mpCena>
+        <dostupan>1</dostupan>
+        <naAkciji>0</naAkciji>
+        <opis>Brzo punjenje, LED indikatori, 2x USB-A + 1x USB-C</opis>
+        <barKod>3234567890001</barKod>
+        <slike>
+            <slika>http://example.com/images/pwrbank-1.jpg</slika>
+            <slika>http://example.com/images/pwrbank-2.jpg</slika>
+        </slike>
+    </artikal>
+</artikli>

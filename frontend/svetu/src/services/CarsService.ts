@@ -1,13 +1,10 @@
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
-type CarMake = components['schemas']['backend_internal_domain_models.CarMake'];
-type CarModel =
-  components['schemas']['backend_internal_domain_models.CarModel'];
-type CarGeneration =
-  components['schemas']['backend_internal_domain_models.CarGeneration'];
-type VINDecodeResult =
-  components['schemas']['backend_internal_domain_models.VINDecodeResult'];
+type CarMake = components['schemas']['models.CarMake'];
+type CarModel = components['schemas']['models.CarModel'];
+type CarGeneration = components['schemas']['models.CarGeneration'];
+type VINDecodeResult = components['schemas']['models.VINDecodeResult'];
 
 export interface CarMakesResponse {
   success: boolean;

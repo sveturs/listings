@@ -28,8 +28,7 @@ import { clearCart as clearLocalCart } from '@/store/slices/localCartSlice';
 import { clearCart as clearApiCart } from '@/store/slices/cartSlice';
 import { apiClient } from '@/services/api-client';
 
-type CreateOrderRequest =
-  components['schemas']['backend_internal_domain_models.CreateOrderRequest'];
+type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
 
 // Validation schemas for each step
 const customerInfoSchema = z.object({
@@ -85,7 +84,7 @@ export default function CheckoutPage() {
           variantId: item.variant_id,
           quantity: item.quantity || 0,
           name: item.product?.name || 'Product',
-          variantName: item.variant?.name,
+          variantName: item.variant?.sku,
           price:
             typeof item.price_per_unit === 'string'
               ? parseFloat(item.price_per_unit)

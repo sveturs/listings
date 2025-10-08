@@ -32,8 +32,8 @@ func NewHandler(service *service.Service, logger *logger.Logger) *Handler {
 // @Tags search-config
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]domain.SearchWeight} "List of search weights"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]domain.SearchWeight} "List of search weights"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/weights [get]
 func (h *Handler) GetWeights(c *fiber.Ctx) error {
 	weights, err := h.service.GetWeights(c.Context())
@@ -51,9 +51,9 @@ func (h *Handler) GetWeights(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param field path string true "Field name"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchWeight} "Search weight details"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Weight not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.SearchWeight} "Search weight details"
+// @Failure 404 {object} utils.ErrorResponseSwag "Weight not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/weights/{field} [get]
 func (h *Handler) GetWeightByField(c *fiber.Ctx) error {
 	fieldName := c.Params("field")
@@ -78,9 +78,9 @@ func (h *Handler) GetWeightByField(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param weight body domain.SearchWeight true "Weight configuration"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchWeight} "Created weight"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} utils.SuccessResponseSwag{data=domain.SearchWeight} "Created weight"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/weights [post]
 func (h *Handler) CreateWeight(c *fiber.Ctx) error {
 	var weight domain.SearchWeight
@@ -105,10 +105,10 @@ func (h *Handler) CreateWeight(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Weight ID"
 // @Param weight body domain.SearchWeight true "Updated weight configuration"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchWeight} "Updated weight"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Weight not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.SearchWeight} "Updated weight"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Weight not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/weights/{id} [put]
 func (h *Handler) UpdateWeight(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -142,9 +142,9 @@ func (h *Handler) UpdateWeight(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Weight ID"
 // @Success 204 {object} nil "Weight deleted successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Weight not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Weight not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/weights/{id} [delete]
 func (h *Handler) DeleteWeight(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -171,8 +171,8 @@ func (h *Handler) DeleteWeight(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param language query string false "Language code (default: ru)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]domain.SearchSynonym} "List of synonyms"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]domain.SearchSynonym} "List of synonyms"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms [get]
 func (h *Handler) GetSynonyms(c *fiber.Ctx) error {
 	language := c.Query("language", "ru")
@@ -193,9 +193,9 @@ func (h *Handler) GetSynonyms(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param synonym body domain.SearchSynonym true "Synonym configuration"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchSynonym} "Created synonym"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} utils.SuccessResponseSwag{data=domain.SearchSynonym} "Created synonym"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms [post]
 func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
 	c.Locals("logger_prefix", "CreateSynonym")
@@ -227,10 +227,10 @@ func (h *Handler) CreateSynonym(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Synonym ID"
 // @Param synonym body domain.SearchSynonym true "Updated synonym configuration"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchSynonym} "Updated synonym"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Synonym not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.SearchSynonym} "Updated synonym"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Synonym not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms/{id} [put]
 func (h *Handler) UpdateSynonym(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -264,9 +264,9 @@ func (h *Handler) UpdateSynonym(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Synonym ID"
 // @Success 204 {object} nil "Synonym deleted successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Synonym not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Synonym not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms/{id} [delete]
 func (h *Handler) DeleteSynonym(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -292,8 +292,8 @@ func (h *Handler) DeleteSynonym(c *fiber.Ctx) error {
 // @Tags search-config
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]domain.TransliterationRule} "List of transliteration rules"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]domain.TransliterationRule} "List of transliteration rules"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/transliteration [get]
 func (h *Handler) GetTransliterationRules(c *fiber.Ctx) error {
 	rules, err := h.service.GetTransliterationRules(c.Context())
@@ -312,9 +312,9 @@ func (h *Handler) GetTransliterationRules(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param rule body domain.TransliterationRule true "Transliteration rule"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.TransliterationRule} "Created rule"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 201 {object} utils.SuccessResponseSwag{data=domain.TransliterationRule} "Created rule"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/transliteration [post]
 func (h *Handler) CreateTransliterationRule(c *fiber.Ctx) error {
 	var rule domain.TransliterationRule
@@ -339,10 +339,10 @@ func (h *Handler) CreateTransliterationRule(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Rule ID"
 // @Param rule body domain.TransliterationRule true "Updated rule"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.TransliterationRule} "Updated rule"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Rule not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.TransliterationRule} "Updated rule"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Rule not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/transliteration/{id} [put]
 func (h *Handler) UpdateTransliterationRule(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -376,9 +376,9 @@ func (h *Handler) UpdateTransliterationRule(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Rule ID"
 // @Success 204 {object} nil "Rule deleted successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Rule not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 404 {object} utils.ErrorResponseSwag "Rule not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/transliteration/{id} [delete]
 func (h *Handler) DeleteTransliterationRule(c *fiber.Ctx) error {
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
@@ -405,8 +405,8 @@ func (h *Handler) DeleteTransliterationRule(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param limit query int false "Limit results (default: 100)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]domain.SearchStatistics} "Search statistics"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]domain.SearchStatistics} "Search statistics"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/statistics [get]
 func (h *Handler) GetSearchStatistics(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 100)
@@ -427,8 +427,8 @@ func (h *Handler) GetSearchStatistics(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param limit query int false "Limit results (default: 10)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]map[string]interface{}} "Popular searches"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]map[string]interface{}} "Popular searches"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/statistics/popular [get]
 func (h *Handler) GetPopularSearches(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 10)
@@ -448,9 +448,9 @@ func (h *Handler) GetPopularSearches(c *fiber.Ctx) error {
 // @Tags search-config
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchConfig} "Search configuration"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Configuration not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.SearchConfig} "Search configuration"
+// @Failure 404 {object} utils.ErrorResponseSwag "Configuration not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config [get]
 func (h *Handler) GetConfig(c *fiber.Ctx) error {
 	config, err := h.service.GetConfig(c.Context())
@@ -473,9 +473,9 @@ func (h *Handler) GetConfig(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param config body domain.SearchConfig true "Search configuration"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=domain.SearchConfig} "Updated configuration"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Bad request"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=domain.SearchConfig} "Updated configuration"
+// @Failure 400 {object} utils.ErrorResponseSwag "Bad request"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config [put]
 func (h *Handler) UpdateConfig(c *fiber.Ctx) error {
 	var config domain.SearchConfig

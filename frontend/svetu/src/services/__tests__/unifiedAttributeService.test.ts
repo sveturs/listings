@@ -1,10 +1,9 @@
 import { unifiedAttributeService } from '../unifiedAttributeService';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 // Mock fetch globally
 global.fetch = jest.fn();

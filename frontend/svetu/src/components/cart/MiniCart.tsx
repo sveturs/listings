@@ -81,7 +81,7 @@ export default function MiniCart({
             variantId: item.variant_id,
             quantity: item.quantity || 0,
             name: item.product?.name || 'Product',
-            variantName: item.variant?.name,
+            variantName: item.variant?.sku,
             // Преобразуем price_per_unit в число (может быть строкой из-за Decimal на backend)
             price:
               typeof item.price_per_unit === 'string'

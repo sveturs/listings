@@ -6,6 +6,7 @@ import type {
   ImportJobStatus,
   UploadProgress,
   ImportRequest,
+  CategoryMapping,
 } from '@/types/import';
 
 // Initial state
@@ -16,6 +17,11 @@ const initialState: ImportState = {
   uploadProgress: null,
   validationErrors: [],
   formats: null,
+
+  // Preview states
+  previewData: null,
+  isPreviewLoading: false,
+  previewError: null,
 
   // UI states
   isLoading: false,
@@ -30,6 +36,25 @@ const initialState: ImportState = {
   isImportModalOpen: false,
   isJobDetailsModalOpen: false,
   isErrorsModalOpen: false,
+
+  // Analysis states (Enhanced Import)
+  analysisFile: null,
+  analysisFileType: '',
+  categoryAnalysis: null,
+  attributeAnalysis: null,
+  variantDetection: null,
+  clientCategories: null,
+  isAnalyzing: false,
+  analysisError: null,
+  analysisProgress: 0,
+  currentAnalysisStep: 0,
+
+  // User modifications for analysis
+  approvedMappings: [],
+  customMappings: {},
+  selectedAttributes: [],
+  approvedVariantGroups: [],
+  categoryProposals: [],
 };
 
 // Async thunks
@@ -133,17 +158,49 @@ export const validateImportFile = createAsyncThunk(
   }
 );
 
+export const previewImportFile = createAsyncThunk(
+  'import/previewFile',
+  async (params: {
+    storefrontId?: number;
+    storefrontSlug?: string;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+    previewLimit?: number;
+  }) => {
+    // Use slug-based API if slug is provided
+    if (params.storefrontSlug) {
+      return await ImportApi.previewFileBySlug(
+        params.storefrontSlug,
+        params.file,
+        params.fileType,
+        params.previewLimit
+      );
+    }
+
+    if (!params.storefrontId) {
+      throw new Error('Either storefrontId or storefrontSlug is required');
+    }
+
+    return await ImportApi.previewFile(
+      params.storefrontId,
+      params.file,
+      params.fileType,
+      params.previewLimit
+    );
+  }
+);
+
 export const fetchJobStatus = createAsyncThunk(
   'import/fetchJobStatus',
-  async (jobId: number) => {
-    return await ImportApi.getJobStatus(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.getJobStatus(params.storefrontId, params.jobId);
   }
 );
 
 export const fetchJobDetails = createAsyncThunk(
   'import/fetchJobDetails',
-  async (jobId: number) => {
-    return await ImportApi.getJobDetails(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.getJobDetails(params.storefrontId, params.jobId);
   }
 );
 
@@ -162,18 +219,150 @@ export const downloadCsvTemplate = createAsyncThunk(
   }
 );
 
+// Enhanced Import Analysis thunks
+export const analyzeImportFile = createAsyncThunk(
+  'import/analyzeFile',
+  async (
+    params: {
+      storefrontId: number;
+      file: File;
+      fileType: 'xml' | 'csv' | 'zip';
+    },
+    { dispatch }
+  ) => {
+    // Step 1: Analyze categories (progress 0-33%)
+    dispatch(setAnalysisProgress(10));
+    const categoryAnalysis = await ImportApi.analyzeCategories(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+    dispatch(setAnalysisProgress(33));
+
+    // Step 2: Analyze attributes (progress 33-66%)
+    const attributeAnalysis = await ImportApi.analyzeAttributes(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+    dispatch(setAnalysisProgress(66));
+
+    // Step 3: Detect variants (progress 66-100%)
+    const variantDetection = await ImportApi.detectVariants(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+    dispatch(setAnalysisProgress(100));
+
+    return {
+      categoryAnalysis,
+      attributeAnalysis,
+      variantDetection,
+    };
+  }
+);
+
+export const analyzeCategories = createAsyncThunk(
+  'import/analyzeCategories',
+  async (params: {
+    storefrontId: number;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+  }) => {
+    return await ImportApi.analyzeCategories(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+  }
+);
+
+export const analyzeAttributes = createAsyncThunk(
+  'import/analyzeAttributes',
+  async (params: {
+    storefrontId: number;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+  }) => {
+    return await ImportApi.analyzeAttributes(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+  }
+);
+
+export const detectVariants = createAsyncThunk(
+  'import/detectVariants',
+  async (params: {
+    storefrontId: number;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+  }) => {
+    return await ImportApi.detectVariants(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+  }
+);
+
+export const analyzeClientCategories = createAsyncThunk(
+  'import/analyzeClientCategories',
+  async (params: {
+    storefrontId: number;
+    file: File;
+    fileType: 'xml' | 'csv' | 'zip';
+  }) => {
+    return await ImportApi.analyzeClientCategories(
+      params.storefrontId,
+      params.file,
+      params.fileType
+    );
+  }
+);
+
+export const fetchCategoryProposals = createAsyncThunk(
+  'import/fetchCategoryProposals',
+  async (params?: {
+    status?: 'pending' | 'approved' | 'rejected';
+    storefront_id?: number;
+    limit?: number;
+    offset?: number;
+  }) => {
+    return await ImportApi.getCategoryProposals(params);
+  }
+);
+
+export const approveCategoryProposal = createAsyncThunk(
+  'import/approveCategoryProposal',
+  async (proposalId: number) => {
+    await ImportApi.approveCategoryProposal(proposalId);
+    return proposalId;
+  }
+);
+
+export const rejectCategoryProposal = createAsyncThunk(
+  'import/rejectCategoryProposal',
+  async (params: { proposalId: number; reason?: string }) => {
+    await ImportApi.rejectCategoryProposal(params.proposalId, params.reason);
+    return params.proposalId;
+  }
+);
+
 export const cancelImportJob = createAsyncThunk(
   'import/cancelJob',
-  async (jobId: number) => {
-    await ImportApi.cancelJob(jobId);
-    return jobId;
+  async (params: { storefrontId: number; jobId: number }) => {
+    await ImportApi.cancelJob(params.storefrontId, params.jobId);
+    return params.jobId;
   }
 );
 
 export const retryImportJob = createAsyncThunk(
   'import/retryJob',
-  async (jobId: number) => {
-    return await ImportApi.retryJob(jobId);
+  async (params: { storefrontId: number; jobId: number }) => {
+    return await ImportApi.retryJob(params.storefrontId, params.jobId);
   }
 );
 
@@ -265,6 +454,92 @@ const importSlice = createSlice({
       state.uploadProgress = null;
       state.validationErrors = [];
       state.error = null;
+      state.previewData = null;
+      state.previewError = null;
+    },
+
+    // Preview reducers
+    clearPreview: (state) => {
+      state.previewData = null;
+      state.previewError = null;
+    },
+
+    // Analysis reducers
+    setAnalysisFile: (state, action: PayloadAction<File | null>) => {
+      state.analysisFile = action.payload;
+    },
+    setAnalysisFileType: (
+      state,
+      action: PayloadAction<'xml' | 'csv' | 'zip' | ''>
+    ) => {
+      state.analysisFileType = action.payload;
+    },
+    setAnalysisProgress: (state, action: PayloadAction<number>) => {
+      state.analysisProgress = action.payload;
+    },
+    setCurrentAnalysisStep: (state, action: PayloadAction<number>) => {
+      state.currentAnalysisStep = action.payload;
+    },
+    setApprovedMappings: (state, action: PayloadAction<CategoryMapping[]>) => {
+      state.approvedMappings = action.payload;
+    },
+    addApprovedMapping: (state, action: PayloadAction<CategoryMapping>) => {
+      const index = state.approvedMappings.findIndex(
+        (m) => m.external_category === action.payload.external_category
+      );
+      if (index >= 0) {
+        state.approvedMappings[index] = action.payload;
+      } else {
+        state.approvedMappings.push(action.payload);
+      }
+    },
+    setCustomMapping: (
+      state,
+      action: PayloadAction<{
+        externalCategory: string;
+        internalCategoryId: number;
+      }>
+    ) => {
+      state.customMappings[action.payload.externalCategory] =
+        action.payload.internalCategoryId;
+    },
+    setSelectedAttributes: (state, action: PayloadAction<string[]>) => {
+      state.selectedAttributes = action.payload;
+    },
+    toggleSelectedAttribute: (state, action: PayloadAction<string>) => {
+      const index = state.selectedAttributes.indexOf(action.payload);
+      if (index >= 0) {
+        state.selectedAttributes.splice(index, 1);
+      } else {
+        state.selectedAttributes.push(action.payload);
+      }
+    },
+    setApprovedVariantGroups: (state, action: PayloadAction<string[]>) => {
+      state.approvedVariantGroups = action.payload;
+    },
+    toggleApprovedVariantGroup: (state, action: PayloadAction<string>) => {
+      const index = state.approvedVariantGroups.indexOf(action.payload);
+      if (index >= 0) {
+        state.approvedVariantGroups.splice(index, 1);
+      } else {
+        state.approvedVariantGroups.push(action.payload);
+      }
+    },
+    clearAnalysis: (state) => {
+      state.analysisFile = null;
+      state.analysisFileType = '';
+      state.categoryAnalysis = null;
+      state.attributeAnalysis = null;
+      state.variantDetection = null;
+      state.clientCategories = null;
+      state.isAnalyzing = false;
+      state.analysisError = null;
+      state.analysisProgress = 0;
+      state.currentAnalysisStep = 0;
+      state.approvedMappings = [];
+      state.customMappings = {};
+      state.selectedAttributes = [];
+      state.approvedVariantGroups = [];
     },
   },
   extraReducers: (builder) => {
@@ -398,6 +673,137 @@ const importSlice = createSlice({
           state.jobs.unshift(action.payload);
         }
         state.currentJob = action.payload;
+      })
+
+      // Preview file
+      .addCase(previewImportFile.pending, (state) => {
+        state.isPreviewLoading = true;
+        state.previewError = null;
+        state.previewData = null;
+      })
+      .addCase(previewImportFile.fulfilled, (state, action) => {
+        state.isPreviewLoading = false;
+        state.previewData = action.payload;
+      })
+      .addCase(previewImportFile.rejected, (state, action) => {
+        state.isPreviewLoading = false;
+        state.previewError =
+          action.error.message || 'Failed to preview import file';
+      })
+
+      // Analyze import file (full analysis)
+      .addCase(analyzeImportFile.pending, (state) => {
+        state.isAnalyzing = true;
+        state.analysisError = null;
+        state.analysisProgress = 0;
+      })
+      .addCase(analyzeImportFile.fulfilled, (state, action) => {
+        state.isAnalyzing = false;
+        state.categoryAnalysis = action.payload.categoryAnalysis;
+        state.attributeAnalysis = action.payload.attributeAnalysis;
+        state.variantDetection = action.payload.variantDetection;
+        state.analysisProgress = 100;
+      })
+      .addCase(analyzeImportFile.rejected, (state, action) => {
+        state.isAnalyzing = false;
+        state.analysisError =
+          action.error.message || 'Failed to analyze import file';
+        state.analysisProgress = 0;
+      })
+
+      // Analyze categories
+      .addCase(analyzeCategories.pending, (state) => {
+        state.isAnalyzing = true;
+        state.analysisError = null;
+      })
+      .addCase(analyzeCategories.fulfilled, (state, action) => {
+        state.isAnalyzing = false;
+        state.categoryAnalysis = action.payload;
+      })
+      .addCase(analyzeCategories.rejected, (state, action) => {
+        state.isAnalyzing = false;
+        state.analysisError =
+          action.error.message || 'Failed to analyze categories';
+      })
+
+      // Analyze attributes
+      .addCase(analyzeAttributes.pending, (state) => {
+        state.isAnalyzing = true;
+        state.analysisError = null;
+      })
+      .addCase(analyzeAttributes.fulfilled, (state, action) => {
+        state.isAnalyzing = false;
+        state.attributeAnalysis = action.payload;
+      })
+      .addCase(analyzeAttributes.rejected, (state, action) => {
+        state.isAnalyzing = false;
+        state.analysisError =
+          action.error.message || 'Failed to analyze attributes';
+      })
+
+      // Detect variants
+      .addCase(detectVariants.pending, (state) => {
+        state.isAnalyzing = true;
+        state.analysisError = null;
+      })
+      .addCase(detectVariants.fulfilled, (state, action) => {
+        state.isAnalyzing = false;
+        state.variantDetection = action.payload;
+      })
+      .addCase(detectVariants.rejected, (state, action) => {
+        state.isAnalyzing = false;
+        state.analysisError =
+          action.error.message || 'Failed to detect variants';
+      })
+
+      // Analyze client categories
+      .addCase(analyzeClientCategories.pending, (state) => {
+        state.isAnalyzing = true;
+        state.analysisError = null;
+      })
+      .addCase(analyzeClientCategories.fulfilled, (state, action) => {
+        state.isAnalyzing = false;
+        state.clientCategories = action.payload;
+      })
+      .addCase(analyzeClientCategories.rejected, (state, action) => {
+        state.isAnalyzing = false;
+        state.analysisError =
+          action.error.message || 'Failed to analyze client categories';
+      })
+
+      // Fetch category proposals
+      .addCase(fetchCategoryProposals.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategoryProposals.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.categoryProposals = action.payload.proposals;
+      })
+      .addCase(fetchCategoryProposals.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error =
+          action.error.message || 'Failed to fetch category proposals';
+      })
+
+      // Approve category proposal
+      .addCase(approveCategoryProposal.fulfilled, (state, action) => {
+        const proposal = state.categoryProposals.find(
+          (p) => p.id === action.payload
+        );
+        if (proposal) {
+          proposal.status = 'approved';
+        }
+      })
+
+      // Reject category proposal
+      .addCase(rejectCategoryProposal.fulfilled, (state, action) => {
+        const proposal = state.categoryProposals.find(
+          (p) => p.id === action.payload
+        );
+        if (proposal) {
+          proposal.status = 'rejected';
+        }
       });
   },
 });
@@ -418,6 +824,20 @@ export const {
   setCurrentJob,
   updateJobStatus,
   resetForm,
+  clearPreview,
+  // Analysis actions
+  setAnalysisFile,
+  setAnalysisFileType,
+  setAnalysisProgress,
+  setCurrentAnalysisStep,
+  setApprovedMappings,
+  addApprovedMapping,
+  setCustomMapping,
+  setSelectedAttributes,
+  toggleSelectedAttribute,
+  setApprovedVariantGroups,
+  toggleApprovedVariantGroup,
+  clearAnalysis,
 } = importSlice.actions;
 
 export default importSlice.reducer;

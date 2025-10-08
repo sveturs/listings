@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -206,7 +207,7 @@ func main() {
 		if err == nil {
 			for varRows.Next() {
 				var v models.StorefrontProductVariant
-				err := varRows.Scan(&v.ID, &v.Name, &v.SKU, &v.Price, &v.StockQuantity, &v.Attributes)
+				err := varRows.Scan(&v.ID, &sql.NullString{}, &v.SKU, &v.Price, &v.StockQuantity, &v.VariantAttributes)
 				if err == nil {
 					p.Variants = append(p.Variants, v)
 				}

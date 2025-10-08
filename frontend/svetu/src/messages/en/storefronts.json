@@ -1,4 +1,5 @@
 {
+  "title": "Product Import",
   "dashboardTitle": "Dashboard",
   "orders": "Orders",
   "myStorefronts": "My Storefronts",
@@ -656,7 +657,9 @@
     "stock": "Stock",
     "analytics": "Analytics"
   },
-  "progress": "Progress",
+  "progress": {
+    "uploading": "Uploading..."
+  },
   "updateSuccess": "Storefront settings successfully updated",
   "updateError": "Error updating storefront settings",
   "advancedModeNotAvailable": "Advanced variant management will be available after product creation. For now, use Simple Mode to create basic variants.",
@@ -671,5 +674,320 @@
   "apply": "Apply",
   "categoriesLoadError": "Failed to load categories",
   "noCategoriesFound": "No categories found",
-  "willGenerateVariants": "Will generate {count} variants"
+  "willGenerateVariants": "Will generate {count} variants",
+  "import": {
+    "wizard": {
+      "title": "Import Wizard",
+      "steps": {
+        "upload": {
+          "name": "Upload",
+          "title": "Upload File",
+          "description": "Select a file to import products",
+          "dragDrop": "Drag and drop file here or click to select",
+          "supportedFormats": "Supported formats: XML, CSV, ZIP (max 50MB)",
+          "remove": "Remove"
+        },
+        "analyzing": {
+          "name": "Analyzing",
+          "title": "Analyzing File",
+          "description": "We are analyzing your file...",
+          "progress": "Progress",
+          "stages": {
+            "categories": "Categories analysis",
+            "attributes": "Attributes analysis",
+            "variants": "Variants detection"
+          }
+        },
+        "categories": {
+          "name": "Categories",
+          "title": "Category Mapping",
+          "description": "Map product categories"
+        },
+        "attributes": {
+          "name": "Attributes",
+          "title": "Attribute Mapping",
+          "description": "Map product attributes"
+        },
+        "variants": {
+          "name": "Variants",
+          "title": "Variant Detection",
+          "description": "Review detected product variants"
+        },
+        "summary": {
+          "name": "Summary",
+          "title": "Import Summary",
+          "description": "Review and confirm import"
+        }
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "startAnalysis": "Start Analysis",
+        "next": "Next",
+        "previous": "Previous",
+        "back": "Back",
+        "startImport": "Start Import"
+      },
+      "categories": {
+        "total": "categories found",
+        "highConfidence": "High Confidence",
+        "mediumConfidence": "Medium Confidence",
+        "lowConfidence": "Low Confidence",
+        "unmapped": "Unmapped",
+        "noMappingsFound": "No category mappings found. The analysis did not detect any categories in your import file."
+      },
+      "variants": {
+        "totalGroups": "Groups Found",
+        "totalVariants": "Total Variants",
+        "ungrouped": "Ungrouped Products"
+      },
+      "summary": {
+        "file": "File",
+        "fileName": "File Name",
+        "fileSize": "File Size",
+        "categories": "Categories",
+        "totalCategories": "Total Categories",
+        "approvedMappings": "Approved Mappings",
+        "customMappings": "Custom Mappings",
+        "attributes": "Attributes",
+        "selectedAttributes": "Selected Attributes",
+        "variants": "Variants",
+        "approvedGroups": "Approved Groups",
+        "totalVariants": "Total Variants"
+      }
+    },
+    "categoryMapping": {
+      "title": "Category Mapping",
+      "aiSuggestion": "AI Suggestion",
+      "selectCategory": "Select Category",
+      "selectPlaceholder": "Choose a category from the list",
+      "newCategory": {
+        "request": "Request New Category",
+        "reasoning": "Reasoning",
+        "reasoningPlaceholder": "Explain why a new category is needed...",
+        "submit": "Submit Request",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "approve": "Approve"
+      },
+      "confidence": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "status": {
+        "approved": "Approved"
+      },
+      "summary": {
+        "highConfidence": "High Confidence",
+        "mediumConfidence": "Medium Confidence",
+        "lowConfidence": "Low Confidence",
+        "unmapped": "Unmapped"
+      },
+      "sections": {
+        "highConfidence": "High Confidence (Auto-approved)",
+        "mediumConfidence": "Medium Confidence (Review Recommended)",
+        "lowConfidence": "Low Confidence (Manual Required)",
+        "unmapped": "No AI Suggestions"
+      },
+      "help": {
+        "title": "How AI Mapping Works",
+        "highConfidence": "Green - AI is confident, can be auto-approved",
+        "mediumConfidence": "Yellow - recommended to review AI suggestion",
+        "lowConfidence": "Red - manual category selection required",
+        "newCategory": "If needed category doesn't exist - request creation"
+      },
+      "errors": {
+        "reasoningRequired": "Reasoning is required"
+      }
+    },
+    "attributeMapping": {
+      "title": "Attribute Mapping",
+      "filters": {
+        "search": "Search",
+        "searchPlaceholder": "Search attributes...",
+        "type": "Type",
+        "allTypes": "All Types",
+        "variantDefiningOnly": "Variant-defining Only"
+      },
+      "actions": {
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All"
+      },
+      "stats": {
+        "total": "Total",
+        "selected": "Selected",
+        "variantDefining": "Variant-defining"
+      },
+      "types": {
+        "string": "Text",
+        "number": "Number",
+        "boolean": "Yes/No",
+        "enum": "List"
+      },
+      "badges": {
+        "variantDefining": "Variant-defining"
+      },
+      "suggestedMapping": "Suggested Mapping",
+      "frequency": "Frequency",
+      "products": "products",
+      "sampleValues": "Examples",
+      "noAttributesFound": "No attributes found",
+      "help": {
+        "title": "Attribute Selection",
+        "selectAttributes": "Select attributes you want to import",
+        "variantDefining": "Attributes marked 'Variant-defining' are used for product grouping",
+        "frequency": "Frequency shows how many products have this attribute",
+        "sampleValues": "Examples help understand value format"
+      }
+    },
+    "variantDetection": {
+      "title": "Variant Detection",
+      "filters": {
+        "search": "Search",
+        "searchPlaceholder": "Search variant groups...",
+        "confidence": "Confidence",
+        "allConfidence": "All Levels"
+      },
+      "actions": {
+        "approveAll": "Approve All",
+        "rejectAll": "Reject All",
+        "showVariants": "Show Variants",
+        "hideVariants": "Hide Variants"
+      },
+      "stats": {
+        "groups": "Groups",
+        "variants": "Variants",
+        "approved": "Approved"
+      },
+      "confidence": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "status": {
+        "approved": "Approved"
+      },
+      "variants": "variants",
+      "attributes": "Attributes",
+      "noGroupsFound": "No groups found",
+      "help": {
+        "title": "Variant Grouping",
+        "variantGroups": "Products are automatically grouped by base name",
+        "confidence": "Confidence level shows grouping quality",
+        "approve": "Approve groups to import as variants of one product",
+        "expandDetails": "Expand group to see all variants"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Classic",
+    "enhanced": "Enhanced"
+  },
+  "tabs": {
+    "uploadFile": "Upload File",
+    "importFromUrl": "Import from URL"
+  },
+  "dragDrop": {
+    "title": "Drag and drop file here",
+    "subtitle": "or click to select file"
+  },
+  "template": {
+    "title": "Download Template",
+    "description": "Use our template to prepare your data correctly"
+  },
+  "url": {
+    "label": "Import from URL",
+    "help": "Enter the URL of a CSV or XML file to import"
+  },
+  "jobs": {
+    "title": "Import History",
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "empty": {
+      "title": "No imports yet",
+      "description": "Start importing products from a file"
+    },
+    "details": {
+      "title": "Import Details",
+      "fileInfo": "File Information",
+      "fileName": "File Name",
+      "fileType": "File Type",
+      "statistics": "Statistics",
+      "total": "Total",
+      "processed": "Processed",
+      "successful": "Successful",
+      "failed": "Failed",
+      "timing": "Timing",
+      "created": "Created",
+      "started": "Started",
+      "completed": "Completed",
+      "duration": "Duration",
+      "notSet": "Not Set",
+      "complete": "complete"
+    },
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "actions": {
+    "refresh": "Refresh",
+    "viewDetails": "View Details",
+    "viewErrors": "View Errors",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "confirmCancel": "Are you sure you want to cancel this import?",
+    "selectFile": "Select File",
+    "downloadTemplate": "Download Template",
+    "import": "Import",
+    "importing": "Importing...",
+    "close": "Close",
+    "removeFile": "Remove File",
+    "back": "Back"
+  },
+  "fileType": {
+    "label": "File Type",
+    "select": "Select file type"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Update Mode",
+      "upsert": "Create or Update",
+      "createOnly": "Create Only",
+      "updateOnly": "Update Only"
+    },
+    "categoryMapping": {
+      "label": "Category Mapping",
+      "auto": "Automatic",
+      "manual": "Manual",
+      "skip": "Skip"
+    }
+  },
+  "manager": {
+    "title": "Import Manager",
+    "description": "Import products from XML, CSV or ZIP files",
+    "startImport": "Start Import"
+  },
+  "stats": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "formats": {
+    "title": "Supported Formats",
+    "extensions": "Extensions",
+    "encoding": "Encoding",
+    "maxFileSize": "Maximum file size",
+    "maxProducts": "Maximum products per import"
+  }
 }

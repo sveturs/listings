@@ -11,10 +11,9 @@ import { toast } from '@/utils/toast';
 import type { CarSelection } from '@/types/cars';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 type UnifiedAttributeValue =
-  components['schemas']['backend_internal_domain_models.UnifiedAttributeValue'];
+  components['schemas']['models.UnifiedAttributeValue'];
 
 interface AttributeGroup {
   id: string;

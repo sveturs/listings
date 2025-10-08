@@ -18,11 +18,9 @@ import AdminGuard from '@/components/AdminGuard';
 import type { components } from '@/types/generated/api';
 import configManager from '@/config';
 
-type DocFile = components['schemas']['internal_proj_docserver_handler.DocFile'];
-type DocFilesResponse =
-  components['schemas']['internal_proj_docserver_handler.DocFilesResponse'];
-type DocContentResponse =
-  components['schemas']['internal_proj_docserver_handler.DocContentResponse'];
+type DocFile = components['schemas']['handler.DocFile'];
+type DocFilesResponse = components['schemas']['handler.DocFilesResponse'];
+type DocContentResponse = components['schemas']['handler.DocContentResponse'];
 
 export default function DocsPage() {
   const [files, setFiles] = useState<DocFile[]>([]);

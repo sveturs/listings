@@ -43,9 +43,9 @@ func NewAICategoryHandler(detector *services.AICategoryDetector, validator *serv
 // @Accept json
 // @Produce json
 // @Param request body services.AIDetectionInput true "Входные данные для определения категории"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат определения категории"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат определения категории"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/detect-category [post]
 func (h *AICategoryHandler) DetectCategory(c *fiber.Ctx) error {
@@ -80,9 +80,9 @@ func (h *AICategoryHandler) DetectCategory(c *fiber.Ctx) error {
 // @Produce json
 // @Param feedbackId path int true "ID записи обратной связи"
 // @Param request body ConfirmDetectionRequest true "Правильная категория"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Обратная связь сохранена"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Обратная связь сохранена"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/confirm/{feedbackId} [post]
 func (h *AICategoryHandler) ConfirmDetection(c *fiber.Ctx) error {
@@ -120,8 +120,8 @@ func (h *AICategoryHandler) ConfirmDetection(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param days query int false "Количество дней для анализа" default(7)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Метрики точности"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Метрики точности"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/metrics [get]
 func (h *AICategoryHandler) GetAccuracyMetrics(c *fiber.Ctx) error {
@@ -146,8 +146,8 @@ func (h *AICategoryHandler) GetAccuracyMetrics(c *fiber.Ctx) error {
 // @Tags marketplace-ai
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Обучение запущено"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Обучение запущено"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/learn [post]
 func (h *AICategoryHandler) TriggerLearning(c *fiber.Ctx) error {
@@ -170,9 +170,9 @@ func (h *AICategoryHandler) TriggerLearning(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body services.ValidationRequest true "Данные для валидации категории"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.ValidationResult} "Результат валидации"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.ValidationResult} "Результат валидации"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/validate-category [post]
 func (h *AICategoryHandler) ValidateCategory(c *fiber.Ctx) error {
@@ -212,9 +212,9 @@ func (h *AICategoryHandler) ValidateCategory(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body services.KeywordGenerationRequest true "Данные для генерации ключевых слов"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.KeywordGenerationResult} "Результат генерации ключевых слов"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.KeywordGenerationResult} "Результат генерации ключевых слов"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/generate-keywords [post]
 func (h *AICategoryHandler) GenerateKeywords(c *fiber.Ctx) error {
@@ -279,8 +279,8 @@ func (h *AICategoryHandler) GenerateKeywords(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param minKeywords query int false "Минимальное количество ключевых слов на категорию" default(50)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.KeywordGenerationResult} "Результат массовой генерации"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.KeywordGenerationResult} "Результат массовой генерации"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/generate-keywords-all [post]
 func (h *AICategoryHandler) GenerateKeywordsForAllCategories(c *fiber.Ctx) error {
@@ -373,8 +373,8 @@ func (h *AICategoryHandler) GenerateKeywordsForAllCategories(c *fiber.Ctx) error
 // @Accept json
 // @Produce json
 // @Param categoryId query int false "ID категории для фильтрации"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Статистика ключевых слов"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Статистика ключевых слов"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/keyword-stats [get]
 func (h *AICategoryHandler) GetKeywordStats(c *fiber.Ctx) error {
@@ -423,8 +423,8 @@ func (h *AICategoryHandler) GetKeywordStats(c *fiber.Ctx) error {
 // @Tags marketplace-ai
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.LearningMetrics} "Результаты обучения"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.LearningMetrics} "Результаты обучения"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/learn-from-feedback [post]
 func (h *AICategoryHandler) LearnFromFeedback(c *fiber.Ctx) error {
@@ -458,8 +458,8 @@ func (h *AICategoryHandler) LearnFromFeedback(c *fiber.Ctx) error {
 // @Tags marketplace-ai
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Процесс улучшения запущен"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Процесс улучшения запущен"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/auto-improve [post]
 func (h *AICategoryHandler) AutoImproveKeywords(c *fiber.Ctx) error {
@@ -491,8 +491,8 @@ func (h *AICategoryHandler) AutoImproveKeywords(c *fiber.Ctx) error {
 // @Tags marketplace-ai
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.LearningMetrics} "Статистика обучения"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.LearningMetrics} "Статистика обучения"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/learning-stats [get]
 func (h *AICategoryHandler) GetLearningStats(c *fiber.Ctx) error {
@@ -515,8 +515,8 @@ func (h *AICategoryHandler) GetLearningStats(c *fiber.Ctx) error {
 // @Tags marketplace-ai
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag "Плановое обучение запущено"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag "Плановое обучение запущено"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/scheduled-learning [post]
 func (h *AICategoryHandler) ScheduledLearning(c *fiber.Ctx) error {
@@ -549,9 +549,9 @@ func (h *AICategoryHandler) ScheduledLearning(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body services.AIDetectionInput true "Входные данные для определения категории"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат определения категории"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат определения категории"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/detect-category-standard [post]
 func (h *AICategoryHandler) DetectCategoryStandard(c *fiber.Ctx) error {
@@ -585,9 +585,9 @@ func (h *AICategoryHandler) DetectCategoryStandard(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body services.AIDetectionInput true "Входные данные товара"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат выбора категории с обоснованием"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Некорректный запрос"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Внутренняя ошибка сервера"
+// @Success 200 {object} utils.SuccessResponseSwag{data=services.AIDetectionResult} "Результат выбора категории с обоснованием"
+// @Failure 400 {object} utils.ErrorResponseSwag "Некорректный запрос"
+// @Failure 500 {object} utils.ErrorResponseSwag "Внутренняя ошибка сервера"
 // @Security BearerAuth
 // @Router /marketplace/ai/select-category [post]
 func (h *AICategoryHandler) SelectCategory(c *fiber.Ctx) error {

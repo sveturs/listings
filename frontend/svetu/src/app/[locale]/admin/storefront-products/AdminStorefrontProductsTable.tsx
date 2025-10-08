@@ -125,8 +125,9 @@ export default function AdminStorefrontProductsTable() {
         // if (categoryFilter) params.append('category_id', categoryFilter);
         // if (statusFilter) params.append('status', statusFilter);
         params.append('limit', '100'); // Получаем больше товаров за раз
-        // Для админки не фильтруем по is_active - показываем все товары
-        // (не передаем параметр is_active вообще, чтобы получить и активные и неактивные)
+        // Для админки явно запрашиваем ВСЕ товары (включая неактивные)
+        // Передаем is_active=all чтобы получить и активные и неактивные товары
+        params.append('is_active', 'all');
 
         // Используем правильный эндпоинт с slug в пути
         const response = await apiClient.get(

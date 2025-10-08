@@ -1,4 +1,5 @@
 {
+  "title": "Uvoz proizvoda",
   "dashboardTitle": "Kontrolna tabla",
   "orders": "Porudžbine",
   "myStorefronts": "Moje prodavnice",
@@ -653,7 +654,9 @@
     "stock": "Zalihe",
     "analytics": "Analitika"
   },
-  "progress": "Napredak",
+  "progress": {
+    "uploading": "Otpremanje..."
+  },
   "updateSuccess": "Postavke prodavnice su uspešno ažurirane",
   "updateError": "Greška pri ažuriranju postavki prodavnice",
   "advancedModeNotAvailable": "Napredno upravljanje varijantama biće dostupno nakon kreiranja proizvoda. Za sada koristite Jednostavan režim za kreiranje osnovnih varijanti.",
@@ -668,5 +671,320 @@
   "apply": "Primeni",
   "categoriesLoadError": "Neuspelo učitavanje kategorija",
   "noCategoriesFound": "Kategorije nisu pronađene",
-  "willGenerateVariants": "Biće kreirano {count} varijanti"
+  "willGenerateVariants": "Biće kreirano {count} varijanti",
+  "import": {
+    "wizard": {
+      "title": "Čarobnjak za uvoz",
+      "steps": {
+        "upload": {
+          "name": "Otpremanje",
+          "title": "Otpremanje fajla",
+          "description": "Izaberite fajl za uvoz proizvoda",
+          "dragDrop": "Prevuci fajl ovde ili klikni za izbor",
+          "supportedFormats": "Podržani formati: XML, CSV, ZIP (maks. 50MB)",
+          "remove": "Ukloni"
+        },
+        "analyzing": {
+          "name": "Analiza",
+          "title": "Analiza fajla",
+          "description": "Analiziramo vaš fajl...",
+          "progress": "Napredak",
+          "stages": {
+            "categories": "Analiza kategorija",
+            "attributes": "Analiza atributa",
+            "variants": "Detekcija varijanti"
+          }
+        },
+        "categories": {
+          "name": "Kategorije",
+          "title": "Mapiranje kategorija",
+          "description": "Mapirajte kategorije proizvoda"
+        },
+        "attributes": {
+          "name": "Atributi",
+          "title": "Mapiranje atributa",
+          "description": "Mapirajte atribute proizvoda"
+        },
+        "variants": {
+          "name": "Varijante",
+          "title": "Detekcija varijanti",
+          "description": "Pregledajte otkrivene varijante proizvoda"
+        },
+        "summary": {
+          "name": "Rezime",
+          "title": "Rezime uvoza",
+          "description": "Pregledajte i potvrdite uvoz"
+        }
+      },
+      "buttons": {
+        "cancel": "Otkaži",
+        "startAnalysis": "Započni analizu",
+        "next": "Sledeće",
+        "previous": "Prethodno",
+        "back": "Nazad",
+        "startImport": "Započni uvoz"
+      },
+      "categories": {
+        "total": "pronađenih kategorija",
+        "highConfidence": "Visoka pouzdanost",
+        "mediumConfidence": "Srednja pouzdanost",
+        "lowConfidence": "Niska pouzdanost",
+        "unmapped": "Nemapirano",
+        "noMappingsFound": "Mapiranje kategorija nije pronađeno. Analiza nije otkrila kategorije u vašoj datoteci za uvoz."
+      },
+      "variants": {
+        "totalGroups": "Pronađeno grupa",
+        "totalVariants": "Ukupno varijanti",
+        "ungrouped": "Negrupisanih proizvoda"
+      },
+      "summary": {
+        "file": "Fajl",
+        "fileName": "Ime fajla",
+        "fileSize": "Veličina fajla",
+        "categories": "Kategorije",
+        "totalCategories": "Ukupno kategorija",
+        "approvedMappings": "Odobrenih mapiranja",
+        "customMappings": "Korisničkih mapiranja",
+        "attributes": "Atributi",
+        "selectedAttributes": "Izabranih atributa",
+        "variants": "Varijante",
+        "approvedGroups": "Odobrenih grupa",
+        "totalVariants": "Ukupno varijanti"
+      }
+    },
+    "categoryMapping": {
+      "title": "Mapiranje kategorija",
+      "aiSuggestion": "AI predlog",
+      "selectCategory": "Izaberite kategoriju",
+      "selectPlaceholder": "Izaberite kategoriju sa liste",
+      "newCategory": {
+        "request": "Zatraži novu kategoriju",
+        "reasoning": "Obrazloženje",
+        "reasoningPlaceholder": "Objasnite zašto je potrebna nova kategorija...",
+        "submit": "Pošalji zahtev",
+        "cancel": "Otkaži"
+      },
+      "actions": {
+        "approve": "Odobri"
+      },
+      "confidence": {
+        "high": "Visoka",
+        "medium": "Srednja",
+        "low": "Niska"
+      },
+      "status": {
+        "approved": "Odobreno"
+      },
+      "summary": {
+        "highConfidence": "Visoka sigurnost",
+        "mediumConfidence": "Srednja sigurnost",
+        "lowConfidence": "Niska sigurnost",
+        "unmapped": "Bez mapiranja"
+      },
+      "sections": {
+        "highConfidence": "Visoka sigurnost (Auto-odobreno)",
+        "mediumConfidence": "Srednja sigurnost (Preporučuje se provera)",
+        "lowConfidence": "Niska sigurnost (Potreban ručni izbor)",
+        "unmapped": "Bez AI predloga"
+      },
+      "help": {
+        "title": "Kako funkcioniše AI mapiranje",
+        "highConfidence": "Zeleno - AI je siguran, može se automatski odobriti",
+        "mediumConfidence": "Žuto - preporučuje se provera AI predloga",
+        "lowConfidence": "Crveno - potreban ručni izbor kategorije",
+        "newCategory": "Ako potrebna kategorija ne postoji - zatražite kreiranje"
+      },
+      "errors": {
+        "reasoningRequired": "Obrazloženje je obavezno"
+      }
+    },
+    "attributeMapping": {
+      "title": "Mapiranje atributa",
+      "filters": {
+        "search": "Pretraga",
+        "searchPlaceholder": "Pretraži atribute...",
+        "type": "Tip",
+        "allTypes": "Svi tipovi",
+        "variantDefiningOnly": "Samo definišuće varijante"
+      },
+      "actions": {
+        "selectAll": "Izaberi sve",
+        "deselectAll": "Poništi izbor"
+      },
+      "stats": {
+        "total": "Ukupno",
+        "selected": "Izabrano",
+        "variantDefining": "Definišuće varijante"
+      },
+      "types": {
+        "string": "Tekst",
+        "number": "Broj",
+        "boolean": "Da/Ne",
+        "enum": "Lista"
+      },
+      "badges": {
+        "variantDefining": "Definišuće varijante"
+      },
+      "suggestedMapping": "Predloženo mapiranje",
+      "frequency": "Učestalost",
+      "products": "proizvoda",
+      "sampleValues": "Primeri",
+      "noAttributesFound": "Atributi nisu pronađeni",
+      "help": {
+        "title": "Izbor atributa",
+        "selectAttributes": "Izaberite atribute koje želite da uvezete",
+        "variantDefining": "Atributi označeni kao 'Definišuće varijante' koriste se za grupisanje proizvoda",
+        "frequency": "Učestalost pokazuje koliko proizvoda ima ovaj atribut",
+        "sampleValues": "Primeri pomažu razumevanju formata vrednosti"
+      }
+    },
+    "variantDetection": {
+      "title": "Detekcija varijanti",
+      "filters": {
+        "search": "Pretraga",
+        "searchPlaceholder": "Pretraži grupe varijanti...",
+        "confidence": "Sigurnost",
+        "allConfidence": "Svi nivoi"
+      },
+      "actions": {
+        "approveAll": "Odobri sve",
+        "rejectAll": "Odbij sve",
+        "showVariants": "Prikaži varijante",
+        "hideVariants": "Sakrij varijante"
+      },
+      "stats": {
+        "groups": "Grupa",
+        "variants": "Varijanti",
+        "approved": "Odobreno"
+      },
+      "confidence": {
+        "high": "Visoka",
+        "medium": "Srednja",
+        "low": "Niska"
+      },
+      "status": {
+        "approved": "Odobreno"
+      },
+      "variants": "varijanti",
+      "attributes": "Atributi",
+      "noGroupsFound": "Grupe nisu pronađene",
+      "help": {
+        "title": "Grupisanje varijanti",
+        "variantGroups": "Proizvodi se automatski grupišu po osnovnom nazivu",
+        "confidence": "Nivo sigurnosti pokazuje kvalitet grupisanja",
+        "approve": "Odobrite grupe za uvoz kao varijante jednog proizvoda",
+        "expandDetails": "Proširite grupu da vidite sve varijante"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Klasičan",
+    "enhanced": "Napredni"
+  },
+  "tabs": {
+    "uploadFile": "Otpremi fajl",
+    "importFromUrl": "Uvezi sa URL-a"
+  },
+  "dragDrop": {
+    "title": "Prevuci i otpusti fajl ovde",
+    "subtitle": "ili klikni da izabereš"
+  },
+  "template": {
+    "title": "Preuzmi šablon",
+    "description": "Koristi naš šablon za pravilnu pripremu podataka"
+  },
+  "url": {
+    "label": "Uvoz preko URL-a",
+    "help": "Unesite URL CSV ili XML fajla za uvoz"
+  },
+  "jobs": {
+    "title": "Istorija uvoza",
+    "filters": {
+      "all": "Svi",
+      "pending": "Na čekanju",
+      "processing": "U obradi",
+      "completed": "Završeno",
+      "failed": "Greška"
+    },
+    "empty": {
+      "title": "Nema uvoza",
+      "description": "Počnite uvoz proizvoda iz fajla"
+    },
+    "details": {
+      "title": "Detalji uvoza",
+      "fileInfo": "Informacije o fajlu",
+      "fileName": "Ime fajla",
+      "fileType": "Tip fajla",
+      "statistics": "Statistika",
+      "total": "Ukupno",
+      "processed": "Obrađeno",
+      "successful": "Uspešno",
+      "failed": "Greške",
+      "timing": "Vreme",
+      "created": "Kreiran",
+      "started": "Započet",
+      "completed": "Završen",
+      "duration": "Trajanje",
+      "notSet": "Nije postavljeno",
+      "complete": "završeno"
+    },
+    "status": {
+      "pending": "Na čekanju",
+      "processing": "U obradi",
+      "completed": "Završeno",
+      "failed": "Greška",
+      "cancelled": "Otkazano"
+    }
+  },
+  "actions": {
+    "refresh": "Osveži",
+    "viewDetails": "Detalji",
+    "viewErrors": "Prikaži greške",
+    "cancel": "Otkaži",
+    "retry": "Pokušaj ponovo",
+    "confirmCancel": "Da li ste sigurni da želite da otkažete uvoz?",
+    "selectFile": "Izaberi fajl",
+    "downloadTemplate": "Preuzmi šablon",
+    "import": "Uvezi",
+    "importing": "Uvozim...",
+    "close": "Zatvori",
+    "removeFile": "Ukloni fajl",
+    "back": "Nazad"
+  },
+  "fileType": {
+    "label": "Tip fajla",
+    "select": "Izaberite tip fajla"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Režim ažuriranja",
+      "upsert": "Kreiraj ili ažuriraj",
+      "createOnly": "Samo kreiranje",
+      "updateOnly": "Samo ažuriranje"
+    },
+    "categoryMapping": {
+      "label": "Mapiranje kategorija",
+      "auto": "Automatski",
+      "manual": "Ručno",
+      "skip": "Preskoči"
+    }
+  },
+  "manager": {
+    "title": "Upravljanje uvozom",
+    "description": "Uvezite proizvode iz XML, CSV ili ZIP fajlova",
+    "startImport": "Pokreni uvoz"
+  },
+  "stats": {
+    "pending": "Na čekanju",
+    "processing": "U obradi",
+    "completed": "Završeno",
+    "failed": "Sa greškama"
+  },
+  "formats": {
+    "title": "Podržani formati",
+    "extensions": "Ekstenzije",
+    "encoding": "Kodiranje",
+    "maxFileSize": "Maksimalna veličina fajla",
+    "maxProducts": "Maksimum proizvoda po uvozu"
+  }
 }

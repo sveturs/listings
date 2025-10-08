@@ -7,7 +7,7 @@ import type { components } from '@/types/generated/api';
 
 // Use generated types from API
 type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'] & {
+  components['schemas']['models.StorefrontProductVariant'] & {
     // Add additional fields that might be needed
     images?: ProductVariantImage[];
     stock_status?: string;
@@ -76,7 +76,8 @@ export default function VariantSelector({
         // Extract available attributes from variant_attributes field
         const attributes: Record<string, Set<string>> = {};
         variantData.forEach((variant: ProductVariant) => {
-          const variantAttrs = variant.variant_attributes || variant.attributes;
+          const variantAttrs =
+            variant.variant_attributes || variant.variant_attributes;
           if (variantAttrs) {
             Object.entries(variantAttrs).forEach(([key, value]) => {
               if (!attributes[key]) {
@@ -127,7 +128,8 @@ export default function VariantSelector({
     (attributes: Record<string, string>): ProductVariant | null => {
       return (
         variants.find((variant) => {
-          const variantAttrs = variant.variant_attributes || variant.attributes;
+          const variantAttrs =
+            variant.variant_attributes || variant.variant_attributes;
           if (!variantAttrs) return false;
           return Object.entries(attributes).every(
             ([key, value]) => String(variantAttrs[key]) === value

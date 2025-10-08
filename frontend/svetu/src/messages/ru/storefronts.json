@@ -1,4 +1,5 @@
 {
+  "title": "Импорт товаров",
   "dashboardTitle": "Панель управления",
   "orders": "Заказы",
   "myStorefronts": "Мои витрины",
@@ -653,7 +654,9 @@
     "stock": "Склад",
     "analytics": "Аналитика"
   },
-  "progress": "Прогресс",
+  "progress": {
+    "uploading": "Загрузка..."
+  },
   "updateSuccess": "Настройки витрины успешно обновлены",
   "updateError": "Ошибка при обновлении настроек",
   "advancedModeNotAvailable": "Расширенное управление вариантами будет доступно после создания товара. Пока используйте Простой режим для создания базовых вариантов.",
@@ -678,5 +681,320 @@
   "delete": "Удалить",
   "confirmDelete": "Подтвердить удаление",
   "edit": "Редактировать",
-  "processing": "Обработка..."
+  "processing": "Обработка...",
+  "import": {
+    "wizard": {
+      "title": "Мастер импорта",
+      "steps": {
+        "upload": {
+          "name": "Загрузка",
+          "title": "Загрузка файла",
+          "description": "Выберите файл для импорта товаров",
+          "dragDrop": "Перетащите файл сюда или нажмите для выбора",
+          "supportedFormats": "Поддерживаемые форматы: XML, CSV, ZIP (макс. 50МБ)",
+          "remove": "Удалить"
+        },
+        "analyzing": {
+          "name": "Анализ",
+          "title": "Анализ файла",
+          "description": "Мы анализируем ваш файл...",
+          "progress": "Прогресс",
+          "stages": {
+            "categories": "Анализ категорий",
+            "attributes": "Анализ атрибутов",
+            "variants": "Определение вариантов"
+          }
+        },
+        "categories": {
+          "name": "Категории",
+          "title": "Маппинг категорий",
+          "description": "Сопоставьте категории товаров"
+        },
+        "attributes": {
+          "name": "Атрибуты",
+          "title": "Маппинг атрибутов",
+          "description": "Сопоставьте атрибуты товаров"
+        },
+        "variants": {
+          "name": "Варианты",
+          "title": "Определение вариантов",
+          "description": "Проверьте обнаруженные варианты товаров"
+        },
+        "summary": {
+          "name": "Итого",
+          "title": "Сводка импорта",
+          "description": "Проверьте и подтвердите импорт"
+        }
+      },
+      "buttons": {
+        "cancel": "Отменить",
+        "startAnalysis": "Начать анализ",
+        "next": "Далее",
+        "previous": "Назад",
+        "back": "Назад",
+        "startImport": "Начать импорт"
+      },
+      "categories": {
+        "total": "категорий найдено",
+        "highConfidence": "Высокая уверенность",
+        "mediumConfidence": "Средняя уверенность",
+        "lowConfidence": "Низкая уверенность",
+        "unmapped": "Без маппинга",
+        "noMappingsFound": "Маппинг категорий не найден. Анализ не обнаружил категорий в вашем файле импорта."
+      },
+      "variants": {
+        "totalGroups": "Найдено групп",
+        "totalVariants": "Всего вариантов",
+        "ungrouped": "Несгруппированных товаров"
+      },
+      "summary": {
+        "file": "Файл",
+        "fileName": "Имя файла",
+        "fileSize": "Размер файла",
+        "categories": "Категории",
+        "totalCategories": "Всего категорий",
+        "approvedMappings": "Подтвержденных маппингов",
+        "customMappings": "Пользовательских маппингов",
+        "attributes": "Атрибуты",
+        "selectedAttributes": "Выбранных атрибутов",
+        "variants": "Варианты",
+        "approvedGroups": "Подтвержденных групп",
+        "totalVariants": "Всего вариантов"
+      }
+    },
+    "categoryMapping": {
+      "title": "Маппинг категорий",
+      "aiSuggestion": "Предложение AI",
+      "selectCategory": "Выберите категорию",
+      "selectPlaceholder": "Выберите категорию из списка",
+      "newCategory": {
+        "request": "Запросить новую категорию",
+        "reasoning": "Обоснование запроса",
+        "reasoningPlaceholder": "Объясните, почему нужна новая категория...",
+        "submit": "Отправить запрос",
+        "cancel": "Отмена"
+      },
+      "actions": {
+        "approve": "Одобрить"
+      },
+      "confidence": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "status": {
+        "approved": "Одобрено"
+      },
+      "summary": {
+        "highConfidence": "Высокая уверенность",
+        "mediumConfidence": "Средняя уверенность",
+        "lowConfidence": "Низкая уверенность",
+        "unmapped": "Без маппинга"
+      },
+      "sections": {
+        "highConfidence": "Высокая уверенность (Авто-одобрено)",
+        "mediumConfidence": "Средняя уверенность (Рекомендуется проверка)",
+        "lowConfidence": "Низкая уверенность (Требуется ручной выбор)",
+        "unmapped": "Без предложений AI"
+      },
+      "help": {
+        "title": "Как работает AI маппинг",
+        "highConfidence": "Зелёные - AI уверен в маппинге, можно одобрить автоматически",
+        "mediumConfidence": "Жёлтые - рекомендуется проверить предложение AI",
+        "lowConfidence": "Красные - требуется выбрать категорию вручную",
+        "newCategory": "Если нужной категории нет - запросите создание новой"
+      },
+      "errors": {
+        "reasoningRequired": "Необходимо указать обоснование запроса"
+      }
+    },
+    "attributeMapping": {
+      "title": "Маппинг атрибутов",
+      "filters": {
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск атрибутов...",
+        "type": "Тип",
+        "allTypes": "Все типы",
+        "variantDefiningOnly": "Только определяющие варианты"
+      },
+      "actions": {
+        "selectAll": "Выбрать все",
+        "deselectAll": "Снять выбор"
+      },
+      "stats": {
+        "total": "Всего",
+        "selected": "Выбрано",
+        "variantDefining": "Для вариантов"
+      },
+      "types": {
+        "string": "Текст",
+        "number": "Число",
+        "boolean": "Да/Нет",
+        "enum": "Список"
+      },
+      "badges": {
+        "variantDefining": "Для вариантов"
+      },
+      "suggestedMapping": "Предложенный маппинг",
+      "frequency": "Частота",
+      "products": "товаров",
+      "sampleValues": "Примеры",
+      "noAttributesFound": "Атрибуты не найдены",
+      "help": {
+        "title": "Выбор атрибутов",
+        "selectAttributes": "Выберите атрибуты, которые хотите импортировать",
+        "variantDefining": "Атрибуты с меткой 'Для вариантов' используются для группировки товаров",
+        "frequency": "Частота показывает, в скольких товарах есть этот атрибут",
+        "sampleValues": "Примеры помогают понять формат значений"
+      }
+    },
+    "variantDetection": {
+      "title": "Обнаружение вариантов",
+      "filters": {
+        "search": "Поиск",
+        "searchPlaceholder": "Поиск групп вариантов...",
+        "confidence": "Уверенность",
+        "allConfidence": "Все уровни"
+      },
+      "actions": {
+        "approveAll": "Одобрить все",
+        "rejectAll": "Отклонить все",
+        "showVariants": "Показать варианты",
+        "hideVariants": "Скрыть варианты"
+      },
+      "stats": {
+        "groups": "Групп",
+        "variants": "Вариантов",
+        "approved": "Одобрено"
+      },
+      "confidence": {
+        "high": "Высокая",
+        "medium": "Средняя",
+        "low": "Низкая"
+      },
+      "status": {
+        "approved": "Одобрено"
+      },
+      "variants": "вариантов",
+      "attributes": "Атрибуты",
+      "noGroupsFound": "Группы не найдены",
+      "help": {
+        "title": "Группировка вариантов",
+        "variantGroups": "Товары автоматически группируются по базовому названию",
+        "confidence": "Уровень уверенности показывает качество группировки",
+        "approve": "Одобрите группы для импорта как варианты одного товара",
+        "expandDetails": "Раскройте группу, чтобы увидеть все варианты"
+      }
+    }
+  },
+  "importMode": {
+    "classic": "Классический",
+    "enhanced": "Расширенный"
+  },
+  "tabs": {
+    "uploadFile": "Загрузить файл",
+    "importFromUrl": "Импорт по URL"
+  },
+  "dragDrop": {
+    "title": "Перетащите файл сюда",
+    "subtitle": "или нажмите, чтобы выбрать"
+  },
+  "template": {
+    "title": "Скачать шаблон",
+    "description": "Используйте наш шаблон для правильной подготовки данных"
+  },
+  "url": {
+    "label": "Импорт по URL",
+    "help": "Введите URL файла CSV или XML для импорта"
+  },
+  "jobs": {
+    "title": "История импорта",
+    "filters": {
+      "all": "Все",
+      "pending": "Ожидает",
+      "processing": "Обрабатывается",
+      "completed": "Завершено",
+      "failed": "Ошибка"
+    },
+    "empty": {
+      "title": "Нет импортов",
+      "description": "Начните импорт товаров из файла"
+    },
+    "details": {
+      "title": "Детали импорта",
+      "fileInfo": "Информация о файле",
+      "fileName": "Имя файла",
+      "fileType": "Тип файла",
+      "statistics": "Статистика",
+      "total": "Всего",
+      "processed": "Обработано",
+      "successful": "Успешно",
+      "failed": "Ошибок",
+      "timing": "Время",
+      "created": "Создан",
+      "started": "Начат",
+      "completed": "Завершен",
+      "duration": "Длительность",
+      "notSet": "Не указано",
+      "complete": "завершено"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "processing": "Обрабатывается",
+      "completed": "Завершено",
+      "failed": "Ошибка",
+      "cancelled": "Отменено"
+    }
+  },
+  "actions": {
+    "refresh": "Обновить",
+    "viewDetails": "Подробнее",
+    "viewErrors": "Показать ошибки",
+    "cancel": "Отменить",
+    "retry": "Повторить",
+    "confirmCancel": "Вы уверены, что хотите отменить импорт?",
+    "selectFile": "Выбрать файл",
+    "downloadTemplate": "Скачать шаблон",
+    "import": "Импортировать",
+    "importing": "Импортируется...",
+    "close": "Закрыть",
+    "removeFile": "Удалить файл",
+    "back": "Назад"
+  },
+  "fileType": {
+    "label": "Тип файла",
+    "select": "Выберите тип файла"
+  },
+  "options": {
+    "updateMode": {
+      "label": "Режим обновления",
+      "upsert": "Создать или обновить",
+      "createOnly": "Только создание",
+      "updateOnly": "Только обновление"
+    },
+    "categoryMapping": {
+      "label": "Маппинг категорий",
+      "auto": "Автоматически",
+      "manual": "Вручную",
+      "skip": "Пропустить"
+    }
+  },
+  "manager": {
+    "title": "Управление импортом",
+    "description": "Импортируйте товары из XML, CSV или ZIP файлов",
+    "startImport": "Начать импорт"
+  },
+  "stats": {
+    "pending": "Ожидают",
+    "processing": "Обрабатываются",
+    "completed": "Завершено",
+    "failed": "С ошибками"
+  },
+  "formats": {
+    "title": "Поддерживаемые форматы",
+    "extensions": "Расширения",
+    "encoding": "Кодировка",
+    "maxFileSize": "Максимальный размер файла",
+    "maxProducts": "Максимум товаров за импорт"
+  }
 }

@@ -199,7 +199,7 @@ func (s *OrderServiceTx) processOrderItemsInTx(
 			if !variant.IsActive {
 				return nil, nil, fmt.Errorf("variant %d is not active", *item.VariantID)
 			}
-			price = decimal.NewFromFloat(variant.Price)
+			price = decimal.NewFromFloat(*variant.Price)
 			stockQuantity = variant.StockQuantity
 		} else {
 			price = decimal.NewFromFloat(product.Price)
@@ -233,7 +233,7 @@ func (s *OrderServiceTx) processOrderItemsInTx(
 		}
 
 		if variant != nil {
-			orderItem.VariantName = &variant.Name
+			orderItem.VariantName = nil
 		}
 
 		// Сохраняем позицию заказа в транзакции

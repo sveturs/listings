@@ -111,7 +111,7 @@ export interface AttributeGroupItem {
 
 // Use generated PaginatedResponse type
 type PaginatedResponse<T> =
-  components['schemas']['backend_internal_domain_models.PaginatedResponse'] & {
+  components['schemas']['models.PaginatedResponse'] & {
     data: T[];
   };
 
@@ -610,9 +610,7 @@ export const adminApi = {
   async getTranslationStatus(
     entityType: 'category' | 'attribute',
     entityIds?: number[]
-  ): Promise<
-    components['schemas']['internal_proj_marketplace_handler.TranslationStatusItem'][]
-  > {
+  ): Promise<components['schemas']['handler.TranslationStatusItem'][]> {
     const params = new URLSearchParams();
     params.append('entity_type', entityType);
     if (entityIds && entityIds.length > 0) {
@@ -693,10 +691,7 @@ export const adminApi = {
     translations: Record<string, string>,
     provider: string = 'manual'
   ): Promise<
-    Record<
-      string,
-      components['schemas']['internal_proj_marketplace_handler.TranslationFieldStatus']
-    >
+    Record<string, components['schemas']['handler.TranslationFieldStatus']>
   > {
     const response = await apiClient.put(
       `/admin/translations/${entityType}/${entityId}/${fieldName}`,

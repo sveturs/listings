@@ -5,10 +5,9 @@ import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 // Use generated types from API
-type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 type BulkUpdateStockRequest =
-  components['schemas']['backend_internal_proj_storefront_types.BulkUpdateStockRequest'];
+  components['schemas']['types.BulkUpdateStockRequest'];
 
 interface VariantStockTableProps {
   productId: number;
@@ -103,13 +102,15 @@ export default function VariantStockTable({
         // Extract available attributes for filtering
         const attrs: Record<string, Set<string>> = {};
         data.forEach((variant) => {
-          if (variant.attributes) {
-            Object.entries(variant.attributes).forEach(([key, value]) => {
-              if (!attrs[key]) {
-                attrs[key] = new Set();
+          if (variant.variant_attributes) {
+            Object.entries(variant.variant_attributes).forEach(
+              ([key, value]) => {
+                if (!attrs[key]) {
+                  attrs[key] = new Set();
+                }
+                attrs[key].add(String(value));
               }
-              attrs[key].add(String(value));
-            });
+            );
           }
         });
         setAvailableAttributes(attrs);
@@ -134,10 +135,10 @@ export default function VariantStockTable({
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(
         (variant) =>
-          (variant.name && variant.name.toLowerCase().includes(searchLower)) ||
+          (variant?.sku && variant?.sku.toLowerCase().includes(searchLower)) ||
           (variant.sku && variant.sku.toLowerCase().includes(searchLower)) ||
-          (variant.attributes &&
-            Object.values(variant.attributes).some((val) =>
+          (variant.variant_attributes &&
+            Object.values(variant.variant_attributes).some((val) =>
               String(val).toLowerCase().includes(searchLower)
             ))
       );
@@ -164,8 +165,9 @@ export default function VariantStockTable({
     if (filters.attribute && filters.attributeValue) {
       filtered = filtered.filter(
         (variant) =>
-          variant.attributes &&
-          variant.attributes[filters.attribute] === filters.attributeValue
+          variant.variant_attributes &&
+          variant.variant_attributes[filters.attribute] ===
+            filters.attributeValue
       );
     }
 
@@ -175,8 +177,8 @@ export default function VariantStockTable({
 
       switch (sort.field) {
         case 'name':
-          aVal = a.name || getAttributesDisplay(a) || '';
-          bVal = b.name || getAttributesDisplay(b) || '';
+          aVal = a.sku || getAttributesDisplay(a) || '';
+          bVal = b.sku || getAttributesDisplay(b) || '';
           break;
         case 'sku':
           aVal = a.sku || '';
@@ -209,8 +211,8 @@ export default function VariantStockTable({
 
   // Utility functions
   const getAttributesDisplay = (variant: ProductVariant): string => {
-    if (!variant.attributes) return '';
-    return Object.entries(variant.attributes)
+    if (!variant.variant_attributes) return '';
+    return Object.entries(variant.variant_attributes)
       .map(([key, value]) => `${key}: ${value}`)
       .join(', ');
   };
@@ -825,7 +827,7 @@ export default function VariantStockTable({
                   )}
                   <td>
                     <div className="font-medium">
-                      {variant.name || getAttributesDisplay(variant)}
+                      {variant?.sku || getAttributesDisplay(variant)}
                     </div>
                   </td>
                   <td>

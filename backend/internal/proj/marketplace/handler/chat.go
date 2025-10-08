@@ -96,9 +96,9 @@ func (h *ChatHandler) loadUserInfoForChats(ctx context.Context, chats []models.M
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.MarketplaceChat}
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getChatsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.MarketplaceChat}
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getChatsError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chat [get]
 func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
@@ -129,10 +129,10 @@ func (h *ChatHandler) GetChats(c *fiber.Ctx) error {
 // @Param receiver_id query string false "Receiver ID for direct messages"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ChatMessagesResponse}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidChatId or marketplace.invalidListingId or marketplace.chatParamsRequired"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getMessagesError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=ChatMessagesResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId or marketplace.invalidListingId or marketplace.chatParamsRequired"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getMessagesError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chat/messages [get]
 func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
@@ -286,9 +286,9 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=UnreadCountData}
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getUnreadCountError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=UnreadCountData}
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getUnreadCountError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/unread [get]
 func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
@@ -310,11 +310,11 @@ func (h *ChatHandler) GetUnreadCount(c *fiber.Ctx) error {
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Param body body backend_internal_domain_models.CreateMessageRequest true "Message data"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.MarketplaceMessage}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.receiverRequired"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.sendMessageError"
+// @Param body body models.CreateMessageRequest true "Message data"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.MarketplaceMessage}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest or marketplace.receiverRequired"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.sendMessageError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages [post]
 func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
@@ -372,11 +372,11 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 // @Tags marketplace-chat
 // @Accept json
 // @Produce json
-// @Param body body backend_internal_domain_models.MarkAsReadRequest true "Message IDs to mark as read"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidRequest"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.markAsReadError"
+// @Param body body models.MarkAsReadRequest true "Message IDs to mark as read"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidRequest"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.markAsReadError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/read [post]
 func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
@@ -401,10 +401,10 @@ func (h *ChatHandler) MarkAsRead(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param chat_id path int true "Chat ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidChatId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.archiveChatError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidChatId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.archiveChatError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/chats/{chat_id}/archive [post]
 func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
@@ -432,11 +432,11 @@ func (h *ChatHandler) ArchiveChat(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Message ID"
 // @Param files formData file true "Files to upload"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.ChatAttachment}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidMessageId or marketplace.noFilesUploaded or marketplace.tooManyFiles"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.messageNotFound"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.uploadAttachmentsError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ChatAttachment}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidMessageId or marketplace.noFilesUploaded or marketplace.tooManyFiles"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.messageNotFound"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.uploadAttachmentsError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/messages/{id}/attachments [post]
 func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
@@ -517,11 +517,11 @@ func (h *ChatHandler) UploadAttachments(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attachment ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=backend_internal_domain_models.ChatAttachment}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.accessDenied"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.attachmentNotFound or marketplace.messageNotFound"
+// @Success 200 {object} utils.SuccessResponseSwag{data=models.ChatAttachment}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.attachmentNotFound or marketplace.messageNotFound"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id} [get]
 func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
@@ -559,10 +559,10 @@ func (h *ChatHandler) GetAttachment(c *fiber.Ctx) error {
 // @Produce octet-stream
 // @Param id path int true "Attachment ID"
 // @Success 200 "File content"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.accessDenied"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.attachmentNotFound"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.accessDenied"
+// @Failure 404 {object} utils.ErrorResponseSwag "marketplace.attachmentNotFound"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id}/download [get]
 func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
@@ -616,11 +616,11 @@ func (h *ChatHandler) GetAttachmentFile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attachment ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=MessageResponse}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "auth.required"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteAttachmentForbidden"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.deleteAttachmentError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=MessageResponse}
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidAttachmentId"
+// @Failure 401 {object} utils.ErrorResponseSwag "auth.required"
+// @Failure 403 {object} utils.ErrorResponseSwag "marketplace.deleteAttachmentForbidden"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.deleteAttachmentError"
 // @Security BearerAuth
 // @Router /api/v1/marketplace/attachments/{id} [delete]
 func (h *ChatHandler) DeleteAttachment(c *fiber.Ctx) error {

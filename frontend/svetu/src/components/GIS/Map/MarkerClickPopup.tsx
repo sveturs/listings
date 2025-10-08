@@ -18,8 +18,7 @@ import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import { useAuth } from '@/contexts/AuthContext';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface MarkerClickPopupProps {
   marker: MapMarkerData;
@@ -101,7 +100,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
         productId: parsedData.id || marker.id,
         variantId: variant?.id,
         name: marker.title,
-        variantName: variant?.name,
+        variantName: variant?.sku,
         price: variant?.price || parsedData.price || parsedMetadata?.price || 0,
         quantity,
         storefrontId: parsedData.storefront_id,

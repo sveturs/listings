@@ -64,7 +64,7 @@ type DigitalVisionCatalog struct {
 	Products []DigitalVisionProduct `xml:"artikal"`
 }
 
-// CategoryMapping represents mapping between import categories and local categories
+// CategoryMapping represents mapping between import categories and local categories (LEGACY - for Digital Vision XML)
 type CategoryMapping struct {
 	ID              int       `json:"id" db:"id"`
 	StorefrontID    int       `json:"storefront_id" db:"storefront_id"`
@@ -75,6 +75,26 @@ type CategoryMapping struct {
 	IsActive        bool      `json:"is_active" db:"is_active"`
 	CreatedAt       time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// StorefrontCategoryMapping represents flexible category mapping for any import source
+// Maps external category paths (e.g., "Electronics/Phones/Apple") to internal marketplace categories
+type StorefrontCategoryMapping struct {
+	ID                 int       `json:"id" db:"id"`
+	StorefrontID       int       `json:"storefront_id" db:"storefront_id"`
+	SourceCategoryPath string    `json:"source_category_path" db:"source_category_path"`   // External category path from import
+	TargetCategoryID   int       `json:"target_category_id" db:"target_category_id"`       // ID in marketplace_categories
+	IsManual           bool      `json:"is_manual" db:"is_manual"`                         // true if created manually, false if via AI
+	ConfidenceScore    *float64  `json:"confidence_score,omitempty" db:"confidence_score"` // AI confidence (0.0-1.0), NULL for manual
+	CreatedAt          time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// StorefrontCategoryMappingWithDetails includes category name for API responses
+type StorefrontCategoryMappingWithDetails struct {
+	StorefrontCategoryMapping
+	TargetCategoryName string `json:"target_category_name" db:"target_category_name"`
+	TargetCategoryPath string `json:"target_category_path" db:"target_category_path"` // Full path like "Electronics > Phones > Smartphones"
 }
 
 // ImportRequest represents a request to start an import
@@ -165,4 +185,22 @@ type ImportSummary struct {
 type ImportJobsResponse struct {
 	Jobs  []ImportJob `json:"jobs"`
 	Total int         `json:"total"`
+}
+
+// ImportPreviewRow represents a single row in import preview with validation
+type ImportPreviewRow struct {
+	LineNumber int                     `json:"line_number"`
+	Data       map[string]interface{}  `json:"data"`
+	Errors     []ImportValidationError `json:"errors,omitempty"`
+	IsValid    bool                    `json:"is_valid"`
+}
+
+// ImportPreviewResponse represents preview of import file before actual import
+type ImportPreviewResponse struct {
+	FileType     string             `json:"file_type"`
+	TotalRows    int                `json:"total_rows"`
+	PreviewRows  []ImportPreviewRow `json:"preview_rows"`
+	Headers      []string           `json:"headers,omitempty"` // For CSV files
+	ValidationOK bool               `json:"validation_ok"`     // True if all preview rows are valid
+	ErrorSummary string             `json:"error_summary,omitempty"`
 }

@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/config"
@@ -27,10 +28,13 @@ type Module struct {
 }
 
 // NewModule создает новый модуль доставки
-func NewModule(db *sqlx.DB, cfg *config.Config, log *logger.Logger) (*Module, error) {
-	// Инициализируем фабрику провайдеров
-	// TODO: передать реальный postExpressService когда он будет доступен
-	providerFactory := factory.NewProviderFactory(db, nil)
+func NewModule(db *sqlx.DB, cfg *config.Config, logger *logger.Logger) (*Module, error) {
+	// Инициализируем фабрику провайдеров с автоинициализацией Post Express
+	providerFactory, err := factory.NewProviderFactoryWithDefaults(db)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to initialize provider factory with defaults, using basic factory")
+		providerFactory = factory.NewProviderFactory(db, nil)
+	}
 
 	// Создаем сервис
 	svc := service.NewService(db, providerFactory)
@@ -48,7 +52,7 @@ func NewModule(db *sqlx.DB, cfg *config.Config, log *logger.Logger) (*Module, er
 	analyticsService := adminLogistics.NewAnalyticsService(sqlDB)
 
 	// Устанавливаем сервисы в admin handler для консолидации
-	adminHandler.SetLogisticsServices(monitoringService, problemService, analyticsService, log)
+	adminHandler.SetLogisticsServices(monitoringService, problemService, analyticsService, logger)
 
 	return &Module{
 		handler:           h,

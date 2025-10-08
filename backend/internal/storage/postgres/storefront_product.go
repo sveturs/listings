@@ -313,6 +313,104 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 		}
 	}
 
+	return p, nil
+}
+
+// GetStorefrontProductBySKU retrieves a single product by SKU and storefront_id
+func (s *Database) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	query := `
+		SELECT
+			p.id, p.storefront_id, p.name, p.description, p.price, p.currency,
+			p.category_id, p.sku, p.barcode, p.stock_quantity, p.stock_status,
+			p.is_active, p.attributes, p.view_count, p.sold_count,
+			p.created_at, p.updated_at,
+			p.has_individual_location, p.individual_address, p.individual_latitude,
+			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
+			c.id, c.name, c.slug, c.icon, c.parent_id
+		FROM storefront_products p
+		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		WHERE p.storefront_id = $1 AND p.sku = $2`
+
+	p := &models.StorefrontProduct{}
+	c := &models.MarketplaceCategory{}
+	var attributesJSON []byte
+	var categoryID sql.NullInt64
+	var categoryName, categorySlug, categoryIcon sql.NullString
+	var categoryParentID sql.NullInt64
+
+	err := s.pool.QueryRow(ctx, query, storefrontID, sku).Scan(
+		&p.ID, &p.StorefrontID, &p.Name, &p.Description, &p.Price, &p.Currency,
+		&p.CategoryID, &p.SKU, &p.Barcode, &p.StockQuantity, &p.StockStatus,
+		&p.IsActive, &attributesJSON, &p.ViewCount, &p.SoldCount,
+		&p.CreatedAt, &p.UpdatedAt,
+		&p.HasIndividualLocation, &p.IndividualAddress, &p.IndividualLatitude,
+		&p.IndividualLongitude, &p.LocationPrivacy, &p.ShowOnMap, &p.HasVariants,
+		&categoryID, &categoryName, &categorySlug, &categoryIcon, &categoryParentID,
+	)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrStorefrontProductNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get storefront product by SKU: %w", err)
+	}
+
+	if attributesJSON != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &p.Attributes); unmarshalErr != nil {
+			return nil, fmt.Errorf("failed to unmarshal attributes: %w", unmarshalErr)
+		}
+	}
+
+	// Only set category if it exists
+	if categoryID.Valid {
+		c.ID = int(categoryID.Int64)
+		c.Name = categoryName.String
+		c.Slug = categorySlug.String
+		if categoryIcon.Valid {
+			c.Icon = &categoryIcon.String
+		}
+		if categoryParentID.Valid {
+			parentID := int(categoryParentID.Int64)
+			c.ParentID = &parentID
+		}
+		p.Category = c
+	}
+
+	// Load images
+	images, err := s.getProductImages(ctx, []int{p.ID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product images: %w", err)
+	}
+	// Initialize empty slice if no images found
+	if images == nil {
+		p.Images = []models.StorefrontProductImage{}
+	} else {
+		p.Images = images
+	}
+
+	// Load variants
+	variants, err := s.getProductVariants(ctx, p.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product variants: %w", err)
+	}
+	p.Variants = variants
+
+	// Load translations
+	translations, err := s.GetTranslationsForEntity(ctx, "storefront_product", p.ID)
+	if err != nil {
+		// Don't fail if translations load fails, just log it
+		logger.Error().Err(err).Int("product_id", p.ID).Msg("Failed to load product translations")
+	} else if len(translations) > 0 {
+		// Convert []Translation to map[language]map[field]text
+		p.Translations = make(map[string]map[string]string)
+		for _, t := range translations {
+			if p.Translations[t.Language] == nil {
+				p.Translations[t.Language] = make(map[string]string)
+			}
+			p.Translations[t.Language][t.FieldName] = t.TranslatedText
+		}
+	}
+
 	// Load address translations from geocoding_cache
 	if err := s.loadAddressTranslationsForProduct(ctx, p); err != nil {
 		logger.Warn().Err(err).Int("product_id", p.ID).Msg("Failed to load address translations for product")
@@ -493,7 +591,7 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 	var attributesJSON []byte
 
 	err := s.pool.QueryRow(ctx, query, variantID).Scan(
-		&variant.ID, &variant.StorefrontProductID, &variant.SKU,
+		&variant.ID, &variant.ProductID, &variant.SKU,
 		&variant.Price, &variant.StockQuantity, &attributesJSON,
 		&variant.IsActive, &variant.CreatedAt, &variant.UpdatedAt,
 	)
@@ -507,47 +605,13 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 
 	// Parse variant attributes to create name
 	if attributesJSON != nil {
-		if unmarshalErr := json.Unmarshal(attributesJSON, &variant.Attributes); unmarshalErr != nil {
+		if unmarshalErr := json.Unmarshal(attributesJSON, &variant.VariantAttributes); unmarshalErr != nil {
 			logger.Error().Err(unmarshalErr).Msg("Failed to unmarshal variant attributes")
 		}
 		// Create variant name from attributes (e.g., "Red - Large")
-		variant.Name = s.createVariantNameFromAttributes(variant.Attributes)
 	}
 
 	return variant, nil
-}
-
-// createVariantNameFromAttributes creates a readable name from variant attributes
-func (s *Database) createVariantNameFromAttributes(attributes map[string]interface{}) string {
-	if len(attributes) == 0 {
-		return ""
-	}
-
-	var parts []string
-	// Common attribute order for display
-	order := []string{"color", "size", "material", "style"}
-
-	for _, key := range order {
-		if val, ok := attributes[key]; ok {
-			parts = append(parts, fmt.Sprintf("%v", val))
-		}
-	}
-
-	// Add any remaining attributes not in the order list
-	for key, val := range attributes {
-		found := false
-		for _, orderedKey := range order {
-			if key == orderedKey {
-				found = true
-				break
-			}
-		}
-		if !found {
-			parts = append(parts, fmt.Sprintf("%v", val))
-		}
-	}
-
-	return strings.Join(parts, " - ")
 }
 
 // UpdateProductStock updates the stock quantity for a product or variant
@@ -1222,7 +1286,7 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 		var attributesJSON []byte
 
 		err := rows.Scan(
-			&v.ID, &v.StorefrontProductID, &v.Name, &v.SKU, &v.Price,
+			&v.ID, &v.ProductID, &sql.NullString{}, &v.SKU, &v.Price,
 			&v.StockQuantity, &attributesJSON, &v.IsActive, &v.CreatedAt, &v.UpdatedAt,
 		)
 		if err != nil {
@@ -1230,7 +1294,7 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 		}
 
 		if attributesJSON != nil {
-			if err := json.Unmarshal(attributesJSON, &v.Attributes); err != nil {
+			if err := json.Unmarshal(attributesJSON, &v.VariantAttributes); err != nil {
 				return nil, err
 			}
 		}
@@ -1656,4 +1720,230 @@ func (s *Database) loadAddressTranslationsForProduct(ctx context.Context, produc
 	}
 
 	return nil
+}
+
+// BatchCreateStorefrontProducts creates multiple products in a single query
+func (s *Database) BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
+	if len(requests) == 0 {
+		return []*models.StorefrontProduct{}, nil
+	}
+
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("product_count", len(requests)).
+		Msg("Batch creating storefront products")
+
+	// Build VALUES clause with placeholders
+	var valueClauses []string
+	var args []interface{}
+	paramIndex := 1
+
+	for _, req := range requests {
+		// Marshal attributes
+		var attributesJSON []byte
+		if req.Attributes != nil {
+			var err error
+			attributesJSON, err = json.Marshal(req.Attributes)
+			if err != nil {
+				logger.Error().Err(err).Msg("Failed to marshal attributes")
+				return nil, fmt.Errorf("failed to marshal attributes: %w", err)
+			}
+		}
+
+		// Prepare location values
+		hasIndividualLocation := req.HasIndividualLocation != nil && *req.HasIndividualLocation
+		showOnMap := req.ShowOnMap == nil || *req.ShowOnMap
+
+		// Handle empty strings as NULL for SKU and Barcode
+		var sku, barcode interface{}
+		if req.SKU != nil && *req.SKU != "" {
+			sku = req.SKU
+		}
+		if req.Barcode != nil && *req.Barcode != "" {
+			barcode = req.Barcode
+		}
+
+		// Create placeholder string for this row
+		placeholders := make([]string, 18)
+		for i := 0; i < 18; i++ {
+			placeholders[i] = fmt.Sprintf("$%d", paramIndex)
+			paramIndex++
+		}
+		valueClauses = append(valueClauses, fmt.Sprintf("(%s)", strings.Join(placeholders, ", ")))
+
+		// Add parameters in correct order
+		args = append(args,
+			storefrontID,            // $1
+			req.Name,                // $2
+			req.Description,         // $3
+			req.Price,               // $4
+			req.Currency,            // $5
+			req.CategoryID,          // $6
+			sku,                     // $7
+			barcode,                 // $8
+			req.StockQuantity,       // $9
+			req.IsActive,            // $10
+			attributesJSON,          // $11
+			hasIndividualLocation,   // $12
+			req.IndividualAddress,   // $13
+			req.IndividualLatitude,  // $14
+			req.IndividualLongitude, // $15
+			req.LocationPrivacy,     // $16
+			showOnMap,               // $17
+			false,                   // $18 has_variants (default false for batch import)
+		)
+	}
+
+	// Build complete query
+	query := fmt.Sprintf(`
+		INSERT INTO storefront_products (
+			storefront_id, name, description, price, currency, category_id,
+			sku, barcode, stock_quantity, is_active, attributes,
+			has_individual_location, individual_address, individual_latitude,
+			individual_longitude, location_privacy, show_on_map, has_variants
+		) VALUES %s
+		RETURNING id, name, sku, price, currency, category_id, stock_status, created_at, updated_at`,
+		strings.Join(valueClauses, ", "))
+
+	// Execute batch insert
+	rows, err := s.pool.Query(ctx, query, args...)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefront_id", storefrontID).
+			Int("product_count", len(requests)).
+			Msg("Failed to batch insert storefront products")
+		return nil, fmt.Errorf("failed to batch insert products: %w", err)
+	}
+	defer rows.Close()
+
+	// Collect results
+	var products []*models.StorefrontProduct
+	for rows.Next() {
+		product := &models.StorefrontProduct{
+			StorefrontID: storefrontID,
+		}
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.SKU,
+			&product.Price,
+			&product.Currency,
+			&product.CategoryID,
+			&product.StockStatus,
+			&product.CreatedAt,
+			&product.UpdatedAt,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to scan batch insert result")
+			return nil, fmt.Errorf("failed to scan result: %w", err)
+		}
+		products = append(products, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.Error().Err(err).Msg("Error iterating batch insert results")
+		return nil, fmt.Errorf("error iterating results: %w", err)
+	}
+
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("created_count", len(products)).
+		Msg("Successfully batch created storefront products")
+
+	return products, nil
+}
+
+// GetStorefrontProductsBySKUs retrieves products by multiple SKUs in a single query
+func (s *Database) GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
+	if len(skus) == 0 {
+		return map[string]*models.StorefrontProduct{}, nil
+	}
+
+	query := `
+		SELECT
+			id, storefront_id, name, description, price, currency, category_id,
+			sku, barcode, stock_quantity, stock_status, is_active, attributes,
+			view_count, sold_count, created_at, updated_at,
+			has_individual_location, individual_address, individual_latitude,
+			individual_longitude, location_privacy, show_on_map, has_variants
+		FROM storefront_products
+		WHERE storefront_id = $1 AND sku = ANY($2)`
+
+	rows, err := s.pool.Query(ctx, query, storefrontID, pq.Array(skus))
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("storefront_id", storefrontID).
+			Int("sku_count", len(skus)).
+			Msg("Failed to get storefront products by SKUs")
+		return nil, fmt.Errorf("failed to get products by SKUs: %w", err)
+	}
+	defer rows.Close()
+
+	products := make(map[string]*models.StorefrontProduct)
+	for rows.Next() {
+		var product models.StorefrontProduct
+		var attributesJSON []byte
+		var sku sql.NullString
+
+		err := rows.Scan(
+			&product.ID,
+			&product.StorefrontID,
+			&product.Name,
+			&product.Description,
+			&product.Price,
+			&product.Currency,
+			&product.CategoryID,
+			&sku,
+			&product.Barcode,
+			&product.StockQuantity,
+			&product.StockStatus,
+			&product.IsActive,
+			&attributesJSON,
+			&product.ViewCount,
+			&product.SoldCount,
+			&product.CreatedAt,
+			&product.UpdatedAt,
+			&product.HasIndividualLocation,
+			&product.IndividualAddress,
+			&product.IndividualLatitude,
+			&product.IndividualLongitude,
+			&product.LocationPrivacy,
+			&product.ShowOnMap,
+			&product.HasVariants,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msg("Failed to scan product")
+			return nil, fmt.Errorf("failed to scan product: %w", err)
+		}
+
+		if sku.Valid {
+			product.SKU = &sku.String
+		}
+
+		if len(attributesJSON) > 0 {
+			if err := json.Unmarshal(attributesJSON, &product.Attributes); err != nil {
+				logger.Error().Err(err).Msg("Failed to unmarshal attributes")
+			}
+		}
+
+		// Use SKU as map key
+		if sku.Valid && sku.String != "" {
+			products[sku.String] = &product
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		logger.Error().Err(err).Msg("Error iterating products")
+		return nil, fmt.Errorf("error iterating products: %w", err)
+	}
+
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("sku_count", len(skus)).
+		Int("found_count", len(products)).
+		Msg("Successfully retrieved products by SKUs")
+
+	return products, nil
 }

@@ -1,14 +1,13 @@
 import type { components } from '@/types/generated/api';
 
 // Базовые типы из API
-export type StorefrontBase =
-  components['schemas']['backend_internal_domain_models.Storefront'];
+export type StorefrontBase = components['schemas']['models.Storefront'];
 export type StorefrontCreateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontCreateDTO'];
+  components['schemas']['models.StorefrontCreateDTO'];
 export type StorefrontUpdateDTO =
-  components['schemas']['backend_internal_domain_models.StorefrontUpdateDTO'];
+  components['schemas']['models.StorefrontUpdateDTO'];
 export type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+  components['schemas']['models.StorefrontProduct'];
 
 // Расширенный тип Storefront с дополнительными полями
 export interface Storefront extends StorefrontBase {
@@ -38,41 +37,33 @@ export interface Storefront extends StorefrontBase {
   };
 }
 export type StorefrontAnalytics =
-  components['schemas']['backend_internal_domain_models.StorefrontAnalytics'];
+  components['schemas']['models.StorefrontAnalytics'];
 export type StorefrontRatingSummary =
-  components['schemas']['backend_internal_domain_models.StorefrontRatingSummary'];
+  components['schemas']['models.StorefrontRatingSummary'];
 export type StorefrontMapData =
-  components['schemas']['backend_internal_domain_models.StorefrontMapData'];
-export type StorefrontSearchResult =
-  components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchResult'];
-export type StorefrontSearchItem =
-  components['schemas']['backend_internal_proj_storefronts_storage_opensearch.StorefrontSearchItem'];
+  components['schemas']['models.StorefrontMapData'];
+export type StorefrontSearchResult = any; // Type removed from swagger schema
+export type StorefrontSearchItem = any; // Type removed from swagger schema
 export type StorefrontsListResponse =
-  components['schemas']['internal_proj_storefronts_handler.StorefrontsListResponse'];
+  components['schemas']['handler.StorefrontsListResponse'];
 
 // Связанные типы
-export type StorefrontStaff =
-  components['schemas']['backend_internal_domain_models.StorefrontStaff'];
-export type StorefrontHours =
-  components['schemas']['backend_internal_domain_models.StorefrontHours'];
+export type StorefrontStaff = components['schemas']['models.StorefrontStaff'];
+export type StorefrontHours = components['schemas']['models.StorefrontHours'];
 export type StorefrontPaymentMethod =
-  components['schemas']['backend_internal_domain_models.StorefrontPaymentMethod'];
+  components['schemas']['models.StorefrontPaymentMethod'];
 export type StorefrontDeliveryOption =
-  components['schemas']['backend_internal_domain_models.StorefrontDeliveryOption'];
-export type Location =
-  components['schemas']['backend_internal_domain_models.Location'];
-export type JSONB =
-  components['schemas']['backend_internal_domain_models.JSONB'];
+  components['schemas']['models.StorefrontDeliveryOption'];
+export type Location = components['schemas']['models.Location'];
+export type JSONB = any; // Type removed from swagger schema
 
 // Enum типы
 export type SubscriptionPlan =
-  components['schemas']['backend_internal_domain_models.SubscriptionPlanType'];
-export type StaffRole =
-  components['schemas']['backend_internal_domain_models.StaffRole'];
+  components['schemas']['models.SubscriptionPlanType'];
+export type StaffRole = components['schemas']['models.StaffRole'];
 export type PaymentMethodType =
-  components['schemas']['backend_internal_domain_models.PaymentMethodType'];
-export type DeliveryProvider =
-  components['schemas']['backend_internal_domain_models.DeliveryProvider'];
+  components['schemas']['models.PaymentMethodType'];
+export type DeliveryProvider = components['schemas']['models.DeliveryProvider'];
 
 // Дополнительные интерфейсы для UI
 

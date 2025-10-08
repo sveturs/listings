@@ -1,13 +1,11 @@
 import { apiClient } from '@/services/api-client';
 import type { components } from '@/types/generated/api';
 
-type UserBalance =
-  components['schemas']['backend_internal_domain_models.UserBalance'];
+type UserBalance = components['schemas']['models.UserBalance'];
 type TransactionHistory = any;
-type DepositResponse =
-  components['schemas']['backend_pkg_utils.SuccessResponseSwag'] & {
-    data?: components['schemas']['backend_internal_domain_models.PaymentSession'];
-  };
+type DepositResponse = components['schemas']['utils.SuccessResponseSwag'] & {
+  data?: components['schemas']['models.PaymentSession'];
+};
 
 export const balanceService = {
   // Получить баланс пользователя

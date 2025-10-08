@@ -6,14 +6,13 @@ import type { components } from '@/types/generated/api';
 import configManager from '@/config';
 
 // Use generated types from API
-type ProductVariant =
-  components['schemas']['backend_internal_domain_models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 type VariantMatrixResponse =
-  components['schemas']['backend_internal_proj_storefront_types.VariantMatrixResponse'];
+  components['schemas']['types.VariantMatrixResponse'];
 type BulkUpdateStockRequest =
-  components['schemas']['backend_internal_proj_storefront_types.BulkUpdateStockRequest'];
+  components['schemas']['types.BulkUpdateStockRequest'];
 type VariantAnalyticsResponse =
-  components['schemas']['backend_internal_proj_storefront_types.VariantAnalyticsResponse'];
+  components['schemas']['types.VariantAnalyticsResponse'];
 
 interface VariantManagerProps {
   productId: number;
@@ -748,11 +747,8 @@ function VariantRow({
   };
 
   const getAttributesDisplay = () => {
-    if (!variant.attributes) return '-';
-
-    return Object.entries(variant.attributes)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(', ');
+    if (variant.sku) return variant.sku;
+    return '-';
   };
 
   const getStockStatusBadge = () => {
@@ -784,7 +780,7 @@ function VariantRow({
       </td>
       <td>
         <div className="font-medium">
-          {variant.name || getAttributesDisplay()}
+          {variant?.sku || getAttributesDisplay()}
         </div>
       </td>
       <td>
@@ -1096,8 +1092,8 @@ function StockManagementTab({
                 </td>
                 <td>
                   <div className="font-medium">
-                    {variant.name ||
-                      Object.entries(variant.attributes || {})
+                    {variant?.sku ||
+                      Object.entries(variant.variant_attributes || {})
                         .map(([k, v]) => `${k}: ${v}`)
                         .join(', ')}
                   </div>

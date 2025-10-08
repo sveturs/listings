@@ -9,12 +9,10 @@ import React, {
 } from 'react';
 import type { components } from '@/types/generated/api';
 
-type StorefrontProduct =
-  components['schemas']['backend_internal_domain_models.StorefrontProduct'];
+type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
 type UpdateProductRequest =
-  components['schemas']['backend_internal_domain_models.UpdateProductRequest'];
-type MarketplaceCategory =
-  components['schemas']['backend_internal_domain_models.MarketplaceCategory'];
+  components['schemas']['models.UpdateProductRequest'];
+type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
 
 interface ProductEditState {
   // Шаги

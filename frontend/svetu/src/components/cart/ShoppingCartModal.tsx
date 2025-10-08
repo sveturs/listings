@@ -18,8 +18,7 @@ import { normalizeImageUrl } from '@/utils/imageUtils';
 import type { AppDispatch } from '@/store';
 import type { components } from '@/types/generated/api';
 
-type ShoppingCartItem =
-  components['schemas']['backend_internal_domain_models.ShoppingCartItem'];
+type ShoppingCartItem = components['schemas']['models.ShoppingCartItem'];
 
 interface ShoppingCartModalProps {
   storefrontId: number;
@@ -132,7 +131,7 @@ export default function ShoppingCartModal({
                       <h4 className="font-medium">{item.product?.name}</h4>
                       {item.variant && (
                         <p className="text-sm text-base-content/70">
-                          {Object.entries(item.variant.attributes || {})
+                          {Object.entries(item.variant.variant_attributes || {})
                             .map(([key, value]) => `${key}: ${value}`)
                             .join(', ')}
                         </p>

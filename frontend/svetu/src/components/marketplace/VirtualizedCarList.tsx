@@ -6,8 +6,7 @@ import CarListingCard from './CarListingCard';
 import Link from 'next/link';
 import { OptimizedCarImage } from '@/components/common/OptimizedCarImage';
 
-type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface VirtualizedCarListProps {
   listings: MarketplaceListing[];

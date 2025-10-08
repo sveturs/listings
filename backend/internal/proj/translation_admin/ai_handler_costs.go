@@ -12,8 +12,8 @@ import (
 // @Tags Translation Admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}}
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}}
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/costs [get]
 func (h *AITranslationHandler) GetCostsSummary(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -35,8 +35,8 @@ func (h *AITranslationHandler) GetCostsSummary(c *fiber.Ctx) error {
 // @Produce json
 // @Param daily_limit query float64 false "Daily cost limit in USD" default(100)
 // @Param monthly_limit query float64 false "Monthly cost limit in USD" default(2000)
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]string}
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]string}
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/costs/alerts [get]
 func (h *AITranslationHandler) GetCostAlerts(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -65,9 +65,9 @@ func (h *AITranslationHandler) GetCostAlerts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param provider path string true "Provider name (openai, google, deepl, claude)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]string}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]string}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/costs/{provider}/reset [post]
 func (h *AITranslationHandler) ResetProviderCosts(c *fiber.Ctx) error {
 	ctx := c.Context()
@@ -108,9 +108,9 @@ func (h *AITranslationHandler) ResetProviderCosts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param provider path string true "Provider name (openai, google, deepl, claude)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=ProviderCosts}
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag
+// @Success 200 {object} utils.SuccessResponseSwag{data=ProviderCosts}
+// @Failure 400 {object} utils.ErrorResponseSwag
+// @Failure 500 {object} utils.ErrorResponseSwag
 // @Router /api/v1/admin/translations/ai/costs/{provider} [get]
 func (h *AITranslationHandler) GetProviderCostDetails(c *fiber.Ctx) error {
 	ctx := c.Context()

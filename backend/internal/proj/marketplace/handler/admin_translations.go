@@ -46,9 +46,9 @@ func NewAdminTranslationsHandler(services globalService.ServicesInterface) *Admi
 // @Accept json
 // @Produce json
 // @Param body body BatchTranslateCategoriesRequest true "Batch translation request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=BatchTranslateResponse} "Batch translation started successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.batchTranslateError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=BatchTranslateResponse} "Batch translation started successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.batchTranslateError"
 // @Security BearerAuth
 // @Router /api/admin/translations/batch-categories [post]
 func (h *AdminTranslationsHandler) BatchTranslateCategories(c *fiber.Ctx) error {
@@ -183,9 +183,9 @@ func (h *AdminTranslationsHandler) BatchTranslateCategories(c *fiber.Ctx) error 
 // @Accept json
 // @Produce json
 // @Param body body BatchTranslateAttributesRequest true "Batch translation request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=BatchTranslateResponse} "Batch translation started successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.batchTranslateError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=BatchTranslateResponse} "Batch translation started successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.batchTranslateError"
 // @Security BearerAuth
 // @Router /api/admin/translations/batch-attributes [post]
 func (h *AdminTranslationsHandler) BatchTranslateAttributes(c *fiber.Ctx) error {
@@ -367,9 +367,9 @@ func (h *AdminTranslationsHandler) BatchTranslateAttributes(c *fiber.Ctx) error 
 // @Produce json
 // @Param entity_type query string true "Entity type (category, attribute)"
 // @Param entity_ids query string false "Comma-separated entity IDs"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]TranslationStatusItem} "Translation status retrieved"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidEntityType"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.getTranslationStatusError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]TranslationStatusItem} "Translation status retrieved"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidEntityType"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.getTranslationStatusError"
 // @Security BearerAuth
 // @Router /api/admin/translations/status [get]
 func (h *AdminTranslationsHandler) GetTranslationStatus(c *fiber.Ctx) error {
@@ -493,9 +493,9 @@ func (h *AdminTranslationsHandler) GetTranslationStatus(c *fiber.Ctx) error {
 // @Param entity_id path int true "Entity ID"
 // @Param field_name path string true "Field name"
 // @Param body body UpdateFieldTranslationRequest true "Translation update request"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=TranslationFieldStatus} "Translation updated successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.invalidData"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "marketplace.updateTranslationError"
+// @Success 200 {object} utils.SuccessResponseSwag{data=TranslationFieldStatus} "Translation updated successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "marketplace.invalidData"
+// @Failure 500 {object} utils.ErrorResponseSwag "marketplace.updateTranslationError"
 // @Security BearerAuth
 // @Router /api/admin/translations/{entity_type}/{entity_id}/{field_name} [put]
 func (h *AdminTranslationsHandler) UpdateFieldTranslation(c *fiber.Ctx) error {

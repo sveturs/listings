@@ -28,15 +28,17 @@ import (
 
 // Module представляет модуль витрин с продуктами
 type Module struct {
-	services             service.ServicesInterface
-	storefrontHandler    *handler.StorefrontHandler
-	productHandler       *handler.ProductHandler
-	importHandler        *handler.ImportHandler
-	imageHandler         *handler.ImageHandler
-	dashboardHandler     *handler.DashboardHandler
-	variantHandler       *storefrontHandler.VariantHandler
-	publicVariantHandler *storefrontHandler.PublicVariantHandler
-	aiProductHandler     *handler.AIProductHandler
+	services                service.ServicesInterface
+	storefrontHandler       *handler.StorefrontHandler
+	productHandler          *handler.ProductHandler
+	importHandler           *handler.ImportHandler
+	imageHandler            *handler.ImageHandler
+	dashboardHandler        *handler.DashboardHandler
+	variantHandler          *storefrontHandler.VariantHandler
+	publicVariantHandler    *storefrontHandler.PublicVariantHandler
+	aiProductHandler        *handler.AIProductHandler
+	categoryProposalHandler *handler.CategoryProposalHandler
+	importQueueManager      *storefrontService.ImportQueueManager
 }
 
 // NewModule создает новый модуль витрин
@@ -58,9 +60,6 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 	// Создаем ProductService с VariantService
 	productSvc := storefrontService.NewProductService(productStorage, searchRepo, variantService)
 
-	// Создаем сервис импорта
-	importSvc := storefrontService.NewImportService(productSvc)
-
 	// Создаем единый ImageService с конфигурацией buckets
 	imageRepo := postgres.NewImageRepository(db.GetSQLXDB())
 	cfg := services.Config()
@@ -71,6 +70,49 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		BucketReviewPhoto: cfg.FileStorage.MinioReviewPhotosBucket,
 	}
 	imageService := services.NewImageService(services.FileStorage(), imageRepo, imageCfg)
+
+	// Создаем repository для import jobs
+	importJobsRepo := postgres.NewImportJobsRepository(db.GetPool())
+
+	// Создаем repository для category mappings
+	categoryMappingsRepo := postgres.NewCategoryMappingsRepository(db.GetPool())
+
+	// Создаем AttributeMapper для маппинга атрибутов (нужен storage adapter)
+	zerologLogger := *logger.Get() // Получаем zerolog.Logger
+	attributeMapper := storefrontService.NewAttributeMapper(productStorage, zerologLogger)
+
+	// Загружаем атрибуты в кэш AttributeMapper
+	if err := attributeMapper.LoadAttributesCache(ctx); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to load attributes cache for AttributeMapper")
+		// Продолжаем без кэша - маппинг будет работать в режиме fallback
+	} else {
+		logger.Info().Msg("AttributeMapper cache loaded successfully")
+	}
+
+	// Получаем MarketplaceSearchRepository для индексации marketplace listings
+	marketplaceSearchRepo := db.GetOpenSearchRepository()
+
+	// Создаем сервис импорта (categoryMappingService будет установлен позже)
+	importSvc := storefrontService.NewImportService(productSvc, importJobsRepo, imageService, nil, attributeMapper, db, marketplaceSearchRepo)
+
+	// Создаем Import Queue Manager для асинхронной обработки импорта
+	// Параметры: workerCount (количество воркеров), queueSize (размер очереди)
+	importQueueManager := storefrontService.NewImportQueueManager(4, 100, importSvc)
+
+	// Устанавливаем queue manager в ImportService
+	importSvc.SetQueueManager(importQueueManager)
+
+	// Запускаем queue manager
+	if err := importQueueManager.Start(); err != nil {
+		logger.Error().
+			Err(err).
+			Msg("Failed to start import queue manager")
+		// Продолжаем работу без queue manager (fallback на синхронный импорт)
+	} else {
+		logger.Info().Msg("Import queue manager started successfully")
+	}
 
 	// Получаем storefront repository
 	storefrontRepo := services.Storage().Storefront().(postgres.StorefrontRepository)
@@ -86,6 +128,16 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 
 	aiDetector := marketplaceServices.NewAICategoryDetector(ctx, db.GetSQLXDB(), zap.L())
 
+	// Создаем CategoryMappingService с AI detector (после создания aiDetector)
+	categoryMappingSvc := storefrontService.NewCategoryMappingService(categoryMappingsRepo, aiDetector, zap.L())
+
+	// Устанавливаем CategoryMappingService в ImportService
+	importSvc.SetCategoryMappingService(categoryMappingSvc)
+
+	// Создаем AI Category Mapper и Analyzer для умного импорта
+	aiCategoryMapper := storefrontService.NewAICategoryMapper(aiDetector, categoryMappingSvc)
+	aiCategoryAnalyzer := storefrontService.NewAICategoryAnalyzer(aiCategoryMapper, categoryMappingSvc)
+
 	// Создаем AI Handler для общих AI операций (анализ изображений, переводы и т.д.)
 	aiHandlerInstance := aiHandler.NewHandler(cfg, services)
 
@@ -96,17 +148,48 @@ func NewModule(ctx context.Context, services service.ServicesInterface) *Module 
 		zap.L(),
 	)
 
+	// Создаем repository и service для CategoryProposals
+	categoryProposalsRepo := postgres.NewCategoryProposalsRepository(db.GetPool())
+	// Database реализует CategoryRepository interface
+	categoryProposalSvc := storefrontService.NewCategoryProposalService(
+		categoryProposalsRepo,
+		db, // Database implements CategoryRepository interface
+		aiCategoryMapper,
+	)
+	categoryProposalHandlerInstance := handler.NewCategoryProposalHandler(categoryProposalSvc)
+
 	return &Module{
-		services:             services,
-		storefrontHandler:    handler.NewStorefrontHandler(storefrontSvc),
-		productHandler:       handler.NewProductHandler(productSvc),
-		importHandler:        handler.NewImportHandler(importSvc),
-		imageHandler:         handler.NewImageHandler(imageService, productSvc),
-		dashboardHandler:     handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
-		variantHandler:       variantHandler,
-		publicVariantHandler: publicVariantHandler,
-		aiProductHandler:     aiProductHandlerInstance,
+		services:                services,
+		storefrontHandler:       handler.NewStorefrontHandler(storefrontSvc),
+		productHandler:          handler.NewProductHandler(productSvc),
+		importHandler:           handler.NewImportHandler(importSvc, aiCategoryMapper, aiCategoryAnalyzer, attributeMapper),
+		imageHandler:            handler.NewImageHandler(imageService, productSvc),
+		dashboardHandler:        handler.NewDashboardHandler(storefrontSvc, productSvc, storefrontRepo),
+		variantHandler:          variantHandler,
+		publicVariantHandler:    publicVariantHandler,
+		aiProductHandler:        aiProductHandlerInstance,
+		categoryProposalHandler: categoryProposalHandlerInstance,
+		importQueueManager:      importQueueManager,
 	}
+}
+
+// Shutdown gracefully shuts down the module
+func (m *Module) Shutdown() error {
+	logger.Info().Msg("Shutting down storefronts module...")
+
+	// Stop import queue manager
+	if m.importQueueManager != nil && m.importQueueManager.IsRunning() {
+		if err := m.importQueueManager.Stop(); err != nil {
+			logger.Error().
+				Err(err).
+				Msg("Failed to stop import queue manager")
+			return err
+		}
+		logger.Info().Msg("Import queue manager stopped successfully")
+	}
+
+	logger.Info().Msg("Storefronts module shutdown complete")
+	return nil
 }
 
 // GetPrefix возвращает префикс для маршрутов
@@ -213,19 +296,28 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Put("/storefronts/slug/:slug/products/bulk/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateStatusBySlug)
 
 		// Маршруты импорта товаров
-		api.Post("/storefronts/:id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
-		api.Post("/storefronts/:id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
-		api.Post("/storefronts/:id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
-		api.Get("/storefronts/:id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
-		api.Get("/storefronts/:id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
-		api.Get("/storefronts/:id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
-		api.Post("/storefronts/:id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
-		api.Post("/storefronts/:id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
+		api.Post("/storefronts/:storefront_id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
+		api.Post("/storefronts/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
+		api.Post("/storefronts/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
+		api.Post("/storefronts/:storefront_id/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.PreviewImportFile)
+
+		// Новые маршруты для AI анализа импорта
+		api.Post("/storefronts/:storefront_id/import/analyze-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeCategories)
+		api.Post("/storefronts/:storefront_id/import/analyze-attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeAttributes)
+		api.Post("/storefronts/:storefront_id/import/detect-variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.DetectVariants)
+		api.Post("/storefronts/:storefront_id/import/analyze-client-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeClientCategories)
+
+		api.Get("/storefronts/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
+		api.Get("/storefronts/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
+		api.Get("/storefronts/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
+		api.Post("/storefronts/:storefront_id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
+		api.Post("/storefronts/:storefront_id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
 
 		// Маршруты импорта через slug
 		api.Post("/storefronts/slug/:slug/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromURLBySlug)
 		api.Post("/storefronts/slug/:slug/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromFileBySlug)
 		api.Post("/storefronts/slug/:slug/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.validateImportBySlug)
+		api.Post("/storefronts/slug/:slug/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.previewImportBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobsBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobDetailsBySlug)
 		api.Get("/storefronts/slug/:slug/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobStatusBySlug)
@@ -271,6 +363,19 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		api.Post("/storefronts/storefront/products/attributes/setup", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.SetupProductAttributes)
 		api.Get("/storefronts/storefront/products/:product_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetProductAttributes)
 		api.Get("/storefronts/storefront/categories/:category_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetAvailableAttributesForCategory)
+	}
+
+	// Admin routes для Category Proposals (требуют роль admin)
+	adminCategoryProposals := api.Group("/admin/category-proposals", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
+	{
+		adminCategoryProposals.Get("/", m.categoryProposalHandler.ListProposals)
+		adminCategoryProposals.Get("/pending/count", m.categoryProposalHandler.GetPendingCount)
+		adminCategoryProposals.Post("/", m.categoryProposalHandler.CreateProposal)
+		adminCategoryProposals.Get("/:id", m.categoryProposalHandler.GetProposal)
+		adminCategoryProposals.Put("/:id", m.categoryProposalHandler.UpdateProposal)
+		adminCategoryProposals.Delete("/:id", m.categoryProposalHandler.DeleteProposal)
+		adminCategoryProposals.Post("/:id/approve", m.categoryProposalHandler.ApproveProposal)
+		adminCategoryProposals.Post("/:id/reject", m.categoryProposalHandler.RejectProposal)
 	}
 
 	// Публичные маршруты для вариантов (БЕЗ АВТОРИЗАЦИИ)
@@ -619,6 +724,20 @@ func (m *Module) validateImportBySlug(c *fiber.Ctx) error {
 	return m.importHandler.ValidateImportFile(c)
 }
 
+func (m *Module) previewImportBySlug(c *fiber.Ctx) error {
+	if err := m.setStorefrontIDBySlug(c); err != nil {
+		return err
+	}
+
+	// Проверяем доступ после установки storefrontID
+	if err := m.checkStorefrontAccess(c); err != nil {
+		return err
+	}
+
+	// Storefront ID уже в locals, ImportHandler его оттуда возьмет
+	return m.importHandler.PreviewImportFile(c)
+}
+
 // Функции-обертки для работы с jobs через slug
 func (m *Module) getJobsBySlug(c *fiber.Ctx) error {
 	if err := m.setStorefrontIDBySlug(c); err != nil {
@@ -899,9 +1018,24 @@ func (s *storageAdapter) GetStorefrontProductByID(ctx context.Context, productID
 	return s.db.GetStorefrontProductByID(ctx, productID)
 }
 
+// GetStorefrontProductBySKU delegates to database
+func (s *storageAdapter) GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProductBySKU(ctx, storefrontID, sku)
+}
+
+// GetStorefrontProductsBySKUs delegates to database
+func (s *storageAdapter) GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
+	return s.db.GetStorefrontProductsBySKUs(ctx, storefrontID, skus)
+}
+
 // CreateStorefrontProduct delegates to database
 func (s *storageAdapter) CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error) {
 	return s.db.CreateStorefrontProduct(ctx, storefrontID, req)
+}
+
+// BatchCreateStorefrontProducts delegates to database
+func (s *storageAdapter) BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
+	return s.db.BatchCreateStorefrontProducts(ctx, storefrontID, requests)
 }
 
 // UpdateStorefrontProduct delegates to database
@@ -990,4 +1124,30 @@ func (s *storageAdapter) CreateStorefrontProductTx(ctx context.Context, tx store
 
 	// Call the database method with the transaction
 	return s.db.CreateStorefrontProductTx(ctx, sqlxWrapper.tx, storefrontID, req)
+}
+
+// Variant operations
+func (s *storageAdapter) CreateProductVariant(ctx context.Context, variant *models.CreateProductVariantRequest) (*models.StorefrontProductVariant, error) {
+	return s.db.CreateProductVariant(ctx, variant)
+}
+
+func (s *storageAdapter) BatchCreateProductVariants(ctx context.Context, variants []*models.CreateProductVariantRequest) ([]*models.StorefrontProductVariant, error) {
+	return s.db.BatchCreateProductVariants(ctx, variants)
+}
+
+func (s *storageAdapter) CreateProductVariantImage(ctx context.Context, image *models.CreateProductVariantImageRequest) (*models.StorefrontProductVariantImage, error) {
+	return s.db.CreateProductVariantImage(ctx, image)
+}
+
+func (s *storageAdapter) BatchCreateProductVariantImages(ctx context.Context, images []*models.CreateProductVariantImageRequest) ([]*models.StorefrontProductVariantImage, error) {
+	return s.db.BatchCreateProductVariantImages(ctx, images)
+}
+
+func (s *storageAdapter) GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error) {
+	return s.db.GetProductVariants(ctx, productID)
+}
+
+// GetAllUnifiedAttributes получает все активные unified attributes
+func (s *storageAdapter) GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error) {
+	return s.db.GetAllUnifiedAttributes(ctx)
 }

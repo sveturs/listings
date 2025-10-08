@@ -27,7 +27,10 @@ export default function ImportErrorsModal() {
 
     setIsLoading(true);
     try {
-      const jobDetails = await ImportApi.getJobDetails(currentJob.id);
+      const jobDetails = await ImportApi.getJobDetails(
+        currentJob.storefront_id,
+        currentJob.id
+      );
       setErrors((jobDetails as any).errors || []);
     } catch (error) {
       console.error('Failed to load import errors:', error);

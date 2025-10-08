@@ -251,9 +251,21 @@ export default function DeliveryProviders() {
                         ? t('actions.deactivate')
                         : t('actions.activate')}
                     </button>
-                    <button className="btn btn-ghost btn-xs">
-                      {t('actions.test')}
-                    </button>
+                    {provider.code === 'postexpress' ||
+                    provider.code === 'post_express' ? (
+                      <a
+                        href="/admin/postexpress/test"
+                        className="btn btn-ghost btn-xs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t('actions.test')}
+                      </a>
+                    ) : (
+                      <button className="btn btn-ghost btn-xs" disabled>
+                        {t('actions.test')}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

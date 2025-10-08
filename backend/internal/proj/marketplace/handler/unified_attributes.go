@@ -49,9 +49,9 @@ func NewUnifiedAttributesHandler(
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.UnifiedAttribute} "List of category attributes"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedAttribute} "List of category attributes"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/categories/{category_id}/attributes [get]
 func (h *UnifiedAttributesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(c.Params("category_id"))
@@ -97,9 +97,9 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributes(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param category_id path int true "Category ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.UnifiedCategoryAttribute} "List of category attributes with settings"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid category ID"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedCategoryAttribute} "List of category attributes with settings"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid category ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/categories/{category_id}/attributes/detailed [get]
 func (h *UnifiedAttributesHandler) GetCategoryAttributesWithSettings(c *fiber.Ctx) error {
 	categoryID, err := strconv.Atoi(c.Params("category_id"))
@@ -130,9 +130,9 @@ func (h *UnifiedAttributesHandler) GetCategoryAttributesWithSettings(c *fiber.Ct
 // @Accept json
 // @Produce json
 // @Param listing_id path int true "Listing ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=[]backend_internal_domain_models.UnifiedAttributeValue} "List of attribute values"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid listing ID"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=[]models.UnifiedAttributeValue} "List of attribute values"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid listing ID"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v2/marketplace/listings/{listing_id}/attributes [get]
 func (h *UnifiedAttributesHandler) GetListingAttributeValues(c *fiber.Ctx) error {
 	listingID, err := strconv.Atoi(c.Params("listing_id"))
@@ -168,10 +168,10 @@ func (h *UnifiedAttributesHandler) GetListingAttributeValues(c *fiber.Ctx) error
 // @Produce json
 // @Param listing_id path int true "Listing ID"
 // @Param values body map[int]interface{} true "Attribute values map (attribute_id -> value)"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Values saved successfully"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Values saved successfully"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
 // @Router /api/v2/marketplace/listings/{listing_id}/attributes [post]
 func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) error {
@@ -220,12 +220,12 @@ func (h *UnifiedAttributesHandler) SaveListingAttributeValues(c *fiber.Ctx) erro
 // @Tags marketplace-attributes-v2-admin
 // @Accept json
 // @Produce json
-// @Param attribute body backend_internal_domain_models.UnifiedAttribute true "Attribute data"
-// @Success 201 {object} backend_pkg_utils.SuccessResponseSwag{data=int} "Created attribute ID"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Param attribute body models.UnifiedAttribute true "Attribute data"
+// @Success 201 {object} utils.SuccessResponseSwag{data=int} "Created attribute ID"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
 // @Router /api/v2/admin/attributes [post]
 func (h *UnifiedAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
@@ -256,12 +256,12 @@ func (h *UnifiedAttributesHandler) CreateAttribute(c *fiber.Ctx) error {
 // @Produce json
 // @Param id path int true "Attribute ID"
 // @Param updates body map[string]interface{} true "Fields to update"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Attribute updated"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Attribute not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Attribute updated"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
+// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
 // @Router /api/v2/admin/attributes/{id} [put]
 func (h *UnifiedAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
@@ -298,12 +298,12 @@ func (h *UnifiedAttributesHandler) UpdateAttribute(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path int true "Attribute ID"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Attribute deleted"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden"
-// @Failure 404 {object} backend_pkg_utils.ErrorResponseSwag "Attribute not found"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Attribute deleted"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
+// @Failure 404 {object} utils.ErrorResponseSwag "Attribute not found"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
 // @Router /api/v2/admin/attributes/{id} [delete]
 func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
@@ -336,12 +336,12 @@ func (h *UnifiedAttributesHandler) DeleteAttribute(c *fiber.Ctx) error {
 // @Produce json
 // @Param category_id path int true "Category ID"
 // @Param attribute_id path int true "Attribute ID"
-// @Param settings body backend_internal_domain_models.UnifiedCategoryAttribute true "Attachment settings"
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=string} "Attribute attached"
-// @Failure 400 {object} backend_pkg_utils.ErrorResponseSwag "Invalid request"
-// @Failure 401 {object} backend_pkg_utils.ErrorResponseSwag "Unauthorized"
-// @Failure 403 {object} backend_pkg_utils.ErrorResponseSwag "Forbidden"
-// @Failure 500 {object} backend_pkg_utils.ErrorResponseSwag "Internal server error"
+// @Param settings body models.UnifiedCategoryAttribute true "Attachment settings"
+// @Success 200 {object} utils.SuccessResponseSwag{data=string} "Attribute attached"
+// @Failure 400 {object} utils.ErrorResponseSwag "Invalid request"
+// @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden"
+// @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security Bearer
 // @Router /api/v2/admin/categories/{category_id}/attributes/{attribute_id} [post]
 func (h *UnifiedAttributesHandler) AttachAttributeToCategory(c *fiber.Ctx) error {
@@ -408,7 +408,7 @@ func (h *UnifiedAttributesHandler) saveListingAttributeValuesLegacy(c *fiber.Ctx
 // @Tags marketplace-attributes-v2-admin
 // @Accept json
 // @Produce json
-// @Success 200 {object} backend_pkg_utils.SuccessResponseSwag{data=map[string]interface{}} "Feature flags status"
+// @Success 200 {object} utils.SuccessResponseSwag{data=map[string]interface{}} "Feature flags status"
 // @Security Bearer
 // @Router /api/v2/admin/attributes/feature-status [get]
 func (h *UnifiedAttributesHandler) GetFeatureStatus(c *fiber.Ctx) error {

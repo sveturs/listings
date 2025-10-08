@@ -16,8 +16,7 @@ import {
   Eye,
 } from 'lucide-react';
 
-type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarListingCardProps {
   listing: MarketplaceListing;

@@ -49,13 +49,13 @@ export default function ImportJobsList({
     const interval = setInterval(() => {
       jobs.forEach((job) => {
         if (job.status === 'pending' || job.status === 'processing') {
-          dispatch(fetchJobStatus(job.id));
+          dispatch(fetchJobStatus({ storefrontId, jobId: job.id }));
         }
       });
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [jobs, autoRefresh, refreshInterval, dispatch]);
+  }, [jobs, autoRefresh, refreshInterval, dispatch, storefrontId]);
 
   const handleJobClick = (job: ImportJob) => {
     dispatch(setCurrentJob(job));
@@ -70,13 +70,13 @@ export default function ImportJobsList({
   const handleCancelJob = async (jobId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm(t('actions.confirmCancel'))) {
-      await dispatch(cancelImportJob(jobId));
+      await dispatch(cancelImportJob({ storefrontId, jobId }));
     }
   };
 
   const handleRetryJob = async (jobId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    await dispatch(retryImportJob(jobId));
+    await dispatch(retryImportJob({ storefrontId, jobId }));
   };
 
   const filteredJobs =
@@ -267,7 +267,7 @@ export default function ImportJobsList({
                       >
                         {getStatusIcon(job.status)}
                         <span className="ml-1">
-                          {t(`status.${job.status}`)}
+                          {t(`jobs.status.${job.status}`)}
                         </span>
                       </span>
 

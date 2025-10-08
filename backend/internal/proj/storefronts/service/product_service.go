@@ -40,12 +40,22 @@ type Storage interface {
 	GetStorefrontProducts(ctx context.Context, filter models.ProductFilter) ([]*models.StorefrontProduct, error)
 	GetStorefrontProduct(ctx context.Context, storefrontID, productID int) (*models.StorefrontProduct, error)
 	GetStorefrontProductByID(ctx context.Context, productID int) (*models.StorefrontProduct, error)
+	GetStorefrontProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error)
+	GetStorefrontProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error)
 	CreateStorefrontProduct(ctx context.Context, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
+	BatchCreateStorefrontProducts(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error)
 	UpdateStorefrontProduct(ctx context.Context, storefrontID, productID int, req *models.UpdateProductRequest) error
 	DeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	HardDeleteStorefrontProduct(ctx context.Context, storefrontID, productID int) error
 	UpdateProductInventory(ctx context.Context, storefrontID, productID int, userID int, req *models.UpdateInventoryRequest) error
 	GetProductStats(ctx context.Context, storefrontID int) (*models.ProductStats, error)
+
+	// Variant operations
+	CreateProductVariant(ctx context.Context, variant *models.CreateProductVariantRequest) (*models.StorefrontProductVariant, error)
+	BatchCreateProductVariants(ctx context.Context, variants []*models.CreateProductVariantRequest) ([]*models.StorefrontProductVariant, error)
+	CreateProductVariantImage(ctx context.Context, image *models.CreateProductVariantImageRequest) (*models.StorefrontProductVariantImage, error)
+	BatchCreateProductVariantImages(ctx context.Context, images []*models.CreateProductVariantImageRequest) ([]*models.StorefrontProductVariantImage, error)
+	GetProductVariants(ctx context.Context, productID int) ([]*models.StorefrontProductVariant, error)
 	IncrementProductViews(ctx context.Context, productID int) error
 
 	// Bulk operations
@@ -65,6 +75,9 @@ type Storage interface {
 
 	// Transactional methods
 	CreateStorefrontProductTx(ctx context.Context, tx Transaction, storefrontID int, req *models.CreateProductRequest) (*models.StorefrontProduct, error)
+
+	// Unified Attributes для AttributeMapper
+	GetAllUnifiedAttributes(ctx context.Context) ([]*models.UnifiedAttribute, error)
 }
 
 // Transaction interface for database transactions
@@ -82,6 +95,11 @@ func NewProductService(storage Storage, searchRepo opensearch.ProductSearchRepos
 		searchRepo:     searchRepo,
 		variantService: variantService,
 	}
+}
+
+// GetStorage returns the storage instance
+func (s *ProductService) GetStorage() Storage {
+	return s.storage
 }
 
 // ValidateStorefrontOwnership checks if user owns the storefront
@@ -161,6 +179,23 @@ func (s *ProductService) GetProduct(ctx context.Context, storefrontID, productID
 				logger.Error().Err(err).Int("product_id", productID).Msg("Failed to increment product views")
 			}
 		}(context.WithoutCancel(ctx))
+	}
+
+	// Обрабатываем адрес с учетом приватности
+	s.processProductLocationPrivacy(product)
+
+	return product, nil
+}
+
+// GetProductBySKU retrieves a single product by SKU and storefront ID
+func (s *ProductService) GetProductBySKU(ctx context.Context, storefrontID int, sku string) (*models.StorefrontProduct, error) {
+	product, err := s.storage.GetStorefrontProductBySKU(ctx, storefrontID, sku)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product by SKU: %w", err)
+	}
+
+	if product == nil {
+		return nil, fmt.Errorf("product not found")
 	}
 
 	// Обрабатываем адрес с учетом приватности
@@ -277,16 +312,15 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		product.Variants = make([]models.StorefrontProductVariant, len(createdVariants))
 		for i, v := range createdVariants {
 			product.Variants[i] = models.StorefrontProductVariant{
-				ID:                  v.ID,
-				StorefrontProductID: v.ProductID,
-				Name:                s.generateVariantName(v.VariantAttributes),
-				SKU:                 v.SKU,
-				Price:               s.getVariantPrice(v.Price, product.Price),
-				StockQuantity:       v.StockQuantity,
-				Attributes:          v.VariantAttributes,
-				IsActive:            v.IsActive,
-				CreatedAt:           v.CreatedAt,
-				UpdatedAt:           v.UpdatedAt,
+				ID:                v.ID,
+				ProductID:         v.ProductID,
+				SKU:               v.SKU,
+				Price:             v.Price,
+				StockQuantity:     v.StockQuantity,
+				VariantAttributes: v.VariantAttributes,
+				IsActive:          v.IsActive,
+				CreatedAt:         v.CreatedAt,
+				UpdatedAt:         v.UpdatedAt,
 			}
 		}
 	}
@@ -990,33 +1024,6 @@ func (s *ProductService) validateSKU(sku string) error {
 	return nil
 }
 
-// generateVariantName creates a display name from variant attributes
-func (s *ProductService) generateVariantName(attributes map[string]interface{}) string {
-	// Sort attribute keys for consistent ordering
-	keys := make([]string, 0, len(attributes))
-	for k := range attributes {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	// Build name from attribute values
-	var parts []string
-	for _, k := range keys {
-		v := attributes[k]
-		parts = append(parts, fmt.Sprintf("%v", v))
-	}
-
-	return strings.Join(parts, " - ")
-}
-
-// getVariantPrice returns variant price or base product price
-func (s *ProductService) getVariantPrice(variantPrice *float64, basePrice float64) float64 {
-	if variantPrice != nil && *variantPrice > 0 {
-		return *variantPrice
-	}
-	return basePrice
-}
-
 // indexProductWithVariants indexes product with variants in OpenSearch
 func (s *ProductService) indexProductWithVariants(ctx context.Context, product *models.StorefrontProduct) {
 	if err := s.searchRepo.IndexProduct(ctx, product); err != nil {
@@ -1049,4 +1056,36 @@ func (s *ProductService) updateProductStockInSearch(ctx context.Context, storefr
 
 	// Fallback: полное переиндексирование продукта
 	return s.searchRepo.IndexProduct(ctx, product)
+}
+
+// BatchCreateProductsForImport creates multiple products in a single batch (for import use only)
+func (s *ProductService) BatchCreateProductsForImport(ctx context.Context, storefrontID int, requests []*models.CreateProductRequest) ([]*models.StorefrontProduct, error) {
+	if len(requests) == 0 {
+		return []*models.StorefrontProduct{}, nil
+	}
+
+	// Validate all requests
+	for i, req := range requests {
+		if err := s.validateCreateRequest(req); err != nil {
+			return nil, fmt.Errorf("invalid request at index %d: %w", i, err)
+		}
+	}
+
+	// Batch create products
+	products, err := s.storage.BatchCreateStorefrontProducts(ctx, storefrontID, requests)
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch create products: %w", err)
+	}
+
+	logger.Info().
+		Int("storefront_id", storefrontID).
+		Int("created_count", len(products)).
+		Msg("Successfully batch created products for import")
+
+	return products, nil
+}
+
+// GetProductsBySKUs retrieves products by multiple SKUs in a single query
+func (s *ProductService) GetProductsBySKUs(ctx context.Context, storefrontID int, skus []string) (map[string]*models.StorefrontProduct, error) {
+	return s.storage.GetStorefrontProductsBySKUs(ctx, storefrontID, skus)
 }

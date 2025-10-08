@@ -545,23 +545,14 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 				variantSKUPtr = &variantSKU.String
 			}
 
-			// Создаем имя варианта из атрибутов
-			variantName := ""
-			if variantAttributes.Valid {
-				// Пытаемся извлечь атрибуты для создания имени
-				// Например: {"color": "red", "size": "L"} -> "Red - L"
-				variantName = variantAttributes.String // Пока используем raw JSON как имя
-			}
-
 			item.Variant = &models.StorefrontProductVariant{
-				ID:                  int(*item.VariantID),
-				StorefrontProductID: int(item.ProductID),
-				Name:                variantName,
-				SKU:                 variantSKUPtr,
+				ID:        int(*item.VariantID),
+				ProductID: int(item.ProductID),
+				SKU:       variantSKUPtr,
 			}
 
 			if variantPrice.Valid {
-				item.Variant.Price = variantPrice.Float64
+				item.Variant.Price = &variantPrice.Float64
 			}
 			if variantStock.Valid {
 				item.Variant.StockQuantity = int(variantStock.Int64)

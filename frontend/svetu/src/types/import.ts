@@ -93,6 +93,23 @@ export interface ImportValidationError {
   value?: any;
 }
 
+// Preview types
+export interface ImportPreviewRow {
+  line_number: number;
+  data: Record<string, any>;
+  errors?: ImportValidationError[];
+  is_valid: boolean;
+}
+
+export interface ImportPreviewResponse {
+  file_type: string;
+  total_rows: number;
+  preview_rows: ImportPreviewRow[];
+  headers?: string[]; // For CSV files
+  validation_ok: boolean;
+  error_summary?: string;
+}
+
 // UI State types
 export interface ImportState {
   jobs: ImportJob[];
@@ -101,6 +118,11 @@ export interface ImportState {
   uploadProgress: UploadProgress | null;
   validationErrors: ImportValidationError[];
   formats: ImportFormats | null;
+
+  // Preview states
+  previewData: ImportPreviewResponse | null;
+  isPreviewLoading: boolean;
+  previewError: string | null;
 
   // UI states
   isLoading: boolean;
@@ -115,6 +137,25 @@ export interface ImportState {
   isImportModalOpen: boolean;
   isJobDetailsModalOpen: boolean;
   isErrorsModalOpen: boolean;
+
+  // Analysis states (Enhanced Import)
+  analysisFile: File | null;
+  analysisFileType: 'xml' | 'csv' | 'zip' | '';
+  categoryAnalysis: CategoryAnalysisResponse | null;
+  attributeAnalysis: AttributeAnalysisResponse | null;
+  variantDetection: VariantDetectionResponse | null;
+  clientCategories: ClientCategoriesResponse | null;
+  isAnalyzing: boolean;
+  analysisError: string | null;
+  analysisProgress: number; // 0-100
+  currentAnalysisStep: number;
+
+  // User modifications for analysis
+  approvedMappings: CategoryMapping[];
+  customMappings: Record<string, number>; // external_category -> internal_category_id
+  selectedAttributes: string[];
+  approvedVariantGroups: string[]; // base_names
+  categoryProposals: CategoryProposal[];
 }
 
 export interface FileUploadConfig {
@@ -149,3 +190,163 @@ export const IMPORT_STATUS_ICONS = {
   completed: 'check-circle',
   failed: 'x-circle',
 } as const;
+
+// ============================================
+// Enhanced Import Analysis Types (Phase 1)
+// ============================================
+
+/**
+ * Confidence level for AI mapping
+ */
+export type MappingConfidence = 'high' | 'medium' | 'low';
+
+/**
+ * Category mapping suggestion from AI
+ */
+export interface CategoryMapping {
+  external_category: string; // Original category from import file
+  suggested_internal_category_id: number | null; // Suggested marketplace category ID
+  suggested_internal_category_name?: string; // Category name (for display)
+  confidence: MappingConfidence;
+  reasoning?: string; // AI explanation why this mapping was suggested
+  is_approved: boolean; // User approved this mapping
+  requires_new_category: boolean; // Needs admin to create new category
+}
+
+/**
+ * Response from category analysis endpoint
+ */
+export interface CategoryAnalysisResponse {
+  total_categories: number;
+  mappings: CategoryMapping[];
+  quality_summary: {
+    high_confidence: number;
+    medium_confidence: number;
+    low_confidence: number;
+    requires_new_category: number;
+  };
+  unmapped_categories: string[]; // Categories with no suggestions
+}
+
+/**
+ * Attribute detected in import file
+ */
+export interface DetectedAttribute {
+  name: string; // Original attribute name from file
+  value_type: 'string' | 'number' | 'boolean' | 'enum'; // Detected type
+  sample_values: string[]; // Example values
+  frequency: number; // How many products have this attribute
+  suggested_mapping?: string; // Suggested internal attribute name
+  is_variant_defining: boolean; // Could be used for variants (color, size, etc.)
+}
+
+/**
+ * Response from attribute analysis endpoint
+ */
+export interface AttributeAnalysisResponse {
+  total_attributes: number;
+  attributes: DetectedAttribute[];
+  variant_defining_attributes: string[]; // Attributes that could define variants
+}
+
+/**
+ * Detected product variant group
+ */
+export interface VariantGroup {
+  base_name: string; // Product base name without variant info
+  variant_count: number; // Number of variants in this group
+  variant_attributes: string[]; // Attributes that define variants (color, size, etc.)
+  products: VariantProduct[]; // Products in this group
+  confidence: MappingConfidence; // How confident we are this is a variant group
+}
+
+/**
+ * Product that is part of variant group
+ */
+export interface VariantProduct {
+  sku: string;
+  name: string;
+  variant_values: Record<string, string>; // e.g., { color: "Red", size: "M" }
+  price: number;
+  images?: string[];
+}
+
+/**
+ * Response from variant detection endpoint
+ */
+export interface VariantDetectionResponse {
+  total_groups: number;
+  variant_groups: VariantGroup[];
+  ungrouped_products: number; // Products that don't belong to any group
+  confidence_summary: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+}
+
+/**
+ * Proposal for new category (admin review required)
+ */
+export interface CategoryProposal {
+  id?: number;
+  external_category: string;
+  suggested_name: string;
+  suggested_parent_id: number | null;
+  reasoning: string;
+  expected_products: number;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+  reviewed_at?: string;
+}
+
+/**
+ * Response from client categories analysis
+ */
+export interface ClientCategoriesResponse {
+  unique_categories: string[];
+  category_tree: CategoryTreeNode[];
+  total_products_per_category: Record<string, number>;
+  suggested_proposals: CategoryProposal[];
+}
+
+/**
+ * Category tree node for hierarchical display
+ */
+export interface CategoryTreeNode {
+  name: string;
+  level: number; // 1, 2, or 3
+  children?: CategoryTreeNode[];
+  product_count: number;
+}
+
+/**
+ * Import analysis state (for wizard)
+ */
+export interface ImportAnalysisState {
+  // Current step in wizard
+  currentStep: number;
+
+  // File info
+  file: File | null;
+  fileType: 'xml' | 'csv' | 'zip' | '';
+
+  // Analysis results
+  categoryAnalysis: CategoryAnalysisResponse | null;
+  attributeAnalysis: AttributeAnalysisResponse | null;
+  variantDetection: VariantDetectionResponse | null;
+  clientCategories: ClientCategoriesResponse | null;
+
+  // User modifications
+  approvedMappings: CategoryMapping[];
+  customMappings: Record<string, number>; // external_category -> internal_category_id
+  selectedAttributes: string[]; // Attributes user wants to import
+  approvedVariantGroups: string[]; // base_names of approved groups
+
+  // Loading states
+  isAnalyzing: boolean;
+  analysisError: string | null;
+
+  // Progress
+  analysisProgress: number; // 0-100
+}

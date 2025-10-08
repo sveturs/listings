@@ -99,37 +99,36 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   // Проверяем, является ли это автомобильная категория
   if (isAutomotiveCategory(product.category?.id)) {
     // Конвертируем UnifiedProduct обратно в формат MarketplaceListing для CarListingCard
-    const listing: components['schemas']['backend_internal_domain_models.MarketplaceListing'] =
-      {
-        id: product.id,
-        user_id: product.seller?.id || 0,
-        title: product.name,
-        description: product.description || '',
-        price: product.price,
-        category_id: product.category?.id || 0,
-        condition: product.condition || 'used',
-        status: 'active',
-        images:
-          product.images?.map((img) => ({
-            id: 0,
-            url: img.url,
-            is_main: img.isMain || false,
-          })) || [],
-        created_at: product.createdAt || new Date().toISOString(),
-        updated_at: product.updatedAt || new Date().toISOString(),
-        views_count: product.viewsCount || 0,
-        attributes:
-          product.attributes?.map((attr) => ({
-            attribute_name: attr.name,
-            string_value: String(attr.value),
-            display_name: attr.displayValue || attr.name,
-          })) || [],
-        city: product.location?.city,
-        country: product.location?.country,
-        latitude: product.location?.latitude,
-        longitude: product.location?.longitude,
-        is_favorite: isFavorite,
-      };
+    const listing: components['schemas']['models.MarketplaceListing'] = {
+      id: product.id,
+      user_id: product.seller?.id || 0,
+      title: product.name,
+      description: product.description || '',
+      price: product.price,
+      category_id: product.category?.id || 0,
+      condition: product.condition || 'used',
+      status: 'active',
+      images:
+        product.images?.map((img) => ({
+          id: 0,
+          url: img.url,
+          is_main: img.isMain || false,
+        })) || [],
+      created_at: product.createdAt || new Date().toISOString(),
+      updated_at: product.updatedAt || new Date().toISOString(),
+      views_count: product.viewsCount || 0,
+      attributes:
+        product.attributes?.map((attr) => ({
+          attribute_name: attr.name,
+          string_value: String(attr.value),
+          display_name: attr.displayValue || attr.name,
+        })) || [],
+      city: product.location?.city,
+      country: product.location?.country,
+      latitude: product.location?.latitude,
+      longitude: product.location?.longitude,
+      is_favorite: isFavorite,
+    };
 
     return (
       <CarListingCard
@@ -276,7 +275,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
         productId: product.id,
         variantId: variant?.id,
         name: product.name,
-        variantName: variant?.name,
+        variantName: variant?.sku,
         price: variant?.price || minPrice,
         quantity,
         storefrontId: product.storefront.id,

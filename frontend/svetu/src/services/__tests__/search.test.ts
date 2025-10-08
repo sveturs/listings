@@ -216,8 +216,7 @@ describe('SearchService', () => {
       const result = await SearchService.getAutocompleteSuggestions('iph');
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search/autocomplete',
-        { params: { q: 'iph' } }
+        '/api/v1/marketplace/search/autocomplete?q=iph'
       );
       expect(result).toEqual(mockSuggestionsResponse.data);
     });
@@ -235,8 +234,7 @@ describe('SearchService', () => {
       await SearchService.getAutocompleteSuggestions('  test  ');
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search/autocomplete',
-        { params: { q: 'test' } }
+        '/api/v1/marketplace/search/autocomplete?q=test'
       );
     });
 

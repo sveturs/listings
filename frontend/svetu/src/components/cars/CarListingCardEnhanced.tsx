@@ -19,8 +19,7 @@ import {
 import CarBadges from './CarBadges';
 import CarQuickInfo from './CarQuickInfo';
 
-type MarketplaceListing =
-  components['schemas']['backend_internal_domain_models.MarketplaceListing'];
+type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarListingCardEnhancedProps {
   listing: MarketplaceListing;

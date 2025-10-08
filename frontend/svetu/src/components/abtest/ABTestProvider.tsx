@@ -461,7 +461,7 @@ const ABTestDebugPanel: React.FC = () => {
                   <>
                     <div className="text-sm">
                       Variant:{' '}
-                      <span className="badge badge-sm">{variant.name}</span>
+                      <span className="badge badge-sm">{variant?.name}</span>
                     </div>
                     <div className="mt-2 flex gap-2">
                       {test.variants.map((v) => (

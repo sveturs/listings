@@ -5,8 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
 import type { components } from '@/types/generated/api';
 
-type UnifiedAttribute =
-  components['schemas']['backend_internal_domain_models.UnifiedAttribute'];
+type UnifiedAttribute = components['schemas']['models.UnifiedAttribute'];
 
 interface ProductVariant {
   id: string;
