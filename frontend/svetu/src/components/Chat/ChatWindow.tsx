@@ -29,6 +29,7 @@ interface ChatWindowProps {
   initialContactId?: number;
   onBack?: () => void;
   showBackButton?: boolean;
+  onShowChat?: () => void;
 }
 
 interface ListingInfo {
@@ -63,6 +64,7 @@ export default function ChatWindow({
   initialContactId,
   onBack,
   showBackButton,
+  onShowChat,
 }: ChatWindowProps) {
   const t = useTranslations('chat');
   const params = useParams();
@@ -785,8 +787,20 @@ export default function ChatWindow({
         <div
           ref={messagesContainerRef}
           onScroll={handleScroll}
-          className="absolute inset-x-0 top-0 bottom-20 overflow-y-auto p-3 sm:p-4 lg:px-8"
+          className="absolute inset-x-0 top-0 overflow-y-auto p-3 sm:p-4 lg:px-8"
+          style={{
+            bottom: 'calc(4rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+          }}
         >
+          <style jsx>{`
+            @media (min-width: 768px) {
+              div {
+                bottom: calc(
+                  4rem + max(0px, env(safe-area-inset-bottom, 0px))
+                ) !important;
+              }
+            }
+          `}</style>
           {/* Индикатор загрузки старых сообщений */}
           {(hasMore || isLoadingOldMessages) && (
             <div className="text-center py-2">
@@ -846,8 +860,20 @@ export default function ChatWindow({
         {!isAtBottom && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-24 right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
+            className="absolute right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
+            style={{
+              bottom: 'calc(4.06rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+            }}
           >
+            <style jsx>{`
+              @media (min-width: 768px) {
+                button {
+                  bottom: calc(
+                    5rem + max(0px, env(safe-area-inset-bottom, 0px))
+                  ) !important;
+                }
+              }
+            `}</style>
             <svg
               className="w-3 h-3 sm:w-4 sm:h-4"
               fill="none"
@@ -865,12 +891,25 @@ export default function ChatWindow({
         )}
 
         {/* Поле ввода - позиционировано внизу контейнера с фоном */}
-        <div className="absolute bottom-0 left-0 right-0 z-20">
+        <div
+          className="absolute left-0 right-0 z-20"
+          style={{
+            bottom: 'calc(3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+          }}
+        >
+          <style jsx>{`
+            @media (min-width: 768px) {
+              div {
+                bottom: max(0px, env(safe-area-inset-bottom, 0px)) !important;
+              }
+            }
+          `}</style>
           <MessageInput
             chat={chat}
             initialListingId={initialListingId}
-            initialStorefrontProductId={initialStorefrontProductId}
+            initialStorefrontProductID={initialStorefrontProductId}
             initialSellerId={initialSellerId || initialContactId}
+            onShowChat={onShowChat}
           />
         </div>
       </div>
