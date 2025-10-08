@@ -83,6 +83,8 @@ type UnifiedSearchItem struct {
 	Price              float64                      `json:"price"`
 	Currency           string                       `json:"currency"`
 	Images             []UnifiedProductImage        `json:"images"`
+	ImageURL           *string                      `json:"image_url,omitempty"`      // Главное изображение (для удобства)
+	ThumbnailURL       *string                      `json:"thumbnail_url,omitempty"`  // Миниатюра главного изображения
 	Category           UnifiedCategoryInfo          `json:"category"`
 	Location           *UnifiedLocationInfo         `json:"location,omitempty"`
 	User               *UnifiedUserInfo             `json:"user,omitempty"`            // Информация о продавце
@@ -452,20 +454,29 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		categoryIDs = []string{categoryID}
 	}
 
+	// Определяем StorefrontFilter на основе типов поиска
+	// Если ищем в обоих типах (marketplace И storefront), исключаем B2C объявления из marketplace
+	// чтобы избежать дубликатов (т.к. они уже есть в storefront индексе через trigger)
+	storefrontFilter := ""
+	if h.containsProductType(params.ProductTypes, productTypeStorefront) {
+		storefrontFilter = "exclude_b2c"
+	}
+
 	searchParams := &search.ServiceParams{
-		Query:         params.Query,
-		Page:          1, // Всегда запрашиваем с первой страницы, так как пагинация будет после объединения
-		Size:          limit,
-		CategoryID:    categoryID,  // Оставляем для обратной совместимости
-		CategoryIDs:   categoryIDs, // Передаем массив категорий
-		PriceMin:      params.PriceMin,
-		PriceMax:      params.PriceMax,
-		Sort:          params.SortBy,
-		SortDirection: params.SortOrder,
-		City:          params.City,
-		Distance:      params.Distance,
-		Latitude:      params.Latitude,
-		Longitude:     params.Longitude,
+		Query:            params.Query,
+		Page:             1, // Всегда запрашиваем с первой страницы, так как пагинация будет после объединения
+		Size:             limit,
+		CategoryID:       categoryID,  // Оставляем для обратной совместимости
+		CategoryIDs:      categoryIDs, // Передаем массив категорий
+		PriceMin:         params.PriceMin,
+		PriceMax:         params.PriceMax,
+		Sort:             params.SortBy,
+		SortDirection:    params.SortOrder,
+		City:             params.City,
+		Distance:         params.Distance,
+		Latitude:         params.Latitude,
+		Longitude:        params.Longitude,
+		StorefrontFilter: storefrontFilter, // Исключаем B2C если ищем и в storefront тоже
 		// AttributeFilters: params.AttributeFilters, // TODO: конвертировать типы
 		Language:     params.Language,
 		DocumentType: "listing", // Фильтруем только marketplace listings
@@ -501,6 +512,9 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		// но если у них есть storefront_id, они могут продаваться через витрину
 		productType := productTypeMarketplace
 
+		// Конвертируем изображения
+		convertedImages := h.convertMarketplaceImages(listing.Images)
+
 		item := UnifiedSearchItem{
 			ID:                 itemID,
 			ProductType:        productType,
@@ -509,7 +523,7 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			Description:        listing.Description,
 			Price:              listing.Price,
 			Currency:           "RSD", // TODO: получить реальную валюту из конфигурации
-			Images:             h.convertMarketplaceImages(listing.Images),
+			Images:             convertedImages,
 			Category:           h.convertMarketplaceCategory(listing.Category),
 			Location:           h.convertMarketplaceLocation(listing),
 			Score:              1.0, // TODO: получить реальный score из OpenSearch
@@ -518,6 +532,25 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 			HasDiscount:        listing.HasDiscount,
 			OldPrice:           listing.OldPrice,
 			DiscountPercentage: listing.DiscountPercentage,
+		}
+
+		// Устанавливаем image_url из главного изображения (для удобства frontend)
+		if len(convertedImages) > 0 {
+			// Ищем главное изображение или берём первое
+			var mainImageURL string
+			for _, img := range convertedImages {
+				if img.IsMain {
+					mainImageURL = img.URL
+					break
+				}
+			}
+			if mainImageURL == "" && len(convertedImages) > 0 {
+				mainImageURL = convertedImages[0].URL
+			}
+			if mainImageURL != "" {
+				item.ImageURL = &mainImageURL
+				item.ThumbnailURL = &mainImageURL
+			}
 		}
 
 		// Добавляем информацию о пользователе
@@ -662,6 +695,27 @@ func (h *UnifiedSearchHandler) searchStorefrontWithLimit(ctx context.Context, pa
 			ViewsCount:   product.ViewsCount, // Добавляем счетчик просмотров для storefront товаров
 			CreatedAt:    product.CreatedAt,
 			Translations: product.Translations, // Добавляем переводы из OpenSearch
+		}
+
+		// Устанавливаем image_url из главного изображения (для удобства frontend)
+		if len(images) > 0 {
+			// Ищем главное изображение или берём первое
+			var mainImageURL string
+			for _, img := range images {
+				if img.IsMain {
+					mainImageURL = img.URL
+					break
+				}
+			}
+			if mainImageURL == "" && len(images) > 0 {
+				mainImageURL = images[0].URL
+			}
+			if mainImageURL != "" {
+				item.ImageURL = &mainImageURL
+				// Для storefront продуктов, thumbnail_url совпадает с image_url
+				// (миниатюры генерируются на стороне S3/CDN)
+				item.ThumbnailURL = &mainImageURL
+			}
 		}
 
 		// Debug code removed

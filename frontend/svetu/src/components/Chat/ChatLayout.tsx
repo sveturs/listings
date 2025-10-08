@@ -21,8 +21,17 @@ export default function ChatLayout({
   initialContactId,
 }: ChatLayoutProps) {
   const t = useTranslations('chat');
-  const [isMobileListOpen, setIsMobileListOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Определяем, есть ли параметры для нового чата
+  const isNewChatParams =
+    Boolean(
+      (initialListingId || initialStorefrontProductId) && initialSellerId
+    ) || Boolean(initialContactId);
+
+  // На мобильных: если есть параметры для нового чата, сразу показываем окно чата
+  // Иначе показываем список чатов
+  const [isMobileListOpen, setIsMobileListOpen] = useState(!isNewChatParams);
   const { currentChat, setCurrentChat } = useChat();
 
   useEffect(() => {
@@ -46,8 +55,15 @@ export default function ChatLayout({
     setIsMobileListOpen(true);
   };
 
+  const handleShowChat = () => {
+    // Переключаем на экран чата (для мобильных устройств)
+    if (isMobile) {
+      setIsMobileListOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-full bg-base-200 rounded-lg overflow-hidden max-w-full">
+    <div className="flex h-full bg-base-200 overflow-hidden max-w-full">
       {/* Боковая панель с чатами - на десктопе всегда видна, на мобильном - условно */}
       <div
         className={`
@@ -77,6 +93,7 @@ export default function ChatLayout({
             }
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
         ) : (initialListingId || initialStorefrontProductId) &&
           initialSellerId ? (
@@ -86,12 +103,14 @@ export default function ChatLayout({
             initialSellerId={initialSellerId}
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
         ) : initialContactId ? (
           <ChatWindow
             initialContactId={initialContactId}
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-base-content/50">

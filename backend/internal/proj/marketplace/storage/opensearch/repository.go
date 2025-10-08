@@ -1436,6 +1436,14 @@ func processUser(doc map[string]interface{}, listing *models.MarketplaceListing)
 }
 
 func processImages(doc map[string]interface{}, listing *models.MarketplaceListing, storage storage.Storage) {
+	// Проверяем, является ли это товаром витрины
+	isStorefrontProduct := false
+	if listing.Metadata != nil {
+		if source, ok := listing.Metadata["source"].(string); ok && source == "storefront" {
+			isStorefrontProduct = true
+		}
+	}
+
 	if len(listing.Images) > 0 {
 		imagesDoc := make([]map[string]interface{}, 0, len(listing.Images))
 		for _, img := range listing.Images {
@@ -1456,6 +1464,42 @@ func processImages(doc map[string]interface{}, listing *models.MarketplaceListin
 			imagesDoc = append(imagesDoc, imageDoc)
 		}
 		doc["images"] = imagesDoc
+	} else if isStorefrontProduct {
+		// Для товаров витрин загружаем изображения из storefront_product_images
+		storefrontImages, err := storage.GetStorefrontProductImages(context.Background(), listing.ID)
+		if err == nil && len(storefrontImages) > 0 {
+			imagesDoc := make([]map[string]interface{}, 0, len(storefrontImages))
+			var mainImageURL, mainThumbnailURL string
+
+			for _, img := range storefrontImages {
+				imageDoc := map[string]interface{}{
+					"id":       img.ID,
+					"url":      img.ImageURL,
+					"alt_text": "",
+					"is_main":  img.IsMain,
+					"position": img.DisplayOrder,
+				}
+				imagesDoc = append(imagesDoc, imageDoc)
+
+				// Запоминаем URL главного изображения
+				if img.IsMain {
+					mainImageURL = img.ImageURL
+					mainThumbnailURL = img.ThumbnailURL
+				}
+			}
+
+			doc["images"] = imagesDoc
+
+			// Устанавливаем верхнеуровневые поля для удобства
+			if mainImageURL != "" {
+				doc["image_url"] = mainImageURL
+				doc["thumbnail_url"] = mainThumbnailURL
+			} else if len(storefrontImages) > 0 {
+				// Если нет главного, берём первое
+				doc["image_url"] = storefrontImages[0].ImageURL
+				doc["thumbnail_url"] = storefrontImages[0].ThumbnailURL
+			}
+		}
 	} else {
 		images, err := storage.GetListingImages(context.Background(), fmt.Sprintf("%d", listing.ID))
 		if err == nil && len(images) > 0 {

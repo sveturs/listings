@@ -144,8 +144,9 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
-		// Используем отдельный индекс для товаров витрин
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "storefront_products")
+		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
+		// Товары витрин синхронизируются в marketplace_listings через триггер sync_storefront_product_to_marketplace
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "marketplace_listings")
 		// Подготавливаем индекс товаров витрин
 		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
@@ -783,6 +784,10 @@ func (db *Database) AddListingImage(ctx context.Context, image *models.Marketpla
 
 func (db *Database) GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error) {
 	return db.marketplaceDB.GetListingImages(ctx, listingID)
+}
+
+func (db *Database) GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error) {
+	return db.marketplaceDB.GetStorefrontProductImages(ctx, productID)
 }
 
 func (db *Database) AddToFavorites(ctx context.Context, userID int, listingID int) error {

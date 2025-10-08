@@ -75,6 +75,7 @@ type Storage interface {
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
+	GetStorefrontProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error)
 
 	// FileStorage возвращает интерфейс для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface

@@ -626,6 +626,11 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 			conditions = append(conditions, fmt.Sprintf("AND l.storefront_id = $%d", argCount))
 			args = append(args, v)
 		}
+
+		// Исключить товары витрин (для админки P2P листингов)
+		if v, ok := filters["exclude_storefronts"]; ok && v == "true" {
+			conditions = append(conditions, "AND l.storefront_id IS NULL")
+		}
 	}
 
 	// Добавляем фильтр по user_id
@@ -3645,13 +3650,15 @@ func (s *Storage) GetStorefrontProductImages(ctx context.Context, productID int)
 
 		// Конвертируем в MarketplaceImage
 		marketplaceImage := models.MarketplaceImage{
-			ID:          img.ID,
-			ListingID:   img.StorefrontProductID,
-			PublicURL:   img.ImageURL,
-			ImageURL:    img.ImageURL, // Заполняем ImageURL для API
-			IsMain:      img.IsDefault,
-			StorageType: "minio",
-			CreatedAt:   img.CreatedAt,
+			ID:           img.ID,
+			ListingID:    img.StorefrontProductID,
+			PublicURL:    img.ImageURL,
+			ImageURL:     img.ImageURL,     // Заполняем ImageURL для API
+			ThumbnailURL: img.ThumbnailURL, // Добавляем ThumbnailURL
+			IsMain:       img.IsDefault,
+			DisplayOrder: img.DisplayOrder, // Добавляем DisplayOrder
+			StorageType:  "minio",
+			CreatedAt:    img.CreatedAt,
 		}
 
 		images = append(images, marketplaceImage)

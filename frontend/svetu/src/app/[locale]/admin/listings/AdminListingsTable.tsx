@@ -95,6 +95,8 @@ export default function AdminListingsTable() {
       params.append('limit', limit.toString());
       params.append('offset', ((page - 1) * limit).toString());
       params.append('sort_by', sortBy);
+      // Исключить товары витрин - показываем только P2P объявления
+      params.append('exclude_storefronts', 'true');
 
       const response = await apiClient.get(`/marketplace/listings?${params}`);
 
@@ -398,7 +400,14 @@ export default function AdminListingsTable() {
                       )}
                     </td>
                     <td>
-                      <div className="font-medium">{listing.title}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{listing.title}</div>
+                        {listing.storefront_id && (
+                          <span className="badge badge-sm badge-info">
+                            Storefront
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-base-content/60 truncate max-w-xs">
                         {listing.description}
                       </div>

@@ -314,6 +314,79 @@ export default function AdminStorefrontProductsTable() {
     }
   };
 
+  const handleBulkActivate = async () => {
+    if (selectedProducts.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Вы уверены что хотите активировать ${selectedProducts.size} товаров?`
+    );
+    if (!confirmed) return;
+
+    try {
+      // Группируем товары по витринам
+      const productsByStorefront = new Map<string, number[]>();
+
+      Array.from(selectedProducts).forEach((id) => {
+        const product = products.find((p) => p.id === id);
+        const slug = product?.storefront_slug || product?.storefront?.slug;
+
+        if (!slug) {
+          console.error(
+            `Cannot activate product ${id}: storefront slug not found`
+          );
+          return;
+        }
+
+        if (!productsByStorefront.has(slug)) {
+          productsByStorefront.set(slug, []);
+        }
+        productsByStorefront.get(slug)!.push(id);
+      });
+
+      // Активируем товары для каждой витрины через bulk endpoint
+      const activatePromises = Array.from(productsByStorefront.entries()).map(
+        async ([slug, productIds]) => {
+          try {
+            const _response = await apiClient.put(
+              `/storefronts/slug/${slug}/products/bulk/status`,
+              {
+                product_ids: productIds,
+                is_active: true,
+              }
+            );
+
+            console.log(
+              `Activated ${productIds.length} products for storefront ${slug}`
+            );
+            return { success: true, count: productIds.length };
+          } catch (error) {
+            console.error(
+              `Error activating products for storefront ${slug}:`,
+              error
+            );
+            return { success: false, count: 0 };
+          }
+        }
+      );
+
+      const results = await Promise.all(activatePromises);
+      const successCount = results.reduce(
+        (sum, r) => sum + (r.success ? r.count : 0),
+        0
+      );
+      console.log(
+        `Successfully activated ${successCount} out of ${selectedProducts.size} products`
+      );
+
+      // Очищаем выбранные товары и обновляем список
+      setSelectedProducts(new Set());
+      await fetchProducts();
+      router.refresh(); // Инвалидировать серверный кеш
+    } catch (error) {
+      console.error('Error during bulk activate:', error);
+    }
+  };
+
   const handleBulkDeactivate = async () => {
     if (selectedProducts.size === 0) return;
 
@@ -323,39 +396,57 @@ export default function AdminStorefrontProductsTable() {
     if (!confirmed) return;
 
     try {
-      // Деактивируем все товары параллельно
-      const deactivatePromises = Array.from(selectedProducts).map(
-        async (id) => {
-          const product = products.find((p) => p.id === id);
-          const slug = product?.storefront_slug || product?.storefront?.slug;
+      // Группируем товары по витринам
+      const productsByStorefront = new Map<string, number[]>();
 
-          if (!slug) {
-            console.error(
-              `Cannot deactivate product ${id}: storefront slug not found`
-            );
-            return false;
-          }
+      Array.from(selectedProducts).forEach((id) => {
+        const product = products.find((p) => p.id === id);
+        const slug = product?.storefront_slug || product?.storefront?.slug;
 
+        if (!slug) {
+          console.error(
+            `Cannot deactivate product ${id}: storefront slug not found`
+          );
+          return;
+        }
+
+        if (!productsByStorefront.has(slug)) {
+          productsByStorefront.set(slug, []);
+        }
+        productsByStorefront.get(slug)!.push(id);
+      });
+
+      // Деактивируем товары для каждой витрины через bulk endpoint
+      const deactivatePromises = Array.from(productsByStorefront.entries()).map(
+        async ([slug, productIds]) => {
           try {
-            const response = await apiClient.put(
-              `/storefronts/slug/${slug}/products/${id}`,
-              { is_active: false }
+            const _response = await apiClient.put(
+              `/storefronts/slug/${slug}/products/bulk/status`,
+              {
+                product_ids: productIds,
+                is_active: false,
+              }
             );
 
-            if (!response.data) {
-              console.error(`Failed to deactivate product ${id}`);
-              return false;
-            }
-            return true;
+            console.log(
+              `Deactivated ${productIds.length} products for storefront ${slug}`
+            );
+            return { success: true, count: productIds.length };
           } catch (error) {
-            console.error(`Error deactivating product ${id}:`, error);
-            return false;
+            console.error(
+              `Error deactivating products for storefront ${slug}:`,
+              error
+            );
+            return { success: false, count: 0 };
           }
         }
       );
 
       const results = await Promise.all(deactivatePromises);
-      const successCount = results.filter((r) => r === true).length;
+      const successCount = results.reduce(
+        (sum, r) => sum + (r.success ? r.count : 0),
+        0
+      );
       console.log(
         `Successfully deactivated ${successCount} out of ${selectedProducts.size} products`
       );
@@ -635,7 +726,7 @@ export default function AdminStorefrontProductsTable() {
                     <a
                       onClick={() => {
                         if (selectedProducts.size > 0) {
-                          console.log('Activate selected');
+                          handleBulkActivate();
                         }
                       }}
                     >

@@ -17,6 +17,7 @@ interface MessageInputProps {
   initialListingId?: number;
   initialStorefrontProductId?: number;
   initialSellerId?: number;
+  onShowChat?: () => void;
 }
 
 export default function MessageInput({
@@ -24,6 +25,7 @@ export default function MessageInput({
   initialListingId,
   initialStorefrontProductId,
   initialSellerId,
+  onShowChat,
 }: MessageInputProps) {
   const t = useTranslations('chat');
   const { user } = useAuth();
@@ -129,6 +131,11 @@ export default function MessageInput({
         // Chat selection will be handled by the parent component after loadChats updates
         // Clear URL parameters after creating chat
         window.history.replaceState({}, '', window.location.pathname);
+
+        // На мобильных устройствах переключаемся на экран чата
+        if (onShowChat) {
+          onShowChat();
+        }
       }
     } catch (error: unknown) {
       const err = error as Error & { status?: number };

@@ -398,6 +398,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 // @Param sort_by query string false "Sort order (price_asc, price_desc, date_desc, etc.)"
 // @Param user_id query int false "User ID filter"
 // @Param storefront_id query int false "Storefront ID filter"
+// @Param exclude_storefronts query boolean false "Exclude storefront products (for admin P2P listings)"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
 // @Success 200 {object} utils.SuccessResponseSwag{data=ListingsResponse} "Listings list with pagination"
@@ -418,6 +419,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	sortBy := c.Query("sort_by")
 	userIDStr := c.Query("user_id")
 	storefrontIDStr := c.Query("storefront_id")
+	excludeStorefronts := c.Query("exclude_storefronts") // Параметр для исключения товаров витрин
 
 	// Значения по умолчанию для пагинации
 	limit := 20
@@ -461,6 +463,9 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	}
 	if storefrontIDStr != "" {
 		filters["storefront_id"] = storefrontIDStr
+	}
+	if excludeStorefronts != "" {
+		filters["exclude_storefronts"] = excludeStorefronts
 	}
 
 	// Получаем список объявлений
@@ -1355,25 +1360,25 @@ func (h *ListingsHandler) GetAdminStatistics(c *fiber.Ctx) error {
 
 	var stats AdminStatisticsResponse
 
-	// Получаем общее количество объявлений
+	// Получаем общее количество объявлений (только P2P, исключаем товары витрин)
 	err := db.GetPool().QueryRow(ctx, `
-		SELECT COUNT(*) FROM marketplace_listings
+		SELECT COUNT(*) FROM marketplace_listings WHERE storefront_id IS NULL
 	`).Scan(&stats.Total)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get total listings count")
 	}
 
-	// Получаем количество активных объявлений
+	// Получаем количество активных объявлений (только P2P)
 	err = db.GetPool().QueryRow(ctx, `
-		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'active'
+		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'active' AND storefront_id IS NULL
 	`).Scan(&stats.Active)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get active listings count")
 	}
 
-	// Получаем количество ожидающих модерации
+	// Получаем количество ожидающих модерации (только P2P)
 	err = db.GetPool().QueryRow(ctx, `
-		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'pending'
+		SELECT COUNT(*) FROM marketplace_listings WHERE status = 'pending' AND storefront_id IS NULL
 	`).Scan(&stats.Pending)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to get pending listings count")
