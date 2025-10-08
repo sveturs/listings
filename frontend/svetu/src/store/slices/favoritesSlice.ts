@@ -2,10 +2,10 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '@/lib/api';
 import { components } from '@/types/generated/api';
 
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.C2CListing'];
 
 interface FavoritesState {
-  items: MarketplaceListing[];
+  items: C2CListing[];
   itemIds: Set<number>;
   loading: boolean;
   error: string | null;
@@ -24,7 +24,7 @@ const initialState: FavoritesState = {
 export const fetchFavorites = createAsyncThunk(
   'favorites/fetchFavorites',
   async () => {
-    const response = await api.get('/marketplace/favorites');
+    const response = await api.get('/c2c/favorites');
     return response.data;
   },
   {
@@ -39,7 +39,7 @@ export const fetchFavorites = createAsyncThunk(
 export const fetchFavoritesCount = createAsyncThunk(
   'favorites/fetchCount',
   async () => {
-    const response = await api.get('/marketplace/favorites/count');
+    const response = await api.get('/c2c/favorites/count');
     return response.data;
   }
 );
@@ -47,7 +47,7 @@ export const fetchFavoritesCount = createAsyncThunk(
 export const addToFavorites = createAsyncThunk(
   'favorites/add',
   async ({ id, type = 'marketplace' }: { id: number; type?: string }) => {
-    const url = `/marketplace/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
+    const url = `/c2c/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
     const response = await api.post(url);
     return { id, type, data: response.data };
   }
@@ -56,7 +56,7 @@ export const addToFavorites = createAsyncThunk(
 export const removeFromFavorites = createAsyncThunk(
   'favorites/remove',
   async ({ id, type = 'marketplace' }: { id: number; type?: string }) => {
-    const url = `/marketplace/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
+    const url = `/c2c/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
     const response = await api.delete(url);
     return { id, type, data: response.data };
   }
@@ -65,7 +65,7 @@ export const removeFromFavorites = createAsyncThunk(
 export const checkIfInFavorites = createAsyncThunk(
   'favorites/check',
   async (id: number) => {
-    const response = await api.get(`/marketplace/favorites/${id}/check`);
+    const response = await api.get(`/c2c/favorites/${id}/check`);
     return { id, isInFavorites: response.data.is_in_favorites };
   }
 );
@@ -80,7 +80,7 @@ const favoritesSlice = createSlice({
       state.count = 0;
       state.error = null;
     },
-    setFavorites: (state, action: PayloadAction<MarketplaceListing[]>) => {
+    setFavorites: (state, action: PayloadAction<C2CListing[]>) => {
       state.items = action.payload;
       state.itemIds = new Set(
         action.payload
@@ -115,7 +115,7 @@ const favoritesSlice = createSlice({
         state.loading = false;
         state.items = action.payload || [];
         state.itemIds = new Set(
-          (action.payload || []).map((item: MarketplaceListing) => item.id)
+          (action.payload || []).map((item: C2CListing) => item.id)
         );
         state.count = (action.payload || []).length;
       })

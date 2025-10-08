@@ -144,7 +144,7 @@ export default function CheckoutPage() {
 
         for (const slug of storefrontSlugs) {
           const response = await apiClient.get(
-            `/api/v1/storefronts/slug/${slug}`
+            `/api/v1/b2c/slug/${slug}`
           );
           if (response.data?.settings?.delivery_providers) {
             const enabledProviders =

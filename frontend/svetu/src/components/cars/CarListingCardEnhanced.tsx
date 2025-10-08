@@ -19,15 +19,15 @@ import {
 import CarBadges from './CarBadges';
 import CarQuickInfo from './CarQuickInfo';
 
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.C2CListing'];
 
 interface CarListingCardEnhancedProps {
-  listing: MarketplaceListing;
+  listing: C2CListing;
   locale: string;
   onFavorite?: (listingId: number) => void;
   onShare?: (listingId: number) => void;
   onCompare?: (listingId: number) => void;
-  onQuickView?: (listing: MarketplaceListing) => void;
+  onQuickView?: (listing: C2CListing) => void;
   isGrid?: boolean;
   isFavorited?: boolean;
   isComparing?: boolean;

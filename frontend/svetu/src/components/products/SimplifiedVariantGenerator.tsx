@@ -52,7 +52,7 @@ export default function SimplifiedVariantGenerator({
           // Сначала попробуем получить список категорий
           const apiUrl = configManager.getApiUrl();
           const response = await fetch(
-            `${apiUrl}/api/v1/marketplace/categories`
+            `${apiUrl}/api/v1/c2c/categories`
           );
           if (response.ok) {
             const data = await response.json();
@@ -86,7 +86,7 @@ export default function SimplifiedVariantGenerator({
 
         // Загружаем вариативные атрибуты для конкретной категории
         const response = await fetch(
-          `/api/v2/marketplace/categories/${categorySlug}/variant-attributes`
+          `/api/v2/c2c/categories/${categorySlug}/variant-attributes`
         );
 
         if (!response.ok) {

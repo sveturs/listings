@@ -9,14 +9,14 @@ import { MarketplaceChat } from '@/types/chat';
 
 interface ChatLayoutProps {
   initialListingId?: number;
-  initialStorefrontProductId?: number;
+  initialB2CProductId?: number;
   initialSellerId?: number;
   initialContactId?: number;
 }
 
 export default function ChatLayout({
   initialListingId,
-  initialStorefrontProductId,
+  initialB2CProductId,
   initialSellerId,
   initialContactId,
 }: ChatLayoutProps) {
@@ -26,7 +26,7 @@ export default function ChatLayout({
   // Определяем, есть ли параметры для нового чата
   const isNewChatParams =
     Boolean(
-      (initialListingId || initialStorefrontProductId) && initialSellerId
+      (initialListingId || initialB2CProductId) && initialSellerId
     ) || Boolean(initialContactId);
 
   // На мобильных: если есть параметры для нового чата, сразу показываем окно чата
@@ -95,11 +95,11 @@ export default function ChatLayout({
             showBackButton={isMobile}
             onShowChat={handleShowChat}
           />
-        ) : (initialListingId || initialStorefrontProductId) &&
+        ) : (initialListingId || initialB2CProductId) &&
           initialSellerId ? (
           <ChatWindow
             initialListingId={initialListingId}
-            initialStorefrontProductId={initialStorefrontProductId}
+            initialB2CProductId={initialB2CProductId}
             initialSellerId={initialSellerId}
             onBack={handleBackToList}
             showBackButton={isMobile}

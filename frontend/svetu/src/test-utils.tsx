@@ -6,7 +6,7 @@ import { NextIntlClientProvider } from 'next-intl';
 // import type { RootState } from '@/store';
 // import chatReducer from '@/store/slices/chatSlice';
 import reviewsReducer from '@/store/slices/reviewsSlice';
-import storefrontsReducer from '@/store/slices/storefrontSlice';
+import storefrontsReducer from '@/store/slices/b2cStoreSlice';
 import importReducer from '@/store/slices/importSlice';
 import productReducer from '@/store/slices/productSlice';
 import paymentReducer from '@/store/slices/paymentSlice';

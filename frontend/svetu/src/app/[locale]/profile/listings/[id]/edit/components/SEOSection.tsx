@@ -66,7 +66,7 @@ export function SEOSection({
             available: boolean;
             suggestion?: string;
           };
-        }>('/api/v1/marketplace/listings/check-slug', {
+        }>('/api/v1/c2c/listings/check-slug', {
           slug,
           exclude_id: listingId || 0,
         });

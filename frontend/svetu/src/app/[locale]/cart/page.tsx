@@ -378,7 +378,7 @@ export default function CartPage() {
                         {/* Store header */}
                         <div className="flex items-center justify-between mb-4">
                           <Link
-                            href={`/${locale}/storefronts/${group.slug}`}
+                            href={`/${locale}/b2c/${group.slug}`}
                             className="text-lg font-semibold hover:link"
                           >
                             {group.name}
@@ -401,7 +401,7 @@ export default function CartPage() {
                                 <div className="flex gap-4">
                                   {/* Image */}
                                   <Link
-                                    href={`/${locale}/storefronts/${item.storefrontSlug}/products/${item.productId}`}
+                                    href={`/${locale}/b2c/${item.storefrontSlug}/products/${item.productId}`}
                                     className="relative w-24 h-24 rounded-lg overflow-hidden bg-base-100 flex-shrink-0"
                                   >
                                     <SafeImage
@@ -418,7 +418,7 @@ export default function CartPage() {
                                     <div className="flex justify-between">
                                       <div>
                                         <Link
-                                          href={`/${locale}/storefronts/${item.storefrontSlug}/products/${item.productId}`}
+                                          href={`/${locale}/b2c/${item.storefrontSlug}/products/${item.productId}`}
                                           className="font-medium hover:link"
                                         >
                                           {item.name}
@@ -576,7 +576,7 @@ export default function CartPage() {
                         {/* Store header */}
                         <div className="flex items-center justify-between mb-4">
                           <Link
-                            href={`/${locale}/storefronts/${group.slug}`}
+                            href={`/${locale}/b2c/${group.slug}`}
                             className="text-lg font-semibold hover:link"
                           >
                             {group.name}

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { CarFilters } from '@/components/marketplace/CarFilters';
+import { CarFilters } from '@/components/c2c/CarFilters';
 import { RealEstateFilters } from './RealEstateFilters';
 import { ElectronicsFilters } from './ElectronicsFilters';
 import { GenericCategoryFilters } from './GenericCategoryFilters';

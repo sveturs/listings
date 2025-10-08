@@ -191,7 +191,7 @@ export default function ProductDetailPage() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
             <Link
-              href="/ru/examples/ideal-marketplace"
+              href="/c2c"
               className="hover:text-primary"
             >
               <FaArrowLeft className="inline mr-2" />

@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './slices/chatSlice';
 import reviewsReducer from './slices/reviewsSlice';
-import storefrontsReducer from './slices/storefrontSlice';
+import b2cStoresReducer from './slices/b2cStoreSlice';
 import importReducer from './slices/importSlice';
 import productReducer from './slices/productSlice';
 import paymentReducer from './slices/paymentSlice';
@@ -19,7 +19,7 @@ export const store = configureStore({
   reducer: {
     chat: chatReducer,
     reviews: reviewsReducer,
-    storefronts: storefrontsReducer,
+    b2cStores: b2cStoresReducer,
     import: importReducer,
     products: productReducer,
     payment: paymentReducer,

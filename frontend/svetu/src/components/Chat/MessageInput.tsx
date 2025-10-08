@@ -15,7 +15,7 @@ import { useObjectURLs } from '@/hooks/useObjectURL';
 interface MessageInputProps {
   chat?: MarketplaceChat;
   initialListingId?: number;
-  initialStorefrontProductId?: number;
+  initialB2CProductId?: number;
   initialSellerId?: number;
   onShowChat?: () => void;
 }
@@ -23,7 +23,7 @@ interface MessageInputProps {
 export default function MessageInput({
   chat,
   initialListingId,
-  initialStorefrontProductId,
+  initialB2CProductId,
   initialSellerId,
   onShowChat,
 }: MessageInputProps) {
@@ -68,10 +68,10 @@ export default function MessageInput({
         receiver_id: chat.buyer_id === user.id ? chat.seller_id : chat.buyer_id,
         content: messageContent,
       };
-    } else if (initialStorefrontProductId && initialSellerId) {
+    } else if (initialB2CProductId && initialSellerId) {
       // Создание нового чата с товаром витрины
       payload = {
-        storefront_product_id: initialStorefrontProductId,
+        storefront_product_id: initialB2CProductId,
         receiver_id: initialSellerId,
         content: messageContent,
       };

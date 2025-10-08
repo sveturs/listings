@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 // Ленивая загрузка CarFilters только когда нужно
 const CarFilters = lazy(() =>
-  import('@/components/marketplace/CarFilters').then((module) => ({
+  import('@/components/c2c/CarFilters').then((module) => ({
     default: module.CarFilters,
   }))
 );

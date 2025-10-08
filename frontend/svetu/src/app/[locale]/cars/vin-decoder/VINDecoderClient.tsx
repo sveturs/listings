@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Car, Info } from 'lucide-react';
-import { VINDecoder } from '@/components/marketplace/VINDecoder';
+import { VINDecoder } from '@/components/c2c/VINDecoder';
 import type { components } from '@/types/generated/api';
 
 type VINDecodeResult = components['schemas']['models.VINDecodeResult'];

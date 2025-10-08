@@ -3,7 +3,7 @@ import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированной схемы
 type UserProfile = components['schemas']['models.UserProfile'];
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.C2CListing'];
 type ChatMessage = components['schemas']['models.MarketplaceMessage'];
 type ListingsResponse = components['schemas']['handler.ListingsResponse'];
 
@@ -51,7 +51,7 @@ export class UserApi extends ApiEndpoint {
  */
 export class MarketplaceApi extends ApiEndpoint {
   constructor() {
-    super('/api/v1/marketplace');
+    super('/api/v1/c2c');
   }
 
   // Для публичных данных можем использовать внутренний URL при SSR
@@ -77,8 +77,8 @@ export class MarketplaceApi extends ApiEndpoint {
     );
   }
 
-  async getListingById(id: string): Promise<ApiResponse<MarketplaceListing>> {
-    return apiClient.get<MarketplaceListing>(
+  async getListingById(id: string): Promise<ApiResponse<C2CListing>> {
+    return apiClient.get<C2CListing>(
       `${this.basePath}/listings/${id}`,
       {
         internal: this.shouldUseInternalUrl(),
@@ -88,8 +88,8 @@ export class MarketplaceApi extends ApiEndpoint {
 
   async createListing(
     data: FormData
-  ): Promise<ApiResponse<MarketplaceListing>> {
-    return apiClient.upload<MarketplaceListing>(
+  ): Promise<ApiResponse<C2CListing>> {
+    return apiClient.upload<C2CListing>(
       `${this.basePath}/listings`,
       data
     );

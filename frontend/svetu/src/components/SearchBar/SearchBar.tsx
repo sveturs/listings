@@ -337,7 +337,7 @@ export default function SearchBar({
             : undefined;
         if (storefrontSlug) {
           router.push(
-            `/${locale}/storefronts/${storefrontSlug}/products/${productId}`
+            `/${locale}/b2c/${storefrontSlug}/products/${productId}`
           );
         } else {
           // Если нет slug, переходим на страницу поиска с фильтром
@@ -347,7 +347,7 @@ export default function SearchBar({
         }
       } else {
         // Для товаров маркетплейса
-        router.push(`/${locale}/marketplace/${productId}`);
+        router.push(`/${locale}/c2c/${productId}`);
       }
       return;
     }
@@ -524,7 +524,7 @@ export default function SearchBar({
           router.push(`/${locale}/category/${categoryId}`);
         }}
         onProductSelect={(productId) => {
-          router.push(`/${locale}/marketplace/${productId}`);
+          router.push(`/${locale}/c2c/${productId}`);
         }}
       />
     </div>

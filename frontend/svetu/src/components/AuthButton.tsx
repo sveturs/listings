@@ -274,7 +274,7 @@ export function AuthButton({ onLoginClick }: AuthButtonProps) {
             </li>
             <li>
               <Link
-                href="/profile/storefronts"
+                href="/profile/b2c"
                 className="flex items-center gap-3 py-3"
               >
                 <svg

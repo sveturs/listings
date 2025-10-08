@@ -80,12 +80,12 @@ export interface Chat {
   buyer?: User;
   seller?: User;
   other_user?: User;
-  listing?: MarketplaceListing;
+  listing?: C2CListing;
   last_message?: ChatMessage;
 }
 
 // Marketplace related types
-export interface MarketplaceListing {
+export interface C2CListing {
   id: number;
   user_id: number;
   category_id: number;

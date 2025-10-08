@@ -73,7 +73,7 @@ const colorMap: { [key: string]: string } = {
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
   async () => {
-    const response = await apiClient.get('/marketplace/categories');
+    const response = await apiClient.get('/c2c/categories');
     if (response.data.success && response.data.data) {
       return response.data.data;
     }
@@ -102,7 +102,7 @@ export const fetchPopularCategories = createAsyncThunk(
     }
 
     const response = await apiClient.get(
-      `/marketplace/popular-categories?lang=${locale}&limit=8`
+      `/c2c/popular-categories?lang=${locale}&limit=8`
     );
 
     if (response.data.success && response.data.data) {

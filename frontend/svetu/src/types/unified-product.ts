@@ -60,7 +60,7 @@ export interface UnifiedProductAttribute {
 
 // Тип для вариантов товара
 export type ProductVariant =
-  components['schemas']['models.StorefrontProductVariant'];
+  components['schemas']['models.B2CProductVariant'];
 
 // Основной унифицированный тип продукта
 export interface UnifiedProduct {
@@ -137,8 +137,8 @@ export interface UnifiedProduct {
 }
 
 // Типы для адаптеров
-export type MarketplaceItemAdapter = (item: any) => UnifiedProduct;
-export type StorefrontProductAdapter = (
+export type C2CItemAdapter = (item: any) => UnifiedProduct;
+export type B2CProductAdapter = (
   product: any,
   storefrontInfo?: UnifiedStorefrontInfo
 ) => UnifiedProduct;

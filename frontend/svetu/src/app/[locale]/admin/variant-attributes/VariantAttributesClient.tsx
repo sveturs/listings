@@ -54,7 +54,7 @@ export default function VariantAttributesClient() {
 
   const fetchCategories = async () => {
     try {
-      const response = await apiClient.get('/marketplace/category-tree');
+      const response = await apiClient.get('/c2c/category-tree');
 
       if (response.error) {
         throw new Error(response.error.message);

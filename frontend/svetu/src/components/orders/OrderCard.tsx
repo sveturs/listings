@@ -7,12 +7,12 @@ import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 import { toast } from '@/utils/toast';
 
-type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
-type StorefrontOrderItem = components['schemas']['models.StorefrontOrderItem'];
+type B2COrder = components['schemas']['models.B2COrder'];
+type B2COrderItem = components['schemas']['models.B2COrderItem'];
 
 interface OrderCardProps {
-  order: StorefrontOrder;
-  onOrderUpdate?: (order: StorefrontOrder) => void;
+  order: B2COrder;
+  onOrderUpdate?: (order: B2COrder) => void;
 }
 
 export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
@@ -127,7 +127,7 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
 
         {/* Items Preview */}
         <div className="space-y-2">
-          {order.items?.slice(0, 2).map((item: StorefrontOrderItem) => (
+          {order.items?.slice(0, 2).map((item: B2COrderItem) => (
             <div
               key={item.id}
               className="flex items-center gap-3 p-2 bg-base-200 rounded"
@@ -179,7 +179,7 @@ export default function OrderCard({ order, onOrderUpdate }: OrderCardProps) {
         {/* Expanded Details */}
         {showDetails && order.items && order.items.length > 2 && (
           <div className="space-y-2 mt-2">
-            {order.items.slice(2).map((item: StorefrontOrderItem) => (
+            {order.items.slice(2).map((item: B2COrderItem) => (
               <div
                 key={item.id}
                 className="flex items-center gap-3 p-2 bg-base-200 rounded"

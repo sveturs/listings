@@ -98,7 +98,7 @@ export default function AdminListingsTable() {
       // Исключить товары витрин - показываем только P2P объявления
       params.append('exclude_storefronts', 'true');
 
-      const response = await apiClient.get(`/marketplace/listings?${params}`);
+      const response = await apiClient.get(`/c2c/listings?${params}`);
 
       if (response.data?.success && response.data.data) {
         // API возвращает data.data для массива объявлений и data.meta для метаданных
@@ -132,7 +132,7 @@ export default function AdminListingsTable() {
   // Обработчики действий
   const handleDelete = async (id: number) => {
     try {
-      const response = await apiClient.delete(`/marketplace/listings/${id}`);
+      const response = await apiClient.delete(`/c2c/listings/${id}`);
 
       if (response.data) {
         await fetchListings();
@@ -154,7 +154,7 @@ export default function AdminListingsTable() {
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
     try {
-      const response = await apiClient.put(`/marketplace/listings/${id}`, {
+      const response = await apiClient.put(`/c2c/listings/${id}`, {
         is_active: !isActive,
       });
 
@@ -474,7 +474,7 @@ export default function AdminListingsTable() {
                     <td>
                       <div className="flex items-center gap-1">
                         <Link
-                          href={`/${locale}/marketplace/${listing.id}`}
+                          href={`/${locale}/c2c/${listing.id}`}
                           className="btn btn-ghost btn-xs"
                           target="_blank"
                         >

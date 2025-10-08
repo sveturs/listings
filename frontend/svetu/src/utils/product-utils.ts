@@ -6,11 +6,11 @@ import { normalizeImageUrl } from '@/utils/imageUtils';
  */
 export function getProductUrl(product: UnifiedProduct, locale: string): string {
   if (product.type === 'storefront' && product.storefront?.slug) {
-    return `/${locale}/storefronts/${product.storefront.slug}/products/${product.id}`;
+    return `/${locale}/b2c/${product.storefront.slug}/products/${product.id}`;
   }
 
   // Для обычных объявлений маркетплейса
-  return `/${locale}/marketplace/${product.id}`;
+  return `/${locale}/c2c/${product.id}`;
 }
 
 /**

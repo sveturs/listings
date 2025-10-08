@@ -4,8 +4,8 @@ import WalkingAccessibilityControl from '../Map/WalkingAccessibilityControl';
 // import { DistrictMapSelector } from '@/components/search';
 import type { Feature, Polygon } from 'geojson';
 import type { MapBounds } from '@/components/GIS/types/gis';
-import { SmartFilters } from '@/components/marketplace/SmartFilters';
-import { QuickFilters } from '@/components/marketplace/QuickFilters';
+import { SmartFilters } from '@/components/c2c/SmartFilters';
+import { QuickFilters } from '@/components/c2c/QuickFilters';
 import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 
 interface MapFilters {

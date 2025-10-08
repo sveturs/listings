@@ -47,7 +47,7 @@ export default function AttributesStep({
     try {
       setLoading(true);
       const response = await apiClient.get(
-        `/api/v1/marketplace/categories/${state.category.id}/attributes`
+        `/api/v1/c2c/categories/${state.category.id}/attributes`
       );
 
       if (response.data) {

@@ -57,8 +57,8 @@ export const moduleLoaders = {
   gis: () => import('./gis.json'),
   home: () => import('./home.json'),
   map: () => import('./map.json'),
-  marketplace: () => import('./marketplace.json'),
-  'marketplace.home': () => import('./marketplace.home.json'),
+  marketplace: () => import('./c2c.json'),
+  'marketplace.home': () => import('./c2c.home.json'),
   misc: () => import('./misc.json'),
   notifications: () => import('./notifications.json'),
   orders: () => import('./orders.json'),
@@ -71,7 +71,7 @@ export const moduleLoaders = {
   scanner: () => import('./scanner.json'),
   search: () => import('./search.json'),
   services: () => import('./services.json'),
-  storefronts: () => import('./storefronts.json'),
+  storefronts: () => import('./b2c.json'),
   trust: () => import('./trust.json'),
 };
 

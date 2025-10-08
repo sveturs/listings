@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import CarDetailClient from './CarDetailClient';
 import type { components } from '@/types/generated/api';
 
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.C2CListing'];
 
 interface CarDetailPageProps {
   params: Promise<{
@@ -11,13 +11,13 @@ interface CarDetailPageProps {
   }>;
 }
 
-async function getCarDetails(id: string): Promise<MarketplaceListing | null> {
+async function getCarDetails(id: string): Promise<C2CListing | null> {
   try {
     // Server Component - используем прямой fetch к backend
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL || 'http://localhost:3000';
     const response = await fetch(
-      `${backendUrl}/api/v1/marketplace/listings/${id}`,
+      `${backendUrl}/api/v1/c2c/listings/${id}`,
       {
         cache: 'no-store', // Всегда получаем свежие данные
       }

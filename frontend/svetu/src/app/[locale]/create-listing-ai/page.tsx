@@ -211,7 +211,7 @@ export default function AIPoweredListingCreationPage() {
     const loadCategories = async () => {
       try {
         const apiUrl = configManager.getApiUrl();
-        const response = await fetch(`${apiUrl}/api/v1/marketplace/categories`);
+        const response = await fetch(`${apiUrl}/api/v1/c2c/categories`);
         if (response.ok) {
           const data = await response.json();
           if (data.data) {
@@ -534,7 +534,7 @@ export default function AIPoweredListingCreationPage() {
     try {
       const apiUrl = configManager.getApiUrl();
       const response = await fetch(
-        `${apiUrl}/api/v1/marketplace/categories/${categoryId}/attributes`
+        `${apiUrl}/api/v1/c2c/categories/${categoryId}/attributes`
       );
       if (response.ok) {
         const data = await response.json();
@@ -2684,7 +2684,7 @@ export default function AIPoweredListingCreationPage() {
         }
 
         toast.success(t('ai.success_messages.listing_created'));
-        router.push(`/marketplace/${response.data.id}`);
+        router.push(`/c2c/${response.data.id}`);
       }
     } catch (error) {
       console.error('Error publishing listing:', error);

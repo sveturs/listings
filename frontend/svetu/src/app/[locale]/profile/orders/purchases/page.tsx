@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   marketplaceOrdersService,
-  type MarketplaceOrder,
-} from '@/services/marketplaceOrders';
+  type C2COrder,
+} from '@/services/c2cOrders';
 import { balanceService } from '@/services/balance';
 import SafeImage from '@/components/SafeImage';
 import { toast } from 'react-hot-toast';
@@ -20,7 +20,7 @@ export default function MyPurchasesPage() {
   const tCommon = useTranslations('common');
   const { isAuthenticated } = useAuth();
 
-  const [orders, setOrders] = useState<MarketplaceOrder[]>([]);
+  const [orders, setOrders] = useState<C2COrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -275,7 +275,7 @@ export default function MyPurchasesPage() {
 
                       {order.listing && (
                         <Link
-                          href={`/${locale}/marketplace/${order.listing_id}`}
+                          href={`/${locale}/c2c/${order.listing_id}`}
                           className="btn btn-sm btn-ghost"
                         >
                           {t('viewListing')}

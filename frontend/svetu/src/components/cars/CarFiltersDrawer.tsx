@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Filter, RotateCcw, Check } from 'lucide-react';
-import { CarFilters } from '@/components/marketplace/CarFilters';
+import { CarFilters } from '@/components/c2c/CarFilters';
 
 interface CarFiltersDrawerProps {
   isOpen: boolean;

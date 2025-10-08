@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEditProduct } from '@/contexts/EditProductContext';
-import { storefrontProductsService } from '@/services/storefrontProducts';
+import { storefrontProductsService } from '@/services/b2cProducts';
 import Image from 'next/image';
 import {
   EyeIcon,
@@ -109,7 +109,7 @@ export default function EditPreviewStep({
       dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false });
 
       // Перенаправляем к списку продуктов
-      router.push(`/${locale}/storefronts/${storefrontSlug}/products`);
+      router.push(`/${locale}/b2c/${storefrontSlug}/products`);
     } catch (error: any) {
       console.error('Error updating product:', error);
       dispatch({

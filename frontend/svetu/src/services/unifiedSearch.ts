@@ -236,7 +236,7 @@ export class UnifiedSearchService {
     let result: UnifiedSearchResult;
 
     if (data.data && Array.isArray(data.data)) {
-      // Старый формат от /marketplace/search
+      // Старый формат от /c2c/search
       const items: UnifiedSearchItem[] = data.data.map((item: any) => ({
         id: `marketplace-${item.id}`,
         product_type: 'marketplace' as const,
@@ -320,7 +320,7 @@ export class UnifiedSearchService {
     });
 
     const response = await apiClient.get(
-      `/marketplace/enhanced-suggestions?${params}`
+      `/c2c/enhanced-suggestions?${params}`
     );
 
     if (!response.data) {
@@ -477,7 +477,7 @@ export class UnifiedSearchService {
 
     try {
       const response = await apiClient.get(
-        `/marketplace/enhanced-suggestions?${searchParams.toString()}`
+        `/c2c/enhanced-suggestions?${searchParams.toString()}`
       );
 
       if (!response.data) {

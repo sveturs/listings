@@ -149,7 +149,7 @@ export default function ChatClient() {
           <ChatErrorBoundary>
             <ChatLayout
               initialListingId={listingId ? parseInt(listingId) : undefined}
-              initialStorefrontProductId={
+              initialB2CProductId={
                 storefrontProductId ? parseInt(storefrontProductId) : undefined
               }
               initialSellerId={sellerId ? parseInt(sellerId) : undefined}

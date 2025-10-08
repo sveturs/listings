@@ -18,7 +18,7 @@ export interface Category {
 
 export class CategoryService {
   static async getCategories(): Promise<Category[]> {
-    const response = await apiClient.get('/marketplace/categories');
+    const response = await apiClient.get('/c2c/categories');
     return response.data?.data || [];
   }
 
@@ -60,7 +60,7 @@ export class CategoryService {
   ): Promise<Category[]> {
     try {
       const response = await apiClient.get(
-        `/marketplace/categories?locale=${locale}`
+        `/c2c/categories?locale=${locale}`
       );
       return response.data?.data || [];
     } catch {

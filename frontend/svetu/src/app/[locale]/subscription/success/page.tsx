@@ -118,7 +118,7 @@ export default function SubscriptionSuccessPage() {
 
           <div className="card-actions justify-center gap-4">
             <Link
-              href="/create-storefront"
+              href="/create-b2c-store"
               className="btn btn-primary btn-lg gap-2"
             >
               <RocketLaunchIcon className="w-5 h-5" />

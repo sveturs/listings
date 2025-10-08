@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { StorefrontProduct } from '@/types/storefront';
+import type { B2CProduct } from '@/types/b2c';
 import type { components } from '@/types/generated/api';
 import { productApi } from '@/services/productApi';
 import { toast } from 'react-hot-toast';
@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 type BulkOperationError = components['schemas']['models.BulkOperationError'];
 
 interface ProductState {
-  products: StorefrontProduct[];
+  products: B2CProduct[];
   selectedIds: number[];
   loading: boolean;
   error: string | null;
@@ -192,7 +192,7 @@ const productSlice = createSlice({
 
     selectByFilter: (
       state,
-      action: PayloadAction<(product: StorefrontProduct) => boolean>
+      action: PayloadAction<(product: B2CProduct) => boolean>
     ) => {
       const filterFn = action.payload;
       const newSelectedIds: number[] = [];
@@ -244,15 +244,15 @@ const productSlice = createSlice({
     },
 
     // Продукты
-    setProducts: (state, action: PayloadAction<StorefrontProduct[]>) => {
+    setProducts: (state, action: PayloadAction<B2CProduct[]>) => {
       state.products = action.payload;
     },
 
-    appendProducts: (state, action: PayloadAction<StorefrontProduct[]>) => {
+    appendProducts: (state, action: PayloadAction<B2CProduct[]>) => {
       state.products = [...state.products, ...action.payload];
     },
 
-    updateProduct: (state, action: PayloadAction<StorefrontProduct>) => {
+    updateProduct: (state, action: PayloadAction<B2CProduct>) => {
       if (action.payload.id) {
         const index = state.products.findIndex(
           (p) => p.id === action.payload.id

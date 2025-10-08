@@ -28,8 +28,8 @@ import MobileSearch from '@/components/GIS/Mobile/MobileSearch';
 import useMobileOptimization from '@/hooks/useMobileOptimization';
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
-import { SmartFilters } from '@/components/marketplace/SmartFilters';
-import { QuickFilters } from '@/components/marketplace/QuickFilters';
+import { SmartFilters } from '@/components/c2c/SmartFilters';
+import { QuickFilters } from '@/components/c2c/QuickFilters';
 import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 // import { TranslationDebugger } from '@/components/TranslationDebugger';
 

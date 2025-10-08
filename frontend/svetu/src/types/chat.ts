@@ -1,5 +1,5 @@
 import { User } from './auth';
-import { MarketplaceItem } from './marketplace';
+import { C2CItem } from './c2c';
 
 export interface MarketplaceChat {
   id: number;
@@ -16,7 +16,7 @@ export interface MarketplaceChat {
   buyer?: User;
   seller?: User;
   other_user?: User;
-  listing?: MarketplaceItem;
+  listing?: C2CItem;
   last_message?: MarketplaceMessage;
   unread_count: number;
 }
@@ -55,8 +55,8 @@ export interface MarketplaceMessage {
   // Дополнительные поля
   sender?: User;
   receiver?: User;
-  listing?: MarketplaceItem;
-  storefront_product?: any; // TODO: добавить тип StorefrontProduct
+  listing?: C2CItem;
+  storefront_product?: any; // TODO: добавить тип B2CProduct
 
   // Мультиязычность
   original_language?: string;

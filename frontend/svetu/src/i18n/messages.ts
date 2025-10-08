@@ -4,12 +4,12 @@
 
 // Английские переводы
 import enCommon from '@/messages/en/common.json';
-import enMarketplace from '@/messages/en/marketplace.json';
+import enMarketplace from '@/messages/en/c2c.json';
 import enAuth from '@/messages/en/auth.json';
 import enMisc from '@/messages/en/misc.json';
 import enCart from '@/messages/en/cart.json';
 import enMap from '@/messages/en/map.json';
-import enStorefronts from '@/messages/en/storefronts.json';
+import enStorefronts from '@/messages/en/b2c.json';
 import enAdmin from '@/messages/en/admin.json';
 import enCars from '@/messages/en/cars.json';
 import enReviews from '@/messages/en/reviews.json';
@@ -30,12 +30,12 @@ import enFilters from '@/messages/en/filters.json';
 
 // Русские переводы
 import ruCommon from '@/messages/ru/common.json';
-import ruMarketplace from '@/messages/ru/marketplace.json';
+import ruMarketplace from '@/messages/ru/c2c.json';
 import ruAuth from '@/messages/ru/auth.json';
 import ruMisc from '@/messages/ru/misc.json';
 import ruCart from '@/messages/ru/cart.json';
 import ruMap from '@/messages/ru/map.json';
-import ruStorefronts from '@/messages/ru/storefronts.json';
+import ruStorefronts from '@/messages/ru/b2c.json';
 import ruAdmin from '@/messages/ru/admin.json';
 import ruCars from '@/messages/ru/cars.json';
 import ruReviews from '@/messages/ru/reviews.json';
@@ -56,12 +56,12 @@ import ruFilters from '@/messages/ru/filters.json';
 
 // Сербские переводы
 import srCommon from '@/messages/sr/common.json';
-import srMarketplace from '@/messages/sr/marketplace.json';
+import srMarketplace from '@/messages/sr/c2c.json';
 import srAuth from '@/messages/sr/auth.json';
 import srMisc from '@/messages/sr/misc.json';
 import srCart from '@/messages/sr/cart.json';
 import srMap from '@/messages/sr/map.json';
-import srStorefronts from '@/messages/sr/storefronts.json';
+import srStorefronts from '@/messages/sr/b2c.json';
 import srAdmin from '@/messages/sr/admin.json';
 import srCars from '@/messages/sr/cars.json';
 import srReviews from '@/messages/sr/reviews.json';

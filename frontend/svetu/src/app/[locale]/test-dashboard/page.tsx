@@ -20,7 +20,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-primary"
                 onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917/dashboard')
+                  router.push('/en/b2c/test-store-737754917/dashboard')
                 }
               >
                 Открыть дашборд
@@ -28,7 +28,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917/analytics')
+                  router.push('/en/b2c/test-store-737754917/analytics')
                 }
               >
                 Открыть аналитику
@@ -36,7 +36,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-accent"
                 onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917')
+                  router.push('/en/b2c/test-store-737754917')
                 }
               >
                 Публичная страница
@@ -54,7 +54,7 @@ export default function TestDashboardPage() {
                 className="btn btn-primary"
                 onClick={() =>
                   router.push(
-                    '/en/storefronts/testuser-electronics-store/dashboard'
+                    '/en/b2c/testuser-electronics-store/dashboard'
                   )
                 }
               >
@@ -64,7 +64,7 @@ export default function TestDashboardPage() {
                 className="btn btn-secondary"
                 onClick={() =>
                   router.push(
-                    '/en/storefronts/testuser-electronics-store/analytics'
+                    '/en/b2c/testuser-electronics-store/analytics'
                   )
                 }
               >
@@ -73,7 +73,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-accent"
                 onClick={() =>
-                  router.push('/en/storefronts/testuser-electronics-store')
+                  router.push('/en/b2c/testuser-electronics-store')
                 }
               >
                 Публичная страница

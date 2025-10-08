@@ -6,7 +6,7 @@ import { useCreateListing } from '@/contexts/CreateListingContext';
 import {
   MarketplaceService,
   CategoryAttributeMapping,
-} from '@/services/marketplace';
+} from '@/services/c2c';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import { CarSelector } from '@/components/cars/CarSelector';
 import type { CarSelection } from '@/types/cars';

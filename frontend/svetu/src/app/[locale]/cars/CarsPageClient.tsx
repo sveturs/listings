@@ -15,10 +15,10 @@ import {
 } from '@/store/slices/universalCompareSlice';
 import CarSortingOptions, {
   type CarSortOption,
-} from '@/components/marketplace/CarSortingOptions';
-import CarQuickFilters from '@/components/marketplace/CarQuickFilters';
+} from '@/components/c2c/CarSortingOptions';
+import CarQuickFilters from '@/components/c2c/CarQuickFilters';
 import UniversalFilters from '@/components/universal/filters/UniversalFilters';
-import CarBrandIcon from '@/components/marketplace/CarBrandIcon';
+import CarBrandIcon from '@/components/c2c/CarBrandIcon';
 import AutocompleteSearch from '@/components/cars/AutocompleteSearch';
 import Breadcrumbs from '@/components/cars/Breadcrumbs';
 // Universal components
@@ -29,7 +29,7 @@ import CarFiltersDrawer from '@/components/cars/CarFiltersDrawer';
 import CarQuickViewModal from '@/components/cars/CarQuickViewModal';
 
 type CarMake = components['schemas']['models.CarMake'];
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.C2CListing'];
 
 interface CarsPageClientProps {
   locale: string;
@@ -45,7 +45,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   });
   const [loading, setLoading] = useState(true);
   const [popularMakes, setPopularMakes] = useState<CarMake[]>([]);
-  const [latestListings, setLatestListings] = useState<MarketplaceListing[]>(
+  const [latestListings, setLatestListings] = useState<C2CListing[]>(
     []
   );
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,10 +61,10 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   );
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
-  const [searchResults, setSearchResults] = useState<MarketplaceListing[]>([]);
+  const [searchResults, setSearchResults] = useState<C2CListing[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [quickViewListing, setQuickViewListing] =
-    useState<MarketplaceListing | null>(null);
+    useState<C2CListing | null>(null);
   const [_favoriteIds, _setFavoriteIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       setLoading(true);
 
       // Загружаем статистику автомобилей
-      const statsResponse = await apiClient.get('/marketplace/cars/stats');
+      const statsResponse = await apiClient.get('/c2c/cars/stats');
       if (statsResponse.data?.data) {
         setStats({
           totalListings: statsResponse.data.data.totalListings || 0,
@@ -100,7 +100,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       };
 
       const listingsResponse = await apiClient.post(
-        '/marketplace/search',
+        '/c2c/search',
         searchParams
       );
 
@@ -204,7 +204,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
       });
 
       const response = await apiClient.post(
-        '/marketplace/search',
+        '/c2c/search',
         searchParams
       );
 
@@ -233,7 +233,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
 
   // Convert listing to universal format
   const convertToUniversalData = (
-    listing: MarketplaceListing
+    listing: C2CListing
   ): UniversalListingData => {
     const carAttrs = (listing.attributes as any) || {};
 
@@ -333,7 +333,7 @@ export default function CarsPageClient({ locale }: CarsPageClientProps) {
   };
 
   // Handle compare toggle
-  const _handleCompare = (listing: MarketplaceListing) => {
+  const _handleCompare = (listing: C2CListing) => {
     const universalData = convertToUniversalData(listing);
     const isComparing = compareItems.some((item) => item.id === listing.id);
 

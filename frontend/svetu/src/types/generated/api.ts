@@ -5736,7 +5736,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/attributes': {
+  '/api/v1/admin/c2c/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -5804,7 +5804,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/attributes/{id}': {
+  '/api/v1/admin/c2c/attributes/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -5967,7 +5967,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/attributes/{id}/translate': {
+  '/api/v1/admin/c2c/attributes/{id}/translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -6038,7 +6038,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/attributes/bulk': {
+  '/api/v1/admin/c2c/attributes/bulk': {
     parameters: {
       query?: never;
       header?: never;
@@ -6106,7 +6106,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId}': {
+  '/api/v1/admin/c2c/categories/{categoryId}/attributes/{attributeId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -6284,7 +6284,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/export': {
+  '/api/v1/admin/c2c/categories/{categoryId}/attributes/export': {
     parameters: {
       query?: never;
       header?: never;
@@ -6346,7 +6346,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/import': {
+  '/api/v1/admin/c2c/categories/{categoryId}/attributes/import': {
     parameters: {
       query?: never;
       header?: never;
@@ -6433,7 +6433,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/marketplace/categories/{targetCategoryId}/attributes/copy': {
+  '/api/v1/admin/c2c/categories/{targetCategoryId}/attributes/copy': {
     parameters: {
       query?: never;
       header?: never;
@@ -17454,7 +17454,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/attribute-groups': {
+  '/api/v1/c2c/admin/attribute-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -17532,7 +17532,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/attribute-groups/{id}': {
+  '/api/v1/c2c/admin/attribute-groups/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -17691,7 +17691,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/attribute-groups/{id}/items': {
+  '/api/v1/c2c/admin/attribute-groups/{id}/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -17813,7 +17813,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/attribute-groups/{id}/items/{attributeId}': {
+  '/api/v1/c2c/admin/attribute-groups/{id}/items/{attributeId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -17877,7 +17877,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/categories/{id}/groups': {
+  '/api/v1/c2c/admin/categories/{id}/groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -17990,7 +17990,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/admin/categories/{id}/groups/{groupId}': {
+  '/api/v1/c2c/admin/categories/{id}/groups/{groupId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18054,7 +18054,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/attachments/{id}': {
+  '/api/v1/c2c/attachments/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18198,7 +18198,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/attachments/{id}/download': {
+  '/api/v1/c2c/attachments/{id}/download': {
     parameters: {
       query?: never;
       header?: never;
@@ -18274,7 +18274,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories': {
+  '/api/v1/c2c/categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -18327,7 +18327,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories/{category_id}/keywords': {
+  '/api/v1/c2c/categories/{category_id}/keywords': {
     parameters: {
       query?: never;
       header?: never;
@@ -18392,7 +18392,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories/{id}/attribute-ranges': {
+  '/api/v1/c2c/categories/{id}/attribute-ranges': {
     parameters: {
       query?: never;
       header?: never;
@@ -18454,7 +18454,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories/{id}/attributes': {
+  '/api/v1/c2c/categories/{id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -18519,7 +18519,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories/detect': {
+  '/api/v1/c2c/categories/detect': {
     parameters: {
       query?: never;
       header?: never;
@@ -18583,7 +18583,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/categories/detect/{stats_id}/confirm': {
+  '/api/v1/c2c/categories/detect/{stats_id}/confirm': {
     parameters: {
       query?: never;
       header?: never;
@@ -18652,7 +18652,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/category-suggestions': {
+  '/api/v1/c2c/category-suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -18716,7 +18716,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/category-tree': {
+  '/api/v1/c2c/category-tree': {
     parameters: {
       query?: never;
       header?: never;
@@ -18769,7 +18769,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/chat': {
+  '/api/v1/c2c/chat': {
     parameters: {
       query?: never;
       header?: never;
@@ -18828,7 +18828,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/chat/messages': {
+  '/api/v1/c2c/chat/messages': {
     parameters: {
       query?: never;
       header?: never;
@@ -18907,7 +18907,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/chat/messages/{id}/translation': {
+  '/api/v1/c2c/chat/messages/{id}/translation': {
     parameters: {
       query?: never;
       header?: never;
@@ -18979,7 +18979,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/chats/{chat_id}/archive': {
+  '/api/v1/c2c/chats/{chat_id}/archive': {
     parameters: {
       query?: never;
       header?: never;
@@ -19050,7 +19050,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/enhance-images': {
+  '/api/v1/c2c/enhance-images': {
     parameters: {
       query?: never;
       header?: never;
@@ -19148,7 +19148,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/enhance-preview': {
+  '/api/v1/c2c/enhance-preview': {
     parameters: {
       query?: never;
       header?: never;
@@ -19246,7 +19246,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/enhanced-suggestions': {
+  '/api/v1/c2c/enhanced-suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -19303,7 +19303,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/favorites': {
+  '/api/v1/c2c/favorites': {
     parameters: {
       query?: never;
       header?: never;
@@ -19330,7 +19330,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -19362,7 +19362,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/favorites/{id}': {
+  '/api/v1/c2c/favorites/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19497,7 +19497,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/favorites/{id}/check': {
+  '/api/v1/c2c/favorites/{id}/check': {
     parameters: {
       query?: never;
       header?: never;
@@ -19568,7 +19568,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/favorites/count': {
+  '/api/v1/c2c/favorites/count': {
     parameters: {
       query?: never;
       header?: never;
@@ -19627,7 +19627,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/fuzzy-search': {
+  '/api/v1/c2c/fuzzy-search': {
     parameters: {
       query?: never;
       header?: never;
@@ -19688,7 +19688,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/images/{id}': {
+  '/api/v1/c2c/images/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19777,7 +19777,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings': {
+  '/api/v1/c2c/listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -19857,7 +19857,7 @@ export interface paths {
       /** @description Listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.MarketplaceListing'];
+          'application/json': components['schemas']['models.C2CListing'];
         };
       };
       responses: {
@@ -19916,7 +19916,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/{id}': {
+  '/api/v1/c2c/listings/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19946,7 +19946,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'];
+              data?: components['schemas']['models.C2CListing'];
             };
           };
         };
@@ -19996,7 +19996,7 @@ export interface paths {
       /** @description Updated listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.MarketplaceListing'];
+          'application/json': components['schemas']['models.C2CListing'];
         };
       };
       responses: {
@@ -20129,7 +20129,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/{id}/images': {
+  '/api/v1/c2c/listings/{id}/images': {
     parameters: {
       query?: never;
       header?: never;
@@ -20230,7 +20230,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/{id}/price-history': {
+  '/api/v1/c2c/listings/{id}/price-history': {
     parameters: {
       query?: never;
       header?: never;
@@ -20292,7 +20292,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/{id}/similar': {
+  '/api/v1/c2c/listings/{id}/similar': {
     parameters: {
       query?: never;
       header?: never;
@@ -20325,7 +20325,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -20357,7 +20357,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/{id}/status': {
+  '/api/v1/c2c/listings/{id}/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -20453,7 +20453,7 @@ export interface paths {
     };
     trace?: never;
   };
-  '/api/v1/marketplace/listings/check-slug': {
+  '/api/v1/c2c/listings/check-slug': {
     parameters: {
       query?: never;
       header?: never;
@@ -20512,7 +20512,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/listings/slug/{slug}': {
+  '/api/v1/c2c/listings/slug/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -20542,7 +20542,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'];
+              data?: components['schemas']['models.C2CListing'];
             };
           };
         };
@@ -20574,7 +20574,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/map/bounds': {
+  '/api/v1/c2c/map/bounds': {
     parameters: {
       query?: never;
       header?: never;
@@ -20652,7 +20652,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/map/clusters': {
+  '/api/v1/c2c/map/clusters': {
     parameters: {
       query?: never;
       header?: never;
@@ -20730,7 +20730,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/messages': {
+  '/api/v1/c2c/messages': {
     parameters: {
       query?: never;
       header?: never;
@@ -20803,7 +20803,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/messages/{id}/attachments': {
+  '/api/v1/c2c/messages/{id}/attachments': {
     parameters: {
       query?: never;
       header?: never;
@@ -20893,7 +20893,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/messages/read': {
+  '/api/v1/c2c/messages/read': {
     parameters: {
       query?: never;
       header?: never;
@@ -20966,7 +20966,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/messages/unread': {
+  '/api/v1/c2c/messages/unread': {
     parameters: {
       query?: never;
       header?: never;
@@ -21025,7 +21025,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/moderate-image': {
+  '/api/v1/c2c/moderate-image': {
     parameters: {
       query?: never;
       header?: never;
@@ -21112,7 +21112,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/my-listings': {
+  '/api/v1/c2c/my-listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -21146,7 +21146,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -21178,7 +21178,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/neighborhood-stats': {
+  '/api/v1/c2c/neighborhood-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -21235,7 +21235,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}': {
+  '/api/v1/c2c/orders/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -21265,7 +21265,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceOrder'];
+              data?: components['schemas']['models.C2COrder'];
             };
           };
         };
@@ -21279,7 +21279,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}/confirm-delivery': {
+  '/api/v1/c2c/orders/{id}/confirm-delivery': {
     parameters: {
       query?: never;
       header?: never;
@@ -21321,7 +21321,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}/confirm-payment': {
+  '/api/v1/c2c/orders/{id}/confirm-payment': {
     parameters: {
       query?: never;
       header?: never;
@@ -21368,7 +21368,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}/dispute': {
+  '/api/v1/c2c/orders/{id}/dispute': {
     parameters: {
       query?: never;
       header?: never;
@@ -21415,7 +21415,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}/message': {
+  '/api/v1/c2c/orders/{id}/message': {
     parameters: {
       query?: never;
       header?: never;
@@ -21462,7 +21462,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/{id}/ship': {
+  '/api/v1/c2c/orders/{id}/ship': {
     parameters: {
       query?: never;
       header?: never;
@@ -21509,7 +21509,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/create': {
+  '/api/v1/c2c/orders/create': {
     parameters: {
       query?: never;
       header?: never;
@@ -21532,7 +21532,7 @@ export interface paths {
       /** @description Order details */
       requestBody: {
         content: {
-          'application/json': components['schemas']['handler.CreateMarketplaceOrderRequest'];
+          'application/json': components['schemas']['handler.CreateC2COrderRequest'];
         };
       };
       responses: {
@@ -21580,7 +21580,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/my/purchases': {
+  '/api/v1/c2c/orders/my/purchases': {
     parameters: {
       query?: never;
       header?: never;
@@ -21624,7 +21624,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/orders/my/sales': {
+  '/api/v1/c2c/orders/my/sales': {
     parameters: {
       query?: never;
       header?: never;
@@ -21668,7 +21668,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/popular-categories': {
+  '/api/v1/c2c/popular-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -21723,7 +21723,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/recommendations': {
+  '/api/v1/c2c/recommendations': {
     parameters: {
       query?: never;
       header?: never;
@@ -21759,7 +21759,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -21773,7 +21773,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/saved-searches': {
+  '/api/v1/c2c/saved-searches': {
     parameters: {
       query?: never;
       header?: never;
@@ -21889,7 +21889,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/saved-searches/{id}': {
+  '/api/v1/c2c/saved-searches/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -22102,7 +22102,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/saved-searches/{id}/execute': {
+  '/api/v1/c2c/saved-searches/{id}/execute': {
     parameters: {
       query?: never;
       header?: never;
@@ -22180,7 +22180,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/search': {
+  '/api/v1/c2c/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -22260,7 +22260,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/suggestions': {
+  '/api/v1/c2c/suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -22324,7 +22324,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/test-fuzzy-search': {
+  '/api/v1/c2c/test-fuzzy-search': {
     parameters: {
       query?: never;
       header?: never;
@@ -22379,7 +22379,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/translations/{id}': {
+  '/api/v1/c2c/translations/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -22525,7 +22525,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/translations/batch-translate': {
+  '/api/v1/c2c/translations/batch-translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -22580,7 +22580,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/translations/detect-language': {
+  '/api/v1/c2c/translations/detect-language': {
     parameters: {
       query?: never;
       header?: never;
@@ -22644,7 +22644,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/marketplace/translations/translate': {
+  '/api/v1/c2c/translations/translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -23230,7 +23230,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'][];
+              data?: components['schemas']['models.B2COrder'][];
             };
           };
         };
@@ -23280,7 +23280,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'];
+              data?: components['schemas']['models.B2COrder'];
             };
           };
         };
@@ -23358,7 +23358,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'];
+              data?: components['schemas']['models.B2COrder'];
             };
           };
         };
@@ -23453,7 +23453,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'];
+              data?: components['schemas']['models.B2COrder'];
             };
           };
         };
@@ -25972,7 +25972,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/public/storefronts/{slug}/products/{product_id}': {
+  '/api/v1/public/b2c/{slug}/products/{product_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -26003,7 +26003,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontProduct'];
+            'application/json': components['schemas']['models.B2CProduct'];
           };
         };
         /** @description Bad Request */
@@ -26049,7 +26049,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/public/storefronts/{slug}/products/{product_id}/variants': {
+  '/api/v1/public/b2c/{slug}/products/{product_id}/variants': {
     parameters: {
       query?: never;
       header?: never;
@@ -26349,7 +26349,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -26402,7 +26402,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.MarketplaceListing'][];
+              data?: components['schemas']['models.C2CListing'][];
             };
           };
         };
@@ -30375,7 +30375,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts': {
+  '/api/v1/b2c': {
     parameters: {
       query?: never;
       header?: never;
@@ -30457,7 +30457,7 @@ export interface paths {
       /** @description Storefront data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.StorefrontCreateDTO'];
+          'application/json': components['schemas']['models.B2CStoreCreateDTO'];
         };
       };
       responses: {
@@ -30514,7 +30514,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}': {
+  '/api/v1/b2c/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -30583,7 +30583,7 @@ export interface paths {
       /** @description Update data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.StorefrontUpdateDTO'];
+          'application/json': components['schemas']['models.B2CStoreUpdateDTO'];
         };
       };
       responses: {
@@ -30719,7 +30719,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/aggregated-rating': {
+  '/api/v1/b2c/{id}/aggregated-rating': {
     parameters: {
       query?: never;
       header?: never;
@@ -30781,7 +30781,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/analytics': {
+  '/api/v1/b2c/{id}/analytics': {
     parameters: {
       query?: never;
       header?: never;
@@ -30873,7 +30873,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/banner': {
+  '/api/v1/b2c/{id}/banner': {
     parameters: {
       query?: never;
       header?: never;
@@ -30963,7 +30963,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/delivery-options': {
+  '/api/v1/b2c/{id}/delivery-options': {
     parameters: {
       query?: never;
       header?: never;
@@ -31048,7 +31048,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/hours': {
+  '/api/v1/b2c/{id}/hours': {
     parameters: {
       query?: never;
       header?: never;
@@ -31133,7 +31133,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/logo': {
+  '/api/v1/b2c/{id}/logo': {
     parameters: {
       query?: never;
       header?: never;
@@ -31223,7 +31223,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/payment-methods': {
+  '/api/v1/b2c/{id}/payment-methods': {
     parameters: {
       query?: never;
       header?: never;
@@ -31308,7 +31308,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/restore': {
+  '/api/v1/b2c/{id}/restore': {
     parameters: {
       query?: never;
       header?: never;
@@ -31388,7 +31388,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/staff': {
+  '/api/v1/b2c/{id}/staff': {
     parameters: {
       query?: never;
       header?: never;
@@ -31517,7 +31517,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/staff/{staffId}/permissions': {
+  '/api/v1/b2c/{id}/staff/{staffId}/permissions': {
     parameters: {
       query?: never;
       header?: never;
@@ -31613,7 +31613,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/staff/{userId}': {
+  '/api/v1/b2c/{id}/staff/{userId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -31704,7 +31704,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{id}/view': {
+  '/api/v1/b2c/{id}/view': {
     parameters: {
       query?: never;
       header?: never;
@@ -31766,7 +31766,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/dashboard/low-stock': {
+  '/api/v1/b2c/{slug}/dashboard/low-stock': {
     parameters: {
       query?: never;
       header?: never;
@@ -31837,7 +31837,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/dashboard/notifications': {
+  '/api/v1/b2c/{slug}/dashboard/notifications': {
     parameters: {
       query?: never;
       header?: never;
@@ -31911,7 +31911,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/dashboard/recent-orders': {
+  '/api/v1/b2c/{slug}/dashboard/recent-orders': {
     parameters: {
       query?: never;
       header?: never;
@@ -31985,7 +31985,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/dashboard/stats': {
+  '/api/v1/b2c/{slug}/dashboard/stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -32054,7 +32054,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products': {
+  '/api/v1/b2c/{slug}/products': {
     parameters: {
       query?: never;
       header?: never;
@@ -32108,7 +32108,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontProduct'][];
+            'application/json': components['schemas']['models.B2CProduct'][];
           };
         };
         /** @description Bad request */
@@ -32159,7 +32159,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontProduct'];
+            'application/json': components['schemas']['models.B2CProduct'];
           };
         };
         /** @description Bad request */
@@ -32197,7 +32197,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/{id}': {
+  '/api/v1/b2c/{slug}/products/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -32228,7 +32228,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontProduct'];
+            'application/json': components['schemas']['models.B2CProduct'];
           };
         };
         /** @description Product not found */
@@ -32395,7 +32395,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/{id}/inventory': {
+  '/api/v1/b2c/{slug}/products/{id}/inventory': {
     parameters: {
       query?: never;
       header?: never;
@@ -32480,7 +32480,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/bulk/create': {
+  '/api/v1/b2c/{slug}/products/bulk/create': {
     parameters: {
       query?: never;
       header?: never;
@@ -32557,7 +32557,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/bulk/delete': {
+  '/api/v1/b2c/{slug}/products/bulk/delete': {
     parameters: {
       query?: never;
       header?: never;
@@ -32634,7 +32634,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/bulk/status': {
+  '/api/v1/b2c/{slug}/products/bulk/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -32711,7 +32711,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/bulk/update': {
+  '/api/v1/b2c/{slug}/products/bulk/update': {
     parameters: {
       query?: never;
       header?: never;
@@ -32788,7 +32788,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{slug}/products/stats': {
+  '/api/v1/b2c/{slug}/products/stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -32848,7 +32848,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/cart': {
+  '/api/v1/b2c/{storefront_id}/cart': {
     parameters: {
       query?: never;
       header?: never;
@@ -32974,7 +32974,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/cart/items': {
+  '/api/v1/b2c/{storefront_id}/cart/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -33059,7 +33059,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/cart/items/{item_id}': {
+  '/api/v1/b2c/{storefront_id}/cart/items/{item_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -33212,7 +33212,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/analyze-attributes': {
+  '/api/v1/b2c/{storefront_id}/import/analyze-attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -33290,7 +33290,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/analyze-categories': {
+  '/api/v1/b2c/{storefront_id}/import/analyze-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -33368,7 +33368,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/analyze-client-categories': {
+  '/api/v1/b2c/{storefront_id}/import/analyze-client-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -33451,7 +33451,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/detect-variants': {
+  '/api/v1/b2c/{storefront_id}/import/detect-variants': {
     parameters: {
       query?: never;
       header?: never;
@@ -33529,7 +33529,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/file': {
+  '/api/v1/b2c/{storefront_id}/import/file': {
     parameters: {
       query?: never;
       header?: never;
@@ -33634,7 +33634,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/jobs': {
+  '/api/v1/b2c/{storefront_id}/import/jobs': {
     parameters: {
       query?: never;
       header?: never;
@@ -33719,7 +33719,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/preview': {
+  '/api/v1/b2c/{storefront_id}/import/preview': {
     parameters: {
       query?: never;
       header?: never;
@@ -33817,7 +33817,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/url': {
+  '/api/v1/b2c/{storefront_id}/import/url': {
     parameters: {
       query?: never;
       header?: never;
@@ -33900,7 +33900,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/import/validate': {
+  '/api/v1/b2c/{storefront_id}/import/validate': {
     parameters: {
       query?: never;
       header?: never;
@@ -33978,7 +33978,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/orders': {
+  '/api/v1/b2c/{storefront_id}/orders': {
     parameters: {
       query?: never;
       header?: never;
@@ -34015,7 +34015,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'][];
+              data?: components['schemas']['models.B2COrder'][];
             };
           };
         };
@@ -34065,7 +34065,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/{storefront_id}/orders/{order_id}/status': {
+  '/api/v1/b2c/{storefront_id}/orders/{order_id}/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -34103,7 +34103,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.StorefrontOrder'];
+              data?: components['schemas']['models.B2COrder'];
             };
           };
         };
@@ -34161,7 +34161,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/ai/ab-test-titles': {
+  '/api/v1/b2c/ai/ab-test-titles': {
     parameters: {
       query?: never;
       header?: never;
@@ -34223,7 +34223,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/ai/analyze-product-image': {
+  '/api/v1/b2c/ai/analyze-product-image': {
     parameters: {
       query?: never;
       header?: never;
@@ -34287,7 +34287,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/ai/detect-category': {
+  '/api/v1/b2c/ai/detect-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -34351,7 +34351,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/ai/metrics': {
+  '/api/v1/b2c/ai/metrics': {
     parameters: {
       query?: never;
       header?: never;
@@ -34399,7 +34399,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/ai/translate-content': {
+  '/api/v1/b2c/ai/translate-content': {
     parameters: {
       query?: never;
       header?: never;
@@ -34461,7 +34461,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/building': {
+  '/api/v1/b2c/building': {
     parameters: {
       query?: never;
       header?: never;
@@ -34492,7 +34492,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontMapData'][];
+            'application/json': components['schemas']['models.B2CStoreMapData'][];
           };
         };
         /** @description Invalid coordinates */
@@ -34523,7 +34523,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/import/csv-template': {
+  '/api/v1/b2c/import/csv-template': {
     parameters: {
       query?: never;
       header?: never;
@@ -34562,7 +34562,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/import/formats': {
+  '/api/v1/b2c/import/formats': {
     parameters: {
       query?: never;
       header?: never;
@@ -34603,7 +34603,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/map': {
+  '/api/v1/b2c/map': {
     parameters: {
       query?: never;
       header?: never;
@@ -34640,7 +34640,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontMapData'][];
+            'application/json': components['schemas']['models.B2CStoreMapData'][];
           };
         };
         /** @description Invalid bounds */
@@ -34671,7 +34671,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/my': {
+  '/api/v1/b2c/my': {
     parameters: {
       query?: never;
       header?: never;
@@ -34728,7 +34728,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/nearby': {
+  '/api/v1/b2c/nearby': {
     parameters: {
       query?: never;
       header?: never;
@@ -34794,7 +34794,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/products/{id}': {
+  '/api/v1/b2c/products/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -34823,7 +34823,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.StorefrontProduct'];
+            'application/json': components['schemas']['models.B2CProduct'];
           };
         };
         /** @description Product not found */
@@ -34854,7 +34854,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/search': {
+  '/api/v1/b2c/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -34942,7 +34942,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/slug/{slug}': {
+  '/api/v1/b2c/slug/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -35002,7 +35002,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images': {
+  '/api/v1/b2c/slug/{slug}/products/{product_id}/images': {
     parameters: {
       query?: never;
       header?: never;
@@ -35155,7 +35155,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}': {
+  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/{image_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -35237,7 +35237,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}/main': {
+  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/{image_id}/main': {
     parameters: {
       query?: never;
       header?: never;
@@ -35319,7 +35319,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/storefronts/slug/{slug}/products/{product_id}/images/order': {
+  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/order': {
     parameters: {
       query?: never;
       header?: never;
@@ -37601,7 +37601,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/marketplace/categories/{category_id}/attributes': {
+  '/api/v2/c2c/categories/{category_id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -37663,7 +37663,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/marketplace/categories/{category_id}/attributes/detailed': {
+  '/api/v2/c2c/categories/{category_id}/attributes/detailed': {
     parameters: {
       query?: never;
       header?: never;
@@ -37725,7 +37725,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/marketplace/listings/{listing_id}/attributes': {
+  '/api/v2/c2c/listings/{listing_id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -38296,7 +38296,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/auto-improve': {
+  '/c2c/ai/auto-improve': {
     parameters: {
       query?: never;
       header?: never;
@@ -38344,7 +38344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/confirm/{feedbackId}': {
+  '/c2c/ai/confirm/{feedbackId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -38409,7 +38409,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/detect-category': {
+  '/c2c/ai/detect-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -38468,7 +38468,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/detect-category-standard': {
+  '/c2c/ai/detect-category-standard': {
     parameters: {
       query?: never;
       header?: never;
@@ -38527,7 +38527,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/generate-keywords': {
+  '/c2c/ai/generate-keywords': {
     parameters: {
       query?: never;
       header?: never;
@@ -38591,7 +38591,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/generate-keywords-all': {
+  '/c2c/ai/generate-keywords-all': {
     parameters: {
       query?: never;
       header?: never;
@@ -38644,7 +38644,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/keyword-stats': {
+  '/c2c/ai/keyword-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -38699,7 +38699,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/learn': {
+  '/c2c/ai/learn': {
     parameters: {
       query?: never;
       header?: never;
@@ -38747,7 +38747,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/learn-from-feedback': {
+  '/c2c/ai/learn-from-feedback': {
     parameters: {
       query?: never;
       header?: never;
@@ -38797,7 +38797,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/learning-stats': {
+  '/c2c/ai/learning-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -38847,7 +38847,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/metrics': {
+  '/c2c/ai/metrics': {
     parameters: {
       query?: never;
       header?: never;
@@ -38902,7 +38902,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/scheduled-learning': {
+  '/c2c/ai/scheduled-learning': {
     parameters: {
       query?: never;
       header?: never;
@@ -38950,7 +38950,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/select-category': {
+  '/c2c/ai/select-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -39014,7 +39014,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/marketplace/ai/validate-category': {
+  '/c2c/ai/validate-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -40155,7 +40155,7 @@ export interface components {
       /** @example 37.6173 */
       lng?: number;
     };
-    'handler.CreateMarketplaceOrderRequest': {
+    'handler.CreateC2COrderRequest': {
       listing_id: number;
       message?: string;
       /** @enum {string} */
@@ -40374,7 +40374,7 @@ export interface components {
       return_url?: string;
     };
     'handler.ListingsResponse': {
-      data?: components['schemas']['models.MarketplaceListing'][];
+      data?: components['schemas']['models.C2CListing'][];
       meta?: components['schemas']['handler.PaginationMeta'];
       /** @example true */
       success?: boolean;
@@ -40606,7 +40606,7 @@ export interface components {
       total_pages?: number;
     };
     'handler.SearchResponse': {
-      data?: components['schemas']['models.MarketplaceListing'][];
+      data?: components['schemas']['models.C2CListing'][];
       meta?: components['schemas']['handler.SearchMetadata'];
     };
     'handler.SetProviderRequest': {
@@ -42359,7 +42359,7 @@ export interface components {
       is_archived?: boolean;
       last_message?: components['schemas']['models.MarketplaceMessage'];
       last_message_at?: string;
-      listing?: components['schemas']['models.MarketplaceListing'];
+      listing?: components['schemas']['models.C2CListing'];
       listing_id?: number;
       other_user?: components['schemas']['models.User'];
       seller?: components['schemas']['models.User'];
@@ -42396,7 +42396,7 @@ export interface components {
       /** @description URL миниатюры для API */
       thumbnail_url?: string;
     };
-    'models.MarketplaceListing': {
+    'models.C2CListing': {
       address_multilingual?: {
         [key: string]: string;
       };
@@ -42450,10 +42450,10 @@ export interface components {
       user?: components['schemas']['models.User'];
       user_id?: number;
       /** @description Варианты товара */
-      variants?: components['schemas']['models.MarketplaceListingVariant'][];
+      variants?: components['schemas']['models.C2CListingVariant'][];
       views_count?: number;
     };
-    'models.MarketplaceListingVariant': {
+    'models.C2CListingVariant': {
       /** @description JSON поле для хранения атрибутов варианта */
       attributes?: {
         [key: string]: string;
@@ -42478,7 +42478,7 @@ export interface components {
       has_attachments?: boolean;
       id?: number;
       is_read?: boolean;
-      listing?: components['schemas']['models.MarketplaceListing'];
+      listing?: components['schemas']['models.C2CListing'];
       listing_id?: number;
       /** @description Мультиязычность */
       original_language?: string;
@@ -42488,7 +42488,7 @@ export interface components {
       sender?: components['schemas']['models.User'];
       sender_id?: number;
       /** @description Новое поле для товара витрины */
-      storefront_product?: components['schemas']['models.StorefrontProduct'];
+      storefront_product?: components['schemas']['models.B2CProduct'];
       /** @description Новое поле для товаров витрин */
       storefront_product_id?: number;
       translation_metadata?: components['schemas']['models.ChatTranslationMetadata'];
@@ -42498,7 +42498,7 @@ export interface components {
       };
       updated_at?: string;
     };
-    'models.MarketplaceOrder': {
+    'models.C2COrder': {
       /** @description Связанные данные (заполняются при необходимости) */
       buyer?: components['schemas']['models.User'];
       buyer_id?: number;
@@ -42506,7 +42506,7 @@ export interface components {
       delivered_at?: string;
       id?: number;
       item_price?: number;
-      listing?: components['schemas']['models.MarketplaceListing'];
+      listing?: components['schemas']['models.C2CListing'];
       listing_id?: number;
       messages?: components['schemas']['models.OrderMessage'][];
       payment_transaction?: components['schemas']['models.PaymentTransaction'];
@@ -42520,13 +42520,13 @@ export interface components {
       seller_payout_amount?: number;
       shipped_at?: string;
       shipping_method?: string;
-      status?: components['schemas']['models.MarketplaceOrderStatus'];
+      status?: components['schemas']['models.C2COrderStatus'];
       status_history?: components['schemas']['models.OrderStatusHistory'][];
       tracking_number?: string;
       updated_at?: string;
     };
     /** @enum {string} */
-    'models.MarketplaceOrderStatus':
+    'models.C2COrderStatus':
       | 'pending'
       | 'paid'
       | 'shipped'
@@ -42696,7 +42696,7 @@ export interface components {
       gateway_status?: string;
       gateway_transaction_id?: string;
       id?: number;
-      listing?: components['schemas']['models.MarketplaceListing'];
+      listing?: components['schemas']['models.C2CListing'];
       /** @description Legacy поле для обратной совместимости */
       listing_id?: number;
       marketplace_commission?: number;
@@ -43098,12 +43098,12 @@ export interface components {
       created_at?: string;
       id?: number;
       price_per_unit?: number;
-      product?: components['schemas']['models.StorefrontProduct'];
+      product?: components['schemas']['models.B2CProduct'];
       product_id?: number;
       quantity?: number;
       total_price?: number;
       updated_at?: string;
-      variant?: components['schemas']['models.StorefrontProductVariant'];
+      variant?: components['schemas']['models.B2CProductVariant'];
       variant_id?: number;
     };
     /** @enum {string} */
@@ -43195,7 +43195,7 @@ export interface components {
       traffic_sources?: components['schemas']['backend_internal_domain_models.JSONB'];
       unique_visitors?: number;
     };
-    'models.StorefrontCreateDTO': {
+    'models.B2CStoreCreateDTO': {
       description?: string;
       email?: string;
       /** @description Локация */
@@ -43262,7 +43262,7 @@ export interface components {
       special_note?: string;
       storefront_id?: number;
     };
-    'models.StorefrontMapData': {
+    'models.B2CStoreMapData': {
       accepts_cards?: boolean;
       /** @description Краткая информация для попапа */
       address?: string;
@@ -43281,7 +43281,7 @@ export interface components {
       supports_cod?: boolean;
       working_now?: boolean;
     };
-    'models.StorefrontOrder': {
+    'models.B2COrder': {
       billing_address?: components['schemas']['backend_internal_domain_models.JSONB'];
       canceled_at?: string;
       commission_amount?: number;
@@ -43299,7 +43299,7 @@ export interface components {
       escrow_release_date?: string;
       id?: number;
       /** @description Связанные данные */
-      items?: components['schemas']['models.StorefrontOrderItem'][];
+      items?: components['schemas']['models.B2COrderItem'][];
       metadata?: {
         [key: string]: unknown;
       };
@@ -43342,13 +43342,13 @@ export interface components {
       /** @description Для совместимости с API */
       user_id?: number;
     };
-    'models.StorefrontOrderItem': {
+    'models.B2COrderItem': {
       created_at?: string;
       id?: number;
       order_id?: number;
       price_per_unit?: number;
       /** @description Связанные данные */
-      product?: components['schemas']['models.StorefrontProduct'];
+      product?: components['schemas']['models.B2CProduct'];
       /** @description Snapshot атрибутов */
       product_attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       product_id?: number;
@@ -43357,7 +43357,7 @@ export interface components {
       product_sku?: string;
       quantity?: number;
       total_price?: number;
-      variant?: components['schemas']['models.StorefrontProductVariant'];
+      variant?: components['schemas']['models.B2CProductVariant'];
       variant_id?: number;
       variant_name?: string;
     };
@@ -43377,7 +43377,7 @@ export interface components {
       /** @description Комиссии и лимиты */
       transaction_fee?: number;
     };
-    'models.StorefrontProduct': {
+    'models.B2CProduct': {
       /** @description AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"} */
       address_translations?: {
         [key: string]: string;
@@ -43395,7 +43395,7 @@ export interface components {
       has_variants?: boolean;
       id?: number;
       /** @description Relations */
-      images?: components['schemas']['models.StorefrontProductImage'][];
+      images?: components['schemas']['models.B2CProductImage'][];
       individual_address?: string;
       individual_latitude?: number;
       individual_longitude?: number;
@@ -43417,10 +43417,10 @@ export interface components {
         };
       };
       updated_at?: string;
-      variants?: components['schemas']['models.StorefrontProductVariant'][];
+      variants?: components['schemas']['models.B2CProductVariant'][];
       view_count?: number;
     };
-    'models.StorefrontProductImage': {
+    'models.B2CProductImage': {
       content_type?: string;
       created_at?: string;
       display_order?: number;
@@ -43436,7 +43436,7 @@ export interface components {
       storefront_product_id?: number;
       thumbnail_url?: string;
     };
-    'models.StorefrontProductVariant': {
+    'models.B2CProductVariant': {
       barcode?: string;
       compare_at_price?: number;
       cost_price?: number;
@@ -43481,7 +43481,7 @@ export interface components {
       updated_at?: string;
       user_id?: number;
     };
-    'models.StorefrontUpdateDTO': {
+    'models.B2CStoreUpdateDTO': {
       /** @description Функции */
       ai_agent_enabled?: boolean;
       banner_url?: string;

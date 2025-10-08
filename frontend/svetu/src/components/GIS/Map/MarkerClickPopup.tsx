@@ -18,7 +18,7 @@ import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import { useAuth } from '@/contexts/AuthContext';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.B2CProductVariant'];
 
 interface MarkerClickPopupProps {
   marker: MapMarkerData;
@@ -71,9 +71,9 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
     ) {
       const storefrontId =
         marker.storefront_id || parsedMetadata?.storefront_id || marker.id;
-      router.push(`/storefronts/${storefrontId}`);
+      router.push(`/b2c/${storefrontId}`);
     } else if (parsedData?.id || marker.id) {
-      router.push(`/marketplace/${parsedData?.id || marker.id}`);
+      router.push(`/c2c/${parsedData?.id || marker.id}`);
     }
   };
 
@@ -114,7 +114,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
   };
 
   // Проверяем, является ли это товаром витрины
-  const isStorefrontProduct =
+  const isB2CProduct =
     parsedData?.product_type === 'storefront' && parsedData?.storefront_id;
   const isOwner = user && user.id === parsedData?.user_id;
 
@@ -438,7 +438,7 @@ const MarkerClickPopup: React.FC<MarkerClickPopupProps> = ({
                     ? '🏪 Открыть витрину'
                     : t('viewDetails')}
                 </button>
-                {isStorefrontProduct && isAuthenticated && !isOwner ? (
+                {isB2CProduct && isAuthenticated && !isOwner ? (
                   <button
                     onClick={handleAddToCart}
                     className="flex-1 btn btn-success btn-sm"

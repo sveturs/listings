@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import VariantSelector from '@/components/Storefront/ProductVariants/VariantSelector';
+import VariantSelector from '@/components/B2C/ProductVariants/VariantSelector';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
+type ProductVariant = components['schemas']['models.B2CProductVariant'];
 
 interface VariantSelectionModalProps {
   isOpen: boolean;
@@ -67,7 +67,7 @@ export default function VariantSelectionModal({
         );
         try {
           const storefrontResponse = await fetch(
-            `/api/v1/storefronts/${storefrontId}`
+            `/api/v1/b2c/${storefrontId}`
           );
           if (storefrontResponse.ok) {
             const storefrontData = await storefrontResponse.json();
@@ -92,7 +92,7 @@ export default function VariantSelectionModal({
       }
 
       // Используем публичный эндпоинт с реальным slug
-      const url = `/api/v1/public/storefronts/${actualSlug}/products/${productId}`;
+      const url = `/api/v1/public/b2c/${actualSlug}/products/${productId}`;
 
       const response = await fetch(url);
       console.log(

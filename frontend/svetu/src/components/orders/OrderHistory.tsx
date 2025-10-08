@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { ordersService } from '@/services/orders';
 import { useAuthContext } from '@/contexts/AuthContext';
-import MarketplaceOrderCard from './MarketplaceOrderCard';
+import C2COrderCard from './C2COrderCard';
 import type { components } from '@/types/generated/api';
 
-type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
+type B2COrder = components['schemas']['models.B2COrder'];
 
 interface OrderHistoryProps {
   status?: string;
@@ -21,7 +21,7 @@ export default function OrderHistory({
   const t = useTranslations('orders');
   const { isAuthenticated } = useAuthContext();
 
-  const [orders, setOrders] = useState<StorefrontOrder[]>([]);
+  const [orders, setOrders] = useState<B2COrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -158,7 +158,7 @@ export default function OrderHistory({
       <div className="space-y-4">
         {Array.isArray(orders) && orders.length > 0
           ? orders.map((order: any) => (
-              <MarketplaceOrderCard key={order.id} order={order} />
+              <C2COrderCard key={order.id} order={order} />
             ))
           : !loading && (
               <div className="text-center py-8 text-gray-500">

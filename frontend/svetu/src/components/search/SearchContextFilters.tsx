@@ -4,7 +4,7 @@ import React, { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { SearchContextConfig } from '@/types/searchContext';
 import { BaseFilters } from './BaseFilters';
-import { CarFilters } from '@/components/marketplace/CarFilters';
+import { CarFilters } from '@/components/c2c/CarFilters';
 import { RealEstateFilters } from './RealEstateFilters';
 import { ElectronicsFilters } from './ElectronicsFilters';
 

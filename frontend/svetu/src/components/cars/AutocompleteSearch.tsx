@@ -108,7 +108,7 @@ export default function AutocompleteSearch({
 
       try {
         // Fetch car makes/models matching query
-        const makesResponse = await fetch('/api/v1/marketplace/cars/makes');
+        const makesResponse = await fetch('/api/v1/c2c/cars/makes');
         const makesData = await makesResponse.json();
 
         const matchingMakes: SearchSuggestion[] =

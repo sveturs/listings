@@ -41,17 +41,17 @@ export const API_ENDPOINTS = {
 
   // Marketplace endpoints
   marketplace: {
-    listings: '/api/v1/marketplace/listings',
-    listing: (id: number) => `/api/v1/marketplace/listings/${id}`,
-    create: '/api/v1/marketplace/listings/create',
-    update: (id: number) => `/api/v1/marketplace/listings/${id}`,
-    delete: (id: number) => `/api/v1/marketplace/listings/${id}`,
-    search: '/api/v1/marketplace/search',
-    categories: '/api/v1/marketplace/categories',
+    listings: '/api/v1/c2c/listings',
+    listing: (id: number) => `/api/v1/c2c/listings/${id}`,
+    create: '/api/v1/c2c/listings/create',
+    update: (id: number) => `/api/v1/c2c/listings/${id}`,
+    delete: (id: number) => `/api/v1/c2c/listings/${id}`,
+    search: '/api/v1/c2c/search',
+    categories: '/api/v1/c2c/categories',
     favorites: {
-      list: '/api/v1/marketplace/favorites',
-      add: (id: number) => `/api/v1/marketplace/listings/${id}/favorite`,
-      remove: (id: number) => `/api/v1/marketplace/listings/${id}/unfavorite`,
+      list: '/api/v1/c2c/favorites',
+      add: (id: number) => `/api/v1/c2c/listings/${id}/favorite`,
+      remove: (id: number) => `/api/v1/c2c/listings/${id}/unfavorite`,
     },
   },
 

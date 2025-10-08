@@ -222,7 +222,7 @@ export default function TransactionHistoryPage() {
                       💳 Пополнить баланс
                     </Link>
                     <Link
-                      href={`/${locale}/marketplace`}
+                      href={`/${locale}/c2c`}
                       className="btn btn-outline"
                     >
                       🛍️ Перейти в маркетплейс

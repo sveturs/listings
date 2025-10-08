@@ -135,7 +135,7 @@ export default function SuccessClient() {
                   🛍️ Покупки в маркетплейсе
                 </Link>
                 <Link
-                  href={`/${locale}/profile/storefronts`}
+                  href={`/${locale}/profile/b2c`}
                   className="btn btn-outline"
                 >
                   🏪 Витрины товаров

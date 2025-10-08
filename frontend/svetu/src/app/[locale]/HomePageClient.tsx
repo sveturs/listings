@@ -114,12 +114,12 @@ export default function HomePageClient({
 
     if (deal.isStorefront && deal.product_id) {
       // Для товаров витрин - используем product_id без префикса
-      const url = `/${locale}/marketplace/${deal.product_id}`;
+      const url = `/${locale}/c2c/${deal.product_id}`;
       logger.debug('Storefront URL:', url);
       return url;
     } else if (deal.listing_id) {
       // Для обычных объявлений - используем listing_id
-      const url = `/${locale}/marketplace/${deal.listing_id}`;
+      const url = `/${locale}/c2c/${deal.listing_id}`;
       logger.debug('Listing URL:', url);
       return url;
     } else {
@@ -128,7 +128,7 @@ export default function HomePageClient({
         typeof deal.id === 'string'
           ? deal.id.replace(/^(ml_|sp_)/, '')
           : deal.id;
-      const url = `/${locale}/marketplace/${cleanId}`;
+      const url = `/${locale}/c2c/${cleanId}`;
       logger.debug('Fallback URL:', url);
       return url;
     }
@@ -167,7 +167,7 @@ export default function HomePageClient({
         );
         try {
           const response = await apiClient.get(
-            `/storefronts/products/${productId}`
+            `/b2c/products/${productId}`
           );
           if (response.data && response.data.storefront_id) {
             storefrontId = response.data.storefront_id;
@@ -438,7 +438,7 @@ export default function HomePageClient({
         // Загружаем активные витрины
         // Сначала загружаем больше витрин, чтобы выбрать те, у которых есть изображения
         const response = await apiClient.get(
-          '/storefronts?is_active=true&limit=10&sort_by=products_count&sort_order=desc'
+          '/b2c?is_active=true&limit=10&sort_by=products_count&sort_order=desc'
         );
 
         if (response.data && response.data.storefronts) {
@@ -1479,7 +1479,7 @@ export default function HomePageClient({
             {officialStores.map((store) => (
               <Link
                 key={store.id}
-                href={`/${locale}/storefronts/${store.slug || store.id}`}
+                href={`/${locale}/b2c/${store.slug || store.id}`}
                 className="card bg-base-100 hover:shadow-xl transition-all overflow-hidden"
               >
                 {/* Фоновое изображение магазина */}
