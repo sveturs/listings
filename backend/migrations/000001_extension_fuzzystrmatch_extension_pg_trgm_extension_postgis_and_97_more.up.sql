@@ -279,6 +279,13 @@ CREATE SEQUENCE public.category_keywords_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.category_proposals_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.category_variant_attributes_id_seq
     AS integer
     START WITH 1
@@ -431,7 +438,21 @@ CREATE SEQUENCE public.gis_poi_cache_id_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+CREATE SEQUENCE public.import_errors_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 CREATE SEQUENCE public.import_history_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+CREATE SEQUENCE public.import_jobs_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -725,25 +746,6 @@ CREATE SEQUENCE public.search_optimization_sessions_id_seq
     NO MAXVALUE
     CACHE 1;
 CREATE SEQUENCE public.search_queries_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.search_statistics_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.search_synonyms_config_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-CREATE SEQUENCE public.search_synonyms_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
