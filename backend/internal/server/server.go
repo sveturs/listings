@@ -46,8 +46,8 @@ import (
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
-	marketplaceHandler "backend/internal/proj/marketplace/handler"
-	marketplaceService "backend/internal/proj/marketplace/service"
+	marketplaceHandler "backend/internal/proj/c2c/handler"
+	marketplaceService "backend/internal/proj/c2c/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
@@ -58,7 +58,7 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
-	"backend/internal/proj/storefronts"
+	b2cModule "backend/internal/proj/b2c"
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/tracking"
 	"backend/internal/proj/translation_admin"
@@ -90,7 +90,7 @@ type Server struct {
 	adminLogistics     *adminLogistics.Module
 	delivery           *delivery.Module
 	orders             *orders.Module
-	storefront         *storefronts.Module
+	storefront         *b2cModule.Module
 	geocode            *geocodeHandler.Handler
 	contacts           *contactsHandler.Handler
 	docs               *docsHandler.Handler
@@ -185,7 +185,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
 	balanceHandler := balanceHandler.NewHandler(services)
-	storefrontModule := storefronts.NewModule(ctx, services)
+	storefrontModule := b2cModule.NewModule(ctx, services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{
 		URL:      cfg.OpenSearch.URL,
 		Username: cfg.OpenSearch.Username,

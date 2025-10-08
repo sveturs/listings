@@ -13,7 +13,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/logger"
-	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/proj/b2c/storage/opensearch"
 	osClientPkg "backend/internal/storage/opensearch"
 	postgresStorage "backend/internal/storage/postgres"
 	"backend/internal/version"

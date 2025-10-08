@@ -13,7 +13,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	marketplaceService "backend/internal/proj/marketplace/service"
+	marketplaceService "backend/internal/proj/c2c/service"
 	"backend/internal/storage"
 	"backend/internal/storage/filestorage"
 	"backend/internal/types"
@@ -25,12 +25,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	authservice "github.com/sveturs/auth/pkg/http/service"
 
-	marketplaceStorage "backend/internal/proj/marketplace/storage/postgres"
+	marketplaceStorage "backend/internal/proj/c2c/storage/postgres"
 	notificationStorage "backend/internal/proj/notifications/storage/postgres"
 	reviewStorage "backend/internal/proj/reviews/storage/postgres"
 
-	"backend/internal/proj/marketplace/storage/opensearch"
-	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/proj/c2c/storage/opensearch"
+	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
 	osClient "backend/internal/storage/opensearch"
 )
 

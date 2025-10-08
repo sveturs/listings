@@ -17,11 +17,11 @@ import (
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
-	marketplaceService "backend/internal/proj/marketplace/service"
+	marketplaceService "backend/internal/proj/c2c/service"
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	storefrontService "backend/internal/proj/storefronts/service"
+	storefrontService "backend/internal/proj/b2c/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/services"
 	"backend/internal/storage"

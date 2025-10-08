@@ -7,7 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/storage/filestorage"
 )
 

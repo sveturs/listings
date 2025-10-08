@@ -9,7 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"backend/internal/domain/models"
-	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/storage/postgres"
 	"backend/pkg/logger"
 )

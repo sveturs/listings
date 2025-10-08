@@ -18,7 +18,7 @@ import (
 	"backend/internal/domain/search"
 	"backend/internal/logger"
 	globalService "backend/internal/proj/global/service"
-	storefrontOpenSearch "backend/internal/proj/storefronts/storage/opensearch"
+	storefrontOpenSearch "backend/internal/proj/b2c/storage/opensearch"
 	"backend/pkg/utils"
 )
 
