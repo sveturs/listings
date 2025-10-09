@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Инициализируем базу данных
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, indexName, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, indexName, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}
@@ -67,9 +67,9 @@ func main() {
 		log.Fatalf("Error reindexing listings: %v", err)
 	}
 
-	log.Println("Запуск реиндексации storefronts...")
+	log.Println("Запуск реиндексации b2c_stores...")
 	if err := db.ReindexAllStorefronts(ctx); err != nil {
-		log.Fatalf("Error reindexing storefronts: %v", err)
+		log.Fatalf("Error reindexing b2c_stores: %v", err)
 	}
 
 	log.Println("Запуск реиндексации товаров витрин...")

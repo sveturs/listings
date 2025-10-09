@@ -24,7 +24,7 @@ func (r *storefrontRepo) HardDeleteDebug(ctx context.Context, id int) error {
 
 	// Простое удаление только самой витрины
 	logger.Info().Int("storefrontID", id).Msg("Deleting storefront")
-	result, err := tx.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	result, err := tx.Exec(ctx, "DELETE FROM b2c_stores WHERE id = $1", id)
 	if err != nil {
 		logger.Error().Err(err).Msg("Failed to delete storefront")
 		return fmt.Errorf("failed to delete storefront: %w", err)

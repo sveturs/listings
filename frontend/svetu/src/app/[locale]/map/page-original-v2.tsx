@@ -18,8 +18,8 @@ import { apiClient } from '@/services/api-client';
 import { MobileFiltersDrawer } from '@/components/GIS/Mobile';
 import { isPointInIsochrone } from '@/components/GIS/utils/mapboxIsochrone';
 import type { Feature, Polygon } from 'geojson';
-import { SmartFilters } from '@/components/marketplace/SmartFilters';
-import { QuickFilters } from '@/components/marketplace/QuickFilters';
+import { SmartFilters } from '@/components/c2c/SmartFilters';
+import { QuickFilters } from '@/components/c2c/QuickFilters';
 import { CategoryTreeSelector } from '@/components/common/CategoryTreeSelector';
 
 // Функция для проверки, находится ли точка внутри полигона (Ray Casting Algorithm)

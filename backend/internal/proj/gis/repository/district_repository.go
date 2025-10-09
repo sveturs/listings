@@ -352,9 +352,9 @@ func (r *DistrictRepository) SearchListingsByDistrict(ctx context.Context, param
 				 LIMIT 1),
 				''
 			) as first_image_url
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN listings_geo mlg ON ml.id = mlg.listing_id
-		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+		LEFT JOIN c2c_categories mc ON ml.category_id = mc.id
 		LEFT JOIN users u ON ml.user_id = u.id
 		JOIN districts d ON d.id = $1
 		WHERE ST_Contains(d.boundary, mlg.location::geometry)
@@ -474,9 +474,9 @@ func (r *DistrictRepository) SearchListingsByMunicipality(ctx context.Context, p
 				 LIMIT 1),
 				''
 			) as first_image_url
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN listings_geo mlg ON ml.id = mlg.listing_id
-		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+		LEFT JOIN c2c_categories mc ON ml.category_id = mc.id
 		LEFT JOIN users u ON ml.user_id = u.id
 		WHERE mlg.municipality_id = $1
 			AND ml.status = 'active'

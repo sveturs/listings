@@ -1,0 +1,178 @@
+{
+  "directories": {
+    "components": [
+      {
+        "old": "src/components/marketplace",
+        "new": "src/components/c2c"
+      },
+      {
+        "old": "src/components/storefronts",
+        "new": "src/components/b2c"
+      },
+      {
+        "old": "src/components/Storefront",
+        "new": "src/components/B2C"
+      }
+    ],
+    "app_routes": [
+      {
+        "old": "src/app/[locale]/marketplace",
+        "new": "src/app/[locale]/c2c"
+      },
+      {
+        "old": "src/app/[locale]/storefronts",
+        "new": "src/app/[locale]/b2c"
+      },
+      {
+        "old": "src/app/[locale]/create-storefront",
+        "new": "src/app/[locale]/create-b2c-store"
+      },
+      {
+        "old": "src/app/[locale]/debug-marketplace",
+        "new": "src/app/[locale]/debug-c2c"
+      },
+      {
+        "old": "src/app/[locale]/admin/storefronts",
+        "new": "src/app/[locale]/admin/b2c-stores"
+      },
+      {
+        "old": "src/app/[locale]/admin/storefront-products",
+        "new": "src/app/[locale]/admin/b2c-products"
+      },
+      {
+        "old": "src/app/[locale]/profile/storefronts",
+        "new": "src/app/[locale]/profile/b2c-stores"
+      },
+      {
+        "old": "src/app/[locale]/examples/ideal-marketplace",
+        "new": "src/app/[locale]/examples/ideal-c2c"
+      },
+      {
+        "old": "src/app/[locale]/examples/storefront-dashboard",
+        "new": "src/app/[locale]/examples/b2c-dashboard"
+      },
+      {
+        "old": "src/app/[locale]/examples/storefront-import",
+        "new": "src/app/[locale]/examples/b2c-import"
+      }
+    ]
+  },
+  "files": {
+    "services": [
+      {
+        "old": "src/services/marketplace.ts",
+        "new": "src/services/c2c.ts"
+      },
+      {
+        "old": "src/services/marketplaceApi.ts",
+        "new": "src/services/c2cApi.ts"
+      },
+      {
+        "old": "src/services/marketplaceOrders.ts",
+        "new": "src/services/c2cOrders.ts"
+      },
+      {
+        "old": "src/services/storefrontApi.ts",
+        "new": "src/services/b2cStoreApi.ts"
+      },
+      {
+        "old": "src/services/storefrontProducts.ts",
+        "new": "src/services/b2cProducts.ts"
+      },
+      {
+        "old": "src/services/ai/storefronts.service.ts",
+        "new": "src/services/ai/b2c.service.ts"
+      }
+    ],
+    "types": [
+      {
+        "old": "src/types/marketplace.ts",
+        "new": "src/types/c2c.ts"
+      },
+      {
+        "old": "src/types/storefront.ts",
+        "new": "src/types/b2c.ts"
+      }
+    ],
+    "store": [
+      {
+        "old": "src/store/slices/storefrontSlice.ts",
+        "new": "src/store/slices/b2cStoreSlice.ts"
+      }
+    ],
+    "hooks": [
+      {
+        "old": "src/hooks/useStorefronts.ts",
+        "new": "src/hooks/useB2CStores.ts"
+      }
+    ],
+    "contexts": [
+      {
+        "old": "src/contexts/CreateStorefrontContext.tsx",
+        "new": "src/contexts/CreateB2CStoreContext.tsx"
+      }
+    ],
+    "components": [
+      {
+        "old": "src/components/MarketplaceCard.tsx",
+        "new": "src/components/C2CCard.tsx"
+      }
+    ],
+    "i18n": [
+      {
+        "old": "src/messages/*/marketplace.json",
+        "new": "src/messages/*/c2c.json"
+      },
+      {
+        "old": "src/messages/*/marketplace.home.json",
+        "new": "src/messages/*/c2c.home.json"
+      },
+      {
+        "old": "src/messages/*/storefronts.json",
+        "new": "src/messages/*/b2c.json"
+      },
+      {
+        "old": "src/messages/*/create_storefront.json",
+        "new": "src/messages/*/create_b2c_store.json"
+      }
+    ]
+  },
+  "api_endpoints": {
+    "old_patterns": [
+      "/api/v1/marketplace",
+      "/api/v1/admin/marketplace",
+      "/api/v1/storefronts",
+      "/api/v1/admin/storefronts",
+      "/api/v1/storefront-products",
+      "/api/v1/admin/storefront-products"
+    ],
+    "new_patterns": [
+      "/api/v1/c2c",
+      "/api/v1/admin/c2c",
+      "/api/v1/b2c/stores",
+      "/api/v1/admin/b2c/stores",
+      "/api/v1/b2c/products",
+      "/api/v1/admin/b2c/products"
+    ]
+  },
+  "type_names": {
+    "marketplace": "C2C",
+    "Marketplace": "C2C",
+    "MarketplaceListing": "C2CListing",
+    "MarketplaceItem": "C2CItem",
+    "MarketplaceOrder": "C2COrder",
+    "MarketplaceFilters": "C2CFilters",
+    "storefront": "b2cStore",
+    "Storefront": "B2CStore",
+    "StorefrontProduct": "B2CProduct",
+    "StorefrontOrder": "B2COrder"
+  },
+  "url_routes": {
+    "/marketplace": "/c2c",
+    "/storefronts": "/b2c",
+    "/create-storefront": "/create-b2c-store",
+    "/profile/storefronts": "/profile/b2c-stores",
+    "/admin/storefronts": "/admin/b2c-stores",
+    "/admin/storefront-products": "/admin/b2c-products"
+  }
+}

@@ -83,12 +83,12 @@ func (r *storefrontRepo) HardDeleteFixed(ctx context.Context, id int) error {
 	}
 
 	// 6. Удаляем витрину из избранного (игнорируем ошибку если таблицы нет)
-	logger.Debug().Msg("Trying to delete from user_favorite_storefronts")
-	_, _ = tx.Exec(ctx, "DELETE FROM user_favorite_storefronts WHERE storefront_id = $1", id)
+	logger.Debug().Msg("Trying to delete from user_favorite_b2c_stores")
+	_, _ = tx.Exec(ctx, "DELETE FROM user_favorite_b2c_stores WHERE storefront_id = $1", id)
 
 	// 7. Удаляем саму витрину
 	logger.Debug().Msg("Deleting storefront itself")
-	result, err := tx.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	result, err := tx.Exec(ctx, "DELETE FROM b2c_stores WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront: %w", err)
 	}

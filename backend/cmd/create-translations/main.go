@@ -57,7 +57,7 @@ func createCategoryTranslations(ctx context.Context, db *sql.DB) error {
 	// Get all categories
 	rows, err := db.QueryContext(ctx, `
 		SELECT id, name, description, seo_title, seo_description
-		FROM marketplace_categories
+		FROM c2c_categories
 		ORDER BY id
 	`)
 	if err != nil {

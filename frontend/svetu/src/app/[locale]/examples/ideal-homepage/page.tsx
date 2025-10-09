@@ -160,7 +160,7 @@ const IdealHomepage = () => {
               <a href="#how-it-works">Как это работает</a>
             </li>
             <li>
-              <a href="#storefronts">Магазины</a>
+              <Link href="/b2c">Магазины</Link>
             </li>
             <li>
               <a href="#about">О нас</a>

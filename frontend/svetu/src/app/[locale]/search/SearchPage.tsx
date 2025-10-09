@@ -8,7 +8,7 @@ import { SearchContextHeader } from '@/components/search/SearchContextHeader';
 import { SearchContextFilters } from '@/components/search/SearchContextFilters';
 import { SearchBar } from '@/components/SearchBar';
 import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
-import { adaptMarketplaceItem } from '@/utils/product-adapters';
+import { adaptC2CItem } from '@/utils/product-adapters';
 import ViewToggle from '@/components/common/ViewToggle';
 import { SearchResultCard } from '@/components/search';
 import { CategorySelector } from '@/components/search/CategorySelector';
@@ -29,7 +29,7 @@ import {
   UnifiedSearchResult,
   UnifiedSearchParams,
 } from '@/services/unifiedSearch';
-import { MarketplaceItem } from '@/types/marketplace';
+import { C2CItem } from '@/types/c2c';
 import { PageTransition } from '@/components/ui/PageTransition';
 
 interface SearchFilters {
@@ -605,7 +605,7 @@ export default function SearchPage() {
     setFiltersLoading(false);
   };
 
-  const convertToMarketplaceItem = (item: any): MarketplaceItem => {
+  const convertToC2CItem = (item: any): C2CItem => {
     return {
       id: item.product_id,
       title: item.name,
@@ -1548,9 +1548,7 @@ export default function SearchPage() {
                         }
                       >
                         <UnifiedProductCard
-                          product={adaptMarketplaceItem(
-                            convertToMarketplaceItem(item)
-                          )}
+                          product={adaptC2CItem(convertToC2CItem(item))}
                           locale={locale}
                           viewMode={viewMode}
                           index={index}

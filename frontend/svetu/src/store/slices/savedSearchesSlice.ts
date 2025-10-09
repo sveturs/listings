@@ -57,7 +57,7 @@ export const fetchSavedSearches = createAsyncThunk(
   'savedSearches/fetch',
   async (searchType?: string) => {
     const params = searchType ? `?search_type=${searchType}` : '';
-    const response = await api.get(`/marketplace/saved-searches${params}`);
+    const response = await api.get(`/c2c/saved-searches${params}`);
     return response.data;
   }
 );
@@ -71,7 +71,7 @@ export const createSavedSearch = createAsyncThunk(
     notify_enabled?: boolean;
     notify_frequency?: string;
   }) => {
-    const response = await api.post('/marketplace/saved-searches', {
+    const response = await api.post('/c2c/saved-searches', {
       ...data,
       search_type: data.search_type || 'cars',
       notify_enabled: data.notify_enabled || false,
@@ -95,7 +95,7 @@ export const updateSavedSearch = createAsyncThunk(
       notify_frequency?: string;
     };
   }) => {
-    const response = await api.put(`/marketplace/saved-searches/${id}`, data);
+    const response = await api.put(`/c2c/saved-searches/${id}`, data);
     return response.data;
   }
 );
@@ -103,7 +103,7 @@ export const updateSavedSearch = createAsyncThunk(
 export const deleteSavedSearch = createAsyncThunk(
   'savedSearches/delete',
   async (id: number) => {
-    await api.delete(`/marketplace/saved-searches/${id}`);
+    await api.delete(`/c2c/saved-searches/${id}`);
     return id;
   }
 );
@@ -111,7 +111,7 @@ export const deleteSavedSearch = createAsyncThunk(
 export const executeSavedSearch = createAsyncThunk(
   'savedSearches/execute',
   async (id: number) => {
-    const response = await api.get(`/marketplace/saved-searches/${id}/execute`);
+    const response = await api.get(`/c2c/saved-searches/${id}/execute`);
     return { id, results: response.data };
   }
 );

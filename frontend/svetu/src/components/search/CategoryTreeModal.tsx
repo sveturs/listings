@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { MarketplaceService } from '@/services/marketplace';
+import { MarketplaceService } from '@/services/c2c';
 import { toast } from '@/utils/toast';
 import {
   ChevronRight,

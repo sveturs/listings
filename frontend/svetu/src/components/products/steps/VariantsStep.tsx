@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCreateProduct } from '@/contexts/CreateProductContext';
-import VariantManager from '@/components/Storefront/ProductVariants/VariantManager';
-import AttributeSetup from '@/components/Storefront/ProductVariants/AttributeSetup';
+import VariantManager from '@/components/B2C/ProductVariants/VariantManager';
+import AttributeSetup from '@/components/B2C/ProductVariants/AttributeSetup';
 import SimplifiedVariantGenerator from '@/components/products/SimplifiedVariantGenerator';
 
 interface VariantsStepProps {
@@ -281,7 +281,7 @@ function SimpleVariantConfig({
 
       try {
         const response = await fetch(
-          `/api/v1/marketplace/categories/${productData.category_id}/attributes`
+          `/api/v1/c2c/categories/${productData.category_id}/attributes`
         );
         if (response.ok) {
           const data = await response.json();

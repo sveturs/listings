@@ -58,7 +58,7 @@ func (s *DensityService) AnalyzeDensity(ctx context.Context, bbox *types.Boundin
 				COUNT(l.id) as listing_count,
 				ST_Area(g.cell::geography) / 1000000.0 as area_km2
 			FROM grid g
-			LEFT JOIN marketplace_listings l ON
+			LEFT JOIN c2c_listings l ON
 				l.location IS NOT NULL
 				AND ST_Within(l.location::geometry, g.cell)
 				AND l.status = 'active'
@@ -111,8 +111,8 @@ func (s *DensityService) FilterListingsByDensity(ctx context.Context, filter *ty
 						4326
 					)::geography
 				) / 1000000.0 as area_km2
-			FROM marketplace_listings l1
-			LEFT JOIN marketplace_listings l2 ON
+			FROM c2c_listings l1
+			LEFT JOIN c2c_listings l2 ON
 				l2.id != l1.id
 				AND l2.status = 'active'
 				AND l2.location IS NOT NULL
@@ -178,7 +178,7 @@ func (s *DensityService) GetDensityHeatmap(ctx context.Context, bbox *types.Boun
 			ST_X(location::geometry) as lng,
 			ST_Y(location::geometry) as lat,
 			1.0 as weight
-		FROM marketplace_listings
+		FROM c2c_listings
 		WHERE
 			location IS NOT NULL
 			AND status = 'active'

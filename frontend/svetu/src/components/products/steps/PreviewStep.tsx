@@ -47,7 +47,7 @@ export default function PreviewStep({
       formData.append('display_order', String(index));
 
       return apiClient.post(
-        `/api/v1/storefronts/slug/${storefrontSlug}/products/${productId}/images`,
+        `/api/v1/b2c/slug/${storefrontSlug}/products/${productId}/images`,
         formData
       );
     });
@@ -101,7 +101,7 @@ export default function PreviewStep({
 
       // Создаем товар
       const productResponse = await apiClient.post(
-        `/api/v1/storefronts/slug/${storefrontSlug}/products`,
+        `/api/v1/b2c/slug/${storefrontSlug}/products`,
         productDataWithLocation
       );
 
@@ -120,7 +120,7 @@ export default function PreviewStep({
         }
 
         toast.success(t('productCreated'));
-        router.push(`/${locale}/storefronts/${storefrontSlug}/products`);
+        router.push(`/${locale}/b2c/${storefrontSlug}/products`);
       }
     } catch (error: any) {
       console.error('Failed to create product:', error);
@@ -137,7 +137,7 @@ export default function PreviewStep({
 
       try {
         const response = await apiClient.get(
-          `/api/v1/marketplace/categories/${state.category.id}/attributes`
+          `/api/v1/c2c/categories/${state.category.id}/attributes`
         );
 
         if (response.data) {

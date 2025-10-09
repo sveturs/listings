@@ -210,7 +210,7 @@ func (r *CategoryDetectionStatsRepository) GetProblematicCategories(ctx context.
 			AVG(CASE WHEN s.ai_suggested_category_id = s.final_category_id THEN 1.0 ELSE 0.0 END) as success_rate,
 			AVG(s.confidence_score) as avg_confidence,
 			COUNT(CASE WHEN s.user_selected_category_id IS NOT NULL THEN 1 END) as correction_count
-		FROM marketplace_categories c
+		FROM c2c_categories c
 		LEFT JOIN category_detection_stats s ON c.id = s.ai_suggested_category_id
 		WHERE s.created_at > NOW() - INTERVAL '30 days'
 		GROUP BY c.id, c.name, c.slug

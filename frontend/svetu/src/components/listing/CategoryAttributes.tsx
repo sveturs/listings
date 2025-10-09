@@ -54,7 +54,7 @@ export default function CategoryAttributes({
       setLoading(true);
       try {
         const response = await fetch(
-          `/api/v1/marketplace/categories/${selectedCategory.id}/attributes?lang=${locale}`
+          `/api/v1/c2c/categories/${selectedCategory.id}/attributes?lang=${locale}`
         );
 
         if (response.ok) {

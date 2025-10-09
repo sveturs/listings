@@ -14,7 +14,7 @@ import configManager from '@/config';
 import { contactsService } from '@/services/contacts';
 import { getLastSeenText } from '@/utils/timeUtils';
 import { toast } from '@/utils/toast';
-import StorefrontProductQuickView from './StorefrontProductQuickView';
+import B2CProductQuickView from './B2CProductQuickView';
 import IncomingContactRequest from './IncomingContactRequest';
 import ChatSettings from './ChatSettings';
 import { useAppDispatch } from '@/store/hooks';
@@ -24,11 +24,12 @@ import { addItem } from '@/store/slices/localCartSlice';
 interface ChatWindowProps {
   chat?: MarketplaceChat;
   initialListingId?: number;
-  initialStorefrontProductId?: number;
+  initialB2CProductId?: number;
   initialSellerId?: number;
   initialContactId?: number;
   onBack?: () => void;
   showBackButton?: boolean;
+  onShowChat?: () => void;
 }
 
 interface ListingInfo {
@@ -41,7 +42,7 @@ interface ListingInfo {
   user_id: number;
 }
 
-interface StorefrontProduct {
+interface B2CProduct {
   id: number;
   name: string;
   price: number;
@@ -58,11 +59,12 @@ interface StorefrontProduct {
 export default function ChatWindow({
   chat,
   initialListingId,
-  initialStorefrontProductId,
+  initialB2CProductId,
   initialSellerId,
   initialContactId,
   onBack,
   showBackButton,
+  onShowChat,
 }: ChatWindowProps) {
   const t = useTranslations('chat');
   const params = useParams();
@@ -73,7 +75,7 @@ export default function ChatWindow({
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isNewChat] = useState(
     !chat &&
-      (((initialListingId || initialStorefrontProductId) && initialSellerId) ||
+      (((initialListingId || initialB2CProductId) && initialSellerId) ||
         initialContactId)
   );
   const [isContactChat] = useState(
@@ -85,8 +87,7 @@ export default function ChatWindow({
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showProductQuickView, setShowProductQuickView] = useState(false);
-  const [storefrontProduct, setStorefrontProduct] =
-    useState<StorefrontProduct | null>(null);
+  const [storefrontProduct, setB2CProduct] = useState<B2CProduct | null>(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
   const dispatch = useAppDispatch();
@@ -191,26 +192,23 @@ export default function ChatWindow({
   useEffect(() => {
     if (chat?.storefront_product_id && !storefrontProduct) {
       const apiUrl = configManager.getApiUrl();
-      fetch(
-        `${apiUrl}/api/v1/storefronts/products/${chat.storefront_product_id}`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      fetch(`${apiUrl}/api/v1/b2c/products/${chat.storefront_product_id}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
         .then((res) => res.json())
         .then((result) => {
           const data = result.data || result;
           if (data && data.id) {
-            setStorefrontProduct(data);
+            setB2CProduct(data);
           }
         })
         .catch((err) => {
           console.error('Error loading storefront product:', err);
           // Fallback data for testing
-          setStorefrontProduct({
+          setB2CProduct({
             id: chat.storefront_product_id || 0,
             name: chat.listing?.title || 'Product',
             price: 1000,
@@ -236,7 +234,7 @@ export default function ChatWindow({
     // Для обычных объявлений
     if (isNewChat && initialListingId && !listingInfo && !isContactChat) {
       const apiUrl = configManager.getApiUrl();
-      fetch(`${apiUrl}/api/v1/marketplace/listings/${initialListingId}`, {
+      fetch(`${apiUrl}/api/v1/c2c/listings/${initialListingId}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -254,21 +252,16 @@ export default function ChatWindow({
     }
 
     // Для товаров витрин - используем заглушку пока endpoint не реализован
-    if (
-      isNewChat &&
-      initialStorefrontProductId &&
-      !listingInfo &&
-      !isContactChat
-    ) {
+    if (isNewChat && initialB2CProductId && !listingInfo && !isContactChat) {
       console.log(
         'Storefront product loading - using placeholder data (endpoint not implemented):',
-        initialStorefrontProductId
+        initialB2CProductId
       );
       // TODO: Implement proper storefront product loading when endpoint is available
       // For now, set placeholder data with product ID
       setListingInfo({
-        id: initialStorefrontProductId,
-        title: t('storefrontProduct', { id: initialStorefrontProductId }),
+        id: initialB2CProductId,
+        title: t('storefrontProduct', { id: initialB2CProductId }),
         images: [],
         user_id: initialSellerId || 0,
       });
@@ -276,7 +269,7 @@ export default function ChatWindow({
   }, [
     isNewChat,
     initialListingId,
-    initialStorefrontProductId,
+    initialB2CProductId,
     isContactChat,
     listingInfo,
     initialSellerId,
@@ -372,7 +365,7 @@ export default function ChatWindow({
       return listingInfo.title;
     }
     // Если это новый чат с товаром витрины, но информация еще загружается
-    if (isNewChat && initialStorefrontProductId && !isContactChat) {
+    if (isNewChat && initialB2CProductId && !isContactChat) {
       return t('loadingProduct');
     }
     // Если это новый чат с обычным объявлением, но информация еще загружается
@@ -640,7 +633,7 @@ export default function ChatWindow({
           {/* Кнопка просмотра детальной страницы */}
           {!!chat?.storefront_product_id ? (
             <Link
-              href={`/${locale}/storefronts/product/${chat.storefront_product_id}`}
+              href={`/${locale}/b2c/product/${chat.storefront_product_id}`}
               className="btn btn-ghost btn-xs sm:btn-sm"
               title={t('viewDetails')}
             >
@@ -662,7 +655,7 @@ export default function ChatWindow({
             !!(chat?.listing || chat?.listing_id || listingInfo) &&
             !isContactChat && (
               <Link
-                href={`/${locale}/marketplace/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
+                href={`/${locale}/c2c/${chat?.listing_id || chat?.listing?.id || listingInfo?.id}`}
                 className="btn btn-ghost btn-xs sm:btn-sm"
                 title={t('viewListing')}
               >
@@ -785,8 +778,21 @@ export default function ChatWindow({
         <div
           ref={messagesContainerRef}
           onScroll={handleScroll}
-          className="absolute inset-x-0 top-0 bottom-20 overflow-y-auto p-3 sm:p-4 lg:px-8"
+          className="absolute inset-x-0 top-0 overflow-y-auto p-3 sm:p-4 lg:px-8"
+          style={{
+            bottom:
+              'calc(4rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+          }}
         >
+          <style jsx>{`
+            @media (min-width: 768px) {
+              div {
+                bottom: calc(
+                  4rem + max(0px, env(safe-area-inset-bottom, 0px))
+                ) !important;
+              }
+            }
+          `}</style>
           {/* Индикатор загрузки старых сообщений */}
           {(hasMore || isLoadingOldMessages) && (
             <div className="text-center py-2">
@@ -846,8 +852,21 @@ export default function ChatWindow({
         {!isAtBottom && (
           <button
             onClick={scrollToBottom}
-            className="absolute bottom-24 right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
+            className="absolute right-4 btn btn-circle btn-sm btn-primary shadow-lg z-10"
+            style={{
+              bottom:
+                'calc(4.06rem + 3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+            }}
           >
+            <style jsx>{`
+              @media (min-width: 768px) {
+                button {
+                  bottom: calc(
+                    5rem + max(0px, env(safe-area-inset-bottom, 0px))
+                  ) !important;
+                }
+              }
+            `}</style>
             <svg
               className="w-3 h-3 sm:w-4 sm:h-4"
               fill="none"
@@ -865,19 +884,33 @@ export default function ChatWindow({
         )}
 
         {/* Поле ввода - позиционировано внизу контейнера с фоном */}
-        <div className="absolute bottom-0 left-0 right-0 z-20">
+        <div
+          className="absolute left-0 right-0 z-20"
+          style={{
+            bottom:
+              'calc(3.06rem + max(0px, env(safe-area-inset-bottom, 0px)))',
+          }}
+        >
+          <style jsx>{`
+            @media (min-width: 768px) {
+              div {
+                bottom: max(0px, env(safe-area-inset-bottom, 0px)) !important;
+              }
+            }
+          `}</style>
           <MessageInput
             chat={chat}
             initialListingId={initialListingId}
-            initialStorefrontProductId={initialStorefrontProductId}
+            initialB2CProductId={initialB2CProductId}
             initialSellerId={initialSellerId || initialContactId}
+            onShowChat={onShowChat}
           />
         </div>
       </div>
 
       {/* Quick View Modal for Storefront Product */}
       {!!chat?.storefront_product_id && (
-        <StorefrontProductQuickView
+        <B2CProductQuickView
           productId={chat.storefront_product_id}
           isOpen={showProductQuickView}
           onClose={() => setShowProductQuickView(false)}

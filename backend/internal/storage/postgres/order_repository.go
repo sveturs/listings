@@ -378,7 +378,7 @@ func (r *orderRepository) Update(ctx context.Context, order *models.StorefrontOr
 func (r *orderRepository) List(ctx context.Context, filter models.OrderFilter) ([]models.StorefrontOrder, int, error) {
 	// Базовый запрос без JOIN users (информация о продавце теперь в auth-service)
 	baseQuery := `FROM storefront_orders so
-		LEFT JOIN storefronts sf ON so.storefront_id = sf.id
+		LEFT JOIN b2c_stores sf ON so.storefront_id = sf.id
 		WHERE 1=1`
 	countQuery := `SELECT COUNT(*) ` + baseQuery
 	selectQuery := `SELECT so.id, so.order_number, so.storefront_id, so.customer_id, so.status,

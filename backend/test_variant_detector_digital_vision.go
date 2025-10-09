@@ -4,7 +4,7 @@ package main
 import (
 	"fmt"
 
-	"backend/internal/proj/storefronts/service"
+	"backend/internal/proj/b2c/service"
 )
 
 func main() {

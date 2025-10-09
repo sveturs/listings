@@ -69,7 +69,7 @@ export default function MyListingsPage() {
       setError(null);
 
       const response = await apiClient.get<BackendResponse>(
-        `/api/v1/marketplace/listings?user_id=${user?.id}`
+        `/api/v1/c2c/listings?user_id=${user?.id}`
       );
 
       if (!response.error && response.data) {
@@ -157,7 +157,7 @@ export default function MyListingsPage() {
       setDeletingId(listingId);
 
       const response = await apiClient.delete(
-        `/api/v1/marketplace/listings/${listingId}`
+        `/api/v1/c2c/listings/${listingId}`
       );
 
       if (!response.error) {
@@ -180,7 +180,7 @@ export default function MyListingsPage() {
       setUpdatingId(listingId);
 
       const response = await apiClient.patch(
-        `/api/v1/marketplace/listings/${listingId}/status`,
+        `/api/v1/c2c/listings/${listingId}/status`,
         { status: newStatus }
       );
 
@@ -400,7 +400,7 @@ export default function MyListingsPage() {
                               className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
                             >
                               <li>
-                                <Link href={`/marketplace/${listing.id}`}>
+                                <Link href={`/c2c/${listing.id}`}>
                                   View Listing
                                 </Link>
                               </li>

@@ -268,10 +268,10 @@ export default function PricingPage() {
                   <li className="flex items-center gap-2">
                     <FiCheck className="text-success shrink-0 w-5 h-5" />
                     <span>
-                      {(plan.max_storefronts ?? 0) === -1
+                      {(plan.max_b2c_stores ?? 0) === -1
                         ? t('features.storefrontsUnlimited')
                         : t('features.storefronts', {
-                            count: plan.max_storefronts ?? 0,
+                            count: plan.max_b2c_stores ?? 0,
                           })}
                     </span>
                   </li>

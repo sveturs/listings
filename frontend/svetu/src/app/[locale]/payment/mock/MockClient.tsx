@@ -154,7 +154,7 @@ export default function MockClient() {
           // Для заказов - подтверждаем оплату через API
           try {
             const response = await fetch(
-              `${config.api.url}/marketplace/orders/${orderId}/confirm-payment`,
+              `${config.api.url}/c2c/orders/${orderId}/confirm-payment`,
               {
                 method: 'POST',
                 headers: {
@@ -348,7 +348,7 @@ export default function MockClient() {
                               localStorage.getItem('access_token');
 
                             const response = await fetch(
-                              `/api/v1/marketplace/orders/${orderId}/confirm-payment`,
+                              `/api/v1/c2c/orders/${orderId}/confirm-payment`,
                               {
                                 method: 'POST',
                                 headers: {

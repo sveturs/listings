@@ -24,12 +24,12 @@ import {
 import CarBadges from './CarBadges';
 import CarQuickInfo from './CarQuickInfo';
 
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarQuickViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  listing: MarketplaceListing | null;
+  listing: C2CListing | null;
   onNext?: () => void;
   onPrevious?: () => void;
   hasNext?: boolean;

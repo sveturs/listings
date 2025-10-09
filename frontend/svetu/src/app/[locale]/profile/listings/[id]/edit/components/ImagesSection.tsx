@@ -51,7 +51,7 @@ export function ImagesSection({
         if (storefrontId) {
           // Сначала получаем информацию о витрине
           const storefrontResponse = await apiClient.get(
-            `/api/v1/storefronts/${storefrontId}`
+            `/api/v1/b2c/${storefrontId}`
           );
 
           const storefrontSlug =
@@ -76,7 +76,7 @@ export function ImagesSection({
 
             try {
               const response = await apiClient.post(
-                `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images`,
+                `/api/v1/b2c/slug/${storefrontSlug}/products/${listingId}/images`,
                 formData
               );
 
@@ -88,7 +88,7 @@ export function ImagesSection({
 
           // После загрузки получаем обновленный список изображений
           const imagesResponse = await apiClient.get(
-            `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images`
+            `/api/v1/b2c/slug/${storefrontSlug}/products/${listingId}/images`
           );
 
           if (imagesResponse.data?.data) {
@@ -122,7 +122,7 @@ export function ImagesSection({
           }
 
           const response = await apiClient.post(
-            `/api/v1/marketplace/listings/${listingId}/images`,
+            `/api/v1/c2c/listings/${listingId}/images`,
             formData
           );
 
@@ -172,7 +172,7 @@ export function ImagesSection({
       if (storefrontId) {
         // Для товаров витрин используем другой эндпоинт
         const storefrontResponse = await apiClient.get(
-          `/api/v1/storefronts/${storefrontId}`
+          `/api/v1/b2c/${storefrontId}`
         );
 
         const storefrontSlug =
@@ -184,12 +184,12 @@ export function ImagesSection({
         }
 
         await apiClient.delete(
-          `/api/v1/storefronts/slug/${storefrontSlug}/products/${listingId}/images/${imageId}`
+          `/api/v1/b2c/slug/${storefrontSlug}/products/${listingId}/images/${imageId}`
         );
       } else {
         // Обычное объявление
         await apiClient.delete(
-          `/api/v1/marketplace/listings/${listingId}/images/${imageId}`
+          `/api/v1/c2c/listings/${listingId}/images/${imageId}`
         );
       }
 

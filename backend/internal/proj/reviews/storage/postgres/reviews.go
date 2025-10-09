@@ -680,7 +680,7 @@ func (s *Storage) GetUserReviews(ctx context.Context, userID int, filter models.
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
     WHERE (r.entity_origin_type = 'user' AND r.entity_origin_id = $2)
        OR (r.entity_type = 'listing' AND
-           EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.id = r.entity_id AND ml.user_id = $2)
+           EXISTS (SELECT 1 FROM c2c_listings ml WHERE ml.id = r.entity_id AND ml.user_id = $2)
           )
     ORDER BY r.created_at DESC
     `
@@ -792,9 +792,9 @@ func (s *Storage) GetStorefrontReviews(ctx context.Context, storefrontID int, fi
     FROM reviews r
     LEFT JOIN vote_counts vc ON vc.review_id = r.id
     LEFT JOIN translations_agg ta ON ta.entity_id = r.id
-    WHERE (r.entity_origin_type = 'storefront' AND r.entity_origin_id = $2)
+    WHERE (r.entity_origin_type = 'b2c_store' AND r.entity_origin_id = $2)
        OR (r.entity_type = 'listing' AND
-           EXISTS (SELECT 1 FROM marketplace_listings ml WHERE ml.id = r.entity_id AND ml.storefront_id = $2)
+           EXISTS (SELECT 1 FROM c2c_listings ml WHERE ml.id = r.entity_id AND ml.storefront_id = $2)
           )
     ORDER BY r.created_at DESC
     `
@@ -899,7 +899,7 @@ func (s *Storage) GetUserRatingSummary(ctx context.Context, userID int) (*models
     WHERE
         ((entity_type = 'user' AND entity_id = $1) OR
          (entity_type = 'listing' AND EXISTS
-            (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+            (SELECT 1 FROM c2c_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
         AND status = 'published'
     `
 
@@ -938,7 +938,7 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
 
 	// Получаем название витрины
 	var storefrontName sql.NullString
-	err := s.pool.QueryRow(ctx, `SELECT name FROM storefronts WHERE id = $1`, storefrontID).Scan(&storefrontName)
+	err := s.pool.QueryRow(ctx, `SELECT name FROM b2c_stores WHERE id = $1`, storefrontID).Scan(&storefrontName)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		log.Printf("Error getting storefront name: %v", err)
 	}
@@ -959,9 +959,9 @@ func (s *Storage) GetStorefrontRatingSummary(ctx context.Context, storefrontID i
         COUNT(*) FILTER (WHERE rating = 5) as rating_5
     FROM reviews
     WHERE
-        ((entity_type = 'storefront' AND entity_id = $1) OR
+        ((entity_type = 'b2c_store' AND entity_id = $1) OR
          (entity_type = 'listing' AND EXISTS
-            (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.storefront_id = $1)))
+            (SELECT 1 FROM c2c_listings ml WHERE ml.id = reviews.entity_id AND ml.storefront_id = $1)))
         AND status = 'published'
     `
 

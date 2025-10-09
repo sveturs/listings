@@ -93,7 +93,7 @@ const CARD_CONFIG = {
     defaultImage: '/images/product-placeholder.jpg',
   },
   marketplace: {
-    linkPrefix: '/marketplace',
+    linkPrefix: '/c2c',
     compareEnabled: false,
     maxCompareItems: 0,
     defaultImage: '/images/placeholder.jpg',

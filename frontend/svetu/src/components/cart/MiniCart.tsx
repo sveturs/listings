@@ -315,7 +315,7 @@ export default function MiniCart({
                           >
                             {/* Image */}
                             <Link
-                              href={`/${locale}/storefronts/${item.storefrontSlug}/products/${item.productId}`}
+                              href={`/${locale}/b2c/${item.storefrontSlug}/products/${item.productId}`}
                               className="relative w-16 h-16 rounded-lg overflow-hidden bg-base-200 flex-shrink-0"
                             >
                               <SafeImage
@@ -330,7 +330,7 @@ export default function MiniCart({
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                               <Link
-                                href={`/${locale}/storefronts/${item.storefrontSlug}/products/${item.productId}`}
+                                href={`/${locale}/b2c/${item.storefrontSlug}/products/${item.productId}`}
                                 className="text-sm font-medium hover:link line-clamp-1"
                               >
                                 {item.name}

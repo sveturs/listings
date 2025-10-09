@@ -42,7 +42,7 @@ export interface SearchSuggestion {
 export const SearchService = {
   async searchListings(params: SearchParams): Promise<SearchResult> {
     const response = await apiClient.post<SearchResult>(
-      '/api/v1/marketplace/search',
+      '/api/v1/c2c/search',
       params
     );
 
@@ -59,7 +59,7 @@ export const SearchService = {
     }
 
     const response = await apiClient.get<SearchSuggestion[]>(
-      `/api/v1/marketplace/search/autocomplete?q=${encodeURIComponent(query.trim())}`
+      `/api/v1/c2c/search/autocomplete?q=${encodeURIComponent(query.trim())}`
     );
 
     if (response.error) {
@@ -83,7 +83,7 @@ export const SearchService = {
 
   async getTrendingSearches(): Promise<string[]> {
     const response = await apiClient.get<string[]>(
-      '/api/v1/marketplace/search/trending'
+      '/api/v1/c2c/search/trending'
     );
 
     if (response.error) {

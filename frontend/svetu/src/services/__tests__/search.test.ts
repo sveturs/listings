@@ -52,10 +52,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.searchListings(params);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search',
-        params
-      );
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/c2c/search', params);
       expect(result).toEqual(mockSearchResponse.data);
     });
 
@@ -78,10 +75,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.searchListings(params);
 
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search',
-        params
-      );
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/c2c/search', params);
       expect(result).toEqual(mockSearchResponse.data);
     });
 
@@ -143,7 +137,7 @@ describe('SearchService', () => {
       await SearchService.searchListings(params);
 
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search',
+        '/api/v1/c2c/search',
         expect.objectContaining({ fuzzy: true })
       );
     });
@@ -161,7 +155,7 @@ describe('SearchService', () => {
       await SearchService.searchListings(params);
 
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search',
+        '/api/v1/c2c/search',
         expect.objectContaining({ sort: 'price_asc' })
       );
     });
@@ -178,7 +172,7 @@ describe('SearchService', () => {
       await SearchService.searchListings(params);
 
       expect(apiClient.post).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search',
+        '/api/v1/c2c/search',
         expect.objectContaining({ page: 3, limit: 50 })
       );
     });
@@ -216,7 +210,7 @@ describe('SearchService', () => {
       const result = await SearchService.getAutocompleteSuggestions('iph');
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search/autocomplete?q=iph'
+        '/api/v1/c2c/search/autocomplete?q=iph'
       );
       expect(result).toEqual(mockSuggestionsResponse.data);
     });
@@ -234,7 +228,7 @@ describe('SearchService', () => {
       await SearchService.getAutocompleteSuggestions('  test  ');
 
       expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search/autocomplete?q=test'
+        '/api/v1/c2c/search/autocomplete?q=test'
       );
     });
 
@@ -331,9 +325,7 @@ describe('SearchService', () => {
 
       const result = await SearchService.getTrendingSearches();
 
-      expect(apiClient.get).toHaveBeenCalledWith(
-        '/api/v1/marketplace/search/trending'
-      );
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/c2c/search/trending');
       expect(result).toEqual(mockTrendingResponse.data);
     });
 

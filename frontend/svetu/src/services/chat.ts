@@ -18,7 +18,7 @@ class ChatService {
 
   constructor() {
     // BFF proxy endpoint
-    this.baseUrl = '/api/v2/marketplace/chat';
+    this.baseUrl = '/api/v2/c2c/chat';
   }
 
   private async getCsrfToken(): Promise<string> {

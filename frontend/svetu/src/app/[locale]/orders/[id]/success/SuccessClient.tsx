@@ -34,9 +34,7 @@ export default function SuccessClient({ params }: Props) {
     const fetchOrder = async () => {
       try {
         // Получаем детали заказа из marketplace API
-        const response = await apiClient.get(
-          `/api/v1/marketplace/orders/${id}`
-        );
+        const response = await apiClient.get(`/api/v1/c2c/orders/${id}`);
         console.log('Order details response:', response);
 
         if (response.data?.success && response.data?.data) {
@@ -78,7 +76,7 @@ export default function SuccessClient({ params }: Props) {
             <h1 className="card-title text-2xl justify-center mb-4">Ошибка</h1>
             <p className="text-base-content/70 mb-6">{error}</p>
             <div className="card-actions justify-center">
-              <Link href={`/${locale}/marketplace`} className="btn btn-primary">
+              <Link href={`/${locale}/c2c`} className="btn btn-primary">
                 Вернуться к маркетплейсу
               </Link>
             </div>
@@ -186,7 +184,7 @@ export default function SuccessClient({ params }: Props) {
             >
               Мои заказы
             </Link>
-            <Link href={`/${locale}/marketplace`} className="btn btn-outline">
+            <Link href={`/${locale}/c2c`} className="btn btn-outline">
               Продолжить покупки
             </Link>
           </div>

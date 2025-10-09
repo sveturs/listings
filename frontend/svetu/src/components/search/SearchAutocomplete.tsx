@@ -236,11 +236,11 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
       ) {
         // Товар из витрины
         router.push(
-          `/${locale}/storefronts/${suggestion.metadata.storefront_slug}/products/${suggestion.product_id}`
+          `/${locale}/b2c/${suggestion.metadata.storefront_slug}/products/${suggestion.product_id}`
         );
       } else {
-        // Обычное объявление - правильный путь /marketplace/[id]
-        router.push(`/${locale}/marketplace/${suggestion.product_id}`);
+        // Обычное объявление - правильный путь /c2c/[id]
+        router.push(`/${locale}/c2c/${suggestion.product_id}`);
       }
     } else if (suggestion.type === 'category') {
       // Переход к категории

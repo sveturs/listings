@@ -368,7 +368,7 @@ func (s *SpatialService) UpdateListingAddress(
 
 // checkListingAccess проверка прав доступа к объявлению
 func (s *SpatialService) checkListingAccess(ctx context.Context, listingID, userID int64) error {
-	query := `SELECT user_id FROM marketplace_listings WHERE id = $1`
+	query := `SELECT user_id FROM c2c_listings WHERE id = $1`
 	var ownerID int64
 
 	err := s.db.QueryRowContext(ctx, query, listingID).Scan(&ownerID)
@@ -683,8 +683,8 @@ func (s *SpatialService) groupStorefrontProducts(ctx context.Context, listings [
 						s.user_id,
 						s.created_at,
 						s.updated_at
-					FROM storefronts s
-					LEFT JOIN unified_geo ug ON ug.source_type = 'storefront' AND ug.source_id = s.id
+					FROM b2c_stores s
+					LEFT JOIN unified_geo ug ON ug.source_type = 'b2c_store' AND ug.source_id = s.id
 					WHERE s.id = $1`
 
 				err := s.db.QueryRowContext(ctx, query, storefrontID).Scan(
@@ -797,7 +797,7 @@ func (s *SpatialService) groupStorefrontProducts(ctx context.Context, listings [
 		}
 	}
 
-	fmt.Printf("🛍️ groupStorefrontProducts: Result - %d regular listings, %d storefronts, total %d\n",
+	fmt.Printf("🛍️ groupStorefrontProducts: Result - %d regular listings, %d b2c_stores, total %d\n",
 		len(regularListings), len(storefrontMap), len(result))
 
 	return result

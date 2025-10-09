@@ -13,19 +13,17 @@ import {
   UnifiedSearchService,
   UnifiedSearchItem,
 } from '@/services/unifiedSearch';
-import { MarketplaceItem } from '@/types/marketplace';
+import { C2CItem } from '@/types/c2c';
 import { UnifiedProductCard } from '@/components/common/UnifiedProductCard';
-import { adaptMarketplaceItem } from '@/utils/product-adapters';
+import { adaptC2CItem } from '@/utils/product-adapters';
 import { useViewPreference } from '@/hooks/useViewPreference';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { ListingGridSkeleton } from '@/components/ui/skeletons';
 import GridColumnsToggle from '@/components/common/GridColumnsToggle';
 import { useGridColumns } from '@/hooks/useGridColumns';
 
-// Адаптер для преобразования UnifiedSearchItem в MarketplaceItem
-function convertToMarketplaceItem(
-  unifiedItem: UnifiedSearchItem
-): MarketplaceItem {
+// Адаптер для преобразования UnifiedSearchItem в C2CItem
+function convertToC2CItem(unifiedItem: UnifiedSearchItem): C2CItem {
   return {
     id: unifiedItem.product_id,
     title: unifiedItem.name,
@@ -286,8 +284,8 @@ export const BentoGridListings: React.FC<BentoGridListingsProps> = ({
               }
             >
               {displayItems.map((item) => {
-                const marketplaceItem = convertToMarketplaceItem(item);
-                const unifiedProduct = adaptMarketplaceItem(marketplaceItem);
+                const marketplaceItem = convertToC2CItem(item);
+                const unifiedProduct = adaptC2CItem(marketplaceItem);
                 return (
                   <UnifiedProductCard
                     key={item.id}

@@ -9,20 +9,28 @@ import { MarketplaceChat } from '@/types/chat';
 
 interface ChatLayoutProps {
   initialListingId?: number;
-  initialStorefrontProductId?: number;
+  initialB2CProductId?: number;
   initialSellerId?: number;
   initialContactId?: number;
 }
 
 export default function ChatLayout({
   initialListingId,
-  initialStorefrontProductId,
+  initialB2CProductId,
   initialSellerId,
   initialContactId,
 }: ChatLayoutProps) {
   const t = useTranslations('chat');
-  const [isMobileListOpen, setIsMobileListOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Определяем, есть ли параметры для нового чата
+  const isNewChatParams =
+    Boolean((initialListingId || initialB2CProductId) && initialSellerId) ||
+    Boolean(initialContactId);
+
+  // На мобильных: если есть параметры для нового чата, сразу показываем окно чата
+  // Иначе показываем список чатов
+  const [isMobileListOpen, setIsMobileListOpen] = useState(!isNewChatParams);
   const { currentChat, setCurrentChat } = useChat();
 
   useEffect(() => {
@@ -46,8 +54,15 @@ export default function ChatLayout({
     setIsMobileListOpen(true);
   };
 
+  const handleShowChat = () => {
+    // Переключаем на экран чата (для мобильных устройств)
+    if (isMobile) {
+      setIsMobileListOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-full bg-base-200 rounded-lg overflow-hidden max-w-full">
+    <div className="flex h-full bg-base-200 overflow-hidden max-w-full">
       {/* Боковая панель с чатами - на десктопе всегда видна, на мобильном - условно */}
       <div
         className={`
@@ -77,21 +92,23 @@ export default function ChatLayout({
             }
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
-        ) : (initialListingId || initialStorefrontProductId) &&
-          initialSellerId ? (
+        ) : (initialListingId || initialB2CProductId) && initialSellerId ? (
           <ChatWindow
             initialListingId={initialListingId}
-            initialStorefrontProductId={initialStorefrontProductId}
+            initialB2CProductId={initialB2CProductId}
             initialSellerId={initialSellerId}
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
         ) : initialContactId ? (
           <ChatWindow
             initialContactId={initialContactId}
             onBack={handleBackToList}
             showBackButton={isMobile}
+            onShowChat={handleShowChat}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-base-content/50">

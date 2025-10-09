@@ -33,9 +33,12 @@ import (
 	adminLogistics "backend/internal/proj/admin/logistics"
 	aiHandler "backend/internal/proj/ai/handler"
 	"backend/internal/proj/analytics"
+	b2cModule "backend/internal/proj/b2c"
 	balanceHandler "backend/internal/proj/balance/handler"
 	"backend/internal/proj/behavior_tracking"
 	"backend/internal/proj/bexexpress"
+	marketplaceHandler "backend/internal/proj/c2c/handler"
+	marketplaceService "backend/internal/proj/c2c/service"
 	configHandler "backend/internal/proj/config"
 	contactsHandler "backend/internal/proj/contacts/handler"
 	creditHandler "backend/internal/proj/credit"
@@ -46,8 +49,6 @@ import (
 	globalHandler "backend/internal/proj/global/handler"
 	globalService "backend/internal/proj/global/service"
 	healthHandler "backend/internal/proj/health"
-	marketplaceHandler "backend/internal/proj/marketplace/handler"
-	marketplaceService "backend/internal/proj/marketplace/service"
 	notificationHandler "backend/internal/proj/notifications/handler"
 	"backend/internal/proj/orders"
 	paymentHandler "backend/internal/proj/payments/handler"
@@ -58,7 +59,6 @@ import (
 	reviewHandler "backend/internal/proj/reviews/handler"
 	"backend/internal/proj/search_admin"
 	"backend/internal/proj/search_optimization"
-	"backend/internal/proj/storefronts"
 	"backend/internal/proj/subscriptions"
 	"backend/internal/proj/tracking"
 	"backend/internal/proj/translation_admin"
@@ -90,7 +90,7 @@ type Server struct {
 	adminLogistics     *adminLogistics.Module
 	delivery           *delivery.Module
 	orders             *orders.Module
-	storefront         *storefronts.Module
+	storefront         *b2cModule.Module
 	geocode            *geocodeHandler.Handler
 	contacts           *contactsHandler.Handler
 	docs               *docsHandler.Handler
@@ -144,7 +144,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	} else {
 		logger.Info().Msg("Успешное подключение к OpenSearch")
 	}
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.MarketplaceIndex, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, cfg.OpenSearch.C2CIndex, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize database")
 	}
@@ -185,7 +185,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	notificationsHandler := notificationHandler.NewHandler(services.Notification())
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
 	balanceHandler := balanceHandler.NewHandler(services)
-	storefrontModule := storefronts.NewModule(ctx, services)
+	storefrontModule := b2cModule.NewModule(ctx, services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{
 		URL:      cfg.OpenSearch.URL,
 		Username: cfg.OpenSearch.Username,
@@ -268,7 +268,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	analyticsModule := analytics.NewModule(db, osClient)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool(), jwtParserMW)
 	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService, jwtParserMW)
-	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New())
+	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New(), cfg.OpenSearch.B2CIndex)
 	// TODO: После рефакторинга передать storage или services для переиндексации
 	searchOptimizationModule := search_optimization.NewModule(db, *pkglogger.New())
 	gisHandlerInstance := gisHandler.NewHandler(db.GetSQLXDB())

@@ -5,10 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  marketplaceOrdersService,
-  type MarketplaceOrder,
-} from '@/services/marketplaceOrders';
+import { marketplaceOrdersService, type C2COrder } from '@/services/c2cOrders';
 import { balanceService } from '@/services/balance';
 import SafeImage from '@/components/SafeImage';
 import { toast } from 'react-hot-toast';
@@ -27,7 +24,7 @@ export default function OrderDetailsPage({ params }: Props) {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
-  const [order, setOrder] = useState<MarketplaceOrder | null>(null);
+  const [order, setOrder] = useState<C2COrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -153,7 +150,7 @@ export default function OrderDetailsPage({ params }: Props) {
                     </p>
                   )}
                   <Link
-                    href={`/${locale}/marketplace/${order.listing_id}`}
+                    href={`/${locale}/c2c/${order.listing_id}`}
                     className="link link-primary text-sm mt-2 inline-block"
                   >
                     {t('viewListing')} →

@@ -83,7 +83,7 @@ type StorefrontCategoryMapping struct {
 	ID                 int       `json:"id" db:"id"`
 	StorefrontID       int       `json:"storefront_id" db:"storefront_id"`
 	SourceCategoryPath string    `json:"source_category_path" db:"source_category_path"`   // External category path from import
-	TargetCategoryID   int       `json:"target_category_id" db:"target_category_id"`       // ID in marketplace_categories
+	TargetCategoryID   int       `json:"target_category_id" db:"target_category_id"`       // ID in c2c_categories
 	IsManual           bool      `json:"is_manual" db:"is_manual"`                         // true if created manually, false if via AI
 	ConfidenceScore    *float64  `json:"confidence_score,omitempty" db:"confidence_score"` // AI confidence (0.0-1.0), NULL for manual
 	CreatedAt          time.Time `json:"created_at" db:"created_at"`

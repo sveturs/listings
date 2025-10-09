@@ -4,11 +4,11 @@ import { memo } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { FiEdit2, FiEye, FiPackage, FiAlertCircle } from 'react-icons/fi';
-import type { StorefrontProduct } from '@/types/storefront';
+import type { B2CProduct } from '@/types/b2c';
 import SafeImage from '@/components/SafeImage';
 
 interface ProductCardProps {
-  product: StorefrontProduct;
+  product: B2CProduct;
   storefrontSlug: string;
   isSelected?: boolean;
   isSelectMode?: boolean;
@@ -136,14 +136,14 @@ export const ProductCard = memo(function ProductCard({
         <td>
           <div className="flex gap-2">
             <Link
-              href={`/storefronts/${storefrontSlug}/products/${product.id}`}
+              href={`/b2c/${storefrontSlug}/products/${product.id}`}
               className="btn btn-ghost btn-xs"
               onClick={(e) => e.stopPropagation()}
             >
               <FiEye className="w-4 h-4" />
             </Link>
             <Link
-              href={`/storefronts/${storefrontSlug}/products/${product.id}/edit`}
+              href={`/b2c/${storefrontSlug}/products/${product.id}/edit`}
               className="btn btn-ghost btn-xs"
               onClick={(e) => e.stopPropagation()}
             >
@@ -239,7 +239,7 @@ export const ProductCard = memo(function ProductCard({
           {!isSelectMode && (
             <div className="card-actions">
               <Link
-                href={`/storefronts/${storefrontSlug}/products/${product.id}/edit`}
+                href={`/b2c/${storefrontSlug}/products/${product.id}/edit`}
                 className="btn btn-primary btn-sm"
                 onClick={(e) => e.stopPropagation()}
               >

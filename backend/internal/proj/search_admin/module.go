@@ -19,8 +19,8 @@ type Module struct {
 }
 
 // NewModule создает новый экземпляр модуля
-func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient, logger *logger.Logger) *Module {
-	searchService := service.NewService(db.GetSQLXDB(), osClient)
+func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient, logger *logger.Logger, b2cIndexName string) *Module {
+	searchService := service.NewService(db.GetSQLXDB(), osClient, b2cIndexName)
 	searchHandler := handler.NewHandler(searchService, logger)
 
 	return &Module{

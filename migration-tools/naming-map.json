@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "database_tables": {
+    "marketplace_listings": "c2c_listings",
+    "marketplace_categories": "c2c_categories",
+    "marketplace_images": "c2c_images",
+    "marketplace_chats": "c2c_chats",
+    "marketplace_messages": "c2c_messages",
+    "marketplace_favorites": "c2c_favorites",
+    "marketplace_orders": "c2c_orders",
+    "marketplace_listing_variants": "c2c_listing_variants",
+    "storefronts": "b2c_stores",
+    "storefront_products": "b2c_products",
+    "storefront_product_images": "b2c_product_images",
+    "storefront_product_variants": "b2c_product_variants",
+    "storefront_product_attributes": "b2c_product_attributes",
+    "storefront_orders": "b2c_orders",
+    "storefront_order_items": "b2c_order_items",
+    "storefront_favorites": "b2c_favorites",
+    "storefront_hours": "b2c_store_hours",
+    "storefront_staff": "b2c_store_staff",
+    "storefront_payment_methods": "b2c_payment_methods",
+    "storefront_delivery_options": "b2c_delivery_options",
+    "storefront_inventory_movements": "b2c_inventory_movements",
+    "user_storefronts": "user_b2c_stores",
+    "storefront_product_variant_images": "b2c_product_variant_images"
+  },
+  "api_endpoints": {
+    "/api/v1/marketplace": "/api/v1/c2c",
+    "/api/v1/storefronts": "/api/v1/b2c/stores",
+    "/api/v1/admin/marketplace": "/api/v1/admin/c2c",
+    "/api/v1/admin/storefronts": "/api/v1/admin/b2c"
+  },
+  "go_modules": {
+    "internal/proj/marketplace": "internal/proj/c2c",
+    "internal/proj/storefronts": "internal/proj/b2c"
+  },
+  "go_types": {
+    "MarketplaceListing": "C2CListing",
+    "MarketplaceCategory": "C2CCategory",
+    "MarketplaceImage": "C2CImage",
+    "MarketplaceChat": "C2CChat",
+    "MarketplaceMessage": "C2CMessage",
+    "MarketplaceFavorite": "C2CFavorite",
+    "MarketplaceOrder": "C2COrder",
+    "Storefront": "B2CStore",
+    "StorefrontProduct": "B2CProduct",
+    "StorefrontProductImage": "B2CProductImage",
+    "StorefrontProductVariant": "B2CProductVariant"
+  },
+  "frontend_routes": {
+    "/marketplace": "/c2c",
+    "/storefronts": "/b2c"
+  },
+  "frontend_components": {
+    "components/marketplace": "components/c2c",
+    "components/storefronts": "components/b2c"
+  },
+  "i18n_keys": {
+    "marketplace": "c2c",
+    "storefronts": "b2c"
+  },
+  "opensearch_indices": {
+    "marketplace_listings": "c2c_listings",
+    "storefront_products": "b2c_products",
+    "storefronts": "b2c_stores"
+  },
+  "minio_buckets": {
+    "marketplace-images": "c2c-images",
+    "storefront-images": "b2c-images"
+  }
+}

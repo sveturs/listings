@@ -100,7 +100,7 @@ type CategoryProposalListResponse struct {
 
 // CategoryProposalApproveRequest represents request to approve a proposal
 type CategoryProposalApproveRequest struct {
-	CreateCategory bool `json:"create_category"` // If true, creates the category in marketplace_categories
+	CreateCategory bool `json:"create_category"` // If true, creates the category in c2c_categories
 }
 
 // CategoryProposalRejectRequest represents request to reject a proposal

@@ -28,7 +28,7 @@ export function ModularIntlProvider({
       // Определяем вероятные следующие модули на основе текущей страницы
       const nextModules = [];
 
-      if (pathname.includes('/marketplace')) {
+      if (pathname.includes('/c2c')) {
         nextModules.push('cart', 'chat');
       } else if (pathname.includes('/chat')) {
         // Для страницы чата загружаем модуль chat

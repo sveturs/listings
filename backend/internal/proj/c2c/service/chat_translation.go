@@ -1,0 +1,303 @@
+// backend/internal/proj/c2c/service/chat_translation.go
+package service
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+
+	"backend/internal/domain/models"
+	"backend/internal/logger"
+	userService "backend/internal/proj/users/service"
+	"backend/internal/storage"
+)
+
+const (
+	languageUnknown = "unknown"
+)
+
+// ChatTranslationService обрабатывает переводы сообщений чата
+type ChatTranslationService struct {
+	translationSvc TranslationServiceInterface
+	redisClient    *redis.Client
+	userSvc        userService.UserServiceInterface
+	storage        storage.Storage
+}
+
+// NewChatTranslationService создает новый сервис переводов чатов
+func NewChatTranslationService(
+	translationSvc TranslationServiceInterface,
+	redisClient *redis.Client,
+	userSvc userService.UserServiceInterface,
+	stor storage.Storage,
+) *ChatTranslationService {
+	return &ChatTranslationService{
+		translationSvc: translationSvc,
+		redisClient:    redisClient,
+		userSvc:        userSvc,
+		storage:        stor,
+	}
+}
+
+// TranslateMessage переводит одно сообщение на целевой язык
+func (s *ChatTranslationService) TranslateMessage(
+	ctx context.Context,
+	message *models.MarketplaceMessage,
+	targetLanguage string,
+	moderateTone bool,
+) error {
+	// Если язык не установлен, определяем его
+	if message.OriginalLanguage == "" || message.OriginalLanguage == languageUnknown {
+		err := s.DetectAndSetLanguage(ctx, message)
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to detect language, will try to translate anyway")
+			// Продолжаем перевод даже если определение языка не удалось
+			message.OriginalLanguage = "auto"
+		}
+	}
+
+	// Если язык совпадает с целевым и НЕ требуется смягчение - пропускаем
+	if message.OriginalLanguage == targetLanguage && !moderateTone {
+		logger.Debug().
+			Int("messageId", message.ID).
+			Str("lang", targetLanguage).
+			Msg("Skipping translation - same language, no moderation needed")
+		return nil
+	}
+
+	// Если язык совпадает, но требуется смягчение - будем смягчать
+	if message.OriginalLanguage == targetLanguage && moderateTone {
+		logger.Debug().
+			Int("messageId", message.ID).
+			Str("lang", targetLanguage).
+			Msg("Same language but moderation requested - will moderate tone")
+	}
+
+	// Проверяем кеш Redis (если Redis доступен)
+	if s.redisClient != nil {
+		cacheKey := s.getCacheKey(message.ID, targetLanguage)
+		cached, err := s.redisClient.Get(ctx, cacheKey).Result()
+		if err == nil {
+			// Cache HIT
+			if message.Translations == nil {
+				message.Translations = make(map[string]string)
+			}
+			message.Translations[targetLanguage] = cached
+			message.ChatTranslationMetadata = &models.ChatTranslationMetadata{
+				TranslatedFrom: message.OriginalLanguage,
+				TranslatedTo:   targetLanguage,
+				TranslatedAt:   time.Now(),
+				CacheHit:       true,
+				Provider:       "claude-haiku",
+			}
+
+			// Сохраняем перевод в БД даже при cache hit
+			if s.storage != nil && message.ID > 0 {
+				err = s.storage.UpdateMessageTranslations(ctx, message.ID, message.Translations)
+				if err != nil {
+					logger.Warn().Err(err).Int("messageId", message.ID).Msg("Failed to save cached translation to DB")
+				} else {
+					logger.Debug().Int("messageId", message.ID).Msg("Cached translation saved to DB")
+				}
+			}
+
+			logger.Debug().
+				Int("messageId", message.ID).
+				Str("targetLang", targetLanguage).
+				Msg("Translation cache HIT")
+			return nil
+		}
+	}
+
+	// Cache MISS - вызываем API
+	logger.Debug().
+		Int("messageId", message.ID).
+		Str("from", message.OriginalLanguage).
+		Str("to", targetLanguage).
+		Bool("moderate", moderateTone).
+		Msg("Translation cache MISS - calling API")
+
+	translated, err := s.translationSvc.TranslateWithToneModeration(
+		ctx,
+		message.Content,
+		message.OriginalLanguage,
+		targetLanguage,
+		moderateTone,
+	)
+	if err != nil {
+		logger.Error().
+			Err(err).
+			Int("messageId", message.ID).
+			Str("targetLang", targetLanguage).
+			Msg("Translation failed")
+		return fmt.Errorf("translation failed: %w", err)
+	}
+
+	// Сохраняем в кеш (TTL 30 дней) если Redis доступен
+	if s.redisClient != nil {
+		cacheKey := s.getCacheKey(message.ID, targetLanguage)
+		err = s.redisClient.Set(ctx, cacheKey, translated, 30*24*time.Hour).Err()
+		if err != nil {
+			logger.Warn().Err(err).Msg("Failed to cache translation")
+		}
+	}
+
+	// Обновляем сообщение
+	if message.Translations == nil {
+		message.Translations = make(map[string]string)
+	}
+	message.Translations[targetLanguage] = translated
+	message.ChatTranslationMetadata = &models.ChatTranslationMetadata{
+		TranslatedFrom: message.OriginalLanguage,
+		TranslatedTo:   targetLanguage,
+		TranslatedAt:   time.Now(),
+		CacheHit:       false,
+		Provider:       "claude-haiku",
+	}
+
+	// Сохраняем перевод в БД для персистентности
+	if s.storage != nil && message.ID > 0 {
+		err = s.storage.UpdateMessageTranslations(ctx, message.ID, message.Translations)
+		if err != nil {
+			logger.Warn().Err(err).Int("messageId", message.ID).Msg("Failed to save translation to DB")
+			// Не возвращаем ошибку, т.к. перевод уже выполнен и закеширован
+		} else {
+			logger.Debug().Int("messageId", message.ID).Msg("Translation saved to DB")
+		}
+	}
+
+	logger.Info().
+		Int("messageId", message.ID).
+		Str("targetLang", targetLanguage).
+		Int("originalLen", len(message.Content)).
+		Int("translatedLen", len(translated)).
+		Msg("Translation completed")
+
+	return nil
+}
+
+// TranslateBatch переводит несколько сообщений параллельно
+func (s *ChatTranslationService) TranslateBatch(
+	ctx context.Context,
+	messages []*models.MarketplaceMessage,
+	targetLanguage string,
+	moderateTone bool,
+) error {
+	if len(messages) == 0 {
+		return nil
+	}
+
+	// Ограничиваем параллелизм (10 одновременных запросов)
+	semaphore := make(chan struct{}, 10)
+	errChan := make(chan error, len(messages))
+	doneChan := make(chan struct{})
+
+	processed := 0
+	for _, msg := range messages {
+		semaphore <- struct{}{} // Acquire
+		go func(m *models.MarketplaceMessage) {
+			defer func() { <-semaphore }() // Release
+
+			err := s.TranslateMessage(ctx, m, targetLanguage, moderateTone)
+			if err != nil {
+				errChan <- err
+			}
+		}(msg)
+		processed++
+	}
+
+	// Ждем завершения всех горутин
+	go func() {
+		for i := 0; i < cap(semaphore); i++ {
+			semaphore <- struct{}{}
+		}
+		close(errChan)
+		close(doneChan)
+	}()
+
+	<-doneChan
+
+	// Собираем ошибки (логируем, но не прерываем)
+	var errors []error
+	for err := range errChan {
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		logger.Warn().
+			Int("failedCount", len(errors)).
+			Int("totalCount", len(messages)).
+			Msg("Some translations failed in batch")
+		// Не возвращаем ошибку, частичный успех - это OK
+	}
+
+	return nil
+}
+
+// DetectAndSetLanguage определяет язык сообщения и устанавливает original_language
+func (s *ChatTranslationService) DetectAndSetLanguage(
+	ctx context.Context,
+	message *models.MarketplaceMessage,
+) error {
+	if message.OriginalLanguage != "" {
+		return nil // Уже установлен
+	}
+
+	lang, confidence, err := s.translationSvc.DetectLanguage(ctx, message.Content)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Language detection failed, defaulting to 'unknown'")
+		message.OriginalLanguage = languageUnknown
+		return nil
+	}
+
+	// Требуем минимальную уверенность 70%
+	if confidence < 0.7 {
+		logger.Warn().
+			Float64("confidence", confidence).
+			Msg("Low confidence in language detection")
+		message.OriginalLanguage = languageUnknown
+		return nil
+	}
+
+	message.OriginalLanguage = lang
+	logger.Debug().
+		Str("detected", lang).
+		Float64("confidence", confidence).
+		Msg("Language detected")
+
+	return nil
+}
+
+// getCacheKey генерирует ключ для Redis
+func (s *ChatTranslationService) getCacheKey(messageID int, targetLang string) string {
+	return fmt.Sprintf("chat:translation:%d:%s", messageID, targetLang)
+}
+
+// GetUserTranslationSettings получает настройки перевода пользователя из БД
+func (s *ChatTranslationService) GetUserTranslationSettings(
+	ctx context.Context,
+	userID int,
+) (*models.ChatUserSettings, error) {
+	// ✅ ИЗМЕНЕНО: Теперь загружаем из БД через UserService
+	settings, err := s.userSvc.GetChatSettings(ctx, userID)
+	if err != nil {
+		logger.Warn().Err(err).Int("userId", userID).Msg("Failed to get chat settings from DB, using defaults")
+		// Возвращаем defaults при ошибке
+		return &models.ChatUserSettings{
+			AutoTranslate:     true,
+			PreferredLanguage: "en",
+			ShowLanguageBadge: true,
+			ModerateTone:      true,
+		}, nil
+	}
+
+	logger.Debug().
+		Int("userId", userID).
+		Str("preferredLang", settings.PreferredLanguage).
+		Bool("autoTranslate", settings.AutoTranslate).
+		Msg("Loaded user translation settings from DB")
+
+	return settings, nil
+}

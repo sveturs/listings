@@ -228,7 +228,7 @@ func (s *OrderService) prepareOrderStruct(req *models.CreateOrderRequest, userID
 
 func (s *OrderService) getStorefrontTx(ctx context.Context, tx *sqlx.Tx, storefrontID int) (*models.Storefront, error) {
 	var storefront models.Storefront
-	query := `SELECT * FROM storefronts WHERE id = $1 FOR SHARE`
+	query := `SELECT * FROM b2c_stores WHERE id = $1 FOR SHARE`
 	err := tx.GetContext(ctx, &storefront, query, storefrontID)
 	if err != nil {
 		return nil, err

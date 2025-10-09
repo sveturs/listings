@@ -119,7 +119,7 @@ export default function EditListingPage() {
       setError(null);
 
       const response = await apiClient.get<ListingResponse>(
-        `/api/v1/marketplace/listings/${listingId}`
+        `/api/v1/c2c/listings/${listingId}`
       );
 
       if (!response.error && response.data) {
@@ -253,7 +253,7 @@ export default function EditListingPage() {
       };
 
       const response = await apiClient.put(
-        `/api/v1/marketplace/listings/${listingId}`,
+        `/api/v1/c2c/listings/${listingId}`,
         updateData
       );
 

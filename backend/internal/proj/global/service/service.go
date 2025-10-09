@@ -13,15 +13,15 @@ import (
 
 	"backend/internal/cache"
 	"backend/internal/config"
+	storefrontService "backend/internal/proj/b2c/service"
 	balance "backend/internal/proj/balance/service"
 	behaviorTrackingService "backend/internal/proj/behavior_tracking/service"
 	behaviorTrackingPostgres "backend/internal/proj/behavior_tracking/storage/postgres"
+	marketplaceService "backend/internal/proj/c2c/service"
 	geocodeService "backend/internal/proj/geocode/service" // Добавить этот импорт
-	marketplaceService "backend/internal/proj/marketplace/service"
 	notificationService "backend/internal/proj/notifications/service"
 	payment "backend/internal/proj/payments/service"
 	reviewService "backend/internal/proj/reviews/service"
-	storefrontService "backend/internal/proj/storefronts/service"
 	userService "backend/internal/proj/users/service"
 	"backend/internal/services"
 	"backend/internal/storage"

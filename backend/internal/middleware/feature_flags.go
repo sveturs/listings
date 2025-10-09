@@ -29,9 +29,9 @@ func (m *FeatureFlagsMiddleware) CheckUnifiedAttributes() fiber.Handler {
 		// Проверяем, включена ли функция для пользователя
 		if !m.featureFlags.ShouldUseUnifiedAttributes(userID) {
 			// Если функция отключена, возвращаем ошибку или перенаправляем на старую версию
-			if c.Path() == "/api/v2/marketplace/categories/:category_id/attributes" {
+			if c.Path() == "/api/v2/c2c/categories/:category_id/attributes" {
 				// Можно перенаправить на v1
-				c.Path("/api/v1/marketplace/categories/" + c.Params("category_id") + "/attributes")
+				c.Path("/api/v1/c2c/categories/" + c.Params("category_id") + "/attributes")
 			} else {
 				return utils.SendError(c, fiber.StatusNotImplemented, "errors.featureNotAvailable")
 			}

@@ -188,7 +188,7 @@ func (d *Database) GetCarListingsCount(ctx context.Context) (int, error) {
 
 	query := `
 		SELECT COUNT(*)
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		WHERE ml.category_id IN (1003, 1301, 1303, 1302, 10174)
 		  AND ml.status = 'active'
 	`

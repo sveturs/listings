@@ -178,7 +178,7 @@ func (db *Database) GetComponentUsages(ctx context.Context, componentID, categor
 			mc.name as category_name
 		FROM custom_ui_component_usage ucu
 		JOIN custom_ui_components cuc ON ucu.component_id = cuc.id
-		JOIN marketplace_categories mc ON ucu.category_id = mc.id
+		JOIN c2c_categories mc ON ucu.category_id = mc.id
 		WHERE 1=1`
 
 	args := []interface{}{}

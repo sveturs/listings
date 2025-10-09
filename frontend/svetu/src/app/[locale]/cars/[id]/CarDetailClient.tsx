@@ -35,10 +35,10 @@ import {
   selectFavorites,
 } from '@/store/selectors/compareSelectors';
 
-type MarketplaceListing = components['schemas']['models.MarketplaceListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarDetailClientProps {
-  car: MarketplaceListing;
+  car: C2CListing;
   locale: string;
 }
 

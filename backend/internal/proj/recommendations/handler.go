@@ -129,7 +129,7 @@ func (h *Handler) getNewListings(category string, limit int) ([]models.Marketpla
 	var listings []models.MarketplaceListing
 
 	query := `
-		SELECT * FROM marketplace_listings
+		SELECT * FROM c2c_listings
 		WHERE status = 'active'
 		ORDER BY created_at DESC
 		LIMIT $1
@@ -187,7 +187,7 @@ func (h *Handler) AddViewHistory(c *fiber.Ctx) error {
 	// Update listing views count
 	if req.InteractionType == "view" {
 		_, _ = h.db.GetSQLXDB().Exec(`
-			UPDATE marketplace_listings
+			UPDATE c2c_listings
 			SET views = views + 1
 			WHERE id = $1
 		`, req.ListingID)

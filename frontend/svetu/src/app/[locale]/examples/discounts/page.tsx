@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { DiscountBadge } from '@/components/ui/DiscountBadge';
-import { PriceHistoryModal } from '@/components/marketplace/PriceHistoryModal';
-import { BlackFridayBadge } from '@/components/storefronts/BlackFridayBadge';
+import { PriceHistoryModal } from '@/components/c2c/PriceHistoryModal';
+import { BlackFridayBadge } from '@/components/b2c/BlackFridayBadge';
 import { ArrowLeft, TrendingDown, Calendar, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
@@ -224,7 +224,7 @@ export default function DiscountsDemo() {
 
               <div className="mockup-browser border bg-base-300">
                 <div className="mockup-browser-toolbar">
-                  <div className="input">http://localhost:3001/marketplace</div>
+                  <div className="input">http://localhost:3001/c2c</div>
                 </div>
                 <div className="flex justify-center px-4 py-16 bg-base-200">
                   <div className="grid md:grid-cols-2 gap-4 max-w-md">
@@ -305,9 +305,7 @@ export default function DiscountsDemo() {
                     <li>• График изменения цены (Chart.js)</li>
                     <li>• Детекция манипуляций с ценой</li>
                     <li>• Статистика: мин/макс/текущая цена</li>
-                    <li>
-                      • API: /api/v1/marketplace/listings/:id/price-history
-                    </li>
+                    <li>• API: /api/v1/c2c/listings/:id/price-history</li>
                     <li>• Автоматические предупреждения</li>
                   </ul>
                 </div>

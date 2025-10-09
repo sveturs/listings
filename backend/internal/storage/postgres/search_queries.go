@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"backend/internal/domain/models"
-	marketplaceService "backend/internal/proj/marketplace/service"
+	marketplaceService "backend/internal/proj/c2c/service"
 )
 
 // GetPopularSearchQueries возвращает популярные поисковые запросы

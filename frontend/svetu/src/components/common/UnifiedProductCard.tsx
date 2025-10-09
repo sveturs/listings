@@ -32,7 +32,7 @@ import {
 import { QuickView } from '@/components/ui/QuickView';
 import { DistanceBadge } from '@/components/ui/DistanceBadge';
 import { DiscountBadge } from '@/components/ui/DiscountBadge';
-import { PriceHistoryModal } from '@/components/marketplace/PriceHistoryModal';
+import { PriceHistoryModal } from '@/components/c2c/PriceHistoryModal';
 import { useDispatch } from 'react-redux';
 import { addItem } from '@/store/slices/localCartSlice';
 import type { AppDispatch } from '@/store';
@@ -52,7 +52,7 @@ import {
   getMinPrice,
   isInStock,
 } from '@/utils/product-utils';
-import { CarListingCard } from '@/components/marketplace/CarListingCard';
+import { CarListingCard } from '@/components/c2c/CarListingCard';
 import type { components } from '@/types/generated/api';
 
 // Функция проверки автомобильной категории
@@ -98,7 +98,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
 
   // Проверяем, является ли это автомобильная категория
   if (isAutomotiveCategory(product.category?.id)) {
-    // Конвертируем UnifiedProduct обратно в формат MarketplaceListing для CarListingCard
+    // Конвертируем UnifiedProduct обратно в формат C2CListing для CarListingCard
     const listing: components['schemas']['models.MarketplaceListing'] = {
       id: product.id,
       user_id: product.seller?.id || 0,
@@ -219,7 +219,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
         );
         return;
       }
-      router.push(`/${locale}/marketplace/${product.id}/buy`);
+      router.push(`/${locale}/c2c/${product.id}/buy`);
     }
   };
 

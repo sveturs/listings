@@ -27,7 +27,7 @@ func NewSubscriptionRepository(db *sqlx.DB) *SubscriptionRepository {
 func (r *SubscriptionRepository) GetPlans(ctx context.Context) ([]models.SubscriptionPlanDetails, error) {
 	query := `
 		SELECT id, code, name, COALESCE(price_monthly, 0) as price_monthly, COALESCE(price_yearly, 0) as price_yearly,
-			max_storefronts, max_products_per_storefront, max_staff_per_storefront, max_images_total,
+			max_b2c_stores, max_products_per_storefront, max_staff_per_storefront, max_images_total,
 			has_ai_assistant, has_live_shopping, has_export_data, has_custom_domain,
 			has_analytics, has_priority_support, commission_rate, free_trial_days,
 			sort_order, is_active, is_recommended, created_at, updated_at
@@ -48,7 +48,7 @@ func (r *SubscriptionRepository) GetPlans(ctx context.Context) ([]models.Subscri
 func (r *SubscriptionRepository) GetPlanByCode(ctx context.Context, code string) (*models.SubscriptionPlanDetails, error) {
 	query := `
 		SELECT id, code, name, COALESCE(price_monthly, 0) as price_monthly, COALESCE(price_yearly, 0) as price_yearly,
-			max_storefronts, max_products_per_storefront, max_staff_per_storefront, max_images_total,
+			max_b2c_stores, max_products_per_storefront, max_staff_per_storefront, max_images_total,
 			has_ai_assistant, has_live_shopping, has_export_data, has_custom_domain,
 			has_analytics, has_priority_support, commission_rate, free_trial_days,
 			sort_order, is_active, is_recommended, created_at, updated_at
@@ -73,7 +73,7 @@ func (r *SubscriptionRepository) GetUserSubscription(ctx context.Context, userID
 		SELECT us.id, us.user_id, us.plan_id, us.status, us.billing_cycle,
 			us.started_at, us.trial_ends_at, us.current_period_start, us.current_period_end,
 			us.canceled_at, us.expires_at, us.last_payment_id, us.last_payment_at,
-			us.next_payment_at, us.payment_method, us.auto_renew, us.used_storefronts,
+			us.next_payment_at, us.payment_method, us.auto_renew, us.used_b2c_stores,
 			us.metadata, us.notes, us.created_at, us.updated_at
 		FROM user_subscriptions us
 		WHERE us.user_id = $1 AND us.status IN ('active', 'trial')
@@ -102,7 +102,7 @@ func (r *SubscriptionRepository) GetUserSubscription(ctx context.Context, userID
 func (r *SubscriptionRepository) GetPlanByID(ctx context.Context, id int) (*models.SubscriptionPlanDetails, error) {
 	query := `
 		SELECT id, code, name, COALESCE(price_monthly, 0) as price_monthly, COALESCE(price_yearly, 0) as price_yearly,
-			max_storefronts, max_products_per_storefront, max_staff_per_storefront, max_images_total,
+			max_b2c_stores, max_products_per_storefront, max_staff_per_storefront, max_images_total,
 			has_ai_assistant, has_live_shopping, has_export_data, has_custom_domain,
 			has_analytics, has_priority_support, commission_rate, free_trial_days,
 			sort_order, is_active, is_recommended, created_at, updated_at
@@ -166,7 +166,7 @@ func (r *SubscriptionRepository) CreateSubscription(ctx context.Context, req *mo
 		INSERT INTO user_subscriptions (
 			user_id, plan_id, status, billing_cycle,
 			started_at, trial_ends_at, current_period_start, current_period_end,
-			next_payment_at, payment_method, auto_renew, used_storefronts
+			next_payment_at, payment_method, auto_renew, used_b2c_stores
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0
 		) RETURNING id`
@@ -336,8 +336,8 @@ func (r *SubscriptionRepository) CheckSubscriptionLimits(ctx context.Context, us
 		}
 		plan = freePlan
 
-		// Count current storefronts for user without subscription
-		countQuery := `SELECT COUNT(*) FROM storefronts WHERE user_id = $1 AND is_active = true`
+		// Count current b2c_stores for user without subscription
+		countQuery := `SELECT COUNT(*) FROM b2c_stores WHERE user_id = $1 AND is_active = true`
 		err = r.db.GetContext(ctx, &usedStorefronts, countQuery, userID)
 		if err != nil {
 			usedStorefronts = 0
@@ -354,7 +354,7 @@ func (r *SubscriptionRepository) CheckSubscriptionLimits(ctx context.Context, us
 		response.Limit = plan.MaxStorefronts
 		if plan.MaxStorefronts == -1 {
 			response.Allowed = true
-			response.Message = "Unlimited storefronts allowed"
+			response.Message = "Unlimited b2c_stores allowed"
 		} else {
 			response.Allowed = (usedStorefronts + count) <= plan.MaxStorefronts
 			if !response.Allowed {
@@ -428,9 +428,9 @@ func (r *SubscriptionRepository) GetUserSubscriptionInfo(ctx context.Context, us
 				return nil, fmt.Errorf("failed to get free plan: %w", err)
 			}
 
-			// Count current storefronts
+			// Count current b2c_stores
 			var usedStorefronts int
-			countQuery := `SELECT COUNT(*) FROM storefronts WHERE user_id = $1 AND is_active = true`
+			countQuery := `SELECT COUNT(*) FROM b2c_stores WHERE user_id = $1 AND is_active = true`
 			_ = r.db.GetContext(ctx, &usedStorefronts, countQuery, userID)
 
 			return &models.UserSubscriptionInfo{

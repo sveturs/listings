@@ -1,4 +1,4 @@
-import { ListingFormData } from '@/types/marketplace';
+import { ListingFormData } from '@/types/c2c';
 
 export interface DraftMetadata {
   id: string;

@@ -20,7 +20,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-primary"
                 onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917/dashboard')
+                  router.push('/en/b2c/test-store-737754917/dashboard')
                 }
               >
                 Открыть дашборд
@@ -28,16 +28,14 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917/analytics')
+                  router.push('/en/b2c/test-store-737754917/analytics')
                 }
               >
                 Открыть аналитику
               </button>
               <button
                 className="btn btn-accent"
-                onClick={() =>
-                  router.push('/en/storefronts/test-store-737754917')
-                }
+                onClick={() => router.push('/en/b2c/test-store-737754917')}
               >
                 Публичная страница
               </button>
@@ -53,9 +51,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-primary"
                 onClick={() =>
-                  router.push(
-                    '/en/storefronts/testuser-electronics-store/dashboard'
-                  )
+                  router.push('/en/b2c/testuser-electronics-store/dashboard')
                 }
               >
                 Открыть дашборд
@@ -63,9 +59,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() =>
-                  router.push(
-                    '/en/storefronts/testuser-electronics-store/analytics'
-                  )
+                  router.push('/en/b2c/testuser-electronics-store/analytics')
                 }
               >
                 Открыть аналитику
@@ -73,7 +67,7 @@ export default function TestDashboardPage() {
               <button
                 className="btn btn-accent"
                 onClick={() =>
-                  router.push('/en/storefronts/testuser-electronics-store')
+                  router.push('/en/b2c/testuser-electronics-store')
                 }
               >
                 Публичная страница

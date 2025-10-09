@@ -7,7 +7,7 @@ import (
 
 	"backend/internal/domain/models"
 	"backend/internal/domain/search"
-	"backend/internal/proj/storefronts/storage/opensearch"
+	"backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/storage/filestorage"
 )
 
@@ -75,6 +75,7 @@ type Storage interface {
 	GetCategoryTree(ctx context.Context) ([]models.CategoryTreeNode, error)
 	AddListingImage(ctx context.Context, image *models.MarketplaceImage) (int, error)
 	GetListingImages(ctx context.Context, listingID string) ([]models.MarketplaceImage, error)
+	GetB2CProductImages(ctx context.Context, productID int) ([]models.MarketplaceImage, error)
 
 	// FileStorage возвращает интерфейс для работы с файловым хранилищем
 	FileStorage() filestorage.FileStorageInterface

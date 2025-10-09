@@ -50,54 +50,54 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	query := `
 		SELECT
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.id
-				WHEN ug.source_type = 'storefront_product' THEN sp.id
+				WHEN ug.source_type = 'c2c_listing' THEN ml.id
+				WHEN ug.source_type = 'b2c_product' THEN sp.id
 			END as id,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.title
-				WHEN ug.source_type = 'storefront_product' THEN sp.name
+				WHEN ug.source_type = 'c2c_listing' THEN ml.title
+				WHEN ug.source_type = 'b2c_product' THEN sp.name
 			END as title,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(ml.description, '')
-				WHEN ug.source_type = 'storefront_product' THEN COALESCE(sp.description, '')
+				WHEN ug.source_type = 'c2c_listing' THEN COALESCE(ml.description, '')
+				WHEN ug.source_type = 'b2c_product' THEN COALESCE(sp.description, '')
 			END as description,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.price
-				WHEN ug.source_type = 'storefront_product' THEN sp.price
+				WHEN ug.source_type = 'c2c_listing' THEN ml.price
+				WHEN ug.source_type = 'b2c_product' THEN sp.price
 			END as price,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(mc1.name, '')
-				WHEN ug.source_type = 'storefront_product' THEN COALESCE(mc2.name, '')
+				WHEN ug.source_type = 'c2c_listing' THEN COALESCE(mc1.name, '')
+				WHEN ug.source_type = 'b2c_product' THEN COALESCE(mc2.name, '')
 			END as category,
 			ST_Y(ug.location::geometry) as lat,
 			ST_X(ug.location::geometry) as lng,
 			COALESCE(ug.formatted_address, '') as address,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.user_id
-				WHEN ug.source_type = 'storefront_product' THEN s.user_id
+				WHEN ug.source_type = 'c2c_listing' THEN ml.user_id
+				WHEN ug.source_type = 'b2c_product' THEN s.user_id
 			END as user_id,
 			CASE
-				WHEN ug.source_type = 'storefront_product' THEN sp.storefront_id
+				WHEN ug.source_type = 'b2c_product' THEN sp.storefront_id
 				ELSE NULL
 			END as storefront_id,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.status
-				WHEN ug.source_type = 'storefront_product' THEN CASE WHEN sp.is_active THEN 'active' ELSE 'inactive' END
+				WHEN ug.source_type = 'c2c_listing' THEN ml.status
+				WHEN ug.source_type = 'b2c_product' THEN CASE WHEN sp.is_active THEN 'active' ELSE 'inactive' END
 			END as status,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.created_at
-				WHEN ug.source_type = 'storefront_product' THEN sp.created_at
+				WHEN ug.source_type = 'c2c_listing' THEN ml.created_at
+				WHEN ug.source_type = 'b2c_product' THEN sp.created_at
 			END as created_at,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.updated_at
-				WHEN ug.source_type = 'storefront_product' THEN sp.updated_at
+				WHEN ug.source_type = 'c2c_listing' THEN ml.updated_at
+				WHEN ug.source_type = 'b2c_product' THEN sp.updated_at
 			END as updated_at,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN ml.views_count
-				WHEN ug.source_type = 'storefront_product' THEN sp.view_count
+				WHEN ug.source_type = 'c2c_listing' THEN ml.views_count
+				WHEN ug.source_type = 'b2c_product' THEN sp.view_count
 			END as views_count,
 			CASE
-				WHEN ug.source_type = 'marketplace_listing' THEN COALESCE(rc.average_rating, 0)
+				WHEN ug.source_type = 'c2c_listing' THEN COALESCE(rc.average_rating, 0)
 				ELSE 0
 			END as rating,
 			ug.source_type::text as item_type,
@@ -114,15 +114,15 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 
 	query += `
 			FROM unified_geo ug
-			LEFT JOIN marketplace_listings ml ON ug.source_type = 'marketplace_listing' AND ug.source_id = ml.id
-			LEFT JOIN storefront_products sp ON ug.source_type = 'storefront_product' AND ug.source_id = sp.id
-			LEFT JOIN storefronts s ON sp.storefront_id = s.id
-			LEFT JOIN marketplace_categories mc1 ON ml.category_id = mc1.id
-			LEFT JOIN marketplace_categories mc2 ON sp.category_id = mc2.id
+			LEFT JOIN c2c_listings ml ON ug.source_type = 'c2c_listing' AND ug.source_id = ml.id
+			LEFT JOIN storefront_products sp ON ug.source_type = 'b2c_product' AND ug.source_id = sp.id
+			LEFT JOIN b2c_stores s ON sp.storefront_id = s.id
+			LEFT JOIN c2c_categories mc1 ON ml.category_id = mc1.id
+			LEFT JOIN c2c_categories mc2 ON sp.category_id = mc2.id
 			LEFT JOIN rating_cache rc ON rc.entity_type = 'listing' AND rc.entity_id = ml.id
 			WHERE (
-				(ug.source_type = 'marketplace_listing' AND ml.status = 'active') OR
-				(ug.source_type = 'storefront_product' AND sp.is_active = true)
+				(ug.source_type = 'c2c_listing' AND ml.status = 'active') OR
+				(ug.source_type = 'b2c_product' AND sp.is_active = true)
 			)`
 
 	var args []interface{}
@@ -147,8 +147,8 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 			argIndex++
 		}
 		query += fmt.Sprintf(` AND (
-			(ug.source_type = 'marketplace_listing' AND ml.category_id IN (%s)) OR
-			(ug.source_type = 'storefront_product' AND sp.category_id IN (%s))
+			(ug.source_type = 'c2c_listing' AND ml.category_id IN (%s)) OR
+			(ug.source_type = 'b2c_product' AND sp.category_id IN (%s))
 		)`, strings.Join(placeholders, ","), strings.Join(placeholders, ","))
 		log.Info().
 			Ints("categoryIDs", params.CategoryIDs).
@@ -158,8 +158,8 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	// Фильтр по минимальной цене
 	if params.MinPrice != nil {
 		query += fmt.Sprintf(` AND (
-			(ug.source_type = 'marketplace_listing' AND ml.price >= $%d) OR
-			(ug.source_type = 'storefront_product' AND sp.price >= $%d)
+			(ug.source_type = 'c2c_listing' AND ml.price >= $%d) OR
+			(ug.source_type = 'b2c_product' AND sp.price >= $%d)
 		)`, argIndex, argIndex)
 		args = append(args, *params.MinPrice)
 		argIndex++
@@ -171,8 +171,8 @@ func (r *PostGISRepository) searchUnifiedGeo(ctx context.Context, params types.S
 	// Фильтр по максимальной цене
 	if params.MaxPrice != nil {
 		query += fmt.Sprintf(` AND (
-			(ug.source_type = 'marketplace_listing' AND ml.price <= $%d) OR
-			(ug.source_type = 'storefront_product' AND sp.price <= $%d)
+			(ug.source_type = 'c2c_listing' AND ml.price <= $%d) OR
+			(ug.source_type = 'b2c_product' AND sp.price <= $%d)
 		)`, argIndex, argIndex)
 		args = append(args, *params.MaxPrice)
 		argIndex++
@@ -581,8 +581,8 @@ func (r *PostGISRepository) GetListingByID(ctx context.Context, id int) (*types.
 			ml.updated_at,
 			ml.views_count,
 			COALESCE(rc.average_rating, 0) as rating
-		FROM marketplace_listings ml
-		LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+		FROM c2c_listings ml
+		LEFT JOIN c2c_categories mc ON ml.category_id = mc.id
 		LEFT JOIN listings_geo lg ON ml.id = lg.listing_id
 		LEFT JOIN rating_cache rc ON rc.entity_type = 'listing' AND rc.entity_id = ml.id
 		WHERE ml.id = $1 AND lg.location IS NOT NULL`
@@ -637,7 +637,7 @@ func (r *PostGISRepository) UpdateListingLocation(ctx context.Context, id int, l
 
 	// Обновляем адрес в основной таблице
 	updateAddressQuery := `
-		UPDATE marketplace_listings
+		UPDATE c2c_listings
 		SET location = $1, updated_at = NOW()
 		WHERE id = $2`
 

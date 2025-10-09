@@ -1484,7 +1484,7 @@ func (r *VariantRepository) GetProductPublic(ctx context.Context, slug string, p
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
 		FROM storefront_products p
-		JOIN storefronts s ON p.storefront_id = s.id
+		JOIN b2c_stores s ON p.storefront_id = s.id
 		WHERE p.id = $1 AND s.slug = $2 AND p.is_active = true`
 
 	var product models.StorefrontProduct

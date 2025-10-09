@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { MarketplaceService } from '@/services/marketplace';
+import { MarketplaceService } from '@/services/c2c';
 import { ChevronRight, Grid3X3, Filter } from 'lucide-react';
 import type { components } from '@/types/generated/api';
 import { CategoryModal } from './CategoryModal';

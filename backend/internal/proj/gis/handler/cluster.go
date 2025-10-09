@@ -86,7 +86,7 @@ func (h *ClusterHandler) GetClusters(c *fiber.Ctx) error {
 				ml.price,
 				ml.category_id
 			FROM listings_geo lg
-			JOIN marketplace_listings ml ON lg.listing_id = ml.id
+			JOIN c2c_listings ml ON lg.listing_id = ml.id
 			WHERE lg.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)
 				AND ml.status = 'active'
 	`
@@ -227,7 +227,7 @@ func (h *ClusterHandler) GetHeatmap(c *fiber.Ctx) error {
 				ST_Y(lg.location::geometry) as lat,
 				ml.price as weight
 			FROM listings_geo lg
-			JOIN marketplace_listings ml ON lg.listing_id = ml.id
+			JOIN c2c_listings ml ON lg.listing_id = ml.id
 			WHERE lg.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)
 				AND ml.status = 'active'
 				AND ml.price IS NOT NULL
@@ -240,7 +240,7 @@ func (h *ClusterHandler) GetHeatmap(c *fiber.Ctx) error {
 				ST_Y(lg.location::geometry) as lat,
 				COALESCE(ml.views_count, 1) as weight
 			FROM listings_geo lg
-			JOIN marketplace_listings ml ON lg.listing_id = ml.id
+			JOIN c2c_listings ml ON lg.listing_id = ml.id
 			WHERE lg.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)
 				AND ml.status = 'active'
 			LIMIT 1000
@@ -252,7 +252,7 @@ func (h *ClusterHandler) GetHeatmap(c *fiber.Ctx) error {
 				ST_Y(lg.location::geometry) as lat,
 				1.0 as weight
 			FROM listings_geo lg
-			JOIN marketplace_listings ml ON lg.listing_id = ml.id
+			JOIN c2c_listings ml ON lg.listing_id = ml.id
 			WHERE lg.location && ST_MakeEnvelope($1, $2, $3, $4, 4326)
 				AND ml.status = 'active'
 			LIMIT 1000

@@ -13,7 +13,7 @@ import {
   List,
   Layers,
 } from 'lucide-react';
-import type { MarketplaceItem } from '@/types/marketplace';
+import type { C2CItem } from '@/types/c2c';
 import type { UnifiedProduct } from '@/types/unified-product';
 
 // Динамические импорты для компонентов с браузерными API
@@ -26,7 +26,7 @@ const QuickView = dynamicImport(
 );
 const PriceHistoryModal = dynamicImport(
   () =>
-    import('@/components/marketplace/PriceHistoryModal').then((mod) => ({
+    import('@/components/c2c/PriceHistoryModal').then((mod) => ({
       default: mod.PriceHistoryModal,
     })),
   { ssr: false }
@@ -37,7 +37,7 @@ const VariantSelectionModal = dynamicImport(
 );
 const EnhancedListingCard = dynamicImport(
   () =>
-    import('@/components/marketplace/EnhancedListingCard').then((mod) => ({
+    import('@/components/c2c/EnhancedListingCard').then((mod) => ({
       default: mod.EnhancedListingCard,
     })),
   { ssr: false }
@@ -76,7 +76,7 @@ export default function ViewDemoPage() {
   const orderId = 57; // Реальный заказ из storefront_orders
 
   // Тестовые данные для карточек
-  const sampleMarketplaceListing: MarketplaceItem = {
+  const sampleC2CListing: C2CItem = {
     id: 106,
     user_id: 8,
     title: 'Volkswagen Atlas Cross Sport',
@@ -218,13 +218,13 @@ export default function ViewDemoPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link
-              href={`/${locale}/marketplace/${marketplaceListingId}`}
+              href={`/${locale}/c2c/${marketplaceListingId}`}
               className="card bg-base-200 hover:bg-base-300 transition-colors"
             >
               <div className="card-body">
                 <h3 className="card-title text-lg">📄 Страница объявления</h3>
                 <p className="text-sm text-base-content/70">
-                  /marketplace/[id] - Полная информация об объявлении
+                  /c2c/[id] - Полная информация об объявлении
                 </p>
                 <div className="badge badge-primary">
                   ID: {marketplaceListingId}
@@ -233,13 +233,13 @@ export default function ViewDemoPage() {
             </Link>
 
             <Link
-              href={`/${locale}/storefronts/${storefrontSlug}/products/${storefrontProductId}`}
+              href={`/${locale}/b2c/${storefrontSlug}/products/${storefrontProductId}`}
               className="card bg-base-200 hover:bg-base-300 transition-colors"
             >
               <div className="card-body">
                 <h3 className="card-title text-lg">🏪 Товар витрины</h3>
                 <p className="text-sm text-base-content/70">
-                  /storefronts/[slug]/products/[id]
+                  /b2c/[slug]/products/[id]
                 </p>
                 <div className="badge badge-secondary">Витрина</div>
               </div>
@@ -272,14 +272,12 @@ export default function ViewDemoPage() {
             </Link>
 
             <Link
-              href={`/${locale}/marketplace/${marketplaceListingId}/buy`}
+              href={`/${locale}/c2c/${marketplaceListingId}/buy`}
               className="card bg-base-200 hover:bg-base-300 transition-colors"
             >
               <div className="card-body">
                 <h3 className="card-title text-lg">💳 Страница покупки</h3>
-                <p className="text-sm text-base-content/70">
-                  /marketplace/[id]/buy
-                </p>
+                <p className="text-sm text-base-content/70">/c2c/[id]/buy</p>
                 <div className="badge badge-warning">Оформление</div>
               </div>
             </Link>
@@ -421,7 +419,7 @@ export default function ViewDemoPage() {
                 }
               >
                 <EnhancedListingCard
-                  item={sampleMarketplaceListing}
+                  item={sampleC2CListing}
                   locale={locale}
                   viewMode={viewMode}
                   gridColumns={gridColumns}
@@ -481,7 +479,7 @@ export default function ViewDemoPage() {
             </Link>
 
             <Link
-              href={`/${locale}/storefronts/create`}
+              href={`/${locale}/b2c/create`}
               className="card bg-base-200 hover:bg-base-300 transition-colors"
             >
               <div className="card-body">
@@ -527,11 +525,8 @@ export default function ViewDemoPage() {
                   <td>Маркетплейс</td>
                   <td>Главная страница с товарами</td>
                   <td>
-                    <Link
-                      href={`/${locale}/marketplace`}
-                      className="link link-primary"
-                    >
-                      /marketplace
+                    <Link href={`/${locale}/c2c`} className="link link-primary">
+                      /c2c
                     </Link>
                   </td>
                 </tr>
@@ -539,11 +534,8 @@ export default function ViewDemoPage() {
                   <td>Витрины</td>
                   <td>Список всех витрин</td>
                   <td>
-                    <Link
-                      href={`/${locale}/storefronts`}
-                      className="link link-primary"
-                    >
-                      /storefronts
+                    <Link href={`/${locale}/b2c`} className="link link-primary">
+                      /b2c
                     </Link>
                   </td>
                 </tr>

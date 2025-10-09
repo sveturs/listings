@@ -13,7 +13,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { CategoryTreeModal } from './CategoryTreeModal';
-import { MarketplaceService } from '@/services/marketplace';
+import { MarketplaceService } from '@/services/c2c';
 
 interface CategorySelectorProps {
   selectedCategoryId?: number;

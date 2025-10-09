@@ -43,7 +43,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.storefront_id = $1`
 
 	args := []interface{}{filter.StorefrontID}
@@ -230,7 +230,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.id = $1 AND p.storefront_id = $2`
 
 	p := &models.StorefrontProduct{}
@@ -328,7 +328,7 @@ func (s *Database) GetStorefrontProductBySKU(ctx context.Context, storefrontID i
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.storefront_id = $1 AND p.sku = $2`
 
 	p := &models.StorefrontProduct{}
@@ -493,7 +493,7 @@ func (s *Database) GetStorefrontProductByID(ctx context.Context, productID int) 
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON p.category_id = c.id
+		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.id = $1`
 
 	p := &models.StorefrontProduct{}
@@ -1029,8 +1029,8 @@ func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, pr
 		return fmt.Errorf("product not found or already deleted")
 	}
 
-	// Обновляем статус в marketplace_listings на 'disabled'
-	updateQuery := `UPDATE marketplace_listings 
+	// Обновляем статус в c2c_listings на 'disabled'
+	updateQuery := `UPDATE c2c_listings 
 		SET status = 'disabled', updated_at = CURRENT_TIMESTAMP 
 		WHERE id = $1 AND storefront_id = $2`
 
@@ -1091,8 +1091,8 @@ func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID
 		return fmt.Errorf("failed to delete inventory movements: %w", err)
 	}
 
-	// 6. Удаляем из marketplace_listings
-	_, err = tx.Exec(ctx, `DELETE FROM marketplace_listings WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
+	// 6. Удаляем из c2c_listings
+	_, err = tx.Exec(ctx, `DELETE FROM c2c_listings WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to delete marketplace listing: %w", err)
 	}
@@ -1226,7 +1226,7 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			0 as file_size,
 			'' as content_type,
 			'minio' as storage_type,
-			'storefronts' as storage_bucket,
+			'b2c_stores' as storage_bucket,
 			spi.image_url as public_url,
 			spi.created_at
 		FROM storefront_product_images spi
@@ -1521,10 +1521,10 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 		}
 	}
 
-	// Обновляем статус в marketplace_listings для удалённых товаров
+	// Обновляем статус в c2c_listings для удалённых товаров
 	if len(deletedIDs) > 0 {
 		_, err = tx.Exec(ctx,
-			`UPDATE marketplace_listings 
+			`UPDATE c2c_listings 
 			SET status = 'disabled', updated_at = CURRENT_TIMESTAMP 
 			WHERE id = ANY($1) AND storefront_id = $2`,
 			pq.Array(deletedIDs), storefrontID,
@@ -1639,7 +1639,7 @@ func (s *Database) loadAddressTranslations(ctx context.Context, products []*mode
 	query := `
 		SELECT entity_id, language, field_name, translated_text
 		FROM translations
-		WHERE entity_type = 'storefront_product'
+		WHERE entity_type = 'b2c_product'
 		  AND entity_id = ANY($1)
 		  AND language IN ('en', 'ru', 'sr')
 		ORDER BY entity_id, language, field_name`
@@ -1686,7 +1686,7 @@ func (s *Database) loadAddressTranslationsForProduct(ctx context.Context, produc
 	query := `
 		SELECT language, field_name, translated_text
 		FROM translations
-		WHERE entity_type = 'storefront_product'
+		WHERE entity_type = 'b2c_product'
 		  AND entity_id = $1
 		  AND language IN ('en', 'ru', 'sr')
 		ORDER BY language, field_name`

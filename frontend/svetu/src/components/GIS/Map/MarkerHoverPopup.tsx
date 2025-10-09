@@ -130,7 +130,7 @@ const MarkerHoverPopup: React.FC<MarkerHoverPopupProps> = ({
   // Обработчик клика на витрину
   const handleStorefrontClick = () => {
     if (marker.item_type === 'storefront' && marker.storefront_id) {
-      router.push(`/${locale}/storefronts/${marker.storefront_id}`);
+      router.push(`/${locale}/b2c/${marker.storefront_id}`);
     } else if (onClick) {
       onClick();
     }

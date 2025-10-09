@@ -4,10 +4,10 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
-type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
 
 interface OrderDetailsProps {
-  order: StorefrontOrder;
+  order: B2COrder;
 }
 
 export default function OrderDetails({ order }: OrderDetailsProps) {

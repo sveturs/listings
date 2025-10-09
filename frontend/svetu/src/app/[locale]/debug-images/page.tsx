@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MarketplaceService } from '@/services/marketplace';
-import { MarketplaceItem } from '@/types/marketplace';
+import { MarketplaceService } from '@/services/c2c';
+import { C2CItem } from '@/types/c2c';
 import configManager from '@/config';
 import SafeImage from '@/components/SafeImage';
 
 export default function DebugImagesPage() {
-  const [items, setItems] = useState<MarketplaceItem[]>([]);
+  const [items, setItems] = useState<C2CItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

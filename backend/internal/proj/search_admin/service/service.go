@@ -13,17 +13,19 @@ import (
 )
 
 type Service struct {
-	repo     *postgres.SearchConfigRepository
-	osClient *opensearch.OpenSearchClient
-	db       *sqlx.DB
-	storage  storage.Storage
+	repo         *postgres.SearchConfigRepository
+	osClient     *opensearch.OpenSearchClient
+	db           *sqlx.DB
+	storage      storage.Storage
+	b2cIndexName string // Имя индекса для B2C товаров из конфигурации
 }
 
-func NewService(db *sqlx.DB, osClient *opensearch.OpenSearchClient) *Service {
+func NewService(db *sqlx.DB, osClient *opensearch.OpenSearchClient, b2cIndexName string) *Service {
 	return &Service{
-		repo:     postgres.NewSearchConfigRepository(db),
-		osClient: osClient,
-		db:       db,
+		repo:         postgres.NewSearchConfigRepository(db),
+		osClient:     osClient,
+		db:           db,
+		b2cIndexName: b2cIndexName,
 	}
 }
 

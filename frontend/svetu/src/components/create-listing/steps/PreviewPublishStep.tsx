@@ -86,7 +86,7 @@ export default function PreviewPublishStep({
 
       // Перенаправляем на страницу объявления
       setTimeout(() => {
-        router.push(`/marketplace/${response.data?.id}`);
+        router.push(`/c2c/${response.data?.id}`);
       }, 1000);
     } catch (error) {
       console.error('Error publishing:', error);

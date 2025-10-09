@@ -94,7 +94,7 @@ func (r *cartRepository) GetByUser(ctx context.Context, userID int, storefrontID
 		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
 			   s.name, s.slug
 		FROM shopping_carts c
-		LEFT JOIN storefronts s ON s.id = c.storefront_id
+		LEFT JOIN b2c_stores s ON s.id = c.storefront_id
 		WHERE c.user_id = $1 AND c.storefront_id = $2`
 
 	var cart models.ShoppingCart
@@ -153,7 +153,7 @@ func (r *cartRepository) GetBySession(ctx context.Context, sessionID string, sto
 		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
 			   s.name, s.slug
 		FROM shopping_carts c
-		LEFT JOIN storefronts s ON s.id = c.storefront_id
+		LEFT JOIN b2c_stores s ON s.id = c.storefront_id
 		WHERE c.session_id = $1 AND c.storefront_id = $2`
 
 	var cart models.ShoppingCart
@@ -590,7 +590,7 @@ func (r *cartRepository) GetAllUserCarts(ctx context.Context, userID int) ([]*mo
 		SELECT c.id, c.user_id, c.storefront_id, c.session_id, c.created_at, c.updated_at,
 			   s.name as storefront_name
 		FROM shopping_carts c
-		JOIN storefronts s ON s.id = c.storefront_id
+		JOIN b2c_stores s ON s.id = c.storefront_id
 		WHERE c.user_id = $1
 		ORDER BY c.updated_at DESC`
 

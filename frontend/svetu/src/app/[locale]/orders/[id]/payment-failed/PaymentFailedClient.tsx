@@ -128,12 +128,12 @@ export default function PaymentFailedClient({ params }: Props) {
           {/* Действия */}
           <div className="card-actions justify-center space-x-4">
             <Link
-              href={`/${locale}/marketplace/${id.split('_')[0] || '27'}/buy`}
+              href={`/${locale}/c2c/${id.split('_')[0] || '27'}/buy`}
               className="btn btn-primary"
             >
               Попробовать снова
             </Link>
-            <Link href={`/${locale}/marketplace`} className="btn btn-outline">
+            <Link href={`/${locale}/c2c`} className="btn btn-outline">
               Вернуться к маркетплейсу
             </Link>
           </div>

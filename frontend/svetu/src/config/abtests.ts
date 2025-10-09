@@ -30,7 +30,7 @@ export const abTests: ABTest[] = [
       },
     ],
     targeting: {
-      urls: ['/cars', '/marketplace', '/real-estate'],
+      urls: ['/cars', '/c2c', '/real-estate'],
     },
     metrics: [
       {
@@ -152,7 +152,7 @@ export const abTests: ABTest[] = [
       },
     ],
     targeting: {
-      urls: ['/search', '/marketplace/search'],
+      urls: ['/search', '/c2c/search'],
     },
     metrics: [
       {

@@ -10,13 +10,14 @@ import (
 )
 
 const (
-	marketplaceIndex        = "marketplace_listings" // Индекс для listings (C2C)
-	marketplaceListingIndex = "marketplace_listings" // Listings индексируются сюда
-	storefrontProductsIndex = "storefront_products"  // Индекс для storefront products (B2C)
-	storefrontsIndex        = "storefronts"          // Индекс для самих витрин
+	marketplaceIndex        = "c2c_listings" // Индекс для listings (C2C)
+	marketplaceListingIndex = "c2c_listings" // Listings индексируются сюда
+	b2c_storesIndex         = "b2c_stores"   // Индекс для самих витрин
 	listingType             = "listing"
 	productType             = "product"
 )
+
+// storefrontProductsIndex удален - теперь используется s.b2cIndexName из конфигурации
 
 // IndexInfo представляет информацию об индексе
 type IndexInfo struct {
@@ -68,7 +69,7 @@ func (s *Service) GetIndexInfo(ctx context.Context) ([]IndexInfo, error) {
 	}
 
 	// Получаем информацию о всех основных индексах
-	indices := []string{marketplaceIndex, storefrontProductsIndex, storefrontsIndex}
+	indices := []string{marketplaceIndex, s.b2cIndexName, b2c_storesIndex}
 	var results []IndexInfo
 
 	for _, indexName := range indices {
@@ -386,7 +387,7 @@ func (s *Service) SearchIndexedDocuments(ctx context.Context, searchQuery string
 		return nil, fmt.Errorf("OpenSearch client not initialized")
 	}
 
-	indexName := marketplaceIndex // "marketplace_listings"
+	indexName := marketplaceIndex // "c2c_listings"
 
 	if limit <= 0 {
 		limit = 20
@@ -577,7 +578,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 	// Очистка индексов перед переиндексацией для удаления старых документов
 	if shouldIndexListings {
-		// Удаляем все документы из индекса marketplace_listings
+		// Удаляем все документы из индекса c2c_listings
 		deleteQuery := map[string]interface{}{
 			"query": map[string]interface{}{
 				"match_all": map[string]interface{}{},
@@ -586,25 +587,25 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 		deleteJSON, _ := json.Marshal(deleteQuery)
 		_, err := s.osClient.Execute(ctx, "POST", "/"+marketplaceListingIndex+"/_delete_by_query", deleteJSON)
 		if err != nil {
-			logger.Warn().Msgf("Warning: Failed to clean marketplace_listings index: %v", err)
+			logger.Warn().Msgf("Warning: Failed to clean c2c_listings index: %v", err)
 		} else {
-			logger.Info().Msg("Successfully cleaned marketplace_listings index")
+			logger.Info().Msg("Successfully cleaned c2c_listings index")
 		}
 	}
 
 	if shouldIndexProducts {
-		// Удаляем все документы из индекса storefront_products
+		// Удаляем все документы из индекса B2C
 		deleteQuery := map[string]interface{}{
 			"query": map[string]interface{}{
 				"match_all": map[string]interface{}{},
 			},
 		}
 		deleteJSON, _ := json.Marshal(deleteQuery)
-		_, err := s.osClient.Execute(ctx, "POST", "/"+storefrontProductsIndex+"/_delete_by_query", deleteJSON)
+		_, err := s.osClient.Execute(ctx, "POST", "/"+s.b2cIndexName+"/_delete_by_query", deleteJSON)
 		if err != nil {
-			logger.Warn().Msgf("Warning: Failed to clean storefront_products index: %v", err)
+			logger.Warn().Msgf("Warning: Failed to clean %s index: %v", s.b2cIndexName, err)
 		} else {
-			logger.Info().Msg("Successfully cleaned storefront_products index")
+			logger.Info().Msgf("Successfully cleaned %s index", s.b2cIndexName)
 		}
 	}
 
@@ -625,8 +626,8 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				ml.address_city,
 				ml.address_country,
 				ml.address_multilingual
-			FROM marketplace_listings ml
-			LEFT JOIN marketplace_categories mc ON ml.category_id = mc.id
+			FROM c2c_listings ml
+			LEFT JOIN c2c_categories mc ON ml.category_id = mc.id
 			WHERE ml.status = 'active'
 			ORDER BY ml.id
 		`
@@ -793,8 +794,8 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 				sf.country,
 				sf.address
 			FROM storefront_products sp
-			LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
-			LEFT JOIN marketplace_categories mc ON sp.category_id = mc.id
+			LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
+			LEFT JOIN c2c_categories mc ON sp.category_id = mc.id
 			WHERE sp.is_active = true
 			ORDER BY sp.id
 		`
@@ -920,7 +921,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 			// Индексируем пакет при достижении размера
 			if len(batch) >= batchSize {
-				if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
+				if err := s.indexBatch(ctx, batch, s.b2cIndexName); err != nil {
 					fmt.Printf("Error indexing batch: %v\n", err)
 					totalErrors += len(batch)
 				} else {
@@ -932,7 +933,7 @@ func (s *Service) ReindexDocuments(ctx context.Context, docType string) error {
 
 		// Индексируем оставшийся пакет
 		if len(batch) > 0 {
-			if err := s.indexBatch(ctx, batch, storefrontProductsIndex); err != nil {
+			if err := s.indexBatch(ctx, batch, s.b2cIndexName); err != nil {
 				fmt.Printf("Error indexing final batch: %v\n", err)
 				totalErrors += len(batch)
 			} else {

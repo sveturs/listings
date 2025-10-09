@@ -1,4 +1,4 @@
-import type { MarketplaceItem } from '@/types/marketplace';
+import type { C2CItem } from '@/types/c2c';
 import type { components } from '@/types/generated/api';
 import type {
   UnifiedProduct,
@@ -7,13 +7,13 @@ import type {
 } from '@/types/unified-product';
 import configManager from '@/config';
 
-type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 /**
  * Конвертирует изображения маркетплейса в унифицированный формат
  */
 function adaptMarketplaceImages(
-  images?: MarketplaceItem['images']
+  images?: C2CItem['images']
 ): UnifiedProductImage[] {
   if (!images || images.length === 0) return [];
 
@@ -29,7 +29,7 @@ function adaptMarketplaceImages(
  * Конвертирует изображения витрины в унифицированный формат
  */
 function adaptStorefrontImages(
-  images?: StorefrontProduct['images']
+  images?: B2CProduct['images']
 ): UnifiedProductImage[] {
   if (!images || images.length === 0) return [];
 
@@ -45,7 +45,7 @@ function adaptStorefrontImages(
  * Конвертирует атрибуты в унифицированный формат
  */
 function adaptAttributes(
-  attributes?: MarketplaceItem['attributes']
+  attributes?: C2CItem['attributes']
 ): UnifiedProduct['attributes'] {
   if (!attributes || attributes.length === 0) return [];
 
@@ -69,9 +69,9 @@ function adaptAttributes(
 }
 
 /**
- * Адаптер для конвертации MarketplaceItem в UnifiedProduct
+ * Адаптер для конвертации C2CItem в UnifiedProduct
  */
-export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
+export function adaptC2CItem(item: C2CItem): UnifiedProduct {
   // Попытка найти condition в атрибутах, если его нет в основном объекте
   let condition = item.condition;
   if (!condition && item.attributes) {
@@ -176,10 +176,10 @@ export function adaptMarketplaceItem(item: MarketplaceItem): UnifiedProduct {
 }
 
 /**
- * Адаптер для конвертации StorefrontProduct в UnifiedProduct
+ * Адаптер для конвертации B2CProduct в UnifiedProduct
  */
-export function adaptStorefrontProduct(
-  product: StorefrontProduct,
+export function adaptB2CProduct(
+  product: B2CProduct,
   storefrontInfo?: UnifiedStorefrontInfo
 ): UnifiedProduct {
   // Определяем статус наличия на основе количества
@@ -294,20 +294,20 @@ export function adaptStorefrontProduct(
 export function adaptProduct(data: any): UnifiedProduct {
   // Определяем тип по наличию характерных полей
   if (data.title && data.user_id !== undefined) {
-    // Это MarketplaceItem
-    return adaptMarketplaceItem(data as MarketplaceItem);
+    // Это C2CItem
+    return adaptC2CItem(data as C2CItem);
   } else if (data.name && data.stock_quantity !== undefined) {
-    // Это StorefrontProduct
-    return adaptStorefrontProduct(data as StorefrontProduct);
+    // Это B2CProduct
+    return adaptB2CProduct(data as B2CProduct);
   } else if (data.product_type) {
     // Используем явно указанный тип
     if (data.product_type === 'storefront') {
-      return adaptStorefrontProduct(data);
+      return adaptB2CProduct(data);
     } else {
-      return adaptMarketplaceItem(data);
+      return adaptC2CItem(data);
     }
   }
 
-  // По умолчанию пытаемся как MarketplaceItem
-  return adaptMarketplaceItem(data);
+  // По умолчанию пытаемся как C2CItem
+  return adaptC2CItem(data);
 }

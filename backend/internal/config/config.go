@@ -102,7 +102,9 @@ type OpenSearchConfig struct {
 	URL              string `yaml:"url"`
 	Username         string `yaml:"username"`
 	Password         string `yaml:"password"`
-	MarketplaceIndex string `yaml:"marketplace_index"`
+	MarketplaceIndex string `yaml:"marketplace_index"` // Deprecated: use C2CIndex
+	C2CIndex         string `yaml:"c2c_index"`         // C2C (Customer-to-Customer) index
+	B2CIndex         string `yaml:"b2c_index"`         // B2C (Business-to-Customer) index
 }
 
 // FileUploadConfig содержит настройки для загрузки файлов
@@ -212,12 +214,24 @@ func NewConfig() (*Config, error) {
 		URL:              os.Getenv("OPENSEARCH_URL"),
 		Username:         os.Getenv("OPENSEARCH_USERNAME"),
 		Password:         os.Getenv("OPENSEARCH_PASSWORD"),
-		MarketplaceIndex: os.Getenv("OPENSEARCH_MARKETPLACE_INDEX"),
+		MarketplaceIndex: os.Getenv("OPENSEARCH_MARKETPLACE_INDEX"), // Deprecated
+		C2CIndex:         os.Getenv("OPENSEARCH_C2C_INDEX"),
+		B2CIndex:         os.Getenv("OPENSEARCH_B2C_INDEX"),
 	}
 
-	// Если индекс не указан, используем значение по умолчанию
+	// Если индекс C2C не указан, используем значение по умолчанию
+	if config.OpenSearch.C2CIndex == "" {
+		config.OpenSearch.C2CIndex = "c2c_listings"
+	}
+
+	// Если индекс B2C не указан, используем значение по умолчанию
+	if config.OpenSearch.B2CIndex == "" {
+		config.OpenSearch.B2CIndex = "b2c_products"
+	}
+
+	// Обратная совместимость: если используется старое название
 	if config.OpenSearch.MarketplaceIndex == "" {
-		config.OpenSearch.MarketplaceIndex = "marketplace_listings"
+		config.OpenSearch.MarketplaceIndex = config.OpenSearch.C2CIndex
 	}
 
 	// Настройки хранилища файлов

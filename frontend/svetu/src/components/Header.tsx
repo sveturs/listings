@@ -77,7 +77,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
 
   // Функция для извлечения ID витрины из пути
   const extractStorefrontIdFromPath = (path: string): number | null => {
-    if (path.includes('/storefronts/')) {
+    if (path.includes('/b2c/')) {
       if (path.includes('tech-store-dmitry')) {
         return 4;
       }
@@ -88,7 +88,7 @@ export default function Header({ locale: propsLocale }: HeaderProps = {}) {
   // Определяем активную витрину из URL
   const currentStorefrontId = searchParams?.get('storefront')
     ? Number(searchParams?.get('storefront'))
-    : pathname?.includes('/storefronts/')
+    : pathname?.includes('/b2c/')
       ? extractStorefrontIdFromPath(pathname)
       : null;
 

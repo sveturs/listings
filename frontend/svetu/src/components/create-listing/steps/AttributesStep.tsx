@@ -3,10 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
-import {
-  MarketplaceService,
-  CategoryAttributeMapping,
-} from '@/services/marketplace';
+import { MarketplaceService, CategoryAttributeMapping } from '@/services/c2c';
 import { getTranslatedAttribute } from '@/utils/translatedAttribute';
 import { CarSelector } from '@/components/cars/CarSelector';
 import type { CarSelection } from '@/types/cars';

@@ -28,7 +28,7 @@ export const productApi = {
     request: BulkCreateProductsRequest
   ) => {
     const response = await apiClient.post<BulkCreateProductsResponse>(
-      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/create`,
+      `/api/v1/b2c/slug/${storefrontSlug}/products/bulk/create`,
       request
     );
     return response.data;
@@ -42,7 +42,7 @@ export const productApi = {
     request: BulkUpdateProductsRequest
   ) => {
     const response = await apiClient.put<BulkUpdateProductsResponse>(
-      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/update`,
+      `/api/v1/b2c/slug/${storefrontSlug}/products/bulk/update`,
       request
     );
     return response.data;
@@ -54,7 +54,7 @@ export const productApi = {
   bulkDelete: async (storefrontSlug: string, productIds: number[]) => {
     const request: BulkDeleteProductsRequest = { product_ids: productIds };
     const response = await apiClient.delete<BulkDeleteProductsResponse>(
-      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/delete`,
+      `/api/v1/b2c/slug/${storefrontSlug}/products/bulk/delete`,
       { data: request }
     );
     return response.data;
@@ -73,7 +73,7 @@ export const productApi = {
       is_active: isActive,
     };
     const response = await apiClient.put<BulkUpdateStatusResponse>(
-      `/api/v1/storefronts/slug/${storefrontSlug}/products/bulk/status`,
+      `/api/v1/b2c/slug/${storefrontSlug}/products/bulk/status`,
       request
     );
     return response.data;
@@ -86,7 +86,7 @@ export const productApi = {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
     // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `/api/v2/storefronts/slug/${storefrontSlug}/products/export/csv${params}`,
+      `/api/v2/b2c/slug/${storefrontSlug}/products/export/csv${params}`,
       {
         credentials: 'include', // Включаем cookies
       }
@@ -119,7 +119,7 @@ export const productApi = {
     const params = productIds?.length ? `?ids=${productIds.join(',')}` : '';
     // Используем BFF proxy - автоматически добавит cookies для авторизации
     const response = await fetch(
-      `/api/v2/storefronts/slug/${storefrontSlug}/products/export/xml${params}`,
+      `/api/v2/b2c/slug/${storefrontSlug}/products/export/xml${params}`,
       {
         credentials: 'include', // Включаем cookies
       }

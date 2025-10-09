@@ -414,7 +414,7 @@ export default function ProfilePage() {
                   </svg>
                   {t('actions.myListings')}
                 </Link>
-                <Link href="/profile/storefronts" className="btn btn-secondary">
+                <Link href="/profile/b2c" className="btn btn-secondary">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 mr-2"

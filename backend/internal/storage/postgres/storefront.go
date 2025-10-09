@@ -145,7 +145,7 @@ func (r *storefrontRepo) Create(ctx context.Context, dto *models.StorefrontCreat
 	countryCode := getCountryCode(dto.Location.Country)
 
 	err = tx.QueryRow(ctx, `
-		INSERT INTO storefronts (
+		INSERT INTO b2c_stores (
 			user_id, slug, name, description,
 			logo_url, banner_url, theme,
 			phone, email, website,
@@ -240,7 +240,7 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 			subscription_plan, subscription_expires_at, commission_rate,
 			ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb, live_shopping_enabled, group_buying_enabled,
 			created_at, updated_at
-		FROM storefronts
+		FROM b2c_stores
 		WHERE id = $1
 	`, id).Scan(
 		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description,
@@ -294,7 +294,7 @@ func (r *storefrontRepo) GetByID(ctx context.Context, id int) (*models.Storefron
 // GetBySlug получает витрину по slug
 func (r *storefrontRepo) GetBySlug(ctx context.Context, slug string) (*models.Storefront, error) {
 	var id int
-	err := r.db.pool.QueryRow(ctx, "SELECT id FROM storefronts WHERE slug = $1", slug).Scan(&id)
+	err := r.db.pool.QueryRow(ctx, "SELECT id FROM b2c_stores WHERE slug = $1", slug).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -411,7 +411,7 @@ func (r *storefrontRepo) Update(ctx context.Context, id int, dto *models.Storefr
 	args = append(args, id)
 
 	query := fmt.Sprintf(
-		"UPDATE storefronts SET %s WHERE id = $%d",
+		"UPDATE b2c_stores SET %s WHERE id = $%d",
 		strings.Join(setClauses, ", "),
 		argCount,
 	)
@@ -439,7 +439,7 @@ func (r *storefrontRepo) Delete(ctx context.Context, id int) error {
 
 	// Деактивируем витрину
 	result, err := tx.Exec(ctx,
-		"UPDATE storefronts SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+		"UPDATE b2c_stores SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
 		id,
 	)
 	if err != nil {
@@ -477,7 +477,7 @@ func (r *storefrontRepo) Restore(ctx context.Context, id int) error {
 
 	// Активируем витрину
 	result, err := tx.Exec(ctx,
-		"UPDATE storefronts SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+		"UPDATE b2c_stores SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
 		id,
 	)
 	if err != nil {
@@ -535,7 +535,7 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 
 	// 2. Удаляем связанные с товарами записи
 	if len(productIDs) > 0 {
-		// shopping_cart_items относится к marketplace_listings, а не к storefront_products - пропускаем
+		// shopping_cart_items относится к c2c_listings, а не к storefront_products - пропускаем
 
 		// Удаляем товары из избранного
 		logger.Debug().Ints("productIDs", productIDs).Msg("HardDelete: Deleting from storefront_favorites")
@@ -595,14 +595,14 @@ func (r *storefrontRepo) HardDelete(ctx context.Context, id int) error {
 	// Пропускаем удаление из storefront_reviews - таблица не существует в текущей схеме БД
 
 	// 7. Удаляем саму витрину из избранного (если есть такая таблица)
-	_, err = tx.Exec(ctx, "DELETE FROM user_favorite_storefronts WHERE storefront_id = $1", id)
+	_, err = tx.Exec(ctx, "DELETE FROM user_favorite_b2c_stores WHERE storefront_id = $1", id)
 	if err != nil {
 		// Игнорируем ошибку если таблица не существует
-		logger.Debug().Err(err).Msg("Failed to delete favorite storefronts (table might not exist)")
+		logger.Debug().Err(err).Msg("Failed to delete favorite b2c_stores (table might not exist)")
 	}
 
 	// 8. Удаляем саму витрину
-	result, err := tx.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	result, err := tx.Exec(ctx, "DELETE FROM b2c_stores WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to hard delete storefront: %w", err)
 	}
@@ -710,11 +710,11 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 	}
 
 	// Подсчет общего количества
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM storefronts WHERE %s", strings.Join(countWhereConditions, " AND "))
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM b2c_stores WHERE %s", strings.Join(countWhereConditions, " AND "))
 	var totalCount int
 	err := r.db.pool.QueryRow(ctx, countQuery, args...).Scan(&totalCount)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count storefronts: %w", err)
+		return nil, 0, fmt.Errorf("failed to count b2c_stores: %w", err)
 	}
 
 	// Сортировка - валидируем допустимые поля
@@ -763,7 +763,7 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 			s.subscription_plan, s.subscription_expires_at, s.commission_rate,
 			s.ai_agent_enabled, s.ai_agent_config, s.live_shopping_enabled, s.group_buying_enabled,
 			s.created_at, s.updated_at
-		FROM storefronts s
+		FROM b2c_stores s
 		WHERE %s
 		ORDER BY %s
 		LIMIT $%d OFFSET $%d
@@ -779,11 +779,11 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 
 	rows, err := r.db.pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list storefronts: %w", err)
+		return nil, 0, fmt.Errorf("failed to list b2c_stores: %w", err)
 	}
 	defer rows.Close()
 
-	var storefronts []*models.Storefront
+	var b2c_stores []*models.Storefront
 	for rows.Next() {
 		s := &models.Storefront{}
 		var theme, settings, seoMeta, aiConfig []byte
@@ -830,10 +830,10 @@ func (r *storefrontRepo) List(ctx context.Context, filter *models.StorefrontFilt
 			}
 		}
 
-		storefronts = append(storefronts, s)
+		b2c_stores = append(b2c_stores, s)
 	}
 
-	return storefronts, totalCount, nil
+	return b2c_stores, totalCount, nil
 }
 
 // FindNearby находит витрины в радиусе
@@ -849,8 +849,8 @@ func (r *storefrontRepo) FindNearby(ctx context.Context, lat, lng, radiusKm floa
 		SortOrder: "asc",
 	}
 
-	storefronts, _, err := r.List(ctx, filter)
-	return storefronts, err
+	b2c_stores, _, err := r.List(ctx, filter)
+	return b2c_stores, err
 }
 
 // GetMapData получает данные для отображения на карте
@@ -885,7 +885,7 @@ func (r *storefrontRepo) GetMapData(ctx context.Context, bounds GeoBounds, filte
 				SELECT 1 FROM storefront_payment_methods 
 				WHERE storefront_id = s.id AND method_type = 'card' AND is_enabled
 			) THEN true ELSE false END as accepts_cards
-		FROM storefronts s
+		FROM b2c_stores s
 		WHERE s.is_active = true
 		AND s.latitude BETWEEN $1 AND $2
 		AND s.longitude BETWEEN $3 AND $4
@@ -942,7 +942,7 @@ func (r *storefrontRepo) IsOwner(ctx context.Context, storefrontID, userID int) 
 	var exists bool
 	err := r.db.pool.QueryRow(ctx, `
 		SELECT EXISTS(
-			SELECT 1 FROM storefronts 
+			SELECT 1 FROM b2c_stores 
 			WHERE id = $1 AND user_id = $2
 		)
 	`, storefrontID, userID).Scan(&exists)
@@ -1079,7 +1079,7 @@ func (r *storefrontRepo) GetDashboardStats(ctx context.Context, storefrontID int
 		SELECT COUNT(*)
 		FROM marketplace_messages m
 		JOIN marketplace_chats c ON m.chat_id = c.id
-		JOIN storefronts s ON c.seller_id = s.user_id
+		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&stats.UnreadMessages)
 	if err != nil {
@@ -1180,7 +1180,7 @@ func (r *storefrontRepo) GetUnreadMessagesCount(ctx context.Context, storefrontI
 		SELECT COUNT(*)
 		FROM marketplace_messages m
 		JOIN marketplace_chats c ON m.chat_id = c.id
-		JOIN storefronts s ON c.seller_id = s.user_id
+		JOIN b2c_stores s ON c.seller_id = s.user_id
 		WHERE s.id = $1 AND m.receiver_id = s.user_id AND m.is_read = false
 	`, storefrontID).Scan(&count)
 	if err != nil {
@@ -1249,7 +1249,7 @@ func (r *storefrontRepo) GetAnalyticsData(ctx context.Context, storefrontID int,
 			FROM storefront_order_items oi
 			JOIN storefront_orders o ON oi.order_id = o.id
 			JOIN storefront_products p ON oi.product_id = p.id
-			JOIN marketplace_categories c ON p.category_id = c.id
+			JOIN c2c_categories c ON p.category_id = c.id
 			WHERE o.storefront_id = $1 
 				AND o.created_at >= $2 
 				AND o.created_at < $3

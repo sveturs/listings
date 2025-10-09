@@ -322,7 +322,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			FROM reviews
 			WHERE ((entity_type = 'user' AND entity_id = $1) OR
 				   (entity_type = 'listing' AND EXISTS
-					 (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+					 (SELECT 1 FROM c2c_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
 			  AND status = 'published'
 		`, entityId).Scan(
 			&stats.TotalReviews,
@@ -345,7 +345,7 @@ func (s *ReviewService) GetReviewStats(ctx context.Context, entityType string, e
 			FROM reviews
 			WHERE ((entity_type = 'user' AND entity_id = $1) OR
 				   (entity_type = 'listing' AND EXISTS
-					 (SELECT 1 FROM marketplace_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
+					 (SELECT 1 FROM c2c_listings ml WHERE ml.id = reviews.entity_id AND ml.user_id = $1)))
 			  AND status = 'published'
 			GROUP BY rating
 			ORDER BY rating

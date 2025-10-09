@@ -85,9 +85,9 @@ export default function FavoritesClient({
     // Для товаров витрин используем другой URL
     if (typeof item.id === 'string' && item.id.startsWith('sp_')) {
       const productId = item.id.replace('sp_', '');
-      return `/${locale}/storefronts/product/${productId}`;
+      return `/${locale}/b2c/product/${productId}`;
     }
-    return `/${locale}/marketplace/${item.id}`;
+    return `/${locale}/c2c/${item.id}`;
   };
 
   if (isLoading) {

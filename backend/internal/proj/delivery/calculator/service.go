@@ -148,7 +148,7 @@ func (s *Service) getProductAttributes(ctx context.Context, productID int, produ
 					FROM delivery_category_defaults dcd
 					WHERE dcd.category_id = ml.category_id)
 				) as attributes
-			FROM marketplace_listings ml
+			FROM c2c_listings ml
 			WHERE ml.id = $1`
 	} else {
 		query = `

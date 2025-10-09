@@ -67,7 +67,7 @@ export function getRequiredModules(pathname: string): string[] {
     modules.push('balance', 'profile'); // profile для общих ключей
   }
 
-  if (pathname.includes('/marketplace')) {
+  if (pathname.includes('/c2c')) {
     modules.push('marketplace');
   }
 

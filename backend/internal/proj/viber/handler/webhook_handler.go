@@ -335,7 +335,7 @@ func (h *WebhookHandler) handleTextMessage(c *fiber.Ctx, event *models.WebhookEv
 	case text == "cart" || strings.Contains(text, "корзин"):
 		return h.messageHandler.HandleCart(ctx, event.Sender.ID)
 
-	case text == "storefronts" || strings.Contains(text, "витрин") || strings.Contains(text, "магазин"):
+	case text == "b2c_stores" || strings.Contains(text, "витрин") || strings.Contains(text, "магазин"):
 		return h.messageHandler.HandleStorefronts(ctx, event.Sender.ID)
 
 	case text == "help" || strings.Contains(text, "помощь") || text == "/help":

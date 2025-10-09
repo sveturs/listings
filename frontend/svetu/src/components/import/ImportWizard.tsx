@@ -66,6 +66,7 @@ export default function ImportWizard({
   const [showPreview, setShowPreview] = useState(false);
   type ImportMode = 'classic' | 'enhanced';
   const [importMode, setImportMode] = useState<ImportMode>('classic');
+  const [previewLimit, setPreviewLimit] = useState<number>(100); // Default: show 100 rows instead of 10
 
   useEffect(() => {
     if (isImportModalOpen && !formats) {
@@ -142,7 +143,7 @@ export default function ImportWizard({
           storefrontSlug,
           file: selectedFiles[0],
           fileType: selectedFileType,
-          previewLimit: 10,
+          previewLimit: previewLimit,
         })
       ).unwrap();
 
@@ -584,43 +585,68 @@ export default function ImportWizard({
                   {t('actions.cancel')}
                 </button>
 
-                <div className="flex space-x-3">
+                <div className="flex items-center space-x-3">
                   {activeTab === 'file' &&
                     selectedFiles.length > 0 &&
                     selectedFileType && (
-                      <button
-                        onClick={handlePreviewFile}
-                        disabled={isPreviewLoading}
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isPreviewLoading ? (
-                          <>
-                            <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 inline-block"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            Loading Preview...
-                          </>
-                        ) : (
-                          'Preview Import'
-                        )}
-                      </button>
+                      <>
+                        {/* Preview rows selector */}
+                        <div className="flex items-center space-x-2">
+                          <label
+                            htmlFor="preview-limit"
+                            className="text-sm text-gray-600"
+                          >
+                            Preview rows:
+                          </label>
+                          <select
+                            id="preview-limit"
+                            value={previewLimit}
+                            onChange={(e) =>
+                              setPreviewLimit(Number(e.target.value))
+                            }
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={handlePreviewFile}
+                          disabled={isPreviewLoading}
+                          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isPreviewLoading ? (
+                            <>
+                              <svg
+                                className="animate-spin -ml-1 mr-2 h-4 w-4 inline-block"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Loading Preview...
+                            </>
+                          ) : (
+                            'Preview Import'
+                          )}
+                        </button>
+                      </>
                     )}
 
                   <button

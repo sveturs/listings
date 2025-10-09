@@ -15,15 +15,17 @@ import { useObjectURLs } from '@/hooks/useObjectURL';
 interface MessageInputProps {
   chat?: MarketplaceChat;
   initialListingId?: number;
-  initialStorefrontProductId?: number;
+  initialB2CProductId?: number;
   initialSellerId?: number;
+  onShowChat?: () => void;
 }
 
 export default function MessageInput({
   chat,
   initialListingId,
-  initialStorefrontProductId,
+  initialB2CProductId,
   initialSellerId,
+  onShowChat,
 }: MessageInputProps) {
   const t = useTranslations('chat');
   const { user } = useAuth();
@@ -66,10 +68,10 @@ export default function MessageInput({
         receiver_id: chat.buyer_id === user.id ? chat.seller_id : chat.buyer_id,
         content: messageContent,
       };
-    } else if (initialStorefrontProductId && initialSellerId) {
+    } else if (initialB2CProductId && initialSellerId) {
       // Создание нового чата с товаром витрины
       payload = {
-        storefront_product_id: initialStorefrontProductId,
+        storefront_product_id: initialB2CProductId,
         receiver_id: initialSellerId,
         content: messageContent,
       };
@@ -129,6 +131,11 @@ export default function MessageInput({
         // Chat selection will be handled by the parent component after loadChats updates
         // Clear URL parameters after creating chat
         window.history.replaceState({}, '', window.location.pathname);
+
+        // На мобильных устройствах переключаемся на экран чата
+        if (onShowChat) {
+          onShowChat();
+        }
       }
     } catch (error: unknown) {
       const err = error as Error & { status?: number };

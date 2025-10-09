@@ -113,7 +113,7 @@ func (s *IsochroneService) FilterListingsByIsochrone(ctx context.Context, filter
 	// Фильтруем объявления через PostGIS
 	query := `
 		SELECT id 
-		FROM marketplace_listings 
+		FROM c2c_listings 
 		WHERE 
 			id = ANY($1) 
 			AND location IS NOT NULL

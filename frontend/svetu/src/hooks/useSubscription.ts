@@ -260,8 +260,8 @@ export function useSubscription(): UseSubscriptionResult {
 
     if (!currentSubscription) return defaults;
 
-    const maxStorefronts = currentSubscription.max_storefronts || 0;
-    const usedStorefronts = currentSubscription.used_storefronts || 0;
+    const maxStorefronts = currentSubscription.max_b2c_stores || 0;
+    const usedStorefronts = currentSubscription.used_b2c_stores || 0;
 
     return {
       storefronts:

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useCreateListing } from '@/contexts/CreateListingContext';
-import { MarketplaceService } from '@/services/marketplace';
+import { MarketplaceService } from '@/services/c2c';
 import { toast } from '@/utils/toast';
 
 // Icons as components

@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import type { components } from '@/types/generated/api';
 
-type StorefrontProduct = components['schemas']['models.StorefrontProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 type UpdateProductRequest =
   components['schemas']['models.UpdateProductRequest'];
 type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];
@@ -20,7 +20,7 @@ interface ProductEditState {
   completedSteps: Set<number>;
 
   // Исходные данные продукта
-  originalProduct?: StorefrontProduct;
+  originalProduct?: B2CProduct;
 
   // Данные для редактирования
   category?: MarketplaceCategory;
@@ -60,7 +60,7 @@ interface ProductEditState {
 type ProductEditAction =
   | { type: 'SET_STEP'; payload: number }
   | { type: 'COMPLETE_STEP'; payload: number }
-  | { type: 'LOAD_PRODUCT'; payload: StorefrontProduct }
+  | { type: 'LOAD_PRODUCT'; payload: B2CProduct }
   | { type: 'SET_CATEGORY'; payload: MarketplaceCategory }
   | { type: 'SET_PRODUCT_DATA'; payload: Partial<UpdateProductRequest> }
   | { type: 'SET_ATTRIBUTE'; payload: { id: number; value: any } }
@@ -336,7 +336,7 @@ interface EditProductContextType {
   nextStep: () => void;
   prevStep: () => void;
   completeStep: (step: number) => void;
-  loadProduct: (product: StorefrontProduct) => void;
+  loadProduct: (product: B2CProduct) => void;
   setCategory: (category: MarketplaceCategory) => void;
   setProductData: (data: Partial<UpdateProductRequest>) => void;
   setAttribute: (id: number, value: any) => void;
@@ -378,7 +378,7 @@ export function EditProductProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'COMPLETE_STEP', payload: step });
   }, []);
 
-  const loadProduct = useCallback((product: StorefrontProduct) => {
+  const loadProduct = useCallback((product: B2CProduct) => {
     dispatch({ type: 'LOAD_PRODUCT', payload: product });
   }, []);
 

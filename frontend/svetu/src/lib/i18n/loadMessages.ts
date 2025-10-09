@@ -88,14 +88,14 @@ export async function loadMessages(
           moduleData = await import(`@/messages/${locale}/profile.json`);
           break;
         case 'marketplace':
-          moduleData = await import(`@/messages/${locale}/marketplace.json`);
+          moduleData = await import(`@/messages/${locale}/c2c.json`);
           break;
         case 'admin':
           moduleData = await import(`@/messages/${locale}/admin.json`);
           break;
         case 'storefronts':
         case 'storefront':
-          moduleData = await import(`@/messages/${locale}/storefronts.json`);
+          moduleData = await import(`@/messages/${locale}/b2c.json`);
           break;
         case 'create_storefront':
           moduleData = await import(
@@ -211,7 +211,7 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
   if (pathname.includes('/balance')) {
     modules.push('balance', 'auth-shared');
   }
-  if (pathname.includes('/marketplace') || pathname.includes('/listing')) {
+  if (pathname.includes('/c2c') || pathname.includes('/listing')) {
     modules.push('marketplace');
   }
   if (pathname.includes('/store') || pathname.includes('/storefront')) {
@@ -219,7 +219,7 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
     modules.push('products');
     modules.push('reviews');
   }
-  if (pathname.includes('/create-storefront')) {
+  if (pathname.includes('/create-b2c-store')) {
     modules.push('create_storefront');
   }
   if (pathname.includes('/create-listing')) {
@@ -240,7 +240,7 @@ export function getRequiredModules(pathname: string): TranslationModule[] {
   if (pathname.includes('/profile')) {
     modules.push('profile', 'auth-shared');
     // Для страницы storefronts в профиле также нужен модуль storefronts
-    if (pathname.includes('/profile/storefronts')) {
+    if (pathname.includes('/profile/b2c')) {
       modules.push('storefronts');
     }
     // Для страницы заказов в профиле также нужен модуль orders

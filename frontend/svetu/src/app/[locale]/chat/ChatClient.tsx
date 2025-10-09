@@ -145,11 +145,11 @@ export default function ChatClient() {
     <PageTransition mode="slide">
       <div className="absolute inset-0 top-16 flex flex-col">
         {/* Chat content wrapped in Error Boundary */}
-        <div className="flex-1 overflow-hidden px-2 sm:px-4 pb-2">
+        <div className="flex-1 overflow-hidden">
           <ChatErrorBoundary>
             <ChatLayout
               initialListingId={listingId ? parseInt(listingId) : undefined}
-              initialStorefrontProductId={
+              initialB2CProductId={
                 storefrontProductId ? parseInt(storefrontProductId) : undefined
               }
               initialSellerId={sellerId ? parseInt(sellerId) : undefined}

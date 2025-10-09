@@ -1,13 +1,13 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
-type StorefrontOrder = components['schemas']['models.StorefrontOrder'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
 type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
 type CancelOrderRequest = components['schemas']['models.CancelOrderRequest'];
 
 export const ordersService = {
   // Создать заказ
-  async createOrder(orderData: CreateOrderRequest): Promise<StorefrontOrder> {
+  async createOrder(orderData: CreateOrderRequest): Promise<B2COrder> {
     console.log('[ordersService] Creating order with data:', orderData);
     const response = await apiClient.post('/api/v1/orders', orderData);
     if (response.error) {
@@ -19,7 +19,7 @@ export const ordersService = {
   },
 
   // Получить заказ по ID
-  async getOrder(orderId: number): Promise<StorefrontOrder> {
+  async getOrder(orderId: number): Promise<B2COrder> {
     const response = await apiClient.get(`/api/v1/orders/${orderId}`);
     if (!response.error && response.data?.data) {
       return response.data.data;
@@ -32,7 +32,7 @@ export const ordersService = {
     status?: string;
     limit?: number;
     offset?: number;
-  }): Promise<{ orders: StorefrontOrder[]; total: number }> {
+  }): Promise<{ orders: B2COrder[]; total: number }> {
     // Используем marketplace endpoint для получения заказов где пользователь - покупатель
     const page = params?.offset
       ? Math.floor(params.offset / (params.limit || 20)) + 1
@@ -62,10 +62,7 @@ export const ordersService = {
   },
 
   // Отменить заказ
-  async cancelOrder(
-    orderId: number,
-    reason?: string
-  ): Promise<StorefrontOrder> {
+  async cancelOrder(orderId: number, reason?: string): Promise<B2COrder> {
     const cancelData: CancelOrderRequest = { reason };
     const response = await apiClient.put(
       `/api/v1/orders/${orderId}/cancel`,
