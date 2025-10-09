@@ -192,7 +192,7 @@ func (s *Storage) GetChats(ctx context.Context, userID int) ([]models.Marketplac
 	FROM c2c_chats c
 	LEFT JOIN c2c_listings l ON c.listing_id = l.id
 	LEFT JOIN storefront_products sp ON c.storefront_product_id = sp.id
-	LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
+	LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
 	LEFT JOIN unread_counts uc ON c.id = uc.chat_id
 	LEFT JOIN chat_images ci ON c.id = ci.chat_id
 	LEFT JOIN storefront_product_images spi ON c.id = spi.chat_id

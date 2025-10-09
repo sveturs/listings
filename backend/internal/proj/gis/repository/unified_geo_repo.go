@@ -303,7 +303,7 @@ func (r *UnifiedGeoRepository) GetStorefrontProducts(ctx context.Context, storef
 			COALESCE(mic.blur_radius_meters, 0) as blur_radius_meters
 		FROM map_items_cache mic
 		WHERE mic.storefront_id = $1
-		  AND mic.item_type = 'storefront_product'
+		  AND mic.item_type = 'b2c_product'
 		  AND mic.status = 'active'
 		ORDER BY mic.created_at DESC
 		LIMIT $2`

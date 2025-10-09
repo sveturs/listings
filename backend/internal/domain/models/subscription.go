@@ -56,7 +56,7 @@ type SubscriptionPlanDetails struct {
 	Name                     string          `json:"name" db:"name"`
 	PriceMonthly             decimal.Decimal `json:"price_monthly" db:"price_monthly"`
 	PriceYearly              decimal.Decimal `json:"price_yearly" db:"price_yearly"`
-	MaxStorefronts           int             `json:"max_storefronts" db:"max_storefronts"`
+	MaxStorefronts           int             `json:"max_b2c_stores" db:"max_b2c_stores"`
 	MaxProductsPerStorefront int             `json:"max_products_per_storefront" db:"max_products_per_storefront"`
 	MaxStaffPerStorefront    int             `json:"max_staff_per_storefront" db:"max_staff_per_storefront"`
 	MaxImagesTotal           int             `json:"max_images_total" db:"max_images_total"`
@@ -93,7 +93,7 @@ type UserSubscription struct {
 	NextPaymentAt      *time.Time               `json:"next_payment_at,omitempty" db:"next_payment_at"`
 	PaymentMethod      *string                  `json:"payment_method,omitempty" db:"payment_method"`
 	AutoRenew          bool                     `json:"auto_renew" db:"auto_renew"`
-	UsedStorefronts    int                      `json:"used_storefronts" db:"used_storefronts"`
+	UsedStorefronts    int                      `json:"used_b2c_stores" db:"used_b2c_stores"`
 	Metadata           JSONB                    `json:"metadata" db:"metadata"`
 	Notes              *string                  `json:"notes,omitempty" db:"notes"`
 	CreatedAt          time.Time                `json:"created_at" db:"created_at"`
@@ -153,8 +153,8 @@ type UserSubscriptionInfo struct {
 	PlanName        *string         `json:"plan_name,omitempty" db:"plan_name"`
 	Status          *string         `json:"status,omitempty" db:"status"`
 	ExpiresAt       *time.Time      `json:"expires_at,omitempty" db:"expires_at"`
-	MaxStorefronts  int             `json:"max_storefronts" db:"max_storefronts"`
-	UsedStorefronts int             `json:"used_storefronts" db:"used_storefronts"`
+	MaxStorefronts  int             `json:"max_b2c_stores" db:"max_b2c_stores"`
+	UsedStorefronts int             `json:"used_b2c_stores" db:"used_b2c_stores"`
 	MaxProducts     int             `json:"max_products" db:"max_products"`
 	MaxStaff        int             `json:"max_staff" db:"max_staff"`
 	MaxImages       int             `json:"max_images" db:"max_images"`

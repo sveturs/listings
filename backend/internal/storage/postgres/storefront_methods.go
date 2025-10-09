@@ -416,7 +416,7 @@ func (r *storefrontRepo) GetStaff(ctx context.Context, storefrontID int) ([]*mod
 // RecordView записывает просмотр витрины
 func (r *storefrontRepo) RecordView(ctx context.Context, storefrontID int) error {
 	_, err := r.db.pool.Exec(ctx, `
-		UPDATE storefronts
+		UPDATE b2c_stores
 		SET views_count = views_count + 1
 		WHERE id = $1
 	`, storefrontID)
@@ -575,7 +575,7 @@ func (r *storefrontRepo) GetClusters(ctx context.Context, bounds GeoBounds, zoom
 			ROUND(latitude/$1)*$1 as cluster_lat,
 			ROUND(longitude/$1)*$1 as cluster_lng,
 			COUNT(*) as count
-		FROM storefronts
+		FROM b2c_stores
 		WHERE is_active = true
 		AND latitude BETWEEN $2 AND $3
 		AND longitude BETWEEN $4 AND $5

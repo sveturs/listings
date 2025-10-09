@@ -111,7 +111,7 @@ func NewService(ctx context.Context, logger zerolog.Logger, frontendPath string,
 		logger:             logger,
 		frontendPath:       frontendPath,
 		supportedLangs:     []string{"sr", "en", "ru"},
-		modules:            []string{"common", "auth", "profile", "marketplace", "admin", "storefronts", "cars", "chat", "cart", "checkout", "realEstate", "search", "services", "map", "misc", "notifications", "orders", "products", "reviews"},
+		modules:            []string{"common", "auth", "profile", "marketplace", "admin", "b2c_stores", "cars", "chat", "cart", "checkout", "realEstate", "search", "services", "map", "misc", "notifications", "orders", "products", "reviews"},
 		translationRepo:    translationRepo,
 		auditRepo:          auditRepo,
 		cache:              translationCache,
@@ -2020,7 +2020,7 @@ func (s *Service) importFromXLIFF(ctx context.Context, req *models.TranslationIm
 	return result, nil
 }
 
-// ensureCategoryTranslations creates missing translations from marketplace_categories table
+// ensureCategoryTranslations creates missing translations from c2c_categories table
 func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []int, sourceLanguage string) error {
 	// Получаем категории из основной таблицы
 	// Используем IN вместо ANY так как это обычный sql.DB
@@ -2038,7 +2038,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString(`
 		SELECT id, name, description, seo_title, seo_description 
-		FROM marketplace_categories 
+		FROM c2c_categories 
 		WHERE id IN (`)
 	queryBuilder.WriteString(strings.Join(placeholders, ","))
 	queryBuilder.WriteString(")")
@@ -2120,7 +2120,7 @@ func (s *Service) ensureCategoryTranslations(ctx context.Context, categoryIDs []
 						Int("category_id", cat.ID).
 						Str("field", fieldName).
 						Str("language", sourceLanguage).
-						Msg("Created source translation from marketplace_categories")
+						Msg("Created source translation from c2c_categories")
 				}
 			}
 		}
@@ -2186,7 +2186,7 @@ func (s *Service) BulkTranslate(ctx context.Context, req *models.BulkTranslateRe
 	}
 
 	// Если это категории и нет переводов в таблице translations,
-	// создаем их из основной таблицы marketplace_categories
+	// создаем их из основной таблицы c2c_categories
 	if req.EntityType == "category" && len(req.EntityIDs) > 0 {
 		if err := s.ensureCategoryTranslations(ctx, req.EntityIDs, req.SourceLanguage); err != nil {
 			s.logger.Error().Err(err).Msg("Failed to ensure category translations")

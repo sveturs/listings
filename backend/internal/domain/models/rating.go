@@ -19,9 +19,9 @@ type AggregatedRating struct {
 
 // RatingBreakdown разбивка рейтинга по источникам
 type RatingBreakdown struct {
-	Direct      BreakdownItem `json:"direct"`      // Прямые отзывы
-	Listings    BreakdownItem `json:"listings"`    // Через товары
-	Storefronts BreakdownItem `json:"storefronts"` // Через магазины
+	Direct      BreakdownItem `json:"direct"`     // Прямые отзывы
+	Listings    BreakdownItem `json:"listings"`   // Через товары
+	Storefronts BreakdownItem `json:"b2c_stores"` // Через магазины
 }
 
 // BreakdownItem элемент разбивки рейтинга

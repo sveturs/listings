@@ -292,7 +292,7 @@ func (s *Storage) CreateListing(ctx context.Context, listing *models.Marketplace
 				source_type, source_id, location, geohash,
 				formatted_address, privacy_level
 			) VALUES (
-				'marketplace_listing', $1, 
+				'c2c_listing', $1, 
 				ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, 
 				substring(ST_GeoHash(ST_SetSRID(ST_MakePoint($2, $3), 4326)) from 1 for 12),
 				$4, $5::location_privacy_level
@@ -628,7 +628,7 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		}
 
 		// Исключить товары витрин (для админки P2P листингов)
-		if v, ok := filters["exclude_storefronts"]; ok && v == "true" {
+		if v, ok := filters["exclude_b2c_stores"]; ok && v == "true" {
 			conditions = append(conditions, "AND l.storefront_id IS NULL")
 		}
 	}
@@ -873,7 +873,7 @@ categories_with_translations AS (
         ) as translations
     FROM category_tree ct
     LEFT JOIN translations t ON
-        t.entity_type = 'marketplace_category'
+        t.entity_type = 'c2c_category'
         AND t.entity_id = ct.id
         AND t.field_name = 'name'
     GROUP BY
@@ -1086,7 +1086,7 @@ func (s *Storage) GetUserStorefrontFavorites(ctx context.Context, userID int) ([
             COALESCE(product_images.images, '[]'::jsonb) as product_images
         FROM storefront_products p
         JOIN storefront_favorites f ON p.id = f.product_id
-        LEFT JOIN storefronts s ON p.storefront_id = s.id
+        LEFT JOIN b2c_stores s ON p.storefront_id = s.id
         LEFT JOIN c2c_categories c ON p.category_id = c.id
         LEFT JOIN product_images ON p.id = product_images.product_id
         WHERE f.user_id = $1
@@ -1382,7 +1382,7 @@ func (s *Storage) DeleteListing(ctx context.Context, id int, userID int) error {
 	// Удаляем отзывы
 	_, err = tx.Exec(ctx, `
 		DELETE FROM reviews 
-		WHERE entity_type = 'marketplace_listing' AND entity_id = $1
+		WHERE entity_type = 'c2c_listing' AND entity_id = $1
 	`, id)
 	if err != nil {
 		return fmt.Errorf("error removing reviews: %w", err)
@@ -1515,7 +1515,7 @@ func (s *Storage) DeleteListingAdmin(ctx context.Context, id int) error {
 	// Удаляем отзывы
 	_, err = tx.Exec(ctx, `
 		DELETE FROM reviews 
-		WHERE entity_type = 'marketplace_listing' AND entity_id = $1
+		WHERE entity_type = 'c2c_listing' AND entity_id = $1
 	`, id)
 	if err != nil {
 		return fmt.Errorf("error removing reviews: %w", err)
@@ -2993,7 +2993,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
             COALESCE(ug.privacy_level::text, 'exact') as location_privacy, l.address_multilingual
         FROM c2c_listings l
         LEFT JOIN c2c_categories c ON l.category_id = c.id
-        LEFT JOIN unified_geo ug ON ug.source_type = 'marketplace_listing' AND ug.source_id = l.id
+        LEFT JOIN unified_geo ug ON ug.source_type = 'c2c_listing' AND ug.source_id = l.id
         WHERE l.id = $1
     `, id).Scan(
 		&listing.ID, &listing.UserID, &listing.CategoryID, &listing.Title,
@@ -3374,7 +3374,7 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
             sp.view_count, sp.created_at, sp.updated_at, false as show_on_map, 'sr' as original_language,
             c.name as category_name, c.slug as category_slug, '{}'::jsonb as metadata
         FROM storefront_products sp
-        LEFT JOIN storefronts sf ON sp.storefront_id = sf.id
+        LEFT JOIN b2c_stores sf ON sp.storefront_id = sf.id
         LEFT JOIN c2c_categories c ON sp.category_id = c.id
         WHERE sp.id = $1 AND sp.is_active = true
     `, id).Scan(
@@ -3523,7 +3523,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 					translated_text
 				) as translations
 			FROM translations
-			WHERE entity_type = 'marketplace_category'
+			WHERE entity_type = 'c2c_category'
 			AND field_name = 'name'
 			GROUP BY entity_id
 		)
@@ -3543,7 +3543,7 @@ func (s *Storage) SearchCategories(ctx context.Context, query string, limit int)
 			OR EXISTS (
 				SELECT 1
 				FROM translations t
-				WHERE t.entity_type = 'marketplace_category'
+				WHERE t.entity_type = 'c2c_category'
 				AND t.entity_id = c.id
 				AND t.field_name = 'name'
 				AND LOWER(t.translated_text) LIKE $1

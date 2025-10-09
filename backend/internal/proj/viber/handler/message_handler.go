@@ -173,22 +173,22 @@ func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) 
 		SortOrder: "DESC",
 	}
 
-	storefronts, total, err := m.storefrontService.Search(ctx, filter)
+	b2c_stores, total, err := m.storefrontService.Search(ctx, filter)
 	if err != nil {
 		msg := "Произошла ошибка при загрузке витрин. Попробуйте позже."
 		return m.sendMessage(ctx, viberID, msg)
 	}
 
-	if len(storefronts) == 0 {
+	if len(b2c_stores) == 0 {
 		msg := "Пока нет активных витрин.\n\n" +
 			"Создайте свою витрину на сайте:\n" +
-			"🔗 https://svetu.rs/storefronts/create"
+			"🔗 https://svetu.rs/b2c_stores/create"
 		return m.sendMessage(ctx, viberID, msg)
 	}
 
 	msg := fmt.Sprintf("Найдено витрин: %d\n\n", total)
 
-	for i, storefront := range storefronts {
+	for i, storefront := range b2c_stores {
 		msg += fmt.Sprintf("%d. %s\n", i+1, storefront.Name)
 		if storefront.Description != nil && *storefront.Description != "" {
 			// Обрезаем описание до 100 символов
@@ -201,9 +201,9 @@ func (m *MessageHandler) HandleStorefronts(ctx context.Context, viberID string) 
 		msg += fmt.Sprintf("🔗 https://svetu.rs/storefront/%s\n\n", storefront.Slug)
 	}
 
-	if total > len(storefronts) {
-		msg += fmt.Sprintf("Показаны первые %d из %d витрин.\n", len(storefronts), total)
-		msg += "Все витрины: https://svetu.rs/storefronts"
+	if total > len(b2c_stores) {
+		msg += fmt.Sprintf("Показаны первые %d из %d витрин.\n", len(b2c_stores), total)
+		msg += "Все витрины: https://svetu.rs/b2c_stores"
 	}
 
 	return m.sendMessage(ctx, viberID, msg)

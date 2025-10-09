@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"backend/internal/middleware"
-	storefrontsOpensearch "backend/internal/proj/b2c/storage/opensearch"
+	b2c_storesOpensearch "backend/internal/proj/b2c/storage/opensearch"
 	"backend/internal/proj/orders/adapters"
 	"backend/internal/proj/orders/handler"
 	"backend/internal/proj/orders/service"
@@ -39,7 +39,7 @@ func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config) (*Mod
 	productRepo := adapters.NewProductRepositoryAdapter(postgresDB)
 
 	// Создаем OpenSearch репозиторий для обновления остатков
-	var productSearchRepo storefrontsOpensearch.ProductSearchRepository
+	var productSearchRepo b2c_storesOpensearch.ProductSearchRepository
 	if opensearchCfg != nil && opensearchCfg.URL != "" {
 		osClient, err := opensearchClient.NewOpenSearchClient(*opensearchCfg)
 		if err != nil {
@@ -49,7 +49,7 @@ func NewModule(db storage.Storage, opensearchCfg *opensearchClient.Config) (*Mod
 		} else {
 			// Используем правильный индекс для товаров витрин
 			// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-			productSearchRepo = storefrontsOpensearch.NewProductRepository(osClient, "marketplace_listings")
+			productSearchRepo = b2c_storesOpensearch.NewProductRepository(osClient, "c2c_listings")
 		}
 	}
 

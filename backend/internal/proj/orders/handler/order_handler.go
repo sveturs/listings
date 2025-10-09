@@ -227,7 +227,7 @@ func (h *OrdersHandler) CancelOrder(c *fiber.Ctx) error {
 // @Failure 403 {object} utils.ErrorResponseSwag "Access denied"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/orders [get]
+// @Router /api/v1/b2c_stores/{storefront_id}/orders [get]
 func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)
@@ -286,7 +286,7 @@ func (h *OrdersHandler) GetStorefrontOrders(c *fiber.Ctx) error {
 // @Failure 404 {object} utils.ErrorResponseSwag "Order not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/orders/{order_id}/status [put]
+// @Router /api/v1/b2c_stores/{storefront_id}/orders/{order_id}/status [put]
 func (h *OrdersHandler) UpdateOrderStatus(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)

@@ -520,7 +520,7 @@ func (r *ProductRepository) buildSearchQuery(params *ProductSearchParams) map[st
 					{
 						"nested": map[string]interface{}{
 							"path":            "variants",
-							"ignore_unmapped": true, // Игнорировать, если поле отсутствует (marketplace_listings не имеет variants)
+							"ignore_unmapped": true, // Игнорировать, если поле отсутствует (c2c_listings не имеет variants)
 							"query": map[string]interface{}{
 								"multi_match": map[string]interface{}{
 									"query": params.Query,
@@ -1163,21 +1163,21 @@ func (r *ProductRepository) parseSearchHit(hit map[string]interface{}) *ProductS
 // parseProductSource парсит данные товара из _source
 func (r *ProductRepository) parseProductSource(source map[string]interface{}, item *ProductSearchItem) {
 	// Основные поля
-	// Сначала проверяем product_id, fallback на id (для товаров из marketplace_listings)
+	// Сначала проверяем product_id, fallback на id (для товаров из c2c_listings)
 	if v, ok := source["product_id"].(float64); ok {
 		item.ProductID = int(v)
 	} else if v, ok := source["id"].(float64); ok {
-		// Fallback: товары витрин из marketplace_listings используют id
+		// Fallback: товары витрин из c2c_listings используют id
 		item.ProductID = int(v)
 	}
 	if v, ok := source["storefront_id"].(float64); ok {
 		item.StorefrontID = int(v)
 	}
-	// Проверяем name, fallback на title (для товаров из marketplace_listings)
+	// Проверяем name, fallback на title (для товаров из c2c_listings)
 	if v, ok := source["name"].(string); ok {
 		item.Name = v
 	} else if v, ok := source["title"].(string); ok {
-		// Fallback: товары витрин из marketplace_listings используют title
+		// Fallback: товары витрин из c2c_listings используют title
 		item.Name = v
 	}
 	if v, ok := source["description"].(string); ok {

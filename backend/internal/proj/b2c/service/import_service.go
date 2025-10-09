@@ -1842,7 +1842,7 @@ func (s *ImportService) indexProductsBatch(ctx context.Context, products []*mode
 }
 
 // IndexMarketplaceListings индексирует marketplace listings с needs_reindex=true в OpenSearch
-// Вызывается после успешного импорта для инкрементальной индексации marketplace_listings
+// Вызывается после успешного импорта для инкрементальной индексации c2c_listings
 func (s *ImportService) IndexMarketplaceListings(ctx context.Context, batchSize int) error {
 	if batchSize <= 0 {
 		batchSize = 100

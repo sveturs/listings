@@ -106,10 +106,10 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
-		osClient:         osClient,      // Сохраняем клиент OpenSearch
-		marketplaceIndex: indexName,     // Сохраняем имя индекса
-		storefrontIndex:  "storefronts", // Индекс для витрин
-		fsStorage:        fileStorage,   // Используем переданный параметр
+		osClient:         osClient,     // Сохраняем клиент OpenSearch
+		marketplaceIndex: indexName,    // Сохраняем имя индекса
+		storefrontIndex:  "b2c_stores", // Индекс для витрин
+		fsStorage:        fileStorage,  // Используем переданный параметр
 		attributeGroups:  NewAttributeGroupStorage(pool),
 	}
 
@@ -145,8 +145,8 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
 		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-		// Товары витрин синхронизируются в marketplace_listings через триггер sync_storefront_product_to_marketplace
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "marketplace_listings")
+		// Товары витрин синхронизируются в c2c_listings через триггер sync_storefront_product_to_marketplace
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "c2c_listings")
 		// Подготавливаем индекс товаров витрин
 		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
@@ -266,8 +266,8 @@ func (db *Database) ReindexAllProducts(ctx context.Context) error {
 			c.id, c.name, c.slug, c.icon, c.parent_id,
 			s.name as storefront_name
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON p.category_id = c.id
-		LEFT JOIN storefronts s ON p.storefront_id = s.id
+		LEFT JOIN c2c_categories c ON p.category_id = c.id
+		LEFT JOIN b2c_stores s ON p.storefront_id = s.id
 		WHERE p.is_active = true
 		ORDER BY p.id
 	`
@@ -633,7 +633,7 @@ func (db *Database) GetMarketplaceListingsForReindex(ctx context.Context, limit 
 			original_language, created_at, updated_at,
 			storefront_id, external_id, metadata,
 			address_multilingual
-		FROM marketplace_listings
+		FROM c2c_listings
 		WHERE needs_reindex = true
 		  AND status = 'active'
 		ORDER BY id
@@ -721,7 +721,7 @@ func (db *Database) ResetMarketplaceListingsReindexFlag(ctx context.Context, lis
 	}
 
 	query := `
-		UPDATE marketplace_listings
+		UPDATE c2c_listings
 		SET needs_reindex = false
 		WHERE id = ANY($1)
 	`
@@ -1175,21 +1175,21 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		}()
 
 		// Увеличиваем счетчик просмотров
-		// Сначала пробуем обновить в marketplace_listings
+		// Сначала пробуем обновить в c2c_listings
 		commandTag, err := tx.Exec(ctx, `
-			UPDATE marketplace_listings
+			UPDATE c2c_listings
 			SET views_count = views_count + 1
 			WHERE id = $1
 		`, id)
 		if err != nil {
-			fmt.Printf("Error updating marketplace_listings: %v\n", err)
+			fmt.Printf("Error updating c2c_listings: %v\n", err)
 			return err
 		}
 
 		rowsAffected := commandTag.RowsAffected()
-		fmt.Printf("marketplace_listings rows affected: %d\n", rowsAffected)
+		fmt.Printf("c2c_listings rows affected: %d\n", rowsAffected)
 
-		// Если не нашли в marketplace_listings, пробуем в storefront_products
+		// Если не нашли в c2c_listings, пробуем в storefront_products
 		if rowsAffected == 0 {
 			fmt.Printf("Trying to update storefront_products for id %d\n", id)
 			commandTag, err = tx.Exec(ctx, `
@@ -1238,10 +1238,10 @@ func (db *Database) IncrementViewsCount(ctx context.Context, id int) error {
 		if db.osMarketplaceRepo != nil && db.osClient != nil {
 			// Получаем обновленное значение счетчика просмотров
 			var viewsCount int
-			// Сначала пробуем получить из marketplace_listings
-			err = db.pool.QueryRow(ctx, "SELECT views_count FROM marketplace_listings WHERE id = $1", id).Scan(&viewsCount)
+			// Сначала пробуем получить из c2c_listings
+			err = db.pool.QueryRow(ctx, "SELECT views_count FROM c2c_listings WHERE id = $1", id).Scan(&viewsCount)
 			if err != nil {
-				// Если не нашли в marketplace_listings, пробуем из storefront_products
+				// Если не нашли в c2c_listings, пробуем из storefront_products
 				err = db.pool.QueryRow(ctx, "SELECT view_count FROM storefront_products WHERE id = $1", id).Scan(&viewsCount)
 				if err != nil {
 					log.Printf("Ошибка при получении обновленного счетчика просмотров: %v", err)
@@ -1289,7 +1289,7 @@ func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
 	// Получаем все объявления с информацией о скидке
 	query := `
         SELECT id, price, metadata
-        FROM marketplace_listings
+        FROM c2c_listings
         WHERE metadata->>'discount' IS NOT NULL
     `
 
@@ -1333,7 +1333,7 @@ func (db *Database) SynchronizeDiscountMetadata(ctx context.Context) error {
 					}
 
 					_, err = db.pool.Exec(ctx, `
-                        UPDATE marketplace_listings
+                        UPDATE c2c_listings
                         SET metadata = $1
                         WHERE id = $2
                     `, updatedMetadataJSON, id)
@@ -1697,7 +1697,7 @@ func (db *Database) CanUserReviewEntity(ctx context.Context, userID int, entityT
 	if entityType == "listing" {
 		var ownerID int
 		err := db.pool.QueryRow(ctx,
-			"SELECT user_id FROM marketplace_listings WHERE id = $1",
+			"SELECT user_id FROM c2c_listings WHERE id = $1",
 			entityID,
 		).Scan(&ownerID)
 
@@ -1746,7 +1746,7 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 	}
 
 	err := db.pool.QueryRow(ctx, `
-		INSERT INTO storefronts (user_id, slug, name, description, logo_url, banner_url, theme,
+		INSERT INTO b2c_stores (user_id, slug, name, description, logo_url, banner_url, theme,
 			phone, email, website, address, city, postal_code, country, latitude, longitude,
 			settings, seo_meta, is_active, subscription_plan, commission_rate)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
@@ -1781,7 +1781,7 @@ func (db *Database) CreateStorefront(ctx context.Context, userID int, dto *model
 				input_method, location_privacy, blur_radius,
 				is_precise
 			) VALUES (
-				'storefront', $1, ST_SetSRID(ST_MakePoint($2, $3), 4326), $4,
+				'b2c_store', $1, ST_SetSRID(ST_MakePoint($2, $3), 4326), $4,
 				$5, $6,
 				0.9, true,
 				'manual', 'exact', 0,
@@ -1820,7 +1820,7 @@ func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]model
 			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
 			commission_rate, ai_agent_enabled, ai_agent_config, live_shopping_enabled,
 			group_buying_enabled, created_at, updated_at
-		FROM storefronts
+		FROM b2c_stores
 		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`, userID)
@@ -1829,7 +1829,7 @@ func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]model
 	}
 	defer rows.Close()
 
-	var storefronts []models.Storefront
+	var b2c_stores []models.Storefront
 	for rows.Next() {
 		var s models.Storefront
 		err := rows.Scan(
@@ -1844,10 +1844,10 @@ func (db *Database) GetUserStorefronts(ctx context.Context, userID int) ([]model
 		if err != nil {
 			return nil, err
 		}
-		storefronts = append(storefronts, s)
+		b2c_stores = append(b2c_stores, s)
 	}
 
-	return storefronts, nil
+	return b2c_stores, nil
 }
 
 func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Storefront, error) {
@@ -1863,7 +1863,7 @@ func (db *Database) GetStorefrontByID(ctx context.Context, id int) (*models.Stor
 			products_count, sales_count, views_count, subscription_plan, subscription_expires_at,
 			commission_rate, ai_agent_enabled, COALESCE(ai_agent_config, '{}')::jsonb,
 			live_shopping_enabled, group_buying_enabled, created_at, updated_at
-		FROM storefronts
+		FROM b2c_stores
 		WHERE id = $1
 	`, id).Scan(
 		&s.ID, &s.UserID, &s.Slug, &s.Name, &s.Description, &s.LogoURL, &s.BannerURL, &theme,
@@ -1915,7 +1915,7 @@ func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID
 	var userID int
 	err := db.pool.QueryRow(ctx, `
 		SELECT s.user_id
-		FROM storefronts s
+		FROM b2c_stores s
 		INNER JOIN storefront_products sp ON sp.storefront_id = s.id
 		WHERE sp.id = $1
 	`, productID).Scan(&userID)
@@ -1931,7 +1931,7 @@ func (db *Database) GetStorefrontOwnerByProductID(ctx context.Context, productID
 
 func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Storefront) error {
 	_, err := db.pool.Exec(ctx, `
-		UPDATE storefronts
+		UPDATE b2c_stores
 		SET name = $2, description = $3, logo_url = $4, banner_url = $5, theme = $6,
 			phone = $7, email = $8, website = $9, address = $10, city = $11,
 			postal_code = $12, country = $13, latitude = $14, longitude = $15,
@@ -1946,7 +1946,7 @@ func (db *Database) UpdateStorefront(ctx context.Context, storefront *models.Sto
 }
 
 func (db *Database) DeleteStorefront(ctx context.Context, id int) error {
-	_, err := db.pool.Exec(ctx, "DELETE FROM storefronts WHERE id = $1", id)
+	_, err := db.pool.Exec(ctx, "DELETE FROM b2c_stores WHERE id = $1", id)
 	return err
 }
 
@@ -2003,7 +2003,7 @@ func (db *Database) StorefrontProductSearch() interface{} {
 	// Возвращаем новый репозиторий если есть клиент OpenSearch
 	if db.osClient != nil {
 		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-		return storefrontOpenSearch.NewProductRepository(db.osClient, "marketplace_listings")
+		return storefrontOpenSearch.NewProductRepository(db.osClient, "c2c_listings")
 	}
 	return nil
 }

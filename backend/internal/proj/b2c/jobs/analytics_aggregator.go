@@ -134,7 +134,7 @@ func (a *AnalyticsAggregator) aggregateStorefrontAnalytics(ctx context.Context, 
 // getActiveStorefronts получает активные витрины
 func (a *AnalyticsAggregator) getActiveStorefronts(ctx context.Context) ([]*models.Storefront, error) {
 	query := `
-		SELECT id, name FROM marketplace_storefronts 
+		SELECT id, name FROM marketplace_b2c_stores 
 		WHERE is_active = true AND deleted_at IS NULL
 	`
 
@@ -280,7 +280,7 @@ func (a *AnalyticsAggregator) getTopProducts(ctx context.Context, storefrontID i
 				'revenue', COALESCE(SUM(oi.price * oi.quantity), 0)
 			) as product_data
 			FROM storefront_events se
-			JOIN marketplace_listings ml ON ml.id = (se.event_data->>'product_id')::int
+			JOIN c2c_listings ml ON ml.id = (se.event_data->>'product_id')::int
 			LEFT JOIN marketplace_order_items oi ON oi.listing_id = ml.id
 			WHERE se.storefront_id = $1 
 				AND se.created_at >= $2 

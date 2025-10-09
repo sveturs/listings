@@ -17051,7 +17051,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Get import job details",
@@ -17119,7 +17119,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Cancel import job",
@@ -17187,7 +17187,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Retry import job",
@@ -17255,7 +17255,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Get import job status",
@@ -19686,7 +19686,7 @@ const docTemplate = `{
                     {
                         "type": "boolean",
                         "description": "Exclude storefront products (for admin P2P listings)",
-                        "name": "exclude_storefronts",
+                        "name": "exclude_b2c_stores",
                         "in": "query"
                     },
                     {
@@ -25607,7 +25607,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/storefronts/{slug}/products/{product_id}": {
+        "/api/v1/public/b2c_stores/{slug}/products/{product_id}": {
             "get": {
                 "description": "Public endpoint for getting basic product information - no authentication required",
                 "consumes": [
@@ -25673,7 +25673,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/storefronts/{slug}/products/{product_id}/variants": {
+        "/api/v1/public/b2c_stores/{slug}/products/{product_id}/variants": {
             "get": {
                 "description": "Public endpoint for getting product variants - no authentication required",
                 "consumes": [
@@ -29745,9 +29745,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts": {
+        "/api/v1/b2c_stores": {
             "get": {
-                "description": "Returns paginated list of storefronts with filters. Public endpoint that shows only active storefronts by default. Admins can see all storefronts.",
+                "description": "Returns paginated list of b2c_stores with filters. Public endpoint that shows only active b2c_stores by default. Admins can see all b2c_stores.",
                 "consumes": [
                     "application/json"
                 ],
@@ -29755,9 +29755,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
-                "summary": "List storefronts",
+                "summary": "List b2c_stores",
                 "parameters": [
                     {
                         "type": "integer",
@@ -29844,7 +29844,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of storefronts",
+                        "description": "List of b2c_stores",
                         "schema": {
                             "$ref": "#/definitions/handler.StorefrontsListResponse"
                         }
@@ -29871,7 +29871,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Create new storefront",
                 "parameters": [
@@ -29919,7 +29919,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/ai/ab-test-titles": {
+        "/api/v1/b2c_stores/ai/ab-test-titles": {
             "post": {
                 "security": [
                     {
@@ -29970,7 +29970,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/ai/analyze-product-image": {
+        "/api/v1/b2c_stores/ai/analyze-product-image": {
             "post": {
                 "security": [
                     {
@@ -30033,7 +30033,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/ai/detect-category": {
+        "/api/v1/b2c_stores/ai/detect-category": {
             "post": {
                 "security": [
                     {
@@ -30058,7 +30058,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_proj_storefronts_handler.DetectCategoryRequest"
+                            "$ref": "#/definitions/backend_internal_proj_b2c_stores_handler.DetectCategoryRequest"
                         }
                     }
                 ],
@@ -30096,7 +30096,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/ai/metrics": {
+        "/api/v1/b2c_stores/ai/metrics": {
             "get": {
                 "security": [
                     {
@@ -30130,7 +30130,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/ai/translate-content": {
+        "/api/v1/b2c_stores/ai/translate-content": {
             "post": {
                 "security": [
                     {
@@ -30155,7 +30155,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/backend_internal_proj_storefronts_handler.TranslateContentRequest"
+                            "$ref": "#/definitions/backend_internal_proj_b2c_stores_handler.TranslateContentRequest"
                         }
                     }
                 ],
@@ -30181,9 +30181,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/building": {
+        "/api/v1/b2c_stores/building": {
             "get": {
-                "description": "Returns all storefronts located in the same building",
+                "description": "Returns all b2c_stores located in the same building",
                 "consumes": [
                     "application/json"
                 ],
@@ -30191,7 +30191,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "map"
                 ],
                 "summary": "Get businesses in building",
@@ -30238,14 +30238,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/import/csv-template": {
+        "/api/v1/b2c_stores/import/csv-template": {
             "get": {
                 "description": "Get CSV template with headers and example data for product import",
                 "produces": [
                     "text/csv"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Get CSV import template",
@@ -30259,14 +30259,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/import/formats": {
+        "/api/v1/b2c_stores/import/formats": {
             "get": {
                 "description": "Get information about supported import formats and their requirements",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Get supported import formats",
@@ -30281,9 +30281,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/map": {
+        "/api/v1/b2c_stores/map": {
             "get": {
-                "description": "Returns storefronts within map bounds with minimal data for performance",
+                "description": "Returns b2c_stores within map bounds with minimal data for performance",
                 "consumes": [
                     "application/json"
                 ],
@@ -30291,10 +30291,10 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "map"
                 ],
-                "summary": "Get storefronts for map",
+                "summary": "Get b2c_stores for map",
                 "parameters": [
                     {
                         "type": "number",
@@ -30361,14 +30361,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/my": {
+        "/api/v1/b2c_stores/my": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns list of storefronts owned by current user",
+                "description": "Returns list of b2c_stores owned by current user",
                 "consumes": [
                     "application/json"
                 ],
@@ -30376,12 +30376,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
-                "summary": "Get my storefronts",
+                "summary": "Get my b2c_stores",
                 "responses": {
                     "200": {
-                        "description": "List of user's storefronts",
+                        "description": "List of user's b2c_stores",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -30404,9 +30404,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/nearby": {
+        "/api/v1/b2c_stores/nearby": {
             "get": {
-                "description": "Returns storefronts within specified radius from coordinates",
+                "description": "Returns b2c_stores within specified radius from coordinates",
                 "consumes": [
                     "application/json"
                 ],
@@ -30414,10 +30414,10 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "map"
                 ],
-                "summary": "Get nearby storefronts",
+                "summary": "Get nearby b2c_stores",
                 "parameters": [
                     {
                         "type": "number",
@@ -30451,7 +30451,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Nearby storefronts",
+                        "description": "Nearby b2c_stores",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -30474,7 +30474,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/products/{id}": {
+        "/api/v1/b2c_stores/products/{id}": {
             "get": {
                 "description": "Returns details of a specific product using only product ID",
                 "consumes": [
@@ -30518,9 +30518,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/search": {
+        "/api/v1/b2c_stores/search": {
             "get": {
-                "description": "Performs advanced search of storefronts using OpenSearch engine",
+                "description": "Performs advanced search of b2c_stores using OpenSearch engine",
                 "consumes": [
                     "application/json"
                 ],
@@ -30528,10 +30528,10 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "search"
                 ],
-                "summary": "Search storefronts using OpenSearch",
+                "summary": "Search b2c_stores using OpenSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -30574,13 +30574,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Only verified storefronts",
+                        "description": "Only verified b2c_stores",
                         "name": "is_verified",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
-                        "description": "Only currently open storefronts",
+                        "description": "Only currently open b2c_stores",
                         "name": "is_open_now",
                         "in": "query"
                     },
@@ -30651,7 +30651,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/slug/{slug}": {
+        "/api/v1/b2c_stores/slug/{slug}": {
             "get": {
                 "description": "Returns storefront details by slug or ID",
                 "consumes": [
@@ -30661,7 +30661,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Get storefront by slug or ID",
                 "parameters": [
@@ -30695,7 +30695,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/slug/{slug}/products/{product_id}/images": {
+        "/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images": {
             "get": {
                 "description": "Returns all images for a specific product",
                 "consumes": [
@@ -30864,7 +30864,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/slug/{slug}/products/{product_id}/images/order": {
+        "/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/order": {
             "put": {
                 "security": [
                     {
@@ -30938,7 +30938,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}": {
+        "/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}": {
             "delete": {
                 "security": [
                     {
@@ -31013,7 +31013,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/slug/{slug}/products/{product_id}/images/{image_id}/main": {
+        "/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}/main": {
             "post": {
                 "security": [
                     {
@@ -31088,7 +31088,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}": {
+        "/api/v1/b2c_stores/{id}": {
             "get": {
                 "description": "Returns storefront details by ID",
                 "consumes": [
@@ -31098,7 +31098,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Get storefront by ID",
                 "parameters": [
@@ -31145,7 +31145,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Update storefront",
                 "parameters": [
@@ -31222,7 +31222,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Delete storefront",
                 "parameters": [
@@ -31277,7 +31277,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/aggregated-rating": {
+        "/api/v1/b2c_stores/{id}/aggregated-rating": {
             "get": {
                 "description": "Returns aggregated rating for a storefront including breakdown by sources",
                 "consumes": [
@@ -31333,7 +31333,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/analytics": {
+        "/api/v1/b2c_stores/{id}/analytics": {
             "get": {
                 "security": [
                     {
@@ -31348,7 +31348,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Get storefront analytics",
                 "parameters": [
@@ -31412,7 +31412,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/banner": {
+        "/api/v1/b2c_stores/{id}/banner": {
             "post": {
                 "security": [
                     {
@@ -31427,7 +31427,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Upload storefront banner",
                 "parameters": [
@@ -31483,7 +31483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/delivery-options": {
+        "/api/v1/b2c_stores/{id}/delivery-options": {
             "put": {
                 "security": [
                     {
@@ -31498,7 +31498,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Update delivery options",
                 "parameters": [
@@ -31559,7 +31559,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/hours": {
+        "/api/v1/b2c_stores/{id}/hours": {
             "put": {
                 "security": [
                     {
@@ -31574,7 +31574,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Update working hours",
                 "parameters": [
@@ -31635,7 +31635,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/logo": {
+        "/api/v1/b2c_stores/{id}/logo": {
             "post": {
                 "security": [
                     {
@@ -31650,7 +31650,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Upload storefront logo",
                 "parameters": [
@@ -31706,7 +31706,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/payment-methods": {
+        "/api/v1/b2c_stores/{id}/payment-methods": {
             "put": {
                 "security": [
                     {
@@ -31721,7 +31721,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Update payment methods",
                 "parameters": [
@@ -31782,7 +31782,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/restore": {
+        "/api/v1/b2c_stores/{id}/restore": {
             "post": {
                 "security": [
                     {
@@ -31797,7 +31797,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Restore deactivated storefront",
                 "parameters": [
@@ -31846,7 +31846,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/staff": {
+        "/api/v1/b2c_stores/{id}/staff": {
             "get": {
                 "description": "Returns list of staff members with their roles and permissions",
                 "consumes": [
@@ -31856,7 +31856,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "staff"
                 ],
                 "summary": "Get storefront staff",
@@ -31904,7 +31904,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "staff"
                 ],
                 "summary": "Add staff member",
@@ -31963,7 +31963,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/staff/{staffId}/permissions": {
+        "/api/v1/b2c_stores/{id}/staff/{staffId}/permissions": {
             "put": {
                 "security": [
                     {
@@ -31978,7 +31978,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "staff"
                 ],
                 "summary": "Update staff permissions",
@@ -32050,7 +32050,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/staff/{userId}": {
+        "/api/v1/b2c_stores/{id}/staff/{userId}": {
             "delete": {
                 "security": [
                     {
@@ -32065,7 +32065,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "staff"
                 ],
                 "summary": "Remove staff member",
@@ -32128,7 +32128,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{id}/view": {
+        "/api/v1/b2c_stores/{id}/view": {
             "post": {
                 "description": "Records a view for analytics",
                 "consumes": [
@@ -32138,7 +32138,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts"
+                    "b2c_stores"
                 ],
                 "summary": "Record storefront view",
                 "parameters": [
@@ -32175,7 +32175,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/dashboard/low-stock": {
+        "/api/v1/b2c_stores/{slug}/dashboard/low-stock": {
             "get": {
                 "security": [
                     {
@@ -32190,7 +32190,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "dashboard"
                 ],
                 "summary": "Get low stock products",
@@ -32246,7 +32246,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/dashboard/notifications": {
+        "/api/v1/b2c_stores/{slug}/dashboard/notifications": {
             "get": {
                 "security": [
                     {
@@ -32261,7 +32261,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "dashboard"
                 ],
                 "summary": "Get dashboard notifications",
@@ -32324,7 +32324,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/dashboard/recent-orders": {
+        "/api/v1/b2c_stores/{slug}/dashboard/recent-orders": {
             "get": {
                 "security": [
                     {
@@ -32339,7 +32339,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "dashboard"
                 ],
                 "summary": "Get recent orders",
@@ -32402,7 +32402,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/dashboard/stats": {
+        "/api/v1/b2c_stores/{slug}/dashboard/stats": {
             "get": {
                 "security": [
                     {
@@ -32417,7 +32417,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "dashboard"
                 ],
                 "summary": "Get dashboard statistics",
@@ -32458,7 +32458,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products": {
+        "/api/v1/b2c_stores/{slug}/products": {
             "get": {
                 "description": "Returns paginated list of products for a storefront",
                 "consumes": [
@@ -32639,7 +32639,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/bulk/create": {
+        "/api/v1/b2c_stores/{slug}/products/bulk/create": {
             "post": {
                 "description": "Create multiple products in a single request",
                 "consumes": [
@@ -32705,7 +32705,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/bulk/delete": {
+        "/api/v1/b2c_stores/{slug}/products/bulk/delete": {
             "delete": {
                 "description": "Delete multiple products in a single request",
                 "consumes": [
@@ -32771,7 +32771,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/bulk/status": {
+        "/api/v1/b2c_stores/{slug}/products/bulk/status": {
             "put": {
                 "description": "Update active/inactive status of multiple products",
                 "consumes": [
@@ -32837,7 +32837,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/bulk/update": {
+        "/api/v1/b2c_stores/{slug}/products/bulk/update": {
             "put": {
                 "description": "Update multiple products in a single request",
                 "consumes": [
@@ -32903,7 +32903,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/stats": {
+        "/api/v1/b2c_stores/{slug}/products/stats": {
             "get": {
                 "security": [
                     {
@@ -32952,7 +32952,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/{id}": {
+        "/api/v1/b2c_stores/{slug}/products/{id}": {
             "get": {
                 "description": "Returns details of a specific product",
                 "consumes": [
@@ -33151,7 +33151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{slug}/products/{id}/inventory": {
+        "/api/v1/b2c_stores/{slug}/products/{id}/inventory": {
             "post": {
                 "security": [
                     {
@@ -33228,7 +33228,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/cart": {
+        "/api/v1/b2c_stores/{storefront_id}/cart": {
             "get": {
                 "security": [
                     {
@@ -33354,7 +33354,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/cart/items": {
+        "/api/v1/b2c_stores/{storefront_id}/cart/items": {
             "post": {
                 "security": [
                     {
@@ -33436,7 +33436,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/cart/items/{item_id}": {
+        "/api/v1/b2c_stores/{storefront_id}/cart/items/{item_id}": {
             "put": {
                 "security": [
                     {
@@ -33600,7 +33600,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/analyze-attributes": {
+        "/api/v1/b2c_stores/{storefront_id}/import/analyze-attributes": {
             "post": {
                 "security": [
                     {
@@ -33615,7 +33615,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Analyze attributes in import file",
@@ -33681,7 +33681,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/analyze-categories": {
+        "/api/v1/b2c_stores/{storefront_id}/import/analyze-categories": {
             "post": {
                 "security": [
                     {
@@ -33696,7 +33696,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Analyze categories in import file",
@@ -33762,7 +33762,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/analyze-client-categories": {
+        "/api/v1/b2c_stores/{storefront_id}/import/analyze-client-categories": {
             "post": {
                 "security": [
                     {
@@ -33777,7 +33777,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Analyze client categories",
@@ -33833,7 +33833,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/detect-variants": {
+        "/api/v1/b2c_stores/{storefront_id}/import/detect-variants": {
             "post": {
                 "security": [
                     {
@@ -33848,7 +33848,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Detect product variants",
@@ -33914,7 +33914,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/file": {
+        "/api/v1/b2c_stores/{storefront_id}/import/file": {
             "post": {
                 "security": [
                     {
@@ -33929,7 +33929,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Import products from file",
@@ -34019,7 +34019,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/jobs": {
+        "/api/v1/b2c_stores/{storefront_id}/import/jobs": {
             "get": {
                 "security": [
                     {
@@ -34034,7 +34034,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Get import jobs",
@@ -34099,7 +34099,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/preview": {
+        "/api/v1/b2c_stores/{storefront_id}/import/preview": {
             "post": {
                 "security": [
                     {
@@ -34114,7 +34114,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Preview import file",
@@ -34187,7 +34187,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/url": {
+        "/api/v1/b2c_stores/{storefront_id}/import/url": {
             "post": {
                 "security": [
                     {
@@ -34202,7 +34202,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Import products from URL",
@@ -34258,7 +34258,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/import/validate": {
+        "/api/v1/b2c_stores/{storefront_id}/import/validate": {
             "post": {
                 "security": [
                     {
@@ -34273,7 +34273,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "storefronts",
+                    "b2c_stores",
                     "import"
                 ],
                 "summary": "Validate import file",
@@ -34339,7 +34339,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/orders": {
+        "/api/v1/b2c_stores/{storefront_id}/orders": {
             "get": {
                 "security": [
                     {
@@ -34432,7 +34432,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/storefronts/{storefront_id}/orders/{order_id}/status": {
+        "/api/v1/b2c_stores/{storefront_id}/orders/{order_id}/status": {
             "put": {
                 "security": [
                     {
@@ -35237,7 +35237,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Gets all shopping carts for the authenticated user across all storefronts",
+                "description": "Gets all shopping carts for the authenticated user across all b2c_stores",
                 "produces": [
                     "application/json"
                 ],
@@ -38735,7 +38735,7 @@ const docTemplate = `{
                 }
             }
         },
-        "backend_internal_proj_storefronts_handler.DetectCategoryRequest": {
+        "backend_internal_proj_b2c_stores_handler.DetectCategoryRequest": {
             "type": "object",
             "properties": {
                 "aiHints": {
@@ -38752,7 +38752,7 @@ const docTemplate = `{
                 }
             }
         },
-        "backend_internal_proj_storefronts_handler.TranslateContentRequest": {
+        "backend_internal_proj_b2c_stores_handler.TranslateContentRequest": {
             "type": "object",
             "properties": {
                 "content": {
@@ -41416,7 +41416,7 @@ const docTemplate = `{
                 "offset": {
                     "type": "integer"
                 },
-                "storefronts": {
+                "b2c_stores": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/models.Storefront"
@@ -44427,7 +44427,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "create_category": {
-                    "description": "If true, creates the category in marketplace_categories",
+                    "description": "If true, creates the category in c2c_categories",
                     "type": "boolean"
                 }
             }
@@ -48107,7 +48107,7 @@ const docTemplate = `{
                         }
                     ]
                 },
-                "storefronts": {
+                "b2c_stores": {
                     "description": "Через магазины",
                     "allOf": [
                         {
@@ -49742,7 +49742,7 @@ const docTemplate = `{
                 "max_staff_per_storefront": {
                     "type": "integer"
                 },
-                "max_storefronts": {
+                "max_b2c_stores": {
                     "type": "integer"
                 },
                 "name": {
@@ -51084,7 +51084,7 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string"
                 },
-                "used_storefronts": {
+                "used_b2c_stores": {
                     "type": "integer"
                 },
                 "user_id": {
@@ -51122,7 +51122,7 @@ const docTemplate = `{
                 "max_staff": {
                     "type": "integer"
                 },
-                "max_storefronts": {
+                "max_b2c_stores": {
                     "type": "integer"
                 },
                 "next_payment_at": {
@@ -51146,7 +51146,7 @@ const docTemplate = `{
                 "trial_ends_at": {
                     "type": "string"
                 },
-                "used_storefronts": {
+                "used_b2c_stores": {
                     "type": "integer"
                 }
             }
@@ -51717,7 +51717,7 @@ const docTemplate = `{
         "opensearch.StorefrontSearchResult": {
             "type": "object",
             "properties": {
-                "storefronts": {
+                "b2c_stores": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/opensearch.StorefrontSearchItem"

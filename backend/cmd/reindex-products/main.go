@@ -109,7 +109,7 @@ func main() {
 			p.individual_address, p.show_on_map, p.location_privacy,
 			c.id as cat_id, c.name as cat_name, c.slug as cat_slug
 		FROM storefront_products p
-		LEFT JOIN marketplace_categories c ON c.id = p.category_id
+		LEFT JOIN c2c_categories c ON c.id = p.category_id
 		WHERE p.is_active = true
 		ORDER BY p.id
 	`
@@ -221,7 +221,7 @@ func main() {
 		transQuery := `
 			SELECT language, field_name, translated_text
 			FROM translations
-			WHERE entity_type = 'storefront_product' AND entity_id = $1
+			WHERE entity_type = 'b2c_product' AND entity_id = $1
 			ORDER BY language, field_name
 		`
 		transRows, err := storage.Query(ctx, transQuery, p.ID)

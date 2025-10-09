@@ -74,7 +74,7 @@ func checkCategoryHierarchy(db *sql.DB, categoryID int) {
 
 	err := db.QueryRow(`
 		SELECT name, parent_id 
-		FROM marketplace_categories 
+		FROM c2c_categories 
 		WHERE id = $1
 	`, categoryID).Scan(&name, &parentID)
 	if err != nil {
@@ -99,7 +99,7 @@ func checkCategoryHierarchy(db *sql.DB, categoryID int) {
 			var nextParent sql.NullInt64
 			err := db.QueryRow(`
 				SELECT parent_id 
-				FROM marketplace_categories 
+				FROM c2c_categories 
 				WHERE id = $1
 			`, parent).Scan(&nextParent)
 			if err != nil {
@@ -175,13 +175,13 @@ func runGetCategoryAttributesQuery(db *sql.DB, categoryID int) {
     WITH category_hierarchy AS (
         WITH RECURSIVE parents AS (
             SELECT id, parent_id
-            FROM marketplace_categories
+            FROM c2c_categories
             WHERE id = $1
             
             UNION
             
             SELECT c.id, c.parent_id
-            FROM marketplace_categories c
+            FROM c2c_categories c
             INNER JOIN parents p ON c.id = p.parent_id
         )
         SELECT id FROM parents
@@ -247,7 +247,7 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 	// Проверяем, что категория существует
 	var count int
 	err := db.QueryRow(`
-		SELECT COUNT(*) FROM marketplace_categories WHERE id = $1
+		SELECT COUNT(*) FROM c2c_categories WHERE id = $1
 	`, categoryID).Scan(&count)
 	if err != nil {
 		fmt.Printf("  Диагностика: ОШИБКА при проверке существования категории - %v\n", err)
@@ -263,13 +263,13 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 	rows, err := db.Query(`
 		WITH RECURSIVE parents AS (
 			SELECT id, parent_id, name
-			FROM marketplace_categories
+			FROM c2c_categories
 			WHERE id = $1
 			
 			UNION
 			
 			SELECT c.id, c.parent_id, c.name
-			FROM marketplace_categories c
+			FROM c2c_categories c
 			INNER JOIN parents p ON c.id = p.parent_id
 		)
 		SELECT id, name FROM parents
@@ -314,13 +314,13 @@ func diagnoseCategoryHierarchy(db *sql.DB, categoryID int) {
 	rows, err = db.Query(`
 		WITH RECURSIVE parents AS (
 			SELECT id, parent_id
-			FROM marketplace_categories
+			FROM c2c_categories
 			WHERE id = $1
 			
 			UNION
 			
 			SELECT c.id, c.parent_id
-			FROM marketplace_categories c
+			FROM c2c_categories c
 			INNER JOIN parents p ON c.id = p.parent_id
 		)
 		SELECT 

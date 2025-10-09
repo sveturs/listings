@@ -2185,7 +2185,7 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 			FROM c2c_listings ml
 			LEFT JOIN c2c_categories mc ON ml.category_id = mc.id
 			LEFT JOIN c2c_images mi ON ml.id = mi.listing_id AND mi.is_main = true
-			LEFT JOIN storefronts s ON ml.storefront_id = s.id
+			LEFT JOIN b2c_stores s ON ml.storefront_id = s.id
 			WHERE LOWER(ml.title) LIKE LOWER($1)
 			  AND ml.status = 'active'
 
@@ -2195,12 +2195,12 @@ func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, q
 			SELECT sp.id, sp.name as title, sp.price, mc.name as category_name,
 			       COALESCE(spi.image_url, '') as image_url,
 			       sp.storefront_id, s.name as storefront_name, s.slug as storefront_slug,
-			       'storefront' as source_type,
+			       'b2c_store' as source_type,
 			       0 as views_count, sp.created_at
 			FROM storefront_products sp
 			LEFT JOIN c2c_categories mc ON sp.category_id = mc.id
 			LEFT JOIN storefront_product_images spi ON sp.id = spi.storefront_product_id AND spi.is_default = true
-			JOIN storefronts s ON sp.storefront_id = s.id
+			JOIN b2c_stores s ON sp.storefront_id = s.id
 			WHERE LOWER(sp.name) LIKE LOWER($1)
 		) combined
 		ORDER BY views_count DESC, created_at DESC

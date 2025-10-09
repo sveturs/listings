@@ -216,7 +216,7 @@ func (s *BotService) GetMainMenuKeyboard() *models.Keyboard {
 				Columns:    2,
 				Rows:       1,
 				ActionType: "reply",
-				ActionBody: "storefronts",
+				ActionBody: "b2c_stores",
 				Text:       "🏪 Витрины",
 				TextSize:   "regular",
 				TextHAlign: "center",

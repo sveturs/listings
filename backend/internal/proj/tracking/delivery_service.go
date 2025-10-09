@@ -240,8 +240,8 @@ func (s *DeliveryService) GetNearbyItems(lat, lng float64, radiusMeters int) ([]
 			) AS INTEGER) as distance_meters,
 			s.name as store_name,
 			s.logo_url as store_logo
-		FROM marketplace_listings l
-		LEFT JOIN storefronts s ON s.id = l.storefront_id
+		FROM c2c_listings l
+		LEFT JOIN b2c_stores s ON s.id = l.storefront_id
 		WHERE l.status = 'active'
 		  AND l.location_latitude IS NOT NULL
 		  AND l.location_longitude IS NOT NULL

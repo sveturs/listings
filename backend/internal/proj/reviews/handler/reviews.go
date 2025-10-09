@@ -933,7 +933,7 @@ func (h *ReviewHandler) GetUserAggregatedRating(c *fiber.Ctx) error {
 // @Success 200 {object} utils.SuccessResponseSwag{data=models.AggregatedRating} "Aggregated rating"
 // @Failure 400 {object} utils.ErrorResponseSwag "Invalid storefront ID"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
-// @Router /api/v1/storefronts/{id}/aggregated-rating [get]
+// @Router /api/v1/b2c_stores/{id}/aggregated-rating [get]
 func (h *ReviewHandler) GetStorefrontAggregatedRating(c *fiber.Ctx) error {
 	storefrontID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {

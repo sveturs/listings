@@ -339,7 +339,7 @@ func (s *MonitoringService) getOrderInfo(ctx context.Context, orderID int) logis
 				''
 			)
 		FROM marketplace_orders mo
-		JOIN marketplace_listings ml ON ml.id = mo.listing_id
+		JOIN c2c_listings ml ON ml.id = mo.listing_id
 		WHERE mo.id = $1
 	`, orderID).Scan(&info.ProductName, &info.Price, &info.ProductImage)
 

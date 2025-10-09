@@ -398,7 +398,7 @@ func (h *ListingsHandler) GetListingBySlug(c *fiber.Ctx) error {
 // @Param sort_by query string false "Sort order (price_asc, price_desc, date_desc, etc.)"
 // @Param user_id query int false "User ID filter"
 // @Param storefront_id query int false "Storefront ID filter"
-// @Param exclude_storefronts query boolean false "Exclude storefront products (for admin P2P listings)"
+// @Param exclude_b2c_stores query boolean false "Exclude storefront products (for admin P2P listings)"
 // @Param limit query int false "Number of items per page" default(20)
 // @Param offset query int false "Number of items to skip" default(0)
 // @Success 200 {object} utils.SuccessResponseSwag{data=ListingsResponse} "Listings list with pagination"
@@ -419,7 +419,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 	sortBy := c.Query("sort_by")
 	userIDStr := c.Query("user_id")
 	storefrontIDStr := c.Query("storefront_id")
-	excludeStorefronts := c.Query("exclude_storefronts") // Параметр для исключения товаров витрин
+	excludeStorefronts := c.Query("exclude_b2c_stores") // Параметр для исключения товаров витрин
 
 	// Значения по умолчанию для пагинации
 	limit := 20
@@ -465,7 +465,7 @@ func (h *ListingsHandler) GetListings(c *fiber.Ctx) error {
 		filters["storefront_id"] = storefrontIDStr
 	}
 	if excludeStorefronts != "" {
-		filters["exclude_storefronts"] = excludeStorefronts
+		filters["exclude_b2c_stores"] = excludeStorefronts
 	}
 
 	// Получаем список объявлений

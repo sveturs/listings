@@ -56,7 +56,7 @@ func (s *Service) GetProductAttributes(ctx context.Context, productID int, produ
 					WHERE dcd.category_id = ml.category_id),
 					'{}'::jsonb
 				) as attributes
-			FROM marketplace_listings ml
+			FROM c2c_listings ml
 			WHERE ml.id = $1`
 	} else {
 		query = `
@@ -127,7 +127,7 @@ func (s *Service) UpdateProductAttributes(ctx context.Context, productID int, pr
 	var query string
 	if productType == ProductTypeListing {
 		query = `
-			UPDATE marketplace_listings
+			UPDATE c2c_listings
 			SET metadata = jsonb_set(
 				COALESCE(metadata, '{}'),
 				'{delivery_attributes}',
@@ -316,7 +316,7 @@ func (s *Service) updateProductAttributesTx(ctx context.Context, tx *sqlx.Tx, pr
 	var query string
 	if productType == ProductTypeListing {
 		query = `
-			UPDATE marketplace_listings
+			UPDATE c2c_listings
 			SET metadata = jsonb_set(
 				COALESCE(metadata, '{}'),
 				'{delivery_attributes}',
@@ -368,9 +368,9 @@ func (s *Service) ApplyCategoryDefaultsToProducts(ctx context.Context, categoryI
 		return 0, err
 	}
 
-	// Обновляем товары из marketplace_listings
+	// Обновляем товары из c2c_listings
 	query1 := `
-		UPDATE marketplace_listings
+		UPDATE c2c_listings
 		SET metadata = jsonb_set(
 			COALESCE(metadata, '{}'),
 			'{delivery_attributes}',

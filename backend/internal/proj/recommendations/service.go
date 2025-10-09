@@ -64,7 +64,7 @@ func (s *Service) GetContentBasedRecommendations(itemID int64, limit int) ([]mod
 				   WHERE ua.listing_id = ml.id
 				   ), '[]'::jsonb
 			   ) as attributes
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		WHERE ml.id = $1 AND ml.status = 'active'
 	`, itemID)
 	if err != nil {
@@ -92,8 +92,8 @@ func (s *Service) GetContentBasedRecommendations(itemID int64, limit int) ([]mod
 				CASE
 					WHEN ml.category_id = $3 THEN 20
 					WHEN ml.category_id IN (
-						SELECT id FROM marketplace_categories
-						WHERE parent_id = (SELECT parent_id FROM marketplace_categories WHERE id = $3)
+						SELECT id FROM c2c_categories
+						WHERE parent_id = (SELECT parent_id FROM c2c_categories WHERE id = $3)
 					) THEN 10
 					ELSE 0
 				END as category_score,
@@ -115,19 +115,19 @@ func (s *Service) GetContentBasedRecommendations(itemID int64, limit int) ([]mod
 					WHEN ml.created_at > NOW() - INTERVAL '90 days' THEN 5
 					ELSE 0
 				END as freshness_score
-			FROM marketplace_listings ml
+			FROM c2c_listings ml
 			WHERE ml.id != $1
 				AND ml.status = 'active'
 				AND ml.category_id IN (
 					-- Same category or sibling categories
-					SELECT id FROM marketplace_categories
-					WHERE id = $3 OR parent_id = (SELECT parent_id FROM marketplace_categories WHERE id = $3)
+					SELECT id FROM c2c_categories
+					WHERE id = $3 OR parent_id = (SELECT parent_id FROM c2c_categories WHERE id = $3)
 				)
 		)
 		SELECT
 			ml.*,
 			(s.price_score + s.category_score + s.location_score + s.engagement_score + s.freshness_score) as total_score
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN item_scores s ON ml.id = s.id
 		ORDER BY total_score DESC
 		LIMIT $6
@@ -233,7 +233,7 @@ func (s *Service) GetCollaborativeRecommendations(userID int64, limit int) ([]mo
 			LIMIT 20
 		)
 		SELECT DISTINCT ml.*
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN universal_view_history vh ON vh.listing_id = ml.id
 		JOIN similar_users su ON su.user_id = vh.user_id
 		WHERE ml.id NOT IN (
@@ -329,7 +329,7 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 			AVG(ml.price) as avg_price,
 			MIN(ml.price) as min_price,
 			MAX(ml.price) as max_price
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN universal_view_history vh ON vh.listing_id = ml.id
 		WHERE vh.user_id = $1
 			AND vh.interaction_type IN ('view', 'click_phone', 'add_favorite')
@@ -342,7 +342,7 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 	// Get top cities
 	rows, err := s.db.GetSQLXDB().Query(`
 		SELECT ml.address_city, COUNT(*) as cnt
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN universal_view_history vh ON vh.listing_id = ml.id
 		WHERE vh.user_id = $1 AND ml.address_city IS NOT NULL
 		GROUP BY ml.address_city
@@ -388,14 +388,14 @@ func (s *Service) GetPersonalizedRecommendations(userID int64, category string, 
 	}
 
 	queryBuilder.WriteString(` END as price_score
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		WHERE ml.status = 'active'
 	`)
 
 	// Add category filter if specified
 	if category != "" && category != "all" {
 		queryBuilder.WriteString(fmt.Sprintf(` AND ml.category_id IN (
-			SELECT id FROM marketplace_categories WHERE LOWER(name) LIKE LOWER('%%%s%%')
+			SELECT id FROM c2c_categories WHERE LOWER(name) LIKE LOWER('%%%s%%')
 		)`, category))
 	}
 
@@ -422,7 +422,7 @@ func (s *Service) GetTrendingRecommendations(limit int) ([]models.MarketplaceLis
 				COUNT(CASE WHEN vh.interaction_type = 'add_favorite' THEN 1 END) as favorites,
 				COUNT(CASE WHEN vh.interaction_type = 'click_phone' THEN 1 END) as phone_clicks,
 				AVG(vh.view_duration_seconds) as avg_duration
-			FROM marketplace_listings ml
+			FROM c2c_listings ml
 			LEFT JOIN universal_view_history vh ON vh.listing_id = ml.id
 				AND vh.created_at > NOW() - INTERVAL '7 days'
 			WHERE ml.status = 'active'
@@ -437,7 +437,7 @@ func (s *Service) GetTrendingRecommendations(limit int) ([]models.MarketplaceLis
 				ts.phone_clicks * 0.15 +
 				COALESCE(ts.avg_duration, 0) * 0.1
 			) as trend_score
-		FROM marketplace_listings ml
+		FROM c2c_listings ml
 		JOIN trending_scores ts ON ts.id = ml.id
 		ORDER BY trend_score DESC
 		LIMIT $1
@@ -452,7 +452,7 @@ func (s *Service) GetTrendingRecommendations(limit int) ([]models.MarketplaceLis
 func (s *Service) GetPopularRecommendations(limit int) ([]models.MarketplaceListing, error) {
 	var listings []models.MarketplaceListing
 	err := s.db.GetSQLXDB().Select(&listings, `
-		SELECT * FROM marketplace_listings
+		SELECT * FROM c2c_listings
 		WHERE status = 'active'
 		ORDER BY views DESC, created_at DESC
 		LIMIT $1

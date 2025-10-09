@@ -10,12 +10,12 @@ import (
 // RegisterRoutes регистрирует все маршруты для заказов
 func (h *OrdersHandler) RegisterRoutes(app *fiber.App, m *middleware.Middleware) {
 	// Корзина покупок (опциональная аутентификация для поддержки анонимных корзин)
-	// ВАЖНО: НЕ используем Group с префиксом /api/v1/storefronts - это создает middleware leak!
-	app.Post("/api/v1/storefronts/:storefront_id/cart/items", m.JWTParser(), h.AddToCart)
-	app.Put("/api/v1/storefronts/:storefront_id/cart/items/:item_id", m.JWTParser(), h.UpdateCartItem)
-	app.Delete("/api/v1/storefronts/:storefront_id/cart/items/:item_id", m.JWTParser(), h.RemoveFromCart)
-	app.Get("/api/v1/storefronts/:storefront_id/cart", m.JWTParser(), h.GetCart)
-	app.Delete("/api/v1/storefronts/:storefront_id/cart", m.JWTParser(), h.ClearCart)
+	// ВАЖНО: НЕ используем Group с префиксом /api/v1/b2c_stores - это создает middleware leak!
+	app.Post("/api/v1/b2c_stores/:storefront_id/cart/items", m.JWTParser(), h.AddToCart)
+	app.Put("/api/v1/b2c_stores/:storefront_id/cart/items/:item_id", m.JWTParser(), h.UpdateCartItem)
+	app.Delete("/api/v1/b2c_stores/:storefront_id/cart/items/:item_id", m.JWTParser(), h.RemoveFromCart)
+	app.Get("/api/v1/b2c_stores/:storefront_id/cart", m.JWTParser(), h.GetCart)
+	app.Delete("/api/v1/b2c_stores/:storefront_id/cart", m.JWTParser(), h.ClearCart)
 
 	// Корзины пользователя (требует аутентификации)
 	app.Get("/api/v1/user/carts", m.JWTParser(), authMiddleware.RequireAuth(), h.GetUserCarts)
@@ -27,6 +27,6 @@ func (h *OrdersHandler) RegisterRoutes(app *fiber.App, m *middleware.Middleware)
 	app.Put("/api/v1/orders/:id/cancel", m.JWTParser(), authMiddleware.RequireAuth(), h.CancelOrder)
 
 	// Управление заказами витрины (для продавцов)
-	app.Get("/api/v1/storefronts/:storefront_id/orders", m.JWTParser(), authMiddleware.RequireAuth(), h.GetStorefrontOrders)
-	app.Put("/api/v1/storefronts/:storefront_id/orders/:order_id/status", m.JWTParser(), authMiddleware.RequireAuth(), h.UpdateOrderStatus)
+	app.Get("/api/v1/b2c_stores/:storefront_id/orders", m.JWTParser(), authMiddleware.RequireAuth(), h.GetStorefrontOrders)
+	app.Put("/api/v1/b2c_stores/:storefront_id/orders/:order_id/status", m.JWTParser(), authMiddleware.RequireAuth(), h.UpdateOrderStatus)
 }

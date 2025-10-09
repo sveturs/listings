@@ -131,7 +131,7 @@ func (s *POIService) FilterListingsByPOI(ctx context.Context, filter *types.POIF
 				l.id,
 				COUNT(p.geom) as poi_count,
 				MIN(ST_Distance(l.location::geography, p.geom::geography)) as min_distance
-			FROM marketplace_listings l
+			FROM c2c_listings l
 			CROSS JOIN poi_locations p
 			WHERE 
 				l.id = ANY($2)

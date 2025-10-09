@@ -178,7 +178,7 @@ func (r *categoryMappingsRepository) GetByStorefront(ctx context.Context, storef
 			mc.name as target_category_name,
 			mc.slug as target_category_path
 		FROM storefront_category_mappings scm
-		JOIN marketplace_categories mc ON mc.id = scm.target_category_id
+		JOIN c2c_categories mc ON mc.id = scm.target_category_id
 		%s
 		ORDER BY scm.created_at DESC`, whereClause)
 

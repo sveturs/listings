@@ -1285,7 +1285,7 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 		var storefront models.Storefront
 		err := storage.QueryRow(context.Background(), `
 			SELECT id, name, slug, city, address, country, latitude, longitude
-			FROM user_storefronts
+			FROM user_b2c_stores
 			WHERE id = $1
 		`, *listing.StorefrontID).Scan(
 			&storefront.ID,
@@ -1297,7 +1297,7 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 			&storefront.Latitude,
 			&storefront.Longitude,
 		)
-		// user_storefronts - legacy таблица без is_verified, устанавливаем false по умолчанию
+		// user_b2c_stores - legacy таблица без is_verified, устанавливаем false по умолчанию
 		storefront.IsVerified = false
 
 		if err == nil {

@@ -26,7 +26,7 @@ import (
 // @Failure 404 {object} utils.ErrorResponseSwag "Product not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/cart/items [post]
+// @Router /api/v1/b2c_stores/{storefront_id}/cart/items [post]
 func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	_, err := strconv.Atoi(storefrontIDStr)
@@ -87,7 +87,7 @@ func (h *OrdersHandler) AddToCart(c *fiber.Ctx) error {
 // @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/cart/items/{item_id} [put]
+// @Router /api/v1/b2c_stores/{storefront_id}/cart/items/{item_id} [put]
 func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)
@@ -143,7 +143,7 @@ func (h *OrdersHandler) UpdateCartItem(c *fiber.Ctx) error {
 // @Failure 404 {object} utils.ErrorResponseSwag "Item not found"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/cart/items/{item_id} [delete]
+// @Router /api/v1/b2c_stores/{storefront_id}/cart/items/{item_id} [delete]
 func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)
@@ -191,7 +191,7 @@ func (h *OrdersHandler) RemoveFromCart(c *fiber.Ctx) error {
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/cart [get]
+// @Router /api/v1/b2c_stores/{storefront_id}/cart [get]
 func (h *OrdersHandler) GetCart(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)
@@ -234,7 +234,7 @@ func (h *OrdersHandler) GetCart(c *fiber.Ctx) error {
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Security BearerAuth
-// @Router /api/v1/storefronts/{storefront_id}/cart [delete]
+// @Router /api/v1/b2c_stores/{storefront_id}/cart [delete]
 func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 	storefrontIDStr := c.Params("storefront_id")
 	storefrontID, err := strconv.Atoi(storefrontIDStr)
@@ -267,7 +267,7 @@ func (h *OrdersHandler) ClearCart(c *fiber.Ctx) error {
 
 // GetUserCarts возвращает все корзины пользователя
 // @Summary Get all user carts
-// @Description Gets all shopping carts for the authenticated user across all storefronts
+// @Description Gets all shopping carts for the authenticated user across all b2c_stores
 // @Tags cart
 // @Produce json
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]models.ShoppingCart} "User's carts"
