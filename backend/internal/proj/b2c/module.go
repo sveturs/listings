@@ -194,7 +194,7 @@ func (m *Module) Shutdown() error {
 
 // GetPrefix возвращает префикс для маршрутов
 func (m *Module) GetPrefix() string {
-	return "/api/v1/b2c_stores"
+	return "/api/v1/b2c"
 }
 
 // RegisterRoutes регистрирует все маршруты модуля
@@ -205,164 +205,164 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	// ВАЖНО: Конкретные маршруты должны быть ПЕРЕД параметризованными
 
 	// Защищенный маршрут /my - специфичный, регистрируем рано
-	api.Get("/b2c_stores/my", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.GetMyStorefronts)
+	api.Get("/b2c/my", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.GetMyStorefronts)
 
 	// Публичный endpoint для получения товара по ID (для чата)
-	api.Get("/b2c_stores/products/:id", m.productHandler.GetProductByID)
+	api.Get("/b2c/products/:id", m.productHandler.GetProductByID)
 
 	// Списки и поиск (публичные)
-	api.Get("/b2c_stores", m.storefrontHandler.ListStorefronts)
-	api.Get("/b2c_stores/search", m.storefrontHandler.SearchOpenSearch)
-	api.Get("/b2c_stores/nearby", m.storefrontHandler.GetNearbyStorefronts)
+	api.Get("/b2c", m.storefrontHandler.ListStorefronts)
+	api.Get("/b2c/search", m.storefrontHandler.SearchOpenSearch)
+	api.Get("/b2c/nearby", m.storefrontHandler.GetNearbyStorefronts)
 
 	// Картографические данные (публичные)
-	api.Get("/b2c_stores/map", m.storefrontHandler.GetMapData)
-	api.Get("/b2c_stores/building", m.storefrontHandler.GetBusinessesInBuilding)
+	api.Get("/b2c/map", m.storefrontHandler.GetMapData)
+	api.Get("/b2c/building", m.storefrontHandler.GetBusinessesInBuilding)
 
 	// Маршруты с slug (публичные)
-	api.Get("/b2c_stores/slug/:slug", m.storefrontHandler.GetStorefrontBySlug)
-	api.Get("/b2c_stores/slug/:slug/products", m.getProductsBySlug)
-	api.Get("/b2c_stores/slug/:slug/products/:id", m.getProductBySlug)
+	api.Get("/b2c/slug/:slug", m.storefrontHandler.GetStorefrontBySlug)
+	api.Get("/b2c/slug/:slug/products", m.getProductsBySlug)
+	api.Get("/b2c/slug/:slug/products/:id", m.getProductBySlug)
 
 	// Публичные маршруты для вариантов товаров
-	api.Get("/b2c_stores/slug/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
-	api.Get("/b2c_stores/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
-	api.Get("/b2c_stores/variants/:variant_id", m.publicVariantHandler.GetVariantByIDPublic)
+	api.Get("/b2c/slug/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
+	api.Get("/b2c/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
+	api.Get("/b2c/variants/:variant_id", m.publicVariantHandler.GetVariantByIDPublic)
 
 	// Параметризованные маршруты (должны быть последними)
 	// Получение витрины (публичное)
-	api.Get("/b2c_stores/:id", m.storefrontHandler.GetStorefront)
+	api.Get("/b2c/:id", m.storefrontHandler.GetStorefront)
 
 	// Персонал (просмотр, публичное)
-	api.Get("/b2c_stores/:id/staff", m.storefrontHandler.GetStaff)
+	api.Get("/b2c/:id/staff", m.storefrontHandler.GetStaff)
 
 	// Аналитика (запись просмотра, публичное)
-	api.Post("/b2c_stores/:id/view", m.storefrontHandler.RecordView)
+	api.Post("/b2c/:id/view", m.storefrontHandler.RecordView)
 
 	// Защищенные маршруты витрин (требуют авторизации)
 	// ВАЖНО: Регистрируем напрямую через api вместо группы, чтобы избежать конфликта с public группой
 	{
 		// AI endpoints для витрин (защищенные)
 		if m.aiProductHandler != nil {
-			api.Post("/b2c_stores/ai/analyze-product-image", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.AnalyzeProductImage)
-			api.Post("/b2c_stores/ai/detect-category", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.DetectCategory)
-			api.Post("/b2c_stores/ai/ab-test-titles", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.ABTestTitles)
-			api.Post("/b2c_stores/ai/translate-content", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.TranslateContent)
-			api.Get("/b2c_stores/ai/metrics", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.GetMetrics)
+			api.Post("/b2c/ai/analyze-product-image", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.AnalyzeProductImage)
+			api.Post("/b2c/ai/detect-category", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.DetectCategory)
+			api.Post("/b2c/ai/ab-test-titles", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.ABTestTitles)
+			api.Post("/b2c/ai/translate-content", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.TranslateContent)
+			api.Get("/b2c/ai/metrics", mw.JWTParser(), authMiddleware.RequireAuth(), m.aiProductHandler.GetMetrics)
 		}
 
 		// Управление витринами
-		// ВАЖНО: Используем /b2c_stores/create вместо /b2c_stores, чтобы избежать конфликта с GET /b2c_stores
-		api.Post("/b2c_stores/create", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.CreateStorefront)
-		api.Put("/b2c_stores/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateStorefront)
-		api.Delete("/b2c_stores/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.DeleteStorefront)
-		api.Post("/b2c_stores/:id/restore", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.RestoreStorefront)
+		// ВАЖНО: Используем /b2c/create вместо /b2c, чтобы избежать конфликта с GET /b2c
+		api.Post("/b2c/create", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.CreateStorefront)
+		api.Put("/b2c/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateStorefront)
+		api.Delete("/b2c/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.DeleteStorefront)
+		api.Post("/b2c/:id/restore", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.RestoreStorefront)
 
 		// Настройки витрины
-		api.Put("/b2c_stores/:id/hours", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateWorkingHours)
-		api.Put("/b2c_stores/:id/payment-methods", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdatePaymentMethods)
-		api.Put("/b2c_stores/:id/delivery-options", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateDeliveryOptions)
+		api.Put("/b2c/:id/hours", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateWorkingHours)
+		api.Put("/b2c/:id/payment-methods", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdatePaymentMethods)
+		api.Put("/b2c/:id/delivery-options", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateDeliveryOptions)
 
 		// Управление персоналом
-		api.Post("/b2c_stores/:id/staff", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.AddStaff)
-		api.Put("/b2c_stores/:id/staff/:staffId/permissions", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateStaffPermissions)
-		api.Delete("/b2c_stores/:id/staff/:userId", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.RemoveStaff)
+		api.Post("/b2c/:id/staff", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.AddStaff)
+		api.Put("/b2c/:id/staff/:staffId/permissions", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UpdateStaffPermissions)
+		api.Delete("/b2c/:id/staff/:userId", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.RemoveStaff)
 
 		// Загрузка изображений
-		api.Post("/b2c_stores/:id/logo", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UploadLogo)
-		api.Post("/b2c_stores/:id/banner", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UploadBanner)
+		api.Post("/b2c/:id/logo", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UploadLogo)
+		api.Post("/b2c/:id/banner", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.UploadBanner)
 
 		// Аналитика (просмотр)
-		api.Get("/b2c_stores/:id/analytics", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.GetAnalytics)
+		api.Get("/b2c/:id/analytics", mw.JWTParser(), authMiddleware.RequireAuth(), m.storefrontHandler.GetAnalytics)
 
 		// Защищенные маршруты товаров с использованием slug
-		api.Post("/b2c_stores/slug/:slug/products", mw.JWTParser(), authMiddleware.RequireAuth(), m.createProductBySlug)
-		api.Put("/b2c_stores/slug/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateProductBySlug)
-		api.Delete("/b2c_stores/slug/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductBySlug)
-		api.Post("/b2c_stores/slug/:slug/products/:id/inventory", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateInventoryBySlug)
-		api.Get("/b2c_stores/slug/:slug/products/stats", mw.JWTParser(), authMiddleware.RequireAuth(), m.getProductStatsBySlug)
+		api.Post("/b2c/slug/:slug/products", mw.JWTParser(), authMiddleware.RequireAuth(), m.createProductBySlug)
+		api.Put("/b2c/slug/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateProductBySlug)
+		api.Delete("/b2c/slug/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductBySlug)
+		api.Post("/b2c/slug/:slug/products/:id/inventory", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateInventoryBySlug)
+		api.Get("/b2c/slug/:slug/products/stats", mw.JWTParser(), authMiddleware.RequireAuth(), m.getProductStatsBySlug)
 
 		// Маршруты для изображений товаров
-		api.Post("/b2c_stores/slug/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.uploadProductImageBySlug)
-		api.Get("/b2c_stores/slug/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.getProductImagesBySlug)
-		api.Delete("/b2c_stores/slug/:slug/products/:product_id/images/:image_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductImageBySlug)
-		api.Post("/b2c_stores/slug/:slug/products/:product_id/images/:image_id/main", mw.JWTParser(), authMiddleware.RequireAuth(), m.setMainProductImageBySlug)
-		api.Put("/b2c_stores/slug/:slug/products/:product_id/images/order", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateImageOrderBySlug)
+		api.Post("/b2c/slug/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.uploadProductImageBySlug)
+		api.Get("/b2c/slug/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.getProductImagesBySlug)
+		api.Delete("/b2c/slug/:slug/products/:product_id/images/:image_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductImageBySlug)
+		api.Post("/b2c/slug/:slug/products/:product_id/images/:image_id/main", mw.JWTParser(), authMiddleware.RequireAuth(), m.setMainProductImageBySlug)
+		api.Put("/b2c/slug/:slug/products/:product_id/images/order", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateImageOrderBySlug)
 
 		// Bulk операции с товарами
-		api.Post("/b2c_stores/slug/:slug/products/bulk/create", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkCreateProductsBySlug)
-		api.Put("/b2c_stores/slug/:slug/products/bulk/update", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateProductsBySlug)
-		api.Delete("/b2c_stores/slug/:slug/products/bulk/delete", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkDeleteProductsBySlug)
-		api.Put("/b2c_stores/slug/:slug/products/bulk/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateStatusBySlug)
+		api.Post("/b2c/slug/:slug/products/bulk/create", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkCreateProductsBySlug)
+		api.Put("/b2c/slug/:slug/products/bulk/update", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateProductsBySlug)
+		api.Delete("/b2c/slug/:slug/products/bulk/delete", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkDeleteProductsBySlug)
+		api.Put("/b2c/slug/:slug/products/bulk/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.bulkUpdateStatusBySlug)
 
 		// Маршруты импорта товаров
-		api.Post("/b2c_stores/:storefront_id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
-		api.Post("/b2c_stores/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
-		api.Post("/b2c_stores/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
-		api.Post("/b2c_stores/:storefront_id/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.PreviewImportFile)
+		api.Post("/b2c/:storefront_id/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromURL)
+		api.Post("/b2c/:storefront_id/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ImportFromFile)
+		api.Post("/b2c/:storefront_id/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.ValidateImportFile)
+		api.Post("/b2c/:storefront_id/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.PreviewImportFile)
 
 		// Новые маршруты для AI анализа импорта
-		api.Post("/b2c_stores/:storefront_id/import/analyze-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeCategories)
-		api.Post("/b2c_stores/:storefront_id/import/analyze-attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeAttributes)
-		api.Post("/b2c_stores/:storefront_id/import/detect-variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.DetectVariants)
-		api.Post("/b2c_stores/:storefront_id/import/analyze-client-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeClientCategories)
+		api.Post("/b2c/:storefront_id/import/analyze-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeCategories)
+		api.Post("/b2c/:storefront_id/import/analyze-attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeAttributes)
+		api.Post("/b2c/:storefront_id/import/detect-variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.DetectVariants)
+		api.Post("/b2c/:storefront_id/import/analyze-client-categories", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.AnalyzeClientCategories)
 
-		api.Get("/b2c_stores/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
-		api.Get("/b2c_stores/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
-		api.Get("/b2c_stores/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
-		api.Post("/b2c_stores/:storefront_id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
-		api.Post("/b2c_stores/:storefront_id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
+		api.Get("/b2c/:storefront_id/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobs)
+		api.Get("/b2c/:storefront_id/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobDetails)
+		api.Get("/b2c/:storefront_id/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.GetJobStatus)
+		api.Post("/b2c/:storefront_id/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.CancelJob)
+		api.Post("/b2c/:storefront_id/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.importHandler.RetryJob)
 
 		// Маршруты импорта через slug
-		api.Post("/b2c_stores/slug/:slug/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromURLBySlug)
-		api.Post("/b2c_stores/slug/:slug/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromFileBySlug)
-		api.Post("/b2c_stores/slug/:slug/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.validateImportBySlug)
-		api.Post("/b2c_stores/slug/:slug/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.previewImportBySlug)
-		api.Get("/b2c_stores/slug/:slug/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobsBySlug)
-		api.Get("/b2c_stores/slug/:slug/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobDetailsBySlug)
-		api.Get("/b2c_stores/slug/:slug/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobStatusBySlug)
-		api.Post("/b2c_stores/slug/:slug/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.cancelJobBySlug)
-		api.Post("/b2c_stores/slug/:slug/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.retryJobBySlug)
+		api.Post("/b2c/slug/:slug/import/url", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromURLBySlug)
+		api.Post("/b2c/slug/:slug/import/file", mw.JWTParser(), authMiddleware.RequireAuth(), m.importFromFileBySlug)
+		api.Post("/b2c/slug/:slug/import/validate", mw.JWTParser(), authMiddleware.RequireAuth(), m.validateImportBySlug)
+		api.Post("/b2c/slug/:slug/import/preview", mw.JWTParser(), authMiddleware.RequireAuth(), m.previewImportBySlug)
+		api.Get("/b2c/slug/:slug/import/jobs", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobsBySlug)
+		api.Get("/b2c/slug/:slug/import/jobs/:jobId", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobDetailsBySlug)
+		api.Get("/b2c/slug/:slug/import/jobs/:jobId/status", mw.JWTParser(), authMiddleware.RequireAuth(), m.getJobStatusBySlug)
+		api.Post("/b2c/slug/:slug/import/jobs/:jobId/cancel", mw.JWTParser(), authMiddleware.RequireAuth(), m.cancelJobBySlug)
+		api.Post("/b2c/slug/:slug/import/jobs/:jobId/retry", mw.JWTParser(), authMiddleware.RequireAuth(), m.retryJobBySlug)
 
 		// Маршруты товаров по slug без префикса (для frontend совместимости)
-		api.Put("/b2c_stores/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateProductBySlugDirect)
-		api.Post("/b2c_stores/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.uploadProductImageBySlugDirect)
-		api.Delete("/b2c_stores/:slug/products/:product_id/images/:image_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductImageBySlugDirect)
-		api.Post("/b2c_stores/:slug/products/:product_id/images/:image_id/main", mw.JWTParser(), authMiddleware.RequireAuth(), m.setMainProductImageBySlugDirect)
+		api.Put("/b2c/:slug/products/:id", mw.JWTParser(), authMiddleware.RequireAuth(), m.updateProductBySlugDirect)
+		api.Post("/b2c/:slug/products/:product_id/images", mw.JWTParser(), authMiddleware.RequireAuth(), m.uploadProductImageBySlugDirect)
+		api.Delete("/b2c/:slug/products/:product_id/images/:image_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.deleteProductImageBySlugDirect)
+		api.Post("/b2c/:slug/products/:product_id/images/:image_id/main", mw.JWTParser(), authMiddleware.RequireAuth(), m.setMainProductImageBySlugDirect)
 
 		// Dashboard маршруты
-		api.Get("/b2c_stores/:slug/dashboard/stats", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetDashboardStats)
-		api.Get("/b2c_stores/:slug/dashboard/recent-orders", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetRecentOrders)
-		api.Get("/b2c_stores/:slug/dashboard/low-stock", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetLowStockProducts)
-		api.Get("/b2c_stores/:slug/dashboard/notifications", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetDashboardNotifications)
+		api.Get("/b2c/:slug/dashboard/stats", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetDashboardStats)
+		api.Get("/b2c/:slug/dashboard/recent-orders", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetRecentOrders)
+		api.Get("/b2c/:slug/dashboard/low-stock", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetLowStockProducts)
+		api.Get("/b2c/:slug/dashboard/notifications", mw.JWTParser(), authMiddleware.RequireAuth(), m.dashboardHandler.GetDashboardNotifications)
 
 		// Приватные маршруты для управления вариантами товаров (требуют авторизации)
 		// Глобальные атрибуты вариантов
-		api.Get("/b2c_stores/storefront/variants/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAttributes)
-		api.Get("/b2c_stores/storefront/variants/attributes/:attribute_id/values", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAttributeValues)
+		api.Get("/b2c/storefront/variants/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAttributes)
+		api.Get("/b2c/storefront/variants/attributes/:attribute_id/values", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAttributeValues)
 
 		// Управление вариантами товара
-		api.Get("/b2c_stores/storefront/products/:product_id/variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantsByProductID)
-		api.Post("/b2c_stores/storefront/variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.CreateVariant)
-		api.Put("/b2c_stores/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.UpdateVariant)
-		api.Delete("/b2c_stores/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.DeleteVariant)
-		api.Get("/b2c_stores/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantByID)
+		api.Get("/b2c/storefront/products/:product_id/variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantsByProductID)
+		api.Post("/b2c/storefront/variants", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.CreateVariant)
+		api.Put("/b2c/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.UpdateVariant)
+		api.Delete("/b2c/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.DeleteVariant)
+		api.Get("/b2c/storefront/variants/:variant_id", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantByID)
 
 		// Генерация и массовые операции
-		api.Post("/b2c_stores/storefront/variants/generate", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GenerateVariants)
-		api.Post("/b2c_stores/storefront/variants/bulk", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.BulkCreateVariants)
-		api.Get("/b2c_stores/storefront/products/:product_id/variant-matrix", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantMatrix)
-		api.Post("/b2c_stores/storefront/products/:product_id/variants/bulk-update-stock", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.BulkUpdateStock)
-		api.Get("/b2c_stores/storefront/products/:product_id/variants/analytics", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAnalytics)
+		api.Post("/b2c/storefront/variants/generate", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GenerateVariants)
+		api.Post("/b2c/storefront/variants/bulk", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.BulkCreateVariants)
+		api.Get("/b2c/storefront/products/:product_id/variant-matrix", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantMatrix)
+		api.Post("/b2c/storefront/products/:product_id/variants/bulk-update-stock", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.BulkUpdateStock)
+		api.Get("/b2c/storefront/products/:product_id/variants/analytics", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetVariantAnalytics)
 
 		// CSV импорт/экспорт
-		api.Post("/b2c_stores/storefront/products/:product_id/variants/import", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.ImportVariants)
-		api.Get("/b2c_stores/storefront/products/:product_id/variants/export", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.ExportVariants)
+		api.Post("/b2c/storefront/products/:product_id/variants/import", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.ImportVariants)
+		api.Get("/b2c/storefront/products/:product_id/variants/export", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.ExportVariants)
 
 		// Настройка атрибутов товара
-		api.Post("/b2c_stores/storefront/products/attributes/setup", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.SetupProductAttributes)
-		api.Get("/b2c_stores/storefront/products/:product_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetProductAttributes)
-		api.Get("/b2c_stores/storefront/categories/:category_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetAvailableAttributesForCategory)
+		api.Post("/b2c/storefront/products/attributes/setup", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.SetupProductAttributes)
+		api.Get("/b2c/storefront/products/:product_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetProductAttributes)
+		api.Get("/b2c/storefront/categories/:category_id/attributes", mw.JWTParser(), authMiddleware.RequireAuth(), m.variantHandler.GetAvailableAttributesForCategory)
 	}
 
 	// Admin routes для Category Proposals (требуют роль admin)
@@ -378,12 +378,24 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 		adminCategoryProposals.Post("/:id/reject", m.categoryProposalHandler.RejectProposal)
 	}
 
+	// Admin routes для B2C витрин (требуют роль admin)
+	adminB2C := api.Group("/admin/b2c", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
+	{
+		// Middleware для установки is_admin флага в Fiber context
+		adminB2C.Use(func(c *fiber.Ctx) error {
+			c.Locals("is_admin", true)
+			return c.Next()
+		})
+		// Админская версия списка витрин (показывает все витрины включая неактивные)
+		adminB2C.Get("/", m.storefrontHandler.ListStorefronts)
+	}
+
 	// Публичные маршруты для вариантов (БЕЗ АВТОРИЗАЦИИ)
 	publicVariants := api.Group("/public")
 	{
 		// Публичные endpoints для покупателей
-		publicVariants.Get("/b2c_stores/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
-		publicVariants.Get("/b2c_stores/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
+		publicVariants.Get("/b2c/:slug/products/:product_id", m.publicVariantHandler.GetProductPublic)
+		publicVariants.Get("/b2c/:slug/products/:product_id/variants", m.publicVariantHandler.GetProductVariantsPublic)
 		publicVariants.Get("/variants/attributes", m.publicVariantHandler.GetVariantAttributesPublic)
 		publicVariants.Get("/variants/attributes/:attribute_id/values", m.publicVariantHandler.GetVariantAttributeValuesPublic)
 		publicVariants.Get("/variants/:variant_id", m.publicVariantHandler.GetVariantByIDPublic)
@@ -391,8 +403,8 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 	}
 
 	// Публичные маршруты импорта (для получения шаблонов и документации)
-	api.Get("/b2c_stores/import/csv-template", m.importHandler.GetCSVTemplate)
-	api.Get("/b2c_stores/import/formats", m.importHandler.GetImportFormats)
+	api.Get("/b2c/import/csv-template", m.importHandler.GetCSVTemplate)
+	api.Get("/b2c/import/formats", m.importHandler.GetImportFormats)
 
 	return nil
 }

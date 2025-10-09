@@ -62,6 +62,7 @@ type Database struct {
 	sqlxDB               *sqlx.DB // sqlx.DB для работы с sqlx библиотекой
 	marketplaceIndex     string
 	storefrontIndex      string
+	b2cProductIndex      string                                       // Индекс для B2C товаров
 	attributeGroups      AttributeGroupStorage
 	fsStorage            filestorage.FileStorageInterface
 	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
@@ -73,7 +74,7 @@ type Database struct {
 	productSearchRepo    storefrontOpenSearch.ProductSearchRepository // Репозиторий для поиска товаров витрин
 }
 
-func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
+func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearchClient, indexName string, b2cIndexName string, fileStorage filestorage.FileStorageInterface, searchWeights *config.SearchWeights) (*Database, error) {
 	// Настраиваем конфигурацию пула
 	poolConfig, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
@@ -106,10 +107,11 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
-		osClient:         osClient,     // Сохраняем клиент OpenSearch
-		marketplaceIndex: indexName,    // Сохраняем имя индекса
-		storefrontIndex:  "b2c_stores", // Индекс для витрин
-		fsStorage:        fileStorage,  // Используем переданный параметр
+		osClient:         osClient,      // Сохраняем клиент OpenSearch
+		marketplaceIndex: indexName,     // Сохраняем имя индекса
+		storefrontIndex:  "b2c_stores",  // Индекс для витрин
+		b2cProductIndex:  b2cIndexName,  // Индекс для B2C товаров из конфигурации
+		fsStorage:        fileStorage,   // Используем переданный параметр
 		attributeGroups:  NewAttributeGroupStorage(pool),
 	}
 
@@ -144,9 +146,8 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		}
 
 		// Инициализируем репозиторий товаров витрин в OpenSearch
-		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-		// Товары витрин синхронизируются в c2c_listings через триггер sync_storefront_product_to_marketplace
-		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, "c2c_listings")
+		// Используем отдельный индекс b2c_products для B2C товаров
+		db.productSearchRepo = storefrontOpenSearch.NewProductRepository(osClient, db.b2cProductIndex)
 		// Подготавливаем индекс товаров витрин
 		if err := db.productSearchRepo.PrepareIndex(ctx); err != nil {
 			log.Printf("Ошибка подготовки индекса товаров витрин в OpenSearch: %v", err)
@@ -2002,8 +2003,8 @@ func (db *Database) StorefrontProductSearch() interface{} {
 	}
 	// Возвращаем новый репозиторий если есть клиент OpenSearch
 	if db.osClient != nil {
-		// ВАЖНО: Используем тот же индекс что и для marketplace (унифицированный поиск)
-		return storefrontOpenSearch.NewProductRepository(db.osClient, "c2c_listings")
+		// Используем отдельный индекс b2c_products для B2C товаров
+		return storefrontOpenSearch.NewProductRepository(db.osClient, db.b2cProductIndex)
 	}
 	return nil
 }

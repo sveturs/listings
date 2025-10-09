@@ -454,13 +454,9 @@ func (h *UnifiedSearchHandler) searchMarketplaceWithLimit(ctx context.Context, p
 		categoryIDs = []string{categoryID}
 	}
 
-	// Определяем StorefrontFilter на основе типов поиска
-	// Если ищем в обоих типах (marketplace И storefront), исключаем B2C объявления из marketplace
-	// чтобы избежать дубликатов (т.к. они уже есть в storefront индексе через trigger)
-	storefrontFilter := ""
-	if h.containsProductType(params.ProductTypes, productTypeStorefront) {
-		storefrontFilter = "exclude_b2c"
-	}
+	// StorefrontFilter больше не нужен - B2C товары теперь индексируются в отдельный индекс b2c_products
+	// и автоматически включаются в результаты storefront поиска без дубликатов
+	storefrontFilter := "" // Пустой фильтр = показывать все товары
 
 	searchParams := &search.ServiceParams{
 		Query:            params.Query,

@@ -18,9 +18,9 @@ async function getProductsStats() {
     );
     const storefrontsData = await storefrontsResponse.json();
 
-    // API возвращает витрины в поле storefronts, а не data
+    // API возвращает витрины в поле b2c_stores, storefronts, а не data
     const storefronts =
-      storefrontsData.storefronts || storefrontsData.data || [];
+      storefrontsData.b2c_stores || storefrontsData.storefronts || storefrontsData.data || [];
 
     if (!storefronts || storefronts.length === 0) {
       return { total: 0, active: 0, outOfStock: 0, sales: 0 };

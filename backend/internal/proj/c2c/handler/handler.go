@@ -61,7 +61,7 @@ type Handler struct {
 }
 
 func (h *Handler) GetPrefix() string {
-	return "/api/v1/marketplace"
+	return "/api/v1/c2c"
 }
 
 // NewHandler creates a new marketplace handler
@@ -239,26 +239,26 @@ func NewHandler(ctx context.Context, services globalService.ServicesInterface, j
 }
 
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
-	marketplace := app.Group("/api/v1/marketplace")
-	marketplace.Get("/listings", h.Listings.GetListings)
-	marketplace.Get("/categories", h.Categories.GetCategories)
-	marketplace.Get("/popular-categories", h.Categories.GetPopularCategories)
-	marketplace.Get("/category-tree", h.Categories.GetCategoryTree)
-	marketplace.Get("/listings/slug/:slug", h.Listings.GetListingBySlug)
-	marketplace.Get("/listings/:id", h.Listings.GetListing)
-	marketplace.Get("/search", h.Search.SearchListingsAdvanced)      // маршрут поиска GET
-	marketplace.Post("/search", h.Search.SearchListingsAdvanced)     // маршрут поиска POST для расширенных фильтров
-	marketplace.Get("/suggestions", h.Search.GetSuggestions)         // маршрут автодополнения
-	marketplace.Get("/search/autocomplete", h.Search.GetSuggestions) // алиас для совместимости с фронтендом
-	marketplace.Get("/category-suggestions", h.Search.GetCategorySuggestions)
-	marketplace.Get("/enhanced-suggestions", h.Search.GetEnhancedSuggestions) // улучшенные предложения
-	marketplace.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
-	marketplace.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
-	marketplace.Get("/listings/:id/similar", h.Search.GetSimilarListings)
-	marketplace.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
+	c2c := app.Group("/api/v1/c2c")
+	c2c.Get("/listings", h.Listings.GetListings)
+	c2c.Get("/categories", h.Categories.GetCategories)
+	c2c.Get("/popular-categories", h.Categories.GetPopularCategories)
+	c2c.Get("/category-tree", h.Categories.GetCategoryTree)
+	c2c.Get("/listings/slug/:slug", h.Listings.GetListingBySlug)
+	c2c.Get("/listings/:id", h.Listings.GetListing)
+	c2c.Get("/search", h.Search.SearchListingsAdvanced)      // маршрут поиска GET
+	c2c.Post("/search", h.Search.SearchListingsAdvanced)     // маршрут поиска POST для расширенных фильтров
+	c2c.Get("/suggestions", h.Search.GetSuggestions)         // маршрут автодополнения
+	c2c.Get("/search/autocomplete", h.Search.GetSuggestions) // алиас для совместимости с фронтендом
+	c2c.Get("/category-suggestions", h.Search.GetCategorySuggestions)
+	c2c.Get("/enhanced-suggestions", h.Search.GetEnhancedSuggestions) // улучшенные предложения
+	c2c.Get("/categories/:id/attributes", h.Categories.GetCategoryAttributes)
+	c2c.Get("/listings/:id/price-history", h.Listings.GetPriceHistory)
+	c2c.Get("/listings/:id/similar", h.Search.GetSimilarListings)
+	c2c.Get("/categories/:id/attribute-ranges", h.Categories.GetAttributeRanges)
 
 	// Public recommendations endpoint
-	marketplace.Get("/recommendations", h.MarketplaceHandler.GetPublicRecommendations)
+	c2c.Get("/recommendations", h.MarketplaceHandler.GetPublicRecommendations)
 
 	// Cars routes (public endpoints)
 	if h.Cars != nil {
@@ -273,14 +273,14 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	}
 
 	// Fuzzy search routes
-	marketplace.Get("/test-fuzzy-search", h.Search.TestFuzzySearch)
-	marketplace.Get("/fuzzy-search", h.Search.SearchWithFuzzyParams)
+	c2c.Get("/test-fuzzy-search", h.Search.TestFuzzySearch)
+	c2c.Get("/fuzzy-search", h.Search.SearchWithFuzzyParams)
 
 	// Category detection routes
 	if h.CategoryDetector != nil {
 		logger.Info().Msg("Registering category detection routes")
 		// Добавляем тестовый эндпоинт
-		marketplace.Get("/categories/detect/test", func(c *fiber.Ctx) error {
+		c2c.Get("/categories/detect/test", func(c *fiber.Ctx) error {
 			logger.Info().Msg("Test endpoint called")
 			return c.JSON(fiber.Map{"status": "ok", "message": "CategoryDetector is available"})
 		})
@@ -289,14 +289,14 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 			logger.Info().Msg("=== DetectCategory route called ===")
 			if h.CategoryDetector == nil {
 				logger.Error().Msg("CategoryDetector is nil in route")
-				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.marketplace.categoryDetectionFailed")
+				return utils.ErrorResponse(c, fiber.StatusInternalServerError, "errors.c2c.categoryDetectionFailed")
 			}
 			logger.Info().Msg("Calling CategoryDetector.DetectCategory method...")
 			return h.CategoryDetector.DetectCategory(c)
 		}
-		marketplace.Post("/categories/detect", detectCategoryFunc)
-		marketplace.Put("/categories/detect/:stats_id/confirm", h.CategoryDetector.UpdateCategoryConfirmation)
-		marketplace.Get("/categories/:category_id/keywords", h.CategoryDetector.GetCategoryKeywords)
+		c2c.Post("/categories/detect", detectCategoryFunc)
+		c2c.Put("/categories/detect/:stats_id/confirm", h.CategoryDetector.UpdateCategoryConfirmation)
+		c2c.Get("/categories/:category_id/keywords", h.CategoryDetector.GetCategoryKeywords)
 	} else {
 		logger.Error().Msg("CategoryDetector is nil, routes not registered")
 	}
@@ -304,7 +304,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// AI Category Detection routes (enhanced)
 	if h.AICategoryHandler != nil {
 		logger.Info().Msg("Registering AI category detection routes")
-		aiGroup := marketplace.Group("/ai")
+		aiGroup := c2c.Group("/ai")
 		aiGroup.Post("/detect-category", h.AICategoryHandler.DetectCategory)
 		aiGroup.Post("/select-category", h.AICategoryHandler.SelectCategory)     // НОВЫЙ МЕТОД: прямой выбор через AI
 		aiGroup.Post("/validate-category", h.AICategoryHandler.ValidateCategory) // ДОБАВЛЕН НЕДОСТАЮЩИЙ РОУТ
@@ -314,20 +314,20 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	}
 
 	// Карта - геопространственные маршруты
-	marketplace.Get("/map/bounds", h.MarketplaceHandler.GetListingsInBounds)
-	marketplace.Get("/map/clusters", h.MarketplaceHandler.GetMapClusters)
+	c2c.Get("/map/bounds", h.MarketplaceHandler.GetListingsInBounds)
+	c2c.Get("/map/clusters", h.MarketplaceHandler.GetMapClusters)
 
 	// Neighborhood statistics
-	marketplace.Get("/neighborhood-stats", h.MarketplaceHandler.GetNeighborhoodStats)
+	c2c.Get("/neighborhood-stats", h.MarketplaceHandler.GetNeighborhoodStats)
 
 	// Автомобильные марки и модели
 	if h.Cars != nil {
-		h.Cars.RegisterRoutes(marketplace)
+		h.Cars.RegisterRoutes(c2c)
 	}
 
 	// Вариативные атрибуты
-	marketplace.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
-	marketplace.Get("/categories/:slug/variant-attributes", h.VariantAttributes.GetCategoryVariantAttributes)
+	c2c.Get("/product-variant-attributes", h.VariantAttributes.GetProductVariantAttributes)
+	c2c.Get("/categories/:slug/variant-attributes", h.VariantAttributes.GetCategoryVariantAttributes)
 
 	// V2 API с унифицированными атрибутами (если включен feature flag)
 	if h.UnifiedAttributes != nil && h.service.Config().FeatureFlags != nil && h.service.Config().FeatureFlags.UseUnifiedAttributes {
@@ -379,52 +379,52 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Marketplace protected routes - используем прямую регистрацию
 	authMW := []fiber.Handler{mw.JWTParser(), authMiddleware.RequireAuth()}
 
-	app.Post("/api/v1/marketplace/listings", append(authMW, h.Listings.CreateListing)...)
-	app.Put("/api/v1/marketplace/listings/:id", append(authMW, h.Listings.UpdateListing)...)
-	app.Patch("/api/v1/marketplace/listings/:id/status", append(authMW, h.Listings.UpdateListingStatus)...)
-	app.Delete("/api/v1/marketplace/listings/:id", append(authMW, h.Listings.DeleteListing)...)
-	app.Post("/api/v1/marketplace/listings/check-slug", append(authMW, h.Listings.CheckSlugAvailability)...)
-	app.Post("/api/v1/marketplace/listings/:id/images", append(authMW, h.Images.UploadImages)...)
-	app.Delete("/api/v1/marketplace/listings/:id/images/:image_id", append(authMW, h.Images.DeleteImage)...)
+	app.Post("/api/v1/c2c/listings", append(authMW, h.Listings.CreateListing)...)
+	app.Put("/api/v1/c2c/listings/:id", append(authMW, h.Listings.UpdateListing)...)
+	app.Patch("/api/v1/c2c/listings/:id/status", append(authMW, h.Listings.UpdateListingStatus)...)
+	app.Delete("/api/v1/c2c/listings/:id", append(authMW, h.Listings.DeleteListing)...)
+	app.Post("/api/v1/c2c/listings/check-slug", append(authMW, h.Listings.CheckSlugAvailability)...)
+	app.Post("/api/v1/c2c/listings/:id/images", append(authMW, h.Images.UploadImages)...)
+	app.Delete("/api/v1/c2c/listings/:id/images/:image_id", append(authMW, h.Images.DeleteImage)...)
 
 	// My listings route - protected
-	app.Get("/api/v1/marketplace/my-listings", append(authMW, h.Listings.GetMyListings)...)
+	app.Get("/api/v1/c2c/my-listings", append(authMW, h.Listings.GetMyListings)...)
 
 	// Favorites routes - поддерживаем оба варианта для совместимости
 	// Старый формат через listings
-	app.Post("/api/v1/marketplace/listings/:id/favorite", append(authMW, h.Favorites.AddToFavorites)...)
-	app.Delete("/api/v1/marketplace/listings/:id/favorite", append(authMW, h.Favorites.RemoveFromFavorites)...)
+	app.Post("/api/v1/c2c/listings/:id/favorite", append(authMW, h.Favorites.AddToFavorites)...)
+	app.Delete("/api/v1/c2c/listings/:id/favorite", append(authMW, h.Favorites.RemoveFromFavorites)...)
 
 	// Новый формат - основной
-	app.Get("/api/v1/marketplace/favorites", append(authMW, h.Favorites.GetFavorites)...)
-	app.Get("/api/v1/marketplace/favorites/count", append(authMW, h.Favorites.GetFavoritesCount)...)
-	app.Post("/api/v1/marketplace/favorites/:id", append(authMW, h.Favorites.AddToFavorites)...)
-	app.Delete("/api/v1/marketplace/favorites/:id", append(authMW, h.Favorites.RemoveFromFavorites)...)
+	app.Get("/api/v1/c2c/favorites", append(authMW, h.Favorites.GetFavorites)...)
+	app.Get("/api/v1/c2c/favorites/count", append(authMW, h.Favorites.GetFavoritesCount)...)
+	app.Post("/api/v1/c2c/favorites/:id", append(authMW, h.Favorites.AddToFavorites)...)
+	app.Delete("/api/v1/c2c/favorites/:id", append(authMW, h.Favorites.RemoveFromFavorites)...)
 
 	// Saved searches routes
-	app.Post("/api/v1/marketplace/saved-searches", append(authMW, h.SavedSearches.CreateSavedSearch)...)
-	app.Get("/api/v1/marketplace/saved-searches", append(authMW, h.SavedSearches.GetSavedSearches)...)
-	app.Get("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.GetSavedSearch)...)
-	app.Put("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.UpdateSavedSearch)...)
-	app.Delete("/api/v1/marketplace/saved-searches/:id", append(authMW, h.SavedSearches.DeleteSavedSearch)...)
-	app.Get("/api/v1/marketplace/saved-searches/:id/execute", append(authMW, h.SavedSearches.ExecuteSavedSearch)...)
-	app.Get("/api/v1/marketplace/favorites/:id/check", append(authMW, h.Favorites.IsInFavorites)...)
-	app.Put("/api/v1/marketplace/translations/:id", append(authMW, h.Translations.UpdateTranslations)...)
-	app.Post("/api/v1/marketplace/translations/batch", append(authMW, h.Translations.TranslateText)...)
-	app.Post("/api/v1/marketplace/moderate-image", append(authMW, h.Images.ModerateImage)...)
-	app.Post("/api/v1/marketplace/enhance-preview", append(authMW, h.Images.EnhancePreview)...)
-	app.Post("/api/v1/marketplace/enhance-images", append(authMW, h.Images.EnhanceImages)...)
+	app.Post("/api/v1/c2c/saved-searches", append(authMW, h.SavedSearches.CreateSavedSearch)...)
+	app.Get("/api/v1/c2c/saved-searches", append(authMW, h.SavedSearches.GetSavedSearches)...)
+	app.Get("/api/v1/c2c/saved-searches/:id", append(authMW, h.SavedSearches.GetSavedSearch)...)
+	app.Put("/api/v1/c2c/saved-searches/:id", append(authMW, h.SavedSearches.UpdateSavedSearch)...)
+	app.Delete("/api/v1/c2c/saved-searches/:id", append(authMW, h.SavedSearches.DeleteSavedSearch)...)
+	app.Get("/api/v1/c2c/saved-searches/:id/execute", append(authMW, h.SavedSearches.ExecuteSavedSearch)...)
+	app.Get("/api/v1/c2c/favorites/:id/check", append(authMW, h.Favorites.IsInFavorites)...)
+	app.Put("/api/v1/c2c/translations/:id", append(authMW, h.Translations.UpdateTranslations)...)
+	app.Post("/api/v1/c2c/translations/batch", append(authMW, h.Translations.TranslateText)...)
+	app.Post("/api/v1/c2c/moderate-image", append(authMW, h.Images.ModerateImage)...)
+	app.Post("/api/v1/c2c/enhance-preview", append(authMW, h.Images.EnhancePreview)...)
+	app.Post("/api/v1/c2c/enhance-images", append(authMW, h.Images.EnhanceImages)...)
 
 	// маршруты для новых методов в TranslationsHandler
-	app.Post("/api/v1/marketplace/translations/batch-translate", append(authMW, h.Translations.BatchTranslateListings)...)
-	app.Post("/api/v1/marketplace/translations/translate", append(authMW, h.Translations.TranslateText)...)
-	app.Post("/api/v1/marketplace/translations/detect-language", append(authMW, h.Translations.DetectLanguage)...)
-	app.Get("/api/v1/marketplace/translations/:id", append(authMW, h.Translations.GetTranslations)...)
+	app.Post("/api/v1/c2c/translations/batch-translate", append(authMW, h.Translations.BatchTranslateListings)...)
+	app.Post("/api/v1/c2c/translations/translate", append(authMW, h.Translations.TranslateText)...)
+	app.Post("/api/v1/c2c/translations/detect-language", append(authMW, h.Translations.DetectLanguage)...)
+	app.Get("/api/v1/c2c/translations/:id", append(authMW, h.Translations.GetTranslations)...)
 
 	// Регистрируем маршруты для заказов маркетплейса под marketplace префиксом
 	if h.Orders != nil {
 		// Создаем защищенную группу ТОЛЬКО для orders - узкий префикс!
-		ordersGroup := app.Group("/api/v1/marketplace/orders", mw.JWTParser(), authMiddleware.RequireAuth())
+		ordersGroup := app.Group("/api/v1/c2c/orders", mw.JWTParser(), authMiddleware.RequireAuth())
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
@@ -563,7 +563,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/reindex-ratings", h.Indexing.ReindexRatings)
 
 	// Chat routes - используем узкий префикс для группы
-	chat := app.Group("/api/v1/marketplace/chat", h.jwtParserMW, authMiddleware.RequireAuth())
+	chat := app.Group("/api/v1/c2c/chat", h.jwtParserMW, authMiddleware.RequireAuth())
 	chat.Get("/", h.Chat.GetChats)
 	chat.Get("/messages", h.Chat.GetMessages)
 	chat.Get("/messages/:id/translation", h.Chat.TranslateMessage) // NEW: Translation endpoint

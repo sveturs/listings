@@ -295,8 +295,8 @@ export default function AdminLayoutClient({
 
                 <li>
                   <Link
-                    href="/admin/b2c"
-                    className={isActive('/admin/b2c') ? 'active' : ''}
+                    href="/admin/b2c-stores"
+                    className={isActive('/admin/b2c-stores') ? 'active' : ''}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
