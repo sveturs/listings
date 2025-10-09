@@ -37,8 +37,8 @@ import {
 import type { components } from '@/types/generated/api';
 
 type B2CStore = components['schemas']['models.Storefront'];
-type B2CStoreCreateDTO = components['schemas']['models.B2CStoreCreateDTO'];
-type B2CStoreUpdateDTO = components['schemas']['models.B2CStoreUpdateDTO'];
+type B2CStoreCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type B2CStoreUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
 
 /**
  * Хук для работы с витринами

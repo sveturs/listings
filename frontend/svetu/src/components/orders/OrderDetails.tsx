@@ -4,7 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
-type B2COrder = components['schemas']['models.B2COrder'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
 
 interface OrderDetailsProps {
   order: B2COrder;

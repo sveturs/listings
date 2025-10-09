@@ -11,7 +11,7 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import type { components } from '@/types/generated/api';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 interface B2CProductsProps {
   storefrontSlug: string;

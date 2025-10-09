@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { api } from '@/lib/api';
 import { components } from '@/types/generated/api';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface FavoritesState {
   items: C2CListing[];

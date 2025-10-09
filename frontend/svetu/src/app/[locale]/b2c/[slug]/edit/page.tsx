@@ -136,7 +136,7 @@ export default function EditStorefrontPage() {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setFormData((prev) => ({
+      setFormData((prev: B2CStoreUpdateDTO) => ({
         ...prev,
         [parent]: {
           ...(prev as any)[parent],
@@ -144,7 +144,7 @@ export default function EditStorefrontPage() {
         },
       }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev: B2CStoreUpdateDTO) => ({ ...prev, [name]: value }));
     }
   };
 

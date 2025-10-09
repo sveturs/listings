@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
 
 // Use generated types from API
-type ProductVariant = components['schemas']['models.B2CProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 type BulkUpdateStockRequest =
   components['schemas']['types.BulkUpdateStockRequest'];
 

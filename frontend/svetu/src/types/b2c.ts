@@ -3,10 +3,10 @@ import type { components } from '@/types/generated/api';
 // Базовые типы из API
 export type StorefrontBase = components['schemas']['models.Storefront'];
 export type B2CStoreCreateDTO =
-  components['schemas']['models.B2CStoreCreateDTO'];
+  components['schemas']['models.StorefrontCreateDTO'];
 export type B2CStoreUpdateDTO =
-  components['schemas']['models.B2CStoreUpdateDTO'];
-export type B2CProduct = components['schemas']['models.B2CProduct'];
+  components['schemas']['models.StorefrontUpdateDTO'];
+export type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 // Расширенный тип Storefront с дополнительными полями
 export interface B2CStore extends StorefrontBase {
@@ -39,7 +39,7 @@ export type StorefrontAnalytics =
   components['schemas']['models.StorefrontAnalytics'];
 export type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
-export type B2CStoreMapData = components['schemas']['models.B2CStoreMapData'];
+export type B2CStoreMapData = components['schemas']['models.StorefrontMapData'];
 export type StorefrontSearchResult = any; // Type removed from swagger schema
 export type StorefrontSearchItem = any; // Type removed from swagger schema
 export type StorefrontsListResponse =

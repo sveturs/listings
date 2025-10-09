@@ -81,7 +81,7 @@ const StorefrontMapContainer: React.FC<StorefrontMapContainerProps> = ({
           });
 
           // Преобразуем в формат для карты
-          const mapData: B2CStoreMapData[] = (response.storefronts || []).map(
+          const mapData: B2CStoreMapData[] = (response.b2c_stores || []).map(
             (storefront: any) => ({
               id: storefront.id,
               name: storefront.name,

@@ -29,7 +29,7 @@ import CarFiltersDrawer from '@/components/cars/CarFiltersDrawer';
 import CarQuickViewModal from '@/components/cars/CarQuickViewModal';
 
 type CarMake = components['schemas']['models.CarMake'];
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarsPageClientProps {
   locale: string;

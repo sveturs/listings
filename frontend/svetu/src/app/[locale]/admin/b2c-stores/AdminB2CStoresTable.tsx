@@ -89,7 +89,10 @@ export default function AdminStorefrontsTable() {
 
       if (response.data) {
         let storefrontsList =
-          response.data.b2c_stores || response.data.storefronts || response.data.data || [];
+          response.data.b2c_stores ||
+          response.data.storefronts ||
+          response.data.data ||
+          [];
 
         // Применяем фильтры
         if (statusFilter) {
@@ -147,11 +150,16 @@ export default function AdminStorefrontsTable() {
         setTotal(response.data.total || storefrontsList.length);
 
         // Вычисляем статистику из полученных данных
-        const allStorefronts = response.data.b2c_stores || response.data.storefronts || response.data.data || [];
+        const allStorefronts =
+          response.data.b2c_stores ||
+          response.data.storefronts ||
+          response.data.data ||
+          [];
         setStats({
           total: allStorefronts.length,
           active: allStorefronts.filter((s: B2CStore) => s.is_active).length,
-          verified: allStorefronts.filter((s: B2CStore) => s.is_verified).length,
+          verified: allStorefronts.filter((s: B2CStore) => s.is_verified)
+            .length,
           totalProducts: allStorefronts.reduce(
             (sum: number, s: B2CStore) => sum + (s.products_count || 0),
             0
@@ -443,431 +451,439 @@ export default function AdminStorefrontsTable() {
         <div className="card-body">
           {/* Панель фильтров */}
           <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2 flex-1">
-            <input
-              type="text"
-              placeholder={t('b2c.searchPlaceholder')}
-              className="input input-bordered flex-1 max-w-md"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="flex gap-2 flex-1">
+              <input
+                type="text"
+                placeholder={t('b2c.searchPlaceholder')}
+                className="input input-bordered flex-1 max-w-md"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
 
-            <select
-              className="select select-bordered"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">{t('b2c.filters.allStatus')}</option>
-              <option value="active">{t('b2c.filters.active')}</option>
-              <option value="inactive">{t('b2c.filters.inactive')}</option>
-            </select>
+              <select
+                className="select select-bordered"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">{t('b2c.filters.allStatus')}</option>
+                <option value="active">{t('b2c.filters.active')}</option>
+                <option value="inactive">{t('b2c.filters.inactive')}</option>
+              </select>
 
-            <select
-              className="select select-bordered"
-              value={verifiedFilter}
-              onChange={(e) => setVerifiedFilter(e.target.value)}
-            >
-              <option value="">{t('b2c.filters.allVerification')}</option>
-              <option value="verified">{t('b2c.filters.verified')}</option>
-              <option value="unverified">{t('b2c.filters.unverified')}</option>
-            </select>
+              <select
+                className="select select-bordered"
+                value={verifiedFilter}
+                onChange={(e) => setVerifiedFilter(e.target.value)}
+              >
+                <option value="">{t('b2c.filters.allVerification')}</option>
+                <option value="verified">{t('b2c.filters.verified')}</option>
+                <option value="unverified">
+                  {t('b2c.filters.unverified')}
+                </option>
+              </select>
 
-            <select
-              className="select select-bordered"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="date_desc">{t('b2c.sort.newest')}</option>
-              <option value="date_asc">{t('b2c.sort.oldest')}</option>
-              <option value="name_asc">{t('b2c.sort.nameAsc')}</option>
-              <option value="name_desc">{t('b2c.sort.nameDesc')}</option>
-              <option value="products_desc">
-                {t('b2c.sort.mostProducts')}
-              </option>
-              <option value="sales_desc">{t('b2c.sort.mostSales')}</option>
-              <option value="rating_desc">{t('b2c.sort.bestRating')}</option>
-            </select>
+              <select
+                className="select select-bordered"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="date_desc">{t('b2c.sort.newest')}</option>
+                <option value="date_asc">{t('b2c.sort.oldest')}</option>
+                <option value="name_asc">{t('b2c.sort.nameAsc')}</option>
+                <option value="name_desc">{t('b2c.sort.nameDesc')}</option>
+                <option value="products_desc">
+                  {t('b2c.sort.mostProducts')}
+                </option>
+                <option value="sales_desc">{t('b2c.sort.mostSales')}</option>
+                <option value="rating_desc">{t('b2c.sort.bestRating')}</option>
+              </select>
+            </div>
+
+            {/* Массовые действия */}
+            {selectedStorefronts.size > 0 && (
+              <div className="dropdown dropdown-end">
+                <label tabIndex={0} className="btn btn-primary dropdown-toggle">
+                  {t('b2c.bulkActions')} ({selectedStorefronts.size})
+                </label>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+                >
+                  <li>
+                    <button
+                      onClick={() => handleBulkAction('activate')}
+                      className="text-success"
+                    >
+                      {t('b2c.activateSelected')}
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => handleBulkAction('deactivate')}
+                      className="text-warning"
+                    >
+                      {t('b2c.deactivateSelected')}
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => handleBulkAction('soft-delete')}
+                      className="text-warning"
+                    >
+                      {t('b2c.softDelete')} ({t('b2c.deleteSelected')})
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => handleBulkAction('hard-delete')}
+                      className="text-error"
+                    >
+                      {t('b2c.hardDelete')} ({t('b2c.deleteSelected')})
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
 
-          {/* Массовые действия */}
-          {selectedStorefronts.size > 0 && (
-            <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-primary dropdown-toggle">
-                {t('b2c.bulkActions')} ({selectedStorefronts.size})
-              </label>
-              <ul
-                tabIndex={0}
-                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-              >
-                <li>
-                  <button
-                    onClick={() => handleBulkAction('activate')}
-                    className="text-success"
-                  >
-                    {t('b2c.activateSelected')}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => handleBulkAction('deactivate')}
-                    className="text-warning"
-                  >
-                    {t('b2c.deactivateSelected')}
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => handleBulkAction('soft-delete')}
-                    className="text-warning"
-                  >
-                    {t('b2c.softDelete')} ({t('b2c.deleteSelected')})
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => handleBulkAction('hard-delete')}
-                    className="text-error"
-                  >
-                    {t('b2c.hardDelete')} ({t('b2c.deleteSelected')})
-                  </button>
-                </li>
-              </ul>
+          {/* Таблица */}
+          <div className="overflow-x-auto">
+            <table className="table table-zebra">
+              <thead>
+                <tr>
+                  <th>
+                    <label>
+                      <input
+                        type="checkbox"
+                        className="checkbox"
+                        checked={
+                          selectedStorefronts.size === storefronts.length &&
+                          storefronts.length > 0
+                        }
+                        onChange={selectAll}
+                      />
+                    </label>
+                  </th>
+                  <th>{t('b2c.table.name')}</th>
+                  <th>{t('b2c.table.owner')}</th>
+                  <th>{t('b2c.table.location')}</th>
+                  <th>{t('b2c.table.products')}</th>
+                  <th>{t('b2c.table.sales')}</th>
+                  <th>{t('b2c.table.rating')}</th>
+                  <th>{t('b2c.table.status')}</th>
+                  <th>{t('b2c.table.verified')}</th>
+                  <th>{t('b2c.table.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {storefronts.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-8">
+                      <p className="text-base-content/60">{t('b2c.noData')}</p>
+                    </td>
+                  </tr>
+                ) : (
+                  storefronts.map((storefront) => (
+                    <tr key={storefront.id}>
+                      <td>
+                        <label>
+                          <input
+                            type="checkbox"
+                            className="checkbox"
+                            checked={selectedStorefronts.has(storefront.id)}
+                            onChange={() => toggleSelection(storefront.id)}
+                          />
+                        </label>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          {storefront.logo_url && (
+                            <div className="avatar">
+                              <div className="mask mask-squircle w-12 h-12">
+                                <img
+                                  src={storefront.logo_url}
+                                  alt={storefront.name}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold">{storefront.name}</div>
+                            <div className="text-sm opacity-50">
+                              @{storefront.slug}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="text-sm">ID: {storefront.user_id}</div>
+                      </td>
+                      <td>
+                        <div className="text-sm">
+                          {storefront.city || storefront.address || '-'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="badge badge-ghost">
+                          {storefront.products_count}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="badge badge-ghost">
+                          {storefront.sales_count}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <span className="text-warning">★</span>
+                          <span>{storefront.rating.toFixed(1)}</span>
+                          <span className="text-xs opacity-50">
+                            ({storefront.reviews_count})
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            storefront.is_active
+                              ? 'badge-success'
+                              : 'badge-error'
+                          }`}
+                        >
+                          {storefront.is_active
+                            ? t('b2c.active')
+                            : t('b2c.inactive')}
+                        </span>
+                      </td>
+                      <td>
+                        {storefront.is_verified ? (
+                          <span className="badge badge-primary">
+                            {t('b2c.verified')}
+                          </span>
+                        ) : (
+                          <span className="badge badge-outline">
+                            {t('b2c.unverified')}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="dropdown dropdown-end">
+                          <label tabIndex={0} className="btn btn-ghost btn-sm">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                              />
+                            </svg>
+                          </label>
+                          <ul
+                            tabIndex={0}
+                            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+                          >
+                            <li>
+                              <a
+                                href={`/b2c/${storefront.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {t('b2c.view')}
+                              </a>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/b2c/${storefront.id}/edit`
+                                  )
+                                }
+                              >
+                                {t('b2c.edit')}
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/b2c-products?storefront=${storefront.id}`
+                                  )
+                                }
+                              >
+                                {t('b2c.viewProducts')}
+                              </button>
+                            </li>
+                            {!storefront.is_active && (
+                              <li>
+                                <button
+                                  onClick={() => handleRestore(storefront.id)}
+                                  className="text-success"
+                                >
+                                  {t('b2c.restore')}
+                                </button>
+                              </li>
+                            )}
+                            <li>
+                              <button
+                                onClick={() => {
+                                  setStorefrontToDelete(storefront.id);
+                                  setDeleteModalOpen(true);
+                                }}
+                                className="text-error"
+                              >
+                                {t('b2c.delete')}
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Пагинация */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="join">
+                <button
+                  className="join-item btn"
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  «
+                </button>
+                {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                  const pageNumber = i + 1;
+                  return (
+                    <button
+                      key={pageNumber}
+                      className={`join-item btn ${
+                        page === pageNumber ? 'btn-active' : ''
+                      }`}
+                      onClick={() => setPage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+                <button
+                  className="join-item btn"
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                >
+                  »
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Таблица */}
-        <div className="overflow-x-auto">
-          <table className="table table-zebra">
-            <thead>
-              <tr>
-                <th>
-                  <label>
+        {/* Модальное окно удаления */}
+        {deleteModalOpen && (
+          <dialog className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">
+                {t('b2c.confirmDeleteTitle')}
+              </h3>
+              <p className="py-4">{t('b2c.confirmDeleteMessage')}</p>
+
+              {/* Выбор типа удаления для администратора */}
+              <div className="form-control py-4">
+                <label className="label">
+                  <span className="label-text font-semibold">
+                    {t('b2c.deleteType')}
+                  </span>
+                </label>
+                <div className="space-y-2">
+                  <label className="label cursor-pointer justify-start gap-4">
                     <input
-                      type="checkbox"
-                      className="checkbox"
-                      checked={
-                        selectedStorefronts.size === storefronts.length &&
-                        storefronts.length > 0
+                      type="radio"
+                      name="deleteType"
+                      value="soft"
+                      checked={deleteType === 'soft'}
+                      onChange={(e) =>
+                        setDeleteType(e.target.value as 'soft' | 'hard')
                       }
-                      onChange={selectAll}
+                      className="radio radio-primary"
                     />
-                  </label>
-                </th>
-                <th>{t('b2c.table.name')}</th>
-                <th>{t('b2c.table.owner')}</th>
-                <th>{t('b2c.table.location')}</th>
-                <th>{t('b2c.table.products')}</th>
-                <th>{t('b2c.table.sales')}</th>
-                <th>{t('b2c.table.rating')}</th>
-                <th>{t('b2c.table.status')}</th>
-                <th>{t('b2c.table.verified')}</th>
-                <th>{t('b2c.table.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {storefronts.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="text-center py-8">
-                    <p className="text-base-content/60">{t('b2c.noData')}</p>
-                  </td>
-                </tr>
-              ) : (
-                storefronts.map((storefront) => (
-                  <tr key={storefront.id}>
-                    <td>
-                      <label>
-                        <input
-                          type="checkbox"
-                          className="checkbox"
-                          checked={selectedStorefronts.has(storefront.id)}
-                          onChange={() => toggleSelection(storefront.id)}
-                        />
-                      </label>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-3">
-                        {storefront.logo_url && (
-                          <div className="avatar">
-                            <div className="mask mask-squircle w-12 h-12">
-                              <img
-                                src={storefront.logo_url}
-                                alt={storefront.name}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-bold">{storefront.name}</div>
-                          <div className="text-sm opacity-50">
-                            @{storefront.slug}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="text-sm">ID: {storefront.user_id}</div>
-                    </td>
-                    <td>
-                      <div className="text-sm">
-                        {storefront.city || storefront.address || '-'}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="badge badge-ghost">
-                        {storefront.products_count}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="badge badge-ghost">
-                        {storefront.sales_count}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <span className="text-warning">★</span>
-                        <span>{storefront.rating.toFixed(1)}</span>
-                        <span className="text-xs opacity-50">
-                          ({storefront.reviews_count})
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          storefront.is_active ? 'badge-success' : 'badge-error'
-                        }`}
-                      >
-                        {storefront.is_active
-                          ? t('b2c.active')
-                          : t('b2c.inactive')}
+                    <div>
+                      <span className="label-text font-medium">
+                        {t('b2c.softDelete')}
                       </span>
-                    </td>
-                    <td>
-                      {storefront.is_verified ? (
-                        <span className="badge badge-primary">
-                          {t('b2c.verified')}
-                        </span>
-                      ) : (
-                        <span className="badge badge-outline">
-                          {t('b2c.unverified')}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="dropdown dropdown-end">
-                        <label tabIndex={0} className="btn btn-ghost btn-sm">
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                            />
-                          </svg>
-                        </label>
-                        <ul
-                          tabIndex={0}
-                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-                        >
-                          <li>
-                            <a
-                              href={`/b2c/${storefront.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {t('b2c.view')}
-                            </a>
-                          </li>
-                          <li>
-                            <button
-                              onClick={() =>
-                                router.push(`/admin/b2c/${storefront.id}/edit`)
-                              }
-                            >
-                              {t('b2c.edit')}
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              onClick={() =>
-                                router.push(
-                                  `/admin/b2c-products?storefront=${storefront.id}`
-                                )
-                              }
-                            >
-                              {t('b2c.viewProducts')}
-                            </button>
-                          </li>
-                          {!storefront.is_active && (
-                            <li>
-                              <button
-                                onClick={() => handleRestore(storefront.id)}
-                                className="text-success"
-                              >
-                                {t('b2c.restore')}
-                              </button>
-                            </li>
-                          )}
-                          <li>
-                            <button
-                              onClick={() => {
-                                setStorefrontToDelete(storefront.id);
-                                setDeleteModalOpen(true);
-                              }}
-                              className="text-error"
-                            >
-                              {t('b2c.delete')}
-                            </button>
-                          </li>
-                        </ul>
+                      <div className="label-text-alt text-warning">
+                        {t('b2c.softDeleteDesc')}
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Пагинация */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-4">
-            <div className="join">
-              <button
-                className="join-item btn"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
-                «
-              </button>
-              {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                const pageNumber = i + 1;
-                return (
-                  <button
-                    key={pageNumber}
-                    className={`join-item btn ${
-                      page === pageNumber ? 'btn-active' : ''
-                    }`}
-                    onClick={() => setPage(pageNumber)}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-              <button
-                className="join-item btn"
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                »
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Модальное окно удаления */}
-      {deleteModalOpen && (
-        <dialog className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">{t('b2c.confirmDeleteTitle')}</h3>
-            <p className="py-4">{t('b2c.confirmDeleteMessage')}</p>
-
-            {/* Выбор типа удаления для администратора */}
-            <div className="form-control py-4">
-              <label className="label">
-                <span className="label-text font-semibold">
-                  {t('b2c.deleteType')}
-                </span>
-              </label>
-              <div className="space-y-2">
-                <label className="label cursor-pointer justify-start gap-4">
-                  <input
-                    type="radio"
-                    name="deleteType"
-                    value="soft"
-                    checked={deleteType === 'soft'}
-                    onChange={(e) =>
-                      setDeleteType(e.target.value as 'soft' | 'hard')
-                    }
-                    className="radio radio-primary"
-                  />
-                  <div>
-                    <span className="label-text font-medium">
-                      {t('b2c.softDelete')}
-                    </span>
-                    <div className="label-text-alt text-warning">
-                      {t('b2c.softDeleteDesc')}
                     </div>
-                  </div>
-                </label>
-                <label className="label cursor-pointer justify-start gap-4">
-                  <input
-                    type="radio"
-                    name="deleteType"
-                    value="hard"
-                    checked={deleteType === 'hard'}
-                    onChange={(e) =>
-                      setDeleteType(e.target.value as 'soft' | 'hard')
-                    }
-                    className="radio radio-error"
-                  />
-                  <div>
-                    <span className="label-text font-medium text-error">
-                      {t('b2c.hardDelete')}
-                    </span>
-                    <div className="label-text-alt text-error">
-                      {t('b2c.hardDeleteDesc')}
+                  </label>
+                  <label className="label cursor-pointer justify-start gap-4">
+                    <input
+                      type="radio"
+                      name="deleteType"
+                      value="hard"
+                      checked={deleteType === 'hard'}
+                      onChange={(e) =>
+                        setDeleteType(e.target.value as 'soft' | 'hard')
+                      }
+                      className="radio radio-error"
+                    />
+                    <div>
+                      <span className="label-text font-medium text-error">
+                        {t('b2c.hardDelete')}
+                      </span>
+                      <div className="label-text-alt text-error">
+                        {t('b2c.hardDeleteDesc')}
+                      </div>
                     </div>
-                  </div>
-                </label>
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-action">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setDeleteModalOpen(false);
+                    setStorefrontToDelete(null);
+                    setDeleteType('soft');
+                  }}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  className={`btn ${deleteType === 'hard' ? 'btn-error' : 'btn-warning'}`}
+                  onClick={() => {
+                    if (storefrontToDelete) {
+                      handleDelete(storefrontToDelete, deleteType);
+                    }
+                  }}
+                >
+                  {deleteType === 'hard'
+                    ? t('b2c.hardDelete')
+                    : t('b2c.softDelete')}
+                </button>
               </div>
             </div>
-
-            <div className="modal-action">
+            <form method="dialog" className="modal-backdrop">
               <button
-                className="btn"
                 onClick={() => {
                   setDeleteModalOpen(false);
                   setStorefrontToDelete(null);
                   setDeleteType('soft');
                 }}
               >
-                {t('common.cancel')}
+                close
               </button>
-              <button
-                className={`btn ${deleteType === 'hard' ? 'btn-error' : 'btn-warning'}`}
-                onClick={() => {
-                  if (storefrontToDelete) {
-                    handleDelete(storefrontToDelete, deleteType);
-                  }
-                }}
-              >
-                {deleteType === 'hard'
-                  ? t('b2c.hardDelete')
-                  : t('b2c.softDelete')}
-              </button>
-            </div>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button
-              onClick={() => {
-                setDeleteModalOpen(false);
-                setStorefrontToDelete(null);
-                setDeleteType('soft');
-              }}
-            >
-              close
-            </button>
-          </form>
-        </dialog>
-      )}
+            </form>
+          </dialog>
+        )}
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import {
 import CarBadges from './CarBadges';
 import CarQuickInfo from './CarQuickInfo';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarListingCardEnhancedProps {
   listing: C2CListing;

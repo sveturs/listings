@@ -303,7 +303,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -351,7 +351,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -420,7 +420,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -491,7 +491,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -541,7 +541,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -721,7 +721,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -788,7 +788,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -858,7 +858,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -5736,7 +5736,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/attributes': {
+  '/api/v1/admin/marketplace/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -5804,7 +5804,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/attributes/{id}': {
+  '/api/v1/admin/marketplace/attributes/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -5890,7 +5890,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -5938,7 +5938,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -5967,7 +5967,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/attributes/{id}/translate': {
+  '/api/v1/admin/marketplace/attributes/{id}/translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -6038,7 +6038,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/attributes/bulk': {
+  '/api/v1/admin/marketplace/attributes/bulk': {
     parameters: {
       query?: never;
       header?: never;
@@ -6106,7 +6106,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/categories/{categoryId}/attributes/{attributeId}': {
+  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/{attributeId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -6149,7 +6149,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -6206,7 +6206,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -6255,7 +6255,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -6284,7 +6284,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/categories/{categoryId}/attributes/export': {
+  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/export': {
     parameters: {
       query?: never;
       header?: never;
@@ -6346,7 +6346,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/categories/{categoryId}/attributes/import': {
+  '/api/v1/admin/marketplace/categories/{categoryId}/attributes/import': {
     parameters: {
       query?: never;
       header?: never;
@@ -6433,7 +6433,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/admin/c2c/categories/{targetCategoryId}/attributes/copy': {
+  '/api/v1/admin/marketplace/categories/{targetCategoryId}/attributes/copy': {
     parameters: {
       query?: never;
       header?: never;
@@ -6472,7 +6472,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -6608,7 +6608,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -8090,7 +8090,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -12324,6 +12324,5026 @@ export interface paths {
       };
     };
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List b2c_stores
+     * @description Returns paginated list of b2c_stores with filters. Public endpoint that shows only active b2c_stores by default. Admins can see all b2c_stores.
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by user ID */
+          user_id?: number;
+          /** @description Filter by active status */
+          is_active?: boolean;
+          /** @description Filter by verification status */
+          is_verified?: boolean;
+          /** @description Filter by city */
+          city?: string;
+          /** @description Minimum rating filter */
+          min_rating?: number;
+          /** @description Search in name and description */
+          search?: string;
+          /** @description Latitude for geo search */
+          lat?: number;
+          /** @description Longitude for geo search */
+          lng?: number;
+          /** @description Radius in km for geo search */
+          radius_km?: number;
+          /** @description Sort field (rating, products_count, distance) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Results per page (max 100) */
+          limit?: number;
+          /** @description Results offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of b2c_stores */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.StorefrontsListResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create new storefront
+     * @description Creates a new storefront for the authenticated user
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Storefront data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.StorefrontCreateDTO'];
+        };
+      };
+      responses: {
+        /** @description Created storefront */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.Storefront'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront limit reached */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront by ID
+     * @description Returns storefront details by ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.Storefront'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    /**
+     * Update storefront
+     * @description Updates storefront details
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.StorefrontUpdateDTO'];
+        };
+      };
+      responses: {
+        /** @description Storefront updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Delete storefront
+     * @description Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal
+     */
+    delete: {
+      parameters: {
+        query?: {
+          /** @description Hard delete (permanent removal, admin only). Default: false (soft delete) */
+          hard?: boolean;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Only owner can delete storefront */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/aggregated-rating': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront aggregated rating
+     * @description Returns aggregated rating for a storefront including breakdown by sources
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Aggregated rating */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.AggregatedRating'];
+            };
+          };
+        };
+        /** @description Invalid storefront ID */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/analytics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront analytics
+     * @description Returns analytics data for a storefront
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Start date (RFC3339 format) */
+          from?: string;
+          /** @description End date (RFC3339 format) */
+          to?: string;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Analytics data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontAnalytics'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/banner': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload storefront banner
+     * @description Uploads a banner image for the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Banner file
+             */
+            banner: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Banner URL */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/delivery-options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update delivery options
+     * @description Updates storefront delivery options
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Delivery options */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.StorefrontDeliveryOption'][];
+        };
+      };
+      responses: {
+        /** @description Delivery options updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/hours': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update working hours
+     * @description Updates storefront working hours
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Working hours */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.StorefrontHours'][];
+        };
+      };
+      responses: {
+        /** @description Hours updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/logo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload storefront logo
+     * @description Uploads a logo image for the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Logo file
+             */
+            logo: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Logo URL */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/payment-methods': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update payment methods
+     * @description Updates storefront payment methods
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Payment methods */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.StorefrontPaymentMethod'][];
+        };
+      };
+      responses: {
+        /** @description Payment methods updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore deactivated storefront
+     * @description Restores a previously deactivated storefront (admin only)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront restored */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Admin access required */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/staff': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront staff
+     * @description Returns list of staff members with their roles and permissions
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Staff list */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.StaffListResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Add staff member
+     * @description Adds a new staff member to the storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Staff data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AddStaffRequest'];
+        };
+      };
+      responses: {
+        /** @description Staff added */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions or staff limit reached */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/staff/{staffId}/permissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update staff permissions
+     * @description Updates permissions for a staff member
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+          /** @description Staff ID */
+          staffId: number;
+        };
+        cookie?: never;
+      };
+      /** @description Permissions map */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_domain_models.JSONB'];
+        };
+      };
+      responses: {
+        /** @description Permissions updated */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Staff not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/staff/{userId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove staff member
+     * @description Removes a staff member from the storefront
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+          /** @description User ID of staff member */
+          userId: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Staff removed */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Insufficient permissions */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Staff not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{id}/view': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Record storefront view
+     * @description Records a view for analytics
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description View recorded */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/dashboard/low-stock': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get low stock products
+     * @description Returns products with low stock for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Low stock products */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postgres.LowStockProduct'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/dashboard/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get dashboard notifications
+     * @description Returns notifications for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard notifications */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.DashboardNotification'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/dashboard/recent-orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get recent orders
+     * @description Returns recent orders for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Limit */
+          limit?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Recent orders */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['postgres.DashboardOrder'][];
+            };
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/dashboard/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get dashboard statistics
+     * @description Returns statistics for storefront dashboard
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Dashboard statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['postgres.DashboardStats'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront products
+     * @description Returns paginated list of products for a storefront
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by category ID */
+          category_id?: number;
+          /** @description Search in name and description */
+          search?: string;
+          /** @description Minimum price filter */
+          min_price?: number;
+          /** @description Maximum price filter */
+          max_price?: number;
+          /** @description Stock status filter (in_stock, low_stock, out_of_stock) */
+          stock_status?: string;
+          /** @description Filter by active status */
+          is_active?: boolean;
+          /** @description Filter by SKU */
+          sku?: string;
+          /** @description Filter by barcode */
+          barcode?: string;
+          /** @description Sort by field (name, price, created_at, stock_quantity) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Number of items per page (default: 20) */
+          limit?: number;
+          /** @description Number of items to skip */
+          offset?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of products */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontProduct'][];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Create a storefront product
+     * @description Creates a new product for the storefront with optional variants support
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product data with optional variants */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.CreateProductRequest'];
+        };
+      };
+      responses: {
+        /** @description Created product with variants */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontProduct'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a storefront product
+     * @description Returns details of a specific product
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontProduct'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    /**
+     * Update a storefront product
+     * @description Updates product details
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Product update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateProductRequest'];
+        };
+      };
+      responses: {
+        /** @description Product updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Hard delete a storefront product
+     * @description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
+     */
+    delete: {
+      parameters: {
+        query: {
+          /** @description Must be true for hard delete */
+          hard: boolean;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product permanently deleted */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/{id}/inventory': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Update product inventory
+     * @description Records inventory movement and updates stock
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Inventory update data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateInventoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Inventory updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SuccessResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/bulk/create': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk create products
+     * @description Create multiple products in a single request
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Products to create */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkCreateProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk creation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkCreateProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/bulk/delete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Bulk delete products
+     * @description Delete multiple products in a single request
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product IDs to delete */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkDeleteProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk deletion result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkDeleteProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/bulk/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Bulk update product status
+     * @description Update active/inactive status of multiple products
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Product IDs and status */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkUpdateStatusRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk status update result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkUpdateStatusResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/bulk/update': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Bulk update products
+     * @description Update multiple products in a single request
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header: {
+          /** @description Bearer token */
+          Authorization: string;
+        };
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      /** @description Products to update */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.BulkUpdateProductsRequest'];
+        };
+      };
+      responses: {
+        /** @description Bulk update result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.BulkUpdateProductsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{slug}/products/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product statistics
+     * @description Returns statistics about storefront products
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product statistics */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ProductStats'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/cart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get shopping cart
+     * @description Gets the current contents of the shopping cart for a storefront
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Cart contents */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    /**
+     * Clear shopping cart
+     * @description Removes all items from the shopping cart
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Cart cleared */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: string;
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/cart/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add item to cart
+     * @description Adds a product to the shopping cart for a specific storefront
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Item to add */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.AddToCartRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/cart/items/{item_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update cart item quantity
+     * @description Updates the quantity of an item in the cart
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Cart item ID */
+          item_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Updated quantity */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateCartItemRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Item not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    /**
+     * Remove item from cart
+     * @description Removes an item from the shopping cart
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Cart item ID */
+          item_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Updated cart */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.ShoppingCart'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Item not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/analyze-attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze attributes in import file
+     * @description Detect and analyze product attributes before import
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['postApiV1B2cStores_storefrontId_importAnalyzeAttributes'];
+      responses: {
+        /** @description Attribute analysis result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.AnalyzeAttributesResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/analyze-categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze categories in import file
+     * @description Analyze categories and get AI mapping suggestions before import
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['postApiV1B2cStores_storefrontId_importAnalyzeAttributes'];
+      responses: {
+        /** @description Category analysis result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.AnalyzeCategoriesResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/analyze-client-categories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze client categories
+     * @description Analyze unique client categories and suggest new marketplace categories
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Analysis request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AnalyzeClientCategoriesRequest'];
+        };
+      };
+      responses: {
+        /** @description Category analysis */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.AnalyzeClientCategoriesResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/detect-variants': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Detect product variants
+     * @description Detect and group product variants before import
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['postApiV1B2cStores_storefrontId_importAnalyzeAttributes'];
+      responses: {
+        /** @description Variant detection result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['handler.DetectVariantsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/file': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import products from file
+     * @description Import products from uploaded file (supports XML, CSV, ZIP formats)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Import file
+             */
+            file: string;
+            /**
+             * @description File type
+             * @enum {string}
+             */
+            file_type: 'xml' | 'csv' | 'zip';
+            /**
+             * @description Update mode
+             * @default upsert
+             * @enum {string}
+             */
+            update_mode?: 'create_only' | 'update_only' | 'upsert';
+            /**
+             * @description Category mapping mode
+             * @default auto
+             * @enum {string}
+             */
+            category_mapping_mode?: 'auto' | 'manual' | 'skip';
+          };
+        };
+      };
+      responses: {
+        /** @description Import job created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJob'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/jobs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get import jobs
+     * @description Get list of import jobs for a storefront
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Filter by status */
+          status?: string;
+          /** @description Limit number of results */
+          limit?: number;
+          /** @description Offset for pagination */
+          offset?: number;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of import jobs */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJobsResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview import file
+     * @description Preview first N rows of import file with validation before actual import
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Import file
+             */
+            file: string;
+            /**
+             * @description File type
+             * @enum {string}
+             */
+            file_type: 'xml' | 'csv' | 'zip';
+            /**
+             * @description Number of rows to preview
+             * @default 10
+             */
+            preview_limit?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Preview result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportPreviewResponse'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/url': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import products from URL
+     * @description Import products from a URL (supports XML, CSV, ZIP formats)
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Import request */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.ImportRequest'];
+        };
+      };
+      responses: {
+        /** @description Import job created */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJob'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/import/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Validate import file
+     * @description Validate import file structure and data without actually importing
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: components['requestBodies']['postApiV1B2cStores_storefrontId_importAnalyzeAttributes'];
+      responses: {
+        /** @description Validation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.ImportJobStatus'];
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Forbidden */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/orders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront orders
+     * @description Gets a list of orders for a specific storefront (owner only)
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Page number */
+          page?: number;
+          /** @description Items per page */
+          limit?: number;
+          /** @description Filter by status */
+          status?: string;
+        };
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront orders */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'][];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/{storefront_id}/orders/{order_id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update order status
+     * @description Updates the status of an order (seller only)
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront ID */
+          storefront_id: number;
+          /** @description Order ID */
+          order_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Status update */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['models.UpdateOrderStatusRequest'];
+        };
+      };
+      responses: {
+        /** @description Updated order */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['models.StorefrontOrder'];
+            };
+          };
+        };
+        /** @description Bad request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Access denied */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Order not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/ai/ab-test-titles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * A/B test product titles
+     * @description Evaluates multiple title variants and returns the best one
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Title variants */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.ABTestTitlesRequest'];
+        };
+      };
+      responses: {
+        /** @description A/B test result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/ai/analyze-product-image': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Analyze product image with AI for storefront products
+     * @description Uses Claude AI to analyze product image and extract title, description, category hints, price, etc.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Image data */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.AnalyzeProductImageRequest'];
+        };
+      };
+      responses: {
+        /** @description AI analysis result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['handler.AnalyzeProductResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/ai/detect-category': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Detect category for storefront product
+     * @description Uses AI to detect the most suitable category for a storefront product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Product details */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_b2c_handler.DetectCategoryRequest'];
+        };
+      };
+      responses: {
+        /** @description Category detection result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['services.AIDetectionResult'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/ai/metrics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI detection metrics for storefront products
+     * @description Returns accuracy and performance metrics for AI category detection
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Metrics data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/ai/translate-content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Translate product content to multiple languages
+     * @description Translates product title and description to specified languages
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      /** @description Content to translate */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['backend_internal_proj_b2c_handler.TranslateContentRequest'];
+        };
+      };
+      responses: {
+        /** @description Translation result */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/building': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get businesses in building
+     * @description Returns all b2c_stores located in the same building
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Building latitude */
+          lat: number;
+          /** @description Building longitude */
+          lng: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Businesses in building */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontMapData'][];
+          };
+        };
+        /** @description Invalid coordinates */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/import/csv-template': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get CSV import template
+     * @description Get CSV template with headers and example data for product import
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description CSV template */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'text/csv': string;
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/import/formats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get supported import formats
+     * @description Get information about supported import formats and their requirements
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Import formats information */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: unknown;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/map': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get b2c_stores for map
+     * @description Returns b2c_stores within map bounds with minimal data for performance
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Minimum latitude */
+          min_lat: number;
+          /** @description Maximum latitude */
+          max_lat: number;
+          /** @description Minimum longitude */
+          min_lng: number;
+          /** @description Maximum longitude */
+          max_lng: number;
+          /** @description Minimum rating filter */
+          min_rating?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Map markers data */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontMapData'][];
+          };
+        };
+        /** @description Invalid bounds */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/my': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my b2c_stores
+     * @description Returns list of b2c_stores owned by current user
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description List of user's b2c_stores */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.Storefront'][];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/nearby': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get nearby b2c_stores
+     * @description Returns b2c_stores within specified radius from coordinates
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Latitude */
+          lat: number;
+          /** @description Longitude */
+          lng: number;
+          /** @description Radius in kilometers (default 5) */
+          radius_km?: number;
+          /** @description Maximum results (default 20, max 100) */
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Nearby b2c_stores */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.Storefront'][];
+          };
+        };
+        /** @description Invalid coordinates */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/products/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a storefront product by ID
+     * @description Returns details of a specific product using only product ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Product ID */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.StorefrontProduct'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['ErrorResponse'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search b2c_stores using OpenSearch
+     * @description Performs advanced search of b2c_stores using OpenSearch engine
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Search query */
+          q?: string;
+          /** @description City filter */
+          city?: string;
+          /** @description Latitude for geo search */
+          lat?: number;
+          /** @description Longitude for geo search */
+          lng?: number;
+          /** @description Search radius in kilometers */
+          radius_km?: number;
+          /** @description Minimum rating */
+          min_rating?: number;
+          /** @description Only verified b2c_stores */
+          is_verified?: boolean;
+          /** @description Only currently open b2c_stores */
+          is_open_now?: boolean;
+          /** @description Payment methods (comma separated) */
+          payment_methods?: string;
+          /** @description Has delivery option */
+          has_delivery?: boolean;
+          /** @description Has self pickup option */
+          has_self_pickup?: boolean;
+          /** @description Sort field (rating, distance, products_count, created_at) */
+          sort_by?: string;
+          /** @description Sort order (asc, desc) */
+          sort_order?: string;
+          /** @description Number of results (max 100) */
+          limit?: number;
+          /** @description Results offset */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Search results */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['opensearch.StorefrontSearchResult'];
+          };
+        };
+        /** @description Invalid parameters */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/slug/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get storefront by slug or ID
+     * @description Returns storefront details by slug or ID
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug or ID */
+          slug: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Storefront details */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.Storefront'];
+          };
+        };
+        /** @description Storefront not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get product images
+     * @description Returns all images for a specific product
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Product images */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['services.UploadImageResponse'][];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Product not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    put?: never;
+    /**
+     * Upload image for storefront product
+     * @description Uploads a new image for a storefront product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            /**
+             * Format: binary
+             * @description Image file
+             */
+            image: string;
+            /** @description Set as main image */
+            is_main?: boolean;
+            /** @description Display order */
+            display_order?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Image uploaded successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
+              data?: components['schemas']['services.UploadImageResponse'];
+            };
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description File too large */
+        413: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete product image
+     * @description Deletes a specific image of a product
+     */
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+          /** @description Image ID */
+          image_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Image deleted successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Image not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/{image_id}/main': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set main product image
+     * @description Sets a specific image as the main image for a product
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+          /** @description Image ID */
+          image_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Main image set successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Image not found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/b2c_stores/slug/{slug}/products/{product_id}/images/order': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update image display order
+     * @description Updates the display order of product images
+     */
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Storefront slug */
+          slug: string;
+          /** @description Product ID */
+          product_id: number;
+        };
+        cookie?: never;
+      };
+      /** @description Image order updates */
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['handler.ImageOrderUpdate'][];
+        };
+      };
+      responses: {
+        /** @description Image order updated successfully */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.SuccessResponseSwag'];
+          };
+        };
+        /** @description Invalid request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Unauthorized */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Internal server error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+      };
+    };
     post?: never;
     delete?: never;
     options?: never;
@@ -17454,7 +22474,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/attribute-groups': {
+  '/api/v1/marketplace/admin/attribute-groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -17532,7 +22552,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/attribute-groups/{id}': {
+  '/api/v1/marketplace/admin/attribute-groups/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -17614,7 +22634,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -17662,7 +22682,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -17691,7 +22711,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/attribute-groups/{id}/items': {
+  '/api/v1/marketplace/admin/attribute-groups/{id}/items': {
     parameters: {
       query?: never;
       header?: never;
@@ -17813,7 +22833,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/attribute-groups/{id}/items/{attributeId}': {
+  '/api/v1/marketplace/admin/attribute-groups/{id}/items/{attributeId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -17848,7 +22868,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -17877,7 +22897,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/categories/{id}/groups': {
+  '/api/v1/marketplace/admin/categories/{id}/groups': {
     parameters: {
       query?: never;
       header?: never;
@@ -17990,7 +23010,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/admin/categories/{id}/groups/{groupId}': {
+  '/api/v1/marketplace/admin/categories/{id}/groups/{groupId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18025,7 +23045,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -18054,7 +23074,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/attachments/{id}': {
+  '/api/v1/marketplace/attachments/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -18151,7 +23171,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -18198,7 +23218,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/attachments/{id}/download': {
+  '/api/v1/marketplace/attachments/{id}/download': {
     parameters: {
       query?: never;
       header?: never;
@@ -18274,7 +23294,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories': {
+  '/api/v1/marketplace/categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -18327,7 +23347,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories/{category_id}/keywords': {
+  '/api/v1/marketplace/categories/{category_id}/keywords': {
     parameters: {
       query?: never;
       header?: never;
@@ -18392,7 +23412,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories/{id}/attribute-ranges': {
+  '/api/v1/marketplace/categories/{id}/attribute-ranges': {
     parameters: {
       query?: never;
       header?: never;
@@ -18454,7 +23474,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories/{id}/attributes': {
+  '/api/v1/marketplace/categories/{id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -18519,7 +23539,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories/detect': {
+  '/api/v1/marketplace/categories/detect': {
     parameters: {
       query?: never;
       header?: never;
@@ -18542,7 +23562,7 @@ export interface paths {
       /** @description Данные для определения категории */
       requestBody: {
         content: {
-          'application/json': components['schemas']['backend_internal_proj_marketplace_handler.DetectCategoryRequest'];
+          'application/json': components['schemas']['backend_internal_proj_c2c_handler.DetectCategoryRequest'];
         };
       };
       responses: {
@@ -18583,7 +23603,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/categories/detect/{stats_id}/confirm': {
+  '/api/v1/marketplace/categories/detect/{stats_id}/confirm': {
     parameters: {
       query?: never;
       header?: never;
@@ -18652,7 +23672,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/category-suggestions': {
+  '/api/v1/marketplace/category-suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -18716,7 +23736,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/category-tree': {
+  '/api/v1/marketplace/category-tree': {
     parameters: {
       query?: never;
       header?: never;
@@ -18769,7 +23789,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/chat': {
+  '/api/v1/marketplace/chat': {
     parameters: {
       query?: never;
       header?: never;
@@ -18828,7 +23848,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/chat/messages': {
+  '/api/v1/marketplace/chat/messages': {
     parameters: {
       query?: never;
       header?: never;
@@ -18907,7 +23927,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/chat/messages/{id}/translation': {
+  '/api/v1/marketplace/chat/messages/{id}/translation': {
     parameters: {
       query?: never;
       header?: never;
@@ -18979,7 +23999,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/chats/{chat_id}/archive': {
+  '/api/v1/marketplace/chats/{chat_id}/archive': {
     parameters: {
       query?: never;
       header?: never;
@@ -19011,7 +24031,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -19050,7 +24070,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/enhance-images': {
+  '/api/v1/marketplace/enhance-images': {
     parameters: {
       query?: never;
       header?: never;
@@ -19148,7 +24168,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/enhance-preview': {
+  '/api/v1/marketplace/enhance-preview': {
     parameters: {
       query?: never;
       header?: never;
@@ -19246,7 +24266,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/enhanced-suggestions': {
+  '/api/v1/marketplace/enhanced-suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -19303,7 +24323,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/favorites': {
+  '/api/v1/marketplace/favorites': {
     parameters: {
       query?: never;
       header?: never;
@@ -19330,7 +24350,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -19362,7 +24382,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/favorites/{id}': {
+  '/api/v1/marketplace/favorites/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19394,7 +24414,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -19459,7 +24479,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -19497,7 +24517,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/favorites/{id}/check': {
+  '/api/v1/marketplace/favorites/{id}/check': {
     parameters: {
       query?: never;
       header?: never;
@@ -19568,7 +24588,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/favorites/count': {
+  '/api/v1/marketplace/favorites/count': {
     parameters: {
       query?: never;
       header?: never;
@@ -19627,7 +24647,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/fuzzy-search': {
+  '/api/v1/marketplace/fuzzy-search': {
     parameters: {
       query?: never;
       header?: never;
@@ -19688,7 +24708,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/images/{id}': {
+  '/api/v1/marketplace/images/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19721,7 +24741,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -19777,7 +24797,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings': {
+  '/api/v1/marketplace/listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -19808,7 +24828,7 @@ export interface paths {
           /** @description Storefront ID filter */
           storefront_id?: number;
           /** @description Exclude storefront products (for admin P2P listings) */
-          exclude_storefronts?: boolean;
+          exclude_b2c_stores?: boolean;
           /** @description Number of items per page */
           limit?: number;
           /** @description Number of items to skip */
@@ -19857,7 +24877,7 @@ export interface paths {
       /** @description Listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.C2CListing'];
+          'application/json': components['schemas']['models.MarketplaceListing'];
         };
       };
       responses: {
@@ -19916,7 +24936,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/{id}': {
+  '/api/v1/marketplace/listings/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -19946,7 +24966,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'];
+              data?: components['schemas']['models.MarketplaceListing'];
             };
           };
         };
@@ -19996,7 +25016,7 @@ export interface paths {
       /** @description Updated listing data */
       requestBody: {
         content: {
-          'application/json': components['schemas']['models.C2CListing'];
+          'application/json': components['schemas']['models.MarketplaceListing'];
         };
       };
       responses: {
@@ -20007,7 +25027,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -20082,7 +25102,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -20129,7 +25149,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/{id}/images': {
+  '/api/v1/marketplace/listings/{id}/images': {
     parameters: {
       query?: never;
       header?: never;
@@ -20230,7 +25250,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/{id}/price-history': {
+  '/api/v1/marketplace/listings/{id}/price-history': {
     parameters: {
       query?: never;
       header?: never;
@@ -20292,7 +25312,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/{id}/similar': {
+  '/api/v1/marketplace/listings/{id}/similar': {
     parameters: {
       query?: never;
       header?: never;
@@ -20325,7 +25345,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -20357,7 +25377,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/{id}/status': {
+  '/api/v1/marketplace/listings/{id}/status': {
     parameters: {
       query?: never;
       header?: never;
@@ -20400,7 +25420,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -20453,7 +25473,7 @@ export interface paths {
     };
     trace?: never;
   };
-  '/api/v1/c2c/listings/check-slug': {
+  '/api/v1/marketplace/listings/check-slug': {
     parameters: {
       query?: never;
       header?: never;
@@ -20512,7 +25532,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/listings/slug/{slug}': {
+  '/api/v1/marketplace/listings/slug/{slug}': {
     parameters: {
       query?: never;
       header?: never;
@@ -20542,7 +25562,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'];
+              data?: components['schemas']['models.MarketplaceListing'];
             };
           };
         };
@@ -20574,7 +25594,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/map/bounds': {
+  '/api/v1/marketplace/map/bounds': {
     parameters: {
       query?: never;
       header?: never;
@@ -20652,7 +25672,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/map/clusters': {
+  '/api/v1/marketplace/map/clusters': {
     parameters: {
       query?: never;
       header?: never;
@@ -20730,7 +25750,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/messages': {
+  '/api/v1/marketplace/messages': {
     parameters: {
       query?: never;
       header?: never;
@@ -20803,7 +25823,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/messages/{id}/attachments': {
+  '/api/v1/marketplace/messages/{id}/attachments': {
     parameters: {
       query?: never;
       header?: never;
@@ -20893,7 +25913,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/messages/read': {
+  '/api/v1/marketplace/messages/read': {
     parameters: {
       query?: never;
       header?: never;
@@ -20927,7 +25947,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -20966,7 +25986,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/messages/unread': {
+  '/api/v1/marketplace/messages/unread': {
     parameters: {
       query?: never;
       header?: never;
@@ -21025,7 +26045,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/moderate-image': {
+  '/api/v1/marketplace/moderate-image': {
     parameters: {
       query?: never;
       header?: never;
@@ -21112,7 +26132,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/my-listings': {
+  '/api/v1/marketplace/my-listings': {
     parameters: {
       query?: never;
       header?: never;
@@ -21146,7 +26166,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -21178,7 +26198,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/neighborhood-stats': {
+  '/api/v1/marketplace/neighborhood-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -21235,7 +26255,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}': {
+  '/api/v1/marketplace/orders/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -21265,7 +26285,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2COrder'];
+              data?: components['schemas']['models.MarketplaceOrder'];
             };
           };
         };
@@ -21279,7 +26299,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}/confirm-delivery': {
+  '/api/v1/marketplace/orders/{id}/confirm-delivery': {
     parameters: {
       query?: never;
       header?: never;
@@ -21321,7 +26341,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}/confirm-payment': {
+  '/api/v1/marketplace/orders/{id}/confirm-payment': {
     parameters: {
       query?: never;
       header?: never;
@@ -21368,7 +26388,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}/dispute': {
+  '/api/v1/marketplace/orders/{id}/dispute': {
     parameters: {
       query?: never;
       header?: never;
@@ -21415,7 +26435,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}/message': {
+  '/api/v1/marketplace/orders/{id}/message': {
     parameters: {
       query?: never;
       header?: never;
@@ -21462,7 +26482,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/{id}/ship': {
+  '/api/v1/marketplace/orders/{id}/ship': {
     parameters: {
       query?: never;
       header?: never;
@@ -21509,7 +26529,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/create': {
+  '/api/v1/marketplace/orders/create': {
     parameters: {
       query?: never;
       header?: never;
@@ -21532,7 +26552,7 @@ export interface paths {
       /** @description Order details */
       requestBody: {
         content: {
-          'application/json': components['schemas']['handler.CreateC2COrderRequest'];
+          'application/json': components['schemas']['handler.CreateMarketplaceOrderRequest'];
         };
       };
       responses: {
@@ -21580,7 +26600,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/my/purchases': {
+  '/api/v1/marketplace/orders/my/purchases': {
     parameters: {
       query?: never;
       header?: never;
@@ -21624,7 +26644,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/orders/my/sales': {
+  '/api/v1/marketplace/orders/my/sales': {
     parameters: {
       query?: never;
       header?: never;
@@ -21668,7 +26688,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/popular-categories': {
+  '/api/v1/marketplace/popular-categories': {
     parameters: {
       query?: never;
       header?: never;
@@ -21723,7 +26743,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/recommendations': {
+  '/api/v1/marketplace/recommendations': {
     parameters: {
       query?: never;
       header?: never;
@@ -21759,7 +26779,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -21773,7 +26793,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/saved-searches': {
+  '/api/v1/marketplace/saved-searches': {
     parameters: {
       query?: never;
       header?: never;
@@ -21889,7 +26909,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/saved-searches/{id}': {
+  '/api/v1/marketplace/saved-searches/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -22055,7 +27075,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -22102,7 +27122,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/saved-searches/{id}/execute': {
+  '/api/v1/marketplace/saved-searches/{id}/execute': {
     parameters: {
       query?: never;
       header?: never;
@@ -22180,7 +27200,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/search': {
+  '/api/v1/marketplace/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -22260,7 +27280,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/suggestions': {
+  '/api/v1/marketplace/suggestions': {
     parameters: {
       query?: never;
       header?: never;
@@ -22324,7 +27344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/test-fuzzy-search': {
+  '/api/v1/marketplace/test-fuzzy-search': {
     parameters: {
       query?: never;
       header?: never;
@@ -22379,7 +27399,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/translations/{id}': {
+  '/api/v1/marketplace/translations/{id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -22467,7 +27487,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['backend_internal_proj_marketplace_handler.MessageResponse'];
+              data?: components['schemas']['backend_internal_proj_c2c_handler.MessageResponse'];
             };
           };
         };
@@ -22525,7 +27545,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/translations/batch-translate': {
+  '/api/v1/marketplace/translations/batch-translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -22580,7 +27600,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/translations/detect-language': {
+  '/api/v1/marketplace/translations/detect-language': {
     parameters: {
       query?: never;
       header?: never;
@@ -22644,7 +27664,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/c2c/translations/translate': {
+  '/api/v1/marketplace/translations/translate': {
     parameters: {
       query?: never;
       header?: never;
@@ -23230,7 +28250,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'][];
+              data?: components['schemas']['models.StorefrontOrder'][];
             };
           };
         };
@@ -23280,7 +28300,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'];
+              data?: components['schemas']['models.StorefrontOrder'];
             };
           };
         };
@@ -23358,7 +28378,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'];
+              data?: components['schemas']['models.StorefrontOrder'];
             };
           };
         };
@@ -23453,7 +28473,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'];
+              data?: components['schemas']['models.StorefrontOrder'];
             };
           };
         };
@@ -25908,71 +30928,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/public/categories/{category_id}/attributes': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get available attributes for a category (public endpoint)
-     * @description Public endpoint for getting all attributes that can be used for products in a specific category - no authentication required
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Category ID */
-          category_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': unknown[];
-          };
-        };
-        /** @description Bad Request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Internal Server Error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/public/b2c/{slug}/products/{product_id}': {
+  '/api/v1/public/b2c_stores/{slug}/products/{product_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -26003,7 +30959,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['models.B2CProduct'];
+            'application/json': components['schemas']['models.StorefrontProduct'];
           };
         };
         /** @description Bad Request */
@@ -26049,7 +31005,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/public/b2c/{slug}/products/{product_id}/variants': {
+  '/api/v1/public/b2c_stores/{slug}/products/{product_id}/variants': {
     parameters: {
       query?: never;
       header?: never;
@@ -26096,6 +31052,70 @@ export interface paths {
         };
         /** @description Not Found */
         404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/categories/{category_id}/attributes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get available attributes for a category (public endpoint)
+     * @description Public endpoint for getting all attributes that can be used for products in a specific category - no authentication required
+     */
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description Category ID */
+          category_id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': unknown[];
+          };
+        };
+        /** @description Bad Request */
+        400: {
           headers: {
             [name: string]: unknown;
           };
@@ -26349,7 +31369,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -26402,7 +31422,7 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.C2CListing'][];
+              data?: components['schemas']['models.MarketplaceListing'][];
             };
           };
         };
@@ -30375,5026 +35395,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/b2c': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List storefronts
-     * @description Returns paginated list of storefronts with filters. Public endpoint that shows only active storefronts by default. Admins can see all storefronts.
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Filter by user ID */
-          user_id?: number;
-          /** @description Filter by active status */
-          is_active?: boolean;
-          /** @description Filter by verification status */
-          is_verified?: boolean;
-          /** @description Filter by city */
-          city?: string;
-          /** @description Minimum rating filter */
-          min_rating?: number;
-          /** @description Search in name and description */
-          search?: string;
-          /** @description Latitude for geo search */
-          lat?: number;
-          /** @description Longitude for geo search */
-          lng?: number;
-          /** @description Radius in km for geo search */
-          radius_km?: number;
-          /** @description Sort field (rating, products_count, distance) */
-          sort_by?: string;
-          /** @description Sort order (asc, desc) */
-          sort_order?: string;
-          /** @description Results per page (max 100) */
-          limit?: number;
-          /** @description Results offset */
-          offset?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of storefronts */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.StorefrontsListResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create new storefront
-     * @description Creates a new storefront for the authenticated user
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Storefront data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.B2CStoreCreateDTO'];
-        };
-      };
-      responses: {
-        /** @description Created storefront */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.Storefront'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront limit reached */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront by ID
-     * @description Returns storefront details by ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Storefront details */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.Storefront'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    /**
-     * Update storefront
-     * @description Updates storefront details
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Update data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.B2CStoreUpdateDTO'];
-        };
-      };
-      responses: {
-        /** @description Storefront updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Delete storefront
-     * @description Deletes a storefront. Soft delete by default (marks as inactive). Admins can use ?hard=true for permanent removal
-     */
-    delete: {
-      parameters: {
-        query?: {
-          /** @description Hard delete (permanent removal, admin only). Default: false (soft delete) */
-          hard?: boolean;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Storefront deleted */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Only owner can delete storefront */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/aggregated-rating': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront aggregated rating
-     * @description Returns aggregated rating for a storefront including breakdown by sources
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Aggregated rating */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.AggregatedRating'];
-            };
-          };
-        };
-        /** @description Invalid storefront ID */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/analytics': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront analytics
-     * @description Returns analytics data for a storefront
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Start date (RFC3339 format) */
-          from?: string;
-          /** @description End date (RFC3339 format) */
-          to?: string;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Analytics data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.StorefrontAnalytics'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/banner': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upload storefront banner
-     * @description Uploads a banner image for the storefront
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description Banner file
-             */
-            banner: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Banner URL */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/delivery-options': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update delivery options
-     * @description Updates storefront delivery options
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Delivery options */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.StorefrontDeliveryOption'][];
-        };
-      };
-      responses: {
-        /** @description Delivery options updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/hours': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update working hours
-     * @description Updates storefront working hours
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Working hours */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.StorefrontHours'][];
-        };
-      };
-      responses: {
-        /** @description Hours updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/logo': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upload storefront logo
-     * @description Uploads a logo image for the storefront
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description Logo file
-             */
-            logo: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Logo URL */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/payment-methods': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update payment methods
-     * @description Updates storefront payment methods
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Payment methods */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.StorefrontPaymentMethod'][];
-        };
-      };
-      responses: {
-        /** @description Payment methods updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/restore': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Restore deactivated storefront
-     * @description Restores a previously deactivated storefront (admin only)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Storefront restored */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Admin access required */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/staff': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront staff
-     * @description Returns list of staff members with their roles and permissions
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Staff list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.StaffListResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Add staff member
-     * @description Adds a new staff member to the storefront
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Staff data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.AddStaffRequest'];
-        };
-      };
-      responses: {
-        /** @description Staff added */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions or staff limit reached */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/staff/{staffId}/permissions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update staff permissions
-     * @description Updates permissions for a staff member
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-          /** @description Staff ID */
-          staffId: number;
-        };
-        cookie?: never;
-      };
-      /** @description Permissions map */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_domain_models.JSONB'];
-        };
-      };
-      responses: {
-        /** @description Permissions updated */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Staff not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/staff/{userId}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove staff member
-     * @description Removes a staff member from the storefront
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-          /** @description User ID of staff member */
-          userId: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Staff removed */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Staff not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{id}/view': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Record storefront view
-     * @description Records a view for analytics
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description View recorded */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/dashboard/low-stock': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get low stock products
-     * @description Returns products with low stock for storefront dashboard
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Low stock products */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postgres.LowStockProduct'][];
-            };
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/dashboard/notifications': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get dashboard notifications
-     * @description Returns notifications for storefront dashboard
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Limit */
-          limit?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Dashboard notifications */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['handler.DashboardNotification'][];
-            };
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/dashboard/recent-orders': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get recent orders
-     * @description Returns recent orders for storefront dashboard
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Limit */
-          limit?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Recent orders */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['postgres.DashboardOrder'][];
-            };
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/dashboard/stats': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get dashboard statistics
-     * @description Returns statistics for storefront dashboard
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Dashboard statistics */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['postgres.DashboardStats'];
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront products
-     * @description Returns paginated list of products for a storefront
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Filter by category ID */
-          category_id?: number;
-          /** @description Search in name and description */
-          search?: string;
-          /** @description Minimum price filter */
-          min_price?: number;
-          /** @description Maximum price filter */
-          max_price?: number;
-          /** @description Stock status filter (in_stock, low_stock, out_of_stock) */
-          stock_status?: string;
-          /** @description Filter by active status */
-          is_active?: boolean;
-          /** @description Filter by SKU */
-          sku?: string;
-          /** @description Filter by barcode */
-          barcode?: string;
-          /** @description Sort by field (name, price, created_at, stock_quantity) */
-          sort_by?: string;
-          /** @description Sort order (asc, desc) */
-          sort_order?: string;
-          /** @description Number of items per page (default: 20) */
-          limit?: number;
-          /** @description Number of items to skip */
-          offset?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of products */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CProduct'][];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Create a storefront product
-     * @description Creates a new product for the storefront with optional variants support
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      /** @description Product data with optional variants */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.CreateProductRequest'];
-        };
-      };
-      responses: {
-        /** @description Created product with variants */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CProduct'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get a storefront product
-     * @description Returns details of a specific product
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Product details */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CProduct'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    /**
-     * Update a storefront product
-     * @description Updates product details
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Product update data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.UpdateProductRequest'];
-        };
-      };
-      responses: {
-        /** @description Product updated successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['SuccessResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Hard delete a storefront product
-     * @description Permanently deletes a product and all related data (reviews, favorites, images, etc.)
-     */
-    delete: {
-      parameters: {
-        query: {
-          /** @description Must be true for hard delete */
-          hard: boolean;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Product permanently deleted */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['SuccessResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/{id}/inventory': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Update product inventory
-     * @description Records inventory movement and updates stock
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Inventory update data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.UpdateInventoryRequest'];
-        };
-      };
-      responses: {
-        /** @description Inventory updated successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['SuccessResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/bulk/create': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Bulk create products
-     * @description Create multiple products in a single request
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header: {
-          /** @description Bearer token */
-          Authorization: string;
-        };
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      /** @description Products to create */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.BulkCreateProductsRequest'];
-        };
-      };
-      responses: {
-        /** @description Bulk creation result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.BulkCreateProductsResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/bulk/delete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Bulk delete products
-     * @description Delete multiple products in a single request
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header: {
-          /** @description Bearer token */
-          Authorization: string;
-        };
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      /** @description Product IDs to delete */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.BulkDeleteProductsRequest'];
-        };
-      };
-      responses: {
-        /** @description Bulk deletion result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.BulkDeleteProductsResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/bulk/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Bulk update product status
-     * @description Update active/inactive status of multiple products
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header: {
-          /** @description Bearer token */
-          Authorization: string;
-        };
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      /** @description Product IDs and status */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.BulkUpdateStatusRequest'];
-        };
-      };
-      responses: {
-        /** @description Bulk status update result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.BulkUpdateStatusResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/bulk/update': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Bulk update products
-     * @description Update multiple products in a single request
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header: {
-          /** @description Bearer token */
-          Authorization: string;
-        };
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      /** @description Products to update */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.BulkUpdateProductsRequest'];
-        };
-      };
-      responses: {
-        /** @description Bulk update result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.BulkUpdateProductsResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{slug}/products/stats': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get product statistics
-     * @description Returns statistics about storefront products
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Product statistics */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ProductStats'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/cart': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get shopping cart
-     * @description Gets the current contents of the shopping cart for a storefront
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Cart contents */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.ShoppingCart'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    /**
-     * Clear shopping cart
-     * @description Removes all items from the shopping cart
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Cart cleared */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: string;
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/cart/items': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Add item to cart
-     * @description Adds a product to the shopping cart for a specific storefront
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Item to add */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.AddToCartRequest'];
-        };
-      };
-      responses: {
-        /** @description Updated cart */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.ShoppingCart'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/cart/items/{item_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update cart item quantity
-     * @description Updates the quantity of an item in the cart
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-          /** @description Cart item ID */
-          item_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Updated quantity */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.UpdateCartItemRequest'];
-        };
-      };
-      responses: {
-        /** @description Updated cart */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.ShoppingCart'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Item not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    /**
-     * Remove item from cart
-     * @description Removes an item from the shopping cart
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-          /** @description Cart item ID */
-          item_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Updated cart */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.ShoppingCart'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Item not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/analyze-attributes': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Analyze attributes in import file
-     * @description Detect and analyze product attributes before import
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['postApiV1Storefronts_storefrontId_importAnalyzeAttributes'];
-      responses: {
-        /** @description Attribute analysis result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.AnalyzeAttributesResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/analyze-categories': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Analyze categories in import file
-     * @description Analyze categories and get AI mapping suggestions before import
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['postApiV1Storefronts_storefrontId_importAnalyzeAttributes'];
-      responses: {
-        /** @description Category analysis result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.AnalyzeCategoriesResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/analyze-client-categories': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Analyze client categories
-     * @description Analyze unique client categories and suggest new marketplace categories
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Analysis request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.AnalyzeClientCategoriesRequest'];
-        };
-      };
-      responses: {
-        /** @description Category analysis */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.AnalyzeClientCategoriesResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/detect-variants': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Detect product variants
-     * @description Detect and group product variants before import
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['postApiV1Storefronts_storefrontId_importAnalyzeAttributes'];
-      responses: {
-        /** @description Variant detection result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['handler.DetectVariantsResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/file': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import products from file
-     * @description Import products from uploaded file (supports XML, CSV, ZIP formats)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description Import file
-             */
-            file: string;
-            /**
-             * @description File type
-             * @enum {string}
-             */
-            file_type: 'xml' | 'csv' | 'zip';
-            /**
-             * @description Update mode
-             * @default upsert
-             * @enum {string}
-             */
-            update_mode?: 'create_only' | 'update_only' | 'upsert';
-            /**
-             * @description Category mapping mode
-             * @default auto
-             * @enum {string}
-             */
-            category_mapping_mode?: 'auto' | 'manual' | 'skip';
-          };
-        };
-      };
-      responses: {
-        /** @description Import job created */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ImportJob'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/jobs': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get import jobs
-     * @description Get list of import jobs for a storefront
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Filter by status */
-          status?: string;
-          /** @description Limit number of results */
-          limit?: number;
-          /** @description Offset for pagination */
-          offset?: number;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of import jobs */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ImportJobsResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/preview': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Preview import file
-     * @description Preview first N rows of import file with validation before actual import
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description Import file
-             */
-            file: string;
-            /**
-             * @description File type
-             * @enum {string}
-             */
-            file_type: 'xml' | 'csv' | 'zip';
-            /**
-             * @description Number of rows to preview
-             * @default 10
-             */
-            preview_limit?: number;
-          };
-        };
-      };
-      responses: {
-        /** @description Preview result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ImportPreviewResponse'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/url': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Import products from URL
-     * @description Import products from a URL (supports XML, CSV, ZIP formats)
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Import request */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.ImportRequest'];
-        };
-      };
-      responses: {
-        /** @description Import job created */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ImportJob'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/import/validate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Validate import file
-     * @description Validate import file structure and data without actually importing
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: components['requestBodies']['postApiV1Storefronts_storefrontId_importAnalyzeAttributes'];
-      responses: {
-        /** @description Validation result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.ImportJobStatus'];
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Forbidden */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/orders': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront orders
-     * @description Gets a list of orders for a specific storefront (owner only)
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Page number */
-          page?: number;
-          /** @description Items per page */
-          limit?: number;
-          /** @description Filter by status */
-          status?: string;
-        };
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Storefront orders */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'][];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/{storefront_id}/orders/{order_id}/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update order status
-     * @description Updates the status of an order (seller only)
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront ID */
-          storefront_id: number;
-          /** @description Order ID */
-          order_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Status update */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['models.UpdateOrderStatusRequest'];
-        };
-      };
-      responses: {
-        /** @description Updated order */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['models.B2COrder'];
-            };
-          };
-        };
-        /** @description Bad request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Access denied */
-        403: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Order not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/ai/ab-test-titles': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * A/B test product titles
-     * @description Evaluates multiple title variants and returns the best one
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Title variants */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.ABTestTitlesRequest'];
-        };
-      };
-      responses: {
-        /** @description A/B test result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/ai/analyze-product-image': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Analyze product image with AI for storefront products
-     * @description Uses Claude AI to analyze product image and extract title, description, category hints, price, etc.
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Image data */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.AnalyzeProductImageRequest'];
-        };
-      };
-      responses: {
-        /** @description AI analysis result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['handler.AnalyzeProductResponse'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/ai/detect-category': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Detect category for storefront product
-     * @description Uses AI to detect the most suitable category for a storefront product
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Product details */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_storefronts_handler.DetectCategoryRequest'];
-        };
-      };
-      responses: {
-        /** @description Category detection result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['services.AIDetectionResult'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/ai/metrics': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get AI detection metrics for storefront products
-     * @description Returns accuracy and performance metrics for AI category detection
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Metrics data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/ai/translate-content': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Translate product content to multiple languages
-     * @description Translates product title and description to specified languages
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      /** @description Content to translate */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['backend_internal_proj_storefronts_handler.TranslateContentRequest'];
-        };
-      };
-      responses: {
-        /** @description Translation result */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/building': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get businesses in building
-     * @description Returns all storefronts located in the same building
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Building latitude */
-          lat: number;
-          /** @description Building longitude */
-          lng: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Businesses in building */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CStoreMapData'][];
-          };
-        };
-        /** @description Invalid coordinates */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/import/csv-template': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get CSV import template
-     * @description Get CSV template with headers and example data for product import
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description CSV template */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'text/csv': string;
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/import/formats': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get supported import formats
-     * @description Get information about supported import formats and their requirements
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Import formats information */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': {
-              [key: string]: unknown;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/map': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefronts for map
-     * @description Returns storefronts within map bounds with minimal data for performance
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Minimum latitude */
-          min_lat: number;
-          /** @description Maximum latitude */
-          max_lat: number;
-          /** @description Minimum longitude */
-          min_lng: number;
-          /** @description Maximum longitude */
-          max_lng: number;
-          /** @description Minimum rating filter */
-          min_rating?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Map markers data */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CStoreMapData'][];
-          };
-        };
-        /** @description Invalid bounds */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/my': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get my storefronts
-     * @description Returns list of storefronts owned by current user
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description List of user's storefronts */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.Storefront'][];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/nearby': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get nearby storefronts
-     * @description Returns storefronts within specified radius from coordinates
-     */
-    get: {
-      parameters: {
-        query: {
-          /** @description Latitude */
-          lat: number;
-          /** @description Longitude */
-          lng: number;
-          /** @description Radius in kilometers (default 5) */
-          radius_km?: number;
-          /** @description Maximum results (default 20, max 100) */
-          limit?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Nearby storefronts */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.Storefront'][];
-          };
-        };
-        /** @description Invalid coordinates */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/products/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get a storefront product by ID
-     * @description Returns details of a specific product using only product ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Product ID */
-          id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Product details */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.B2CProduct'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['ErrorResponse'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/search': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Search storefronts using OpenSearch
-     * @description Performs advanced search of storefronts using OpenSearch engine
-     */
-    get: {
-      parameters: {
-        query?: {
-          /** @description Search query */
-          q?: string;
-          /** @description City filter */
-          city?: string;
-          /** @description Latitude for geo search */
-          lat?: number;
-          /** @description Longitude for geo search */
-          lng?: number;
-          /** @description Search radius in kilometers */
-          radius_km?: number;
-          /** @description Minimum rating */
-          min_rating?: number;
-          /** @description Only verified storefronts */
-          is_verified?: boolean;
-          /** @description Only currently open storefronts */
-          is_open_now?: boolean;
-          /** @description Payment methods (comma separated) */
-          payment_methods?: string;
-          /** @description Has delivery option */
-          has_delivery?: boolean;
-          /** @description Has self pickup option */
-          has_self_pickup?: boolean;
-          /** @description Sort field (rating, distance, products_count, created_at) */
-          sort_by?: string;
-          /** @description Sort order (asc, desc) */
-          sort_order?: string;
-          /** @description Number of results (max 100) */
-          limit?: number;
-          /** @description Results offset */
-          offset?: number;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Search results */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['opensearch.StorefrontSearchResult'];
-          };
-        };
-        /** @description Invalid parameters */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/slug/{slug}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get storefront by slug or ID
-     * @description Returns storefront details by slug or ID
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug or ID */
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Storefront details */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['models.Storefront'];
-          };
-        };
-        /** @description Storefront not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/slug/{slug}/products/{product_id}/images': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get product images
-     * @description Returns all images for a specific product
-     */
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          product_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Product images */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['services.UploadImageResponse'][];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Product not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    put?: never;
-    /**
-     * Upload image for storefront product
-     * @description Uploads a new image for a storefront product
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          product_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody: {
-        content: {
-          'multipart/form-data': {
-            /**
-             * Format: binary
-             * @description Image file
-             */
-            image: string;
-            /** @description Set as main image */
-            is_main?: boolean;
-            /** @description Display order */
-            display_order?: number;
-          };
-        };
-      };
-      responses: {
-        /** @description Image uploaded successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['services.UploadImageResponse'];
-            };
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description File too large */
-        413: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/{image_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete product image
-     * @description Deletes a specific image of a product
-     */
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          product_id: number;
-          /** @description Image ID */
-          image_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Image deleted successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Image not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/{image_id}/main': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Set main product image
-     * @description Sets a specific image as the main image for a product
-     */
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          product_id: number;
-          /** @description Image ID */
-          image_id: number;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Main image set successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Image not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/b2c/slug/{slug}/products/{product_id}/images/order': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /**
-     * Update image display order
-     * @description Updates the display order of product images
-     */
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          /** @description Storefront slug */
-          slug: string;
-          /** @description Product ID */
-          product_id: number;
-        };
-        cookie?: never;
-      };
-      /** @description Image order updates */
-      requestBody: {
-        content: {
-          'application/json': components['schemas']['handler.ImageOrderUpdate'][];
-        };
-      };
-      responses: {
-        /** @description Image order updated successfully */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'];
-          };
-        };
-        /** @description Invalid request */
-        400: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-        /** @description Internal server error */
-        500: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            'application/json': components['schemas']['utils.ErrorResponseSwag'];
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/subscriptions': {
     parameters: {
       query?: never;
@@ -36170,7 +36170,7 @@ export interface paths {
     };
     /**
      * Get all user carts
-     * @description Gets all shopping carts for the authenticated user across all storefronts
+     * @description Gets all shopping carts for the authenticated user across all b2c_stores
      */
     get: {
       parameters: {
@@ -37601,7 +37601,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/c2c/categories/{category_id}/attributes': {
+  '/api/v2/marketplace/categories/{category_id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -37663,7 +37663,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/c2c/categories/{category_id}/attributes/detailed': {
+  '/api/v2/marketplace/categories/{category_id}/attributes/detailed': {
     parameters: {
       query?: never;
       header?: never;
@@ -37725,7 +37725,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/c2c/listings/{listing_id}/attributes': {
+  '/api/v2/marketplace/listings/{listing_id}/attributes': {
     parameters: {
       query?: never;
       header?: never;
@@ -38296,7 +38296,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/auto-improve': {
+  '/marketplace/ai/auto-improve': {
     parameters: {
       query?: never;
       header?: never;
@@ -38344,7 +38344,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/confirm/{feedbackId}': {
+  '/marketplace/ai/confirm/{feedbackId}': {
     parameters: {
       query?: never;
       header?: never;
@@ -38409,7 +38409,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/detect-category': {
+  '/marketplace/ai/detect-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -38468,7 +38468,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/detect-category-standard': {
+  '/marketplace/ai/detect-category-standard': {
     parameters: {
       query?: never;
       header?: never;
@@ -38527,7 +38527,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/generate-keywords': {
+  '/marketplace/ai/generate-keywords': {
     parameters: {
       query?: never;
       header?: never;
@@ -38591,7 +38591,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/generate-keywords-all': {
+  '/marketplace/ai/generate-keywords-all': {
     parameters: {
       query?: never;
       header?: never;
@@ -38644,7 +38644,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/keyword-stats': {
+  '/marketplace/ai/keyword-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -38699,7 +38699,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/learn': {
+  '/marketplace/ai/learn': {
     parameters: {
       query?: never;
       header?: never;
@@ -38747,7 +38747,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/learn-from-feedback': {
+  '/marketplace/ai/learn-from-feedback': {
     parameters: {
       query?: never;
       header?: never;
@@ -38797,7 +38797,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/learning-stats': {
+  '/marketplace/ai/learning-stats': {
     parameters: {
       query?: never;
       header?: never;
@@ -38847,7 +38847,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/metrics': {
+  '/marketplace/ai/metrics': {
     parameters: {
       query?: never;
       header?: never;
@@ -38902,7 +38902,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/scheduled-learning': {
+  '/marketplace/ai/scheduled-learning': {
     parameters: {
       query?: never;
       header?: never;
@@ -38950,7 +38950,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/select-category': {
+  '/marketplace/ai/select-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -39014,7 +39014,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/c2c/ai/validate-category': {
+  '/marketplace/ai/validate-category': {
     parameters: {
       query?: never;
       header?: never;
@@ -39474,6 +39474,20 @@ export interface components {
       sourceLanguage?: string;
       targetLanguages?: string[];
     };
+    'backend_internal_proj_b2c_handler.DetectCategoryRequest': {
+      aiHints?: components['schemas']['services.AIHints'];
+      description?: string;
+      language?: string;
+      title?: string;
+    };
+    'backend_internal_proj_b2c_handler.TranslateContentRequest': {
+      content?: {
+        description?: string;
+        title?: string;
+      };
+      sourceLanguage?: string;
+      targetLanguages?: string[];
+    };
     'backend_internal_proj_bexexpress_models.CalculateRateRequest': {
       cod_amount?: number;
       insurance_amount?: number;
@@ -39522,18 +39536,7 @@ export interface components {
       | 7
       | 8
       | 9;
-    'backend_internal_proj_delivery_models.TrackingEvent': {
-      created_at?: string;
-      description?: string;
-      event_time?: string;
-      id?: number;
-      location?: string;
-      provider_id?: number;
-      raw_data?: number[];
-      shipment_id?: number;
-      status?: string;
-    };
-    'backend_internal_proj_marketplace_handler.DetectCategoryRequest': {
+    'backend_internal_proj_c2c_handler.DetectCategoryRequest': {
       attributes?: {
         [key: string]: unknown;
       };
@@ -39553,11 +39556,22 @@ export interface components {
       product_type?: string;
       title?: string;
     };
-    'backend_internal_proj_marketplace_handler.MessageResponse': {
+    'backend_internal_proj_c2c_handler.MessageResponse': {
       /** @example marketplace.operationSuccess */
       message?: string;
       /** @example true */
       success?: boolean;
+    };
+    'backend_internal_proj_delivery_models.TrackingEvent': {
+      created_at?: string;
+      description?: string;
+      event_time?: string;
+      id?: number;
+      location?: string;
+      provider_id?: number;
+      raw_data?: number[];
+      shipment_id?: number;
+      status?: string;
     };
     'backend_internal_proj_postexpress_models.CalculateRateRequest': {
       cod_amount?: number;
@@ -39640,20 +39654,6 @@ export interface components {
       /** @description Дополнительные поля для совместимости с repository */
       total_shipments?: number;
       total_value?: number;
-    };
-    'backend_internal_proj_storefronts_handler.DetectCategoryRequest': {
-      aiHints?: components['schemas']['services.AIHints'];
-      description?: string;
-      language?: string;
-      title?: string;
-    };
-    'backend_internal_proj_storefronts_handler.TranslateContentRequest': {
-      content?: {
-        description?: string;
-        title?: string;
-      };
-      sourceLanguage?: string;
-      targetLanguages?: string[];
     };
     'backend_internal_proj_users_handler.MessageResponse': {
       /** @example Операция выполнена успешно */
@@ -40155,7 +40155,7 @@ export interface components {
       /** @example 37.6173 */
       lng?: number;
     };
-    'handler.CreateC2COrderRequest': {
+    'handler.CreateMarketplaceOrderRequest': {
       listing_id: number;
       message?: string;
       /** @enum {string} */
@@ -40374,7 +40374,7 @@ export interface components {
       return_url?: string;
     };
     'handler.ListingsResponse': {
-      data?: components['schemas']['models.C2CListing'][];
+      data?: components['schemas']['models.MarketplaceListing'][];
       meta?: components['schemas']['handler.PaginationMeta'];
       /** @example true */
       success?: boolean;
@@ -40606,7 +40606,7 @@ export interface components {
       total_pages?: number;
     };
     'handler.SearchResponse': {
-      data?: components['schemas']['models.C2CListing'][];
+      data?: components['schemas']['models.MarketplaceListing'][];
       meta?: components['schemas']['handler.SearchMetadata'];
     };
     'handler.SetProviderRequest': {
@@ -40637,9 +40637,9 @@ export interface components {
       min_sample_size?: number;
     };
     'handler.StorefrontsListResponse': {
+      b2c_stores?: components['schemas']['models.Storefront'][];
       limit?: number;
       offset?: number;
-      storefronts?: components['schemas']['models.Storefront'][];
       total?: number;
     };
     'handler.StripeWebhookRequest': {
@@ -41721,7 +41721,7 @@ export interface components {
       updated_at?: string;
     };
     'models.CategoryProposalApproveRequest': {
-      /** @description If true, creates the category in marketplace_categories */
+      /** @description If true, creates the category in c2c_categories */
       create_category?: boolean;
     };
     'models.CategoryProposalListResponse': {
@@ -42359,7 +42359,7 @@ export interface components {
       is_archived?: boolean;
       last_message?: components['schemas']['models.MarketplaceMessage'];
       last_message_at?: string;
-      listing?: components['schemas']['models.C2CListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       listing_id?: number;
       other_user?: components['schemas']['models.User'];
       seller?: components['schemas']['models.User'];
@@ -42396,7 +42396,7 @@ export interface components {
       /** @description URL миниатюры для API */
       thumbnail_url?: string;
     };
-    'models.C2CListing': {
+    'models.MarketplaceListing': {
       address_multilingual?: {
         [key: string]: string;
       };
@@ -42450,10 +42450,10 @@ export interface components {
       user?: components['schemas']['models.User'];
       user_id?: number;
       /** @description Варианты товара */
-      variants?: components['schemas']['models.C2CListingVariant'][];
+      variants?: components['schemas']['models.MarketplaceListingVariant'][];
       views_count?: number;
     };
-    'models.C2CListingVariant': {
+    'models.MarketplaceListingVariant': {
       /** @description JSON поле для хранения атрибутов варианта */
       attributes?: {
         [key: string]: string;
@@ -42478,7 +42478,7 @@ export interface components {
       has_attachments?: boolean;
       id?: number;
       is_read?: boolean;
-      listing?: components['schemas']['models.C2CListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       listing_id?: number;
       /** @description Мультиязычность */
       original_language?: string;
@@ -42488,7 +42488,7 @@ export interface components {
       sender?: components['schemas']['models.User'];
       sender_id?: number;
       /** @description Новое поле для товара витрины */
-      storefront_product?: components['schemas']['models.B2CProduct'];
+      storefront_product?: components['schemas']['models.StorefrontProduct'];
       /** @description Новое поле для товаров витрин */
       storefront_product_id?: number;
       translation_metadata?: components['schemas']['models.ChatTranslationMetadata'];
@@ -42498,7 +42498,7 @@ export interface components {
       };
       updated_at?: string;
     };
-    'models.C2COrder': {
+    'models.MarketplaceOrder': {
       /** @description Связанные данные (заполняются при необходимости) */
       buyer?: components['schemas']['models.User'];
       buyer_id?: number;
@@ -42506,7 +42506,7 @@ export interface components {
       delivered_at?: string;
       id?: number;
       item_price?: number;
-      listing?: components['schemas']['models.C2CListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       listing_id?: number;
       messages?: components['schemas']['models.OrderMessage'][];
       payment_transaction?: components['schemas']['models.PaymentTransaction'];
@@ -42520,13 +42520,13 @@ export interface components {
       seller_payout_amount?: number;
       shipped_at?: string;
       shipping_method?: string;
-      status?: components['schemas']['models.C2COrderStatus'];
+      status?: components['schemas']['models.MarketplaceOrderStatus'];
       status_history?: components['schemas']['models.OrderStatusHistory'][];
       tracking_number?: string;
       updated_at?: string;
     };
     /** @enum {string} */
-    'models.C2COrderStatus':
+    'models.MarketplaceOrderStatus':
       | 'pending'
       | 'paid'
       | 'shipped'
@@ -42696,7 +42696,7 @@ export interface components {
       gateway_status?: string;
       gateway_transaction_id?: string;
       id?: number;
-      listing?: components['schemas']['models.C2CListing'];
+      listing?: components['schemas']['models.MarketplaceListing'];
       /** @description Legacy поле для обратной совместимости */
       listing_id?: number;
       marketplace_commission?: number;
@@ -42955,12 +42955,12 @@ export interface components {
       success_rate?: number;
     };
     'models.RatingBreakdown': {
+      /** @description Через магазины */
+      b2c_stores?: components['schemas']['models.BreakdownItem'];
       /** @description Прямые отзывы */
       direct?: components['schemas']['models.BreakdownItem'];
       /** @description Через товары */
       listings?: components['schemas']['models.BreakdownItem'];
-      /** @description Через магазины */
-      storefronts?: components['schemas']['models.BreakdownItem'];
     };
     'models.Review': {
       comment?: string;
@@ -43098,12 +43098,12 @@ export interface components {
       created_at?: string;
       id?: number;
       price_per_unit?: number;
-      product?: components['schemas']['models.B2CProduct'];
+      product?: components['schemas']['models.StorefrontProduct'];
       product_id?: number;
       quantity?: number;
       total_price?: number;
       updated_at?: string;
-      variant?: components['schemas']['models.B2CProductVariant'];
+      variant?: components['schemas']['models.StorefrontProductVariant'];
       variant_id?: number;
     };
     /** @enum {string} */
@@ -43195,7 +43195,7 @@ export interface components {
       traffic_sources?: components['schemas']['backend_internal_domain_models.JSONB'];
       unique_visitors?: number;
     };
-    'models.B2CStoreCreateDTO': {
+    'models.StorefrontCreateDTO': {
       description?: string;
       email?: string;
       /** @description Локация */
@@ -43262,7 +43262,7 @@ export interface components {
       special_note?: string;
       storefront_id?: number;
     };
-    'models.B2CStoreMapData': {
+    'models.StorefrontMapData': {
       accepts_cards?: boolean;
       /** @description Краткая информация для попапа */
       address?: string;
@@ -43281,7 +43281,7 @@ export interface components {
       supports_cod?: boolean;
       working_now?: boolean;
     };
-    'models.B2COrder': {
+    'models.StorefrontOrder': {
       billing_address?: components['schemas']['backend_internal_domain_models.JSONB'];
       canceled_at?: string;
       commission_amount?: number;
@@ -43299,7 +43299,7 @@ export interface components {
       escrow_release_date?: string;
       id?: number;
       /** @description Связанные данные */
-      items?: components['schemas']['models.B2COrderItem'][];
+      items?: components['schemas']['models.StorefrontOrderItem'][];
       metadata?: {
         [key: string]: unknown;
       };
@@ -43342,13 +43342,13 @@ export interface components {
       /** @description Для совместимости с API */
       user_id?: number;
     };
-    'models.B2COrderItem': {
+    'models.StorefrontOrderItem': {
       created_at?: string;
       id?: number;
       order_id?: number;
       price_per_unit?: number;
       /** @description Связанные данные */
-      product?: components['schemas']['models.B2CProduct'];
+      product?: components['schemas']['models.StorefrontProduct'];
       /** @description Snapshot атрибутов */
       product_attributes?: components['schemas']['backend_internal_domain_models.JSONB'];
       product_id?: number;
@@ -43357,7 +43357,7 @@ export interface components {
       product_sku?: string;
       quantity?: number;
       total_price?: number;
-      variant?: components['schemas']['models.B2CProductVariant'];
+      variant?: components['schemas']['models.StorefrontProductVariant'];
       variant_id?: number;
       variant_name?: string;
     };
@@ -43377,7 +43377,7 @@ export interface components {
       /** @description Комиссии и лимиты */
       transaction_fee?: number;
     };
-    'models.B2CProduct': {
+    'models.StorefrontProduct': {
       /** @description AddressTranslations - map[language]address, e.g. {"en": "Street 12, Novi Sad", "ru": "Улица 12, Нови-Сад"} */
       address_translations?: {
         [key: string]: string;
@@ -43395,7 +43395,7 @@ export interface components {
       has_variants?: boolean;
       id?: number;
       /** @description Relations */
-      images?: components['schemas']['models.B2CProductImage'][];
+      images?: components['schemas']['models.StorefrontProductImage'][];
       individual_address?: string;
       individual_latitude?: number;
       individual_longitude?: number;
@@ -43417,10 +43417,10 @@ export interface components {
         };
       };
       updated_at?: string;
-      variants?: components['schemas']['models.B2CProductVariant'][];
+      variants?: components['schemas']['models.StorefrontProductVariant'][];
       view_count?: number;
     };
-    'models.B2CProductImage': {
+    'models.StorefrontProductImage': {
       content_type?: string;
       created_at?: string;
       display_order?: number;
@@ -43436,7 +43436,7 @@ export interface components {
       storefront_product_id?: number;
       thumbnail_url?: string;
     };
-    'models.B2CProductVariant': {
+    'models.StorefrontProductVariant': {
       barcode?: string;
       compare_at_price?: number;
       cost_price?: number;
@@ -43481,7 +43481,7 @@ export interface components {
       updated_at?: string;
       user_id?: number;
     };
-    'models.B2CStoreUpdateDTO': {
+    'models.StorefrontUpdateDTO': {
       /** @description Функции */
       ai_agent_enabled?: boolean;
       banner_url?: string;
@@ -43517,10 +43517,10 @@ export interface components {
       id?: number;
       is_active?: boolean;
       is_recommended?: boolean;
+      max_b2c_stores?: number;
       max_images_total?: number;
       max_products_per_storefront?: number;
       max_staff_per_storefront?: number;
-      max_storefronts?: number;
       name?: string;
       price_monthly?: number;
       price_yearly?: number;
@@ -43987,7 +43987,7 @@ export interface components {
       status?: components['schemas']['models.SubscriptionStatus'];
       trial_ends_at?: string;
       updated_at?: string;
-      used_storefronts?: number;
+      used_b2c_stores?: number;
       user_id?: number;
     };
     'models.UserSubscriptionInfo': {
@@ -43997,10 +43997,10 @@ export interface components {
       has_custom_domain?: boolean;
       has_export?: boolean;
       has_live?: boolean;
+      max_b2c_stores?: number;
       max_images?: number;
       max_products?: number;
       max_staff?: number;
-      max_storefronts?: number;
       next_payment_at?: string;
       plan_code?: string;
       plan_name?: string;
@@ -44008,7 +44008,7 @@ export interface components {
       status?: string;
       subscription_id?: number;
       trial_ends_at?: string;
-      used_storefronts?: number;
+      used_b2c_stores?: number;
     };
     'models.VINDecodeRequest': {
       listing_id?: number;
@@ -45623,6 +45623,22 @@ export interface components {
         'application/json': components['schemas']['models.PricingRule'];
       };
     };
+    postApiV1B2cStores_storefrontId_importAnalyzeAttributes: {
+      content: {
+        'multipart/form-data': {
+          /**
+           * Format: binary
+           * @description Import file
+           */
+          file: string;
+          /**
+           * @description File type
+           * @enum {string}
+           */
+          file_type: 'xml' | 'csv' | 'zip';
+        };
+      };
+    };
     /** @description Search parameters */
     'search.ServiceParams': {
       content: {
@@ -45643,22 +45659,6 @@ export interface components {
            * @description Photos to upload (max 5, max 5MB each, formats: jpg/png/webp)
            */
           photos: string;
-        };
-      };
-    };
-    postApiV1Storefronts_storefrontId_importAnalyzeAttributes: {
-      content: {
-        'multipart/form-data': {
-          /**
-           * Format: binary
-           * @description Import file
-           */
-          file: string;
-          /**
-           * @description File type
-           * @enum {string}
-           */
-          file_type: 'xml' | 'csv' | 'zip';
         };
       };
     };

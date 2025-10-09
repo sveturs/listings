@@ -7,8 +7,8 @@ import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 import { toast } from '@/utils/toast';
 
-type B2COrder = components['schemas']['models.B2COrder'];
-type B2COrderItem = components['schemas']['models.B2COrderItem'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
+type B2COrderItem = components['schemas']['models.StorefrontOrderItem'];
 
 interface OrderCardProps {
   order: B2COrder;

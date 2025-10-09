@@ -12,8 +12,8 @@ import type { PaymentMethodType } from '@/types/b2c';
 
 // Типы из сгенерированного API
 type B2CStore = components['schemas']['models.Storefront'];
-type B2CStoreCreateDTO = components['schemas']['models.B2CStoreCreateDTO'];
-type B2CStoreUpdateDTO = components['schemas']['models.B2CStoreUpdateDTO'];
+type B2CStoreCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type B2CStoreUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
 type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
@@ -284,7 +284,7 @@ export const fetchMyStorefronts = createAsyncThunk<
     // API возвращает массив витрин, преобразуем в ожидаемый формат
     if (Array.isArray(data)) {
       return {
-        storefronts: data,
+        b2c_stores: data,
         total: data.length,
         limit: data.length,
         offset: 0,
@@ -559,13 +559,13 @@ const storefrontSlice = createSlice({
       .addCase(fetchStorefronts.fulfilled, (state, action) => {
         state.isLoading = false;
 
-        const { storefronts = [], total = 0, offset = 0 } = action.payload;
+        const { b2c_stores = [], total = 0, offset = 0 } = action.payload;
 
         // Если это первая страница или новый поиск - заменяем, иначе добавляем
         if (offset === 0) {
-          state.b2cStores = storefronts;
+          state.b2cStores = b2c_stores;
         } else {
-          state.b2cStores = [...state.b2cStores, ...storefronts];
+          state.b2cStores = [...state.b2cStores, ...b2c_stores];
         }
 
         state.totalCount = total;
@@ -614,9 +614,9 @@ const storefrontSlice = createSlice({
       })
       .addCase(fetchMyStorefronts.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Безопасное извлечение storefronts с проверкой на null
-        if (action.payload && 'storefronts' in action.payload) {
-          state.myStorefronts = action.payload.storefronts || [];
+        // Безопасное извлечение b2c_stores с проверкой на null
+        if (action.payload && 'b2c_stores' in action.payload) {
+          state.myStorefronts = action.payload.b2c_stores || [];
         } else if (Array.isArray(action.payload)) {
           // Если payload сам является массивом
           state.myStorefronts = action.payload;

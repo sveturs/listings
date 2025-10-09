@@ -29,7 +29,7 @@ import SafeHTML from '@/components/SafeHTML';
 // import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant = components['schemas']['models.B2CProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface User {
   id: number;

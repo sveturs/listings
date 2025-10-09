@@ -15,9 +15,9 @@ import {
   type LocationPrivacyLevel,
 } from '@/utils/addressUtils';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 type B2CStore = components['schemas']['models.Storefront'];
-type ProductVariant = components['schemas']['models.B2CProductVariant'] & {
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'] & {
   images?: Array<{
     id: number;
     image_url: string;

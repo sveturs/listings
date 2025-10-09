@@ -100,7 +100,10 @@ export default function AdminB2CProductsTable() {
 
       // API возвращает витрины в поле b2c_stores, storefronts или data
       const storefronts =
-        storefrontsData.b2c_stores || storefrontsData.storefronts || storefrontsData.data || [];
+        storefrontsData.b2c_stores ||
+        storefrontsData.storefronts ||
+        storefrontsData.data ||
+        [];
 
       if (!storefronts || storefronts.length === 0) {
         setProducts([]);

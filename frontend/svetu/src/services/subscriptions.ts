@@ -238,8 +238,8 @@ class SubscriptionService {
     const suitablePlans = plans.filter((plan) => {
       if (
         needs.storefronts &&
-        (plan.max_storefronts ?? 0) !== -1 &&
-        (plan.max_storefronts ?? 0) < needs.storefronts
+        (plan.max_b2c_stores ?? 0) !== -1 &&
+        (plan.max_b2c_stores ?? 0) < needs.storefronts
       ) {
         return false;
       }

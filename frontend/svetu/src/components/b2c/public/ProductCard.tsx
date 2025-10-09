@@ -12,7 +12,7 @@ import {
   getFullLocalizedAddress,
 } from '@/utils/addressUtils';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 interface ProductCardProps {
   product: B2CProduct;

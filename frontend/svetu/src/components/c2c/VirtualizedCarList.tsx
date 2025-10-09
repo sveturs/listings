@@ -6,7 +6,7 @@ import CarListingCard from './CarListingCard';
 import Link from 'next/link';
 import { OptimizedCarImage } from '@/components/common/OptimizedCarImage';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface VirtualizedCarListProps {
   listings: C2CListing[];

@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Инициализируем базу данных
-	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, indexName, fileStorage, cfg.SearchWeights)
+	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient, indexName, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		log.Fatalf("Failed to create database: %v", err)
 	}

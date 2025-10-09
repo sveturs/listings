@@ -62,7 +62,7 @@ type Database struct {
 	sqlxDB               *sqlx.DB // sqlx.DB для работы с sqlx библиотекой
 	marketplaceIndex     string
 	storefrontIndex      string
-	b2cProductIndex      string                                       // Индекс для B2C товаров
+	b2cProductIndex      string // Индекс для B2C товаров
 	attributeGroups      AttributeGroupStorage
 	fsStorage            filestorage.FileStorageInterface
 	storefrontRepo       StorefrontRepository                         // Репозиторий для витрин
@@ -107,11 +107,11 @@ func NewDatabase(ctx context.Context, dbURL string, osClient *osClient.OpenSearc
 		marketplaceDB:    marketplaceStorage.NewStorage(pool, translationService, nil), // userService будет установлен позже
 		reviewDB:         reviewStorage.NewStorage(pool, translationService),
 		notificationsDB:  notificationStorage.NewNotificationStorage(pool),
-		osClient:         osClient,      // Сохраняем клиент OpenSearch
-		marketplaceIndex: indexName,     // Сохраняем имя индекса
-		storefrontIndex:  "b2c_stores",  // Индекс для витрин
-		b2cProductIndex:  b2cIndexName,  // Индекс для B2C товаров из конфигурации
-		fsStorage:        fileStorage,   // Используем переданный параметр
+		osClient:         osClient,     // Сохраняем клиент OpenSearch
+		marketplaceIndex: indexName,    // Сохраняем имя индекса
+		storefrontIndex:  "b2c_stores", // Индекс для витрин
+		b2cProductIndex:  b2cIndexName, // Индекс для B2C товаров из конфигурации
+		fsStorage:        fileStorage,  // Используем переданный параметр
 		attributeGroups:  NewAttributeGroupStorage(pool),
 	}
 

@@ -3,7 +3,7 @@ import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированной схемы
 type UserProfile = components['schemas']['models.UserProfile'];
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 type ChatMessage = components['schemas']['models.MarketplaceMessage'];
 type ListingsResponse = components['schemas']['handler.ListingsResponse'];
 

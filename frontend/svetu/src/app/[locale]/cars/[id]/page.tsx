@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import CarDetailClient from './CarDetailClient';
 import type { components } from '@/types/generated/api';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarDetailPageProps {
   params: Promise<{

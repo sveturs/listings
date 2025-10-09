@@ -99,7 +99,7 @@ export const UnifiedProductCard: React.FC<UnifiedProductCardProps> = ({
   // Проверяем, является ли это автомобильная категория
   if (isAutomotiveCategory(product.category?.id)) {
     // Конвертируем UnifiedProduct обратно в формат C2CListing для CarListingCard
-    const listing: components['schemas']['models.C2CListing'] = {
+    const listing: components['schemas']['models.MarketplaceListing'] = {
       id: product.id,
       user_id: product.seller?.id || 0,
       title: product.name,

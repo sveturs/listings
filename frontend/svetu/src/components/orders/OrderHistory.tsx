@@ -7,7 +7,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import C2COrderCard from './C2COrderCard';
 import type { components } from '@/types/generated/api';
 
-type B2COrder = components['schemas']['models.B2COrder'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
 
 interface OrderHistoryProps {
   status?: string;

@@ -6,7 +6,7 @@ import SafeImage from '../../SafeImage';
 import type { components } from '@/types/generated/api';
 
 // Use generated types from API
-type ProductVariant = components['schemas']['models.B2CProductVariant'] & {
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'] & {
   // Add additional fields that might be needed
   images?: ProductVariantImage[];
   stock_status?: string;

@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import type { components } from '@/types/generated/api';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 type UpdateProductRequest =
   components['schemas']['models.UpdateProductRequest'];
 type MarketplaceCategory = components['schemas']['models.MarketplaceCategory'];

@@ -5,12 +5,12 @@ import type { components } from '@/types/generated/api';
 
 // Типы из сгенерированного API
 type B2CStore = components['schemas']['models.Storefront'];
-type B2CStoreCreateDTO = components['schemas']['models.B2CStoreCreateDTO'];
-type B2CStoreUpdateDTO = components['schemas']['models.B2CStoreUpdateDTO'];
+type B2CStoreCreateDTO = components['schemas']['models.StorefrontCreateDTO'];
+type B2CStoreUpdateDTO = components['schemas']['models.StorefrontUpdateDTO'];
 type StorefrontAnalytics = components['schemas']['models.StorefrontAnalytics'];
 type StorefrontRatingSummary =
   components['schemas']['models.StorefrontRatingSummary'];
-type B2CStoreMapData = components['schemas']['models.B2CStoreMapData'];
+type B2CStoreMapData = components['schemas']['models.StorefrontMapData'];
 type StorefrontSearchResult = any; // Type removed from swagger schema
 type StorefrontsListResponse =
   components['schemas']['handler.StorefrontsListResponse'];

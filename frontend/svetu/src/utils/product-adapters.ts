@@ -7,7 +7,7 @@ import type {
 } from '@/types/unified-product';
 import configManager from '@/config';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 /**
  * Конвертирует изображения маркетплейса в унифицированный формат

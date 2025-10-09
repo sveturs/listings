@@ -16,7 +16,7 @@ import {
   Eye,
 } from 'lucide-react';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarListingCardProps {
   listing: C2CListing;

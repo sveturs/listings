@@ -20,7 +20,7 @@ import InfiniteScrollTrigger from '@/components/common/InfiniteScrollTrigger';
 import SafeImage from '@/components/SafeImage';
 import type { components } from '@/types/generated/api';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 interface PageProps {
   params: Promise<{

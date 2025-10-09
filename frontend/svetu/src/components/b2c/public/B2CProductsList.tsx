@@ -13,7 +13,7 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { components } from '@/types/generated/api';
 import type { UnifiedStorefrontInfo } from '@/types/unified-product';
 
-type B2CProduct = components['schemas']['models.B2CProduct'];
+type B2CProduct = components['schemas']['models.StorefrontProduct'];
 
 interface B2CProductsListProps {
   storefrontId: number;

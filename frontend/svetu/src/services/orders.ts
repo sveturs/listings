@@ -1,7 +1,7 @@
 import { apiClient } from './api-client';
 import type { components } from '@/types/generated/api';
 
-type B2COrder = components['schemas']['models.B2COrder'];
+type B2COrder = components['schemas']['models.StorefrontOrder'];
 type CreateOrderRequest = components['schemas']['models.CreateOrderRequest'];
 type CancelOrderRequest = components['schemas']['models.CancelOrderRequest'];
 

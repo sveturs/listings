@@ -35,7 +35,7 @@ import {
   selectFavorites,
 } from '@/store/selectors/compareSelectors';
 
-type C2CListing = components['schemas']['models.C2CListing'];
+type C2CListing = components['schemas']['models.MarketplaceListing'];
 
 interface CarDetailClientProps {
   car: C2CListing;

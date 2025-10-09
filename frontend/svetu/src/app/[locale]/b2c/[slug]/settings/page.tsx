@@ -368,7 +368,7 @@ export default function StorefrontSettingsPage() {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setFormData((prev) => ({
+      setFormData((prev: B2CStoreUpdateDTO) => ({
         ...prev,
         [parent]: {
           ...(prev as any)[parent],
@@ -376,7 +376,7 @@ export default function StorefrontSettingsPage() {
         },
       }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev: B2CStoreUpdateDTO) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -855,7 +855,7 @@ export default function StorefrontSettingsPage() {
                             lat: location.latitude,
                             lng: location.longitude,
                           });
-                          setFormData((prev) => ({
+                          setFormData((prev: B2CStoreUpdateDTO) => ({
                             ...prev,
                             location: {
                               ...prev.location,

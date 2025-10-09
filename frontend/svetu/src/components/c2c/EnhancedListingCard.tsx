@@ -37,7 +37,7 @@ import type { AppDispatch } from '@/store';
 import VariantSelectionModal from '@/components/cart/VariantSelectionModal';
 import type { components } from '@/types/generated/api';
 
-type ProductVariant = components['schemas']['models.B2CProductVariant'];
+type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
 
 interface EnhancedListingCardProps {
   item: C2CItem;

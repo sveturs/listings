@@ -14,7 +14,10 @@ export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Редирект для backward compatibility: /profile/b2c -> /profile/b2c-stores
-  if (pathname.includes('/profile/b2c') && !pathname.includes('/profile/b2c-stores')) {
+  if (
+    pathname.includes('/profile/b2c') &&
+    !pathname.includes('/profile/b2c-stores')
+  ) {
     const newPathname = pathname.replace('/profile/b2c', '/profile/b2c-stores');
     const newUrl = new URL(newPathname, request.url);
     newUrl.search = request.nextUrl.search;
