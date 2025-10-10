@@ -182,9 +182,9 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	usersHandler := userHandler.NewHandler(services, authHandler, jwtParserMW)
 
 	reviewHandler := reviewHandler.NewHandler(services, jwtParserMW)
-	notificationsHandler := notificationHandler.NewHandler(services.Notification())
+	notificationsHandler := notificationHandler.NewHandler(services.Notification(), jwtParserMW)
 	marketplaceHandlerInstance := marketplaceHandler.NewHandler(ctx, services, jwtParserMW)
-	balanceHandler := balanceHandler.NewHandler(services)
+	balanceHandler := balanceHandler.NewHandler(services, jwtParserMW)
 	storefrontModule := b2cModule.NewModule(ctx, services)
 	ordersModule, err := orders.NewModule(db, &opensearch.Config{
 		URL:      cfg.OpenSearch.URL,
@@ -194,7 +194,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	if err != nil {
 		return nil, pkgErrors.Wrap(err, "failed to initialize orders module")
 	}
-	contactsHandler := contactsHandler.NewHandler(services)
+	contactsHandler := contactsHandler.NewHandler(services, jwtParserMW)
 	paymentsHandler := paymentHandler.NewHandler(services, jwtParserMW)
 
 	// Post Express инициализация
@@ -275,7 +275,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 
 	// Инициализация модуля подписок
 	// Используем nil для AllSecure - модуль автоматически переключится на mock payments
-	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New())
+	subscriptionsModule := subscriptions.NewModule(db.GetSQLXDB(), nil, nil, pkglogger.New(), jwtParserMW)
 
 	// Инициализация модуля трекинга
 	trackingModule := tracking.NewModule(db) //nolint:contextcheck

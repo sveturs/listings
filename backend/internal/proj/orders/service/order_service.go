@@ -66,7 +66,6 @@ func NewOrderService(
 	}
 }
 
-
 // ConfirmOrder подтверждает заказ после успешной оплаты
 func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) error {
 	s.logger.Info("Confirming order (order_id: %d)", orderID)

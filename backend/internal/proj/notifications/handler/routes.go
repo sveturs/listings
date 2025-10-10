@@ -16,7 +16,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	app.Post("/api/v1/notifications/email/public", h.SendPublicEmail)
 
 	// Защищенные маршруты
-	protected := app.Group("/api/v1/notifications", mw.JWTParser(), authMiddleware.RequireAuth())
+	protected := app.Group("/api/v1/notifications", h.jwtParserMW, authMiddleware.RequireAuthString())
 
 	protected.Get("/", h.GetNotifications)
 	protected.Get("/settings", h.GetSettings)

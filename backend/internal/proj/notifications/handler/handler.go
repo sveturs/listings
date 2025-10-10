@@ -13,11 +13,10 @@ import (
 	"strings"
 	"time"
 
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	"backend/internal/logger"
@@ -28,11 +27,13 @@ import (
 type Handler struct {
 	notificationService service.NotificationServiceInterface
 	bot                 *tgbotapi.BotAPI
+	jwtParserMW         fiber.Handler
 }
 
-func NewHandler(service service.NotificationServiceInterface) *Handler {
+func NewHandler(service service.NotificationServiceInterface, jwtParserMW fiber.Handler) *Handler {
 	handler := &Handler{
 		notificationService: service,
+		jwtParserMW:         jwtParserMW,
 	}
 
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
