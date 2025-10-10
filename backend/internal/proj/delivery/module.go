@@ -85,7 +85,7 @@ func (m *Module) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error
 
 	// Регистрируем админские роуты (консолидация из admin/logistics)
 	adminGroup := app.Group("/api/v1/admin/delivery")
-	adminGroup.Use(mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
+	adminGroup.Use(mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
 	m.adminHandler.RegisterConsolidatedRoutes(adminGroup, mw)
 
 	return nil
