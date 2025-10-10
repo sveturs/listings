@@ -358,17 +358,6 @@ func (s *ProductService) CreateProduct(ctx context.Context, storefrontID, userID
 		if err != nil {
 			logger.Error().Err(err).Msgf("Failed to reload product %d after creation", product.ID)
 		} else {
-			// ОТЛАДКА: проверяем что переводы загрузились
-			if len(productWithRelations.Translations) > 0 {
-				logger.Info().
-					Int("product_id", productWithRelations.ID).
-					Interface("translations", productWithRelations.Translations).
-					Msg("DEBUG: Product reloaded with translations in CreateProduct")
-			} else {
-				logger.Warn().
-					Int("product_id", productWithRelations.ID).
-					Msg("DEBUG: Product reloaded but translations are empty in CreateProduct!")
-			}
 			product = productWithRelations
 		}
 	}
@@ -566,27 +555,10 @@ func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontI
 		logger.Error().Err(err).Msgf("Failed to reload product %d after creation", product.ID)
 		// Используем старый объект product без связанных данных
 		productWithRelations = product
-	} else {
-		// ОТЛАДКА: проверяем что переводы загрузились
-		if len(productWithRelations.Translations) > 0 {
-			logger.Info().
-				Int("product_id", productWithRelations.ID).
-				Interface("translations", productWithRelations.Translations).
-				Msg("DEBUG: Product reloaded with translations")
-		} else {
-			logger.Warn().
-				Int("product_id", productWithRelations.ID).
-				Msg("DEBUG: Product reloaded but translations are empty!")
-		}
 	}
 
 	// Index product in OpenSearch (with translations if loaded)
 	if s.searchRepo != nil {
-		// ОТЛАДКА: Логируем перед индексацией
-		logger.Info().
-			Int("product_id", productWithRelations.ID).
-			Bool("has_translations", len(productWithRelations.Translations) > 0).
-			Msg("DEBUG: About to index product in OpenSearch")
 
 		if err := s.searchRepo.IndexProduct(ctx, productWithRelations); err != nil {
 			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", productWithRelations.ID)

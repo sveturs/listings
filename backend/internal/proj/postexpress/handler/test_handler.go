@@ -35,9 +35,12 @@ type TestShipmentRequest struct {
 	InsuredValue int64  `json:"insured_value" example:"0"` // объявленная ценность (RSD)
 
 	// Дополнительные услуги
-	Services       string `json:"services" example:"PNA"`       // PNA, SMS, OTK, VD
-	DeliveryMethod string `json:"delivery_method" example:"K"`  // K = Kurir, S = Šalter
-	PaymentMethod  string `json:"payment_method" example:"POF"` // POF = gotovina
+	Services         string `json:"services" example:"PNA"`       // PNA, SMS, OTK, VD
+	DeliveryMethod   string `json:"delivery_method" example:"K"`  // K = Kurir, S = Šalter, PAK = Paкетомат
+	DeliveryType     string `json:"delivery_type" example:"standard"` // standard, cod, parcel_locker
+	PaymentMethod    string `json:"payment_method" example:"POF"` // POF = gotovina
+	IdRukovanje      int    `json:"id_rukovanje" example:"29"` // ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
+	ParcelLockerCode string `json:"parcel_locker_code,omitempty" example:""` // Код паккетомата (для IdRukovanje = 85)
 }
 
 // TestShipmentResponse - ответ с результатом создания
@@ -139,9 +142,24 @@ func (h *Handler) GetTestConfig(c *fiber.Ctx) error {
 			"address": "Takovska 2",
 			"zip":     "11000",
 		},
+		"delivery_types": []fiber.Map{
+			{"code": "standard", "name": "Обычная доставка", "description": "Стандартная доставка курьером или в отделение"},
+			{"code": "cod", "name": "Откупная (COD)", "description": "Доставка с наложенным платежом"},
+			{"code": "parcel_locker", "name": "Паккетомат", "description": "Доставка в паккетомат (IdRukovanje: 85)"},
+		},
 		"delivery_methods": []fiber.Map{
 			{"code": "K", "name": "Kurir (Courier)"},
 			{"code": "S", "name": "Šalter (Post Office)"},
+			{"code": "PAK", "name": "Paкетомат (Parcel Locker)"},
+		},
+		"id_rukovanje_options": []fiber.Map{
+			{"id": 29, "name": "PE_Danas_za_sutra_12", "description": "Доставка завтра до 12:00"},
+			{"id": 30, "name": "PE_Danas_za_danas", "description": "Доставка сегодня"},
+			{"id": 55, "name": "PE_Danas_za_odmah", "description": "Доставка немедленно"},
+			{"id": 58, "name": "PE_Danas_za_sutra_19", "description": "Доставка завтра до 19:00"},
+			{"id": 59, "name": "PE_Danas_za_odmah_Bg", "description": "Доставка немедленно (только Белград)"},
+			{"id": 71, "name": "PE_Danas_za_sutra_isporuka", "description": "Доставка завтра (стандартная)"},
+			{"id": 85, "name": "Isporuka_na_paketomatu", "description": "Доставка в паккетомат"},
 		},
 		"payment_methods": []fiber.Map{
 			{"code": "POF", "name": "Gotovina (Cash)"},
@@ -208,13 +226,16 @@ func (h *Handler) createTestShipmentResponse(req *TestShipmentRequest, startTime
 				"zip":     req.SenderZip,
 			},
 			"shipment": fiber.Map{
-				"weight":          req.Weight,
-				"content":         req.Content,
-				"cod_amount":      req.CODAmount,
-				"insured_value":   req.InsuredValue,
-				"services":        req.Services,
-				"delivery_method": req.DeliveryMethod,
-				"payment_method":  req.PaymentMethod,
+				"weight":             req.Weight,
+				"content":            req.Content,
+				"cod_amount":         req.CODAmount,
+				"insured_value":      req.InsuredValue,
+				"services":           req.Services,
+				"delivery_method":    req.DeliveryMethod,
+				"delivery_type":      req.DeliveryType,
+				"payment_method":     req.PaymentMethod,
+				"id_rukovanje":       req.IdRukovanje,
+				"parcel_locker_code": req.ParcelLockerCode,
 			},
 		},
 		ResponseData: fiber.Map{

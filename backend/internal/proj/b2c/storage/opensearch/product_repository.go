@@ -375,11 +375,6 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 
 	// Переводы из таблицы translations (новая архитектура)
 	if len(product.Translations) > 0 {
-		logger.Info().
-			Int("product_id", product.ID).
-			Interface("translations", product.Translations).
-			Msg("DEBUG: productToDoc() - Adding translations to document")
-
 		doc["translations"] = product.Translations
 		// Индексируем переводы для full-text search
 		for lang, fields := range product.Translations {
@@ -390,12 +385,6 @@ func (r *ProductRepository) productToDoc(product *models.StorefrontProduct) map[
 				doc[fmt.Sprintf("description_%s", lang)] = description
 			}
 		}
-	} else {
-		logger.Warn().
-			Int("product_id", product.ID).
-			Bool("is_nil", product.Translations == nil).
-			Int("len", len(product.Translations)).
-			Msg("DEBUG: productToDoc() - NO translations to index!")
 	}
 
 	// ========== LOCATION & ADDRESS DATA ==========
