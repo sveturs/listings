@@ -2195,7 +2195,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 		allAttributes = append(allAttributes, attr)
 	}
 
-
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
 	}
@@ -2988,7 +2987,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &originalLang,
 		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy, &addressMultilingual,
 	)
-
 	if err != nil {
 		// Если не найдено в c2c_listings, попробуем найти в storefront_products
 		if err.Error() == "no rows in result set" {

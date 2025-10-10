@@ -313,7 +313,6 @@ func (h *ViberHandler) getDeliveryInfoByID(ctx context.Context, deliveryID int) 
 		&courierLongitude,
 		&info.CourierName,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get delivery info: %w", err)
 	}

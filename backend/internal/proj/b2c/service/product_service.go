@@ -559,7 +559,6 @@ func (s *ProductService) CreateProductForImport(ctx context.Context, storefrontI
 
 	// Index product in OpenSearch (with translations if loaded)
 	if s.searchRepo != nil {
-
 		if err := s.searchRepo.IndexProduct(ctx, productWithRelations); err != nil {
 			logger.Error().Err(err).Msgf("Failed to index product %d in OpenSearch", productWithRelations.ID)
 			// Не возвращаем ошибку, так как товар уже создан в БД

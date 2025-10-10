@@ -35,11 +35,11 @@ type TestShipmentRequest struct {
 	InsuredValue int64  `json:"insured_value" example:"0"` // объявленная ценность (RSD)
 
 	// Дополнительные услуги
-	Services         string `json:"services" example:"PNA"`       // PNA, SMS, OTK, VD
-	DeliveryMethod   string `json:"delivery_method" example:"K"`  // K = Kurir, S = Šalter, PAK = Paкетомат
-	DeliveryType     string `json:"delivery_type" example:"standard"` // standard, cod, parcel_locker
-	PaymentMethod    string `json:"payment_method" example:"POF"` // POF = gotovina
-	IdRukovanje      int    `json:"id_rukovanje" example:"29"` // ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
+	Services         string `json:"services" example:"PNA"`                  // PNA, SMS, OTK, VD
+	DeliveryMethod   string `json:"delivery_method" example:"K"`             // K = Kurir, S = Šalter, PAK = Paкетомат
+	DeliveryType     string `json:"delivery_type" example:"standard"`        // standard, cod, parcel_locker
+	PaymentMethod    string `json:"payment_method" example:"POF"`            // POF = gotovina
+	IdRukovanje      int    `json:"id_rukovanje" example:"29"`               // ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
 	ParcelLockerCode string `json:"parcel_locker_code,omitempty" example:""` // Код паккетомата (для IdRukovanje = 85)
 }
 

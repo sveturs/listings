@@ -491,7 +491,6 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	attributeExamples := make(map[string][]string)
 	attributeFirstValue := make(map[string]interface{}) // Для маппинга
 
-
 	for _, product := range products {
 		// Analyze custom attributes from product.Attributes
 		if product.Attributes != nil {
@@ -521,7 +520,6 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 			}
 		}
 	}
-
 
 	// Используем AttributeMapper для маппинга атрибутов
 	for attrName, frequency := range attributeFrequency {

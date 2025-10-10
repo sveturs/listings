@@ -574,11 +574,14 @@ go run test_postexpress.go
 | Cancellation | ✅ | With reason |
 | Address validation | ✅ | Via offices |
 | SMS notifications | ✅ | Via services |
+| **COD (откупные пошильки)** | ✅ | Full support with Otkupnina structure |
+| **Parcel Lockers (паккетоматы)** | ✅ | IdRukovanje: 85 support |
 | Label generation | ⚠️ | URL extraction (may need separate endpoint) |
 | Webhooks | ⚠️ | Stub (need documentation) |
 | Provider adapter | ✅ | Full DeliveryProvider interface |
 | Factory integration | ✅ | With graceful fallback |
 | Test script | ✅ | 4 comprehensive tests |
+| **Visual Testing Page** | ✅ | http://localhost:3001/ru/examples/postexpress-test |
 
 **Legend:**
 - ✅ Полностью реализовано
@@ -679,6 +682,21 @@ go run test_postexpress.go
 ---
 
 ## 📝 Changelog
+
+### 2025-10-10 - COD and Parcel Locker Testing Support
+
+**Added:**
+- `backend/internal/proj/postexpress/handler/test_handler.go` - добавлены поля для COD и паккетоматов
+- `frontend/svetu/src/app/[locale]/examples/postexpress-test/page.tsx` - визуальная страница тестирования
+- Поддержка откупных пошильок (cash-on-delivery) с полями `cod_amount`, `delivery_type`
+- Поддержка паккетоматов (IdRukovanje: 85) с полем `parcel_locker_code`
+- Новая страница для визуального тестирования: http://localhost:3001/ru/examples/postexpress-test
+- Обновлен конфиг API с новыми типами доставки и опциями IdRukovanje
+
+**Updated:**
+- `backend/internal/proj/postexpress/handler/test_handler.go` - расширен TestShipmentRequest
+- `frontend/svetu/src/app/[locale]/examples/page.tsx` - добавлена ссылка на новую страницу
+- `docs/POST_EXPRESS_INTEGRATION_COMPLETE.md` - обновлена документация
 
 ### 2025-10-06 - Initial Implementation Complete
 

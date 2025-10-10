@@ -17,18 +17,19 @@ import {
 
 type B2CProduct = components['schemas']['models.StorefrontProduct'];
 type B2CStore = components['schemas']['models.Storefront'];
-type ProductVariant = components['schemas']['models.StorefrontProductVariant'] & {
-  images?: Array<{
-    id: number;
-    image_url: string;
-    thumbnail_url?: string;
-    alt_text?: string;
-    is_main: boolean;
-  }>;
-  stock_status?: string;
-  available_quantity?: number;
-  is_default?: boolean;
-};
+type ProductVariant =
+  components['schemas']['models.StorefrontProductVariant'] & {
+    images?: Array<{
+      id: number;
+      image_url: string;
+      thumbnail_url?: string;
+      alt_text?: string;
+      is_main: boolean;
+    }>;
+    stock_status?: string;
+    available_quantity?: number;
+    is_default?: boolean;
+  };
 
 type Props = {
   params: Promise<{ slug: string; id: string }>;
