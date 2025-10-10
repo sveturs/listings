@@ -260,44 +260,6 @@ func TestWeightedVoting(t *testing.T) {
 	}
 }
 
-// TestCaching is temporarily disabled as cache methods are now private
-// TODO: refactor test to use public interface or add test helper methods
-/*
-func TestCaching(t *testing.T) {
-	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
-
-	input := AIDetectionInput{
-		Title:       "Test Product",
-		Description: "Test Description",
-		AIHints: &AIHints{
-			Domain:      "test",
-			ProductType: "test",
-		},
-	}
-
-	result := &AIDetectionResult{
-		CategoryID:      1001,
-		CategoryName:    "Test Category",
-		ConfidenceScore: 0.95,
-	}
-
-	// Сохраняем в кэш
-	cacheKey := detector.getCacheKey(input)
-	detector.saveToCache(cacheKey, result)
-
-	// Проверяем что можем получить из кэша
-	cached := detector.getFromCache(cacheKey)
-	assert.NotNil(t, cached)
-	assert.Equal(t, result.CategoryID, cached.CategoryID)
-	assert.Equal(t, result.CategoryName, cached.CategoryName)
-
-	// Проверяем что кэш истекает
-	detector.cache[cacheKey].expiresAt = time.Now().Add(-1 * time.Hour)
-	cached = detector.getFromCache(cacheKey)
-	assert.Nil(t, cached)
-}
-*/
-
 func TestExtractKeywords(t *testing.T) {
 	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
 

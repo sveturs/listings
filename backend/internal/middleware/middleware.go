@@ -39,12 +39,6 @@ func NewMiddleware(cfg *config.Config, services globalService.ServicesInterface,
 	}
 }
 
-// Setup - deprecated, middleware регистрируется в server.go
-// func (m *Middleware) Setup(app *fiber.App) {
-// 	app.Use(m.Logger())
-// 	app.Use(m.CORS())
-// }
-
 // ErrorHandler обрабатывает все ошибки приложения
 func (m *Middleware) ErrorHandler(c *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
