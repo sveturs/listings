@@ -17,7 +17,6 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import ErrorBoundaryClass from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import { PublicEnvScript } from 'next-runtime-env';
-import '@/utils/forceTokenCleanup'; // Автоматическая очистка старых HS256 токенов
 import '../globals.css';
 
 const geistSans = Geist({
