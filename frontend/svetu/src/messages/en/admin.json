@@ -941,7 +941,6 @@
   "quickAnalysis": "Quick Analysis",
   "builtin": "Built-in",
   "builtinNotEditable": "Built-in configurations cannot be edited",
-  "edit": "Edit",
   "languageSelect": "Select language",
   "testing": "Testing",
   "inputText": "Enter text",
@@ -1056,24 +1055,35 @@
       "reset": "Reset"
     },
     "status": {
-      "processing": "Processing"
+      "pending": "Pending",
+      "processing": "Processing",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
     },
     "table": {
-      "date": "Date",
-      "sent": "Sent",
-      "delivered": "Delivered",
-      "in_transit": "In Transit",
-      "problems": "Problems",
-      "courier_service": "Courier Service",
-      "shipments": "Shipments",
-      "success_rate": "Success Rate",
-      "avg_time": "Avg Time"
+      "tracking_number": "Tracking Number",
+      "status": "Status",
+      "provider": "Provider",
+      "recipient": "Recipient",
+      "sender": "Sender",
+      "cod": "Cash on Delivery",
+      "weight": "Weight",
+      "created": "Created",
+      "actions": "Actions"
     },
     "actions": {
+      "track": "Track",
+      "export": "Export",
       "view": "View",
+      "new_shipment": "New Shipment",
+      "comments": "Comments",
+      "assign": "Assign",
+      "resolve": "Resolve",
+      "printLabel": "Print Label",
       "updateStatus": "Update Status",
-      "contact": "Contact",
-      "printLabel": "Print Label"
+      "contact": "Contact"
     },
     "pagination": {
       "page": "Page",
@@ -1150,37 +1160,6 @@
       "sender": "Sender",
       "receiver": "Receiver",
       "problem": "Problem"
-    },
-    "status": {
-      "pending": "Pending",
-      "processing": "Processing",
-      "in_transit": "In Transit",
-      "delivered": "Delivered",
-      "failed": "Failed",
-      "cancelled": "Cancelled"
-    },
-    "table": {
-      "tracking_number": "Tracking Number",
-      "status": "Status",
-      "provider": "Provider",
-      "recipient": "Recipient",
-      "sender": "Sender",
-      "cod": "Cash on Delivery",
-      "weight": "Weight",
-      "created": "Created",
-      "actions": "Actions"
-    },
-    "actions": {
-      "track": "Track",
-      "export": "Export",
-      "view": "View",
-      "new_shipment": "New Shipment",
-      "comments": "Comments",
-      "assign": "Assign",
-      "resolve": "Resolve",
-      "printLabel": "Print Label",
-      "updateStatus": "Update Status",
-      "contact": "Contact"
     }
   },
   "storefrontProducts": {
@@ -1578,10 +1557,18 @@
       "description": "Manage delivery providers and their configurations",
       "name": "Name",
       "code": "Code",
-      "status": "Status",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
       "features": "Features",
       "apiStatus": "API Status",
-      "actions": "Actions",
+      "actions": {
+        "configure": "Configure",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "test": "Test Connection"
+      },
       "active": "Active",
       "inactive": "Inactive",
       "configured": "Configured",
@@ -1609,20 +1596,10 @@
         "capabilities": "Capabilities",
         "actions": "Actions"
       },
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
       "capabilities": {
         "cod": "Cash on Delivery",
         "insurance": "Insurance",
         "tracking": "Real-time Tracking"
-      },
-      "actions": {
-        "configure": "Configure",
-        "activate": "Activate",
-        "deactivate": "Deactivate",
-        "test": "Test Connection"
       },
       "configModal": {
         "title": "Configure Provider",
@@ -1709,8 +1686,6 @@
       "investigating": "Investigating",
       "resolved": "Resolved",
       "openProblems": "Open Problems",
-      "investigating": "Investigating",
-      "resolved": "Resolved",
       "avgResolutionTime": "Avg Resolution Time",
       "hours": "hours",
       "trackingNumber": "Tracking #",
@@ -1881,5 +1856,42 @@
       "responseData": "API Response",
       "required": "*"
     }
+  },
+  "postexpressTest": {
+    "title": "Post Express - Visual Testing",
+    "description": "Complete visual testing of Post Express WSP API integration",
+    "shipmentParams": "Shipment Parameters",
+    "recipient": "Recipient",
+    "sender": "Sender",
+    "packageParams": "Package Parameters",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "email": "Email",
+    "city": "City",
+    "zip": "ZIP Code",
+    "address": "Address",
+    "companyName": "Company Name",
+    "content": "Content",
+    "weight": "Weight (g)",
+    "codAmount": "Cash on Delivery (RSD)",
+    "insuredValue": "Insured Value (RSD)",
+    "services": "Services",
+    "deliveryMethod": "Delivery Method",
+    "paymentMethod": "Payment Method",
+    "creating": "Creating...",
+    "createButton": "Create Test Shipment",
+    "results": "Results",
+    "fillFormPrompt": "Fill out the form and create a test shipment",
+    "error": "Error",
+    "successTitle": "Shipment created successfully!",
+    "processingTime": "Processing time",
+    "trackingNumber": "Tracking Number",
+    "cost": "Cost",
+    "manifestId": "Manifest ID",
+    "shipmentId": "Shipment ID",
+    "externalId": "External ID",
+    "requestData": "Request Data",
+    "responseData": "API Response",
+    "required": "*"
   }
 }
