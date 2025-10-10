@@ -13,23 +13,25 @@ import (
 
 // Module модуль аналитики
 type Module struct {
-	handler *handler.AnalyticsHandler
+	handler     *handler.AnalyticsHandler
+	jwtParserMW fiber.Handler
 }
 
 // NewModule создает новый модуль аналитики
-func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient) *Module {
+func NewModule(db *postgres.Database, osClient *opensearch.OpenSearchClient, jwtParserMW fiber.Handler) *Module {
 	storefrontRepo := postgres.NewStorefrontRepository(db)
 	analyticsService := service.NewAnalyticsService(storefrontRepo, osClient, db)
-	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, jwtParserMW)
 
 	return &Module{
-		handler: analyticsHandler,
+		handler:     analyticsHandler,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
 // RegisterRoutes регистрирует маршруты модуля
 func (m *Module) RegisterRoutes(app *fiber.App, middleware *middleware.Middleware) error {
-	routes.RegisterAnalyticsRoutes(app, m.handler, middleware)
+	routes.RegisterAnalyticsRoutes(app, m.handler, middleware, m.jwtParserMW)
 	return nil
 }
 

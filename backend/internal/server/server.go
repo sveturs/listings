@@ -253,7 +253,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 		logger.Info().Msg("Notification service integrated with delivery module")
 	}
 
-	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs)
+	docsHandlerInstance := docsHandler.NewHandler(cfg.Docs, jwtParserMW)
 
 	// Health handler
 	// Получаем sql.DB из Database структуры
@@ -265,7 +265,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	middleware := middleware.NewMiddleware(cfg, services, authServiceInstance, jwtParserMW)
 	geocodeHandler := geocodeHandler.NewHandler(services)
 	globalHandlerInstance := globalHandler.NewHandler(services, cfg.SearchWeights)
-	analyticsModule := analytics.NewModule(db, osClient)
+	analyticsModule := analytics.NewModule(db, osClient, jwtParserMW)
 	behaviorTrackingModule := behavior_tracking.NewModule(ctx, db.GetPool(), jwtParserMW)
 	translationAdminModule := translation_admin.NewModule(ctx, db.GetSQLXDB(), *logger.Get(), "/data/hostel-booking-system", redisClient, translationService, jwtParserMW)
 	searchAdminModule := search_admin.NewModule(db, osClient, pkglogger.New(), cfg.OpenSearch.B2CIndex)
@@ -595,10 +595,11 @@ func (s *Server) registerProjectRoutes() {
 	// Добавляем все проекты, которые реализуют RouteRegistrar
 	// ВАЖНО: global должен быть первым, чтобы его публичные API не конфликтовали с авторизацией других модулей
 	// config регистрируется отдельно до этого метода для публичных роутов
+	// analytics должен быть РАНЬШЕ остальных, чтобы публичный /api/v1/analytics/event зарегистрировался первым
 	// searchOptimization должен быть раньше marketplace, чтобы избежать конфликта с глобальным middleware
 	// subscriptions должен быть раньше marketplace, чтобы публичные роуты не перехватывались auth middleware
 	// tracking должен быть раньше marketplace, чтобы его публичные роуты не перехватывались auth middleware
-	registrars = append(registrars, s.global, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
+	registrars = append(registrars, s.global, s.analytics, s.ai, s.notifications, s.users, s.review, s.searchOptimization, s.searchAdmin, s.tracking)
 
 	// Добавляем Subscriptions если он инициализирован - ДО marketplace чтобы избежать конфликтов с auth middleware
 	if s.subscriptions != nil {
@@ -623,7 +624,7 @@ func (s *Server) registerProjectRoutes() {
 		registrars = append(registrars, s.adminLogistics)
 	}
 
-	registrars = append(registrars, s.docs, s.analytics, s.behaviorTracking, s.translationAdmin, s.viber)
+	registrars = append(registrars, s.docs, s.behaviorTracking, s.translationAdmin, s.viber)
 
 	// Добавляем VIN модуль
 	if s.vin != nil {

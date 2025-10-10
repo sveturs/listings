@@ -15,14 +15,16 @@ import (
 )
 
 // NewHandler создает новый экземпляр Handler
-func NewHandler(cfg config.DocsConfig) *Handler {
+func NewHandler(cfg config.DocsConfig, jwtParserMW fiber.Handler) *Handler {
 	return &Handler{
-		cfg: cfg,
+		cfg:         cfg,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
 type Handler struct {
-	cfg config.DocsConfig
+	cfg         config.DocsConfig
+	jwtParserMW fiber.Handler
 }
 
 // DocFile определен в responses.go

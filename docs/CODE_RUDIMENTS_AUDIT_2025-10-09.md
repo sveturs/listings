@@ -709,7 +709,7 @@ git stash pop
 **Коммиты:**
 1. `af85ecbf` - refactor: migrate AdminRequired to RequireAuthString("admin") in search_admin and delivery
 2. `8d22e065` - chore: cleanup duplicate test scripts in backend/scripts/
-3. `[pending]` - chore: remove CSRF from reviews module (BFF proxy architecture)
+3. `40093a25` - chore: complete Phase 3 of code rudiments audit (analytics + docserver JWT migration)
 
 **Достижения:**
 - ✅ Завершена миграция AdminRequired → RequireAuthString("admin") (2 модуля)
@@ -718,6 +718,15 @@ git stash pop
 - ✅ Удалена CSRF защита из reviews (используется BFF proxy)
 - ✅ Подтверждено удаление неиспользуемых утилит (jwtDecode.ts, mobileDynamicImports.ts - уже удалены ранее)
 - ✅ Подтверждено удаление закомментированного кода (уже удалён ранее)
+- ✅ **ЗАВЕРШЕНА миграция JWT middleware в analytics и docserver модулях:**
+  - `analytics/handler/analytics_handler.go` - добавлен jwtParserMW field
+  - `analytics/routes/routes.go` - мигрирован на RequireAuthString("admin")
+  - `analytics/module.go` - добавлена передача jwtParserMW
+  - `docserver/handler/handler.go` - добавлен jwtParserMW field
+  - `docserver/handler/routes.go` - мигрирован на RequireAuthString("admin")
+  - `server/server.go` - обновлена инициализация обоих модулей
+  - ✅ Функциональное тестирование: публичный эндпоинт analytics работает
+  - ✅ Pre-check пройден: format ✅, lint (0 issues) ✅
 - 📊 **Общий прогресс аудита: Фаза 1 (100%) + Фаза 2 (89%) + Фаза 3 (100%) = 96% всех задач**
 
 **Отложенные задачи (низкий приоритет):**
