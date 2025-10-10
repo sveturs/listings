@@ -93,12 +93,6 @@ type AdminAdminsResponse struct {
 	IsAdmin bool   `json:"is_admin" example:"true"`
 }
 
-// LoginResponse represents deprecated login response
-type LoginResponse struct {
-	Message string       `json:"message" example:"users.login.success.authenticated"`
-	User    *models.User `json:"user"`
-}
-
 // UsersListResponse структура ответа со списком пользователей для админки
 type UsersListResponse struct {
 	Users      []*models.UserProfile `json:"users"`
