@@ -54,17 +54,17 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// если этот роут зарегистрирован раньше
 	app.Get("/api/v1/reviews/:id", h.Review.GetReviewByID)
 
-	// Protected POST/PUT/DELETE endpoints (требуют и Auth и CSRF)
-	app.Post("/api/v1/reviews/draft", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.CreateDraftReview)
-	app.Post("/api/v1/reviews/:id/photos", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UploadPhotos)
-	app.Post("/api/v1/reviews/:id/publish", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.PublishReview)
-	app.Put("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UpdateReview)
-	app.Delete("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.DeleteReview)
-	app.Post("/api/v1/reviews/:id/vote", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.VoteForReview)
-	app.Post("/api/v1/reviews/:id/response", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.AddResponse)
-	app.Post("/api/v1/reviews/upload-photos", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.UploadPhotosForNewReview)
-	app.Post("/api/v1/reviews/:id/confirm", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.ConfirmReview)
-	app.Post("/api/v1/reviews/:id/dispute", h.jwtParserMW, authMiddleware.RequireAuth(), mw.CSRFProtection(), h.Review.DisputeReview)
+	// Protected POST/PUT/DELETE endpoints (БЕЗ CSRF - используем BFF proxy архитектуру)
+	app.Post("/api/v1/reviews/draft", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.CreateDraftReview)
+	app.Post("/api/v1/reviews/:id/photos", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.UploadPhotos)
+	app.Post("/api/v1/reviews/:id/publish", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.PublishReview)
+	app.Put("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.UpdateReview)
+	app.Delete("/api/v1/reviews/:id", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.DeleteReview)
+	app.Post("/api/v1/reviews/:id/vote", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.VoteForReview)
+	app.Post("/api/v1/reviews/:id/response", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.AddResponse)
+	app.Post("/api/v1/reviews/upload-photos", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.UploadPhotosForNewReview)
+	app.Post("/api/v1/reviews/:id/confirm", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.ConfirmReview)
+	app.Post("/api/v1/reviews/:id/dispute", h.jwtParserMW, authMiddleware.RequireAuth(), h.Review.DisputeReview)
 
 	return nil
 }
