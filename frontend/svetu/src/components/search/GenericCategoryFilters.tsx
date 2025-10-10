@@ -77,11 +77,14 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
     // Validate options structure only for types that require values
     const requiresValues = ['select', 'multiselect'].includes(attribute_type);
     if (requiresValues && options && !Array.isArray(options.values)) {
-      console.warn(`GenericCategoryFilters: Attribute "${name}" of type "${attribute_type}" has invalid options.values:`, {
-        attribute: name,
-        options,
-        valuesType: typeof options.values,
-      });
+      console.warn(
+        `GenericCategoryFilters: Attribute "${name}" of type "${attribute_type}" has invalid options.values:`,
+        {
+          attribute: name,
+          options,
+          valuesType: typeof options.values,
+        }
+      );
       // Skip rendering this filter if it has invalid structure
       return null;
     }

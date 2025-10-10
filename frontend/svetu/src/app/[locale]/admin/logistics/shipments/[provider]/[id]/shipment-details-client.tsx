@@ -80,8 +80,10 @@ export default function ShipmentDetailsClient({
         `/admin/logistics/shipments/${provider}/${id}`
       );
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch shipment details');
+      if (!result.data) {
+        throw new Error(
+          result.error?.message || 'Failed to fetch shipment details'
+        );
       }
 
       setShipment(result.data);

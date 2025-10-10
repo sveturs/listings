@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import { apiClient } from '@/services/api-client';
 
 /**
  * @deprecated Этот модуль больше не нужен. BFF proxy автоматически добавляет авторизацию через httpOnly cookies.

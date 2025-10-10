@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
+import { apiClient } from '@/services/api-client';
 
 // Use generated types from API
 type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
@@ -86,17 +87,12 @@ export default function VariantStockTable({
   const loadVariants = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/b2c/storefront/products/${productId}/variants`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get<ProductVariant[]>(
+        `/b2c/storefront/products/${productId}/variants`
       );
-      if (response.ok) {
-        const data: ProductVariant[] = await response.json();
+
+      if (response.data) {
+        const data = response.data;
         setVariants(data);
 
         // Extract available attributes for filtering
@@ -114,6 +110,8 @@ export default function VariantStockTable({
           }
         });
         setAvailableAttributes(attrs);
+      } else if (response.error) {
+        console.error('Failed to load variants:', response.error.message);
       }
     } catch (error) {
       console.error('Failed to load variants:', error);
@@ -289,25 +287,16 @@ export default function VariantStockTable({
 
       const request: BulkUpdateStockRequest = { updates };
 
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
-        }
+      const response = await apiClient.post(
+        `/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
+        request
       );
 
-      if (response.ok) {
+      if (response.data) {
         setPendingUpdates(new Map());
         await loadVariants();
-      } else {
-        const error = await response.json();
-        alert(`Failed to update stock: ${error.error}`);
+      } else if (response.error) {
+        alert(`Failed to update stock: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to update stock:', error);
@@ -362,24 +351,16 @@ export default function VariantStockTable({
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/b2c/storefront/products/${productId}/variants/import`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
+      const response = await apiClient.upload(
+        `/b2c/storefront/products/${productId}/variants/import`,
+        formData
       );
 
-      if (response.ok) {
+      if (response.data) {
         await loadVariants();
         alert(t('variants.csvImportSuccess'));
-      } else {
-        const error = await response.json();
-        alert(`Import failed: ${error.error}`);
+      } else if (response.error) {
+        alert(`Import failed: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to import CSV:', error);
@@ -395,13 +376,12 @@ export default function VariantStockTable({
   const handleCSVExport = async () => {
     try {
       setExporting(true);
-      const token = localStorage.getItem('access_token');
+
+      // Используем BFF proxy для безопасного доступа (credentials автоматически)
       const response = await fetch(
-        `/api/v1/b2c/storefront/products/${productId}/variants/export`,
+        `/api/v2/b2c/storefront/products/${productId}/variants/export`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include', // JWT cookies передаются автоматически
         }
       );
 
@@ -418,7 +398,7 @@ export default function VariantStockTable({
         document.body.removeChild(a);
       } else {
         const error = await response.json();
-        alert(`Export failed: ${error.error}`);
+        alert(`Export failed: ${error.error || error.message}`);
       }
     } catch (error) {
       console.error('Failed to export CSV:', error);

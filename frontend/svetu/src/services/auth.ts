@@ -158,17 +158,6 @@ export class AuthService {
   static async refreshToken() {
     return authService.refreshToken();
   }
-
-  static getAuthHeaders() {
-    // Возвращаем пустые заголовки, так как токены теперь в cookies
-    return {};
-  }
-
-  static async getCsrfToken() {
-    // CSRF токены теперь управляются backend автоматически
-    // Возвращаем пустую строку для обратной совместимости
-    return '';
-  }
 }
 
 export default authService;

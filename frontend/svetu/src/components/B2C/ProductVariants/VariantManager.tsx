@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import type { components } from '@/types/generated/api';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 // Use generated types from API
 type ProductVariant = components['schemas']['models.StorefrontProductVariant'];
@@ -77,19 +77,13 @@ export default function VariantManager({
   const loadVariants = useCallback(async () => {
     if (productId <= 0) return; // Skip for new products
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/products/${productId}/variants`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/products/${productId}/variants`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setVariants(data);
+      if (response.data) {
+        setVariants(response.data);
+      } else if (response.error) {
+        console.error('Failed to load variants:', response.error);
       }
     } catch (error) {
       console.error('Failed to load variants:', error);
@@ -98,18 +92,9 @@ export default function VariantManager({
 
   const loadAttributes = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/public/variants/attributes`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
+      const response = await apiClient.get('/public/variants/attributes');
+      if (response.data) {
+        const data = response.data;
         setAttributes(
           data.filter((attr: ProductVariantAttribute) => attr.affects_stock)
         );
@@ -118,6 +103,8 @@ export default function VariantManager({
         for (const attr of data) {
           await loadAttributeValues(attr.id);
         }
+      } else if (response.error) {
+        console.error('Failed to load attributes:', response.error);
       }
     } catch (error) {
       console.error('Failed to load attributes:', error);
@@ -126,22 +113,19 @@ export default function VariantManager({
 
   const loadAttributeValues = async (attributeId: number) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/public/variants/attributes/${attributeId}/values`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
+      const response = await apiClient.get(
+        `/public/variants/attributes/${attributeId}/values`
       );
-      if (response.ok) {
-        const values = await response.json();
+      if (response.data) {
         setAttributeValues((prev) => ({
           ...prev,
-          [attributeId]: values,
+          [attributeId]: response.data,
         }));
+      } else if (response.error) {
+        console.error(
+          `Failed to load values for attribute ${attributeId}:`,
+          response.error
+        );
       }
     } catch (error) {
       console.error(
@@ -154,19 +138,13 @@ export default function VariantManager({
   const loadVariantMatrix = useCallback(async () => {
     if (productId <= 0) return; // Skip for new products
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/products/${productId}/variant-matrix`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/products/${productId}/variant-matrix`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setVariantMatrix(data);
+      if (response.data) {
+        setVariantMatrix(response.data);
+      } else if (response.error) {
+        console.error('Failed to load variant matrix:', response.error);
       }
     } catch (error) {
       console.error('Failed to load variant matrix:', error);
@@ -176,19 +154,13 @@ export default function VariantManager({
   const loadAnalytics = useCallback(async () => {
     if (productId <= 0) return; // Skip for new products
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/products/${productId}/variants/analytics`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/products/${productId}/variants/analytics`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setAnalytics(data);
+      if (response.data) {
+        setAnalytics(response.data);
+      } else if (response.error) {
+        console.error('Failed to load analytics:', response.error);
       }
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -235,27 +207,17 @@ export default function VariantManager({
         base_price: 0,
       };
 
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/variants/generate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
-        }
+      const response = await apiClient.post(
+        '/b2c/storefront/variants/generate',
+        request
       );
 
-      if (response.ok) {
+      if (response.data) {
         await loadVariants();
         await loadVariantMatrix();
         setActiveTab('variants');
-      } else {
-        const error = await response.json();
-        alert(`Failed to generate variants: ${error.error}`);
+      } else if (response.error) {
+        alert(`Failed to generate variants: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to generate variants:', error);
@@ -277,26 +239,16 @@ export default function VariantManager({
         })),
       };
 
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(request),
-        }
+      const response = await apiClient.post(
+        `/b2c/storefront/products/${productId}/variants/bulk-update-stock`,
+        request
       );
 
-      if (response.ok) {
+      if (response.data) {
         await loadVariants();
         await loadAnalytics();
-      } else {
-        const error = await response.json();
-        alert(`Failed to update stock: ${error.error}`);
+      } else if (response.error) {
+        alert(`Failed to update stock: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to update stock:', error);
@@ -721,24 +673,16 @@ function VariantRow({
 
   const saveChanges = async () => {
     try {
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/storefront/variants/${variant.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(editValues),
-        }
+      const response = await apiClient.put(
+        `/storefront/variants/${variant.id}`,
+        editValues
       );
 
-      if (response.ok) {
+      if (response.data) {
         setEditing(false);
         onUpdate();
-      } else {
-        const error = await response.json();
-        alert(`Failed to update variant: ${error.error}`);
+      } else if (response.error) {
+        alert(`Failed to update variant: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to update variant:', error);

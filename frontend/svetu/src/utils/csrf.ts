@@ -36,18 +36,3 @@ export async function getCSRFToken(): Promise<string> {
 export function clearCSRFToken(): void {
   csrfToken = null;
 }
-
-/**
- * Создает headers с CSRF токеном для административных запросов
- */
-export async function createAdminHeaders(
-  authToken: string
-): Promise<Record<string, string>> {
-  const token = await getCSRFToken();
-
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${authToken}`,
-    'X-CSRF-Token': token,
-  };
-}

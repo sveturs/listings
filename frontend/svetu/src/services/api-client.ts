@@ -120,16 +120,11 @@ class ApiClient {
   }
 
   /**
-   * Получает CSRF токен через AuthService
+   * CSRF токены управляются backend автоматически в BFF архитектуре
+   * Этот метод оставлен для совместимости, всегда возвращает null
    */
   private async getCsrfToken(): Promise<string | null> {
-    if (typeof window === 'undefined') return null;
-    try {
-      const { AuthService } = await import('./auth');
-      return await AuthService.getCsrfToken();
-    } catch {
-      return null;
-    }
+    return null;
   }
 
   /**

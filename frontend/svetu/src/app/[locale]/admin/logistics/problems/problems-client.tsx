@@ -61,10 +61,10 @@ export default function ProblemShipmentsClient() {
         `/admin/logistics/problems?${params}`
       );
 
-      if (result.success && result.data) {
+      if (result.data) {
         setProblems(result.data.problems || []);
       } else {
-        throw new Error(result.error || 'Failed to fetch problems');
+        throw new Error(result.error?.message || 'Failed to fetch problems');
       }
     } catch (err) {
       console.error('Error fetching problems:', err);
@@ -156,10 +156,10 @@ export default function ProblemShipmentsClient() {
         }
       );
 
-      if (result.success) {
+      if (result.data) {
         fetchProblems();
       } else {
-        setError(result.error || 'Failed to resolve problem');
+        setError(result.error?.message || 'Failed to resolve problem');
       }
     } catch (err) {
       console.error('Error resolving problem:', err);
@@ -183,10 +183,10 @@ export default function ProblemShipmentsClient() {
         }
       );
 
-      if (result.success) {
+      if (result.data) {
         fetchProblems();
       } else {
-        setError(result.error || 'Failed to assign problem');
+        setError(result.error?.message || 'Failed to assign problem');
       }
     } catch (err) {
       console.error('Error assigning problem:', err);

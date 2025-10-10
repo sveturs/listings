@@ -43,12 +43,15 @@ export const CarFiltersDrawer: React.FC<CarFiltersDrawerProps> = ({
     };
   }, [isOpen]);
 
-  const handleFilterChange = useCallback((newFilters: any) => {
-    setTempFilters(newFilters);
-    setHasChanges(
-      JSON.stringify(newFilters) !== JSON.stringify(currentFilters)
-    );
-  }, [currentFilters]);
+  const handleFilterChange = useCallback(
+    (newFilters: any) => {
+      setTempFilters(newFilters);
+      setHasChanges(
+        JSON.stringify(newFilters) !== JSON.stringify(currentFilters)
+      );
+    },
+    [currentFilters]
+  );
 
   const handleApply = () => {
     onApply(tempFilters);

@@ -16,7 +16,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AdminGuard from '@/components/AdminGuard';
 import type { components } from '@/types/generated/api';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 type DocFile = components['schemas']['handler.DocFile'];
 type DocFilesResponse = components['schemas']['handler.DocFilesResponse'];
@@ -67,27 +67,17 @@ export default function DocsPage() {
 
   const fetchDocFiles = async () => {
     try {
-      // Импортируем AuthService для получения заголовков с токеном
-      const { AuthService } = await import('@/services/auth');
-      const headers = await AuthService.getAuthHeaders();
+      // Используем apiClient (BFF proxy /api/v2)
+      const response = await apiClient.get('/docs/files');
 
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/v1/docs/files`, {
-        headers,
-        credentials: 'include',
-      });
-      if (response.ok) {
-        const result = await response.json();
-        // API обертывает в SuccessResponseSwag
-        const data: DocFilesResponse = result.data || result;
-        setFiles(data.files || []);
-      } else {
-        console.error(
-          'Failed to fetch doc files:',
-          response.status,
-          response.statusText
-        );
+      if (response.error) {
+        console.error('Failed to fetch doc files:', response.error);
+        return;
       }
+
+      // API обертывает в SuccessResponseSwag
+      const data: DocFilesResponse = response.data?.data || response.data;
+      setFiles(data.files || []);
     } catch (error) {
       console.error('Failed to fetch doc files:', error);
     }
@@ -96,40 +86,25 @@ export default function DocsPage() {
   const fetchFileContent = async (path: string) => {
     setLoading(true);
     try {
-      // Импортируем AuthService для получения заголовков с токеном
-      const { AuthService } = await import('@/services/auth');
-      const headers = await AuthService.getAuthHeaders();
-
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/docs/content?path=${encodeURIComponent(path)}`,
-        {
-          headers,
-          credentials: 'include',
-        }
+      // Используем apiClient (BFF proxy /api/v2)
+      const response = await apiClient.get(
+        `/docs/content?path=${encodeURIComponent(path)}`
       );
-      if (response.ok) {
-        const result = await response.json();
-        // API обертывает в SuccessResponseSwag
-        const data: DocContentResponse = result.data || result;
-        setFileContent(data.content || '');
-        setSelectedFile(path);
-        // Закрываем сайдбар на мобильных устройствах после выбора файла
-        setSidebarOpen(false);
-        // Добавляем состояние в историю для обработки кнопки назад
-        if (isMobile) {
-          window.history.pushState(
-            { file: path },
-            '',
-            window.location.pathname
-          );
-        }
-      } else {
-        console.error(
-          'Failed to fetch file content:',
-          response.status,
-          response.statusText
-        );
+
+      if (response.error) {
+        console.error('Failed to fetch file content:', response.error);
+        return;
+      }
+
+      // API обертывает в SuccessResponseSwag
+      const data: DocContentResponse = response.data?.data || response.data;
+      setFileContent(data.content || '');
+      setSelectedFile(path);
+      // Закрываем сайдбар на мобильных устройствах после выбора файла
+      setSidebarOpen(false);
+      // Добавляем состояние в историю для обработки кнопки назад
+      if (isMobile) {
+        window.history.pushState({ file: path }, '', window.location.pathname);
       }
     } catch (error) {
       console.error('Failed to fetch file content:', error);

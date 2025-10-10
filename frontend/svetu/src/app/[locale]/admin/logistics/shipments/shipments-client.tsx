@@ -70,11 +70,11 @@ export default function ShipmentsListClient() {
         `/admin/logistics/shipments?${params}`
       );
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch shipments');
+      if (!result.data) {
+        throw new Error(result.error?.message || 'Failed to fetch shipments');
       }
 
-      if (result.success) {
+      if (result.data) {
         // Временные тестовые данные пока API не готов
         setShipments([
           {
