@@ -37,8 +37,6 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 
 	// User profile endpoints (БЕЗ CSRF - используем BFF proxy архитектуру)
 	users := app.Group("/api/v1/users", h.jwtParserMW, authMiddleware.RequireAuthString())
-	users.Get("/me", h.User.GetProfile)    // TODO: remove
-	users.Put("/me", h.User.UpdateProfile) // TODO: remove
 	users.Get("/profile", h.User.GetProfile)
 	users.Put("/profile", h.User.UpdateProfile)
 	users.Get("/:id/profile", h.User.GetProfileByID)
