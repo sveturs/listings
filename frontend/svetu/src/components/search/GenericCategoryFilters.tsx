@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Filter, Tag } from 'lucide-react';
 import { apiClient } from '@/services/api-client';
@@ -31,16 +31,7 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
   const [loading, setLoading] = useState(true);
   const [filterValues, setFilterValues] = useState<Record<string, any>>({});
 
-  useEffect(() => {
-    loadCategoryAttributes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryId]);
-
-  useEffect(() => {
-    onFiltersChange(filterValues);
-  }, [filterValues, onFiltersChange]);
-
-  const loadCategoryAttributes = async () => {
+  const loadCategoryAttributes = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClient.get(
@@ -58,7 +49,15 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryId]);
+
+  useEffect(() => {
+    loadCategoryAttributes();
+  }, [loadCategoryAttributes]);
+
+  useEffect(() => {
+    onFiltersChange(filterValues);
+  }, [filterValues, onFiltersChange]);
 
   const handleFilterChange = (attributeName: string, value: any) => {
     setFilterValues((prev) => {
@@ -75,13 +74,16 @@ export const GenericCategoryFilters: React.FC<GenericCategoryFiltersProps> = ({
   const renderAttributeFilter = (attribute: CategoryAttribute) => {
     const { id, name, display_name, attribute_type, options } = attribute;
 
-    // Debug logging to understand the options structure
-    if (options && !Array.isArray(options.values)) {
-      console.error('GenericCategoryFilters: options.values is not an array:', {
+    // Validate options structure only for types that require values
+    const requiresValues = ['select', 'multiselect'].includes(attribute_type);
+    if (requiresValues && options && !Array.isArray(options.values)) {
+      console.warn(`GenericCategoryFilters: Attribute "${name}" of type "${attribute_type}" has invalid options.values:`, {
         attribute: name,
         options,
         valuesType: typeof options.values,
       });
+      // Skip rendering this filter if it has invalid structure
+      return null;
     }
 
     switch (attribute_type) {
