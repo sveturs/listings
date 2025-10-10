@@ -21,7 +21,7 @@ func setupTestDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 }
 
 func TestDetectByAIHints(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Requires full database with pg_trgm extension (similarity function) and complex aggregations. Use integration test instead.")
 	tests := []struct {
 		name           string
 		hints          *AIHints
@@ -104,7 +104,7 @@ func TestDetectByAIHints(t *testing.T) {
 }
 
 func TestDetectByKeywords(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Requires full database with category_keyword_weights table and PostgreSQL array support. Use integration test instead.")
 	tests := []struct {
 		name           string
 		keywords       []string
@@ -166,7 +166,7 @@ func TestDetectByKeywords(t *testing.T) {
 }
 
 func TestWeightedVoting(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Algorithm changed to weighted_voting_v2 with complex scoring formulas. Requires refactoring for new logic.")
 	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
 
 	tests := []struct {
@@ -334,7 +334,7 @@ func TestExtractKeywords(t *testing.T) {
 }
 
 func TestLearnFromFeedback(t *testing.T) {
-	t.Skip("Test needs refactoring to handle array types in mock")
+	t.Skip("sqlmock cannot properly handle PostgreSQL array types (keywords []string). Requires real database for testing.")
 	db, mock := setupTestDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {
