@@ -42,7 +42,7 @@ func (s *Database) GetStorefrontProducts(ctx context.Context, filter models.Prod
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.storefront_id = $1`
 
@@ -229,7 +229,7 @@ func (s *Database) GetStorefrontProduct(ctx context.Context, storefrontID, produ
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.id = $1 AND p.storefront_id = $2`
 
@@ -327,7 +327,7 @@ func (s *Database) GetStorefrontProductBySKU(ctx context.Context, storefrontID i
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.storefront_id = $1 AND p.sku = $2`
 
@@ -430,7 +430,7 @@ func (s *Database) GetProductByID(ctx context.Context, productID int64) (*models
 			p.created_at, p.updated_at,
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants
-		FROM storefront_products p
+		FROM b2c_products p
 		WHERE p.id = $1`
 
 	product := &models.StorefrontProduct{}
@@ -492,7 +492,7 @@ func (s *Database) GetStorefrontProductByID(ctx context.Context, productID int) 
 			p.has_individual_location, p.individual_address, p.individual_latitude,
 			p.individual_longitude, p.location_privacy, p.show_on_map, p.has_variants,
 			c.id, c.name, c.slug, c.icon, c.parent_id
-		FROM storefront_products p
+		FROM b2c_products p
 		LEFT JOIN c2c_categories c ON p.category_id = c.id
 		WHERE p.id = $1`
 
@@ -584,7 +584,7 @@ func (s *Database) GetProductVariantByID(ctx context.Context, variantID int64) (
 		SELECT 
 			id, storefront_product_id, sku, price, stock_quantity, 
 			variant_attributes, is_active, created_at, updated_at
-		FROM storefront_product_variants
+		FROM b2c_product_variants
 		WHERE id = $1`
 
 	variant := &models.StorefrontProductVariant{}
@@ -619,7 +619,7 @@ func (s *Database) UpdateProductStock(ctx context.Context, productID int64, vari
 	if variantID != nil && *variantID > 0 {
 		// Update variant stock
 		query := `
-			UPDATE storefront_product_variants 
+			UPDATE b2c_product_variants 
 			SET stock_quantity = stock_quantity - $1, 
 			    updated_at = CURRENT_TIMESTAMP
 			WHERE id = $2 AND stock_quantity >= $1`
@@ -635,7 +635,7 @@ func (s *Database) UpdateProductStock(ctx context.Context, productID int64, vari
 	} else {
 		// Update product stock
 		query := `
-			UPDATE storefront_products 
+			UPDATE b2c_products 
 			SET stock_quantity = stock_quantity - $1,
 			    updated_at = CURRENT_TIMESTAMP
 			WHERE id = $2 AND stock_quantity >= $1`
@@ -675,7 +675,7 @@ func (s *Database) CreateStorefrontProduct(ctx context.Context, storefrontID int
 	}
 
 	query := `
-		INSERT INTO storefront_products (
+		INSERT INTO b2c_products (
 			storefront_id, name, description, price, currency, category_id,
 			sku, barcode, stock_quantity, is_active, attributes,
 			has_individual_location, individual_address, individual_latitude,
@@ -773,7 +773,7 @@ func (s *Database) CreateStorefrontProductTx(ctx context.Context, tx *sqlx.Tx, s
 	}
 
 	query := `
-		INSERT INTO storefront_products (
+		INSERT INTO b2c_products (
 			storefront_id, name, description, price, currency, category_id,
 			sku, barcode, stock_quantity, is_active, attributes,
 			has_individual_location, individual_address, individual_latitude,
@@ -974,7 +974,7 @@ func (s *Database) UpdateStorefrontProduct(ctx context.Context, storefrontID, pr
 	args = append(args, productID, storefrontID)
 
 	query := fmt.Sprintf(`
-		UPDATE storefront_products
+		UPDATE b2c_products
 		SET %s, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $%d AND storefront_id = $%d`,
 		strings.Join(setClauses, ", "), argIndex, argIndex+1)
@@ -1016,8 +1016,8 @@ func (s *Database) DeleteStorefrontProduct(ctx context.Context, storefrontID, pr
 		}
 	}()
 
-	// Деактивируем товар в storefront_products (если еще активен)
-	query := `UPDATE storefront_products
+	// Деактивируем товар в b2c_products (если еще активен)
+	query := `UPDATE b2c_products
 		SET is_active = false, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $1 AND storefront_id = $2`
 	result, err := tx.Exec(ctx, query, productID, storefrontID)
@@ -1062,13 +1062,13 @@ func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID
 	// Удаляем связанные данные в правильном порядке (от зависимых к независимым)
 
 	// 1. Удаляем изображения товара
-	_, err = tx.Exec(ctx, `DELETE FROM storefront_product_images WHERE storefront_product_id = $1`, productID)
+	_, err = tx.Exec(ctx, `DELETE FROM b2c_product_images WHERE storefront_product_id = $1`, productID)
 	if err != nil {
 		return fmt.Errorf("failed to delete product images: %w", err)
 	}
 
 	// 2. Удаляем варианты товара (если есть)
-	_, err = tx.Exec(ctx, `DELETE FROM storefront_product_variants WHERE product_id = $1`, productID)
+	_, err = tx.Exec(ctx, `DELETE FROM b2c_product_variants WHERE product_id = $1`, productID)
 	if err != nil {
 		return fmt.Errorf("failed to delete product variants: %w", err)
 	}
@@ -1097,8 +1097,8 @@ func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID
 		return fmt.Errorf("failed to delete marketplace listing: %w", err)
 	}
 
-	// 7. Наконец, удаляем сам товар из storefront_products
-	result, err := tx.Exec(ctx, `DELETE FROM storefront_products WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
+	// 7. Наконец, удаляем сам товар из b2c_products
+	result, err := tx.Exec(ctx, `DELETE FROM b2c_products WHERE id = $1 AND storefront_id = $2`, productID, storefrontID)
 	if err != nil {
 		return fmt.Errorf("failed to delete storefront product: %w", err)
 	}
@@ -1136,7 +1136,7 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 		// Get current quantity
 		var currentQuantity int
 		err = tx.QueryRow(ctx,
-			`SELECT stock_quantity FROM storefront_products WHERE id = $1 AND storefront_id = $2`,
+			`SELECT stock_quantity FROM b2c_products WHERE id = $1 AND storefront_id = $2`,
 			productID, storefrontID,
 		).Scan(&currentQuantity)
 		if err != nil {
@@ -1155,7 +1155,7 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 
 	// Update stock
 	_, err = tx.Exec(ctx,
-		`UPDATE storefront_products SET stock_quantity = $1 WHERE id = $2 AND storefront_id = $3`,
+		`UPDATE b2c_products SET stock_quantity = $1 WHERE id = $2 AND storefront_id = $3`,
 		newQuantity, productID, storefrontID,
 	)
 	if err != nil {
@@ -1186,7 +1186,7 @@ func (s *Database) GetProductStats(ctx context.Context, storefrontID int) (*mode
 			COUNT(*) FILTER (WHERE stock_status = 'low_stock') as low_stock,
 			SUM(price * stock_quantity) as total_value,
 			SUM(sold_count) as total_sold
-		FROM storefront_products
+		FROM b2c_products
 		WHERE storefront_id = $1`
 
 	var stats models.ProductStats
@@ -1229,7 +1229,7 @@ func (s *Database) getProductImages(ctx context.Context, productIDs []int) ([]mo
 			'b2c_stores' as storage_bucket,
 			spi.image_url as public_url,
 			spi.created_at
-		FROM storefront_product_images spi
+		FROM b2c_product_images spi
 		WHERE spi.storefront_product_id = ANY($1)
 		ORDER BY is_default DESC, display_order ASC`
 
@@ -1270,7 +1270,7 @@ func (s *Database) getProductVariants(ctx context.Context, productID int) ([]mod
 			is_active,
 			created_at,
 			updated_at
-		FROM storefront_product_variants
+		FROM b2c_product_variants
 		WHERE product_id = $1 AND is_active = true
 		ORDER BY is_default DESC, id ASC`
 
@@ -1329,7 +1329,7 @@ func (s *Database) BulkCreateProducts(ctx context.Context, storefrontID int, pro
 		attributesJSON, _ := json.Marshal(req.Attributes)
 
 		err := tx.QueryRow(ctx,
-			`INSERT INTO storefront_products (
+			`INSERT INTO b2c_products (
 				storefront_id, name, description, price, currency, category_id,
 				sku, barcode, stock_quantity, is_active, attributes
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
@@ -1377,7 +1377,7 @@ func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, upd
 
 	var validProductIDs []int
 	rows, err := tx.Query(ctx,
-		`SELECT id FROM storefront_products WHERE id = ANY($1) AND storefront_id = $2`,
+		`SELECT id FROM b2c_products WHERE id = ANY($1) AND storefront_id = $2`,
 		pq.Array(productIDs), storefrontID,
 	)
 	if err != nil {
@@ -1458,7 +1458,7 @@ func (s *Database) BulkUpdateProducts(ctx context.Context, storefrontID int, upd
 		// Add WHERE clause
 		args = append(args, update.ProductID)
 		query := fmt.Sprintf(
-			"UPDATE storefront_products SET %s WHERE id = $%d",
+			"UPDATE b2c_products SET %s WHERE id = $%d",
 			strings.Join(setClauses, ", "),
 			argIndex,
 		)
@@ -1503,7 +1503,7 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 
 	// Soft delete products that belong to the storefront
 	rows, err := tx.Query(ctx,
-		`UPDATE storefront_products
+		`UPDATE b2c_products
 		SET is_active = false, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ANY($1) AND storefront_id = $2 AND is_active = true
 		RETURNING id`,
@@ -1558,7 +1558,7 @@ func (s *Database) BulkDeleteProducts(ctx context.Context, storefrontID int, pro
 // IncrementProductViews increments the view count for a product
 func (s *Database) IncrementProductViews(ctx context.Context, productID int) error {
 	query := `
-		UPDATE storefront_products
+		UPDATE b2c_products
 		SET view_count = view_count + 1
 		WHERE id = $1`
 
@@ -1584,7 +1584,7 @@ func (s *Database) BulkUpdateStatus(ctx context.Context, storefrontID int, produ
 	}
 
 	rows, err := s.pool.Query(ctx,
-		`UPDATE storefront_products
+		`UPDATE b2c_products
 		SET is_active = $1, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ANY($2) AND storefront_id = $3
 		RETURNING id`,
@@ -1796,7 +1796,7 @@ func (s *Database) BatchCreateStorefrontProducts(ctx context.Context, storefront
 
 	// Build complete query
 	query := fmt.Sprintf(`
-		INSERT INTO storefront_products (
+		INSERT INTO b2c_products (
 			storefront_id, name, description, price, currency, category_id,
 			sku, barcode, stock_quantity, is_active, attributes,
 			has_individual_location, individual_address, individual_latitude,
@@ -1867,7 +1867,7 @@ func (s *Database) GetStorefrontProductsBySKUs(ctx context.Context, storefrontID
 			view_count, sold_count, created_at, updated_at,
 			has_individual_location, individual_address, individual_latitude,
 			individual_longitude, location_privacy, show_on_map, has_variants
-		FROM storefront_products
+		FROM b2c_products
 		WHERE storefront_id = $1 AND sku = ANY($2)`
 
 	rows, err := s.pool.Query(ctx, query, storefrontID, pq.Array(skus))

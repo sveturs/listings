@@ -1,0 +1,30 @@
+{
+  "filter": {
+    "all": "All",
+    "all_short": "All",
+    "all_description": "Show all listings and products",
+    "c2c": "Listings",
+    "c2c_short": "C2C",
+    "c2c_description": "Listings from individuals",
+    "b2c": "Storefronts",
+    "b2c_short": "B2C",
+    "b2c_description": "Products from stores and businesses",
+    "aria_label": "Filter by source type"
+  },
+  "badge": {
+    "c2c": "C2C",
+    "c2c_tooltip": "Listing from individual",
+    "b2c": "Store",
+    "b2c_tooltip": "Product from storefront"
+  },
+  "condition": {
+    "new": "New",
+    "used": "Used",
+    "refurbished": "Refurbished",
+    "like_new": "Like New"
+  },
+  "no_image": "No image",
+  "no_listings_found": "No listings found",
+  "from_storefront": "From storefront",
+  "results_count": "{count, plural, =0 {No listings found} one {Found # listing} other {Found # listings}}"
+}

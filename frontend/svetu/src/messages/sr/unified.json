@@ -1,0 +1,30 @@
+{
+  "filter": {
+    "all": "Sve",
+    "all_short": "Sve",
+    "all_description": "Prikaži sve oglase i proizvode",
+    "c2c": "Oglasi",
+    "c2c_short": "C2C",
+    "c2c_description": "Oglasi od privatnih lica",
+    "b2c": "Prodavnice",
+    "b2c_short": "B2C",
+    "b2c_description": "Proizvodi iz prodavnica i radnji",
+    "aria_label": "Filter po tipu izvora"
+  },
+  "badge": {
+    "c2c": "C2C",
+    "c2c_tooltip": "Oglas od privatnog lica",
+    "b2c": "Prodavnica",
+    "b2c_tooltip": "Proizvod iz prodavnice"
+  },
+  "condition": {
+    "new": "Novo",
+    "used": "Polovno",
+    "refurbished": "Obnovljeno",
+    "like_new": "Kao novo"
+  },
+  "no_image": "Nema slike",
+  "no_listings_found": "Nisu pronađeni oglasi",
+  "from_storefront": "Iz prodavnice",
+  "results_count": "{count, plural, =0 {Nije pronađeno oglasa} one {Pronađen # oglas} few {Pronađena # oglasa} other {Pronađeno # oglasa}}"
+}

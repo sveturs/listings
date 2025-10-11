@@ -17,6 +17,7 @@ interface Synonym {
 export default function SynonymManager() {
   const t = useTranslations('admin');
   const [synonyms, setSynonyms] = useState<Synonym[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ru' | 'sr'>(
     'ru'
@@ -39,6 +40,7 @@ export default function SynonymManager() {
   const fetchSynonyms = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       const params = new URLSearchParams({
         page: page.toString(),
@@ -57,13 +59,54 @@ export default function SynonymManager() {
         `/api/v1/admin/search/synonyms?${params}`
       );
 
+      console.log('[SynonymManager] Full API Response:', response);
+      console.log('[SynonymManager] Response status:', response.status);
+      console.log('[SynonymManager] Response data:', response.data);
+      console.log('[SynonymManager] Response data type:', typeof response.data);
+
+      // Check if response has error
+      if (response.error) {
+        console.error('[SynonymManager] API Error:', response.error);
+        setError(response.error.message || 'Failed to fetch synonyms');
+        setSynonyms([]);
+        return;
+      }
+
+      // Backend returns: {success: true, data: {data: [...], total: N, ...}}
+      // apiClient returns: ApiResponse where data = backend response
       if (response && response.data) {
-        setSynonyms(response.data?.data || []);
-        setTotal(response.data?.total || 0);
-        setTotalPages(response.data?.total_pages || 1);
+        const backendResponse = response.data;
+        console.log('[SynonymManager] Backend response:', backendResponse);
+
+        // backendResponse.data содержит {data: [...], total: N, ...}
+        const paginatedData = backendResponse.data;
+        console.log('[SynonymManager] Paginated data:', paginatedData);
+        console.log(
+          '[SynonymManager] Is paginatedData.data an array?',
+          Array.isArray(paginatedData?.data)
+        );
+
+        // Извлекаем массив синонимов из paginatedData.data
+        const synonymsData = Array.isArray(paginatedData?.data)
+          ? paginatedData.data
+          : [];
+        console.log('[SynonymManager] Final synonyms array:', synonymsData);
+        console.log('[SynonymManager] Synonyms count:', synonymsData.length);
+
+        setSynonyms(synonymsData);
+        setTotal(paginatedData?.total || 0);
+        setTotalPages(paginatedData?.total_pages || 1);
+      } else {
+        console.warn('[SynonymManager] No data in response, setting empty');
+        setSynonyms([]);
+        setTotal(0);
+        setTotalPages(1);
       }
     } catch (error: any) {
-      console.error('Error fetching synonyms:', error);
+      console.error('[SynonymManager] Error fetching synonyms:', error);
+      setError(error.message || 'Failed to fetch synonyms');
+      setSynonyms([]);
+
       if (error.status === 401) {
         window.location.href = '/ru/login';
       }
@@ -287,6 +330,26 @@ export default function SynonymManager() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Ошибки */}
+      {error && (
+        <div className="alert alert-error">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
