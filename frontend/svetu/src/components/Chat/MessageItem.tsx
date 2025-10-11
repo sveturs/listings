@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { ChatAttachments } from '@/components/Chat/ChatAttachments';
 import { useChat } from '@/hooks/useChat';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeText } from '@/utils/sanitize';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -163,10 +163,7 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
               <p
                 className="whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(displayText, {
-                    ALLOWED_TAGS: [],
-                    KEEP_CONTENT: true,
-                  }),
+                  __html: sanitizeText(displayText),
                 }}
               />
             </div>
@@ -204,22 +201,14 @@ export default function MessageItem({ message, isOwn }: MessageItemProps) {
                     animatedEmojis.includes(message.content.trim()) ? (
                       <AnimatedEmoji emoji={message.content.trim()} size={64} />
                     ) : (
-                      <span>
-                        {DOMPurify.sanitize(message.content, {
-                          ALLOWED_TAGS: [],
-                          KEEP_CONTENT: true,
-                        })}
-                      </span>
+                      <span>{sanitizeText(message.content)}</span>
                     )
                   ) : (
                     <>
                       <p className="whitespace-pre-wrap">
                         <span
                           dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(displayText, {
-                              ALLOWED_TAGS: [],
-                              KEEP_CONTENT: true,
-                            }),
+                            __html: sanitizeText(displayText),
                           }}
                         />
                       </p>

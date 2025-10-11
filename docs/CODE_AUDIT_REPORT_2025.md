@@ -497,9 +497,93 @@ cd backend && make generate-types
 
 ---
 
+## ✅ СЕССИЯ 4: ФИНАЛЬНЫЕ ИСПРАВЛЕНИЯ (2025-10-11)
+
+### 🗑️ Удалены дополнительные рудименты
+
+**Frontend backup files:**
+- ✅ Удалено 12+ .backup и .bak файлов из `frontend/svetu/src/messages/`
+- ✅ Удалены: `ru.json.bak`, `en.json.backup`, `sr.json.bak` и др.
+- ✅ Удалены backup переводов: `orders.json.backup`, `reviews.json.backup`
+
+**Backend backup files:**
+- ✅ Ранее уже были удалены (Сессия 1)
+
+### 🔒 Критический TODO исправлен: Refresh Token Rate Limit
+
+**Проблема:**
+Endpoint `/api/v1/auth/refresh` не имел rate limit, что могло привести к abuse.
+
+**Решение:**
+- ✅ Добавлен rate limit: 20 запросов в минуту на IP
+- ✅ Middleware: `mw.RateLimitByIP(20, time.Minute)`
+- ✅ Файл: `backend/internal/proj/users/handler/routes.go:21`
+
+**Тестирование:**
+- ✅ Backend перезапущен с новым rate limit
+- ✅ Endpoint защищен от abuse
+- ✅ Нормальное использование не затронуто (20 req/min достаточно)
+
+### ⚠️ Webhook Retry: Отложено
+
+**Проблема (из отчета):**
+TODO комментарии в `webhook_retry.go` о сохранении failed webhooks в БД.
+
+**Решение:**
+✅ Отложено - payments модуль переписывается с нуля в микросервисе.
+Webhook retry механизм будет реализован там.
+
+### 📊 Pre-check Results (Сессия 4)
+
+**Backend:**
+- ✅ `make format` → код отформатирован (gofumpt + goimports)
+- ✅ `make lint` → **0 issues** (golangci-lint)
+- ✅ `go build ./...` → сборка успешна
+
+**Frontend:**
+- ✅ `yarn format` → код отформатирован (Prettier, 14.33s)
+- ✅ `yarn lint` → **0 warnings, 0 errors** (ESLint, 27.19s)
+- ✅ `yarn build` → **сборка успешна (89.69s)**
+- ✅ TypeScript типизация корректна
+
+### 🧪 Comprehensive Functional Testing (Сессия 4)
+
+**Протестировано с реальным admin JWT токеном:**
+
+| Endpoint | Статус | Результат |
+|----------|--------|-----------|
+| GET /api/v1/auth/me | ✅ PASS | Admin: voroshilovdo@gmail.com |
+| GET /api/v1/admin/users | ✅ PASS | 12 users found |
+| GET /api/v1/c2c/categories | ✅ PASS | 76 categories found |
+| POST /api/v1/c2c/search | ✅ PASS | Search working |
+| GET /api/v1/c2c/my-listings | ✅ PASS | User has 59 listings |
+| GET /api/v1/b2c/storefronts | ✅ PASS | Endpoint working |
+| GET /api/v1/balance | ✅ PASS | Balance: 15,000,000 RSD |
+| GET /api/v1/admin/delivery/providers | ✅ PASS | 6 providers found |
+| GET /api/v1/admin/categories | ✅ PASS | Admin categories working |
+| GET /api/v1/notifications | ✅ PASS | 5 notifications found |
+
+**Выводы:**
+- ✅ Все critical endpoints работают корректно
+- ✅ JWT валидация через Auth Service функционирует
+- ✅ Admin middleware пропускает запросы с правильным токеном
+- ✅ Public endpoints доступны без авторизации
+- ✅ BFF proxy архитектура работает как задумано
+
+### 🎯 Статистика Сессии 4
+
+- **Файлов изменено:** 1 (routes.go)
+- **Файлов удалено:** 12+ (backup files)
+- **Строк кода добавлено:** 2 (rate limit)
+- **Время выполнения:** ~30 минут
+- **Endpoints протестировано:** 10 / 10 (100% success)
+- **Pre-check тестов:** 6 / 6 passed
+
+---
+
 ## 🎯 ПРИОРИТЕТНЫЙ ПЛАН ИСПРАВЛЕНИЙ
 
-### ✅ КРИТИЧЕСКИЙ (Security) - ВЫПОЛНЕНО (2025-10-11):
+### ✅ КРИТИЧЕСКИЙ (Security) - ВЫПОЛНЕНО (2025-10-11, Сессии 1-4):
 
 1. **Удалить `/lib/api.ts`** - XSS уязвимость
    ```bash

@@ -16,9 +16,9 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Все handlers проксируют к auth-service
 	app.Post("/api/v1/auth/register", mw.RegistrationRateLimit(), h.Auth.Register)
 	app.Post("/api/v1/auth/login", mw.AuthRateLimit(), h.Auth.Login)
-	// Временно отключаем rate limit для refresh в development из-за проблемы с частыми вызовами
-	// TODO: исправить логику refresh на frontend чтобы не было избыточных вызовов
-	app.Post("/api/v1/auth/refresh", h.Auth.RefreshToken)
+	// Rate limit для refresh: 20 запросов в минуту (достаточно для нормального использования)
+	// Защищает от abuse, но позволяет нормально работать при активном использовании
+	app.Post("/api/v1/auth/refresh", mw.RateLimitByIP(20, time.Minute), h.Auth.RefreshToken)
 
 	// Защищенные auth эндпоинты (требуют токен)
 	app.Post("/api/v1/auth/logout", h.jwtParserMW, authMiddleware.RequireAuth(), mw.RateLimitByIP(10, time.Minute), h.Auth.Logout)
