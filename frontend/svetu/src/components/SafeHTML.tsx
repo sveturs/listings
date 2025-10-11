@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'dompurify';
 
 interface SafeHTMLProps {
   html: string;

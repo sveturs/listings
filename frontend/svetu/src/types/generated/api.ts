@@ -11377,7 +11377,7 @@ export interface paths {
     };
     /**
      * Get items performance
-     * @description Returns performance metrics for items
+     * @description Returns performance metrics for items (admin only)
      */
     get: {
       parameters: {
@@ -11415,6 +11415,15 @@ export interface paths {
             'application/json': components['schemas']['utils.ErrorResponseSwag'];
           };
         };
+        /** @description Forbidden - admin only */
+        403: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
         /** @description Internal server error */
         500: {
           headers: {
@@ -11443,7 +11452,7 @@ export interface paths {
     };
     /**
      * Get search metrics
-     * @description Returns search analytics metrics
+     * @description Returns search analytics metrics (admin only)
      */
     get: {
       parameters: {
@@ -11474,6 +11483,15 @@ export interface paths {
         };
         /** @description Unauthorized */
         401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['utils.ErrorResponseSwag'];
+          };
+        };
+        /** @description Forbidden - admin only */
+        403: {
           headers: {
             [name: string]: unknown;
           };
@@ -40713,15 +40731,30 @@ export interface components {
       /** @example Test paket za SVETU */
       content?: string;
       /**
-       * @description K = Kurir, S = Šalter
+       * @description K = Kurir, S = Šalter, PAK = Paкетомат
        * @example K
        */
       delivery_method?: string;
+      /**
+       * @description standard, cod, parcel_locker
+       * @example standard
+       */
+      delivery_type?: string;
+      /**
+       * @description ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
+       * @example 29
+       */
+      id_rukovanje?: number;
       /**
        * @description объявленная ценность (RSD)
        * @example 0
        */
       insured_value?: number;
+      /**
+       * @description Код паккетомата (для IdRukovanje = 85)
+       * @example
+       */
+      parcel_locker_code?: string;
       /**
        * @description POF = gotovina
        * @example POF

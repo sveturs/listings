@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { apiClient } from '@/services/api-client';
 
 interface AttributeValue {
   value: string;
@@ -55,23 +56,19 @@ export default function AttributeSetup({
 
   const loadAvailableAttributes = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/b2c/storefront/categories/${categoryId}/attributes`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/categories/${categoryId}/attributes`
       );
-      if (response.ok) {
-        const attributes = await response.json();
+      if (response.data) {
+        const attributes = response.data;
         setAvailableAttributes(attributes);
 
         // Load global values for each attribute
         for (const attr of attributes) {
           loadGlobalValues(attr.id);
         }
+      } else if (response.error) {
+        console.error('Failed to load available attributes:', response.error);
       }
     } catch (error) {
       console.error('Failed to load available attributes:', error);
@@ -80,17 +77,11 @@ export default function AttributeSetup({
 
   const loadCurrentSetup = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/b2c/storefront/products/${productId}/attributes`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/products/${productId}/attributes`
       );
-      if (response.ok) {
-        const currentAttributes = await response.json();
+      if (response.data) {
+        const currentAttributes = response.data;
         const setups = availableAttributes.map((attr) => {
           const existing = currentAttributes.find(
             (ca: any) => ca.attribute_id === attr.id
@@ -115,6 +106,8 @@ export default function AttributeSetup({
               };
         });
         setAttributeSetups(setups);
+      } else if (response.error) {
+        console.error('Failed to load current setup:', response.error);
       }
     } catch (error) {
       console.error('Failed to load current setup:', error);
@@ -130,17 +123,11 @@ export default function AttributeSetup({
 
   const loadGlobalValues = async (attributeId: number) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(
-        `/api/v1/public/variants/attributes/${attributeId}/values`,
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        }
+      const response = await apiClient.get(
+        `/public/variants/attributes/${attributeId}/values`
       );
-      if (response.ok) {
-        const values = await response.json();
+      if (response.data) {
+        const values = response.data;
         setGlobalValues((prev) => ({
           ...prev,
           [attributeId]: values.map((v: any) => ({
@@ -151,6 +138,11 @@ export default function AttributeSetup({
             is_custom: false,
           })),
         }));
+      } else if (response.error) {
+        console.error(
+          `Failed to load global values for attribute ${attributeId}:`,
+          response.error
+        );
       }
     } catch (error) {
       console.error(

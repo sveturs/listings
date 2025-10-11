@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
@@ -86,6 +86,12 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
   const [loadingMakes, setLoadingMakes] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
 
+  // Используем ref для хранения callback, чтобы избежать бесконечного цикла
+  const onFiltersChangeRef = useRef(onFiltersChange);
+  useEffect(() => {
+    onFiltersChangeRef.current = onFiltersChange;
+  }, [onFiltersChange]);
+
   // Загрузка марок при монтировании
   useEffect(() => {
     loadMakes();
@@ -119,7 +125,7 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     if (condition) filters.condition = condition;
     if (selectedBodyTypes.length > 0) filters.car_body_type = selectedBodyTypes;
 
-    onFiltersChange(filters);
+    onFiltersChangeRef.current(filters);
 
     // Обновляем URL со всеми параметрами
     const params = new URLSearchParams(searchParams?.toString() || '');
@@ -185,7 +191,6 @@ export const CarFilters: React.FC<CarFiltersProps> = ({
     locale,
     router,
     searchParams,
-    onFiltersChange,
   ]);
 
   const loadMakes = async () => {

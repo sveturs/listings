@@ -57,7 +57,7 @@ export default function SynonymManager() {
         `/api/v1/admin/search/synonyms?${params}`
       );
 
-      if (response && response.success) {
+      if (response && response.data) {
         setSynonyms(response.data?.data || []);
         setTotal(response.data?.total || 0);
         setTotalPages(response.data?.total_pages || 1);

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { api } from '@/lib/api';
+import { apiClient } from '@/services/api-client';
 import { components } from '@/types/generated/api';
 
 type C2CListing = components['schemas']['models.MarketplaceListing'];
@@ -24,7 +24,7 @@ const initialState: FavoritesState = {
 export const fetchFavorites = createAsyncThunk(
   'favorites/fetchFavorites',
   async () => {
-    const response = await api.get('/c2c/favorites');
+    const response = await apiClient.get('/c2c/favorites');
     return response.data;
   },
   {
@@ -39,7 +39,7 @@ export const fetchFavorites = createAsyncThunk(
 export const fetchFavoritesCount = createAsyncThunk(
   'favorites/fetchCount',
   async () => {
-    const response = await api.get('/c2c/favorites/count');
+    const response = await apiClient.get('/c2c/favorites/count');
     return response.data;
   }
 );
@@ -48,7 +48,7 @@ export const addToFavorites = createAsyncThunk(
   'favorites/add',
   async ({ id, type = 'marketplace' }: { id: number; type?: string }) => {
     const url = `/c2c/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
-    const response = await api.post(url);
+    const response = await apiClient.post(url);
     return { id, type, data: response.data };
   }
 );
@@ -57,7 +57,7 @@ export const removeFromFavorites = createAsyncThunk(
   'favorites/remove',
   async ({ id, type = 'marketplace' }: { id: number; type?: string }) => {
     const url = `/c2c/favorites/${id}${type === 'storefront' ? '?type=storefront' : ''}`;
-    const response = await api.delete(url);
+    const response = await apiClient.delete(url);
     return { id, type, data: response.data };
   }
 );
@@ -65,7 +65,7 @@ export const removeFromFavorites = createAsyncThunk(
 export const checkIfInFavorites = createAsyncThunk(
   'favorites/check',
   async (id: number) => {
-    const response = await api.get(`/c2c/favorites/${id}/check`);
+    const response = await apiClient.get(`/c2c/favorites/${id}/check`);
     return { id, isInFavorites: response.data.is_in_favorites };
   }
 );

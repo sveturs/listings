@@ -92,15 +92,15 @@ export default function AnalyticsClient() {
           ),
         ]);
 
-        if (performanceRes.success) {
+        if (performanceRes.data) {
           setPerformanceMetrics(performanceRes.data);
         }
 
-        if (financialRes.success) {
+        if (financialRes.data) {
           setFinancialReport(financialRes.data);
         }
 
-        if (courierRes.success) {
+        if (courierRes.data) {
           setCourierComparison(courierRes.data || []);
         }
       } catch (apiErr) {
@@ -201,21 +201,12 @@ export default function AnalyticsClient() {
     try {
       setExportLoading(true);
 
-      // Делаем прямой запрос для скачивания файла
-      const baseURL =
-        process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : '';
-
-      const url = `${baseURL}/api/v1/admin/logistics/analytics/export?period=${selectedPeriod}&format=csv&report_type=performance`;
-
-      // Получаем токен авторизации
-      const token = localStorage.getItem('token');
+      // Используем BFF proxy для скачивания файла
+      const url = `/api/v2/admin/logistics/analytics/export?period=${selectedPeriod}&format=csv&report_type=performance`;
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include', // Включаем cookies для авторизации через BFF
       });
 
       if (response.ok) {

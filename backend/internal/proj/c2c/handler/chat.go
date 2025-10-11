@@ -815,10 +815,14 @@ func (h *ChatHandler) handleWebSocketConnection(c *websocket.Conn, userID int) {
 						// Обновляем статус онлайн при получении heartbeat
 						h.services.Chat().SetUserOnline(userID)
 						continue
+
+					default:
+						// Для всех остальных типов продолжаем обработку как обычного сообщения
+						break
 					}
 				}
 
-				// Обрабатываем обычное сообщение
+				// Обрабатываем обычное сообщение (если это не служебное)
 				var msg models.MarketplaceMessage
 				if err := json.Unmarshal(message, &msg); err != nil {
 					logger.Error().Err(err).Msg("Error unmarshaling WebSocket message")

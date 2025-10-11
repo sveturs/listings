@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import configManager from '@/config';
+import { apiClient } from '@/services/api-client';
 
 interface AttributeValue {
   value: string;
@@ -61,18 +61,11 @@ export default function VariantGenerator({
 
   const loadProductAttributes = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/b2c/storefront/products/${productId}/attributes`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await apiClient.get(
+        `/b2c/storefront/products/${productId}/attributes`
       );
-      if (response.ok) {
-        const attrs = await response.json();
+      if (response.data) {
+        const attrs = response.data;
         setAttributes(attrs);
 
         // Initialize selected values
@@ -81,6 +74,8 @@ export default function VariantGenerator({
           initialSelected[attr.attribute.name] = [];
         });
         setSelectedValues(initialSelected);
+      } else if (response.error) {
+        console.error('Failed to load product attributes:', response.error);
       }
     } catch (error) {
       console.error('Failed to load product attributes:', error);
@@ -177,24 +172,15 @@ export default function VariantGenerator({
         default_attributes: defaultAttributes,
       };
 
-      const apiUrl = configManager.getApiUrl();
-      const response = await fetch(
-        `${apiUrl}/api/v1/storefront/variants/generate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(request),
-        }
+      const response = await apiClient.post(
+        '/storefront/variants/generate',
+        request
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        onGenerate(result.variants);
-      } else {
-        const error = await response.json();
-        alert(`Failed to generate variants: ${error.error}`);
+      if (response.data) {
+        onGenerate(response.data.variants);
+      } else if (response.error) {
+        alert(`Failed to generate variants: ${response.error.message}`);
       }
     } catch (error) {
       console.error('Failed to generate variants:', error);

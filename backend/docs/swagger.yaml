@@ -2303,13 +2303,25 @@ definitions:
         example: Test paket za SVETU
         type: string
       delivery_method:
-        description: K = Kurir, S = Šalter
+        description: K = Kurir, S = Šalter, PAK = Paкетомат
         example: K
         type: string
+      delivery_type:
+        description: standard, cod, parcel_locker
+        example: standard
+        type: string
+      id_rukovanje:
+        description: ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
+        example: 29
+        type: integer
       insured_value:
         description: объявленная ценность (RSD)
         example: 0
         type: integer
+      parcel_locker_code:
+        description: Код паккетомата (для IdRukovanje = 85)
+        example: ""
+        type: string
       payment_method:
         description: POF = gotovina
         example: POF
@@ -18866,7 +18878,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns performance metrics for items
+      description: Returns performance metrics for items (admin only)
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
@@ -18899,6 +18911,10 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - admin only
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
         "500":
           description: Internal server error
           schema:
@@ -18912,7 +18928,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns search analytics metrics
+      description: Returns search analytics metrics (admin only)
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
@@ -18941,6 +18957,10 @@ paths:
               type: object
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.ErrorResponseSwag'
+        "403":
+          description: Forbidden - admin only
           schema:
             $ref: '#/definitions/utils.ErrorResponseSwag'
         "500":

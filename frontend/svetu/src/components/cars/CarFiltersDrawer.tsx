@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Filter, RotateCcw, Check } from 'lucide-react';
 import { CarFilters } from '@/components/c2c/CarFilters';
@@ -43,12 +43,15 @@ export const CarFiltersDrawer: React.FC<CarFiltersDrawerProps> = ({
     };
   }, [isOpen]);
 
-  const handleFilterChange = (newFilters: any) => {
-    setTempFilters(newFilters);
-    setHasChanges(
-      JSON.stringify(newFilters) !== JSON.stringify(currentFilters)
-    );
-  };
+  const handleFilterChange = useCallback(
+    (newFilters: any) => {
+      setTempFilters(newFilters);
+      setHasChanges(
+        JSON.stringify(newFilters) !== JSON.stringify(currentFilters)
+      );
+    },
+    [currentFilters]
+  );
 
   const handleApply = () => {
     onApply(tempFilters);
