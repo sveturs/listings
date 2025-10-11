@@ -1,8 +1,8 @@
 # План реализации Unified Listings (C2C + B2C без дублирования)
 
 **Дата создания:** 2025-10-11
-**Дата последнего обновления:** 2025-10-11 16:45
-**Статус:** ✅ Backend + OpenSearch + Frontend ПОЛНОСТЬЮ завершены! Готово к интеграции!
+**Дата последнего обновления:** 2025-10-11 17:10
+**Статус:** ✅ ПОЛНОСТЬЮ ЗАВЕРШЕНО! Backend + Frontend + OpenSearch + Tests + Commit!
 **Цель:** Объединить отображение C2C и B2C товаров без дублирования данных в БД
 
 ---
@@ -231,8 +231,35 @@ curl -H "Authorization: Bearer $TOKEN" \
 | | | | | **Примеры:**|
 | | | | | - C2C: "Принтер Canon G3420" (id: 1067) |
 | | | | | - B2C: "Baterija za LG B2050 950 mAh" (id: 1061, storefront: 43) |
+| 2025-10-11 17:00 | Pre-commit check + коммит | ✅ | 25 мин | Выполнен полный pre-commit check и коммит |
+| | | | | **Pre-commit check результаты:** |
+| | | | | - ✅ Backend format (gofumpt + goimports) |
+| | | | | - ✅ Backend lint (golangci-lint): 0 issues |
+| | | | | - ✅ Backend build: успешно |
+| | | | | - ✅ Frontend format (prettier): unchanged |
+| | | | | - ✅ Frontend lint (eslint): 0 warnings/errors |
+| | | | | - ✅ Frontend build: успешно (92.61s) |
+| | | | | **Git commit:** |
+| | | | | - Commit hash: 4ec102ff |
+| | | | | - 26 files changed, 5274 insertions(+), 46 deletions(-) |
+| | | | | - Версия обновлена до 0.2.4 |
+| 2025-10-11 17:05 | Финальное API тестирование | ✅ | 5 мин | Функциональные тесты unified API с JWT токеном |
+| | | | | **Результаты тестирования:** |
+| | | | | - ✅ GET /api/v1/unified/listings: total=9, success=true |
+| | | | | - ✅ Фильтр C2C: total=4, все с source_type="c2c" |
+| | | | | - ✅ Фильтр B2C: total=5, все с source_type="b2c" |
+| | | | | - ✅ Все listings с изображениями (images array заполнен) |
+| | | | | - ✅ B2C listings содержат storefront_id и metadata |
+| | | | | - ✅ Metadata корректная (stock_status, currency, attributes) |
+| | | | | - ✅ Сортировка по created_at DESC работает |
+| | | | | **Примеры проверенных товаров:** |
+| | | | | - C2C #1067: "Принтер Canon G3420" (15000 RSD, used) |
+| | | | | - C2C #1066: "Электроотвертка Xiaomi" (4500 RSD, new) |
+| | | | | - C2C #1060: "PS5" (45000 RSD, used) |
+| | | | | - B2C #1065: "Baterija Nokia BL-6F" (390 RSD, new, storefront: 43) |
+| | | | | - B2C #1061: "Baterija LG B2050" (590 RSD, new, storefront: 43) |
 
-**Статус:** ✅ Backend + OpenSearch + Frontend ПОЛНОСТЬЮ завершены! API протестировано!
+**Статус:** ✅ ПОЛНОСТЬЮ ЗАВЕРШЕНО! Backend + Frontend + OpenSearch + Tests + Commit!
 
 **Следующая задача:**
 Интеграция компонентов на главной странице (опционально - можно сделать отдельным PR)
