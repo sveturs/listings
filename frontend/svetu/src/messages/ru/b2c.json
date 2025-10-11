@@ -732,7 +732,12 @@
         "next": "Далее",
         "previous": "Назад",
         "back": "Назад",
-        "startImport": "Начать импорт"
+        "startImport": "Начать импорт",
+        "backToUpload": "Вернуться к загрузке"
+      },
+      "errors": {
+        "fileRequired": "Файл не выбран",
+        "importFailed": "Не удалось запустить импорт"
       },
       "categories": {
         "total": "категорий найдено",

@@ -1073,8 +1073,8 @@ func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID
 		return fmt.Errorf("failed to delete product variants: %w", err)
 	}
 
-	// 3. Удаляем записи в избранном
-	_, err = tx.Exec(ctx, `DELETE FROM marketplace_favorites WHERE listing_id = $1`, productID)
+	// 3. Удаляем записи в избранном из новой таблицы b2c_favorites
+	_, err = tx.Exec(ctx, `DELETE FROM b2c_favorites WHERE product_id = $1`, productID)
 	if err != nil {
 		return fmt.Errorf("failed to delete favorites: %w", err)
 	}
@@ -1085,8 +1085,8 @@ func (s *Database) HardDeleteStorefrontProduct(ctx context.Context, storefrontID
 		return fmt.Errorf("failed to delete reviews: %w", err)
 	}
 
-	// 5. Удаляем записи инвентаризации
-	_, err = tx.Exec(ctx, `DELETE FROM storefront_inventory_movements WHERE storefront_product_id = $1`, productID)
+	// 5. Удаляем записи инвентаризации из новой таблицы b2c_inventory_movements
+	_, err = tx.Exec(ctx, `DELETE FROM b2c_inventory_movements WHERE storefront_product_id = $1`, productID)
 	if err != nil {
 		return fmt.Errorf("failed to delete inventory movements: %w", err)
 	}
@@ -1162,9 +1162,9 @@ func (s *Database) UpdateProductInventory(ctx context.Context, storefrontID, pro
 		return fmt.Errorf("failed to update stock: %w", err)
 	}
 
-	// Record movement
+	// Record movement в новой таблице b2c_inventory_movements
 	_, err = tx.Exec(ctx,
-		`INSERT INTO storefront_inventory_movements (
+		`INSERT INTO b2c_inventory_movements (
 			storefront_product_id, type, quantity, reason, notes, user_id
 		) VALUES ($1, $2, $3, $4, $5, $6)`,
 		productID, req.Type, req.Quantity, req.Reason, req.Notes, userID,

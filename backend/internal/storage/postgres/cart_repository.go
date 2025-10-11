@@ -515,25 +515,29 @@ func (r *cartRepository) GetItems(ctx context.Context, cartID int64) ([]models.S
 
 			// Получаем изображения товара
 			imagesQuery := `
-				SELECT id, image_url, display_order 
-				FROM storefront_product_images 
-				WHERE storefront_product_id = $1 
+				SELECT id, image_url, display_order
+				FROM b2c_product_images
+				WHERE storefront_product_id = $1
 				ORDER BY display_order ASC, id ASC
-				LIMIT 1`
+				`
 
 			var imageID int
 			var imageURL string
 			var displayOrder int
 
-			err := r.pool.QueryRow(ctx, imagesQuery, item.ProductID).Scan(&imageID, &imageURL, &displayOrder)
-			if err == nil {
-				item.Product.Images = []models.StorefrontProductImage{
-					{
-						ID:                  imageID,
-						StorefrontProductID: int(item.ProductID),
-						ImageURL:            imageURL,
-						DisplayOrder:        displayOrder,
-					},
+			imageRows, imgErr := r.pool.Query(ctx, imagesQuery, item.ProductID)
+			if imgErr == nil {
+				defer imageRows.Close()
+				item.Product.Images = []models.StorefrontProductImage{}
+				for imageRows.Next() {
+					if scanErr := imageRows.Scan(&imageID, &imageURL, &displayOrder); scanErr == nil {
+						item.Product.Images = append(item.Product.Images, models.StorefrontProductImage{
+							ID:                  imageID,
+							StorefrontProductID: int(item.ProductID),
+							ImageURL:            imageURL,
+							DisplayOrder:        displayOrder,
+						})
+					}
 				}
 			}
 		}

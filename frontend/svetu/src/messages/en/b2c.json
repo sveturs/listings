@@ -725,7 +725,12 @@
         "next": "Next",
         "previous": "Previous",
         "back": "Back",
-        "startImport": "Start Import"
+        "startImport": "Start Import",
+        "backToUpload": "Back to Upload"
+      },
+      "errors": {
+        "fileRequired": "File is required",
+        "importFailed": "Failed to start import"
       },
       "categories": {
         "total": "categories found",

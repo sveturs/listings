@@ -20,6 +20,7 @@ import CategoryMappingStep from './CategoryMappingStep';
 import AttributeMappingStep from './AttributeMappingStep';
 import VariantDetectionStep from './VariantDetectionStep';
 import { CategoryService, type Category } from '@/services/category';
+import { ImportApi } from '@/services/importApi';
 
 interface ImportAnalysisWizardProps {
   storefrontId: number;
@@ -42,7 +43,7 @@ export default function ImportAnalysisWizard({
   storefrontId,
   storefrontSlug: _storefrontSlug,
   onClose,
-  onSuccess: _onSuccess,
+  onSuccess,
   onSwitchToClassic,
 }: ImportAnalysisWizardProps) {
   const t = useTranslations('storefronts.import.wizard');
@@ -249,8 +250,12 @@ export default function ImportAnalysisWizard({
     }
   };
 
-  const handleComplete = () => {
-    // TODO: Start actual import with all the selected options
+  const handleComplete = async () => {
+    if (!selectedFile || !analysisFileType) {
+      alert(t('errors.fileRequired'));
+      return;
+    }
+
     console.log('Starting import with:', {
       file: selectedFile,
       approvedMappings,
@@ -259,9 +264,34 @@ export default function ImportAnalysisWizard({
       approvedVariantGroups,
     });
 
-    // For now, close the wizard. In the future, this will trigger actual import
-    // and call onSuccess with job ID
-    onClose?.();
+    try {
+      // Start actual import
+      const job = await ImportApi.importFromFile(
+        storefrontId,
+        selectedFile,
+        {
+          file_type: analysisFileType as 'xml' | 'csv' | 'zip',
+          update_mode: 'upsert',
+          category_mapping_mode: 'auto',
+        },
+        (progress) => {
+          console.log('Upload progress:', progress);
+        }
+      );
+
+      console.log('Import job created:', job);
+
+      // Call onSuccess with job ID
+      if (onSuccess && job.id) {
+        onSuccess(job.id);
+      }
+
+      // Close wizard
+      onClose?.();
+    } catch (error) {
+      console.error('Failed to start import:', error);
+      alert(t('errors.importFailed') || 'Failed to start import');
+    }
   };
 
   const renderStepContent = () => {

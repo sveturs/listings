@@ -82,41 +82,34 @@ export default function CartPage() {
     }
   }, [isAuthenticated]);
 
-  // Загружаем корзины при монтировании для авторизованных
+  // Загружаем корзины при монтировании
+  // ВАЖНО: useCartSync уже загружает корзины при авторизации через CartSyncProvider
+  // Здесь мы только проверяем, есть ли уже загруженные данные
   useEffect(() => {
     console.log(
       '[CartPage useEffect] isAuthenticated:',
       isAuthenticated,
       'user:',
-      user
+      user,
+      'apiCarts:',
+      apiCarts
     );
 
-    if (isAuthenticated && user?.id) {
-      console.log('[CartPage] Loading carts for user:', user);
-      console.log('[CartPage] User ID type:', typeof user.id);
-      // Используем реальный ID пользователя
-      dispatch(fetchAllCarts(user.id))
-        .then((result) => {
-          console.log('[CartPage] Carts loaded result:', result);
-          console.log('[CartPage] Carts loaded payload:', result.payload);
-          setIsInitialLoad(false);
-        })
-        .catch((error) => {
-          console.error('[CartPage] Failed to load carts:', error);
-          setIsInitialLoad(false);
-        });
-    } else {
-      console.log(
-        '[CartPage useEffect] Not loading carts - isAuthenticated:',
-        isAuthenticated,
-        'user:',
-        user
-      );
-      // Для неавторизованных пользователей сразу снимаем флаг загрузки
+    // Для неавторизованных пользователей сразу снимаем флаг загрузки
+    if (!isAuthenticated) {
+      console.log('[CartPage] Not authenticated, hiding loader');
+      setIsInitialLoad(false);
+      return;
+    }
+
+    // Для авторизованных проверяем, загружены ли корзины
+    // useCartSync уже вызвал fetchUserCarts, так что ждём результата
+    if (user?.id && apiCarts.length >= 0) {
+      // Корзины загружены (даже если пустые) - убираем лоадер
+      console.log('[CartPage] Carts already loaded by useCartSync:', apiCarts.length);
       setIsInitialLoad(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.id, dispatch]);
+  }, [isAuthenticated, user?.id, apiCarts]);
 
   // Группируем товары по витринам для локальной корзины (неавторизованные)
   const localItemsByStorefront = localItems.reduce(
