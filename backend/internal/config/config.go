@@ -99,12 +99,11 @@ type RedisConfig struct {
 }
 
 type OpenSearchConfig struct {
-	URL              string `yaml:"url"`
-	Username         string `yaml:"username"`
-	Password         string `yaml:"password"`
-	MarketplaceIndex string `yaml:"marketplace_index"` // Deprecated: use C2CIndex
-	C2CIndex         string `yaml:"c2c_index"`         // C2C (Customer-to-Customer) index
-	B2CIndex         string `yaml:"b2c_index"`         // B2C (Business-to-Customer) index
+	URL      string `yaml:"url"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	C2CIndex string `yaml:"c2c_index"` // C2C (Customer-to-Customer) index
+	B2CIndex string `yaml:"b2c_index"` // B2C (Business-to-Customer) index
 }
 
 // FileUploadConfig содержит настройки для загрузки файлов
@@ -211,12 +210,11 @@ func NewConfig() (*Config, error) {
 	config.MinIOPublicURL = minioPublicURL
 
 	config.OpenSearch = OpenSearchConfig{
-		URL:              os.Getenv("OPENSEARCH_URL"),
-		Username:         os.Getenv("OPENSEARCH_USERNAME"),
-		Password:         os.Getenv("OPENSEARCH_PASSWORD"),
-		MarketplaceIndex: os.Getenv("OPENSEARCH_MARKETPLACE_INDEX"), // Deprecated
-		C2CIndex:         os.Getenv("OPENSEARCH_C2C_INDEX"),
-		B2CIndex:         os.Getenv("OPENSEARCH_B2C_INDEX"),
+		URL:      os.Getenv("OPENSEARCH_URL"),
+		Username: os.Getenv("OPENSEARCH_USERNAME"),
+		Password: os.Getenv("OPENSEARCH_PASSWORD"),
+		C2CIndex: os.Getenv("OPENSEARCH_C2C_INDEX"),
+		B2CIndex: os.Getenv("OPENSEARCH_B2C_INDEX"),
 	}
 
 	// Если индекс C2C не указан, используем значение по умолчанию
@@ -227,11 +225,6 @@ func NewConfig() (*Config, error) {
 	// Если индекс B2C не указан, используем значение по умолчанию
 	if config.OpenSearch.B2CIndex == "" {
 		config.OpenSearch.B2CIndex = "b2c_products"
-	}
-
-	// Обратная совместимость: если используется старое название
-	if config.OpenSearch.MarketplaceIndex == "" {
-		config.OpenSearch.MarketplaceIndex = config.OpenSearch.C2CIndex
 	}
 
 	// Настройки хранилища файлов

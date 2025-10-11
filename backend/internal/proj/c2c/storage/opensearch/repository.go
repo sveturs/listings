@@ -1330,8 +1330,6 @@ func processStorefrontData(doc map[string]interface{}, listing *models.Marketpla
 		} else {
 			logger.Info().Msgf("WARNING: Failed to load storefront data for listing %d: %v", listing.ID, err)
 		}
-	} else {
-		logger.Info().Msgf("DEBUG: Listing %d has no storefront_id", listing.ID)
 	}
 
 	// Дополнительная проверка после обработки всех метаданных и скидок
@@ -3505,16 +3503,6 @@ func (r *Repository) docToListing(doc map[string]interface{}, language string) (
 		}
 
 		listing.Storefront = storefront
-	}
-	if listing.ID == 18 {
-		logger.Info().Msgf("DEBUG: Преобразование документа для объявления ID=18")
-		logger.Info().Msgf("DEBUG: Source документа: %+v", doc)
-		if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-			logger.Info().Msgf("DEBUG: Метаданные в документе: %+v", metadata)
-			if discount, ok := metadata["discount"].(map[string]interface{}); ok {
-				logger.Info().Msgf("DEBUG: Скидка в документе: %+v", discount)
-			}
-		}
 	}
 	return listing, nil
 }

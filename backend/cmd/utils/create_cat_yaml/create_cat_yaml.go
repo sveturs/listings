@@ -152,7 +152,7 @@ func run(cfg *config.Config) error {
 
 	// Инициализируем базу данных с OpenSearch и файловым хранилищем
 	db, err := postgres.NewDatabase(ctx, cfg.DatabaseURL, osClient,
-		cfg.OpenSearch.MarketplaceIndex, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
+		cfg.OpenSearch.C2CIndex, cfg.OpenSearch.B2CIndex, fileStorage, cfg.SearchWeights)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}

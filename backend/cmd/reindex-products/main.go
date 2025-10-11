@@ -63,10 +63,10 @@ func main() {
 		context.Background(),
 		cfg.DatabaseURL,
 		osClient,
-		cfg.OpenSearch.MarketplaceIndex, // indexName for C2C
-		cfg.OpenSearch.B2CIndex,         // b2cIndexName
-		nil,                             // fileStorage - not needed for this task
-		cfg.SearchWeights,               // searchWeights from config
+		cfg.OpenSearch.C2CIndex, // indexName for C2C
+		cfg.OpenSearch.B2CIndex, // b2cIndexName
+		nil,                     // fileStorage - not needed for this task
+		cfg.SearchWeights,       // searchWeights from config
 	)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to initialize storage")

@@ -310,7 +310,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		aiGroup.Post("/validate-category", h.AICategoryHandler.ValidateCategory) // ДОБАВЛЕН НЕДОСТАЮЩИЙ РОУТ
 		aiGroup.Post("/confirm/:feedbackId", h.AICategoryHandler.ConfirmDetection)
 		aiGroup.Get("/metrics", h.AICategoryHandler.GetAccuracyMetrics)
-		aiGroup.Post("/learn", mw.JWTParser(), authMiddleware.RequireAuth(), h.AICategoryHandler.TriggerLearning) // Защищено для админов
+		aiGroup.Post("/learn", h.jwtParserMW, authMiddleware.RequireAuth(), h.AICategoryHandler.TriggerLearning) // Защищено для админов
 	}
 
 	// Карта - геопространственные маршруты
@@ -346,12 +346,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 		v2Marketplace.Get("/categories/:category_id/attribute-ranges", h.UnifiedAttributes.GetAttributeRanges)
 
 		// Защищенные эндпоинты v2 (требуют авторизации)
-		v2Protected := v2.Group("/marketplace", mw.JWTParser(), authMiddleware.RequireAuth(), featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Protected := v2.Group("/marketplace", h.jwtParserMW, authMiddleware.RequireAuth(), featureFlagsMiddleware.CheckUnifiedAttributes())
 		v2Protected.Post("/listings/:listing_id/attributes", h.UnifiedAttributes.SaveListingAttributeValues)
 		v2Protected.Put("/listings/:listing_id/attributes", h.UnifiedAttributes.UpdateListingAttributeValues)
 
 		// Административные эндпоинты v2
-		v2Admin := app.Group("/api/v2/admin", mw.JWTParser(), authMiddleware.RequireAuthString("admin"), featureFlagsMiddleware.CheckUnifiedAttributes())
+		v2Admin := app.Group("/api/v2/admin", h.jwtParserMW, authMiddleware.RequireAuthString("admin"), featureFlagsMiddleware.CheckUnifiedAttributes())
 		v2Admin.Post("/attributes", h.UnifiedAttributes.CreateAttribute)
 		v2Admin.Put("/attributes/:attribute_id", h.UnifiedAttributes.UpdateAttribute)
 		v2Admin.Delete("/attributes/:attribute_id", h.UnifiedAttributes.DeleteAttribute)
@@ -376,8 +376,8 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// ВАЖНО: НЕ используем Group("/api/v1") с middleware - это вызывает middleware leak!
 	// Все защищенные маршруты регистрируем с inline middleware
 
-	// Marketplace protected routes - используем прямую регистрацию
-	authMW := []fiber.Handler{mw.JWTParser(), authMiddleware.RequireAuth()}
+	// Marketplace protected routes - используем прямую регистрацию с h.jwtParserMW
+	authMW := []fiber.Handler{h.jwtParserMW, authMiddleware.RequireAuth()}
 
 	app.Post("/api/v1/c2c/listings", append(authMW, h.Listings.CreateListing)...)
 	app.Put("/api/v1/c2c/listings/:id", append(authMW, h.Listings.UpdateListing)...)
@@ -424,12 +424,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	// Регистрируем маршруты для заказов маркетплейса под marketplace префиксом
 	if h.Orders != nil {
 		// Создаем защищенную группу ТОЛЬКО для orders - узкий префикс!
-		ordersGroup := app.Group("/api/v1/c2c/orders", mw.JWTParser(), authMiddleware.RequireAuth())
+		ordersGroup := app.Group("/api/v1/c2c/orders", h.jwtParserMW, authMiddleware.RequireAuth())
 		h.Orders.RegisterRoutes(ordersGroup)
 	}
 
-	// Используем JWTParser + библиотечный RequireAuthString("admin") для защиты admin роутов
-	adminRoutes := app.Group("/api/v1/admin", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
+	// Используем h.jwtParserMW + библиотечный RequireAuthString("admin") для защиты admin роутов
+	adminRoutes := app.Group("/api/v1/admin", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 
 	// Статистика для админ панели
 	adminRoutes.Get("/listings/statistics", h.Listings.GetAdminStatistics)
@@ -553,6 +553,12 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	adminRoutes.Post("/marketplace-translations/batch-attributes", h.AdminTranslations.BatchTranslateAttributes)
 	adminRoutes.Get("/marketplace-translations/status", h.AdminTranslations.GetTranslationStatus)
 	adminRoutes.Put("/marketplace-translations/:entity_type/:entity_id/:field_name", h.AdminTranslations.UpdateFieldTranslation)
+
+	// Алиасы для обратной совместимости с frontend (c2c-translations → marketplace-translations)
+	adminRoutes.Post("/c2c-translations/batch-categories", h.AdminTranslations.BatchTranslateCategories)
+	adminRoutes.Post("/c2c-translations/batch-attributes", h.AdminTranslations.BatchTranslateAttributes)
+	adminRoutes.Get("/c2c-translations/status", h.AdminTranslations.GetTranslationStatus)
+	adminRoutes.Put("/c2c-translations/:entity_type/:entity_id/:field_name", h.AdminTranslations.UpdateFieldTranslation)
 
 	// Управление администраторами
 

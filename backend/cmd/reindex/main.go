@@ -44,7 +44,7 @@ func main() {
 		Password: cfg.OpenSearch.Password,
 	}
 	osClient, err := opensearch.NewOpenSearchClient(osConfig)
-	indexName := cfg.OpenSearch.MarketplaceIndex
+	indexName := cfg.OpenSearch.C2CIndex
 	if err != nil {
 		log.Fatalf("Failed to create OpenSearch client: %v", err)
 	}

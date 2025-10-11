@@ -21,7 +21,7 @@ func setupTestDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock) {
 }
 
 func TestDetectByAIHints(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Requires full database with pg_trgm extension (similarity function) and complex aggregations. Use integration test instead.")
 	tests := []struct {
 		name           string
 		hints          *AIHints
@@ -104,7 +104,7 @@ func TestDetectByAIHints(t *testing.T) {
 }
 
 func TestDetectByKeywords(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Requires full database with category_keyword_weights table and PostgreSQL array support. Use integration test instead.")
 	tests := []struct {
 		name           string
 		keywords       []string
@@ -166,7 +166,7 @@ func TestDetectByKeywords(t *testing.T) {
 }
 
 func TestWeightedVoting(t *testing.T) {
-	t.Skip("Test needs refactoring to match current implementation")
+	t.Skip("Algorithm changed to weighted_voting_v2 with complex scoring formulas. Requires refactoring for new logic.")
 	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
 
 	tests := []struct {
@@ -260,44 +260,6 @@ func TestWeightedVoting(t *testing.T) {
 	}
 }
 
-// TestCaching is temporarily disabled as cache methods are now private
-// TODO: refactor test to use public interface or add test helper methods
-/*
-func TestCaching(t *testing.T) {
-	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
-
-	input := AIDetectionInput{
-		Title:       "Test Product",
-		Description: "Test Description",
-		AIHints: &AIHints{
-			Domain:      "test",
-			ProductType: "test",
-		},
-	}
-
-	result := &AIDetectionResult{
-		CategoryID:      1001,
-		CategoryName:    "Test Category",
-		ConfidenceScore: 0.95,
-	}
-
-	// Сохраняем в кэш
-	cacheKey := detector.getCacheKey(input)
-	detector.saveToCache(cacheKey, result)
-
-	// Проверяем что можем получить из кэша
-	cached := detector.getFromCache(cacheKey)
-	assert.NotNil(t, cached)
-	assert.Equal(t, result.CategoryID, cached.CategoryID)
-	assert.Equal(t, result.CategoryName, cached.CategoryName)
-
-	// Проверяем что кэш истекает
-	detector.cache[cacheKey].expiresAt = time.Now().Add(-1 * time.Hour)
-	cached = detector.getFromCache(cacheKey)
-	assert.Nil(t, cached)
-}
-*/
-
 func TestExtractKeywords(t *testing.T) {
 	detector := NewAICategoryDetector(context.Background(), nil, zap.NewNop())
 
@@ -334,7 +296,7 @@ func TestExtractKeywords(t *testing.T) {
 }
 
 func TestLearnFromFeedback(t *testing.T) {
-	t.Skip("Test needs refactoring to handle array types in mock")
+	t.Skip("sqlmock cannot properly handle PostgreSQL array types (keywords []string). Requires real database for testing.")
 	db, mock := setupTestDB(t)
 	defer func() {
 		if err := db.Close(); err != nil {

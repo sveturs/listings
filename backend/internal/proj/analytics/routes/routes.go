@@ -9,22 +9,18 @@ import (
 )
 
 // RegisterAnalyticsRoutes регистрирует маршруты для аналитики
-func RegisterAnalyticsRoutes(app *fiber.App, h *handler.AnalyticsHandler, mw *middleware.Middleware) {
-	api := app.Group("/api/v1/analytics")
+func RegisterAnalyticsRoutes(app *fiber.App, h *handler.AnalyticsHandler, mw *middleware.Middleware, jwtParserMW fiber.Handler) {
+	// Публичный маршрут - регистрируем напрямую БЕЗ группы чтобы избежать наследования middleware
+	// Запись событий (может быть анонимной)
+	app.Post("/api/v1/analytics/event", h.RecordEvent)
 
-	// Публичные маршруты (не требуют авторизации)
-	public := api.Group("")
-	{
-		// Запись событий (может быть анонимной)
-		public.Post("/event", h.RecordEvent)
-	}
-
-	// Защищенные маршруты (требуют авторизации)
-	protected := api.Group("", mw.JWTParser(), authMiddleware.RequireAuth())
+	// Защищенные admin маршруты (требуют авторизации и роли admin)
+	// БЕЗ CSRF - используем BFF proxy архитектуру
+	adminMetrics := app.Group("/api/v1/analytics/metrics", jwtParserMW, authMiddleware.RequireAuthString("admin"))
 	{
 		// Метрики поиска (только для админов)
-		protected.Get("/metrics/search", h.GetSearchMetrics)
+		adminMetrics.Get("/search", h.GetSearchMetrics)
 		// Производительность товаров (только для админов)
-		protected.Get("/metrics/items", h.GetItemsPerformance)
+		adminMetrics.Get("/items", h.GetItemsPerformance)
 	}
 }

@@ -196,22 +196,31 @@ func (s *UserService) IsUserAdmin(ctx context.Context, email string) (bool, erro
 
 // GetAllAdmins возвращает список всех администраторов
 func (s *UserService) GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error) {
-	// Получаем всех пользователей с ролью admin
-	usersResp, err := s.userService.GetUsersByRole(ctx, "admin")
+	// Получаем всех пользователей
+	usersResp, err := s.userService.GetAllUsers(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get admins from auth service: %w", err)
+		return nil, fmt.Errorf("failed to get users from auth service: %w", err)
 	}
 
 	if usersResp.Users == nil {
 		return []*models.AdminUser{}, nil
 	}
 
-	// Конвертируем в AdminUser
-	admins := make([]*models.AdminUser, 0, len(usersResp.Users))
+	// Фильтруем только администраторов (проверяем каждого пользователя через IsUserAdmin)
+	admins := make([]*models.AdminUser, 0)
 	for _, user := range usersResp.Users {
-		admins = append(admins, &models.AdminUser{
-			Email: user.Email,
-		})
+		// Проверяем, является ли пользователь администратором
+		adminResp, err := s.userService.IsUserAdmin(ctx, user.ID)
+		if err != nil {
+			// Логируем ошибку, но продолжаем проверку других пользователей
+			continue
+		}
+
+		if adminResp.IsAdmin {
+			admins = append(admins, &models.AdminUser{
+				Email: user.Email,
+			})
+		}
 	}
 
 	return admins, nil

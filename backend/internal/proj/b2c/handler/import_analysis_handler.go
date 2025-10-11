@@ -491,21 +491,16 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 	attributeExamples := make(map[string][]string)
 	attributeFirstValue := make(map[string]interface{}) // Для маппинга
 
-	fmt.Printf("[DEBUG] AnalyzeAttributes: Total products parsed: %d\n", len(products))
-
 	for _, product := range products {
 		// Analyze custom attributes from product.Attributes
 		if product.Attributes != nil {
-			fmt.Printf("[DEBUG] Product %s has %d attributes\n", product.SKU, len(product.Attributes))
 			for attrName, attrValue := range product.Attributes {
-				fmt.Printf("[DEBUG]   - %s: %v (type: %T)\n", attrName, attrValue, attrValue)
 
 				// Skip standard fields and category fields
 				if attrName == "category_path" ||
 					attrName == "kategorija1" ||
 					attrName == "kategorija2" ||
 					attrName == "kategorija3" {
-					fmt.Printf("[DEBUG]     SKIPPED (category field)\n")
 					continue
 				}
 
@@ -526,12 +521,8 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		}
 	}
 
-	fmt.Printf("[DEBUG] Detected %d unique attributes after filtering\n", len(attributeFrequency))
-
 	// Используем AttributeMapper для маппинга атрибутов
-	fmt.Printf("[DEBUG] Starting attribute mapping for %d attributes\n", len(attributeFrequency))
 	for attrName, frequency := range attributeFrequency {
-		fmt.Printf("[DEBUG] Mapping attribute: %s (frequency: %d)\n", attrName, frequency)
 		// Мапим через AttributeMapper
 		mappedAttr, err := h.attributeMapper.MapExternalAttribute(
 			c.Context(),
@@ -583,12 +574,6 @@ func (h *ImportHandler) AnalyzeAttributes(c *fiber.Ctx) error {
 		VariantDefiningAttributes: variantDefiningAttrs,
 		TotalProducts:             len(products),
 		ProcessingTimeMs:          0,
-	}
-
-	fmt.Printf("[DEBUG] Final response: %d detected attributes, %d total products\n", len(detectedAttrs), len(products))
-	for i, attr := range detectedAttrs {
-		fmt.Printf("[DEBUG]   Attribute %d: %s (type: %s, samples: %v, frequency: %d, standard: %v, variant: %v)\n",
-			i+1, attr.Name, attr.ValueType, attr.SampleValues, attr.Frequency, attr.IsStandard, attr.IsVariantDefining)
 	}
 
 	return c.JSON(response)

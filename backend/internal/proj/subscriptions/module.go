@@ -21,7 +21,7 @@ type Module struct {
 }
 
 // NewModule создает новый модуль подписок
-func NewModule(db *sqlx.DB, paymentService *paymentsService.AllSecureService, allSecureClient *allsecure.Client, logger *logger.Logger) *Module {
+func NewModule(db *sqlx.DB, paymentService *paymentsService.AllSecureService, allSecureClient *allsecure.Client, logger *logger.Logger, jwtParserMW fiber.Handler) *Module {
 	// Создаем репозиторий
 	repo := postgres.NewSubscriptionRepository(db)
 
@@ -34,7 +34,7 @@ func NewModule(db *sqlx.DB, paymentService *paymentsService.AllSecureService, al
 	)
 
 	// Создаем handler
-	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, logger)
+	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, logger, jwtParserMW)
 
 	return &Module{
 		handler: subscriptionHandler,

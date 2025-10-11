@@ -12,11 +12,12 @@ import (
 // RegisterRoutes регистрирует все маршруты для проекта docs
 func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) error {
 	// Маршруты документации - требуют авторизации и прав администратора
-	docsRoutes := app.Group("/api/v1/docs", mw.JWTParser(), authMiddleware.RequireAuth())
+	// БЕЗ CSRF - используем BFF proxy архитектуру
+	docsRoutes := app.Group("/api/v1/docs", h.jwtParserMW, authMiddleware.RequireAuthString("admin"))
 
 	// Документация доступна только администраторам
-	docsRoutes.Get("/files", mw.RequireAdmin(), h.GetDocFiles)
-	docsRoutes.Get("/content", mw.RequireAdmin(), h.GetFileContent)
+	docsRoutes.Get("/files", h.GetDocFiles)
+	docsRoutes.Get("/content", h.GetFileContent)
 
 	return nil
 }

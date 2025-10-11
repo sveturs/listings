@@ -40,7 +40,7 @@ func (h *Handler) RegisterRoutes(app *fiber.App, mw *middleware.Middleware) erro
 	statsGroup.Get("/popular", h.GetPopularSearches)
 
 	// Защищенные admin маршруты для поиска (специфичная группа)
-	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.JWTParser(), authMiddleware.RequireAuth(), mw.AdminRequired)
+	adminSearchRoutes := app.Group("/api/v1/admin/search", mw.JWTParser(), authMiddleware.RequireAuthString("admin"))
 
 	// Аналитика поиска - REMOVED (deprecated, use /api/v1/analytics/metrics/search instead)
 

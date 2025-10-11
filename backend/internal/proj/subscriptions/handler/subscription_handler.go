@@ -14,15 +14,17 @@ import (
 
 // SubscriptionHandler handles subscription endpoints
 type SubscriptionHandler struct {
-	service *service.SubscriptionService
-	logger  *logger.Logger
+	service     *service.SubscriptionService
+	logger      *logger.Logger
+	jwtParserMW fiber.Handler
 }
 
 // NewSubscriptionHandler creates new subscription handler
-func NewSubscriptionHandler(service *service.SubscriptionService, logger *logger.Logger) *SubscriptionHandler {
+func NewSubscriptionHandler(service *service.SubscriptionService, logger *logger.Logger, jwtParserMW fiber.Handler) *SubscriptionHandler {
 	return &SubscriptionHandler{
-		service: service,
-		logger:  logger,
+		service:     service,
+		logger:      logger,
+		jwtParserMW: jwtParserMW,
 	}
 }
 

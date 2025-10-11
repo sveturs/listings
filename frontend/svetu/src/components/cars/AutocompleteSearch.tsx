@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, X, Clock, TrendingUp, MapPin, Car } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { apiClient } from '@/services/api-client';
 
 interface SearchSuggestion {
   type: 'make' | 'model' | 'location' | 'recent' | 'popular';
@@ -108,8 +109,7 @@ export default function AutocompleteSearch({
 
       try {
         // Fetch car makes/models matching query
-        const makesResponse = await fetch('/api/v1/c2c/cars/makes');
-        const makesData = await makesResponse.json();
+        const makesData = await apiClient.get('/c2c/cars/makes');
 
         const matchingMakes: SearchSuggestion[] =
           makesData.data

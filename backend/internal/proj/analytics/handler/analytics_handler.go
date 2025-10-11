@@ -14,13 +14,15 @@ import (
 
 // AnalyticsHandler обработчик для аналитики
 type AnalyticsHandler struct {
-	service service.AnalyticsService
+	service     service.AnalyticsService
+	jwtParserMW fiber.Handler
 }
 
 // NewAnalyticsHandler создает новый обработчик
-func NewAnalyticsHandler(service service.AnalyticsService) *AnalyticsHandler {
+func NewAnalyticsHandler(service service.AnalyticsService, jwtParserMW fiber.Handler) *AnalyticsHandler {
 	return &AnalyticsHandler{
-		service: service,
+		service:     service,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
@@ -88,7 +90,7 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 
 // GetSearchMetrics возвращает метрики поиска
 // @Summary Get search metrics
-// @Description Returns search analytics metrics
+// @Description Returns search analytics metrics (admin only)
 // @Tags analytics
 // @Accept json
 // @Produce json
@@ -98,28 +100,11 @@ func (h *AnalyticsHandler) RecordEvent(c *fiber.Ctx) error {
 // @Param period query string false "Period (day, week, month)" default(week)
 // @Success 200 {object} utils.SuccessResponseSwag{data=service.SearchMetrics} "Search metrics"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - admin only"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/search [get]
 func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
-	// Проверяем права админа - используем тот же подход как в search_admin
-	userID, ok := authMiddleware.GetUserID(c)
-	if !ok || userID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
-	}
-
-	// Hardcoded admin users (как в других админских модулях)
-	adminUsers := []int{1, 2, 3, 4, 5, 6}
-	isAdmin := false
-	for _, adminID := range adminUsers {
-		if userID == adminID {
-			isAdmin = true
-			break
-		}
-	}
-
-	if !isAdmin {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.error.access_denied")
-	}
+	// Проверка прав админа выполняется через middleware RequireAuthString("admin")
 
 	dateFrom := c.Query("date_from", "")
 	dateTo := c.Query("date_to", "")
@@ -136,7 +121,7 @@ func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 
 // GetItemsPerformance возвращает производительность товаров
 // @Summary Get items performance
-// @Description Returns performance metrics for items
+// @Description Returns performance metrics for items (admin only)
 // @Tags analytics
 // @Accept json
 // @Produce json
@@ -146,28 +131,11 @@ func (h *AnalyticsHandler) GetSearchMetrics(c *fiber.Ctx) error {
 // @Param limit query int false "Limit" default(20)
 // @Success 200 {object} utils.SuccessResponseSwag{data=[]service.ItemPerformance} "Items performance"
 // @Failure 401 {object} utils.ErrorResponseSwag "Unauthorized"
+// @Failure 403 {object} utils.ErrorResponseSwag "Forbidden - admin only"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/analytics/metrics/items [get]
 func (h *AnalyticsHandler) GetItemsPerformance(c *fiber.Ctx) error {
-	// Проверяем права админа - используем тот же подход как в search_admin
-	userID, ok := authMiddleware.GetUserID(c)
-	if !ok || userID == 0 {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "auth.unauthorized")
-	}
-
-	// Hardcoded admin users (как в других админских модулях)
-	adminUsers := []int{1, 2, 3, 4, 5, 6}
-	isAdmin := false
-	for _, adminID := range adminUsers {
-		if userID == adminID {
-			isAdmin = true
-			break
-		}
-	}
-
-	if !isAdmin {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "admin.error.access_denied")
-	}
+	// Проверка прав админа выполняется через middleware RequireAuthString("admin")
 
 	dateFrom := c.Query("date_from", "")
 	dateTo := c.Query("date_to", "")

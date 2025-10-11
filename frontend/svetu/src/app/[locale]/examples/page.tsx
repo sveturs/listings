@@ -248,6 +248,15 @@ export default function ExamplesPage() {
       icon: '🏘️',
       badge: 'ADVANCED',
     },
+    {
+      title: 'Post Express - Тестирование',
+      description:
+        'Создание тестовых откупных пошильок и доставки в паккетоматы через WSP API',
+      href: '/examples/postexpress-test',
+      color: 'bg-gradient-to-r from-blue-600 to-indigo-600',
+      icon: '📮',
+      badge: 'NEW',
+    },
   ];
 
   return (
@@ -324,7 +333,8 @@ export default function ExamplesPage() {
               max="100"
             ></progress>
             <p className="text-sm text-base-content/70 mt-2">
-              All 28 UI/UX improvements have been successfully implemented!
+              All {examples.length} UI/UX improvements have been successfully
+              implemented!
             </p>
           </div>
         </div>

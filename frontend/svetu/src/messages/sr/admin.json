@@ -651,7 +651,6 @@
       "quickEdit": "Brza izmena",
       "fullEdit": "Potpuna izmena"
     },
-    "confirmBulkDelete": "Da li ste sigurni da želite da obrišete izabrane proizvode?",
     "deleteSelected": "Obriši izabrane ({count})",
     "noProducts": "Nema proizvoda za prikaz",
     "noStorefronts": "Još nemate nijednu vitrinu",
@@ -1081,7 +1080,6 @@
   "statusLabel": "Status",
   "cancel": "Otkaži",
   "save": "Sačuvaj",
-  "edit": "Izmeni",
   "analyzing": "Analiza...",
   "logistics": {
     "title": "Upravljanje logistikom",
@@ -1098,7 +1096,7 @@
     },
     "problems": {
       "title": "Problematične dostave",
-      "description": "Upravljanje problematičnim pošiljkama",
+      "description": "Opis",
       "problemType": "Tip problema",
       "allTypes": "Svi tipovi",
       "types": {
@@ -1121,7 +1119,6 @@
       "list": "Lista problema",
       "noProblems": "Nema problematičnih pošiljaka",
       "type": "Tip",
-      "description": "Opis",
       "assignedTo": "Dodeljeno",
       "table": {
         "id": "ID",
@@ -1183,11 +1180,11 @@
     },
     "status": {
       "pending": "Na čekanju",
+      "processing": "Obrada",
       "in_transit": "U tranzitu",
       "delivered": "Dostavljeno",
       "failed": "Neuspešno",
-      "cancelled": "Otkazano",
-      "returned": "Vraćeno"
+      "cancelled": "Otkazano"
     },
     "table": {
       "tracking_number": "Broj praćenja",
@@ -1198,24 +1195,19 @@
       "cod": "Otkup",
       "weight": "Težina",
       "created": "Kreirano",
-      "delivered": "Dostavljeno",
-      "updated_at": "Ažurirano",
-      "destination": "Odredište",
       "actions": "Akcije"
     },
     "actions": {
-      "view": "Pregled",
-      "edit": "Izmeni",
       "track": "Prati",
-      "delete": "Obriši",
       "export": "Izvezi",
+      "view": "Pregledaj",
       "new_shipment": "Nova pošiljka",
-      "resolve": "Reši",
-      "assign": "Dodeli",
       "comments": "Komentari",
-      "view_details": "Detalji",
-      "update_status": "Ažuriraj status",
-      "contact_courier": "Kontaktiraj kurira"
+      "assign": "Dodeli",
+      "resolve": "Reši",
+      "printLabel": "Štampaj etiketu",
+      "updateStatus": "Ažuriraj status",
+      "contact": "Kontakt"
     },
     "pagination": {
       "page": "Stranica",
@@ -1252,12 +1244,6 @@
     "createdAt": "Kreirano",
     "statusHistory": "Istorija statusa",
     "failedReason": "Razlog neuspeha",
-    "actions": {
-      "view": "Pregledaj",
-      "updateStatus": "Ažuriraj status",
-      "contact": "Kontakt",
-      "printLabel": "Štampaj etiketu"
-    },
     "assignModal": {
       "title": "Dodeli administratora",
       "selectAdmin": "Izaberi administratora",
@@ -1288,20 +1274,6 @@
     "quickActions": {
       "title": "Brze akcije"
     },
-    "table": {
-      "date": "Datum",
-      "sent": "Poslato",
-      "delivered": "Dostavljeno",
-      "in_transit": "U tranzitu",
-      "problems": "Problemi",
-      "courier_service": "Kurirska služba",
-      "shipments": "Pošiljke",
-      "success_rate": "Stopa uspešnosti",
-      "avg_time": "Prosečno vreme"
-    },
-    "status": {
-      "processing": "Obrada"
-    },
     "map": {
       "all": "Sve",
       "in_transit": "U tranzitu",
@@ -1312,37 +1284,6 @@
       "sender": "Pošaljilac",
       "receiver": "Primalac",
       "problem": "Problem"
-    },
-    "status": {
-      "pending": "Na čekanju",
-      "processing": "Obrada",
-      "in_transit": "U tranzitu",
-      "delivered": "Dostavljeno",
-      "failed": "Neuspešno",
-      "cancelled": "Otkazano"
-    },
-    "table": {
-      "tracking_number": "Broj praćenja",
-      "status": "Status",
-      "provider": "Provajder",
-      "recipient": "Primalac",
-      "sender": "Pošaljilac",
-      "cod": "Otkup",
-      "weight": "Težina",
-      "created": "Kreirano",
-      "actions": "Akcije"
-    },
-    "actions": {
-      "track": "Prati",
-      "export": "Izvezi",
-      "view": "Pregledaj",
-      "new_shipment": "Nova pošiljka",
-      "comments": "Komentari",
-      "assign": "Dodeli",
-      "resolve": "Reši",
-      "printLabel": "Štampaj etiketu",
-      "updateStatus": "Ažuriraj status",
-      "contact": "Kontakt"
     }
   },
   "storefronts": {
@@ -1528,10 +1469,18 @@
       "description": "Upravljanje provajderima dostave i njihovim konfiguracijama",
       "name": "Naziv",
       "code": "Kod",
-      "status": "Status",
+      "status": {
+        "active": "Aktivan",
+        "inactive": "Neaktivan"
+      },
       "features": "Mogućnosti",
       "apiStatus": "API Status",
-      "actions": "Akcije",
+      "actions": {
+        "configure": "Konfiguriši",
+        "activate": "Aktiviraj",
+        "deactivate": "Deaktiviraj",
+        "test": "Test veza"
+      },
       "active": "Aktivan",
       "inactive": "Neaktivan",
       "configured": "Konfigurisan",
@@ -1559,20 +1508,10 @@
         "capabilities": "Mogućnosti",
         "actions": "Akcije"
       },
-      "status": {
-        "active": "Aktivan",
-        "inactive": "Neaktivan"
-      },
       "capabilities": {
         "cod": "Pouzećem",
         "insurance": "Osiguranje",
         "tracking": "Praćenje u realnom vremenu"
-      },
-      "actions": {
-        "configure": "Konfiguriši",
-        "activate": "Aktiviraj",
-        "deactivate": "Deaktiviraj",
-        "test": "Test veza"
       },
       "configModal": {
         "title": "Konfiguriši provajdera",
@@ -1659,8 +1598,6 @@
       "investigating": "Istražuje se",
       "resolved": "Rešeno",
       "openProblems": "Otvoreni problemi",
-      "investigating": "Istražuje se",
-      "resolved": "Rešeno",
       "avgResolutionTime": "Prosečno vreme rešavanja",
       "hours": "sati",
       "trackingNumber": "Broj za praćenje",
@@ -1901,5 +1838,42 @@
       "rejected": "Predlog odbijen",
       "deleted": "Predlog obrisan"
     }
+  },
+  "postexpressTest": {
+    "title": "Post Express - Vizuelno testiranje",
+    "description": "Potpuno vizuelno testiranje Post Express WSP API integracije",
+    "shipmentParams": "Parametri pošiljke",
+    "recipient": "Primalac",
+    "sender": "Pošiljalac",
+    "packageParams": "Parametri paketa",
+    "fullName": "Ime i prezime",
+    "phone": "Telefon",
+    "email": "Email",
+    "city": "Grad",
+    "zip": "Poštanski broj",
+    "address": "Adresa",
+    "companyName": "Naziv",
+    "content": "Sadržaj",
+    "weight": "Težina (g)",
+    "codAmount": "Otkup (RSD)",
+    "insuredValue": "Vrednost (RSD)",
+    "services": "Usluge",
+    "deliveryMethod": "Način dostave",
+    "paymentMethod": "Način plaćanja",
+    "creating": "Kreiranje...",
+    "createButton": "Kreiraj test pošiljku",
+    "results": "Rezultati",
+    "fillFormPrompt": "Popunite formu i kreirajte test pošiljku",
+    "error": "Greška",
+    "successTitle": "Pošiljka uspešno kreirana!",
+    "processingTime": "Vreme obrade",
+    "trackingNumber": "Broj pošiljke",
+    "cost": "Cena",
+    "manifestId": "Manifest ID",
+    "shipmentId": "Shipment ID",
+    "externalId": "External ID",
+    "requestData": "Poslati podaci",
+    "responseData": "API odgovor",
+    "required": "*"
   }
 }

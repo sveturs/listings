@@ -1,11 +1,14 @@
 package viber
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
 	globalService "backend/internal/proj/global/service"
 	"backend/internal/proj/viber/config"
 	"backend/internal/proj/viber/handler"
+	"backend/internal/proj/viber/infobip"
 	"backend/internal/proj/viber/service"
 	"backend/internal/storage/postgres"
 	"backend/pkg/utils"
@@ -20,6 +23,7 @@ type ViberHandler struct {
 	infobipService *service.InfobipBotService
 	sessionManager *service.SessionManager
 	config         *config.ViberConfig
+	db             *postgres.Database
 }
 
 // NewViberHandler создаёт новый обработчик Viber
@@ -62,6 +66,7 @@ func NewViberHandler(db *postgres.Database, services globalService.ServicesInter
 		infobipService: infobipService,
 		sessionManager: sessionManager,
 		config:         cfg,
+		db:             db,
 	}
 }
 
@@ -101,8 +106,24 @@ func (h *ViberHandler) HandleInfobipWebhook(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.error.invalidJSON")
 	}
 
-	// TODO: Обработка Infobip webhook
-	// Здесь нужно реализовать обработку webhook'ов от Infobip
+	// Обработка webhook через сервис
+	// Конвертируем map в структуру Infobip webhook
+	webhookJSON, err := json.Marshal(webhook)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.error.invalidJSON")
+	}
+
+	var infobipWebhook infobip.ViberWebhook
+	if err := json.Unmarshal(webhookJSON, &infobipWebhook); err != nil {
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "common.error.invalidJSON")
+	}
+
+	// Обрабатываем webhook
+	if err := h.infobipService.ProcessWebhook(c.Context(), &infobipWebhook); err != nil {
+		// Логируем ошибку, но возвращаем 200, чтобы Infobip не ретраил
+		// В production логирование через logger
+		_ = err // В production: logger.Error("Failed to process Infobip webhook", "error", err)
+	}
 
 	return utils.SuccessResponse(c, nil)
 }
@@ -167,18 +188,18 @@ func (h *ViberHandler) SendTrackingNotification(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "viber.error.missingFields")
 	}
 
-	// TODO: Получаем информацию о доставке
-	// deliveryInfo := getDeliveryInfo(req.DeliveryID)
+	// Получаем информацию о доставке
+	deliveryInfo, err := h.getDeliveryInfoByID(c.Context(), req.DeliveryID)
+	if err != nil {
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "delivery.error.notFound")
+	}
 
 	// Отправляем через подходящий сервис
-	var err error
 	//nolint:gocritic // if-else chain is appropriate here for service selection
 	if h.config.UseInfobip && h.infobipService != nil {
-		// err = h.infobipService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
-		err = h.infobipService.SendTextMessage(c.Context(), req.ViberID, fmt.Sprintf("🚚 Ваш заказ в пути! Отследить: %s/track/%d", h.config.FrontendURL, req.DeliveryID))
+		err = h.infobipService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
 	} else if h.botService != nil {
-		// err = h.botService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
-		err = h.botService.SendTextMessage(c.Context(), req.ViberID, fmt.Sprintf("🚚 Ваш заказ в пути! Отследить: %s/track/%d", h.config.FrontendURL, req.DeliveryID))
+		err = h.botService.SendTrackingNotification(c.Context(), req.ViberID, deliveryInfo)
 	} else {
 		return utils.ErrorResponse(c, fiber.StatusServiceUnavailable, "viber.error.serviceNotAvailable")
 	}
@@ -249,6 +270,68 @@ func (h *ViberHandler) EstimateMessageCost(c *fiber.Ctx) error {
 	}
 
 	return utils.SuccessResponse(c, result)
+}
+
+// getDeliveryInfoByID получает информацию о доставке из БД
+func (h *ViberHandler) getDeliveryInfoByID(ctx context.Context, deliveryID int) (*service.DeliveryInfo, error) {
+	query := `
+		SELECT
+			d.id,
+			d.order_id,
+			d.tracking_token,
+			d.delivery_address,
+			d.delivery_latitude,
+			d.delivery_longitude,
+			d.estimated_delivery_time,
+			COALESCE(clh.latitude, d.pickup_latitude) as courier_latitude,
+			COALESCE(clh.longitude, d.pickup_longitude) as courier_longitude,
+			COALESCE(u.full_name, 'Courier') as courier_name
+		FROM deliveries d
+		LEFT JOIN users u ON u.id = d.courier_id
+		LEFT JOIN LATERAL (
+			SELECT latitude, longitude
+			FROM courier_location_history
+			WHERE courier_id = d.courier_id
+			ORDER BY created_at DESC
+			LIMIT 1
+		) clh ON true
+		WHERE d.id = $1
+	`
+
+	var info service.DeliveryInfo
+	var courierLatitude, courierLongitude, deliveryLatitude, deliveryLongitude *float64
+
+	err := h.db.QueryRowContext(ctx, query, deliveryID).Scan(
+		&info.ID,
+		&info.OrderID,
+		&info.TrackingToken,
+		&info.DeliveryAddress,
+		&deliveryLatitude,
+		&deliveryLongitude,
+		&info.EstimatedTime,
+		&courierLatitude,
+		&courierLongitude,
+		&info.CourierName,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get delivery info: %w", err)
+	}
+
+	// Конвертируем nullable поля
+	if courierLatitude != nil {
+		info.CourierLatitude = *courierLatitude
+	}
+	if courierLongitude != nil {
+		info.CourierLongitude = *courierLongitude
+	}
+	if deliveryLatitude != nil {
+		info.DeliveryLatitude = *deliveryLatitude
+	}
+	if deliveryLongitude != nil {
+		info.DeliveryLongitude = *deliveryLongitude
+	}
+
+	return &info, nil
 }
 
 // DTOs для запросов

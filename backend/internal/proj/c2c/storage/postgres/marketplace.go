@@ -773,13 +773,9 @@ func (s *Storage) GetListings(ctx context.Context, filters map[string]string, li
 		}
 		// User info будет загружена в handler через auth-service
 		listing.User.ID = listing.UserID
-		log.Printf("DEBUG GetListings: listing.ID=%d, listing.UserID=%d", listing.ID, listing.UserID)
 		if tempStorefrontID.Valid {
 			sfID := int(tempStorefrontID.Int32)
 			listing.StorefrontID = &sfID
-			log.Printf("DEBUG: Listing %d has storefront_id: %d", listing.ID, *listing.StorefrontID)
-		} else {
-			log.Printf("DEBUG: Listing %d has no storefront_id", listing.ID)
 		}
 		if tempLatitude.Valid {
 			listing.Latitude = &tempLatitude.Float64
@@ -2093,8 +2089,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 
 		// Проверяем, не добавляли ли мы уже этот атрибут
 		if seen[attr.AttributeID] {
-			log.Printf("WARNING: Skipping duplicate attribute ID=%d, Name=%s",
-				attr.AttributeID, attr.AttributeName)
 			continue
 		}
 		seen[attr.AttributeID] = true
@@ -2139,8 +2133,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 				attr.DisplayValue = textValue.String
 			}
 
-			log.Printf("DEBUG: Attribute %d (%s) has text value: %s, display: %s",
-				attr.AttributeID, attr.AttributeName, textValue.String, attr.DisplayValue)
 		}
 
 		if numericValue.Valid {
@@ -2176,8 +2168,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 				attr.DisplayValue = fmt.Sprintf("%g", numericValue.Float64)
 			}
 
-			log.Printf("DEBUG: Attribute %d (%s) has numeric value: %f, display: %s",
-				attr.AttributeID, attr.AttributeName, numericValue.Float64, attr.DisplayValue)
 		}
 
 		if boolValue.Valid {
@@ -2187,8 +2177,6 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			} else {
 				attr.DisplayValue = "Нет"
 			}
-			log.Printf("DEBUG: Attribute %d (%s) has boolean value: %t",
-				attr.AttributeID, attr.AttributeName, boolValue.Bool)
 		}
 
 		if jsonValue.Valid {
@@ -2202,14 +2190,10 @@ func (s *Storage) GetListingAttributes(ctx context.Context, listingID int) ([]mo
 			} else {
 				attr.DisplayValue = jsonValue.String
 			}
-			log.Printf("DEBUG: Attribute %d (%s) has JSON value: %s",
-				attr.AttributeID, attr.AttributeName, jsonValue.String)
 		}
 
 		allAttributes = append(allAttributes, attr)
 	}
-
-	log.Printf("DEBUG: Found %d unique attributes for listing %d", len(allAttributes), listingID)
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating listing attributes: %w", err)
@@ -3003,9 +2987,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 		&listing.ShowOnMap, &originalLang,
 		&categoryName, &categorySlug, &listing.Metadata, &storefrontID, &locationPrivacy, &addressMultilingual,
 	)
-	log.Printf("999 DEBUG: Listing %d metadata: %+v", id, listing.Metadata)
-	log.Printf("DEBUG: err after query = %v", err)
-
 	if err != nil {
 		// Если не найдено в c2c_listings, попробуем найти в storefront_products
 		if err.Error() == "no rows in result set" {
@@ -3114,9 +3095,7 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 
 	// Получаем изображения
 	var images []models.MarketplaceImage
-	log.Printf("DEBUG GetListingByID: listing.ID=%d, StorefrontID=%v", listing.ID, listing.StorefrontID)
 	if listing.StorefrontID != nil && *listing.StorefrontID > 0 {
-		log.Printf("DEBUG GetListingByID: Loading storefront images for listing %d, storefront_id=%d", listing.ID, *listing.StorefrontID)
 		// Для B2C товаров загружаем изображения из storefront_product_images
 		storefrontImages, err := s.GetB2CProductImages(ctx, listing.ID)
 		if err != nil {
@@ -3124,11 +3103,9 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			// Не прерываем выполнение, просто оставляем пустой массив изображений
 			images = []models.MarketplaceImage{}
 		} else {
-			log.Printf("DEBUG GetListingByID: Successfully loaded %d storefront images for listing %d", len(storefrontImages), listing.ID)
 			images = storefrontImages
 		}
 	} else {
-		log.Printf("DEBUG GetListingByID: Loading marketplace images for listing %d (no storefront_id)", listing.ID)
 		// Для обычных marketplace товаров загружаем изображения из c2c_images
 		marketplaceImages, err := s.GetListingImages(ctx, fmt.Sprintf("%d", listing.ID))
 		if err != nil {
@@ -3136,7 +3113,6 @@ func (s *Storage) GetListingByID(ctx context.Context, id int) (*models.Marketpla
 			// Не прерываем выполнение, просто оставляем пустой массив изображений
 			images = []models.MarketplaceImage{}
 		} else {
-			log.Printf("DEBUG GetListingByID: Successfully loaded %d marketplace images for listing %d", len(marketplaceImages), listing.ID)
 			images = marketplaceImages
 		}
 	}
@@ -3401,13 +3377,11 @@ func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*m
 	listing.User.ID = listing.UserID
 
 	// Загружаем изображения для B2C продукта
-	log.Printf("DEBUG getStorefrontProductAsListing: Loading images for storefront product %d", listing.ID)
 	storefrontImages, err := s.GetB2CProductImages(ctx, listing.ID)
 	if err != nil {
 		log.Printf("Error loading storefront images for product %d: %v", listing.ID, err)
 		listing.Images = []models.MarketplaceImage{}
 	} else {
-		log.Printf("DEBUG getStorefrontProductAsListing: Successfully loaded %d images for storefront product %d", len(storefrontImages), listing.ID)
 		listing.Images = storefrontImages
 	}
 

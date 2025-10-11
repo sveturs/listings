@@ -407,7 +407,6 @@ func (h *DistrictHandler) GetVisibleCities(c *fiber.Ctx) error {
 	var req types.VisibleCitiesRequest
 
 	// Логирование сырого тела запроса
-	fmt.Printf("DEBUG: GetVisibleCities raw body: %s\n", string(c.Body()))
 
 	if err := c.BodyParser(&req); err != nil {
 		fmt.Printf("ERROR: Failed to parse request body: %+v\n", err)
@@ -415,7 +414,6 @@ func (h *DistrictHandler) GetVisibleCities(c *fiber.Ctx) error {
 	}
 
 	// Логирование распарсенного запроса
-	fmt.Printf("DEBUG: Parsed request: bounds=%+v, center=%+v\n", req.Bounds, req.Center)
 
 	if err := req.Validate(); err != nil {
 		fmt.Printf("ERROR: Request validation failed: %+v\n", err)

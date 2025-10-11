@@ -99,7 +99,7 @@ export async function loadMessages(
           break;
         case 'create_storefront':
           moduleData = await import(
-            `@/messages/${locale}/create_storefront.json`
+            `@/messages/${locale}/create_b2c_store.json`
           );
           break;
         case 'create_listing':

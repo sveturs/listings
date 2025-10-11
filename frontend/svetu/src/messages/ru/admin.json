@@ -533,34 +533,6 @@
     "revokeRole": "Отозвать роль",
     "confirmRevokeRole": "Вы уверены что хотите отозвать роль {role}?",
     "roleDescriptions": {
-      "admin": "Полный доступ ко всем функциям системы",
-      "moderator": "Модерация контента и управление пользователями",
-      "support": "Поддержка пользователей и просмотр данных",
-      "user": "Обычный пользователь с базовыми правами"
-    },
-    "roleTooltip": {
-      "noDescription": "Описание роли недоступно"
-    },
-    "error": {
-      "fetchFailed": "Не удалось загрузить пользователей",
-      "updateFailed": "Не удалось обновить статус пользователя",
-      "deleteFailed": "Не удалось удалить пользователя",
-      "cannotModifySelf": "Вы не можете изменить свой аккаунт",
-      "cannotDeleteSelf": "Вы не можете удалить свой аккаунт"
-    },
-    "roleTooltip": {
-      "noRole": "Роль не назначена",
-      "noDescription": "Нет описания функций роли",
-      "priority": "Приоритет"
-    },
-    "providers": {
-      "google": "Google",
-      "email": "Электронная почта"
-    },
-    "timezone": {
-      "default": "По умолчанию"
-    },
-    "roleDescriptions": {
       "super_admin": "Полный доступ к системе со всеми разрешениями",
       "admin": "Административный доступ для управления пользователями и контентом",
       "financial_manager": "Управляет финансовыми транзакциями и отчетами",
@@ -591,6 +563,25 @@
       "vip_customer": "VIP-клиент с эксклюзивными преимуществами",
       "warehouse_worker": "Обрабатывает выполнение заказов и упаковку",
       "user": "Стандартный пользователь с базовыми разрешениями"
+    },
+    "roleTooltip": {
+      "noRole": "Роль не назначена",
+      "noDescription": "Нет описания функций роли",
+      "priority": "Приоритет"
+    },
+    "error": {
+      "fetchFailed": "Не удалось загрузить пользователей",
+      "updateFailed": "Не удалось обновить статус пользователя",
+      "deleteFailed": "Не удалось удалить пользователя",
+      "cannotModifySelf": "Вы не можете изменить свой аккаунт",
+      "cannotDeleteSelf": "Вы не можете удалить свой аккаунт"
+    },
+    "providers": {
+      "google": "Google",
+      "email": "Электронная почта"
+    },
+    "timezone": {
+      "default": "По умолчанию"
     }
   },
   "balance": {
@@ -973,7 +964,6 @@
   "statusLabel": "Статус",
   "cancel": "Отмена",
   "save": "Сохранить",
-  "edit": "Редактировать",
   "analyzing": "Анализ...",
   "checkError": "[MISSING_RU] checkError",
   "required": "[MISSING_RU] required",
@@ -1075,24 +1065,34 @@
       "reset": "Сбросить"
     },
     "status": {
-      "processing": "Обработка"
+      "pending": "Ожидает",
+      "in_transit": "В пути",
+      "delivered": "Доставлено",
+      "failed": "Не удалось",
+      "cancelled": "Отменено"
     },
     "table": {
-      "date": "Дата",
-      "sent": "Отправлено",
-      "delivered": "Доставлено",
-      "in_transit": "В пути",
-      "problems": "Проблемы",
-      "courier_service": "Служба доставки",
-      "shipments": "Отправлений",
-      "success_rate": "Успешность",
-      "avg_time": "Ср. время"
+      "tracking_number": "Номер отслеживания",
+      "status": "Статус",
+      "provider": "Поставщик",
+      "recipient": "Получатель",
+      "sender": "Отправитель",
+      "cod": "Наложенный платеж",
+      "weight": "Вес",
+      "created": "Создано",
+      "actions": "Действия"
     },
     "actions": {
-      "view": "Просмотр",
+      "track": "Отследить",
+      "export": "Экспорт",
+      "view": "Просмотреть",
+      "new_shipment": "Новое отправление",
+      "comments": "Комментарии",
+      "assign": "Назначить",
+      "resolve": "Решить",
+      "printLabel": "Печать этикетки",
       "updateStatus": "Обновить статус",
-      "contact": "Связаться",
-      "printLabel": "Печать этикетки"
+      "contact": "Связаться"
     },
     "pagination": {
       "page": "Страница",
@@ -1169,36 +1169,6 @@
       "sender": "Отправитель",
       "receiver": "Получатель",
       "problem": "Проблема"
-    },
-    "status": {
-      "pending": "Ожидает",
-      "in_transit": "В пути",
-      "delivered": "Доставлено",
-      "failed": "Не удалось",
-      "cancelled": "Отменено"
-    },
-    "table": {
-      "tracking_number": "Номер отслеживания",
-      "status": "Статус",
-      "provider": "Поставщик",
-      "recipient": "Получатель",
-      "sender": "Отправитель",
-      "cod": "Наложенный платеж",
-      "weight": "Вес",
-      "created": "Создано",
-      "actions": "Действия"
-    },
-    "actions": {
-      "track": "Отследить",
-      "export": "Экспорт",
-      "view": "Просмотреть",
-      "new_shipment": "Новое отправление",
-      "comments": "Комментарии",
-      "assign": "Назначить",
-      "resolve": "Решить",
-      "printLabel": "Печать этикетки",
-      "updateStatus": "Обновить статус",
-      "contact": "Связаться"
     }
   },
   "storefrontProducts": {
@@ -1277,7 +1247,7 @@
       "draft": "Черновик",
       "archived": "В архиве"
     },
-    "noProducts": "Товары не найдены",
+    "noProducts": "Нет товаров для отображения",
     "noProductsDesc": "Создайте первый товар или измените фильтры",
     "stockStatus": {
       "inStock": "В наличии",
@@ -1301,7 +1271,6 @@
       "title": "Удалить товар",
       "message": "Вы уверены, что хотите удалить этот товар? Это действие нельзя отменить."
     },
-    "noProducts": "Нет товаров для отображения",
     "noStorefronts": "У вас пока нет витрин",
     "noStorefrontsDescription": "Создайте вашу первую витрину, чтобы начать продавать товары",
     "createStorefront": "Создать витрину"
@@ -1496,8 +1465,15 @@
       "testing": "Тестирование"
     },
     "dashboard": {
+      "title": "Dashboard доставки",
       "todayStats": "Статистика за сегодня",
-      "providerStats": "Производительность провайдеров",
+      "shipments": "Отправлений",
+      "delivered": "Доставлено",
+      "inTransit": "В пути",
+      "problems": "Проблемные",
+      "avgTime": "Среднее время",
+      "successRate": "Успешность",
+      "providerStats": "Статистика по провайдерам",
       "costAnalysis": "Анализ стоимости",
       "avgCost": "Средняя стоимость",
       "totalCost": "Общая стоимость",
@@ -1581,90 +1557,6 @@
         "pricePerM3": "Цена за м³"
       }
     },
-    "dashboard": {
-      "title": "Dashboard доставки",
-      "todayStats": "Статистика за сегодня",
-      "shipments": "Отправлений",
-      "delivered": "Доставлено",
-      "inTransit": "В пути",
-      "problems": "Проблемные",
-      "avgTime": "Среднее время",
-      "successRate": "Успешность",
-      "providerStats": "Статистика по провайдерам",
-      "costAnalysis": "Анализ стоимости",
-      "avgCost": "Средняя стоимость",
-      "totalCost": "Общая стоимость",
-      "savings": "Экономия"
-    },
-    "problemShipments": {
-      "title": "Проблемные доставки",
-      "filters": {
-        "allTypes": "Все типы проблем",
-        "delayed": "Задержка",
-        "lost": "Потеряно",
-        "damaged": "Повреждено",
-        "wrongAddress": "Неверный адрес",
-        "refused": "Отказ получателя"
-      },
-      "table": {
-        "tracking": "Трек-номер",
-        "provider": "Провайдер",
-        "problemType": "Тип проблемы",
-        "status": "Статус",
-        "priority": "Приоритет",
-        "assignedTo": "Назначено",
-        "createdAt": "Создано",
-        "actions": "Действия"
-      },
-      "priority": {
-        "low": "Низкий",
-        "medium": "Средний",
-        "high": "Высокий",
-        "critical": "Критический"
-      },
-      "status": {
-        "open": "Открыто",
-        "investigating": "Расследуется",
-        "resolved": "Решено",
-        "closed": "Закрыто"
-      },
-      "actions": {
-        "view": "Просмотр",
-        "assign": "Назначить",
-        "resolve": "Решить",
-        "escalate": "Эскалировать",
-        "contact": "Связаться с клиентом"
-      }
-    },
-    "analytics": {
-      "title": "Аналитика доставки",
-      "timeRange": "Период",
-      "export": "Экспорт отчета",
-      "metrics": {
-        "totalShipments": "Всего отправлений",
-        "deliveryRate": "Процент доставки",
-        "avgDeliveryTime": "Среднее время доставки",
-        "customerSatisfaction": "Удовлетворенность клиентов",
-        "costPerShipment": "Средняя стоимость отправки",
-        "problemRate": "Процент проблем"
-      },
-      "charts": {
-        "deliveryTrends": "Тренды доставок",
-        "providerComparison": "Сравнение провайдеров",
-        "costAnalysis": "Анализ затрат",
-        "geographicDistribution": "География доставок"
-      }
-    },
-    "settings": {
-      "title": "Настройки доставки",
-      "defaultProvider": "Провайдер по умолчанию",
-      "autoSelection": "Автоматический выбор оптимального провайдера",
-      "notifications": "Уведомления о проблемах",
-      "webhookUrl": "Webhook URL для статусов",
-      "cacheDuration": "Время кэширования расчетов (минуты)",
-      "maxRetries": "Максимум попыток при ошибке",
-      "save": "Сохранить настройки"
-    },
     "problemShipments": {
       "title": "Проблемные отправления",
       "filters": {
@@ -1735,6 +1627,35 @@
         "cancel": "Отмена"
       },
       "noProblems": "Проблемные отправления не найдены"
+    },
+    "analytics": {
+      "title": "Аналитика доставки",
+      "timeRange": "Период",
+      "export": "Экспорт отчета",
+      "metrics": {
+        "totalShipments": "Всего отправлений",
+        "deliveryRate": "Процент доставки",
+        "avgDeliveryTime": "Среднее время доставки",
+        "customerSatisfaction": "Удовлетворенность клиентов",
+        "costPerShipment": "Средняя стоимость отправки",
+        "problemRate": "Процент проблем"
+      },
+      "charts": {
+        "deliveryTrends": "Тренды доставок",
+        "providerComparison": "Сравнение провайдеров",
+        "costAnalysis": "Анализ затрат",
+        "geographicDistribution": "География доставок"
+      }
+    },
+    "settings": {
+      "title": "Настройки доставки",
+      "defaultProvider": "Провайдер по умолчанию",
+      "autoSelection": "Автоматический выбор оптимального провайдера",
+      "notifications": "Уведомления о проблемах",
+      "webhookUrl": "Webhook URL для статусов",
+      "cacheDuration": "Время кэширования расчетов (минуты)",
+      "maxRetries": "Максимум попыток при ошибке",
+      "save": "Сохранить настройки"
     },
     "testing": {
       "title": "Тестирование провайдеров доставки",
@@ -1854,5 +1775,42 @@
       "rejected": "Предложение отклонено",
       "deleted": "Предложение удалено"
     }
+  },
+  "postexpressTest": {
+    "title": "Post Express - Визуальное тестирование",
+    "description": "Полное визуальное тестирование Post Express WSP API интеграции",
+    "shipmentParams": "Параметры отправления",
+    "recipient": "Получатель",
+    "sender": "Отправитель",
+    "packageParams": "Параметры посылки",
+    "fullName": "ФИО",
+    "phone": "Телефон",
+    "email": "Email",
+    "city": "Город",
+    "zip": "Индекс",
+    "address": "Адрес",
+    "companyName": "Название",
+    "content": "Содержимое",
+    "weight": "Вес (г)",
+    "codAmount": "Наложенный платеж (RSD)",
+    "insuredValue": "Ценность (RSD)",
+    "services": "Услуги",
+    "deliveryMethod": "Способ доставки",
+    "paymentMethod": "Способ оплаты",
+    "creating": "Создание...",
+    "createButton": "Создать тестовое отправление",
+    "results": "Результаты",
+    "fillFormPrompt": "Заполните форму и создайте тестовое отправление",
+    "error": "Ошибка",
+    "successTitle": "Отправление создано успешно!",
+    "processingTime": "Время обработки",
+    "trackingNumber": "Трек-номер",
+    "cost": "Стоимость",
+    "manifestId": "Manifest ID",
+    "shipmentId": "Shipment ID",
+    "externalId": "External ID",
+    "requestData": "Отправленные данные",
+    "responseData": "Ответ API",
+    "required": "*"
   }
 }

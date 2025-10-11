@@ -16,12 +16,6 @@ type Storage interface {
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
 	GetFavoritedUsers(ctx context.Context, listingID int) ([]int, error)
 
-	// Методы для работы с администраторами
-	IsUserAdmin(ctx context.Context, email string) (bool, error)
-	GetAllAdmins(ctx context.Context) ([]*models.AdminUser, error)
-	AddAdmin(ctx context.Context, admin *models.AdminUser) error
-	RemoveAdmin(ctx context.Context, email string) error
-
 	// Reviews
 	CreateReview(ctx context.Context, review *models.Review) (*models.Review, error)
 	GetReviews(ctx context.Context, filter models.ReviewsFilter) ([]models.Review, int64, error)

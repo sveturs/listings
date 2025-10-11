@@ -5,9 +5,8 @@ package handler
 import (
 	"strconv"
 
-	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
-
 	"github.com/gofiber/fiber/v2"
+	authMiddleware "github.com/sveturs/auth/pkg/http/fiber/middleware"
 
 	"backend/internal/domain/models"
 	globalService "backend/internal/proj/global/service"
@@ -15,12 +14,14 @@ import (
 )
 
 type Handler struct {
-	services globalService.ServicesInterface
+	services    globalService.ServicesInterface
+	jwtParserMW fiber.Handler
 }
 
-func NewHandler(services globalService.ServicesInterface) *Handler {
+func NewHandler(services globalService.ServicesInterface, jwtParserMW fiber.Handler) *Handler {
 	return &Handler{
-		services: services,
+		services:    services,
+		jwtParserMW: jwtParserMW,
 	}
 }
 
