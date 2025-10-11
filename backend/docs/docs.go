@@ -11499,7 +11499,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns performance metrics for items",
+                "description": "Returns performance metrics for items (admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -11559,6 +11559,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden - admin only",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -11575,7 +11581,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns search analytics metrics",
+                "description": "Returns search analytics metrics (admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -11628,6 +11634,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponseSwag"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - admin only",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponseSwag"
                         }
@@ -41550,14 +41562,29 @@ const docTemplate = `{
                     "example": "Test paket za SVETU"
                 },
                 "delivery_method": {
-                    "description": "K = Kurir, S = Šalter",
+                    "description": "K = Kurir, S = Šalter, PAK = Paкетомат",
                     "type": "string",
                     "example": "K"
+                },
+                "delivery_type": {
+                    "description": "standard, cod, parcel_locker",
+                    "type": "string",
+                    "example": "standard"
+                },
+                "id_rukovanje": {
+                    "description": "ID услуги доставки (29, 30, 55, 58, 59, 71, 85)",
+                    "type": "integer",
+                    "example": 29
                 },
                 "insured_value": {
                     "description": "объявленная ценность (RSD)",
                     "type": "integer",
                     "example": 0
+                },
+                "parcel_locker_code": {
+                    "description": "Код паккетомата (для IdRukovanje = 85)",
+                    "type": "string",
+                    "example": ""
                 },
                 "payment_method": {
                     "description": "POF = gotovina",

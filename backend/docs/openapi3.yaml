@@ -7718,7 +7718,7 @@ paths:
         - analytics
   /api/v1/analytics/metrics/items:
     get:
-      description: Returns performance metrics for items
+      description: Returns performance metrics for items (admin only)
       parameters:
         - description: Start date (YYYY-MM-DD)
           in: query
@@ -7756,6 +7756,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "403":
+          description: Forbidden - admin only
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
         "500":
           description: Internal server error
           content:
@@ -7769,7 +7775,7 @@ paths:
         - analytics
   /api/v1/analytics/metrics/search:
     get:
-      description: Returns search analytics metrics
+      description: Returns search analytics metrics (admin only)
       parameters:
         - description: Start date (YYYY-MM-DD)
           in: query
@@ -7801,6 +7807,12 @@ paths:
                     type: object
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/utils.ErrorResponseSwag"
+        "403":
+          description: Forbidden - admin only
           content:
             application/json:
               schema:
@@ -28547,13 +28559,25 @@ components:
           example: Test paket za SVETU
           type: string
         delivery_method:
-          description: K = Kurir, S = Šalter
+          description: K = Kurir, S = Šalter, PAK = Paкетомат
           example: K
           type: string
+        delivery_type:
+          description: standard, cod, parcel_locker
+          example: standard
+          type: string
+        id_rukovanje:
+          description: ID услуги доставки (29, 30, 55, 58, 59, 71, 85)
+          example: 29
+          type: integer
         insured_value:
           description: объявленная ценность (RSD)
           example: 0
           type: integer
+        parcel_locker_code:
+          description: Код паккетомата (для IdRukovanje = 85)
+          example: ""
+          type: string
         payment_method:
           description: POF = gotovina
           example: POF

@@ -13230,7 +13230,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns performance metrics for items",
+                "description": "Returns performance metrics for items (admin only)",
                 "tags": [
                     "analytics"
                 ],
@@ -13298,6 +13298,16 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden - admin only",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "content": {
@@ -13318,7 +13328,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns search analytics metrics",
+                "description": "Returns search analytics metrics (admin only)",
                 "tags": [
                     "analytics"
                 ],
@@ -13375,6 +13385,16 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/utils.ErrorResponseSwag"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - admin only",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -47842,14 +47862,29 @@
                         "example": "Test paket za SVETU"
                     },
                     "delivery_method": {
-                        "description": "K = Kurir, S = Šalter",
+                        "description": "K = Kurir, S = Šalter, PAK = Paкетомат",
                         "type": "string",
                         "example": "K"
+                    },
+                    "delivery_type": {
+                        "description": "standard, cod, parcel_locker",
+                        "type": "string",
+                        "example": "standard"
+                    },
+                    "id_rukovanje": {
+                        "description": "ID услуги доставки (29, 30, 55, 58, 59, 71, 85)",
+                        "type": "integer",
+                        "example": 29
                     },
                     "insured_value": {
                         "description": "объявленная ценность (RSD)",
                         "type": "integer",
                         "example": 0
+                    },
+                    "parcel_locker_code": {
+                        "description": "Код паккетомата (для IdRukovanje = 85)",
+                        "type": "string",
+                        "example": ""
                     },
                     "payment_method": {
                         "description": "POF = gotovina",
