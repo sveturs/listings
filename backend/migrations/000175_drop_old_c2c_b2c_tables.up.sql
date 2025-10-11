@@ -17,12 +17,12 @@ DROP TABLE IF EXISTS marketplace_images CASCADE;
 DROP TABLE IF EXISTS marketplace_listings CASCADE;
 DROP TABLE IF EXISTS marketplace_categories CASCADE;
 
+-- Удаление B2C materialized views (зависимости, удаляем первыми)
+DROP MATERIALIZED VIEW IF EXISTS storefront_rating_distribution CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS storefront_ratings CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS storefront_rating_summary CASCADE;
+
 -- Удаление B2C таблиц (storefront_*)
-DROP TABLE IF EXISTS storefront_cart_items CASCADE;
-DROP TABLE IF EXISTS storefront_carts CASCADE;
-DROP TABLE IF EXISTS storefront_rating_distribution CASCADE;
-DROP TABLE IF EXISTS storefront_ratings CASCADE;
-DROP TABLE IF EXISTS storefront_events CASCADE;
 DROP TABLE IF EXISTS storefront_order_items CASCADE;
 DROP TABLE IF EXISTS storefront_orders CASCADE;
 DROP TABLE IF EXISTS storefront_favorites CASCADE;
