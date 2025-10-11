@@ -3332,14 +3332,14 @@ func (s *Storage) GenerateUniqueSlug(ctx context.Context, baseSlug string, exclu
 	return fmt.Sprintf("%s-%s", baseSlug, shortHash), nil
 }
 
-// getStorefrontProductAsListing получает товар из storefront_products и возвращает как MarketplaceListing
+// getStorefrontProductAsListing получает товар из b2c_products и возвращает как MarketplaceListing
 func (s *Storage) getStorefrontProductAsListing(ctx context.Context, id int) (*models.MarketplaceListing, error) {
 	listing := &models.MarketplaceListing{
 		User:     &models.User{},
 		Category: &models.MarketplaceCategory{},
 	}
 
-	// Получаем данные товара из storefront_products
+	// Получаем данные товара из b2c_products
 	var categoryName, categorySlug sql.NullString
 
 	err := s.pool.QueryRow(ctx, `

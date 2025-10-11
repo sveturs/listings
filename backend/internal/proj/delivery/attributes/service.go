@@ -386,7 +386,7 @@ func (s *Service) ApplyCategoryDefaultsToProducts(ctx context.Context, categoryI
 
 	count1, _ := result1.RowsAffected()
 
-	// Обновляем товары из storefront_products
+	// Обновляем товары из b2c_products
 	query2 := `
 		UPDATE b2c_products
 		SET attributes = jsonb_set(

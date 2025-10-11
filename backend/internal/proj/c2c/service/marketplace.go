@@ -2172,7 +2172,7 @@ func (s *MarketplaceService) getCategorySuggestionsUnified(ctx context.Context, 
 
 // getProductSuggestionsUnified возвращает подходящие товары
 func (s *MarketplaceService) getProductSuggestionsUnified(ctx context.Context, query string, limit int) []models.UnifiedSuggestion {
-	// Поиск товаров по названию из обеих таблиц (c2c_listings и storefront_products)
+	// Поиск товаров по названию из обеих таблиц (c2c_listings и b2c_products)
 	sqlQuery := `
 		SELECT id, title, price, category_name, image_url, storefront_id, storefront_name, storefront_slug, source_type
 		FROM (
