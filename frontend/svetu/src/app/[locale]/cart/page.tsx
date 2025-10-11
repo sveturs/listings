@@ -19,7 +19,6 @@ import {
 import {
   selectAllCarts,
   selectAllCartsItemsCount,
-  fetchAllCarts,
   removeFromCart as removeFromApiCart,
   updateCartItem as updateApiCartItem,
   clearCart as clearApiCart,
@@ -106,10 +105,13 @@ export default function CartPage() {
     // useCartSync уже вызвал fetchUserCarts, так что ждём результата
     if (user?.id && apiCarts.length >= 0) {
       // Корзины загружены (даже если пустые) - убираем лоадер
-      console.log('[CartPage] Carts already loaded by useCartSync:', apiCarts.length);
+      console.log(
+        '[CartPage] Carts already loaded by useCartSync:',
+        apiCarts.length
+      );
       setIsInitialLoad(false);
     }
-  }, [isAuthenticated, user?.id, apiCarts]);
+  }, [isAuthenticated, user, apiCarts]);
 
   // Группируем товары по витринам для локальной корзины (неавторизованные)
   const localItemsByStorefront = localItems.reduce(

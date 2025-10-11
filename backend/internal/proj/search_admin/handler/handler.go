@@ -174,7 +174,7 @@ func (h *Handler) DeleteWeight(c *fiber.Ctx) error {
 // @Param page query int false "Page number (default: 1)"
 // @Param limit query int false "Items per page (default: 20)"
 // @Param search query string false "Search term"
-// @Success 200 {object} utils.PaginatedResponseSwag{data=[]domain.SearchSynonym} "Paginated list of synonyms"
+// @Success 200 {object} map[string]interface{} "Paginated list of synonyms"
 // @Failure 500 {object} utils.ErrorResponseSwag "Internal server error"
 // @Router /api/v1/search/config/synonyms [get]
 func (h *Handler) GetSynonyms(c *fiber.Ctx) error {

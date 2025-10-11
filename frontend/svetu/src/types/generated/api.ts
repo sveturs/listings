@@ -33169,13 +33169,19 @@ export interface paths {
     };
     /**
      * Get search synonyms
-     * @description Get all synonyms for search terms
+     * @description Get all synonyms for search terms with pagination
      */
     get: {
       parameters: {
         query?: {
           /** @description Language code (default: ru) */
           language?: string;
+          /** @description Page number (default: 1) */
+          page?: number;
+          /** @description Items per page (default: 20) */
+          limit?: number;
+          /** @description Search term */
+          search?: string;
         };
         header?: never;
         path?: never;
@@ -33183,14 +33189,14 @@ export interface paths {
       };
       requestBody?: never;
       responses: {
-        /** @description List of synonyms */
+        /** @description Paginated list of synonyms */
         200: {
           headers: {
             [name: string]: unknown;
           };
           content: {
-            'application/json': components['schemas']['utils.SuccessResponseSwag'] & {
-              data?: components['schemas']['domain.SearchSynonym'][];
+            'application/json': {
+              [key: string]: unknown;
             };
           };
         };
@@ -36173,6 +36179,164 @@ export interface paths {
         };
       };
     };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/unified/listings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get unified listings (C2C + B2C)
+     * @description Возвращает объединенный список C2C объявлений и B2C товаров
+     */
+    get: {
+      parameters: {
+        query?: {
+          /** @description Тип источника: all, c2c, b2c */
+          source_type?: string;
+          /** @description ID категории */
+          category_id?: number;
+          /** @description Минимальная цена */
+          min_price?: number;
+          /** @description Максимальная цена */
+          max_price?: number;
+          /** @description Состояние: new, used, refurbished */
+          condition?: string;
+          /** @description Текстовый поиск */
+          query?: string;
+          /** @description ID витрины (только для B2C) */
+          storefront_id?: number;
+          /** @description Лимит */
+          limit?: number;
+          /** @description Смещение */
+          offset?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.UnifiedListingsResponse'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/unified/listings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get unified listing by ID
+     * @description Получить unified listing по ID и типу (c2c или b2c)
+     */
+    get: {
+      parameters: {
+        query: {
+          /** @description Тип источника: c2c, b2c */
+          source_type: string;
+        };
+        header?: never;
+        path: {
+          /** @description ID объявления/товара */
+          id: number;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description OK */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['models.UnifiedListing'];
+          };
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Not Found */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              [key: string]: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -43799,6 +43963,61 @@ export interface components {
       is_required?: boolean;
       sort_order?: number;
       updated_at?: string;
+    };
+    'models.UnifiedImage': {
+      display_order?: number;
+      id?: number;
+      is_main?: boolean;
+      thumbnail_url?: string;
+      url?: string;
+    };
+    'models.UnifiedListing': {
+      category?: components['schemas']['models.MarketplaceCategory'];
+      category_id?: number;
+      city?: string;
+      condition?: string;
+      country?: string;
+      created_at?: string;
+      description?: string;
+      discount_percentage?: number;
+      has_discount?: boolean;
+      id?: number;
+      /** @description Связанные данные (загружаются отдельно) */
+      images?: components['schemas']['models.UnifiedImage'][];
+      /** @description Флаги и дополнительные поля */
+      is_favorite?: boolean;
+      latitude?: number;
+      location?: string;
+      longitude?: number;
+      metadata?: {
+        [key: string]: unknown;
+      };
+      old_price?: number;
+      original_language?: string;
+      price?: number;
+      show_on_map?: boolean;
+      /** @description "c2c" или "b2c" */
+      source_type?: string;
+      status?: string;
+      /** @description только для B2C */
+      storefront?: components['schemas']['models.Storefront'];
+      /** @description только для B2C */
+      storefront_id?: number;
+      title?: string;
+      translations?: {
+        [key: string]: unknown;
+      };
+      updated_at?: string;
+      user?: components['schemas']['models.User'];
+      user_id?: number;
+      views_count?: number;
+    };
+    'models.UnifiedListingsResponse': {
+      data?: components['schemas']['models.UnifiedListing'][];
+      limit?: number;
+      offset?: number;
+      source_type?: string;
+      total?: number;
     };
     'models.UnifiedSuggestion': {
       /** @description ID категории для type="category" */
